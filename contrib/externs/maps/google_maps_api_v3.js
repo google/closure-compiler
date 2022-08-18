@@ -33,11 +33,10 @@ var google = {};
 google.maps = {};
 
 /**
- * Google Maps JavaScript API version loaded by the browser.
- * @see https://developers.google.com/maps/documentation/javascript/versions
- *
- * @type {string}
+ * Google Maps JavaScript API version loaded by the browser. See <a
+ * href="https://developers.google.com/maps/documentation/javascript/versions">https://developers.google.com/maps/documentation/javascript/versions</a>
  * @const
+ * @type {string}
  */
 google.maps.version;
 
@@ -274,15 +273,15 @@ google.maps.CircleOptions = function() {};
 google.maps.CircleOptions.prototype.center;
 
 /**
- * Indicates whether this <code>Circle</code> handles mouse events. Defaults to
- * <code>true</code>.
+ * Indicates whether this <code>Circle</code> handles mouse events.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.CircleOptions.prototype.clickable;
 
 /**
  * If set to <code>true</code>, the user can drag this circle over the map.
- * Defaults to <code>false</code>.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.CircleOptions.prototype.draggable;
@@ -290,7 +289,8 @@ google.maps.CircleOptions.prototype.draggable;
 /**
  * If set to <code>true</code>, the user can edit this circle by dragging the
  * control points shown at the center and around the circumference of the
- * circle. Defaults to <code>false</code>.
+ * circle.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.CircleOptions.prototype.editable;
@@ -334,8 +334,8 @@ google.maps.CircleOptions.prototype.strokeColor;
 google.maps.CircleOptions.prototype.strokeOpacity;
 
 /**
- * The stroke position. Defaults to CENTER. This property is not supported on
- * Internet Explorer 8 and earlier.
+ * The stroke position.
+ * @default {@link google.maps.StrokePosition.CENTER}
  * @type {?google.maps.StrokePosition|undefined}
  */
 google.maps.CircleOptions.prototype.strokePosition;
@@ -347,7 +347,8 @@ google.maps.CircleOptions.prototype.strokePosition;
 google.maps.CircleOptions.prototype.strokeWeight;
 
 /**
- * Whether this circle is visible on the map. Defaults to <code>true</code>.
+ * Whether this circle is visible on the map.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.CircleOptions.prototype.visible;
@@ -702,8 +703,8 @@ google.maps.Data.AddFeatureEvent.prototype.feature;
 google.maps.Data.DataOptions = function() {};
 
 /**
- * The position of the drawing controls on the map. The default position is
- * TOP_LEFT.
+ * The position of the drawing controls on the map.
+ * @default {@link google.maps.ControlPosition.TOP_LEFT}
  * @type {!google.maps.ControlPosition|undefined}
  */
 google.maps.Data.DataOptions.prototype.controlPosition;
@@ -712,9 +713,9 @@ google.maps.Data.DataOptions.prototype.controlPosition;
  * Describes which drawing modes are available for the user to select, in the
  * order they are displayed. This should not include the <code>null</code>
  * drawing mode, which is added by default. If <code>null</code>, drawing
- * controls are disabled and not displayed. Defaults to <code>null</code>.
- * Possible drawing modes are <code>"Point"</code>, <code>"LineString"</code> or
- * <code>"Polygon"</code>.
+ * controls are disabled and not displayed. Possible drawing modes are
+ * <code>"Point"</code>, <code>"LineString"</code> or <code>"Polygon"</code>.
+ * @default <code>null</code>
  * @type {?Array<string>|undefined}
  */
 google.maps.Data.DataOptions.prototype.controls;
@@ -722,9 +723,10 @@ google.maps.Data.DataOptions.prototype.controls;
 /**
  * The current drawing mode of the given Data layer. A drawing mode of
  * <code>null</code> means that the user can interact with the map as normal,
- * and clicks do not draw anything. Defaults to <code>null</code>. Possible
- * drawing modes are <code>null</code>, <code>"Point"</code>,
- * <code>"LineString"</code> or <code>"Polygon"</code>.
+ * and clicks do not draw anything. Possible drawing modes are
+ * <code>null</code>, <code>"Point"</code>, <code>"LineString"</code> or
+ * <code>"Polygon"</code>.
+ * @default <code>null</code>
  * @type {?string|undefined}
  */
 google.maps.Data.DataOptions.prototype.drawingMode;
@@ -1341,8 +1343,8 @@ google.maps.Data.StyleOptions = function() {};
 google.maps.Data.StyleOptions.prototype.animation;
 
 /**
- * If <code>true</code>, the marker receives mouse and touch events. Default
- * value is <code>true</code>.
+ * If <code>true</code>, the marker receives mouse and touch events.
+ * @default <code>true</code>
  * @type {boolean|undefined}
  */
 google.maps.Data.StyleOptions.prototype.clickable;
@@ -1355,8 +1357,8 @@ google.maps.Data.StyleOptions.prototype.cursor;
 
 /**
  * If <code>true</code>, the object can be dragged across the map and the
- * underlying feature will have its geometry updated. Default value is
- * <code>false</code>.
+ * underlying feature will have its geometry updated.
+ * @default <code>false</code>
  * @type {boolean|undefined}
  */
 google.maps.Data.StyleOptions.prototype.draggable;
@@ -1364,7 +1366,8 @@ google.maps.Data.StyleOptions.prototype.draggable;
 /**
  * If <code>true</code>, the object can be edited by dragging control points and
  * the underlying feature will have its geometry updated. Only applies to
- * LineString and Polygon geometries. Default value is <code>false</code>.
+ * LineString and Polygon geometries.
+ * @default <code>false</code>
  * @type {boolean|undefined}
  */
 google.maps.Data.StyleOptions.prototype.editable;
@@ -1444,7 +1447,8 @@ google.maps.Data.StyleOptions.prototype.strokeWeight;
 google.maps.Data.StyleOptions.prototype.title;
 
 /**
- * Whether the feature is visible. Defaults to <code>true</code>.
+ * Whether the feature is visible.
+ * @default <code>true</code>
  * @type {boolean|undefined}
  */
 google.maps.Data.StyleOptions.prototype.visible;
@@ -1581,13 +1585,6 @@ google.maps.DirectionsLeg.prototype.start_location;
 google.maps.DirectionsLeg.prototype.steps;
 
 /**
- * Information about traffic speed along the leg.
- * @type {!Array<?>}
- * @deprecated This array will always be empty.
- */
-google.maps.DirectionsLeg.prototype.traffic_speed_entry;
-
-/**
  * An array of non-stopover waypoints along this leg, which were specified in
  * the original request. <p> <strong>Deprecated in alternative routes</strong>.
  * Version 3.27 will be the last version of the API that adds extra
@@ -1599,6 +1596,13 @@ google.maps.DirectionsLeg.prototype.traffic_speed_entry;
  * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsLeg.prototype.via_waypoints;
+
+/**
+ * Information about traffic speed along the leg.
+ * @type {!Array<?>}
+ * @deprecated This array will always be empty.
+ */
+google.maps.DirectionsLeg.prototype.traffic_speed_entry;
 
 /**
  * An object containing a <code>points</code> property to describe the polyline
@@ -1716,11 +1720,9 @@ google.maps.DirectionsRendererOptions.prototype.directions;
 google.maps.DirectionsRendererOptions.prototype.draggable;
 
 /**
- * This property indicates whether the renderer should provide UI to select
- * amongst alternative routes. By default, this flag is <code>false</code> and a
- * user-selectable list of routes will be shown in the directions&#39;
- * associated panel. To hide that list, set <code>hideRouteList</code> to
- * <code>true</code>.
+ * This property indicates whether the renderer should provide a user-selectable
+ * list of routes shown in the directions panel.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.hideRouteList;
@@ -1762,9 +1764,10 @@ google.maps.DirectionsRendererOptions.prototype.panel;
 google.maps.DirectionsRendererOptions.prototype.polylineOptions;
 
 /**
- * By default, the input map is centered and zoomed to the bounding box of this
- * set of directions. If this option is set to <code>true</code>, the viewport
- * is left unchanged, unless the map&#39;s center and zoom were never set.
+ * If this option is set to <code>true</code> or the map&#39;s center and zoom
+ * were never set, the input map is centered and zoomed to the bounding box of
+ * this set of directions.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.preserveViewport;
@@ -1867,8 +1870,15 @@ google.maps.DirectionsRequest.prototype.origin;
 google.maps.DirectionsRequest.prototype.provideRouteAlternatives;
 
 /**
- * Region code used as a bias for geocoding requests. Optional.
- * @type {string|undefined}
+ * Region code used as a bias for geocoding requests. The region code accepts a
+ * <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
  */
 google.maps.DirectionsRequest.prototype.region;
 
@@ -1886,8 +1896,8 @@ google.maps.DirectionsRequest.prototype.transitOptions;
 google.maps.DirectionsRequest.prototype.travelMode;
 
 /**
- * Preferred unit system to use when displaying distance. Defaults to the unit
- * system used in the country of origin.
+ * Preferred unit system to use when displaying distance.
+ * @default The unit system used in the country of origin.
  * @type {!google.maps.UnitSystem|undefined}
  */
 google.maps.DirectionsRequest.prototype.unitSystem;
@@ -2125,25 +2135,10 @@ google.maps.DirectionsStep.prototype.encoded_lat_lngs;
 google.maps.DirectionsStep.prototype.end_location;
 
 /**
- * The ending location of this step.
- * @type {!google.maps.LatLng}
- * @deprecated Please use {@link google.maps.DirectionsStep.end_location}.
- */
-google.maps.DirectionsStep.prototype.end_point;
-
-/**
  * Instructions for this step.
  * @type {string}
  */
 google.maps.DirectionsStep.prototype.instructions;
-
-/**
- * A sequence of <code>LatLng</code>s describing the course of this step. This
- * is an approximate (smoothed) path of the step.
- * @type {!Array<!google.maps.LatLng>}
- * @deprecated Please use {@link google.maps.DirectionsStep.path}.
- */
-google.maps.DirectionsStep.prototype.lat_lngs;
 
 /**
  * Contains the action to take for the current step (<code>turn-left</code>,
@@ -2161,27 +2156,10 @@ google.maps.DirectionsStep.prototype.maneuver;
 google.maps.DirectionsStep.prototype.path;
 
 /**
- * Contains an object with a single property, &#39;points&#39;, that holds an <a
- * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
- * polyline</a> representation of the step. This polyline is an approximate
- * (smoothed) path of the step.
- * @type {!Array<!google.maps.DirectionsStep>|undefined}
- * @deprecated Please use {@link google.maps.DirectionsStep.encoded_lat_lngs}.
- */
-google.maps.DirectionsStep.prototype.polyline;
-
-/**
  * The starting location of this step.
  * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.start_location;
-
-/**
- * The starting location of this step.
- * @type {!google.maps.LatLng}
- * @deprecated Please use {@link google.maps.DirectionsStep.start_location}.
- */
-google.maps.DirectionsStep.prototype.start_point;
 
 /**
  * Sub-steps of this step. Specified for non-transit sections of transit routes.
@@ -2209,6 +2187,38 @@ google.maps.DirectionsStep.prototype.transit_details;
 google.maps.DirectionsStep.prototype.travel_mode;
 
 /**
+ * The starting location of this step.
+ * @type {!google.maps.LatLng}
+ * @deprecated Please use {@link google.maps.DirectionsStep.start_location}.
+ */
+google.maps.DirectionsStep.prototype.start_point;
+
+/**
+ * The ending location of this step.
+ * @type {!google.maps.LatLng}
+ * @deprecated Please use {@link google.maps.DirectionsStep.end_location}.
+ */
+google.maps.DirectionsStep.prototype.end_point;
+
+/**
+ * A sequence of <code>LatLng</code>s describing the course of this step. This
+ * is an approximate (smoothed) path of the step.
+ * @type {!Array<!google.maps.LatLng>}
+ * @deprecated Please use {@link google.maps.DirectionsStep.path}.
+ */
+google.maps.DirectionsStep.prototype.lat_lngs;
+
+/**
+ * Contains an object with a single property, &#39;points&#39;, that holds an <a
+ * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
+ * polyline</a> representation of the step. This polyline is an approximate
+ * (smoothed) path of the step.
+ * @type {!Array<!google.maps.DirectionsStep>|undefined}
+ * @deprecated Please use {@link google.maps.DirectionsStep.encoded_lat_lngs}.
+ */
+google.maps.DirectionsStep.prototype.polyline;
+
+/**
  * A <code>DirectionsWaypoint</code> represents a location between origin and
  * destination through which the trip should be routed.
  * @record
@@ -2228,7 +2238,7 @@ google.maps.DirectionsWaypoint.prototype.location;
  * legs. If <code>false</code>, indicates that the route should be biased to go
  * through this waypoint, but not split into two legs. This is useful if you
  * want to create a route in response to the user dragging waypoints on a map.
- * This value is <code>true</code> by default. Optional.
+ * @default <code>true</code>
  * @type {boolean|undefined}
  */
 google.maps.DirectionsWaypoint.prototype.stopover;
@@ -2327,8 +2337,15 @@ google.maps.DistanceMatrixRequest.prototype.drivingOptions;
 google.maps.DistanceMatrixRequest.prototype.origins;
 
 /**
- * Region code used as a bias for geocoding requests. Optional.
- * @type {string|undefined}
+ * Region code used as a bias for geocoding requests. The region code accepts a
+ * <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
  */
 google.maps.DistanceMatrixRequest.prototype.region;
 
@@ -2640,6 +2657,202 @@ google.maps.ErrorEvent = function() {};
 google.maps.ErrorEvent.prototype.error;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * An interface representing a vector map tile feature. These are inputs to the
+ * <code>FeatureStyleFunction</code>. Do not save a reference to a particular
+ * <code>Feature</code> object because the reference will not be stable.
+ * @record
+ */
+google.maps.Feature = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * <code>FeatureType</code> of this <code>Feature</code>.
+ * @type {!google.maps.FeatureType}
+ */
+google.maps.Feature.prototype.featureType;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * An interface representing a map layer containing features of a
+ * specific {@link google.maps.FeatureType} whose style can be overridden
+ * client-side, or have events attached.
+ * @record
+ */
+google.maps.FeatureLayer = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The <code>FeatureType</code> associated with this <code>FeatureLayer</code>.
+ * @type {!google.maps.FeatureType}
+ */
+google.maps.FeatureLayer.prototype.featureType;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Whether this <code>FeatureLayer</code> is available, meaning whether
+ * Data-driven styling is available for this map (there is a map ID using vector
+ * tiles with this <code>FeatureLayer</code> enabled in the Google Cloud Console
+ * map style.) If this is false (or becomes false), styling on this
+ * <code>FeatureLayer</code> returns to default and events are not triggered.
+ * @type {boolean}
+ */
+google.maps.FeatureLayer.prototype.isAvailable;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The style of <code>Feature</code>s in the <code>FeatureLayer</code>. The
+ * style is applied when style is set. If your style function updates, you must
+ * set the style property again. A <code>FeatureStyleFunction</code> must return
+ * consistent results when it is applied over the map tiles, and should be
+ * optimized for performance. If you use a <code>FeatureStyleOptions</code>, all
+ * features of that layer will be styled with the same
+ * <code>FeatureStyleOptions</code>. Set the style to <code>null</code> to
+ * remove the previously set style. If this <code>FeatureLayer</code> is not
+ * available, setting style does nothing and logs an error.
+ * @type {?google.maps.FeatureStyleOptions|?google.maps.FeatureStyleFunction|undefined}
+ */
+google.maps.FeatureLayer.prototype.style;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Adds the given listener function to the given event name. Returns an
+ * identifier for this listener that can be used with {@link
+ * google.maps.event.removeListener}.
+ * @param {string} eventName Observed event.
+ * @param {!Function} handler Function to handle events.
+ * @return {!google.maps.MapsEventListener} Resulting event listener.
+ */
+google.maps.FeatureLayer.prototype.addListener = function(
+    eventName, handler) {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * This object is returned from a mouse event on a <code>FeatureLayer</code>.
+ * @extends {google.maps.MapMouseEvent}
+ * @record
+ */
+google.maps.FeatureMouseEvent = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The <code>Feature</code>s at this mouse event.
+ * @type {!Array<!google.maps.Feature>}
+ */
+google.maps.FeatureMouseEvent.prototype.features;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @typedef {function(!google.maps.FeatureStyleFunctionOptions):
+ * (?google.maps.FeatureStyleOptions|undefined)}
+ */
+google.maps.FeatureStyleFunction;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Options passed to a <code>FeatureStyleFunction</code>.
+ * @record
+ */
+google.maps.FeatureStyleFunctionOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * <code>Feature</code> passed into the <code>FeatureStyleFunction</code> for
+ * styling.
+ * @type {!google.maps.Feature}
+ */
+google.maps.FeatureStyleFunctionOptions.prototype.feature;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * These options specify the way the style of a <code>Feature</code> should be
+ * modified on a map.
+ * @record
+ */
+google.maps.FeatureStyleOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Hex RGB string (like &quot;#00FF00&quot; for green). Only applies to polygon
+ * geometries.
+ * @type {string|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.fillColor;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The fill opacity between 0.0 and 1.0. Only applies to polygon geometries.
+ * @type {number|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.fillOpacity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Hex RGB string (like &quot;#00FF00&quot; for green).
+ * @type {string|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.strokeColor;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The stroke opacity between 0.0 and 1.0. Only applies to line and polygon
+ * geometries.
+ * @type {number|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.strokeOpacity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The stroke width in pixels. Only applies to line and polygon geometries.
+ * @type {number|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.strokeWeight;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Identifiers for feature types.
+ * @enum {string}
+ */
+google.maps.FeatureType = {
+  /**
+   * Indicates a first-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_1: 'ADMINISTRATIVE_AREA_LEVEL_1',
+  /**
+   * Indicates a second-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_2: 'ADMINISTRATIVE_AREA_LEVEL_2',
+  /**
+   * Indicates a third-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_3: 'ADMINISTRATIVE_AREA_LEVEL_3',
+  /**
+   * Indicates a fourth-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_4: 'ADMINISTRATIVE_AREA_LEVEL_4',
+  /**
+   * Indicates the national political entity.
+   */
+  COUNTRY: 'COUNTRY',
+  /**
+   * Indicates an incorporated city or town political entity.
+   */
+  LOCALITY: 'LOCALITY',
+  /**
+   * Indicates a named neighborhood.
+   */
+  NEIGHBORHOOD: 'NEIGHBORHOOD',
+  /**
+   * Indicates a postal code as used to address postal mail within the country.
+   */
+  POSTAL_CODE: 'POSTAL_CODE',
+  /**
+   * Indicates a first-order civil entity below a locality.
+   */
+  SUBLOCALITY_LEVEL_1: 'SUBLOCALITY_LEVEL_1',
+};
+
+/**
  * Options for the rendering of the fullscreen control.
  * @record
  */
@@ -2927,7 +3140,7 @@ google.maps.GeocoderResult.prototype.plus_code;
 /**
  * An array of strings denoting all the localities contained in a postal code.
  * This is only present when the result is a postal code that contains multiple
- * localities. This array can contain up to 10 localities.
+ * localities.
  * @type {!Array<string>|undefined}
  */
 google.maps.GeocoderResult.prototype.postcode_localities;
@@ -3050,7 +3263,7 @@ google.maps.GroundOverlayOptions.prototype.map;
 
 /**
  * The opacity of the overlay, expressed as a number between 0 and 1. Optional.
- * Defaults to 1.
+ * @default <code>1.0</code>
  * @type {?number|undefined}
  */
 google.maps.GroundOverlayOptions.prototype.opacity;
@@ -3138,9 +3351,9 @@ google.maps.IconSequence = function() {};
 
 /**
  * If <code>true</code>, each icon in the sequence has the same fixed rotation
- * regardless of the angle of the edge on which it lies. Defaults to
- * <code>false</code>, in which case each icon in the sequence is rotated to
- * align with its edge.
+ * regardless of the angle of the edge on which it lies. If <code>false</code>,
+ * case each icon in the sequence is rotated to align with its edge.
+ * @default <code>false</code>
  * @type {boolean|undefined}
  */
 google.maps.IconSequence.prototype.fixedRotation;
@@ -3154,8 +3367,8 @@ google.maps.IconSequence.prototype.icon;
 /**
  * The distance from the start of the line at which an icon is to be rendered.
  * This distance may be expressed as a percentage of line&#39;s length (e.g.
- * &#39;50%&#39;) or in pixels (e.g. &#39;50px&#39;). Defaults to
- * &#39;100%&#39;.
+ * &#39;50%&#39;) or in pixels (e.g. &#39;50px&#39;).
+ * @default <code>&#39;100%&#39;</code>
  * @type {string|undefined}
  */
 google.maps.IconSequence.prototype.offset;
@@ -3164,7 +3377,8 @@ google.maps.IconSequence.prototype.offset;
  * The distance between consecutive icons on the line. This distance may be
  * expressed as a percentage of the line&#39;s length (e.g. &#39;50%&#39;) or in
  * pixels (e.g. &#39;50px&#39;). To disable repeating of the icon, specify
- * &#39;0&#39;. Defaults to &#39;0&#39;.
+ * &#39;0&#39;.
+ * @default <code>0</code>
  * @type {string|undefined}
  */
 google.maps.IconSequence.prototype.repeat;
@@ -3443,8 +3657,8 @@ google.maps.InfoWindowOptions.prototype.ariaLabel;
 google.maps.InfoWindowOptions.prototype.content;
 
 /**
- * Disable auto-pan on open. By default, the InfoWindow will pan the map so that
- * it is fully visible when it opens.
+ * Disable panning the map to make the InfoWindow fully visible when it opens.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.InfoWindowOptions.prototype.disableAutoPan;
@@ -3690,8 +3904,8 @@ google.maps.KmlLayerMetadata.prototype.snippet;
 google.maps.KmlLayerOptions = function() {};
 
 /**
- * If <code>true</code>, the layer receives mouse events. Default value is
- * <code>true</code>.
+ * If <code>true</code>, the layer receives mouse events.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.KmlLayerOptions.prototype.clickable;
@@ -3703,16 +3917,17 @@ google.maps.KmlLayerOptions.prototype.clickable;
 google.maps.KmlLayerOptions.prototype.map;
 
 /**
- * By default, the input map is centered and zoomed to the bounding box of the
- * contents of the layer. If this option is set to <code>true</code>, the
- * viewport is left unchanged, unless the map&#39;s center and zoom were never
- * set.
+ * If this option is set to <code>true</code> or if the map&#39;s center and
+ * zoom were never set, the input map is centered and zoomed to the bounding box
+ * of the contents of the layer.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.KmlLayerOptions.prototype.preserveViewport;
 
 /**
- * Whether to render the screen overlays. Default <code>true</code>.
+ * Whether to render the screen overlays.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.KmlLayerOptions.prototype.screenOverlays;
@@ -3948,7 +4163,8 @@ google.maps.LatLngAltitudeLiteral = function() {};
 
 /**
  * Distance (in meters) above the ground surface. Negative value means
- * underneath the ground surface. Defaults to 0.
+ * underneath the ground surface.
+ * @default <code>0</code>
  * @type {number}
  */
 google.maps.LatLngAltitudeLiteral.prototype.altitude;
@@ -4425,6 +4641,20 @@ google.maps.Map.prototype.getClickableIcons = function() {};
 google.maps.Map.prototype.getDiv = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Returns the <code>FeatureLayer</code> of the specific
+ * <code>FeatureType</code>. A <code>FeatureLayer</code> must be enabled in the
+ * Google Cloud Console. If a <code>FeatureLayer</code> of the specified
+ * <code>FeatureType</code> does not exist on this map, or if Data-driven
+ * styling is not available (no map ID, no vector tiles, and no
+ * <code>FeatureLayer</code> enabled in the map style), this logs an error, and
+ * the resulting <code>FeatureLayer.isAvailable</code> will be false.
+ * @param {!google.maps.FeatureType} featureType
+ * @return {!google.maps.FeatureLayer}
+ */
+google.maps.Map.prototype.getFeatureLayer = function(featureType) {};
+
+/**
  * Returns the compass heading of the map. The heading value is measured in
  * degrees (clockwise) from cardinal direction North. If the map is not yet
  * initialized then the result is <code>undefined</code>.
@@ -4712,7 +4942,8 @@ google.maps.MapOptions.prototype.center;
 
 /**
  * When <code>false</code>, map icons are not clickable. A map icon represents a
- * point of interest, also known as a POI. By default map icons are clickable.
+ * point of interest, also known as a POI.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.MapOptions.prototype.clickableIcons;
@@ -4745,16 +4976,6 @@ google.maps.MapOptions.prototype.disableDefaultUI;
  * @type {?boolean|undefined}
  */
 google.maps.MapOptions.prototype.disableDoubleClickZoom;
-
-/**
- * If <code>false</code>, prevents the map from being dragged. Dragging is
- * enabled by default.
- * @type {?boolean|undefined}
- * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
- *     the <code>gestureHandling</code> property, and set it to
- *     <code>"none"</code>.
- */
-google.maps.MapOptions.prototype.draggable;
 
 /**
  * The name or url of the cursor to display when mousing over a draggable map.
@@ -4814,11 +5035,11 @@ google.maps.MapOptions.prototype.gestureHandling;
 google.maps.MapOptions.prototype.heading;
 
 /**
- * Whether the map should allow fractional zoom levels. If not explicitly set to
- * <code>true</code> or <code>false</code>, by default vector maps will allow
- * fractional zoom and raster maps will not. Listen to
+ * Whether the map should allow fractional zoom levels. Listen to
  * <code>isfractionalzoomenabled_changed</code> to know when the default has
  * been set.
+ * @default <code>true</code> for vector maps and <code>false</code> for raster
+ * maps
  * @type {?boolean|undefined}
  */
 google.maps.MapOptions.prototype.isFractionalZoomEnabled;
@@ -5022,6 +5243,16 @@ google.maps.MapOptions.prototype.zoomControl;
 google.maps.MapOptions.prototype.zoomControlOptions;
 
 /**
+ * If <code>false</code>, prevents the map from being dragged. Dragging is
+ * enabled by default.
+ * @type {?boolean|undefined}
+ * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
+ *     the <code>gestureHandling</code> property, and set it to
+ *     <code>"none"</code>.
+ */
+google.maps.MapOptions.prototype.draggable;
+
+/**
  * @record
  */
 google.maps.MapPanes = function() {};
@@ -5171,8 +5402,8 @@ google.maps.MapTypeControlOptions = function() {};
 google.maps.MapTypeControlOptions.prototype.mapTypeIds;
 
 /**
- * Position id. Used to specify the position of the control on the map. The
- * default position is <code>TOP_RIGHT</code>.
+ * Position id. Used to specify the position of the control on the map.
+ * @default {@link google.maps.ControlPosition.TOP_RIGHT}
  * @type {?google.maps.ControlPosition|undefined}
  */
 google.maps.MapTypeControlOptions.prototype.position;
@@ -5306,6 +5537,133 @@ google.maps.MapsEventListener = function() {};
 google.maps.MapsEventListener.prototype.remove = function() {};
 
 /**
+ * Base class for managing network errors in Maps.
+ * @extends {Error}
+ * @constructor
+ */
+google.maps.MapsNetworkError = function() {};
+
+/**
+ * Identifies the type of error produced by the API.
+ * @type {!google.maps.DirectionsStatus|!google.maps.DistanceMatrixStatus|!google.maps.ElevationStatus|!google.maps.GeocoderStatus|!google.maps.MaxZoomStatus|!google.maps.places.PlacesServiceStatus|!google.maps.StreetViewStatus}
+ */
+google.maps.MapsNetworkError.prototype.code;
+
+/**
+ * Represents the network service that responded with the error.
+ * @type {!google.maps.MapsNetworkErrorEndpoint}
+ */
+google.maps.MapsNetworkError.prototype.endpoint;
+
+/**
+ * Identifiers for API endpoints used by {@link google.maps.MapsNetworkError}
+ * instances.
+ * @enum {string}
+ */
+google.maps.MapsNetworkErrorEndpoint = {
+  /**
+   * Identifies the Routes API within the Directions API.
+   */
+  DIRECTIONS_ROUTE: 'DIRECTIONS_ROUTE',
+  /**
+   * Identifies the DistanceMatrix API.
+   */
+  DISTANCE_MATRIX: 'DISTANCE_MATRIX',
+  /**
+   * Identifies the getElevationsAlongPath API within the Elevation API.
+   */
+  ELEVATION_ALONG_PATH: 'ELEVATION_ALONG_PATH',
+  /**
+   * Identifies the getElevationForLocations API within the Elevation API.
+   */
+  ELEVATION_LOCATIONS: 'ELEVATION_LOCATIONS',
+  /**
+   * Identifies the Get DeliveryVehicle API within Fleet Engine.
+   */
+  FLEET_ENGINE_GET_DELIVERY_VEHICLE: 'FLEET_ENGINE_GET_DELIVERY_VEHICLE',
+  /**
+   * Identifies the Get Trip API within Fleet Engine.
+   */
+  FLEET_ENGINE_GET_TRIP: 'FLEET_ENGINE_GET_TRIP',
+  /**
+   * Identifies the Get Vehicle API within Fleet Engine.
+   */
+  FLEET_ENGINE_GET_VEHICLE: 'FLEET_ENGINE_GET_VEHICLE',
+  /**
+   * Identifies the List DeliveryVehicles API within Fleet Engine.
+   */
+  FLEET_ENGINE_LIST_DELIVERY_VEHICLES: 'FLEET_ENGINE_LIST_DELIVERY_VEHICLES',
+  /**
+   * Identifies the List Tasks API within Fleet Engine.
+   */
+  FLEET_ENGINE_LIST_TASKS: 'FLEET_ENGINE_LIST_TASKS',
+  /**
+   * Identifies the List Vehicles API within Fleet Engine.
+   */
+  FLEET_ENGINE_LIST_VEHICLES: 'FLEET_ENGINE_LIST_VEHICLES',
+  /**
+   * Identifies the Search Tasks API within Fleet Engine.
+   */
+  FLEET_ENGINE_SEARCH_TASKS: 'FLEET_ENGINE_SEARCH_TASKS',
+  /**
+   * Identifies the geocode API within the Geocoder.
+   */
+  GEOCODER_GEOCODE: 'GEOCODER_GEOCODE',
+  /**
+   * Identifies the MaximumZoomImageryService API within the Maps API.
+   */
+  MAPS_MAX_ZOOM: 'MAPS_MAX_ZOOM',
+  /**
+   * Identifies the Autocomplete API within the Places API.
+   */
+  PLACES_AUTOCOMPLETE: 'PLACES_AUTOCOMPLETE',
+  /**
+   * Identifies the Details API within the Places API.
+   */
+  PLACES_DETAILS: 'PLACES_DETAILS',
+  /**
+   * Identifies the findPlaceFromPhoneNumber API within the Places API.
+   */
+  PLACES_FIND_PLACE_FROM_PHONE_NUMBER: 'PLACES_FIND_PLACE_FROM_PHONE_NUMBER',
+  /**
+   * Identifies the findPlaceFromQuery API within the Places API.
+   */
+  PLACES_FIND_PLACE_FROM_QUERY: 'PLACES_FIND_PLACE_FROM_QUERY',
+  /**
+   * Identifies the Gateway API within the Places API.
+   */
+  PLACES_GATEWAY: 'PLACES_GATEWAY',
+  /**
+   * Identifies the LocalContextSearch API within the Places API.
+   */
+  PLACES_LOCAL_CONTEXT_SEARCH: 'PLACES_LOCAL_CONTEXT_SEARCH',
+  /**
+   * Identifies the NearbySearch API within the Places API.
+   */
+  PLACES_NEARBY_SEARCH: 'PLACES_NEARBY_SEARCH',
+  /**
+   * Identifies the getPanorama method within the Streetview service.
+   */
+  STREETVIEW_GET_PANORAMA: 'STREETVIEW_GET_PANORAMA',
+};
+
+/**
+ * Represents a request error from a web service (i.e. the equivalent of a 4xx
+ * code in HTTP).
+ * @extends {google.maps.MapsNetworkError}
+ * @constructor
+ */
+google.maps.MapsRequestError = function() {};
+
+/**
+ * Represents a server-side error from a web service (i.e. the equivalent of a
+ * 5xx code in HTTP).
+ * @extends {google.maps.MapsNetworkError}
+ * @constructor
+ */
+google.maps.MapsServerError = function() {};
+
+/**
  * @param {google.maps.MarkerOptions=} opts Named optional arguments
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -5346,7 +5704,7 @@ google.maps.Marker.prototype.getIcon = function() {};
 /**
  * Get the label of the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.label}.
- * @return {?google.maps.MarkerLabel|undefined}
+ * @return {?google.maps.MarkerLabel|string|undefined}
  */
 google.maps.Marker.prototype.getLabel = function() {};
 
@@ -5526,19 +5884,20 @@ google.maps.MarkerLabel = function() {};
 /**
  * The className property of the label&#39;s element (equivalent to the
  * element&#39;s class attribute). Multiple space-separated CSS classes can be
- * added. Default is no CSS class (an empty string). The font color, size,
- * weight, and family can only be set via the other properties of
- * <code>MarkerLabel</code>. CSS classes should not be used to change the
- * position nor orientation of the label (e.g. using translations and rotations)
- * if also using <a
+ * added. The font color, size, weight, and family can only be set via the other
+ * properties of <code>MarkerLabel</code>. CSS classes should not be used to
+ * change the position nor orientation of the label (e.g. using translations and
+ * rotations) if also using <a
  * href="https://developers.google.com/maps/documentation/javascript/examples/marker-collision-management">marker
  * collision management</a>.
+ * @default <code>&#39;&#39;</code> (empty string)
  * @type {string|undefined}
  */
 google.maps.MarkerLabel.prototype.className;
 
 /**
- * The color of the label text. Default color is black.
+ * The color of the label text.
+ * @default <code>&#39;black&#39;</code>
  * @type {string|undefined}
  */
 google.maps.MarkerLabel.prototype.color;
@@ -5552,7 +5911,7 @@ google.maps.MarkerLabel.prototype.fontFamily;
 
 /**
  * The font size of the label text (equivalent to the CSS font-size property).
- * Default size is 14px.
+ * @default <code>&#39;14px&#39;</code>
  * @type {string|undefined}
  */
 google.maps.MarkerLabel.prototype.fontSize;
@@ -5586,13 +5945,14 @@ google.maps.MarkerOptions.prototype.anchorPoint;
 
 /**
  * Which animation to play when marker is added to a map.
+ * @default <code>null</code>
  * @type {?google.maps.Animation|undefined}
  */
 google.maps.MarkerOptions.prototype.animation;
 
 /**
- * If <code>true</code>, the marker receives mouse and touch events. Default
- * value is <code>true</code>.
+ * If <code>true</code>, the marker receives mouse and touch events.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.MarkerOptions.prototype.clickable;
@@ -5600,26 +5960,29 @@ google.maps.MarkerOptions.prototype.clickable;
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Set a collision behavior for markers on vector maps.
+ * @default <code>null</code>
  * @type {?string|?google.maps.CollisionBehavior|undefined}
  */
 google.maps.MarkerOptions.prototype.collisionBehavior;
 
 /**
  * If <code>false</code>, disables cross that appears beneath the marker when
- * dragging. This option is <code>true</code> by default.
+ * dragging.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.MarkerOptions.prototype.crossOnDrag;
 
 /**
  * Mouse cursor type to show on hover.
+ * @default <code>pointer</code>
  * @type {?string|undefined}
  */
 google.maps.MarkerOptions.prototype.cursor;
 
 /**
- * If <code>true</code>, the marker can be dragged. Default value is
- * <code>false</code>.
+ * If <code>true</code>, the marker can be dragged.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.MarkerOptions.prototype.draggable;
@@ -5639,6 +6002,7 @@ google.maps.MarkerOptions.prototype.icon;
  * for use with screen readers) will be added to the marker with the provided
  * label&#39;s text. Please note that the <code>label</code> is currently only
  * used for accessibility text for non-optimized markers.
+ * @default <code>null</code>
  * @type {?string|?google.maps.MarkerLabel|undefined}
  */
 google.maps.MarkerOptions.prototype.label;
@@ -5653,6 +6017,7 @@ google.maps.MarkerOptions.prototype.map;
 
 /**
  * A number between 0.0, transparent, and 1.0, opaque.
+ * @default 1.0
  * @type {?number|undefined}
  */
 google.maps.MarkerOptions.prototype.opacity;
@@ -5687,12 +6052,14 @@ google.maps.MarkerOptions.prototype.shape;
  * readers) will be added to the marker with the provided value. Please note
  * that the <code>title</code> is currently only used for accessibility text for
  * non-optimized markers.
+ * @default <code>undefined</code>
  * @type {?string|undefined}
  */
 google.maps.MarkerOptions.prototype.title;
 
 /**
  * If <code>true</code>, the marker is visible.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.MarkerOptions.prototype.visible;
@@ -5942,8 +6309,8 @@ google.maps.Padding.prototype.top;
 google.maps.PanControlOptions = function() {};
 
 /**
- * Position id. Used to specify the position of the control on the map. The
- * default position is <code>TOP_LEFT</code>.
+ * Position id. Used to specify the position of the control on the map.
+ * @default {@link google.maps.ControlPosition.TOP_LEFT}
  * @type {?google.maps.ControlPosition|undefined}
  */
 google.maps.PanControlOptions.prototype.position;
@@ -6044,6 +6411,37 @@ google.maps.Place.prototype.placeId;
  * @type {string|undefined}
  */
 google.maps.Place.prototype.query;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * An interface representing a feature with a place ID which includes features
+ * of type {@link google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_1}, {@link
+ * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_2}, {@link
+ * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_3}, {@link
+ * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_4}, {@link
+ * google.maps.FeatureType.COUNTRY}, {@link
+ * google.maps.FeatureType.LOCALITY}, {@link
+ * google.maps.FeatureType.NEIGHBORHOOD}, {@link
+ * google.maps.FeatureType.POSTAL_CODE}, and {@link
+ * google.maps.FeatureType.SUBLOCALITY_LEVEL_1}.
+ * @extends {google.maps.Feature}
+ * @record
+ */
+google.maps.PlaceFeature = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The display name.
+ * @type {string}
+ */
+google.maps.PlaceFeature.prototype.displayName;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The {@link google.maps.places.PlaceResult.place_id}.
+ * @type {string}
+ */
+google.maps.PlaceFeature.prototype.placeId;
 
 /**
  * @param {number} x
@@ -6224,24 +6622,24 @@ google.maps.Polygon.prototype.setVisible = function(visible) {};
 google.maps.PolygonOptions = function() {};
 
 /**
- * Indicates whether this <code>Polygon</code> handles mouse events. Defaults to
- * <code>true</code>.
+ * Indicates whether this <code>Polygon</code> handles mouse events.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolygonOptions.prototype.clickable;
 
 /**
  * If set to <code>true</code>, the user can drag this shape over the map. The
- * <code>geodesic</code> property defines the mode of dragging. Defaults to
- * <code>false</code>.
+ * <code>geodesic</code> property defines the mode of dragging.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolygonOptions.prototype.draggable;
 
 /**
  * If set to <code>true</code>, the user can edit this shape by dragging the
- * control points shown at the vertices and on each segment. Defaults to
- * <code>false</code>.
+ * control points shown at the vertices and on each segment.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolygonOptions.prototype.editable;
@@ -6264,8 +6662,8 @@ google.maps.PolygonOptions.prototype.fillOpacity;
  * will follow the curvature of the Earth. When <code>false</code>, edges of the
  * polygon are rendered as straight lines in screen space. Note that the shape
  * of a geodesic polygon may appear to change when dragged, as the dimensions
- * are maintained relative to the surface of the earth. Defaults to
- * <code>false</code>.
+ * are maintained relative to the surface of the earth.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolygonOptions.prototype.geodesic;
@@ -6305,7 +6703,8 @@ google.maps.PolygonOptions.prototype.strokeColor;
 google.maps.PolygonOptions.prototype.strokeOpacity;
 
 /**
- * The stroke position. Defaults to <code>CENTER</code>.
+ * The stroke position.
+ * @default {@link google.maps.StrokePosition.CENTER}
  * @type {?google.maps.StrokePosition|undefined}
  */
 google.maps.PolygonOptions.prototype.strokePosition;
@@ -6317,7 +6716,8 @@ google.maps.PolygonOptions.prototype.strokePosition;
 google.maps.PolygonOptions.prototype.strokeWeight;
 
 /**
- * Whether this polygon is visible on the map. Defaults to <code>true</code>.
+ * Whether this polygon is visible on the map.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolygonOptions.prototype.visible;
@@ -6420,24 +6820,24 @@ google.maps.Polyline.prototype.setVisible = function(visible) {};
 google.maps.PolylineOptions = function() {};
 
 /**
- * Indicates whether this <code>Polyline</code> handles mouse events. Defaults
- * to <code>true</code>.
+ * Indicates whether this <code>Polyline</code> handles mouse events.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolylineOptions.prototype.clickable;
 
 /**
  * If set to <code>true</code>, the user can drag this shape over the map. The
- * <code>geodesic</code> property defines the mode of dragging. Defaults to
- * <code>false</code>.
+ * <code>geodesic</code> property defines the mode of dragging.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolylineOptions.prototype.draggable;
 
 /**
  * If set to <code>true</code>, the user can edit this shape by dragging the
- * control points shown at the vertices and on each segment. Defaults to
- * <code>false</code>.
+ * control points shown at the vertices and on each segment.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolylineOptions.prototype.editable;
@@ -6447,8 +6847,8 @@ google.maps.PolylineOptions.prototype.editable;
  * will follow the curvature of the Earth. When <code>false</code>, edges of the
  * polygon are rendered as straight lines in screen space. Note that the shape
  * of a geodesic polygon may appear to change when dragged, as the dimensions
- * are maintained relative to the surface of the earth. Defaults to
- * <code>false</code>.
+ * are maintained relative to the surface of the earth.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolylineOptions.prototype.geodesic;
@@ -6496,7 +6896,8 @@ google.maps.PolylineOptions.prototype.strokeOpacity;
 google.maps.PolylineOptions.prototype.strokeWeight;
 
 /**
- * Whether this polyline is visible on the map. Defaults to <code>true</code>.
+ * Whether this polyline is visible on the map.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.PolylineOptions.prototype.visible;
@@ -6634,23 +7035,23 @@ google.maps.RectangleOptions = function() {};
 google.maps.RectangleOptions.prototype.bounds;
 
 /**
- * Indicates whether this <code>Rectangle</code> handles mouse events. Defaults
- * to <code>true</code>.
+ * Indicates whether this <code>Rectangle</code> handles mouse events.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.RectangleOptions.prototype.clickable;
 
 /**
  * If set to <code>true</code>, the user can drag this rectangle over the map.
- * Defaults to <code>false</code>.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.RectangleOptions.prototype.draggable;
 
 /**
  * If set to <code>true</code>, the user can edit this rectangle by dragging the
- * control points shown at the corners and on each edge. Defaults to
- * <code>false</code>.
+ * control points shown at the corners and on each edge.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.RectangleOptions.prototype.editable;
@@ -6688,8 +7089,8 @@ google.maps.RectangleOptions.prototype.strokeColor;
 google.maps.RectangleOptions.prototype.strokeOpacity;
 
 /**
- * The stroke position. Defaults to CENTER. This property is not supported on
- * Internet Explorer 8 and earlier.
+ * The stroke position.
+ * @default {@link google.maps.StrokePosition.CENTER}
  * @type {?google.maps.StrokePosition|undefined}
  */
 google.maps.RectangleOptions.prototype.strokePosition;
@@ -6701,7 +7102,8 @@ google.maps.RectangleOptions.prototype.strokePosition;
 google.maps.RectangleOptions.prototype.strokeWeight;
 
 /**
- * Whether this rectangle is visible on the map. Defaults to <code>true</code>.
+ * Whether this rectangle is visible on the map.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.RectangleOptions.prototype.visible;
@@ -6959,16 +7361,16 @@ google.maps.StreetViewLocationRequest.prototype.location;
 google.maps.StreetViewLocationRequest.prototype.preference;
 
 /**
- * Sets a radius in meters in which to search for a panorama. Defaults to 50
- * when not supplied.
+ * Sets a radius in meters in which to search for a panorama.
+ * @default <code>50</code>
  * @type {?number|undefined}
  */
 google.maps.StreetViewLocationRequest.prototype.radius;
 
 /**
  * Specifies the source of panoramas to search. This allows a restriction to
- * search for just outdoor panoramas for example. If not specified it is set to
- * <code>DEFAULT</code>.
+ * search for just outdoor panoramas for example.
+ * @default {@link google.maps.StreetViewSource.DEFAULT}
  * @type {?google.maps.StreetViewSource|undefined}
  */
 google.maps.StreetViewLocationRequest.prototype.source;
@@ -7006,6 +7408,15 @@ google.maps.StreetViewPanorama = function(container, opts) {};
  * @type {!Array<!google.maps.MVCArray<!HTMLElement>>}
  */
 google.maps.StreetViewPanorama.prototype.controls;
+
+/**
+ * Sets focus on this <code>StreetViewPanorama</code>. You may wish to consider
+ * using this method along with a <code>visible_changed</code> event to make
+ * sure that <code>StreetViewPanorama</code> is visible before setting focus on
+ * it. A <code>StreetViewPanorama</code> that is not visible cannot be focused.
+ * @return {undefined}
+ */
+google.maps.StreetViewPanorama.prototype.focus = function() {};
 
 /**
  * Returns the set of navigation links for the Street View panorama.
@@ -7227,13 +7638,15 @@ google.maps.StreetViewPanoramaOptions.prototype.controlSize;
 google.maps.StreetViewPanoramaOptions.prototype.disableDefaultUI;
 
 /**
- * Enables/disables zoom on double click. Disabled by default.
+ * Enables/disables zoom on double click.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.disableDoubleClickZoom;
 
 /**
- * If <code>true</code>, the close button is displayed. Disabled by default.
+ * If <code>true</code>, the close button is displayed.
+ * @default <code>false</code>
  * @type {?boolean|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.enableCloseButton;
@@ -7265,12 +7678,18 @@ google.maps.StreetViewPanoramaOptions.prototype.linksControl;
 
 /**
  * Whether motion tracking is on or off. Enabled by default when the motion
- * tracking control is present, so that the POV (point of view) follows the
- * orientation of the device. This is primarily applicable to mobile devices. If
+ * tracking control is present and permission is granted by a user or not
+ * required, so that the POV (point of view) follows the orientation of the
+ * device. This is primarily applicable to mobile devices. If
  * <code>motionTracking</code> is set to <code>false</code> while
  * <code>motionTrackingControl</code> is enabled, the motion tracking control
  * appears but tracking is off. The user can tap the motion tracking control to
- * toggle this option.
+ * toggle this option. If <code>motionTracking</code> is set to
+ * <code>true</code> while permission is required but not yet requested, the
+ * motion tracking control appears but tracking is off. The user can tap the
+ * motion tracking control to request permission. If <code>motionTracking</code>
+ * is set to <code>true</code> while permission is denied by a user, the motion
+ * tracking control appears disabled with tracking turned off.
  * @type {?boolean|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.motionTracking;
@@ -7320,8 +7739,8 @@ google.maps.StreetViewPanoramaOptions.prototype.position;
 google.maps.StreetViewPanoramaOptions.prototype.pov;
 
 /**
- * If <code>false</code>, disables scrollwheel zooming in Street View. The
- * scrollwheel is enabled by default.
+ * If <code>false</code>, disables scrollwheel zooming in Street View.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.scrollwheel;
@@ -7650,9 +8069,9 @@ google.maps.Symbol = function() {};
 /**
  * The position of the symbol relative to the marker or polyline. The
  * coordinates of the symbol&#39;s path are translated left and up by the
- * anchor&#39;s x and y coordinates respectively. By default, a symbol is
- * anchored at <code>(0, 0)</code>. The position is expressed in the same
- * coordinate system as the symbol&#39;s path.
+ * anchor&#39;s x and y coordinates respectively. The position is expressed in
+ * the same coordinate system as the symbol&#39;s path.
+ * @default <code>google.maps.Point(0,0)</code>
  * @type {?google.maps.Point|undefined}
  */
 google.maps.Symbol.prototype.anchor;
@@ -7667,16 +8086,17 @@ google.maps.Symbol.prototype.anchor;
 google.maps.Symbol.prototype.fillColor;
 
 /**
- * The symbol&#39;s fill opacity. Defaults to 0.
+ * The symbol&#39;s fill opacity.
+ * @default <code>0</code>
  * @type {?number|undefined}
  */
 google.maps.Symbol.prototype.fillOpacity;
 
 /**
  * The origin of the label relative to the origin of the path, if label is
- * supplied by the marker. By default, the origin is located at <code>(0,
- * 0)</code>. The origin is expressed in the same coordinate system as the
- * symbol&#39;s path. This property is unused for symbols on polylines.
+ * supplied by the marker. The origin is expressed in the same coordinate system
+ * as the symbol&#39;s path. This property is unused for symbols on polylines.
+ * @default <code>google.maps.Point(0,0)</code>
  * @type {?google.maps.Point|undefined}
  */
 google.maps.Symbol.prototype.labelOrigin;
@@ -7690,10 +8110,11 @@ google.maps.Symbol.prototype.labelOrigin;
 google.maps.Symbol.prototype.path;
 
 /**
- * The angle by which to rotate the symbol, expressed clockwise in degrees.
- * Defaults to 0. A symbol in an <code>IconSequence</code> where
- * <code>fixedRotation</code> is <code>false</code> is rotated relative to the
- * angle of the edge on which it lies.
+ * The angle by which to rotate the symbol, expressed clockwise in degrees. A
+ * symbol in an <code>IconSequence</code> where <code>fixedRotation</code> is
+ * <code>false</code> is rotated relative to the angle of the edge on which it
+ * lies.
+ * @default <code>0</code>
  * @type {?number|undefined}
  */
 google.maps.Symbol.prototype.rotation;
@@ -7724,8 +8145,8 @@ google.maps.Symbol.prototype.strokeColor;
 google.maps.Symbol.prototype.strokeOpacity;
 
 /**
- * The symbol&#39;s stroke weight. Defaults to the <code>scale</code> of the
- * symbol.
+ * The symbol&#39;s stroke weight.
+ * @default The {@link google.maps.Symbol.scale} of the symbol.
  * @type {?number|undefined}
  */
 google.maps.Symbol.prototype.strokeWeight;
@@ -7821,7 +8242,7 @@ google.maps.TrafficLayerOptions = function() {};
 
 /**
  * Whether the traffic layer refreshes with updated information automatically.
- * This is <code>true</code> by default.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.TrafficLayerOptions.prototype.autoRefresh;
@@ -8504,15 +8925,19 @@ google.maps.drawing.DrawingControlOptions = function() {};
  * The drawing modes to display in the drawing control, in the order in which
  * they are to be displayed. The hand icon (which corresponds to the
  * <code>null</code> drawing mode) is always available and is not to be
- * specified in this array. Defaults to <code>['marker', 'polyline',
- * 'rectangle', 'circle', 'polygon']</code>.
+ * specified in this array.
+ * @default <code>[{@link google.maps.drawing.OverlayType.MARKER}, {@link
+ * google.maps.drawing.OverlayType.POLYLINE}, {@link
+ * google.maps.drawing.OverlayType.RECTANGLE}, {@link
+ * google.maps.drawing.OverlayType.CIRCLE}, {@link
+ * google.maps.drawing.OverlayType.POLYGON}]</code>
  * @type {?Array<!google.maps.drawing.OverlayType>|undefined}
  */
 google.maps.drawing.DrawingControlOptions.prototype.drawingModes;
 
 /**
- * Position id. Used to specify the position of the control on the map. The
- * default position is <code>TOP_LEFT</code>.
+ * Position id. Used to specify the position of the control on the map.
+ * @default {@link google.maps.ControlPosition.TOP_LEFT}
  * @type {?google.maps.ControlPosition|undefined}
  */
 google.maps.drawing.DrawingControlOptions.prototype.position;
@@ -8586,8 +9011,8 @@ google.maps.drawing.DrawingManagerOptions = function() {};
 google.maps.drawing.DrawingManagerOptions.prototype.circleOptions;
 
 /**
- * The enabled/disabled state of the drawing control. Defaults to
- * <code>true</code>.
+ * The enabled/disabled state of the drawing control.
+ * @default <code>true</code>
  * @type {?boolean|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.drawingControl;
@@ -8711,40 +9136,6 @@ google.maps.drawing.OverlayType = {
 google.maps.event = {};
 
 /**
- * Cross browser event handler registration. This listener is removed by calling
- * removeListener(handle) for the handle that is returned by this function.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
- *     use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListener = function(
-    instance, eventName, handler, capture) {};
-
-/**
- * Wrapper around addDomListener that removes the listener after the first
- * event.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
- *     deprecated, use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListenerOnce = function(
-    instance, eventName, handler, capture) {};
-
-/**
  * Adds the given listener function to the given event name for the given object
  * instance. Returns an identifier for this listener that can be used with
  * removeListener().
@@ -8808,6 +9199,40 @@ google.maps.event.removeListener = function(listener) {};
 google.maps.event.trigger = function(instance, eventName, eventArgs) {};
 
 /**
+ * Cross browser event handler registration. This listener is removed by calling
+ * removeListener(handle) for the handle that is returned by this function.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {boolean=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
+ *     use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListener = function(
+    instance, eventName, handler, capture) {};
+
+/**
+ * Wrapper around addDomListener that removes the listener after the first
+ * event.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {boolean=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
+ *     deprecated, use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListenerOnce = function(
+    instance, eventName, handler, capture) {};
+
+/**
  * @const
  */
 google.maps.geometry = {};
@@ -8869,9 +9294,9 @@ google.maps.geometry.poly.isLocationOnEdge = function(
 google.maps.geometry.spherical = {};
 
 /**
- * Returns the area of a closed path. The computed area uses the same units as
- * the radius. The radius defaults to the Earth&#39;s radius in meters, in which
- * case the area is in square meters.
+ * Returns the unsigned area of a closed path, in the range [0, -2×pi×radius²].
+ * The computed area uses the same units as the radius. The radius defaults to
+ * the Earth&#39;s radius in meters, in which case the area is in square meters.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|!google.maps.MVCArray<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     path
  * @param {number=} radius
@@ -8935,10 +9360,17 @@ google.maps.geometry.spherical.computeOffsetOrigin = function(
     to, distance, heading, radius) {};
 
 /**
- * Returns the signed area of a closed path. The signed area may be used to
- * determine the orientation of the path. The computed area uses the same units
- * as the radius. The radius defaults to the Earth&#39;s radius in meters, in
- * which case the area is in square meters.
+ * Returns the signed area of a closed path, where counterclockwise is positive,
+ * in the range [-2×pi×radius², 2×pi×radius²]. The computed area uses the same
+ * units as the radius. The radius defaults to the Earth&#39;s radius in meters,
+ * in which case the area is in square meters. <br><br> The area is computed
+ * using the <a href="https://wikipedia.org/wiki/Parallel_transport">parallel
+ * transport</a> method; the parallel transport around a closed path on the unit
+ * sphere twists by an angle that is equal to the area enclosed by the path.
+ * This is simpler and more accurate and robust than triangulation using Girard,
+ * l&#39;Huilier, or Eriksson on each triangle. In particular, since it
+ * doesn&#39;t triangulate, it suffers no instability except in the unavoidable
+ * case when an <em>edge</em> (not a diagonal) of the polygon spans 180 degrees.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|!google.maps.MVCArray<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     loop
  * @param {number=} radius
@@ -9354,7 +9786,11 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
     .prototype.authTokenFetcher;
 
 /**
- * The delivery vehicle ID to track initially.
+ * The delivery vehicle ID to track immediately after the location provider is
+ * instantiated. If not specified, the location provider does not start tracking
+ * any vehicle; use {@link
+ * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProvider.deliveryVehicleId}
+ * to set the ID and begin tracking.
  * @type {?string}
  */
 google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
@@ -9542,8 +9978,12 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
     .projectId;
 
 /**
- * The tracking ID to track initially.
- * @type {string}
+ * The tracking ID of the task to track immediately after the location provider
+ * is instantiated. If not specified, the location provider does not start
+ * tracking any task; use {@link
+ * google.maps.journeySharing.FleetEngineShipmentLocationProvider.trackingId} to
+ * set the tracking ID and begin tracking.
+ * @type {?string}
  */
 google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
     .trackingId;
@@ -9656,8 +10096,11 @@ google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .projectId;
 
 /**
- * The trip ID to track initially.
- * @type {string}
+ * The trip ID to track immediately after the location provider is instantiated.
+ * If not specified, the location provider does not start tracking any trip;
+ * use {@link google.maps.journeySharing.FleetEngineTripLocationProvider.tripId}
+ * to set the ID and begin tracking.
+ * @type {?string}
  */
 google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .tripId;
@@ -10487,7 +10930,7 @@ google.maps.journeySharing.VehicleLocationUpdate.prototype
     .speedKilometersPerHour;
 
 /**
- * The update time.
+ * The time this update was received from the vehicle.
  * @type {?Date}
  */
 google.maps.journeySharing.VehicleLocationUpdate.prototype.time;
@@ -10647,8 +11090,8 @@ google.maps.localContext.LocalContextMapViewOptions.prototype.directionsOptions;
 google.maps.localContext.LocalContextMapViewOptions.prototype.element;
 
 /**
- * A soft boundary or hint to use when searching for places. Defaults to no
- * bias.
+ * A soft boundary or hint to use when searching for places.
+ * @default <code>null</code>
  * @type {?google.maps.places.LocationBias|undefined}
  */
 google.maps.localContext.LocalContextMapViewOptions.prototype.locationBias;
@@ -11027,19 +11470,6 @@ google.maps.places.AutocompleteOptions.prototype.componentRestrictions;
 google.maps.places.AutocompleteOptions.prototype.fields;
 
 /**
- * Whether to retrieve only Place IDs. The PlaceResult made available when the
- * place_changed event is fired will only have the place_id, types and name
- * fields, with the place_id, types and description returned by the Autocomplete
- * service. Disabled by default.
- * @type {boolean|undefined}
- * @deprecated <code>placeIdOnly</code> is deprecated as of January 15, 2019,
- *     and will be turned off on January 15, 2020. Use {@link
- *     google.maps.places.AutocompleteOptions.fields} instead: <code>fields:
- *     [&#39;place_id&#39;, &#39;name&#39;, &#39;types&#39;]</code>.
- */
-google.maps.places.AutocompleteOptions.prototype.placeIdOnly;
-
-/**
  * A boolean value, indicating that the Autocomplete widget should only return
  * those places that are inside the bounds of the Autocomplete widget at the
  * time the query is sent. Setting strictBounds to <code>false</code> (which is
@@ -11057,6 +11487,19 @@ google.maps.places.AutocompleteOptions.prototype.strictBounds;
  * @type {!Array<string>|undefined}
  */
 google.maps.places.AutocompleteOptions.prototype.types;
+
+/**
+ * Whether to retrieve only Place IDs. The PlaceResult made available when the
+ * place_changed event is fired will only have the place_id, types and name
+ * fields, with the place_id, types and description returned by the Autocomplete
+ * service. Disabled by default.
+ * @type {boolean|undefined}
+ * @deprecated <code>placeIdOnly</code> is deprecated as of January 15, 2019,
+ *     and will be turned off on January 15, 2020. Use {@link
+ *     google.maps.places.AutocompleteOptions.fields} instead: <code>fields:
+ *     [&#39;place_id&#39;, &#39;name&#39;, &#39;types&#39;]</code>.
+ */
+google.maps.places.AutocompleteOptions.prototype.placeIdOnly;
 
 /**
  * Represents a single autocomplete prediction.
@@ -11205,6 +11648,18 @@ google.maps.places.AutocompletionRequest.prototype.componentRestrictions;
 google.maps.places.AutocompletionRequest.prototype.input;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A language identifier for the language in which the results should be
+ * returned, if possible. Results in the selected language may be given a higher
+ * ranking, but suggestions are not restricted to this language. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>. Google often updates the supported languages, so
+ * this list may not be exhaustive.
+ * @type {?string|undefined}
+ */
+google.maps.places.AutocompletionRequest.prototype.language;
+
+/**
  * Location for prediction biasing. Predictions will be biased towards the given
  * <code>location</code> and <code>radius</code>. Alternatively,
  * <code>bounds</code> can be used.
@@ -11235,6 +11690,21 @@ google.maps.places.AutocompletionRequest.prototype.origin;
  * @type {number|undefined}
  */
 google.maps.places.AutocompletionRequest.prototype.radius;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A region code which is used for result formatting and for result filtering.
+ * It does not restrict the suggestions to this country. The region code accepts
+ * a <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
+ */
+google.maps.places.AutocompletionRequest.prototype.region;
 
 /**
  * Unique reference used to bundle individual requests into sessions.
@@ -11310,6 +11780,17 @@ google.maps.places.FindPlaceFromPhoneNumberRequest = function() {};
 google.maps.places.FindPlaceFromPhoneNumberRequest.prototype.fields;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A language identifier for the language in which names and addresses should be
+ * returned, when possible. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>. Google often updates the supported languages, so
+ * this list may not be exhaustive.
+ * @type {?string|undefined}
+ */
+google.maps.places.FindPlaceFromPhoneNumberRequest.prototype.language;
+
+/**
  * The bias used when searching for Place. The result will be biased towards,
  * but not restricted to, the given {@link google.maps.places.LocationBias}.
  * @type {!google.maps.places.LocationBias|undefined}
@@ -11341,6 +11822,17 @@ google.maps.places.FindPlaceFromQueryRequest = function() {};
  * @type {!Array<string>}
  */
 google.maps.places.FindPlaceFromQueryRequest.prototype.fields;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A language identifier for the language in which names and addresses should be
+ * returned, when possible. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>. Google often updates the supported languages, so
+ * this list may not be exhaustive.
+ * @type {?string|undefined}
+ */
+google.maps.places.FindPlaceFromQueryRequest.prototype.language;
 
 /**
  * The bias used when searching for Place. The result will be biased towards,
@@ -11424,10 +11916,34 @@ google.maps.places.PlaceDetailsRequest = function() {};
 google.maps.places.PlaceDetailsRequest.prototype.fields;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A language identifier for the language in which details should be returned.
+ * See the <a href="https://developers.google.com/maps/faq#languagesupport">list
+ * of supported languages</a>. Google often updates the supported languages, so
+ * this list may not be exhaustive.
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceDetailsRequest.prototype.language;
+
+/**
  * The Place ID of the Place for which details are being requested.
  * @type {string}
  */
 google.maps.places.PlaceDetailsRequest.prototype.placeId;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A region code of the user&#39;s region. This can affect which photos may be
+ * returned, and possibly other things. The region code accepts a <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceDetailsRequest.prototype.region;
 
 /**
  * Unique reference used to bundle the details request with an autocomplete
@@ -11464,16 +11980,6 @@ google.maps.places.PlaceGeometry.prototype.viewport;
 google.maps.places.PlaceOpeningHours = function() {};
 
 /**
- * Whether the Place is open at the current time.
- * @type {boolean|undefined}
- * @deprecated <code>open_now</code> is deprecated as of November 2019. Use
- *     the {@link google.maps.places.PlaceOpeningHours.isOpen} method from
- *     a {@link google.maps.places.PlacesService.getDetails} result instead. See
- *     <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
- */
-google.maps.places.PlaceOpeningHours.prototype.open_now;
-
-/**
  * Opening periods covering for each day of the week, starting from Sunday, in
  * chronological order. Days in which the Place is not open are not included.
  * Only available with {@link google.maps.places.PlacesService.getDetails}.
@@ -11492,6 +11998,16 @@ google.maps.places.PlaceOpeningHours.prototype.periods;
  * @type {!Array<string>|undefined}
  */
 google.maps.places.PlaceOpeningHours.prototype.weekday_text;
+
+/**
+ * Whether the Place is open at the current time.
+ * @type {boolean|undefined}
+ * @deprecated <code>open_now</code> is deprecated as of November 2019. Use
+ *     the {@link google.maps.places.PlaceOpeningHours.isOpen} method from
+ *     a {@link google.maps.places.PlacesService.getDetails} result instead. See
+ *     <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
+ */
+google.maps.places.PlaceOpeningHours.prototype.open_now;
 
 /**
  * Check whether the place is open now (when no date is passed), or at the given
@@ -11749,19 +12265,6 @@ google.maps.places.PlaceResult.prototype.name;
 google.maps.places.PlaceResult.prototype.opening_hours;
 
 /**
- * A flag indicating whether the Place is closed, either permanently or
- * temporarily. If the place is operational, or if no data is available, the
- * flag is absent from the response.
- * @type {boolean|undefined}
- * @deprecated <code>permanently_closed</code> is deprecated as of May 2020 and
- *     will be turned off in May 2021. Use {@link
- *     google.maps.places.PlaceResult.business_status} instead as
- *     <code>permanently_closed</code> does not distinguish between temporary
- *     and permanent closures.
- */
-google.maps.places.PlaceResult.prototype.permanently_closed;
-
-/**
  * Photos of this Place. The collection will contain up to ten {@link
  * google.maps.places.PlacePhoto} objects.
  * @type {!Array<!google.maps.places.PlacePhoto>|undefined}
@@ -11831,20 +12334,6 @@ google.maps.places.PlaceResult.prototype.user_ratings_total;
 /**
  * The offset from UTC of the Place’s current timezone, in minutes. For example,
  * Sydney, Australia in daylight savings is 11 hours ahead of UTC, so the
- * <code>utc_offset</code> will be <code>660</code>. For timezones behind UTC,
- * the offset is negative. For example, the <code>utc_offset</code> is
- * <code>-60</code> for Cape Verde. Only available with {@link
- * google.maps.places.PlacesService.getDetails}.
- * @type {number|undefined}
- * @deprecated <code>utc_offset</code> is deprecated as of November 2019.
- *     Use {@link google.maps.places.PlaceResult.utc_offset_minutes} instead.
- *     See <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
- */
-google.maps.places.PlaceResult.prototype.utc_offset;
-
-/**
- * The offset from UTC of the Place’s current timezone, in minutes. For example,
- * Sydney, Australia in daylight savings is 11 hours ahead of UTC, so the
  * <code>utc_offset_minutes</code> will be <code>660</code>. For timezones
  * behind UTC, the offset is negative. For example, the
  * <code>utc_offset_minutes</code> is <code>-60</code> for Cape Verde. Only
@@ -11871,17 +12360,37 @@ google.maps.places.PlaceResult.prototype.vicinity;
 google.maps.places.PlaceResult.prototype.website;
 
 /**
+ * The offset from UTC of the Place’s current timezone, in minutes. For example,
+ * Sydney, Australia in daylight savings is 11 hours ahead of UTC, so the
+ * <code>utc_offset</code> will be <code>660</code>. For timezones behind UTC,
+ * the offset is negative. For example, the <code>utc_offset</code> is
+ * <code>-60</code> for Cape Verde. Only available with {@link
+ * google.maps.places.PlacesService.getDetails}.
+ * @type {number|undefined}
+ * @deprecated <code>utc_offset</code> is deprecated as of November 2019.
+ *     Use {@link google.maps.places.PlaceResult.utc_offset_minutes} instead.
+ *     See <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
+ */
+google.maps.places.PlaceResult.prototype.utc_offset;
+
+/**
+ * A flag indicating whether the Place is closed, either permanently or
+ * temporarily. If the place is operational, or if no data is available, the
+ * flag is absent from the response.
+ * @type {boolean|undefined}
+ * @deprecated <code>permanently_closed</code> is deprecated as of May 2020 and
+ *     will be turned off in May 2021. Use {@link
+ *     google.maps.places.PlaceResult.business_status} instead as
+ *     <code>permanently_closed</code> does not distinguish between temporary
+ *     and permanent closures.
+ */
+google.maps.places.PlaceResult.prototype.permanently_closed;
+
+/**
  * Represents a single review of a place.
  * @record
  */
 google.maps.places.PlaceReview = function() {};
-
-/**
- * The aspects rated by the review. The ratings on a scale of 0 to 3.
- * @type {!Array<!google.maps.places.PlaceAspectRating>|undefined}
- * @deprecated This field is no longer available.
- */
-google.maps.places.PlaceReview.prototype.aspects;
 
 /**
  * The name of the reviewer.
@@ -11939,6 +12448,13 @@ google.maps.places.PlaceReview.prototype.text;
 google.maps.places.PlaceReview.prototype.time;
 
 /**
+ * The aspects rated by the review. The ratings on a scale of 0 to 3.
+ * @type {!Array<!google.maps.places.PlaceAspectRating>|undefined}
+ * @deprecated This field is no longer available.
+ */
+google.maps.places.PlaceReview.prototype.aspects;
+
+/**
  * An object used to fetch additional pages of Places results.
  * @record
  */
@@ -11980,6 +12496,17 @@ google.maps.places.PlaceSearchRequest.prototype.bounds;
 google.maps.places.PlaceSearchRequest.prototype.keyword;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A language identifier for the language in which names and addresses should be
+ * returned, when possible. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>. Google often updates the supported languages, so
+ * this list may not be exhaustive.
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceSearchRequest.prototype.language;
+
+/**
  * The location around which to search for Places.
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|undefined}
  */
@@ -12004,15 +12531,6 @@ google.maps.places.PlaceSearchRequest.prototype.maxPriceLevel;
 google.maps.places.PlaceSearchRequest.prototype.minPriceLevel;
 
 /**
- * Equivalent to <code>keyword</code>. Values in this field are combined with
- * values in the <code>keyword</code> field and passed as part of the same
- * search string.
- * @type {string|undefined}
- * @deprecated Use <code>keyword</code> instead.
- */
-google.maps.places.PlaceSearchRequest.prototype.name;
-
-/**
  * Restricts results to only those places that are open right now.
  * @type {boolean|undefined}
  */
@@ -12026,10 +12544,11 @@ google.maps.places.PlaceSearchRequest.prototype.openNow;
 google.maps.places.PlaceSearchRequest.prototype.radius;
 
 /**
- * Specifies the ranking method to use when returning results. Defaults to
- * <code>PROMINENCE</code>. Note that when <code>rankBy</code> is set to
- * <code>DISTANCE</code>, you must specify a <code>location</code> but you
- * cannot specify a <code>radius</code> or <code>bounds</code>.
+ * Specifies the ranking method to use when returning results. Note that when
+ * <code>rankBy</code> is set to <code>DISTANCE</code>, you must specify a
+ * <code>location</code> but you cannot specify a <code>radius</code> or
+ * <code>bounds</code>.
+ * @default {@link google.maps.places.RankBy.PROMINENCE}
  * @type {!google.maps.places.RankBy|undefined}
  */
 google.maps.places.PlaceSearchRequest.prototype.rankBy;
@@ -12045,6 +12564,15 @@ google.maps.places.PlaceSearchRequest.prototype.rankBy;
  * @type {string|undefined}
  */
 google.maps.places.PlaceSearchRequest.prototype.type;
+
+/**
+ * Equivalent to <code>keyword</code>. Values in this field are combined with
+ * values in the <code>keyword</code> field and passed as part of the same
+ * search string.
+ * @type {string|undefined}
+ * @deprecated Use <code>keyword</code> instead.
+ */
+google.maps.places.PlaceSearchRequest.prototype.name;
 
 /**
  * Contains methods related to searching for places and retrieving details about
@@ -12408,6 +12936,17 @@ google.maps.places.TextSearchRequest = function() {};
 google.maps.places.TextSearchRequest.prototype.bounds;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A language identifier for the language in which names and addresses should be
+ * returned, when possible. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>. Google often updates the supported languages, so
+ * this list may not be exhaustive.
+ * @type {?string|undefined}
+ */
+google.maps.places.TextSearchRequest.prototype.language;
+
+/**
  * The center of the area used to bias results when searching for Places.
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|undefined}
  */
@@ -12428,6 +12967,19 @@ google.maps.places.TextSearchRequest.prototype.query;
  * @type {number|undefined}
  */
 google.maps.places.TextSearchRequest.prototype.radius;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A region code to bias results towards. The region code accepts a <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
+ */
+google.maps.places.TextSearchRequest.prototype.region;
 
 /**
  * Searches for places of the given type. The type is translated to the local
@@ -12534,8 +13086,8 @@ google.maps.visualization.HeatmapLayerOptions.prototype.map;
 google.maps.visualization.HeatmapLayerOptions.prototype.maxIntensity;
 
 /**
- * The opacity of the heatmap, expressed as a number between 0 and 1. Defaults
- * to 0.6.
+ * The opacity of the heatmap, expressed as a number between 0 and 1.
+ * @default <code>0.6</code>
  * @type {?number|undefined}
  */
 google.maps.visualization.HeatmapLayerOptions.prototype.opacity;
