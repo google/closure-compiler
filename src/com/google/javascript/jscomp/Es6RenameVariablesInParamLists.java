@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.HashBasedTable;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -58,23 +60,8 @@ public final class Es6RenameVariablesInParamLists
       return;
     }
 
-    Node paramList = function.getSecondChild();
     final CollectReferences collector = new CollectReferences();
-    NodeTraversal.traverse(compiler, paramList, new NodeTraversal.AbstractPreOrderCallback() {
-      @Override
-      public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-        if (parent == null) {
-          return true;
-        }
-
-        if ((parent.isDefaultValue() && n == parent.getLastChild())
-            || (parent.isComputedProp() && n == parent.getFirstChild())) {
-          NodeTraversal.traverse(compiler, n, collector);
-          return false;
-        }
-        return true;
-      }
-    });
+    collector.collect(function);
 
     Scope blockScope = t.getScope();
     HashBasedTable<Node, String, String> renameTable = HashBasedTable.create();
@@ -104,19 +91,37 @@ public final class Es6RenameVariablesInParamLists
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
-  /**
-   * Collects all references in a naive way.
-   */
-  private static class CollectReferences extends NodeTraversal.AbstractPostOrderCallback {
+  /** Collects all references in a naive way. */
+  private static class CollectReferences {
 
     private final Set<String> currFuncReferences = new HashSet<>();
 
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!NodeUtil.isReferenceName(n)) {
+    void collect(Node fn) {
+      checkState(fn.isFunction());
+      Node paramList = fn.getSecondChild();
+      findCandiates(paramList);
+    }
+
+    void findCandiates(Node n) {
+      Node parent = n.getParent();
+      if ((parent.isDefaultValue() && n == parent.getLastChild())
+          || (parent.isComputedProp() && n == parent.getFirstChild())) {
+        visitCandiates(n);
+        // Don't visit the children of these nodes.
         return;
       }
-      currFuncReferences.add(n.getString());
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        visitCandiates(c);
+      }
+    }
+
+    void visitCandiates(Node n) {
+      if (NodeUtil.isReferenceName(n)) {
+        currFuncReferences.add(n.getString());
+      }
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        visitCandiates(c);
+      }
     }
   }
 }
