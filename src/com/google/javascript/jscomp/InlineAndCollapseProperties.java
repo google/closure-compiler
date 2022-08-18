@@ -1481,7 +1481,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       // replaced with "a$b" in all occurrences of "a.b.c", "a.b.c.d", etc.
       if (n.props != null) {
         for (Name p : n.props) {
-          flattenPrefixes(alias, p, 1);
+          flattenPrefixes(alias, originalName + p.getBaseName(), p, 1);
         }
       }
     }
@@ -1492,12 +1492,13 @@ class InlineAndCollapseProperties implements CompilerPass {
      *
      * @param n A global property name (e.g. "a.b.c.d")
      * @param alias A flattened prefix name (e.g. "a$b")
+     * @param originalName The full original name of the global property (e.g. "a.b.c.d") equivalent
+     *     to n.getFullName(), but pre-computed to save on intermediate string allocation
      * @param depth The difference in depth between the property name and the prefix name (e.g. 2)
      */
-    private void flattenPrefixes(String alias, Name n, int depth) {
+    private void flattenPrefixes(String alias, String originalName, Name n, int depth) {
       // Only flatten the prefix of a name declaration if the name being
       // initialized is fully qualified (i.e. not an object literal key).
-      String originalName = n.getFullName();
       Ref decl = n.getDeclaration();
       if (decl != null && decl.getNode() != null && decl.getNode().isGetProp()) {
         flattenNameRefAtDepth(alias, decl.getNode(), depth, originalName);
@@ -1518,7 +1519,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
       if (n.props != null) {
         for (Name p : n.props) {
-          flattenPrefixes(alias, p, depth + 1);
+          flattenPrefixes(alias, originalName + p.getBaseName(), p, depth + 1);
         }
       }
     }
