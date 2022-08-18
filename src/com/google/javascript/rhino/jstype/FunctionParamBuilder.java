@@ -48,10 +48,16 @@ import java.util.ArrayList;
 public final class FunctionParamBuilder {
 
   private final JSTypeRegistry registry;
-  private final ArrayList<Parameter> parameters = new ArrayList<>();
+  private final ArrayList<Parameter> parameters;
 
   public FunctionParamBuilder(JSTypeRegistry registry) {
     this.registry = registry;
+    this.parameters = new ArrayList<>();
+  }
+
+  public FunctionParamBuilder(JSTypeRegistry registry, int initialParameterCapacity) {
+    this.registry = registry;
+    this.parameters = new ArrayList<>(initialParameterCapacity);
   }
 
   /**
@@ -100,15 +106,19 @@ public final class FunctionParamBuilder {
     return true;
   }
 
-  /** Copies the parameter specification from the given parameter. */
+  /** Copies the existing parameter into this builder */
   public void newParameterFrom(FunctionType.Parameter n) {
-    newParameter(n.getJSType(), n.isOptional(), n.isVariadic());
+    parameters.add(n);
   }
 
   /** Copies the parameter specification from the given parameter, but makes sure it's optional. */
   public void newOptionalParameterFrom(FunctionType.Parameter p) {
     boolean isOptional = p.isOptional() || !p.isVariadic();
-    newParameter(p.getJSType(), isOptional, p.isVariadic());
+    if (isOptional != p.isOptional()) {
+      newParameter(p.getJSType(), isOptional, p.isVariadic());
+    } else {
+      newParameterFrom(p);
+    }
   }
 
   /** Adds a parameter with the given type */

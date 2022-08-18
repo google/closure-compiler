@@ -188,25 +188,35 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       changed = true;
     }
 
-    FunctionParamBuilder paramBuilder = new FunctionParamBuilder(registry);
-    for (FunctionType.Parameter paramNode : type.getParameters()) {
-      JSType beforeParamType = paramNode.getJSType();
+    boolean paramsChanged = false;
+    int numParams = type.getParameters().size();
+    FunctionParamBuilder paramBuilder =
+        numParams == 0 ? null : new FunctionParamBuilder(registry, numParams);
+    for (int i = 0; i < numParams; i++) {
+      FunctionType.Parameter parameter = type.getParameters().get(i);
+      JSType beforeParamType = parameter.getJSType();
       JSType afterParamType = beforeParamType.visit(this);
+
       if (!identical(beforeParamType, afterParamType)) {
         changed = true;
-      }
-      if (paramNode.isOptional()) {
-        paramBuilder.addOptionalParams(afterParamType);
-      } else if (paramNode.isVariadic()) {
-        paramBuilder.addVarArgs(afterParamType);
+        paramsChanged = true;
+        // TODO(lharker): we could also lazily create the FunctionParamBuilder here, but that would
+        // require re-iterating over all previously seen params so unclear it's worth the complexity
+        if (parameter.isOptional()) {
+          paramBuilder.addOptionalParams(afterParamType);
+        } else if (parameter.isVariadic()) {
+          paramBuilder.addVarArgs(afterParamType);
+        } else {
+          paramBuilder.addRequiredParams(afterParamType);
+        }
       } else {
-        paramBuilder.addRequiredParams(afterParamType);
+        paramBuilder.newParameterFrom(parameter);
       }
     }
 
     if (changed) {
       return type.toBuilder()
-          .withParameters(paramBuilder.build())
+          .withParameters(paramsChanged ? paramBuilder.build() : type.getParameters())
           .withReturnType(afterReturn)
           .withTypeOfThis(afterThis)
           .withIsAbstract(false) // TODO(b/187989034): Copy this from the source function.
