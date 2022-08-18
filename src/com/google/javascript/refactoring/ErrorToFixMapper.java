@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Maps a {@code JSError} to a list of {@code SuggestedFix}es, if possible.
@@ -82,7 +83,7 @@ public final class ErrorToFixMapper {
    * Creates a SuggestedFix for the given error. Note that some errors have multiple fixes so
    * getFixesForJsError should often be used instead of this.
    */
-  public SuggestedFix getFixForJsError(JSError error) {
+  public @Nullable SuggestedFix getFixForJsError(JSError error) {
     switch (error.getType().key) {
       case "JSC_REDECLARED_VARIABLE":
         return getFixForRedeclaration(error);
@@ -129,7 +130,7 @@ public final class ErrorToFixMapper {
     }
   }
 
-  private SuggestedFix getFixForRedeclaration(JSError error) {
+  private @Nullable SuggestedFix getFixForRedeclaration(JSError error) {
     Node name = error.getNode();
     checkState(name.isName(), name);
     Node parent = name.getParent();
@@ -200,7 +201,7 @@ public final class ErrorToFixMapper {
    * (JSC_REDECLARED_VARIABLE). But after running the fixer once, you can then run it again and
    * #getFixForRedeclaration will take care of the JSC_REDECLARED_VARIABLE warning.
    */
-  private SuggestedFix getFixForEarlyReference(JSError error) {
+  private @Nullable SuggestedFix getFixForEarlyReference(JSError error) {
     Matcher m = EARLY_REF.matcher(error.getDescription());
     if (m.matches()) {
       String name = m.group(1);
@@ -309,7 +310,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private SuggestedFix getFixForInvalidSuper(JSError error) {
+  private @Nullable SuggestedFix getFixForInvalidSuper(JSError error) {
     Matcher m = DID_YOU_MEAN.matcher(error.getDescription());
     if (m.matches()) {
       String superDotSuggestion = checkNotNull(m.group(1));
@@ -322,7 +323,7 @@ public final class ErrorToFixMapper {
     return null;
   }
 
-  private SuggestedFix getFixForInexistentProperty(JSError error) {
+  private @Nullable SuggestedFix getFixForInexistentProperty(JSError error) {
     Matcher m = DID_YOU_MEAN.matcher(error.getDescription());
     if (m.matches()) {
       String suggestedPropName = m.group(1);
@@ -392,7 +393,7 @@ public final class ErrorToFixMapper {
     return fix.build();
   }
 
-  private SuggestedFix getFixForUnsortedRequires(JSError error) {
+  private @Nullable SuggestedFix getFixForUnsortedRequires(JSError error) {
     // TODO(tjgq): Encode enough information in the error to avoid the need to run a traversal in
     // order to produce the fix.
     Node script = NodeUtil.getEnclosingScript(error.getNode());
@@ -409,7 +410,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private SuggestedFix getFixForUnsortedProvides(JSError error) {
+  private @Nullable SuggestedFix getFixForUnsortedProvides(JSError error) {
     // TODO(tjgq): Encode enough information in the error to avoid the need to run a traversal in
     // order to produce the fix.
     Node script = NodeUtil.getEnclosingScript(error.getNode());
@@ -439,7 +440,7 @@ public final class ErrorToFixMapper {
    * adding a @const annotation. Don't try to adjust the JSDoc, because that can produce invalid
    * output.
    */
-  private SuggestedFix getFixForConstantCaseErrors(JSError error) {
+  private @Nullable SuggestedFix getFixForConstantCaseErrors(JSError error) {
     Node n = error.getNode();
     Node parent = n.getParent();
     if (!n.isName() || !NodeUtil.isNameDeclaration(parent)) {

@@ -25,6 +25,7 @@ import com.google.gson.JsonParseException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Java implementation of the source map parser.
@@ -94,11 +95,11 @@ public class SourceMapObjectParser {
         "Invalid map format: section must have either 'map' or 'url'");
   }
 
-  private static String getStringOrNull(JsonObject object, String key) {
+  private static @Nullable String getStringOrNull(JsonObject object, String key) {
     return object.has(key) ? object.get(key).getAsString() : null;
   }
 
-  private static String[] getJavaStringArray(JsonElement element) {
+  private static String @Nullable [] getJavaStringArray(JsonElement element) {
     if (element == null || element instanceof JsonNull) {
       return null;
     }

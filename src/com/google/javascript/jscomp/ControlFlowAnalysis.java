@@ -935,6 +935,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   }
 
   /** Get the next sibling (including itself) of one of the given types. */
+  @Nullable
   private static Node getNextSiblingOfType(Node first, Token... types) {
     for (Node c = first; c != null; c = c.getNext()) {
       for (Token type : types) {
@@ -1035,6 +1036,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    *
    * @return The CATCH node or null if it there isn't a CATCH before the function terminates.
    */
+  @Nullable
   static Node getExceptionHandler(Node n) {
     for (Node cur = n; !cur.isScript() && !cur.isFunction(); cur = cur.getParent()) {
       Node catchNode = getCatchHandlerForBlock(cur);
@@ -1050,6 +1052,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    *
    * @return The CATCH node or null there is no catch handler.
    */
+  @Nullable
   static Node getCatchHandlerForBlock(Node block) {
     if (block.isBlock()
         && block.getParent().isTry()

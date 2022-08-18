@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Class for parsing version 3 of the SourceMap format, as produced by the Closure Compiler, etc.
@@ -145,7 +146,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
   }
 
   @Override
-  public OriginalMapping getMappingForLine(int lineNumber, int column) {
+  public @Nullable OriginalMapping getMappingForLine(int lineNumber, int column) {
     // Normalize the line and column numbers to 0.
     lineNumber--;
     column--;
@@ -179,7 +180,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     return Arrays.asList(sources);
   }
 
-  public Collection<String> getOriginalSourcesContent() {
+  public @Nullable Collection<String> getOriginalSourcesContent() {
     return sourcesContent == null ? null : Arrays.asList(sourcesContent);
   }
 
@@ -418,11 +419,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     return entries.get(entry).getGeneratedColumn() - target;
   }
 
-  /**
-   * Returns the mapping entry that proceeds the supplied line or null if no
-   * such entry exists.
-   */
-  private OriginalMapping getPreviousMapping(int lineNumber) {
+  /** Returns the mapping entry that proceeds the supplied line or null if no such entry exists. */
+  private @Nullable OriginalMapping getPreviousMapping(int lineNumber) {
     do {
       if (lineNumber == 0) {
         return null;
@@ -434,7 +432,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
   }
 
   /** Creates an "OriginalMapping" object for the given entry object. */
-  private OriginalMapping getOriginalMappingForEntry(Entry entry, Precision precision) {
+  private @Nullable OriginalMapping getOriginalMappingForEntry(Entry entry, Precision precision) {
     if (entry.getSourceFileId() == UNMAPPED) {
       return null;
     } else {

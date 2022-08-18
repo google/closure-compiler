@@ -173,6 +173,7 @@ public final class SymbolTable {
    * Gets the scope that contains the given node. If {@code n} is a function name, we return the
    * scope that contains the function, not the function itself.
    */
+  @Nullable
   public SymbolScope getEnclosingScope(Node n) {
     Node current = n.getParent();
     if (n.isName() && n.getParent().isFunction()) {
@@ -218,6 +219,7 @@ public final class SymbolTable {
    * var x = x() ? function(y) {} : function(y) {};
    * </code>
    */
+  @Nullable
   public Symbol getParameterInFunction(Symbol sym, String paramName) {
     SymbolScope scope = getScopeInFunction(sym);
     if (scope != null) {
@@ -229,6 +231,7 @@ public final class SymbolTable {
     return null;
   }
 
+  @Nullable
   private SymbolScope getScopeInFunction(Symbol sym) {
     FunctionType type = sym.getFunctionType();
     if (type == null) {
@@ -259,6 +262,7 @@ public final class SymbolTable {
    * out this association dynamically, so sometimes we'll just create the association when we create
    * the scope.
    */
+  @Nullable
   private Symbol findSymbolForScope(SymbolScope scope) {
     Node rootNode = scope.getRootNode();
     if (rootNode.getParent() == null) {
@@ -301,6 +305,7 @@ public final class SymbolTable {
   }
 
   /** Gets the symbol for the prototype if this is the symbol for a constructor or interface. */
+  @Nullable
   public Symbol getSymbolForInstancesOf(Symbol sym) {
     FunctionType fn = sym.getFunctionType();
     if (fn != null && fn.isNominalConstructorOrInterface()) {
@@ -387,6 +392,7 @@ public final class SymbolTable {
    *     of this file for more information on how our internal type system is more granular than
    *     Symbols.
    */
+  @Nullable
   private Symbol getSymbolForTypeHelper(JSType type, boolean linkToCtor) {
     if (type == null) {
       return null;
@@ -658,6 +664,7 @@ public final class SymbolTable {
   }
 
   /** Helper for addSymbolsFrom, to determine the best declaration spot. */
+  @Nullable
   private <S extends StaticSlot, R extends StaticRef> StaticRef findBestDeclToAdd(
       StaticSymbolTable<S, R> otherSymbolTable, S slot) {
     StaticRef decl = slot.getDeclaration();
@@ -1642,10 +1649,12 @@ public final class SymbolTable {
       this.declaration = ref;
     }
 
+    @Nullable
     public Node getDeclarationNode() {
       return declaration == null ? null : declaration.getNode();
     }
 
+    @Nullable
     public String getSourceFileName() {
       Node n = getDeclarationNode();
       return n == null ? null : n.getSourceFileName();
@@ -1771,6 +1780,7 @@ public final class SymbolTable {
      * Get the slot for a fully-qualified name (e.g., "a.b.c") by trying to find property scopes at
      * each part of the path.
      */
+    @Nullable
     public Symbol getQualifiedSlot(String name) {
       Symbol fullyNamedSym = getSlot(name);
       if (fullyNamedSym != null) {
@@ -1788,6 +1798,7 @@ public final class SymbolTable {
       return null;
     }
 
+    @Nullable
     public Symbol getSlot(String name) {
       Symbol own = getOwnSlot(name);
       if (own != null) {
@@ -2336,6 +2347,7 @@ public final class SymbolTable {
     }
   }
 
+  @Nullable
   private JSType getType(StaticSlot sym) {
     if (sym instanceof StaticTypedSlot) {
       return ((StaticTypedSlot) sym).getType();
@@ -2343,6 +2355,7 @@ public final class SymbolTable {
     return null;
   }
 
+  @Nullable
   private JSType getTypeOfThis(StaticScope s) {
     if (s instanceof StaticTypedScope) {
       return ((StaticTypedScope) s).getTypeOfThis();
