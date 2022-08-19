@@ -2024,9 +2024,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private Writer streamToLegacyOutputWriter(OutputStream stream) throws IOException {
     if (legacyOutputCharset == null) {
-      return new BufferedWriter(new OutputStreamWriter(stream, UTF_8));
+      return createWriter(stream, UTF_8);
     } else {
-      return new BufferedWriter(new OutputStreamWriter(stream, legacyOutputCharset));
+      return createWriter(stream, legacyOutputCharset);
     }
   }
 
@@ -2034,10 +2034,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private Writer streamToOutputWriter2(OutputStream stream) {
     if (outputCharset2 == null) {
-      return new BufferedWriter(new OutputStreamWriter(stream, UTF_8));
+      return createWriter(stream, UTF_8);
     } else {
-      return new BufferedWriter(new OutputStreamWriter(stream, outputCharset2));
+      return createWriter(stream, outputCharset2);
     }
+  }
+
+  /** Creates a buffered Writer that writes to the given stream using the given encoding. */
+  @GwtIncompatible("Unnecessary")
+  Writer createWriter(OutputStream stream, Charset charset) {
+    return new BufferedWriter(new OutputStreamWriter(stream, charset));
   }
 
   /**
