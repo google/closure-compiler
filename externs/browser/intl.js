@@ -203,7 +203,7 @@ Intl.DateTimeFormat.prototype.formatRangeToParts = function(date1, date2) {};
  *    hour: (string|undefined), minute: (string|undefined),
  *    second: (string|undefined), timeZoneName: (string|undefined),
  *    hour12: (boolean|undefined),
- *    dateStyle: (string|undefined), datimeStyle: (string|undefined),
+ *    dateStyle: (string|undefined), timeStyle: (string|undefined),
  *    dayPeriod: (string|undefined), hourCycle: (string|undefined),
  *    fractionalSecondDigits: (number|undefined)}}
  */
