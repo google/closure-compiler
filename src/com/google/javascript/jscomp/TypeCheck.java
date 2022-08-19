@@ -374,8 +374,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           TypedScopeCreator.UNKNOWN_LENDS,
           TypedScopeCreator.LENDS_ON_NON_OBJECT,
           TypedScopeCreator.CTOR_INITIALIZER,
-          TypedScopeCreator.IFACE_INITIALIZER,
-          FunctionTypeBuilder.THIS_TYPE_NON_OBJECT);
+          TypedScopeCreator.IFACE_INITIALIZER);
 
   private final AbstractCompiler compiler;
   private final TypeValidator validator;

@@ -19057,31 +19057,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   @Ignore
-  public void testBadTemplateType4() {
-    // TODO(johnlenz): Add a check for useless of template types.
-    // Unless there are at least two references to a Template type in
-    // a definition it isn't useful.
-    newTest()
-        .addSource("/**\n" + "* @template T\n" + "*/\n" + "function f() {}\n" + "f();")
-        .addDiagnostic(FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format())
-        .run();
-  }
-
-  @Test
-  @Ignore
-  public void testBadTemplateType5() {
-    // TODO(johnlenz): Add a check for useless of template types.
-    // Unless there are at least two references to a Template type in
-    // a definition it isn't useful.
-    newTest()
-        .addSource(
-            "/**\n" + "* @template T\n" + "* @return {T}\n" + "*/\n" + "function f() {}\n" + "f();")
-        .addDiagnostic(FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format())
-        .run();
-  }
-
-  @Test
-  @Ignore
   public void testFunctionLiteralUndefinedThisArgument() {
     // TODO(johnlenz): this was a weird error.  We should add a general
     // restriction on what is accepted for T. Something like:

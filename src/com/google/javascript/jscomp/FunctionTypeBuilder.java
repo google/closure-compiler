@@ -116,11 +116,6 @@ final class FunctionTypeBuilder {
       "JSC_RESOLVED_TAG_EMPTY",
       "Could not resolve type in {0} tag of {1}");
 
-  static final DiagnosticType IMPLEMENTS_WITHOUT_CONSTRUCTOR =
-      DiagnosticType.warning(
-          "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
-          "@implements used without @constructor or @interface for {0}");
-
   static final DiagnosticType CONSTRUCTOR_REQUIRED =
       DiagnosticType.warning("JSC_CONSTRUCTOR_REQUIRED",
                              "{0} used without @constructor for {1}");
@@ -148,41 +143,23 @@ final class FunctionTypeBuilder {
           "JSC_TEMPLATE_TRANSFORMATION_ON_CLASS",
           "Template type transformation {0} not allowed on classes or interfaces");
 
-  static final DiagnosticType TEMPLATE_TYPE_DUPLICATED = DiagnosticType.warning(
-      "JSC_TEMPLATE_TYPE_DUPLICATED",
-      "Only one parameter type must be the template type");
-
-  static final DiagnosticType TEMPLATE_TYPE_EXPECTED = DiagnosticType.warning(
-      "JSC_TEMPLATE_TYPE_EXPECTED",
-      "The template type must be a parameter type");
-
   static final DiagnosticType TEMPLATE_TYPE_ILLEGAL_BOUND =
       DiagnosticType.error(
           "JSC_TEMPLATE_TYPE_ILLEGAL_BOUND",
           "Illegal upper bound ''{0}'' on template type parameter {1}");
-
-  static final DiagnosticType THIS_TYPE_NON_OBJECT =
-      DiagnosticType.warning(
-          "JSC_THIS_TYPE_NON_OBJECT",
-          "@this type of a function must be an object\n" +
-          "Actual type: {0}");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
           EXTENDS_WITHOUT_TYPEDEF,
           EXTENDS_NON_OBJECT,
           RESOLVED_TAG_EMPTY,
-          IMPLEMENTS_WITHOUT_CONSTRUCTOR,
           CONSTRUCTOR_REQUIRED,
           VAR_ARGS_MUST_BE_LAST,
           OPTIONAL_ARG_AT_END,
           INEXISTENT_PARAM,
           TYPE_REDEFINITION,
           TEMPLATE_TRANSFORMATION_ON_CLASS,
-          TEMPLATE_TYPE_DUPLICATED,
-          TEMPLATE_TYPE_EXPECTED,
           TEMPLATE_TYPE_ILLEGAL_BOUND,
-          THIS_TYPE_NON_OBJECT,
           TypeCheck.SAME_INTERFACE_MULTIPLE_IMPLEMENTS);
 
   private abstract static class ValidatorBase implements Predicate<JSType> {
