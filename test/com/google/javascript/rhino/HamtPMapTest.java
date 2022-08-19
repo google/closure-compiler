@@ -194,6 +194,7 @@ public class HamtPMapTest {
   }
 
   @Test
+  @SuppressWarnings("CheckReturnValue")
   public void testReconcile_rejectsNullResult() {
     PMap<Integer, Integer> left = build(1, 3, 5, 7);
     PMap<Integer, Integer> right = build(2, 4, 6, 8);

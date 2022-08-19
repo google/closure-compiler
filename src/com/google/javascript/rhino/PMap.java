@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
@@ -45,12 +46,15 @@ import javax.annotation.Nullable;
 public interface PMap<K, V> {
 
   /** Returns whether this map is empty. */
+  @CheckReturnValue
   boolean isEmpty();
 
   /** Returns an iterable for the values in this map. */
+  @CheckReturnValue
   Iterable<V> values();
 
   /** Returns an iterable for the keys in this map. */
+  @CheckReturnValue
   Iterable<K> keys();
 
   /** Retrieves the given key from the map, or returns null if it is not present. */
@@ -60,12 +64,14 @@ public interface PMap<K, V> {
    * Returns a new map with the given key-value pair added. If the value is already present, then
    * this same map will be returned.
    */
+  @CheckReturnValue
   PMap<K, V> plus(K key, V value);
 
   /**
    * Returns a new map with the given key removed. If the key was not present in the first place,
    * then this same map will be returned.
    */
+  @CheckReturnValue
   PMap<K, V> minus(K key);
 
   /**
@@ -83,6 +89,7 @@ public interface PMap<K, V> {
    * from {@code that}. There are no guarantees on the source of {@code key}. Note that {@code that}
    * map must be the same implementation.
    */
+  @CheckReturnValue
   PMap<K, V> reconcile(PMap<K, V> that, Reconciler<K, V> joiner);
 
   /**
@@ -91,6 +98,7 @@ public interface PMap<K, V> {
    * called on two non-null values. Note that {@code that} map must be the same implementation. Note
    * that the equivalence MUST be reflective (i.e. equivalence.test(x, x) == true).
    */
+  @CheckReturnValue
   boolean equivalent(PMap<K, V> that, BiPredicate<V, V> equivalence);
 
   /** See {@link #reconcile}. */

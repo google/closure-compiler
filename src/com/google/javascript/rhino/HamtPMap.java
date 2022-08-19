@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.PMap.Reconciler;
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -125,6 +126,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
 
   /** Returns an empty map. */
   @SuppressWarnings("unchecked") // Empty immutable collection is safe to cast.
+  @CheckReturnValue
   public static <K, V> HamtPMap<K, V> empty() {
     return (HamtPMap<K, V>) EMPTY;
   }
@@ -136,6 +138,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
   }
 
   @Override
+  @CheckReturnValue
   public String toString() {
     StringBuilder sb = new StringBuilder().append("{");
     if (!isEmpty()) {
@@ -157,12 +160,14 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
 
   /** Returns whether this map is empty. */
   @Override
+  @CheckReturnValue
   public boolean isEmpty() {
     return key == null;
   }
 
   /** Returns an iterable for a (possibly null) tree. */
   @Override
+  @CheckReturnValue
   public Iterable<V> values() {
     if (isEmpty()) {
       return Collections.<V>emptyList();
@@ -172,6 +177,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
 
   /** Returns an iterable for a (possibly null) tree. */
   @Override
+  @CheckReturnValue
   public Iterable<K> keys() {
     if (isEmpty()) {
       return Collections.emptyList();
@@ -184,6 +190,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * present.
    */
   @Override
+  @CheckReturnValue
   public V get(K key) {
     return !isEmpty() ? get(key, hash(key)) : null;
   }
@@ -203,6 +210,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * this same map will be returned.
    */
   @Override
+  @CheckReturnValue
   public HamtPMap<K, V> plus(K key, V value) {
     checkNotNull(value);
 
@@ -258,6 +266,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * then this same map will be returned.
    */
   @Override
+  @CheckReturnValue
   public HamtPMap<K, V> minus(K key) {
     return !isEmpty() ? minus(key, hash(key), null) : this;
   }
@@ -294,6 +303,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
   }
 
   @Override
+  @CheckReturnValue
   public HamtPMap<K, V> reconcile(PMap<K, V> that, Reconciler<K, V> joiner) {
     HamtPMap<K, V> result =
         reconcile(
