@@ -176,9 +176,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_MULTIPLE_VAR_DEF", "declaration of multiple variables with shared type information");
 
-  static final DiagnosticType ENUM_DUP =
-      DiagnosticType.error("JSC_ENUM_DUP", "enum element {0} already defined");
-
   static final DiagnosticType INVALID_INTERFACE_MEMBER_DECLARATION =
       DiagnosticType.warning(
           "JSC_INVALID_INTERFACE_MEMBER_DECLARATION",
@@ -248,11 +245,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_UNKNOWN_PROTOTYPAL_OVERRIDE", //
           "property {0} not defined on any supertype of {1}");
-
-  static final DiagnosticType INTERFACE_METHOD_OVERRIDE =
-      DiagnosticType.warning(
-          "JSC_INTERFACE_METHOD_OVERRIDE",
-          "property {0} is already defined by the {1} extended interface");
 
   static final DiagnosticType UNKNOWN_EXPR_TYPE =
       DiagnosticType.warning(
@@ -343,7 +335,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           CONSTRUCTOR_NOT_CALLABLE,
           FUNCTION_MASKS_VARIABLE,
           MULTIPLE_VAR_DEF,
-          ENUM_DUP,
           INVALID_INTERFACE_MEMBER_DECLARATION,
           INTERFACE_METHOD_NOT_EMPTY,
           CONFLICTING_EXTENDED_TYPE,
@@ -353,7 +344,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
           UNKNOWN_OVERRIDE,
           UNKNOWN_PROTOTYPAL_OVERRIDE,
-          INTERFACE_METHOD_OVERRIDE,
           WRONG_ARGUMENT_COUNT,
           ILLEGAL_IMPLICIT_CAST,
           INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
