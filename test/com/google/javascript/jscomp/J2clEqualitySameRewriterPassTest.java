@@ -24,8 +24,6 @@ import org.junit.runners.JUnit4;
 public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   private static final String EXTERN =
       "Equality.$same = function(opt_a, opt_b) {};\n"
-          // TODO(b/240961496): Remove old mangling scheme after migration is done.
-          + "String.m_equals__java_lang_String__java_lang_Object = function(opt_a, opt_b){}\n"
           + "String.m_equals__java_lang_String__java_lang_Object__boolean = function(opt_a,"
           + " opt_b) {};";
   ;
@@ -226,20 +224,6 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "'ABC' === a;"));
   }
 
-  // TODO(b/240961496): Remove test for old mangling scheme after migration is done.
-  @Test
-  public void testRewriteStringEquals_old() {
-    test(
-        LINE_JOINER.join(
-            "String.m_equals__java_lang_String__java_lang_Object('', 0);",
-            "var a = 'ABC';",
-            "String.m_equals__java_lang_String__java_lang_Object('ABC', a);"),
-        LINE_JOINER.join(
-            "'' === 0;", //
-            "var a = 'ABC';",
-            "'ABC' === a;"));
-  }
-
   @Test
   public void testNotRewriteStringEquals() {
     testSame(
@@ -248,10 +232,6 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var b = null;",
             "String.m_equals__java_lang_String__java_lang_Object__boolean(b, null);",
             "String.m_equals__java_lang_String__java_lang_Object__boolean(null, b);",
-            "String.m_equals__java_lang_String__java_lang_Object__boolean(c, d);",
-            // TODO(b/240961496): Remove test for old mangling scheme after migration is done.
-            "String.m_equals__java_lang_String__java_lang_Object(b, null);",
-            "String.m_equals__java_lang_String__java_lang_Object(null, b);",
-            "String.m_equals__java_lang_String__java_lang_Object(c, d);"));
+            "String.m_equals__java_lang_String__java_lang_Object__boolean(c, d);"));
   }
 }

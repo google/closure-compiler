@@ -88,30 +88,4 @@ public final class J2clStringValueOfRewriterPassTest extends CompilerTestCase {
             "module$exports$java$lang$String$impl",
             "    .m_valueOf__java_lang_Object__java_lang_String([])"));
   }
-
-  @Test
-  public void testRemoveStringValueOf_old() {
-    test("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object('')", "String('')");
-    test(
-        "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(null)", "String(null)");
-    test("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(undefined)", "'null'");
-    test("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(void 0)", "'null'");
-    test(
-        lines(
-            "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object('foo' +",
-            "    module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(bar))"),
-        "String('foo' + module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(bar))");
-    test(
-        "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(foo + 'bar' + baz)",
-        "String(foo + 'bar' + baz)");
-    test(
-        "foo + module$exports$java$lang$String$impl.m_valueOf__java_lang_Object('bar' + baz)",
-        "foo + String('bar' + baz)");
-    test("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(1)", "String(1)");
-    test(
-        "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(null + foo)",
-        "String(null + foo)");
-    testSame("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object(window)");
-    testSame("module$exports$java$lang$String$impl.m_valueOf__java_lang_Object([])");
-  }
 }

@@ -23,9 +23,6 @@ final class J2clStringValueOfRewriterPass extends AbstractPeepholeOptimization {
 
   private static final String METHOD_NAME =
       "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object__java_lang_String";
-  // TODO(b/240961496): Remove old mangling scheme after migration is done.
-  private static final String METHOD_NAME_OLD_MANGLING =
-      "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object";
 
   private boolean shouldRunJ2clPasses = false;
 
@@ -78,8 +75,6 @@ final class J2clStringValueOfRewriterPass extends AbstractPeepholeOptimization {
   }
 
   private static boolean isStringValueOfMethodName(Node fnName) {
-    return fnName.isQualifiedName()
-        && (fnName.getOriginalQualifiedName().equals(METHOD_NAME)
-            || fnName.getOriginalQualifiedName().equals(METHOD_NAME_OLD_MANGLING));
+    return fnName.isQualifiedName() && fnName.getOriginalQualifiedName().equals(METHOD_NAME);
   }
 }
