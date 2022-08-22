@@ -27,7 +27,6 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNANNOTATED
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNEXPECTED_PARAMS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
-import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.NodeUtil.Visitor;
@@ -546,7 +545,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testPolymerRewriterGeneratesDeclaration_OutsideModule_WithRequires() {
-    ignoreWarnings(MISSING_NAMESPACE_IMPORT);
     test(
         srcs(
             TestExternsBuilder.getClosureExternsAsSource(),
@@ -574,7 +572,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testPolymerRewriterGeneratesDeclaration_OutsideModule_WithRequires2() {
-    ignoreWarnings(MISSING_NAMESPACE_IMPORT);
     test(
         srcs(
             TestExternsBuilder.getClosureExternsAsSource(),

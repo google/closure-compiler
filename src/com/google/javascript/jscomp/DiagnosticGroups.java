@@ -182,7 +182,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "moduleLoad",
           ModuleLoader.LOAD_WARNING,
-          ModuleMapCreator.MISSING_NAMESPACE_IMPORT,
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
 
@@ -431,7 +430,6 @@ public class DiagnosticGroups {
           MISSING_PROVIDE,
           DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),
           DiagnosticGroup.forType(MISSING_MODULE_OR_PROVIDE),
-          DiagnosticGroup.forType(ModuleMapCreator.MISSING_NAMESPACE_IMPORT),
           MISSING_PROPERTIES,
           // triggered by typedefs with missing types
           DUPLICATE_VARS,

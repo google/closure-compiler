@@ -34,10 +34,6 @@ import javax.annotation.Nullable;
 
 /** Creates a {@link ModuleMap}. */
 public class ModuleMapCreator implements CompilerPass {
-  public static final DiagnosticType MISSING_NAMESPACE_IMPORT =
-      DiagnosticType.error(
-          "JSC_MISSING_NAMESPACE_IMPORT", "Imported Closure namespace \"{0}\" never defined.");
-
   public static final DiagnosticType DOES_NOT_HAVE_EXPORT =
       DiagnosticType.error(
           "JSC_DOES_NOT_HAVE_EXPORT", "Requested module does not have an export \"{0}\".");

@@ -28,7 +28,6 @@ import static com.google.javascript.jscomp.RhinoErrorReporter.UNRECOGNIZED_TYPE_
 import static com.google.javascript.jscomp.TypeCheck.INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.modules.EsModuleProcessor.NAMESPACE_IMPORT_CANNOT_USE_STAR;
-import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -1099,8 +1098,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   @Test
   public void testMissingRequireAssumesGoogProvide() {
-    ignoreWarnings(
-        MISSING_MODULE_OR_PROVIDE, MISSING_NAMESPACE_IMPORT, POSSIBLE_INEXISTENT_PROPERTY);
+    ignoreWarnings(MISSING_MODULE_OR_PROVIDE, POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
         srcs(
