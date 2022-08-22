@@ -19,14 +19,15 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.MaybeReachingVariableUse.ReachingUses;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
+import com.google.javascript.rhino.HamtPMap;
 import com.google.javascript.rhino.Node;
-import java.util.Collection;
+import com.google.javascript.rhino.PMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -104,7 +105,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
    */
   static final class ReachingUses implements LatticeElement {
     // Maps variables to all their uses that are upward exposed at the current cfgNode.
-    final HashMultimap<Var, Node> mayUseMap = HashMultimap.create();
+    private PMap<Var, PMap<Node, Node>> mayUsePMap = HamtPMap.empty();
 
     public ReachingUses() {}
 
@@ -114,18 +115,62 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
      * @param other The constructed object is a replicated copy of this element.
      */
     public ReachingUses(ReachingUses other) {
-      this.mayUseMap.putAll(other.mayUseMap);
+      mayUsePMap = other.mayUsePMap;
+    }
+
+    public Iterable<Node> get(Var v) {
+      PMap<Node, Node> uses = this.mayUsePMap.get(v);
+      return uses != null ? uses.keys() : ImmutableList.of();
+    }
+
+    public void removeAll(Var v) {
+      mayUsePMap = mayUsePMap.minus(v);
+    }
+
+    public void put(Var v, Node n) {
+      var values = mayUsePMap.get(v);
+      if (values == null) {
+        values = HamtPMap.empty();
+      }
+      var newValues = values.plus(n, n);
+      if (newValues != values) {
+        mayUsePMap = mayUsePMap.plus(v, newValues);
+      }
+    }
+
+    public void join(ReachingUses other) {
+      mayUsePMap =
+          mayUsePMap.reconcile(
+              other.mayUsePMap,
+              (Var var, PMap<Node, Node> thisVal, PMap<Node, Node> thatVal) -> {
+                if (thisVal == null) {
+                  return thatVal;
+                }
+                if (thatVal == null) {
+                  return thisVal;
+                }
+                // The PMap as a set with the key and value pair have the same value.
+                return thisVal.reconcile(thatVal, (node, unused1, unused2) -> node);
+              });
     }
 
     @Override
     public boolean equals(Object other) {
       return (other instanceof ReachingUses)
-          && ((ReachingUses) other).mayUseMap.equals(this.mayUseMap);
+          && ((ReachingUses) other).mayUsePMap.equivalent(this.mayUsePMap, ReachingUses::equalMaps);
+    }
+
+    private static boolean equalMaps(PMap<Node, Node> map1, PMap<Node, Node> map2) {
+      return map1 == map2 || map1.equivalent(map2, ReachingUses::equalNodes);
+    }
+
+    private static boolean equalNodes(Node n1, Node n2) {
+      return n1 == n2;
     }
 
     @Override
     public int hashCode() {
-      return mayUseMap.hashCode();
+      throw new UnsupportedOperationException("the hashcode of this object is not stable");
     }
   }
 
@@ -141,7 +186,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
 
     @Override
     public void joinFlow(ReachingUses uses) {
-      this.result.mayUseMap.putAll(uses.mayUseMap);
+      this.result.join(uses);
     }
 
     @Override
@@ -357,7 +402,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
       return;
     }
     if (!escaped.contains(var)) {
-      use.mayUseMap.put(var, node);
+      use.put(var, node);
     }
   }
 
@@ -371,7 +416,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
       return;
     }
     if (!escaped.contains(var)) {
-      use.mayUseMap.removeAll(var);
+      use.removeAll(var);
     }
   }
 
@@ -384,10 +429,10 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
    * @param defNode the control flow graph node that may assign a value to {@code name}
    * @return the list of upward exposed uses of the variable {@code name} at defNode.
    */
-  Collection<Node> getUses(String name, Node defNode) {
+  Iterable<Node> getUses(String name, Node defNode) {
     GraphNode<Node, Branch> n = getCfg().getNode(defNode);
     checkNotNull(n);
     LinearFlowState<ReachingUses> state = n.getAnnotation();
-    return state.getOut().mayUseMap.get(allVarsInFn.get(name));
+    return state.getOut().get(allVarsInFn.get(name));
   }
 }

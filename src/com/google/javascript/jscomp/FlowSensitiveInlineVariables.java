@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -455,9 +454,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return false;
       }
 
-      Collection<Node> uses = reachingUses.getUses(varName, getDefCfgNode());
-
-      if (uses.size() != 1) {
+      if (!hasExactlyOne(reachingUses.getUses(varName, getDefCfgNode()))) {
         return false;
       }
 
@@ -486,6 +483,17 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       }
 
       return true;
+    }
+
+    boolean hasExactlyOne(Iterable<Node> iterable) {
+      Iterator<Node> iterator = iterable.iterator();
+      if (iterator.hasNext()) {
+        iterator.next();
+        if (!iterator.hasNext()) {
+          return true;
+        }
+      }
+      return false;
     }
 
     /**

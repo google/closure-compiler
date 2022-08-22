@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -127,8 +128,8 @@ final class ReachingUseDefTester {
   /**
    * Returns may-be-reaching uses of definition of variable `x` on the node extracted at label `D:`.
    */
-  Collection<Node> getComputedUses() {
-    return reachingUse.getUses("x", labelFinder.extractedDef);
+  ImmutableSet<Node> getComputedUses() {
+    return ImmutableSet.copyOf(reachingUse.getUses("x", labelFinder.extractedDef));
   }
 
   /**
