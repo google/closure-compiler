@@ -1134,10 +1134,9 @@ public class NodeTraversal {
   /** Gets the current scope. */
   public AbstractScope<?, ?> getAbstractScope() {
     AbstractScope<?, ?> scope = scopes.peek();
-
-    // NOTE(dylandavidson): Use for-each loop to avoid slow ArrayList#get performance.
-    for (Node scopeRoot : scopeRoots) {
-      scope = scopeCreator.createScope(scopeRoot, scope);
+    int rootCount = scopeRoots.size();
+    for (int i = 0; i < rootCount; i++) {
+      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
       scopes.push(scope);
     }
     scopeRoots.clear();
