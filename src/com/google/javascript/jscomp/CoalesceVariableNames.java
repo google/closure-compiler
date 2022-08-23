@@ -398,7 +398,10 @@ class CoalesceVariableNames extends AbstractPostOrderCallback
       case CONST:
       case VAR:
         Node nameDecl = NodeUtil.getEnclosingNode(v.getNode(), NodeUtil::isNameDeclaration);
-        return NodeUtil.findLhsNodesInNode(nameDecl).size() > 1;
+
+        int[] count = {0}; // for lambda access
+        NodeUtil.visitLhsNodesInNode(nameDecl, (lhs) -> count[0]++);
+        return count[0] > 1;
       default:
         return false;
     }

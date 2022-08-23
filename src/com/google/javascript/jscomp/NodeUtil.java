@@ -4068,11 +4068,11 @@ public final class NodeUtil {
     return collector.vars.values();
   }
 
-  private static void getLhsNodesHelper(Node n, List<Node> lhsNodes) {
+  private static void getLhsNodesHelper(Node n, Consumer<Node> consumer) {
     switch (n.getToken()) {
       case IMPORT:
-        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
-        getLhsNodesHelper(n.getSecondChild(), lhsNodes);
+        getLhsNodesHelper(n.getFirstChild(), consumer);
+        getLhsNodesHelper(n.getSecondChild(), consumer);
         return;
       case VAR:
       case CONST:
@@ -4082,7 +4082,7 @@ public final class NodeUtil {
       case PARAM_LIST:
       case IMPORT_SPECS:
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          getLhsNodesHelper(child, lhsNodes);
+          getLhsNodesHelper(child, consumer);
         }
         return;
       case DESTRUCTURING_LHS:
@@ -4091,21 +4091,21 @@ public final class NodeUtil {
       case ITER_REST:
       case OBJECT_REST:
       case CAST:
-        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        getLhsNodesHelper(n.getFirstChild(), consumer);
         return;
       case IMPORT_SPEC:
       case COMPUTED_PROP:
       case STRING_KEY:
-        getLhsNodesHelper(n.getLastChild(), lhsNodes);
+        getLhsNodesHelper(n.getLastChild(), consumer);
         return;
       case NAME:
       case IMPORT_STAR:
-        lhsNodes.add(n);
+        consumer.accept(n);
         return;
       case GETPROP:
       case GETELEM:
         // Not valid in declarations but may appear in assignments.
-        lhsNodes.add(n);
+        consumer.accept(n);
         return;
       case EMPTY:
         return;
@@ -4116,11 +4116,11 @@ public final class NodeUtil {
         // e.g.
         // for (some.prop in someObj) {...
         // for ({a, b} of someIterable) {...
-        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        getLhsNodesHelper(n.getFirstChild(), consumer);
         return;
       default:
         if (isAssignmentOp(n)) {
-          getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+          getLhsNodesHelper(n.getFirstChild(), consumer);
         } else {
           throw new IllegalStateException("Invalid node in lhs: " + n);
         }
@@ -4132,7 +4132,7 @@ public final class NodeUtil {
    *
    * <p>An assigning parent node is one that assigns a value to one or more LHS nodes.
    */
-  public static List<Node> findLhsNodesInNode(Node assigningParent) {
+  public static void visitLhsNodesInNode(Node assigningParent, Consumer<Node> consumer) {
     checkArgument(
         isNameDeclaration(assigningParent)
             || assigningParent.isParamList()
@@ -4144,9 +4144,7 @@ public final class NodeUtil {
             // enhanced for loops assign to loop variables
             || isEnhancedFor(assigningParent),
         assigningParent);
-    ArrayList<Node> lhsNodes = new ArrayList<>();
-    getLhsNodesHelper(assigningParent, lhsNodes);
-    return lhsNodes;
+    getLhsNodesHelper(assigningParent, consumer);
   }
 
   /** Returns {@code true} if the node is a definition with Object.defineProperties */

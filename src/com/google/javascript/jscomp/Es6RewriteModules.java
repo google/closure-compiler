@@ -543,17 +543,10 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   }
 
   private void visitExportNameDeclaration(Node declaration) {
-    //    export var Foo;
-    //    export let {a, b:[c,d]} = {};
-    List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(declaration);
-
-    for (Node lhs : lhsNodes) {
-      checkState(lhs.isName());
-      String name = lhs.getString();
-
-      if (declaration.getJSDocInfo() != null && declaration.getJSDocInfo().hasTypedefType()) {
-        typedefs.add(name);
-      }
+    if (declaration.getJSDocInfo() != null && declaration.getJSDocInfo().hasTypedefType()) {
+      //    export var Foo;
+      //    export let {a, b:[c,d]} = {};
+      NodeUtil.visitLhsNodesInNode(declaration, (lhs) -> typedefs.add(lhs.getString()));
     }
   }
 

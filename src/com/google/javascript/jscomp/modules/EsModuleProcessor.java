@@ -803,23 +803,25 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
   private void visitExportNameDeclaration(NodeTraversal t, Node export, Node declaration) {
     //    export var Foo;
     //    export let {a, b:[c,d]} = {};
-    List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(declaration);
-    for (Node lhs : lhsNodes) {
-      checkState(lhs.isName());
-      String name = lhs.getString();
-      if (!currentModuleBuilder.add(
-          Export.builder()
-              .exportName(name)
-              .moduleRequest(null)
-              .importName(null)
-              .localName(name)
-              .modulePath(t.getInput().getPath())
-              .exportNode(export)
-              .nameNode(lhs)
-              .moduleMetadata(metadata)
-              .build())) {
-        t.report(export, DUPLICATE_EXPORT, name);
-      }
+    NodeUtil.visitLhsNodesInNode(
+        declaration, lhs -> addExportNameDeclaration(t, lhs, export, declaration));
+  }
+
+  private void addExportNameDeclaration(NodeTraversal t, Node lhs, Node export, Node declaration) {
+    checkState(lhs.isName());
+    String name = lhs.getString();
+    if (!currentModuleBuilder.add(
+        Export.builder()
+            .exportName(name)
+            .moduleRequest(null)
+            .importName(null)
+            .localName(name)
+            .modulePath(t.getInput().getPath())
+            .exportNode(export)
+            .nameNode(lhs)
+            .moduleMetadata(metadata)
+            .build())) {
+      t.report(export, DUPLICATE_EXPORT, name);
     }
   }
 

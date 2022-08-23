@@ -96,11 +96,13 @@ public class CheckConstantCaseNames implements NodeTraversal.Callback, CompilerP
         if (info != null && info.hasConstAnnotation()) {
           break;
         }
-        for (Node name : NodeUtil.findLhsNodesInNode(n)) {
-          if (convention.isConstant(name.getString())) {
-            this.invalidNamesPerModule.put(name.getString(), name);
-          }
-        }
+        NodeUtil.visitLhsNodesInNode(
+            n,
+            (name) -> {
+              if (convention.isConstant(name.getString())) {
+                this.invalidNamesPerModule.put(name.getString(), name);
+              }
+            });
         break;
 
       case NAME:

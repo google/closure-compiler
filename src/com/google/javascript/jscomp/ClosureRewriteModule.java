@@ -1003,10 +1003,8 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   private void recordTopLevelVarNames(Node varNode) {
-    for (Node lhs : NodeUtil.findLhsNodesInNode(varNode)) {
-      String name = lhs.getString();
-      currentScript.topLevelNames.add(name);
-    }
+    NodeUtil.visitLhsNodesInNode(
+        varNode, (lhs) -> currentScript.topLevelNames.add(lhs.getString()));
   }
 
   private void maybeRecordExportDeclaration(NodeTraversal t, Node n) {
@@ -1641,9 +1639,8 @@ final class ClosureRewriteModule implements CompilerPass {
       }
 
       enclosingStatement.detach();
-      for (Node lhs : NodeUtil.findLhsNodesInNode(enclosingStatement)) {
-        syntheticExterns.putIfAbsent(lhs.getString(), lhs);
-      }
+      NodeUtil.visitLhsNodesInNode(
+          enclosingStatement, (lhs) -> syntheticExterns.putIfAbsent(lhs.getString(), lhs));
     }
   }
 

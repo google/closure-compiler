@@ -27,6 +27,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import javax.annotation.Nullable;
 
 /**
@@ -241,11 +242,11 @@ abstract class PotentialDeclaration {
 
       Node prev = null;
 
-      for (Node n : NodeUtil.findLhsNodesInNode(rootTarget.getParent())) {
-
+      ArrayList<Node> lhsNodes = new ArrayList<>();
+      NodeUtil.visitLhsNodesInNode(rootTarget.getParent(), lhsNodes::add);
+      for (Node n : lhsNodes) {
         n.detach();
         Node temp = IR.var(n);
-
         if (prev == null) {
           definitionNode.replaceWith(temp);
           compiler.reportChangeToEnclosingScope(temp);

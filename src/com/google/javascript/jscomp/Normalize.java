@@ -27,10 +27,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -358,12 +356,12 @@ final class Normalize implements CompilerPass {
 
         Node exportSpecs = new Node(Token.EXPORT_SPECS).srcref(n);
         n.addChildToFront(exportSpecs);
-        Iterable<Node> names;
         if (c.isClass() || c.isFunction()) {
-          names = Collections.singleton(c.getFirstChild());
+          Node name = c.getFirstChild();
           c.insertBefore(n);
+          addNameNodeToExportSpecs(exportSpecs, name);
         } else {
-          names = NodeUtil.findLhsNodesInNode(c);
+          NodeUtil.visitLhsNodesInNode(c, (name) -> addNameNodeToExportSpecs(exportSpecs, name));
           // Split up var declarations onto separate lines.
           for (Node child = c.getFirstChild(); child != null; ) {
             final Node next = child.getNext();
@@ -374,15 +372,15 @@ final class Normalize implements CompilerPass {
           }
         }
 
-        for (Node name : names) {
-          Node exportSpec = new Node(Token.EXPORT_SPEC).srcref(name);
-          exportSpec.addChildToFront(name.cloneNode());
-          exportSpec.addChildToFront(name.cloneNode());
-          exportSpecs.addChildToBack(exportSpec);
-        }
-
         compiler.reportChangeToEnclosingScope(n.getParent());
       }
+    }
+
+    private void addNameNodeToExportSpecs(Node exportSpecs, Node name) {
+      Node exportSpec = new Node(Token.EXPORT_SPEC).srcref(name);
+      exportSpec.addChildToFront(name.cloneNode());
+      exportSpec.addChildToFront(name.cloneNode());
+      exportSpecs.addChildToBack(exportSpec);
     }
 
     /**
@@ -494,17 +492,18 @@ final class Normalize implements CompilerPass {
                 //    for (var [a, b = 3] in c) {}
                 // to:
                 //    var a; var b; for ([a, b = 3] in c) {}
-                List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(lhs);
-                for (Node name : lhsNodes) {
-                  // Add a declaration outside the for loop for the given name.
-                  checkState(
-                      name.isName(),
-                      "lhs in destructuring declaration should be a simple name.",
-                      name);
-                  Node newName = IR.name(name.getString()).srcref(name);
-                  Node newVar = IR.var(newName).srcref(name);
-                  newVar.insertBefore(insertBefore);
-                }
+                NodeUtil.visitLhsNodesInNode(
+                    lhs,
+                    (name) -> {
+                      // Add a declaration outside the for loop for the given name.
+                      checkState(
+                          name.isName(),
+                          "lhs in destructuring declaration should be a simple name.",
+                          name);
+                      Node newName = IR.name(name.getString()).srcref(name);
+                      Node newVar = IR.var(newName).srcref(name);
+                      newVar.insertBefore(insertBefore);
+                    });
 
                 // Transform for (var [a, b]... ) to for ([a, b]...
                 Node destructuringPattern = lhs.removeFirstChild();

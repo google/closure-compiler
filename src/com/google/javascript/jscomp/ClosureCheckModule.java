@@ -486,12 +486,14 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       checkShortName(t, lhs, callNode.getLastChild().getString());
     }
     currentModuleInfo.importsByLongRequiredName.put(extractFirstArgumentName(callNode), lhs);
-    for (Node nameNode : NodeUtil.findLhsNodesInNode(declaration)) {
-      String name = nameNode.getString();
-      if (!currentModuleInfo.shortImportNames.add(name)) {
-        t.report(nameNode, DUPLICATE_NAME_SHORT_REQUIRE, name);
-      }
-    }
+    NodeUtil.visitLhsNodesInNode(
+        declaration,
+        (nameNode) -> {
+          String name = nameNode.getString();
+          if (!currentModuleInfo.shortImportNames.add(name)) {
+            t.report(nameNode, DUPLICATE_NAME_SHORT_REQUIRE, name);
+          }
+        });
   }
 
   private static void checkShortName(NodeTraversal t, Node shortNameNode, String namespace) {

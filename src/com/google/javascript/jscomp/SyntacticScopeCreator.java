@@ -169,9 +169,7 @@ public final class SyntacticScopeCreator implements ScopeCreator {
         // to avoid extra GC and cpu cycles.
         declareVar(s, n.getFirstChild());
       } else {
-        for (Node lhs : NodeUtil.findLhsNodesInNode(n)) {
-          declareVar(s, lhs);
-        }
+        NodeUtil.visitLhsNodesInNode(n, (lhs) -> declareVar(s, lhs));
       }
     }
 

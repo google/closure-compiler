@@ -29,7 +29,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -486,13 +485,13 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     private void visitExportNameDeclaration(Node declaration) {
       //    export var Foo;
       //    export let {a, b:[c,d]} = {};
-      List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(declaration);
+      NodeUtil.visitLhsNodesInNode(declaration, (lhs) -> addExportedName(lhs));
+    }
 
-      for (Node lhs : lhsNodes) {
-        checkState(lhs.isName());
-        String name = lhs.getString();
-        exportedNameToLocalQName.put(name, new LocalQName(name, lhs));
-      }
+    private void addExportedName(Node lhs) {
+      checkState(lhs.isName());
+      String name = lhs.getString();
+      exportedNameToLocalQName.put(name, new LocalQName(name, lhs));
     }
 
     private void visitExportDeclaration(NodeTraversal t, Node export) {

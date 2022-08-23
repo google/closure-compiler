@@ -1812,12 +1812,15 @@ public final class ConformanceRules {
       }
 
       if (NodeUtil.isNameDeclaration(n)) {
-        for (Node name : NodeUtil.findLhsNodesInNode(n)) {
-          if (!isAllowlistedName(name.getString())) {
-            return false;
-          }
-        }
-        return true;
+        boolean[] allowlisted = {true}; // for lambda access
+        NodeUtil.visitLhsNodesInNode(
+            n,
+            (name) -> {
+              if (!isAllowlistedName(name.getString())) {
+                allowlisted[0] = false;
+              }
+            });
+        return allowlisted[0];
       }
 
       return false;

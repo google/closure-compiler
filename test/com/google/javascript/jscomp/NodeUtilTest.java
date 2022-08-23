@@ -3627,30 +3627,30 @@ public final class NodeUtilTest {
 
     @Test
     public void testFindLhsNodesInNodeWithNameDeclaration() {
-      assertThat(findLhsNodesInNode("var x;")).hasSize(1);
-      assertThat(findLhsNodesInNode("var x, y;")).hasSize(2);
-      assertThat(findLhsNodesInNode("var f = function(x, y, z) {};")).hasSize(1);
+      assertThat(visitLhsNodesInNode("var x;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("var x, y;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("var f = function(x, y, z) {};")).hasSize(1);
     }
 
     @Test
     public void testFindLhsNodesInNodeWithArrayPatternDeclaration() {
-      assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
-      assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
-      assertThat(findLhsNodesInNode("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
+      assertThat(visitLhsNodesInNode("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
     }
 
     @Test
     public void testFindLhsNodesInNodeWithObjectPatternDeclaration() {
-      assertThat(findLhsNodesInNode("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
-      assertThat(findLhsNodesInNode("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
-      assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
-      assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
+      assertThat(visitLhsNodesInNode("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
           .hasSize(3);
     }
 
     @Test
     public void testFindLhsNodesInNodeWithCastOnLhs() {
-      Iterable<Node> lhsNodes = findLhsNodesInNode("/** @type {*} */ (a.b) = 3;");
+      Iterable<Node> lhsNodes = visitLhsNodesInNode("/** @type {*} */ (a.b) = 3;");
       assertThat(lhsNodes).hasSize(1);
       Iterator<Node> nodeIterator = lhsNodes.iterator();
       assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
@@ -3658,28 +3658,28 @@ public final class NodeUtilTest {
 
     @Test
     public void testFindLhsNodesInNodeWithArrayPatternAssign() {
-      assertThat(findLhsNodesInNode("[this.x] = rhs;")).hasSize(1);
-      assertThat(findLhsNodesInNode("[this.x, y] = rhs;")).hasSize(2);
-      assertThat(findLhsNodesInNode("[this.x, y, this.z] = rhs;")).hasSize(3);
-      assertThat(findLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
-      assertThat(findLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
-      assertThat(findLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
-      assertThat(findLhsNodesInNode("[ /** @type {*} */ (x.y.z) ] = rhs;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("[this.x] = rhs;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("[this.x, y] = rhs;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("[this.x, y, this.z] = rhs;")).hasSize(3);
+      assertThat(visitLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
+      assertThat(visitLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("[ /** @type {*} */ (x.y.z) ] = rhs;")).hasSize(1);
     }
 
     @Test
     public void testFindLhsNodesInNodeWithComplexAssign() {
-      assertThat(findLhsNodesInNode("x += 1;")).hasSize(1);
-      assertThat(findLhsNodesInNode("x.y += 1;")).hasSize(1);
-      assertThat(findLhsNodesInNode("x -= 1;")).hasSize(1);
-      assertThat(findLhsNodesInNode("x.y -= 1;")).hasSize(1);
-      assertThat(findLhsNodesInNode("x *= 2;")).hasSize(1);
-      assertThat(findLhsNodesInNode("x.y *= 2;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("x += 1;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("x.y += 1;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("x -= 1;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("x.y -= 1;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("x *= 2;")).hasSize(1);
+      assertThat(visitLhsNodesInNode("x.y *= 2;")).hasSize(1);
     }
 
     @Test
     public void testFindLhsNodesInForOfWithDeclaration() {
-      Iterable<Node> lhsNodes = findLhsNodesInNode("for (const {x, y} of iterable) {}");
+      Iterable<Node> lhsNodes = visitLhsNodesInNode("for (const {x, y} of iterable) {}");
       assertThat(lhsNodes).hasSize(2);
       Iterator<Node> nodeIterator = lhsNodes.iterator();
       assertNode(nodeIterator.next()).isName("x");
@@ -3688,7 +3688,7 @@ public final class NodeUtilTest {
 
     @Test
     public void testFindLhsNodesInForOfWithoutDeclaration() {
-      Iterable<Node> lhsNodes = findLhsNodesInNode("for ({x, y: a.b} of iterable) {}");
+      Iterable<Node> lhsNodes = visitLhsNodesInNode("for ({x, y: a.b} of iterable) {}");
       assertThat(lhsNodes).hasSize(2);
       Iterator<Node> nodeIterator = lhsNodes.iterator();
       assertNode(nodeIterator.next()).isName("x");
@@ -3697,7 +3697,7 @@ public final class NodeUtilTest {
 
     @Test
     public void testFindLhsNodesInForInWithDeclaration() {
-      Iterable<Node> lhsNodes = findLhsNodesInNode("for (const x in obj) {}");
+      Iterable<Node> lhsNodes = visitLhsNodesInNode("for (const x in obj) {}");
       assertThat(lhsNodes).hasSize(1);
       Iterator<Node> nodeIterator = lhsNodes.iterator();
       assertNode(nodeIterator.next()).isName("x");
@@ -3705,7 +3705,7 @@ public final class NodeUtilTest {
 
     @Test
     public void testFindLhsNodesInForInWithoutDeclaration() {
-      Iterable<Node> lhsNodes = findLhsNodesInNode("for (a.b in iterable) {}");
+      Iterable<Node> lhsNodes = visitLhsNodesInNode("for (a.b in iterable) {}");
       assertThat(lhsNodes).hasSize(1);
       Iterator<Node> nodeIterator = lhsNodes.iterator();
       assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
@@ -4836,12 +4836,12 @@ public final class NodeUtilTest {
   }
 
   /**
-   * @param js JavaScript node to be passed to {@code NodeUtil.findLhsNodesInNode}. Must be either
+   * @param js JavaScript node to be passed to {@code NodeUtil.visitLhsNodesInNode}. Must be either
    *     an EXPR_RESULT containing an assignment operation (e.g. =, +=, /=, etc) in which case the
-   *     assignment node will be passed to {@code NodeUtil.findLhsNodesInNode}, or a VAR, LET, or
+   *     assignment node will be passed to {@code NodeUtil.visitLhsNodesInNode}, or a VAR, LET, or
    *     CONST statement, in which case the declaration statement will be passed.
    */
-  private static Iterable<Node> findLhsNodesInNode(String js) {
+  private static Iterable<Node> visitLhsNodesInNode(String js) {
     Node root = parse(js);
     checkState(root.isScript(), root);
     root = root.getOnlyChild();
@@ -4849,7 +4849,9 @@ public final class NodeUtilTest {
       root = root.getOnlyChild();
       checkState(NodeUtil.isAssignmentOp(root), root);
     }
-    return NodeUtil.findLhsNodesInNode(root);
+    ArrayList<Node> nodes = new ArrayList<>();
+    NodeUtil.visitLhsNodesInNode(root, nodes::add);
+    return nodes;
   }
 
   private static Node getNameNode(Node n, String name) {

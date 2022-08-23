@@ -691,20 +691,19 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               lhs.isDestructuringPattern()
                   ? RHS_IS_NEVER_LOCAL
                   : FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE;
-          visitLhsNodes(
-              encloserSummary,
-              traversal.getScope(),
-              NodeUtil.findLhsNodesInNode(node),
-              rhsLocality);
+          NodeUtil.visitLhsNodesInNode(
+              node,
+              (lhsNode) ->
+                  visitLhsNode(encloserSummary, traversal.getScope(), lhsNode, rhsLocality));
           break;
 
         case INC: // e.g. x++;
         case DEC:
         case DELPROP:
-          visitLhsNodes(
+          visitLhsNode(
               encloserSummary,
               traversal.getScope(),
-              ImmutableList.of(node.getOnlyChild()),
+              node.getOnlyChild(),
               // The value assigned by a unary op is always local.
               RHS_IS_ALWAYS_LOCAL);
           break;
@@ -716,13 +715,17 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           // e.g.
           // for (const {prop1, prop2} of iterable) {...}
           // for ({prop1: x.p1, prop2: x.p2} of iterable) {...}
-          visitLhsNodes(
-              encloserSummary,
-              traversal.getScope(),
-              NodeUtil.findLhsNodesInNode(node),
-              // The RHS of a for-of must always be an iterable, making it a container, so we can't
-              // consider its contents to be local
-              RHS_IS_NEVER_LOCAL);
+          NodeUtil.visitLhsNodesInNode(
+              node,
+              (lhsNode) ->
+                  visitLhsNode(
+                      encloserSummary,
+                      traversal.getScope(),
+                      lhsNode,
+                      // The RHS of a for-of must always be an iterable, making it a container, so
+                      // we can't
+                      // consider its contents to be local
+                      RHS_IS_NEVER_LOCAL));
           checkIteratesImpureIterable(node, encloserSummary);
           break;
 
@@ -731,12 +734,15 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           // for (prop in obj) {...}
           // Also this, though not very useful or readable.
           // for ([char1, char2, ...x.rest] in obj) {...}
-          visitLhsNodes(
-              encloserSummary,
-              traversal.getScope(),
-              NodeUtil.findLhsNodesInNode(node),
-              // A for-in always assigns a string, which is a local value by definition.
-              RHS_IS_ALWAYS_LOCAL);
+          NodeUtil.visitLhsNodesInNode(
+              node,
+              (lhsNode) ->
+                  visitLhsNode(
+                      encloserSummary,
+                      traversal.getScope(),
+                      lhsNode,
+                      // A for-in always assigns a string, which is a local value by definition.
+                      RHS_IS_ALWAYS_LOCAL));
           break;
 
         case OPTCHAIN_CALL:
@@ -753,11 +759,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           }
           // Assume the value assigned to each item is potentially global state. This is overly
           // conservative but necessary because in the common case the rhs is not a literal.
-          visitLhsNodes(
-              encloserSummary,
-              traversal.getScope(),
-              NodeUtil.findLhsNodesInNode(node.getParent()),
-              RHS_IS_NEVER_LOCAL);
+          NodeUtil.visitLhsNodesInNode(
+              node.getParent(),
+              (lhsNode) ->
+                  visitLhsNode(encloserSummary, traversal.getScope(), lhsNode, RHS_IS_NEVER_LOCAL));
           break;
 
         case NAME:
@@ -831,10 +836,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           if (NodeUtil.isCompoundAssignmentOp(node)) {
             // e.g.
             // x += 3;
-            visitLhsNodes(
+            visitLhsNode(
                 encloserSummary,
                 traversal.getScope(),
-                ImmutableList.of(node.getFirstChild()),
+                node.getFirstChild(),
                 // The update assignments (e.g. `+=) always assign primitive, and therefore local,
                 // values.
                 RHS_IS_ALWAYS_LOCAL);
@@ -969,47 +974,45 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * @param lhsNodes LHS nodes that are all assigned values by a given parent node
      * @param hasLocalRhs Predicate indicating whether a given LHS is being assigned a local value
      */
-    private void visitLhsNodes(
+    private void visitLhsNode(
         AmbiguatedFunctionSummary encloserSummary,
         Scope scope,
-        List<Node> lhsNodes,
+        Node lhs,
         Predicate<Node> hasLocalRhs) {
-      for (Node lhs : lhsNodes) {
-        if (NodeUtil.isNormalOrOptChainGet(lhs)) {
-          // Although OPTCHAIN_GETPROP can not be an LHS of an assign, it can be a child to DELPROP.
-          // e.g. `delete obj?.prop` <==> `obj == null ?  true : delete obj.prop;`
-          // Hence the enclosing function's side effects must be recorded.
-          if (lhs.getFirstChild().isThis()) {
-            encloserSummary.setMutatesThis();
-          } else {
-            Node objectNode = lhs.getFirstChild();
-            if (objectNode.isName()) {
-              Var var = scope.getVar(objectNode.getString());
-              if (isVarDeclaredInSameContainerScope(var, scope)) {
-                // Maybe a local object modification.  We won't know for sure until
-                // we exit the scope and can validate the value of the local.
-                this.functionScopeStack.getLast().taintedVars.add(var);
-              } else {
-                encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
-              }
+      if (NodeUtil.isNormalOrOptChainGet(lhs)) {
+        // Although OPTCHAIN_GETPROP can not be an LHS of an assign, it can be a child to DELPROP.
+        // e.g. `delete obj?.prop` <==> `obj == null ?  true : delete obj.prop;`
+        // Hence the enclosing function's side effects must be recorded.
+        if (lhs.getFirstChild().isThis()) {
+          encloserSummary.setMutatesThis();
+        } else {
+          Node objectNode = lhs.getFirstChild();
+          if (objectNode.isName()) {
+            Var var = scope.getVar(objectNode.getString());
+            if (isVarDeclaredInSameContainerScope(var, scope)) {
+              // Maybe a local object modification.  We won't know for sure until
+              // we exit the scope and can validate the value of the local.
+              this.functionScopeStack.getLast().taintedVars.add(var);
             } else {
-              // Don't track multi level locals: local.prop.prop2++;
               encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
             }
-          }
-        } else {
-          checkState(lhs.isName(), lhs);
-          Var var = scope.getVar(lhs.getString());
-          if (isVarDeclaredInSameContainerScope(var, scope)) {
-            if (!hasLocalRhs.test(lhs)) {
-              // Assigned value is not guaranteed to be a local value,
-              // so if we see any property assignments on this variable,
-              // they could be tainting a non-local value.
-              this.functionScopeStack.getLast().skiplistedVars.add(var);
-            }
           } else {
+            // Don't track multi level locals: local.prop.prop2++;
             encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           }
+        }
+      } else {
+        checkState(lhs.isName(), lhs);
+        Var var = scope.getVar(lhs.getString());
+        if (isVarDeclaredInSameContainerScope(var, scope)) {
+          if (!hasLocalRhs.test(lhs)) {
+            // Assigned value is not guaranteed to be a local value,
+            // so if we see any property assignments on this variable,
+            // they could be tainting a non-local value.
+            this.functionScopeStack.getLast().skiplistedVars.add(var);
+          }
+        } else {
+          encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
         }
       }
     }

@@ -1129,16 +1129,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // Though almost certainly a terrible idea, it is possible to do destructuring in
       // the catch declaration.
       // e.g. `} catch ({message, errno}) {`
-      for (Node catchName : NodeUtil.findLhsNodesInNode(n)) {
-        JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null, null);
-        new SlotDefiner()
-            .forDeclarationNode(catchName)
-            .forVariableName(catchName.getString())
-            .inScope(currentScope)
-            .withType(type)
-            .allowLaterTypeInference(type == null)
-            .defineSlot();
-      }
+      NodeUtil.visitLhsNodesInNode(
+          n,
+          (catchName) -> {
+            JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null, null);
+            new SlotDefiner()
+                .forDeclarationNode(catchName)
+                .forVariableName(catchName.getString())
+                .inScope(currentScope)
+                .withType(type)
+                .allowLaterTypeInference(type == null)
+                .defineSlot();
+          });
     }
 
     /** Defines an assignment to a name as if it were an actual declaration. */

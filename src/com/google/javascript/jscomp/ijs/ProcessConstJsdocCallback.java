@@ -118,13 +118,15 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
     checkArgument(NodeUtil.isNameDeclaration(lhs.getParent()) || lhs.getParent().isAssign());
     boolean isImport = PotentialDeclaration.isImportRhs(rhs);
     boolean isAlias = PotentialDeclaration.isAliasDeclaration(lhs, rhs);
-    for (Node name : NodeUtil.findLhsNodesInNode(lhs.getParent())) {
-      if (isAlias || isImport) {
-        currentFile.recordAliasDeclaration(name);
-      } else {
-        currentFile.recordNameDeclaration(name);
-      }
-    }
+    NodeUtil.visitLhsNodesInNode(
+        lhs.getParent(),
+        (name) -> {
+          if (isAlias || isImport) {
+            currentFile.recordAliasDeclaration(name);
+          } else {
+            currentFile.recordNameDeclaration(name);
+          }
+        });
   }
 
   private void processDeclarationWithRhs(NodeTraversal t, Node lhs) {
