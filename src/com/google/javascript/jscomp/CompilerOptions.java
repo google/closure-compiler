@@ -1680,7 +1680,7 @@ public class CompilerOptions implements Serializable {
   public void setPolymerVersion(Integer polymerVersion) {
     checkArgument(
         polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
-        "Invalid Polymer version:",
+        "Invalid Polymer version: (%s)",
         polymerVersion);
     this.polymerVersion = polymerVersion;
   }

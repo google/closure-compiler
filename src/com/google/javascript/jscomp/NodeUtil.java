@@ -3930,7 +3930,7 @@ public final class NodeUtil {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
-      checkState(current.isGetProp(), "Not a getprop node: ", current);
+      checkState(current.isGetProp(), "Not a getprop node:  (%s)", current);
     }
   }
 

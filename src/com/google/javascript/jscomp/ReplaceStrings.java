@@ -406,7 +406,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
         replacementParameters.add(paramCount);
       } else {
         // TODO(johnlenz): report an error.
-        Preconditions.checkState(param.isEmpty(), "Unknown marker", param);
+        Preconditions.checkState(param.isEmpty(), "Unknown marker (%s)", param);
       }
     }
 

@@ -67,7 +67,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       boolean propertyRenamingEnabled) {
     checkArgument(
         polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
-        "Invalid Polymer version:",
+        "Invalid Polymer version: (%s)",
         polymerVersion);
     this.compiler = compiler;
     tagNameMap = TagNameToType.getMap();

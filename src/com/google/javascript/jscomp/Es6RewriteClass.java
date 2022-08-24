@@ -154,11 +154,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       } else {
         Preconditions.checkState(
             member.isMemberFunctionDef() || member.isComputedProp(),
-            "Unexpected class member:",
+            "Unexpected class member: (%s)",
             member);
         Preconditions.checkState(
             !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE),
-            "Member variables should have been transpiled earlier:",
+            "Member variables should have been transpiled earlier: (%s)",
             member);
         visitMethod(member, metadata);
       }

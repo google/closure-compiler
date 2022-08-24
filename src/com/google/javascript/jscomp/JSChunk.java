@@ -169,7 +169,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   /** Adds a dependency on another chunk. */
   public void addDependency(JSChunk dep) {
     checkNotNull(dep);
-    Preconditions.checkState(dep != this, "Cannot add dependency on self", this);
+    Preconditions.checkState(dep != this, "Cannot add dependency on self (%s)", this);
     deps.add(dep);
   }
 

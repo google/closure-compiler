@@ -331,7 +331,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
       case LET:
       case CONST:
         Node varName = n.getFirstChild();
-        checkState(n.hasChildren(), "AST should be normalized", n);
+        checkState(n.hasChildren(), "AST should be normalized (%s)", n);
 
         if (varName.isDestructuringLhs()) {
           // Note: since destructuring is evaluated in reverse AST order, we traverse the first

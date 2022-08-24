@@ -653,7 +653,8 @@ public class NodeTraversal {
         }
         break;
       default:
-        checkState(s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got:", s);
+        checkState(
+            s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got: (%s)", s);
         traverseWithScope(n, s);
     }
   }

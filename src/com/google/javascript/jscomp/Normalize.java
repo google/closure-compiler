@@ -498,7 +498,7 @@ final class Normalize implements CompilerPass {
                       // Add a declaration outside the for loop for the given name.
                       checkState(
                           name.isName(),
-                          "lhs in destructuring declaration should be a simple name.",
+                          "lhs in destructuring declaration should be a simple name. (%s)",
                           name);
                       Node newName = IR.name(name.getString()).srcref(name);
                       Node newVar = IR.var(newName).srcref(name);

@@ -533,7 +533,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         String aliasVarName = aliasLhsNode.getString();
 
         Var aliasVar = alias.scope.getVar(aliasVarName);
-        checkState(aliasVar != null, "Expected variable to be defined in scope", aliasVarName);
+        checkState(aliasVar != null, "Expected variable to be defined in scope (%s)", aliasVarName);
         ReferenceCollector collector =
             new ReferenceCollector(
                 compiler,

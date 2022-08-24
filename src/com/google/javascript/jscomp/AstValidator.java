@@ -648,7 +648,7 @@ public final class AstValidator implements CompilerPass {
   private boolean isInParameterListOfFunction(Node child, Node functionNode) {
     Node paramList = checkNotNull(functionNode.getSecondChild(), functionNode);
     for (Node parent = child.getParent(); parent != functionNode; parent = parent.getParent()) {
-      checkNotNull(parent, "{} not contained in function {}", child, functionNode);
+      checkNotNull(parent, "%s not contained in function %s", child, functionNode);
       if (parent == paramList) {
         return true;
       }

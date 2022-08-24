@@ -112,7 +112,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
   Property(String name, JSType type, boolean inferred,
       Node propertyNode) {
     this.name = checkNotNull(name);
-    this.type = checkNotNull(type, "Null type specified for {}", name);
+    this.type = checkNotNull(type, "Null type specified for %s", name);
     this.inferred = inferred;
     this.propertyNode = propertyNode;
   }
@@ -157,7 +157,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
   }
 
   void setType(JSType type) {
-    this.type = checkNotNull(type, "Null type specified for property {}", name);
+    this.type = checkNotNull(type, "Null type specified for property %s", name);
   }
 
   @Override public JSDocInfo getJSDocInfo() {
