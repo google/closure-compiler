@@ -485,7 +485,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     private void visitExportNameDeclaration(Node declaration) {
       //    export var Foo;
       //    export let {a, b:[c,d]} = {};
-      NodeUtil.visitLhsNodesInNode(declaration, (lhs) -> addExportedName(lhs));
+      NodeUtil.visitLhsNodesInNode(declaration, this::addExportedName);
     }
 
     private void addExportedName(Node lhs) {
