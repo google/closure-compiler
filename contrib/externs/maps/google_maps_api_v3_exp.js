@@ -9675,11 +9675,11 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider = function(
     options) {};
 
 /**
- * The filter options to apply when fetching the delivery vehicles.
- * @type {?google.maps.journeySharing.FleetEngineDeliveryVehicleFilterOptions|undefined}
+ * The filter applied when fetching the delivery vehicles.
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider.prototype
-    .deliveryVehicleFilterOptions;
+    .deliveryVehicleFilter;
 
 /**
  * The bounds within which to track delivery vehicles. If no bounds are set, no
@@ -9729,11 +9729,17 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions
     .prototype.authTokenFetcher;
 
 /**
- * Filter options to apply when fetching the delivery vehicles.
- * @type {?google.maps.journeySharing.FleetEngineDeliveryVehicleFilterOptions}
+ * A filter query to apply when fetching delivery vehicles. This filter is
+ * passed directly to Fleet Engine. <p>See <a
+ * href="https://developers.google.com/maps/documentation/transportation-logistics/last-mile-fleet-solution/reference/fleet-engine/rpc/maps.fleetengine.delivery.v1#listdeliveryvehiclesrequest">ListDeliveryVehiclesRequest.filter</a>
+ * for supported formats. <p>Note that valid filters for attributes must have
+ * the &quot;attributes&quot; prefix. For example, <code>attributes.x =
+ * &quot;y&quot;</code> or <code>attributes.&quot;x y&quot; =
+ * &quot;z&quot;</code>.
+ * @type {?string}
  */
 google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions
-    .prototype.deliveryVehicleFilterOptions;
+    .prototype.deliveryVehicleFilter;
 
 /**
  * The latitude/longitude bounds within which to track vehicles immediately
@@ -9780,22 +9786,6 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderUpdateEvent =
  */
 google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderUpdateEvent
     .prototype.deliveryVehicles;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Options for filtering for delivery vehicles
- * @record
- */
-google.maps.journeySharing.FleetEngineDeliveryVehicleFilterOptions =
-    function() {};
-
-/**
- * Custom attributes that the delivery vehicles must have. Values must be
- * strings or an error will be generated.
- * @type {?Object<string, string>}
- */
-google.maps.journeySharing.FleetEngineDeliveryVehicleFilterOptions.prototype
-    .requiredAttributes;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
