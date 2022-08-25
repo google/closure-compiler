@@ -9731,9 +9731,9 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions
 /**
  * A filter query to apply when fetching delivery vehicles. This filter is
  * passed directly to Fleet Engine. <p>See <a
- * href="https://developers.google.com/maps/documentation/transportation-logistics/last-mile-fleet-solution/reference/fleet-engine/rpc/maps.fleetengine.delivery.v1#listdeliveryvehiclesrequest">ListDeliveryVehiclesRequest.filter</a>
- * for supported formats. <p>Note that valid filters for attributes must have
- * the &quot;attributes&quot; prefix. For example, <code>attributes.x =
+ * href="https://goo.gle/3wT0Dlt">ListDeliveryVehiclesRequest.filter</a> for
+ * supported formats. <p>Note that valid filters for attributes must have the
+ * &quot;attributes&quot; prefix. For example, <code>attributes.x =
  * &quot;y&quot;</code> or <code>attributes.&quot;x y&quot; =
  * &quot;z&quot;</code>.
  * @type {?string}
