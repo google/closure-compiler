@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
@@ -54,13 +53,14 @@ public class NodeTraversal {
   private Node currentChangeScope;
 
   /**
-   * Stack containing the Scopes that have been created. The Scope objects are lazily created; so
-   * the {@code scopeRoots} stack contains the Nodes for all Scopes that have not been created yet.
+   * The chain scope for the currentNode being visited. Scopes are relatively expensive to build so
+   * they are built lazily. The list contains instanciated `AbstractScope` or the `Node`
+   * representing the root of the scope.
+   *
+   * <p>If `AbstractScope` is seen all previous entries will also have been instanciated due to the
+   * heirarchical nature of scopes.
    */
-  private final Deque<AbstractScope<?, ?>> scopes = new ArrayDeque<>();
-
-  /** A stack of scope roots. See #scopes. */
-  private final List<Node> scopeRoots = new ArrayList<>();
+  private final ArrayList<Object> scopes = new ArrayList<>();
 
   /**
    * Stack containing the control flow graphs (CFG) that have been created. There are fewer CFGs
@@ -1081,7 +1081,7 @@ public class NodeTraversal {
   private void pushScope(Node node) {
     checkNotNull(currentNode);
     checkNotNull(node);
-    scopeRoots.add(node);
+    scopes.add(node);
     recordScopeRoot(node);
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
@@ -1100,7 +1100,7 @@ public class NodeTraversal {
    */
   private void pushScope(AbstractScope<?, ?> s, boolean quietly) {
     checkNotNull(currentNode);
-    scopes.push(s);
+    scopes.add(s);
     recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
       scopeCallback.enterScope(this);
@@ -1120,84 +1120,106 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
-    Node scopeRoot;
-    int roots = scopeRoots.size();
-    if (roots > 0) {
-      scopeRoot = scopeRoots.remove(roots - 1);
-    } else {
-      scopeRoot = scopes.pop().getRootNode();
-    }
-    if (NodeUtil.isValidCfgRoot(scopeRoot)) {
+    int roots = scopes.size();
+    Object scopeRoot = scopes.remove(roots - 1);
+    Node scopeRootNode = getNodeRootFromScopeObj(scopeRoot);
+    if (NodeUtil.isValidCfgRoot(scopeRootNode)) {
       cfgs.pop();
     }
   }
 
+  /**
+   * Scopes are stored in a list of objects. These can either be instanciated `AbstractScope` or the
+   * `Node` representing the root of the scope.
+   */
+  private Node getNodeRootFromScopeObj(Object root) {
+    return root instanceof Node ? (Node) root : ((AbstractScope) root).getRootNode();
+  }
+
+  /** Returns the current scope's root. */
+  @Nullable
+  public Node getScopeRoot() {
+    int roots = scopes.size();
+    if (roots > 0) {
+      return getNodeRootFromScopeObj(scopes.get(roots - 1));
+    } else {
+      return null;
+    }
+  }
+
+  int getScopeDepth() {
+    int depth = scopes.size();
+    checkState(depth > 0);
+    return depth - 1; // Use 0-based scope depth to be consistent within the compiler
+  }
+
+  public Scope getScope() {
+    return getAbstractScope().untyped();
+  }
+
+  public TypedScope getTypedScope() {
+    return getAbstractScope().typed();
+  }
+
   /** Gets the current scope. */
   public AbstractScope<?, ?> getAbstractScope() {
-    AbstractScope<?, ?> scope = scopes.peek();
-    int rootCount = scopeRoots.size();
-    for (int i = 0; i < rootCount; i++) {
-      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
-      scopes.push(scope);
-    }
-    scopeRoots.clear();
-    return scope;
+    return getAbstractScope(scopes.size() - 1);
   }
 
   /**
-   * Instantiate some, but not necessarily all, scopes from stored roots.
-   *
-   * <p>NodeTraversal instantiates scopes lazily when getScope() or similar is called, by iterating
-   * over a stored list of not-yet-instantiated scopeRoots. When a not-yet-instantiated parent scope
-   * is requested, it doesn't make sense to instantiate <i>all</i> pending scopes. Instead, we count
-   * the number that are needed to ensure the requested parent is instantiated and call this
-   * function to instantiate only as many scopes as are needed, shifting their roots off the queue,
-   * and returning the deepest scope actually created.
+   * Recusively visit uninstanciated scopes and instanciate and store any necessary scopes to return
+   * the requested scope.
    */
-  private AbstractScope<?, ?> instantiateScopes(int count) {
-    checkArgument(count <= scopeRoots.size());
-    AbstractScope<?, ?> scope = scopes.peek();
+  private AbstractScope<?, ?> getAbstractScope(int rootDepth) {
 
-    for (int i = 0; i < count; i++) {
-      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
-      scopes.push(scope);
+    Object o = scopes.get(rootDepth);
+    if (o instanceof Node) {
+      // The root scope has a null parent.
+      AbstractScope<?, ?> parentScope = (rootDepth > 0) ? getAbstractScope(rootDepth - 1) : null;
+      AbstractScope<?, ?> scope = scopeCreator.createScope((Node) o, parentScope);
+      scopes.set(rootDepth, scope);
+      return scope;
+    } else {
+      return (AbstractScope<?, ?>) o;
     }
-    scopeRoots.subList(0, count).clear();
-    return scope;
   }
 
   public boolean isHoistScope() {
     return isHoistScopeRootNode(getScopeRoot());
   }
 
+  @Nullable
   public Node getClosestHoistScopeRoot() {
-    int roots = scopeRoots.size();
-    for (int i = roots; i > 0; i--) {
-      Node rootNode = scopeRoots.get(i - 1);
+    for (int i = scopes.size() - 1; i >= 0; i--) {
+      Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
       if (isHoistScopeRootNode(rootNode)) {
         return rootNode;
       }
     }
 
-    return scopes.peek().getClosestHoistScope().getRootNode();
+    return null;
   }
 
+  @Nullable
   public AbstractScope<?, ?> getClosestContainerScope() {
-    for (int i = scopeRoots.size(); i > 0; i--) {
-      if (!NodeUtil.createsBlockScope(scopeRoots.get(i - 1))) {
-        return instantiateScopes(i);
+    for (int i = scopes.size() - 1; i >= 0; i--) {
+      Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
+      if (!NodeUtil.createsBlockScope(rootNode)) {
+        return getAbstractScope(i);
       }
     }
-    return scopes.peek().getClosestContainerScope();
+    return null;
   }
 
+  @Nullable
   public AbstractScope<?, ?> getClosestHoistScope() {
-    for (int i = scopeRoots.size(); i > 0; i--) {
-      if (isHoistScopeRootNode(scopeRoots.get(i - 1))) {
-        return instantiateScopes(i);
+    for (int i = scopes.size() - 1; i >= 0; i--) {
+      Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
+      if (isHoistScopeRootNode(rootNode)) {
+        return getAbstractScope(i);
       }
     }
-    return scopes.peek().getClosestHoistScope();
+    return null;
   }
 
   private static boolean isHoistScopeRootNode(Node n) {
@@ -1210,14 +1232,6 @@ public class NodeTraversal {
       default:
         return NodeUtil.isFunctionBlock(n);
     }
-  }
-
-  public Scope getScope() {
-    return getAbstractScope().untyped();
-  }
-
-  public TypedScope getTypedScope() {
-    return getAbstractScope().typed();
   }
 
   /** Gets the control flow graph for the current JS scope. */
@@ -1239,18 +1253,6 @@ public class NodeTraversal {
       result = (ControlFlowGraph<Node>) o;
     }
     return result;
-  }
-
-  /** Returns the current scope's root. */
-  @Nullable
-  public Node getScopeRoot() {
-    int roots = scopeRoots.size();
-    if (roots > 0) {
-      return scopeRoots.get(roots - 1);
-    } else {
-      AbstractScope<?, ?> s = scopes.peek();
-      return s != null ? s.getRootNode() : null;
-    }
   }
 
   @SuppressWarnings("unchecked") // The type is always ControlFlowGraph<Node>
@@ -1314,12 +1316,6 @@ public class NodeTraversal {
     return NodeUtil.isModuleScopeRoot(moduleRoot);
   }
 
-  int getScopeDepth() {
-    int sum = scopes.size() + scopeRoots.size();
-    checkState(sum > 0);
-    return sum - 1; // Use 0-based scope depth to be consistent within the compiler
-  }
-
   /** Reports a diagnostic (error or warning) */
   public void report(Node n, DiagnosticType diagnosticType, String... arguments) {
     JSError error = JSError.make(n, diagnosticType, arguments);
@@ -1373,8 +1369,8 @@ public class NodeTraversal {
   }
 
   /**
-   * Prefills the scopeRoots stack up to a given spot in the AST. Allows for starting traversal at
-   * any spot while still having correct scope state.
+   * Prefills the scopes stack up to a given spot in the AST. Allows for starting traversal at any
+   * spot while still having correct scope state.
    */
   private void initScopeRoots(Node n) {
     Deque<Node> queuedScopeRoots = new ArrayDeque<>();
