@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -27,7 +28,9 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CrossChunkMethodMotion;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
@@ -404,6 +407,56 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void testCrossChunkMethodMotion() throws IOException {
+    // run checks & serialize .typedasts
+    SourceFile f1 =
+        SourceFile.fromCode(
+            "f1.js",
+            lines(
+                "/** @constructor */",
+                "var Foo = function() {};",
+                "Foo.prototype.bar = function() {};",
+                "/** @type {!Foo} */",
+                "var x = new Foo();"));
+    SourceFile f2 = SourceFile.fromCode("f2.js", "x.bar();");
+    precompileLibrary(f1);
+    precompileLibrary(typeSummary(f1), f2);
+
+    Compiler compiler = new Compiler();
+    // create two chunks, where chunk 2 depends on chunk 1, and they contain f1 and f2
+    CompilerOptions options = new CompilerOptions();
+    options.setCrossChunkMethodMotion(true);
+    JSChunk chunk1 = new JSChunk("chunk1");
+    chunk1.add(f1);
+    JSChunk chunk2 = new JSChunk("chunk2");
+    chunk2.add(f2);
+    chunk2.addDependency(chunk1);
+
+    // run compilation
+    try (InputStream inputStream = toInputStream(this.shards)) {
+      compiler.initModulesWithTypedAstFilesystem(
+          ImmutableList.copyOf(this.externFiles),
+          ImmutableList.of(chunk1, chunk2),
+          options,
+          inputStream);
+    }
+    compiler.parse();
+    compiler.stage2Passes();
+    // TODO(b/427535473): fix the crash in cross-chunk method motion.
+    IllegalStateException e = assertThrows(IllegalStateException.class, compiler::stage3Passes);
+    assertThat(e).hasMessageThat().contains("[synthetic:chunk_method_stubbing]");
+
+    // TODO(b/427535473): assert this expected output after the b/427535473 crash is fixed
+    String[] unusedExpected =
+        new String[] {
+          CrossChunkMethodMotion.STUB_DECLARATIONS
+              + "var Foo = function() {};"
+              + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
+          "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
+        };
   }
 
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
