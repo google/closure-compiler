@@ -119,17 +119,6 @@ public abstract class JsMessage {
    */
   public abstract boolean isHidden();
 
-  /**
-   * Gets a list of the parts of this message. Each part is either a {@link String} or a {@link
-   * PlaceholderReference}.
-   *
-   * @deprecated use {@link #getParts()}} instead
-   */
-  @Deprecated
-  public final ImmutableList<CharSequence> parts() {
-    return getParts();
-  }
-
   public abstract ImmutableMap<String, String> getPlaceholderNameToExampleMap();
 
   public abstract ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap();

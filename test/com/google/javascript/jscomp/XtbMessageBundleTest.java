@@ -69,7 +69,7 @@ public final class XtbMessageBundleTest {
 
     message = bundle.getMessage("3945720239421293834");
     assertThat(message.toString()).isEmpty();
-    assertThat(message.parts()).isNotEmpty();
+    assertThat(message.getParts()).isNotEmpty();
   }
 
   /**

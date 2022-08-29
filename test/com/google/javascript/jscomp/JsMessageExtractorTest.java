@@ -271,7 +271,7 @@ public final class JsMessageExtractorTest {
   private void assertEquals(JsMessage expected, JsMessage actual) {
     assertThat(actual.getId()).isEqualTo(expected.getId());
     assertThat(actual.getKey()).isEqualTo(expected.getKey());
-    assertThat(actual.parts()).isEqualTo(expected.parts());
+    assertThat(actual.getParts()).isEqualTo(expected.getParts());
     assertThat(actual.placeholders()).isEqualTo(expected.placeholders());
     assertThat(actual.getDesc()).isEqualTo(expected.getDesc());
     assertThat(actual.getMeaning()).isEqualTo(expected.getMeaning());

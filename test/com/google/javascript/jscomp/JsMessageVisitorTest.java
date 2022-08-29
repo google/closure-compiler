@@ -834,7 +834,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_WITH_CAMELCASE");
     assertThat(msg.toString()).isEqualTo("Slide {$slideNumber}:");
-    List<CharSequence> parts = msg.parts();
+    ImmutableList<CharSequence> parts = msg.getParts();
     assertThat(parts).hasSize(3);
     assertThat(((JsMessage.PlaceholderReference) parts.get(1)).getName()).isEqualTo("slideNumber");
   }
