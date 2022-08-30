@@ -1921,26 +1921,26 @@ public final class NodeUtil {
 
   /** Finds the class containing the given node. */
   public static Node getEnclosingClass(Node n) {
-    return getEnclosingType(n, Token.CLASS);
+    return getEnclosingNode(n, Node::isClass);
   }
 
   public static Node getEnclosingModuleIfPresent(Node n) {
-    return getEnclosingType(n, Token.MODULE_BODY);
+    return getEnclosingNode(n, Node::isModuleBody);
   }
 
   /** Finds the function containing the given node. */
   public static Node getEnclosingFunction(Node n) {
-    return getEnclosingType(n, Token.FUNCTION);
+    return getEnclosingNode(n, Node::isFunction);
   }
 
   /** Finds the script containing the given node. */
   public static Node getEnclosingScript(Node n) {
-    return getEnclosingType(n, Token.SCRIPT);
+    return getEnclosingNode(n, Node::isScript);
   }
 
   /** Finds the block containing the given node. */
   public static Node getEnclosingBlock(Node n) {
-    return getEnclosingType(n, Token.BLOCK);
+    return getEnclosingNode(n, Node::isBlock);
   }
 
   public static Node getEnclosingBlockScopeRoot(Node n) {
@@ -1949,6 +1949,19 @@ public final class NodeUtil {
 
   public static Node getEnclosingScopeRoot(Node n) {
     return getEnclosingNode(n, NodeUtil::createsScope);
+  }
+
+  /**
+   * Return the nearest enclosing hoist scope root node, null for the global scope. There are
+   * currently 4 such roots to consider: the global, module, function, and class static blocks.
+   */
+  public static Node getEnclosingHoistScopeRoot(Node n) {
+    return getEnclosingNode(n, NodeUtil::isHoistScopeRoot);
+  }
+
+  public static boolean isHoistScopeRoot(Node n) {
+    // The "global" hoist scope has multiple meaning so
+    return n.isFunction() || n.isModuleBody() || isClassStaticBlock(n);
   }
 
   public static boolean isInFunction(Node n) {

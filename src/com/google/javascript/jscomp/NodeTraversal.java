@@ -46,6 +46,11 @@ public class NodeTraversal {
   /** Contains the current node */
   private Node currentNode;
 
+  private Node currentHoistScopeRoot;
+
+  /** Contains the current FUNCTION node if there is one, otherwise null. */
+  private Node currentFunction;
+
   /** Contains the enclosing SCRIPT node if there is one, otherwise null. */
   private Node currentScript;
 
@@ -61,14 +66,6 @@ public class NodeTraversal {
    * heirarchical nature of scopes.
    */
   private final ArrayList<Object> scopes = new ArrayList<>();
-
-  /**
-   * Stack containing the control flow graphs (CFG) that have been created. There are fewer CFGs
-   * than scopes, since block-level scopes are not valid CFG roots. The CFG objects are lazily
-   * populated: elements are simply the CFG root node until requested by {@link
-   * #getControlFlowGraph()}.
-   */
-  private final Deque<Object> cfgs = new ArrayDeque<>();
 
   /** The current source file name */
   @Nullable private String sourceName;
@@ -180,6 +177,67 @@ public class NodeTraversal {
 
     @Override
     public void exitScope(NodeTraversal t) {}
+  }
+
+  /**
+   * An traversal base class that tracks and caches the ControlFlowGraph (CFG) during the traversal.
+   * The CFGs are constructed lazily.
+   */
+  public abstract static class AbstractCfgCallback implements ScopedCallback {
+
+    private final ArrayDeque<Object> cfgs = new ArrayDeque<>();
+
+    /** Gets the control flow graph for the current JS scope. */
+    @SuppressWarnings("unchecked") // The type is always ControlFlowGraph<Node>
+    public ControlFlowGraph<Node> getControlFlowGraph(AbstractCompiler compiler) {
+      ControlFlowGraph<Node> result;
+      Object o = cfgs.peek();
+      checkState(o != null);
+      if (o instanceof Node) {
+        Node cfgRoot = (Node) o;
+        result =
+            ControlFlowAnalysis.builder()
+                .setCompiler(compiler)
+                .setCfgRoot(cfgRoot)
+                .setIncludeEdgeAnnotations(true)
+                .computeCfg();
+        cfgs.pop();
+        cfgs.push(result);
+      } else {
+        result = (ControlFlowGraph<Node>) o;
+      }
+      return result;
+    }
+
+    @Override
+    public final void enterScope(NodeTraversal t) {
+      Node currentScopeRoot = t.getScopeRoot();
+      if (NodeUtil.isValidCfgRoot(currentScopeRoot)) {
+        cfgs.push(currentScopeRoot);
+      }
+      enterScopeWithCfg(t);
+    }
+
+    @Override
+    public final void exitScope(NodeTraversal t) {
+      exitScopeWithCfg(t);
+      Node currentScopeRoot = t.getScopeRoot();
+      if (NodeUtil.isValidCfgRoot(currentScopeRoot)) {
+        cfgs.pop();
+      }
+    }
+
+    public void enterScopeWithCfg(NodeTraversal t) {}
+
+    public void exitScopeWithCfg(NodeTraversal t) {}
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {}
   }
 
   /** Abstract callback to visit all nodes but not traverse into function bodies. */
@@ -808,6 +866,7 @@ public class NodeTraversal {
 
   /** Traverses a module. */
   private void handleModule(Node n, Node parent) {
+    currentHoistScopeRoot = n;
     pushScope(n);
     currentNode = n;
     if (callback.shouldTraverse(this, n, parent)) {
@@ -816,6 +875,8 @@ public class NodeTraversal {
       callback.visit(this, n, parent);
     }
     popScope();
+    // Module bodies don't nest
+    currentHoistScopeRoot = null;
   }
 
   private void handleDestructuringOrDefaultValue(Node n, Node parent) {
@@ -871,8 +932,12 @@ public class NodeTraversal {
     }
 
     boolean createsBlockScope = NodeUtil.createsBlockScope(n);
+    Node previousHoistScopeRoot = currentHoistScopeRoot;
     if (createsBlockScope) {
       pushScope(n);
+      if (NodeUtil.isClassStaticBlock(n)) {
+        currentHoistScopeRoot = n;
+      }
     }
 
     /**
@@ -892,6 +957,7 @@ public class NodeTraversal {
 
     if (createsBlockScope) {
       popScope();
+      currentHoistScopeRoot = previousHoistScopeRoot;
     }
 
     currentNode = n;
@@ -918,6 +984,12 @@ public class NodeTraversal {
     }
 
     currentNode = n;
+
+    // may nest within class static blocks
+    Node previousHoistScopeRoot = currentHoistScopeRoot;
+    currentHoistScopeRoot = n;
+    Node previousFunction = currentFunction;
+    currentFunction = n;
     pushScope(n);
 
     if (!isFunctionDeclaration) {
@@ -937,6 +1009,8 @@ public class NodeTraversal {
     traverseBranch(body, n);
 
     popScope();
+    currentFunction = previousFunction;
+    currentHoistScopeRoot = previousHoistScopeRoot;
   }
 
   /**
@@ -1066,15 +1140,7 @@ public class NodeTraversal {
    */
   @Nullable
   public Node getEnclosingFunction() {
-    Node root = getCfgRoot();
-    return root.isFunction() ? root : null;
-  }
-
-  /** Sets the given node as the current scope and pushes the relevant frames on the CFG stacks. */
-  private void recordScopeRoot(Node node) {
-    if (NodeUtil.isValidCfgRoot(node)) {
-      cfgs.push(node);
-    }
+    return currentFunction;
   }
 
   /** Creates a new scope (e.g. when entering a function). */
@@ -1082,7 +1148,6 @@ public class NodeTraversal {
     checkNotNull(currentNode);
     checkNotNull(node);
     scopes.add(node);
-    recordScopeRoot(node);
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
@@ -1101,7 +1166,6 @@ public class NodeTraversal {
   private void pushScope(AbstractScope<?, ?> s, boolean quietly) {
     checkNotNull(currentNode);
     scopes.add(s);
-    recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
@@ -1120,12 +1184,7 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
-    int roots = scopes.size();
-    Object scopeRoot = scopes.remove(roots - 1);
-    Node scopeRootNode = getNodeRootFromScopeObj(scopeRoot);
-    if (NodeUtil.isValidCfgRoot(scopeRootNode)) {
-      cfgs.pop();
-    }
+    scopes.remove(scopes.size() - 1);
   }
 
   /**
@@ -1234,38 +1293,6 @@ public class NodeTraversal {
     }
   }
 
-  /** Gets the control flow graph for the current JS scope. */
-  @SuppressWarnings("unchecked") // The type is always ControlFlowGraph<Node>
-  public ControlFlowGraph<Node> getControlFlowGraph() {
-    ControlFlowGraph<Node> result;
-    Object o = cfgs.peek();
-    if (o instanceof Node) {
-      Node cfgRoot = (Node) o;
-      result =
-          ControlFlowAnalysis.builder()
-              .setCompiler(compiler)
-              .setCfgRoot(cfgRoot)
-              .setIncludeEdgeAnnotations(true)
-              .computeCfg();
-      cfgs.pop();
-      cfgs.push(result);
-    } else {
-      result = (ControlFlowGraph<Node>) o;
-    }
-    return result;
-  }
-
-  @SuppressWarnings("unchecked") // The type is always ControlFlowGraph<Node>
-  private Node getCfgRoot() {
-    Node result;
-    Object o = cfgs.peek();
-    if (o instanceof Node) {
-      result = (Node) o;
-    } else {
-      result = ((ControlFlowGraph<Node>) o).getEntry().getValue();
-    }
-    return result;
-  }
 
   public ScopeCreator getScopeCreator() {
     return scopeCreator;
@@ -1295,20 +1322,16 @@ public class NodeTraversal {
 
   /** Determines whether the hoist scope of the current traversal is global. */
   public boolean inGlobalHoistScope() {
-    Node cfgRoot = getCfgRoot();
-    checkState(
-        cfgRoot.isScript()
-            || cfgRoot.isRoot()
-            || cfgRoot.isBlock()
-            || cfgRoot.isFunction()
-            || cfgRoot.isModuleBody(),
-        cfgRoot);
-    return cfgRoot.isScript() || cfgRoot.isRoot() || cfgRoot.isBlock();
+    return currentHoistScopeRoot == null;
   }
 
   /** Determines whether the hoist scope of the current traversal is global. */
   public boolean inModuleHoistScope() {
-    Node moduleRoot = getCfgRoot();
+    Node moduleRoot = currentHoistScopeRoot;
+    if (moduleRoot == null) {
+      // in global hoist scope
+      return false;
+    }
     if (moduleRoot.isFunction()) {
       // For wrapped modules, the function block is the module scope root.
       moduleRoot = moduleRoot.getLastChild();
@@ -1361,8 +1384,19 @@ public class NodeTraversal {
     if (Platform.isThreadInterrupted()) {
       throw new RuntimeException(new InterruptedException());
     }
-    Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(traversalRoot);
+    Node hoistScopeRoot = NodeUtil.getEnclosingHoistScopeRoot(traversalRoot);
+    this.currentHoistScopeRoot = hoistScopeRoot;
+    // "null" is the global hoist scope root, but we want the current script if any
+    // for the "change scope"
+    Node changeScope =
+        NodeUtil.getEnclosingChangeScopeRoot(
+            hoistScopeRoot != null ? hoistScopeRoot : traversalRoot);
     setChangeScope(changeScope);
+
+    Node enclosingFunction =
+        hoistScopeRoot != null ? NodeUtil.getEnclosingFunction(hoistScopeRoot) : null;
+    this.currentFunction = enclosingFunction;
+
     Node script = getEnclosingScript(changeScope);
     currentScript = script;
     clearScriptState();

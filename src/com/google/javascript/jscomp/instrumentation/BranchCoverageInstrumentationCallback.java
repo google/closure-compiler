@@ -32,7 +32,7 @@ import java.util.Objects;
 
 /** Instrument branch coverage for javascript. */
 @GwtIncompatible("FileInstrumentationData")
-public class BranchCoverageInstrumentationCallback extends NodeTraversal.AbstractPostOrderCallback {
+public class BranchCoverageInstrumentationCallback extends NodeTraversal.AbstractCfgCallback {
   private final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;
 
@@ -74,7 +74,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     }
 
     if (node.isIf()) {
-      ControlFlowGraph<Node> cfg = traversal.getControlFlowGraph();
+      ControlFlowGraph<Node> cfg = getControlFlowGraph(compiler);
       boolean hasDefaultBlock = false;
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
@@ -96,7 +96,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       processBranchInfo(node, instrumentationData.get(fileName), getChildrenBlocks(node));
     } else if (NodeUtil.isLoopStructure(node)) {
       List<Node> blocks = getChildrenBlocks(node);
-      ControlFlowGraph<Node> cfg = traversal.getControlFlowGraph();
+      ControlFlowGraph<Node> cfg = getControlFlowGraph(compiler);
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
           Node destination = outEdge.getDestination().getValue();

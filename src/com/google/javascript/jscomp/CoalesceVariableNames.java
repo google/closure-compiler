@@ -25,8 +25,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphColoring;
@@ -64,8 +62,7 @@ import org.jspecify.nullness.Nullable;
  * graph coloring in {@link GraphColoring} to determine which two variables can
  * be merge together safely.
  */
-class CoalesceVariableNames extends AbstractPostOrderCallback
-    implements CompilerPass, ScopedCallback {
+class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final MemoizedScopeCreator scopeCreator;
@@ -131,7 +128,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback
   }
 
   @Override
-  public void enterScope(NodeTraversal t) {
+  public void enterScopeWithCfg(NodeTraversal t) {
     AllVarsDeclaredInFunction allVarsDeclaredInFunction = shouldOptimizeScope(t);
     if (allVarsDeclaredInFunction == null) {
       shouldOptimizeScopeStack.push(false);
@@ -143,7 +140,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback
     checkState(scope.isFunctionScope(), scope);
 
     // live variables analysis is based off of the control flow graph
-    ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
+    ControlFlowGraph<Node> cfg = getControlFlowGraph(compiler);
 
     liveness =
         new LiveVariablesAnalysis(
@@ -178,7 +175,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback
   }
 
   @Override
-  public void exitScope(NodeTraversal t) {
+  public void exitScopeWithCfg(NodeTraversal t) {
     if (!shouldOptimizeScopeStack.pop()) {
       return;
     }

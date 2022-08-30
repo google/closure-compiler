@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
-import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
@@ -38,7 +37,7 @@ import java.util.Map;
  * after this assignment, we know that the current content of {@code x} will not be read and this
  * assignment is useless.
  */
-class DeadAssignmentsElimination extends AbstractScopedCallback implements CompilerPass {
+class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private LiveVariablesAnalysis liveness;
@@ -75,14 +74,14 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
   }
 
   @Override
-  public void enterScope(NodeTraversal t) {
+  public void enterScopeWithCfg(NodeTraversal t) {
     if (t.inFunctionBlockScope()) {
       functionStack.addFirst(new BailoutInformation());
     }
   }
 
   @Override
-  public void exitScope(NodeTraversal t) {
+  public void exitScopeWithCfg(NodeTraversal t) {
     if (t.inFunctionBlockScope()) {
       eliminateDeadAssignments(t);
       functionStack.removeFirst();
@@ -120,7 +119,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     }
 
     // Computes liveness information first.
-    ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
+    ControlFlowGraph<Node> cfg = getControlFlowGraph(compiler);
     SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     AllVarsDeclaredInFunction allVarsDeclaredInFunction =
         NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, functionScope);

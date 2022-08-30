@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
@@ -27,10 +25,9 @@ import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
 import com.google.javascript.rhino.Node;
 
 /**
- * Use {@link ControlFlowGraph} and {@link GraphReachability} to inform user
- * about unreachable code.
+ * Use {@link ControlFlowGraph} and {@link GraphReachability} to inform user about unreachable code.
  */
-class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCallback {
+class CheckUnreachableCode extends NodeTraversal.AbstractCfgCallback {
 
   static final DiagnosticType UNREACHABLE_CODE = DiagnosticType.warning(
       "JSC_UNREACHABLE_CODE", "unreachable code");
@@ -42,15 +39,16 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
   }
 
   @Override
-  public void enterScope(NodeTraversal t) {
+  public void enterScopeWithCfg(NodeTraversal t) {
     if (NodeUtil.isValidCfgRoot(t.getScopeRoot())) {
-      initScope(t.getControlFlowGraph());
+      initScope(getControlFlowGraph(compiler));
     }
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    GraphNode<Node, Branch> gNode = t.getControlFlowGraph().getNode(n);
+    ControlFlowGraph<Node> cfg = getControlFlowGraph(compiler);
+    GraphNode<Node, Branch> gNode = cfg.getNode(n);
     if (gNode != null && gNode.getAnnotation() != GraphReachability.REACHABLE) {
 
       // Only report error when there are some line number informations.
@@ -63,7 +61,7 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
         compiler.report(JSError.make(n, UNREACHABLE_CODE));
         // From now on, we are going to assume the user fixed the error and not
         // give more warning related to code section reachable from this node.
-        new GraphReachability<>(t.getControlFlowGraph()).recompute(n);
+        new GraphReachability<>(cfg).recompute(n);
 
         // Saves time by not traversing children.
         return false;
@@ -76,9 +74,6 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
     new GraphReachability<>(controlFlowGraph, REACHABLE)
         .compute(controlFlowGraph.getEntry().getValue());
   }
-
-  @Override
-  public void exitScope(NodeTraversal t) {}
 
   private static final Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> REACHABLE =
       (EdgeTuple<Node, Branch> input) -> {
