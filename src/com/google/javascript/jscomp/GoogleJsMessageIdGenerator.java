@@ -22,7 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.JsMessage.IdGenerator;
-import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
+import com.google.javascript.jscomp.JsMessage.Part;
 import java.util.List;
 
 /**
@@ -55,17 +55,16 @@ public final class GoogleJsMessageIdGenerator implements IdGenerator {
   }
 
   @Override
-  public String generateId(String meaning, List<CharSequence> messageParts) {
+  public String generateId(String meaning, List<Part> messageParts) {
     checkState(meaning != null);
 
     StringBuilder sb = new StringBuilder();
-    for (CharSequence part : messageParts) {
-      if (part instanceof PlaceholderReference) {
-        sb.append(CaseFormat.LOWER_CAMEL.to(
-            CaseFormat.UPPER_UNDERSCORE,
-            ((PlaceholderReference) part).getName()));
+    for (Part part : messageParts) {
+      if (part.isPlaceholder()) {
+        sb.append(
+            CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, part.getPlaceholderName()));
       } else {
-        sb.append(part);
+        sb.append(part.getString());
       }
     }
     String tcValue = sb.toString();

@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
+import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.Style;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -755,9 +756,9 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_WITH_CAMELCASE");
     assertThat(msg.toString()).isEqualTo("Slide {$slideNumber}:");
-    ImmutableList<CharSequence> parts = msg.getParts();
+    ImmutableList<Part> parts = msg.getParts();
     assertThat(parts).hasSize(3);
-    assertThat(((JsMessage.PlaceholderReference) parts.get(1)).getName()).isEqualTo("slideNumber");
+    assertThat(parts.get(1).getPlaceholderName()).isEqualTo("slideNumber");
   }
 
   @Test

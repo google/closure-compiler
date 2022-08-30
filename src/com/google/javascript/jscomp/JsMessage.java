@@ -73,8 +73,6 @@ public abstract class JsMessage {
     CLOSURE; // Any legacy code is prohibited
   }
 
-  private static final String MESSAGE_REPRESENTATION_FORMAT = "{$%s}";
-
   /** Gets the message's sourceName. */
   @Nullable
   public abstract String getSourceName();
@@ -93,7 +91,7 @@ public abstract class JsMessage {
    * Gets a read-only list of the parts of this message. Each part is either a {@link String} or a
    * {@link PlaceholderReference}.
    */
-  public abstract ImmutableList<CharSequence> getParts();
+  public abstract ImmutableList<Part> getParts();
 
   /**
    * Gets the message's alternate ID (e.g. {@code "92430284230902938293"}), if available. This will
@@ -127,19 +125,25 @@ public abstract class JsMessage {
   public abstract ImmutableSet<String> placeholders();
 
   public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
-    return getPlaceholderNameToOriginalCodeMap().getOrDefault(placeholderReference.getName(), "-");
+    return getPlaceholderNameToOriginalCodeMap()
+        .getOrDefault(placeholderReference.getPlaceholderName(), "-");
   }
 
   public String getPlaceholderExample(PlaceholderReference placeholderReference) {
-    return getPlaceholderNameToExampleMap().getOrDefault(placeholderReference.getName(), "-");
+    return getPlaceholderNameToExampleMap()
+        .getOrDefault(placeholderReference.getPlaceholderName(), "-");
   }
 
   /** Returns a String containing the original message text. */
   @Override
   public final String toString() {
     StringBuilder sb = new StringBuilder();
-    for (CharSequence p : getParts()) {
-      sb.append(p.toString());
+    for (Part p : getParts()) {
+      if (p.isPlaceholder()) {
+        sb.append(PH_JS_PREFIX).append(p.getPlaceholderName()).append(PH_JS_SUFFIX);
+      } else {
+        sb.append(p.getString());
+      }
     }
     return sb.toString();
   }
@@ -148,8 +152,8 @@ public abstract class JsMessage {
    * @return false iff the message is represented by empty string.
    */
   public final boolean isEmpty() {
-    for (CharSequence part : getParts()) {
-      if (part.length() > 0) {
+    for (Part part : getParts()) {
+      if (part.isPlaceholder() || part.getString().length() > 0) {
         return false;
       }
     }
@@ -157,34 +161,70 @@ public abstract class JsMessage {
     return true;
   }
 
+  /** Represents part of a message. */
+  public interface Part {
+    /** True for placeholders, false for literal string parts. */
+    boolean isPlaceholder();
+
+    /**
+     * Gets the name of the placeholder.
+     *
+     * @return the name for a placeholder
+     * @throws UnsupportedOperationException if this is not a {@link PlaceholderReference}.
+     */
+    String getPlaceholderName();
+
+    /**
+     * Gets the literal string for this message part.
+     *
+     * @return the literal string for {@link StringPart}.
+     * @throws UnsupportedOperationException if this is not a {@link StringPart}.
+     */
+    String getString();
+  }
+
+  /** Represents a literal string part of a message. */
+  @AutoValue
+  public abstract static class StringPart implements Part {
+    @Override
+    public abstract String getString();
+
+    public static StringPart create(String str) {
+      return new AutoValue_JsMessage_StringPart(str);
+    }
+
+    @Override
+    public boolean isPlaceholder() {
+      return false;
+    }
+
+    @Override
+    public String getPlaceholderName() {
+      throw new UnsupportedOperationException(
+          SimpleFormat.format("not a placeholder: '%s'", getString()));
+    }
+  }
+
   /** A reference to a placeholder in a translatable message. */
   @AutoValue
-  public abstract static class PlaceholderReference implements CharSequence {
+  public abstract static class PlaceholderReference implements Part {
 
     static PlaceholderReference create(String name) {
       return new AutoValue_JsMessage_PlaceholderReference(name);
     }
 
     @Override
-    public int length() {
-      return getName().length();
+    public abstract String getPlaceholderName();
+
+    @Override
+    public boolean isPlaceholder() {
+      return true;
     }
 
     @Override
-    public char charAt(int index) {
-      return getName().charAt(index);
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end) {
-      return getName().subSequence(start, end);
-    }
-
-    public abstract String getName();
-
-    @Override
-    public final String toString() {
-      return SimpleFormat.format(MESSAGE_REPRESENTATION_FORMAT, getName());
+    public String getString() {
+      throw new UnsupportedOperationException(
+          SimpleFormat.format("not a string part: '%s'", getPlaceholderName()));
     }
   }
 
@@ -231,7 +271,7 @@ public abstract class JsMessage {
 
     @Nullable private String alternateId;
 
-    private final List<CharSequence> parts = new ArrayList<>();
+    private final List<Part> parts = new ArrayList<>();
     private final Set<String> placeholders = new LinkedHashSet<>();
     private ImmutableMap<String, String> placeholderNameToExampleMap = ImmutableMap.of();
     private ImmutableMap<String, String> placeholderNameToOriginalCodeMap = ImmutableMap.of();
@@ -324,7 +364,7 @@ public abstract class JsMessage {
     @CanIgnoreReturnValue
     public Builder appendStringPart(String part) {
       checkNotNull(part, "String part of the message could not be null");
-      parts.add(part);
+      parts.add(StringPart.create(part));
       return this;
     }
 
@@ -381,7 +421,7 @@ public abstract class JsMessage {
       return !parts.isEmpty();
     }
 
-    public List<CharSequence> getParts() {
+    public List<Part> getParts() {
       return parts;
     }
 
@@ -443,13 +483,13 @@ public abstract class JsMessage {
      * Generates a compact uppercase alphanumeric text representation of a 63-bit fingerprint of the
      * content parts of a message.
      */
-    private static String fingerprint(List<CharSequence> messageParts) {
+    private static String fingerprint(List<Part> messageParts) {
       StringBuilder sb = new StringBuilder();
-      for (CharSequence part : messageParts) {
-        if (part instanceof JsMessage.PlaceholderReference) {
-          sb.append(part.toString());
+      for (Part part : messageParts) {
+        if (part.isPlaceholder()) {
+          sb.append(PH_JS_PREFIX).append(part.getPlaceholderName()).append(PH_JS_SUFFIX);
         } else {
-          sb.append(part);
+          sb.append(part.getString());
         }
       }
       long nonnegativeHash = Long.MAX_VALUE & Hash.hash64(sb.toString());
@@ -728,6 +768,6 @@ public abstract class JsMessage {
      *     we will just use a fingerprint of the message.
      * @param messageParts The parts of the message, including the main message text.
      */
-    String generateId(String meaning, List<CharSequence> messageParts);
+    String generateId(String meaning, List<Part> messageParts);
   }
 }

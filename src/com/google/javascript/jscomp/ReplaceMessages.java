@@ -28,7 +28,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
+import com.google.javascript.jscomp.JsMessage.StringPart;
 import com.google.javascript.jscomp.JsMessageVisitor.MalformedException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -654,25 +656,24 @@ public final class ReplaceMessages {
      * @throws MalformedException if {@code partsIterator} contains a placeholder reference that
      *     does not correspond to a valid argument in the arg list
      */
-    private Node constructAddOrStringNode(ImmutableList<CharSequence> parts, Node argListNode)
+    private Node constructAddOrStringNode(ImmutableList<Part> parts, Node argListNode)
         throws MalformedException {
       if (parts.isEmpty()) {
         return astFactory.createString("");
       }
 
       Node resultNode = null;
-      for (CharSequence part : parts) {
+      for (Part part : parts) {
         final Node partNode = constructLegacyFunctionMsgPart(argListNode, part);
         resultNode = resultNode == null ? partNode : astFactory.createAdd(resultNode, partNode);
       }
       return resultNode;
     }
 
-    private Node constructLegacyFunctionMsgPart(Node argListNode, CharSequence part)
+    private Node constructLegacyFunctionMsgPart(Node argListNode, Part part)
         throws MalformedException {
       Node partNode = null;
-      if (part instanceof JsMessage.PlaceholderReference) {
-        JsMessage.PlaceholderReference phRef = (JsMessage.PlaceholderReference) part;
+      if (part.isPlaceholder()) {
 
         for (Node node = argListNode.getFirstChild(); node != null; node = node.getNext()) {
           if (node.isName()) {
@@ -681,7 +682,7 @@ public final class ReplaceMessages {
             // We ignore the case here because the transconsole only supports
             // uppercase placeholder names, but function arguments in JavaScript
             // code can have mixed case.
-            if (Ascii.equalsIgnoreCase(arg, phRef.getName())) {
+            if (Ascii.equalsIgnoreCase(arg, part.getPlaceholderName())) {
               partNode = IR.name(arg);
             }
           }
@@ -689,7 +690,8 @@ public final class ReplaceMessages {
 
         if (partNode == null) {
           throw new MalformedException(
-              "Unrecognized message placeholder referenced: " + phRef.getName(), argListNode);
+              "Unrecognized message placeholder referenced: " + part.getPlaceholderName(),
+              argListNode);
         }
       } else {
         // The part is just a string literal.
@@ -777,13 +779,13 @@ public final class ReplaceMessages {
    * @return the root of the constructed parse tree
    */
   private Node constructStringExprNode(
-      List<CharSequence> msgParts, Map<String, Node> placeholderMap, MsgOptions options) {
+      List<Part> msgParts, Map<String, Node> placeholderMap, MsgOptions options) {
 
     if (msgParts.isEmpty()) {
       return astFactory.createString("");
     } else {
       Node resultNode = null;
-      for (CharSequence msgPart : msgParts) {
+      for (Part msgPart : msgParts) {
         final Node partNode = createNodeForMsgPart(msgPart, options, placeholderMap);
         resultNode = (resultNode == null) ? partNode : astFactory.createAdd(resultNode, partNode);
       }
@@ -792,16 +794,13 @@ public final class ReplaceMessages {
   }
 
   private Node createNodeForMsgPart(
-      CharSequence part, MsgOptions options, Map<String, Node> placeholderMap) {
+      Part part, MsgOptions options, Map<String, Node> placeholderMap) {
     final Node partNode;
-    if (part instanceof JsMessage.PlaceholderReference) {
-      JsMessage.PlaceholderReference phRef = (JsMessage.PlaceholderReference) part;
-
-      final String placeholderName = phRef.getName();
-      partNode = checkNotNull(placeholderMap.get(placeholderName)).cloneTree();
+    if (part.isPlaceholder()) {
+      partNode = checkNotNull(placeholderMap.get(part.getPlaceholderName())).cloneTree();
     } else {
       // The part is just a string literal.
-      String s = part.toString();
+      String s = part.getString();
       if (options.escapeLessThan) {
         // Note that "&" is not replaced because the translation can contain HTML entities.
         s = s.replace("<", "&lt;");
@@ -913,17 +912,17 @@ public final class ReplaceMessages {
   }
 
   /** Merges consecutive string parts in the list of message parts. */
-  private static List<CharSequence> mergeStringParts(List<CharSequence> parts) {
-    List<CharSequence> result = new ArrayList<>();
-    for (CharSequence part : parts) {
-      if (part instanceof JsMessage.PlaceholderReference) {
+  private static List<Part> mergeStringParts(List<Part> parts) {
+    List<Part> result = new ArrayList<>();
+    for (Part part : parts) {
+      if (part.isPlaceholder()) {
         result.add(part);
       } else {
-        CharSequence lastPart = result.isEmpty() ? null : Iterables.getLast(result);
-        if (lastPart == null || lastPart instanceof JsMessage.PlaceholderReference) {
+        Part lastPart = result.isEmpty() ? null : Iterables.getLast(result);
+        if (lastPart == null || lastPart.isPlaceholder()) {
           result.add(part);
         } else {
-          result.set(result.size() - 1, lastPart.toString() + part);
+          result.set(result.size() - 1, StringPart.create(lastPart.getString() + part.getString()));
         }
       }
     }
