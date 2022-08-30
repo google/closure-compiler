@@ -21,8 +21,6 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -50,8 +48,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
                         options.setPrettyPrint(true);
                         options.setPreferLineBreakAtEndOfFile(false);
                         options.setPreferSingleQuotes(true);
-                        options.setOutputFeatureSet(
-                            FeatureSet.ES_NEXT.with(Feature.TYPE_ANNOTATION));
+                        options.setGentsMode(true);
                       }
                     }))
             .build();

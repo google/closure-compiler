@@ -388,7 +388,7 @@ public class CodeGenerator {
         if (node.getParent().isArrowFunction()
             && node.hasOneChild()
             && first.isName()
-            && !outputFeatureSet.has(Feature.TYPE_ANNOTATION)) {
+            && !gentsMode) {
           add(first);
         } else {
           add("(");
