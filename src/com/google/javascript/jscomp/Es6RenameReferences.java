@@ -16,19 +16,16 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Splitter;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.List;
+import org.jspecify.nullness.Nullable;
 
-/**
- * Renames references in code and JSDoc when necessary.
- */
+/** Renames references in code and JSDoc when necessary. */
 final class Es6RenameReferences extends AbstractPostOrderCallback {
-
-  private static final Splitter SPLIT_ON_DOT = Splitter.on('.').limit(2);
 
   private final Table<Node, String, String> renameTable;
   private final boolean typesOnly;
@@ -45,9 +42,11 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (!typesOnly && NodeUtil.isReferenceName(n)) {
-      renameReference(t, n, false);
+      renameNameReference(t, n);
     }
 
+    // Remove this branch after module rewriting is always done
+    // after type checking.
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
       for (Node root : info.getTypeNodes()) {
@@ -58,7 +57,7 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
 
   private void renameTypeNodeRecursive(NodeTraversal t, Node n) {
     if (n.isStringLit()) {
-      renameReference(t, n, true);
+      renameTypeReference(t, n);
     }
 
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
@@ -66,17 +65,44 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
     }
   }
 
-  private void renameReference(NodeTraversal t, Node n, boolean isType) {
+  private void renameNameReference(NodeTraversal t, Node n) {
+    checkState(n.isName());
+    String oldName = n.getString();
+    renameReference(t, n, oldName, null, false);
+  }
+
+  private void renameTypeReference(NodeTraversal t, Node n) {
+    checkState(n.isStringLit());
     String fullName = n.getString();
-    List<String> split = SPLIT_ON_DOT.splitToList(fullName);
-    String oldName = split.get(0);
+    String rootName;
+    String rest;
+    int endPos = fullName.indexOf('.');
+    if (endPos == -1) {
+      rootName = fullName;
+      rest = null;
+    } else {
+      rootName = fullName.substring(0, endPos);
+      rest = fullName.substring(endPos);
+    }
+    renameReference(t, n, rootName, rest, true);
+  }
+
+  /**
+   * @param t The NodeTraversal.
+   * @param oldName The root name of a qualified name.
+   * @param rest The rest of the qualified name or null.
+   * @param inJSDoc Whether the rewriting is occuring within JSDoc.
+   */
+  private void renameReference(
+      NodeTraversal t, Node n, String oldName, @Nullable String rest, boolean inJSDoc) {
     Scope current = t.getScope();
     while (current != null) {
       String newName = renameTable.get(current.getRootNode(), oldName);
       if (newName != null) {
-        String rest = split.size() == 2 ? "." + split.get(1) : "";
-        n.setString(newName + rest);
-        if (!isType) {
+        String newFullName = rest == null ? newName : newName + rest;
+        n.setString(newFullName);
+        // Dont call reportCodeChange for jsdoc changes
+        if (!inJSDoc) {
           t.reportCodeChange();
         }
         return;
