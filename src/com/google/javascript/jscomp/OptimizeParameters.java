@@ -1015,6 +1015,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         if (n.getString().equals("arguments")) {
           return false;
         } else {
+          // If it isn't in global scope, then it is in local scope.  This logic depends on
+          // "Normalize" creating distinct local names.
           Var v = globalScope.getVar(n.getString());
           if (v == null) {
             return false;
