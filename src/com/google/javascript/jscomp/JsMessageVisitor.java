@@ -283,7 +283,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     try {
       if (isVar) {
-        extractMessageFromVariable(builder, node, parent, parent.getParent());
+        extractMessageFromVariable(builder, node, parent);
       } else {
         extractMessageFrom(builder, msgNode, node);
       }
@@ -449,35 +449,19 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param builder the message builder
    * @param nameNode a NAME node for a JS message variable
    * @param parentNode a VAR node, parent of {@code nameNode}
-   * @param grandParentNode the grandparent of {@code nameNode}. This node is only used to get meta
-   *     data about the message that might be surrounding it (e.g. a message description). This
-   *     argument may be null if the meta data is not needed.
    * @throws MalformedException if {@code varNode} does not correspond to a valid JS message VAR
    *     node
    */
-  private void extractMessageFromVariable(
-      JsMessage.Builder builder, Node nameNode, Node parentNode, @Nullable Node grandParentNode)
+  private void extractMessageFromVariable(JsMessage.Builder builder, Node nameNode, Node parentNode)
       throws MalformedException {
 
     // Determine the message's value
-    Node valueNode = nameNode.getFirstChild();
-    switch (valueNode.getToken()) {
-      case STRINGLIT:
-      case ADD:
-        maybeInitMetaDataFromJsDocOrHelpVar(builder, parentNode, grandParentNode);
-        builder.appendStringPart(extractStringFromStringExprNode(valueNode));
-        break;
-      case FUNCTION:
-        maybeInitMetaDataFromJsDocOrHelpVar(builder, parentNode, grandParentNode);
-        extractFromFunctionNode(builder, valueNode);
-        break;
-      case CALL:
-        maybeInitMetaDataFromJsDoc(builder, parentNode);
-        extractFromCallNode(builder, valueNode);
-        break;
-      default:
-        throw new MalformedException(
-            "Cannot parse value of message " + builder.getKey(), valueNode);
+    Node valueNode = checkNotNull(nameNode.getFirstChild());
+    if (valueNode.isCall()) {
+      maybeInitMetaDataFromJsDoc(builder, parentNode);
+      extractFromCallNode(builder, valueNode);
+    } else {
+      throw new MalformedException("Cannot parse value of message " + builder.getKey(), valueNode);
     }
   }
 
@@ -495,55 +479,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       throws MalformedException {
     maybeInitMetaDataFromJsDoc(builder, docNode);
     extractFromCallNode(builder, valueNode);
-  }
-
-  /**
-   * Initializes the meta data in a JsMessage by examining the nodes just before and after a message
-   * VAR node.
-   *
-   * @param builder the message builder whose meta data will be initialized
-   * @param varNode the message VAR node
-   * @param parentOfVarNode {@code varNode}'s parent node
-   */
-  private void maybeInitMetaDataFromJsDocOrHelpVar(
-      JsMessage.Builder builder, Node varNode, @Nullable Node parentOfVarNode)
-      throws MalformedException {
-
-    // First check description in @desc
-    if (maybeInitMetaDataFromJsDoc(builder, varNode)) {
-      return;
-    }
-
-    // Check the preceding node for meta data
-    if ((parentOfVarNode != null) && maybeInitMetaDataFromHelpVar(builder, varNode.getPrevious())) {
-      return;
-    }
-
-    // Check the subsequent node for meta data
-    maybeInitMetaDataFromHelpVar(builder, varNode.getNext());
-  }
-
-  /**
-   * Initializes the meta data in a JsMessage by examining a node just before or after a message VAR
-   * node.
-   *
-   * @param builder the message builder whose meta data will be initialized
-   * @param sibling a node adjacent to the message VAR node
-   * @return true iff message has corresponding description variable
-   */
-  private static boolean maybeInitMetaDataFromHelpVar(
-      JsMessage.Builder builder, @Nullable Node sibling) throws MalformedException {
-    if ((sibling != null) && (sibling.isVar())) {
-      Node nameNode = sibling.getFirstChild();
-      String name = nameNode.getString();
-      if (name.equals(builder.getKey() + DESC_SUFFIX)) {
-        Node valueNode = nameNode.getFirstChild();
-        String desc = extractStringFromStringExprNode(valueNode);
-        builder.setDesc(desc);
-        return true;
-      }
-    }
-    return false;
   }
 
   /**
@@ -603,112 +538,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       default:
         throw new MalformedException(
             "STRING or ADD node expected; found: " + node.getToken(), node);
-    }
-  }
-
-  /**
-   * Initializes a message builder from a FUNCTION node.
-   *
-   * <p>
-   *
-   * <pre>
-   * The tree should look something like:
-   *
-   * function
-   *  |-- name
-   *  |-- lp
-   *  |   |-- name <arg1>
-   *  |    -- name <arg2>
-   *   -- block
-   *      |
-   *       --return
-   *           |
-   *            --add
-   *               |-- string foo
-   *                -- name <arg1>
-   * </pre>
-   *
-   * @param builder the message builder
-   * @param node the function node that contains a message
-   * @throws MalformedException if the parsed message is invalid
-   */
-  private void extractFromFunctionNode(JsMessage.Builder builder, Node node)
-      throws MalformedException {
-    Set<String> phNames = new LinkedHashSet<>();
-
-    for (Node fnChild = node.getFirstChild(); fnChild != null; fnChild = fnChild.getNext()) {
-      switch (fnChild.getToken()) {
-        case NAME:
-          // This is okay. The function has a name, but it is empty.
-          break;
-        case PARAM_LIST:
-          // Parse the placeholder names from the function argument list.
-          for (Node argumentNode = fnChild.getFirstChild();
-              argumentNode != null;
-              argumentNode = argumentNode.getNext()) {
-            if (argumentNode.isName()) {
-              String phName = argumentNode.getString();
-              if (phNames.contains(phName)) {
-                throw new MalformedException("Duplicate placeholder name: " + phName, argumentNode);
-              } else {
-                phNames.add(phName);
-              }
-            }
-          }
-          break;
-        case BLOCK:
-          // Build the message's value by examining the return statement
-          Node returnNode = fnChild.getFirstChild();
-          if (!returnNode.isReturn()) {
-            throw new MalformedException(
-                "RETURN node expected; found: " + returnNode.getToken(), returnNode);
-          }
-          for (Node child = returnNode.getFirstChild(); child != null; child = child.getNext()) {
-            extractFromReturnDescendant(builder, child);
-          }
-
-          // Check that all placeholders from the message text have appropriate
-          // object literal keys
-          for (String phName : builder.getPlaceholders()) {
-            if (!phNames.contains(phName)) {
-              throw new MalformedException(
-                  "Unrecognized message placeholder referenced: " + phName, returnNode);
-            }
-          }
-          break;
-        default:
-          throw new MalformedException(
-              "NAME, PARAM_LIST, or BLOCK node expected; found: " + node, fnChild);
-      }
-    }
-  }
-
-  /**
-   * Appends value parts to the message builder by traversing the descendants of the given RETURN
-   * node.
-   *
-   * @param builder the message builder
-   * @param node the node from where we extract a message
-   * @throws MalformedException if the parsed message is invalid
-   */
-  private static void extractFromReturnDescendant(JsMessage.Builder builder, Node node)
-      throws MalformedException {
-
-    switch (node.getToken()) {
-      case STRINGLIT:
-        builder.appendStringPart(node.getString());
-        break;
-      case NAME:
-        builder.appendPlaceholderReference(node.getString());
-        break;
-      case ADD:
-        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-          extractFromReturnDescendant(builder, child);
-        }
-        break;
-      default:
-        throw new MalformedException(
-            "STRING, NAME, or ADD node expected; found: " + node.getToken(), node);
     }
   }
 
