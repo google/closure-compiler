@@ -2794,6 +2794,22 @@ var RTCDataChannelInit;
 var RTCCertificate;
 
 /**
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcofferoptions
+ * @see https://www.w3.org/TR/webrtc/#legacy-configuration-extensions
+ */
+function RTCOfferOptions() {}
+
+/** @type {boolean|undefined} */
+RTCOfferOptions.prototype.iceRestart;
+
+/** @type {boolean|undefined} */
+RTCOfferOptions.prototype.offerToReceiveAudio;
+
+/** @type {boolean|undefined} */
+RTCOfferOptions.prototype.offerToReceiveVideo;
+
+/**
  * @param {RTCConfiguration} configuration
  * @param {!MediaConstraints=} constraints
  * @constructor
@@ -2834,14 +2850,14 @@ RTCPeerConnection.prototype.dispatchEvent = function(evt) {};
 // forward, and vice versa.
 
 /**
- * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
- *    successCallbackOrConstraints
+ * @param {(!RTCSessionDescriptionCallback|!MediaConstraints|!RTCOfferOptions)=}
+ *    successCallbackOrConstraintsOrOfferOptions
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>}
  */
 RTCPeerConnection.prototype.createOffer = function(
-    successCallbackOrConstraints, errorCallback, constraints) {};
+    successCallbackOrConstraintsOrOfferOptions, errorCallback, constraints) {};
 
 /**
  * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
