@@ -26,6 +26,9 @@ on:
     # Daily at 12pm UTC
     - cron: '0 12 * * *'
 
+permissions:
+  contents: read
+
 env:
   VERSION_NODEJS: '16.16.0'
   UNSYMLINK_DIR: bazel-bin-unsymlink
