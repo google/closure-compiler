@@ -33,6 +33,8 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.RestrictedApi;
+import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -1800,9 +1802,21 @@ public class CompilerOptions implements Serializable {
   /**
    * Sets the features that allowed to appear in the output. Any feature in the input that is not in
    * this output must be transpiled away.
+   *
+   * <p>Note: this is an package private API since not every FeatureSet value can be properly output
+   * by the compiler without crashing. Both the `setBrowserFeaturesetYear` and `setLanguageOut` APIs
+   * are supported alternatives.
    */
-  public void setOutputFeatureSet(FeatureSet featureSet) {
+  void setOutputFeatureSet(FeatureSet featureSet) {
     this.outputFeatureSet = Optional.of(featureSet);
+  }
+
+  @RestrictedApi(
+      explanation = "This API can request unsupported transpilation modes that crash the compiler",
+      link = "go/setOutputFeatureSetDeprecation",
+      allowlistAnnotations = {LegacySetFeatureSetCaller.class})
+  public void legacySetOutputFeatureSet(FeatureSet featureSet) {
+    setOutputFeatureSet(featureSet);
   }
 
   /** Gets the set of features that can appear in the output. */
