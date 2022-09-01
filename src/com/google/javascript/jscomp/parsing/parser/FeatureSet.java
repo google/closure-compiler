@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing.parser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
+import com.google.errorprone.annotations.InlineMe;
 import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.Set;
@@ -326,6 +327,7 @@ public final class FeatureSet implements Serializable {
    * @deprecated Please use {@link #version()} instead.
    */
   @Deprecated
+  @InlineMe(replacement = "this.version()")
   public String versionForDebugging() {
     return version();
   }

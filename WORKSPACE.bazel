@@ -88,6 +88,15 @@ maven_import(
 )
 
 maven_import(
+  # annotations from https://github.com/google/error-prone
+  group_id = "com.google.errorprone",
+  artifact_id = "error_prone_annotations",
+  version = "2.15.0",
+  sha256 = "067047714349e7789a5bdbfad9d1c0af9f3a1eb28c55a0ee3f68e682f905c4eb",
+  licenses = ["notice"],
+)
+
+maven_import(
     # https://truth.dev/protobufs
     group_id = "com.google.truth.extensions",
     artifact_id = "truth-liteproto-extension",
@@ -132,11 +141,8 @@ rules_proto_toolchains()
 # From https://github.com/bazelbuild/rules_java/releases/
 http_archive(
     name = "rules_java",
-    urls = [
-      "https://mirror.bazel.build/github.com/bazelbuild/rules_java/releases/download/5.0.0/rules_java-5.0.0.tar.gz",
-      "https://github.com/bazelbuild/rules_java/releases/download/5.0.0/rules_java-5.0.0.tar.gz",
-    ],
-    sha256 = "8c376f1e4ab7d7d8b1880e4ef8fc170862be91b7c683af97ca2768df546bb073",
+    url = "https://github.com/bazelbuild/rules_java/releases/download/5.1.0/rules_java-5.1.0.tar.gz",
+    sha256 = "d974a2d6e1a534856d1b60ad6a15e57f3970d8596fbb0bb17b9ee26ca209332a",
 )
 load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
 rules_java_dependencies()
