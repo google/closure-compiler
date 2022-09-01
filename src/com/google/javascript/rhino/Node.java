@@ -905,7 +905,11 @@ public class Node {
     return child;
   }
 
-  /** @return A Node that is the head of the list of children. */
+  /**
+   * Remove all children, but leave them linked to each other.
+   *
+   * @return The first child node
+   */
   @Nullable
   public final Node removeChildren() {
     Node children = first;
@@ -951,8 +955,6 @@ public class Node {
     this.propListHead = other.propListHead;
     return this;
   }
-
-
 
   /**
    * Checks for invalid or missing properties and feeds error messages for any violations to the
@@ -1482,12 +1484,12 @@ public class Node {
     return ((StaticSourceFile) this.getProp(Prop.SOURCE_FILE));
   }
 
-  /** @param inputId */
+  /** Sets the ID of the input this Node came from. */
   public void setInputId(InputId inputId) {
     this.putProp(Prop.INPUT_ID, inputId);
   }
 
-  /** @return The Id of the CompilerInput associated with this Node. */
+  /** Returns the Id of the CompilerInput associated with this Node. */
   @Nullable
   public InputId getInputId() {
     return ((InputId) this.getProp(Prop.INPUT_ID));
@@ -1640,7 +1642,9 @@ public class Node {
     }
   }
 
-  /** @see Node#children() */
+  /**
+   * @see Node#children()
+   */
   private static final class SiblingNodeIterable implements Iterable<Node> {
     private final Node start;
 
@@ -1654,7 +1658,9 @@ public class Node {
     }
   }
 
-  /** @see Node#children() */
+  /**
+   * @see Node#children()
+   */
   private static final class SiblingNodeIterator implements Iterator<Node> {
     @Nullable private Node current;
 
@@ -1724,7 +1730,7 @@ public class Node {
     return node;
   }
 
-  /** @return True if this Node is {@code node} or a descendant of {@code node}. */
+  /** Is this Node the same as {@code node} or a descendant of {@code node}? */
   public final boolean isDescendantOf(Node node) {
     for (Node n = this; n != null; n = n.parent) {
       if (n == node) {
@@ -1757,7 +1763,9 @@ public class Node {
   public static final class AncestorIterable implements Iterable<Node> {
     @Nullable private Node cur;
 
-    /** @param cur The node to start. */
+    /**
+     * @param cur The node to start.
+     */
     AncestorIterable(@Nullable Node cur) {
       this.cur = cur;
     }
@@ -2255,13 +2263,13 @@ public class Node {
     throw new UnsupportedOperationException("Did you mean cloneNode?");
   }
 
-  /** @return A detached clone of the Node, specifically excluding its children. */
+  /** Returns a detached clone of the Node, specifically excluding its children. */
   @CheckReturnValue
   public final Node cloneNode() {
     return cloneNode(false);
   }
 
-  /** @return A detached clone of the Node, specifically excluding its children. */
+  /** Returns a detached clone of the Node, specifically excluding its children. */
   @CheckReturnValue
   Node cloneNode(boolean cloneTypeExprs) {
     Node clone = new Node(token);
@@ -2285,7 +2293,7 @@ public class Node {
     }
   }
 
-  /** @return A detached clone of the Node and all its children. */
+  /** Returns a detached clone of the Node and all its children. */
   @CheckReturnValue
   public final Node cloneTree() {
     return cloneTree(false);
@@ -2452,12 +2460,16 @@ public class Node {
     return (JSType) getProp(Prop.TYPEDEF_TYPE);
   }
 
-  /** @param unused Whether a parameter was function to be unused. Set by RemoveUnusedVars */
+  /** Sets the value for isUnusedParameter() */
   public final void setUnusedParameter(boolean unused) {
     putBooleanProp(Prop.IS_UNUSED_PARAMETER, unused);
   }
 
-  /** @return Whether a parameter was function to be unused. Set by RemoveUnusedVars */
+  /**
+   * Is this node an unused function parameter declaration?
+   *
+   * <p>Set by RemoveUnusedVars
+   */
   public final boolean isUnusedParameter() {
     return getBooleanProp(Prop.IS_UNUSED_PARAMETER);
   }
@@ -2576,7 +2588,7 @@ public class Node {
     return getBooleanProp(Prop.IS_GENERATOR_MARKER);
   }
 
-  /** @see #isGeneratorSafe() */
+  /** Set the value for isGeneratorSafe() */
   public final void setGeneratorSafe(boolean isGeneratorSafe) {
     putBooleanProp(Prop.IS_GENERATOR_SAFE, isGeneratorSafe);
   }
