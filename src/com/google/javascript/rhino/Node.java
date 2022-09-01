@@ -1172,33 +1172,37 @@ public class Node {
       checkState(this.propListHead.propType == Prop.SOURCE_FILE.ordinal(), this.propListHead);
     }
 
-    if (hasNodePropertyBitSet(propSet, NodeProperty.IS_DECLARED_CONSTANT)
-        || hasNodePropertyBitSet(propSet, NodeProperty.IS_INFERRED_CONSTANT)) {
-      int newConstantVarFlags =
-          (hasNodePropertyBitSet(propSet, NodeProperty.IS_DECLARED_CONSTANT)
-                  ? ConstantVarFlags.DECLARED
-                  : 0)
-              | (hasNodePropertyBitSet(propSet, NodeProperty.IS_INFERRED_CONSTANT)
-                  ? ConstantVarFlags.INFERRED
-                  : 0);
-      propSet = removeNodePropertyBit(propSet, NodeProperty.IS_DECLARED_CONSTANT);
-      propSet = removeNodePropertyBit(propSet, NodeProperty.IS_INFERRED_CONSTANT);
-      this.propListHead =
-          new IntPropListItem(
-              (byte) Prop.CONSTANT_VAR_FLAGS.ordinal(), newConstantVarFlags, this.propListHead);
-    }
-
+    // We'll gather the bits for CONST_VAR_FLAGS into this variable.
+    int constantVarFlags = 0;
     // Exclude the sign bit for clarity.
     for (int i = 0; i < 63; i++) {
-      boolean isBitSet = hasBitSet(propSet, i);
-      if (isBitSet) {
-        NodeProperty nodeProperty = NodeProperty.forNumber(i);
-        Prop prop = PropTranslator.deserialize(nodeProperty);
-        if (prop == null) {
-          throw new IllegalStateException("Can not translate " + nodeProperty + " to AST Prop");
-        }
-        this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
+      if (!hasBitSet(propSet, i)) {
+        continue;
       }
+      NodeProperty nodeProperty = NodeProperty.forNumber(i);
+      switch (nodeProperty) {
+        case IS_DECLARED_CONSTANT:
+          constantVarFlags |= ConstantVarFlags.DECLARED;
+          break;
+        case IS_INFERRED_CONSTANT:
+          constantVarFlags |= ConstantVarFlags.INFERRED;
+          break;
+        default:
+          // All other properties are booleans that are 1-to-1 equivalent with Node properties.
+          Prop prop = PropTranslator.deserialize(nodeProperty);
+          if (prop == null) {
+            throw new IllegalStateException("Can not translate " + nodeProperty + " to AST Prop");
+          }
+          this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
+          break;
+      }
+    }
+
+    // Store the CONSTANT_VAR_FLAGS
+    if (constantVarFlags != 0) {
+      this.propListHead =
+          new IntPropListItem(
+              (byte) Prop.CONSTANT_VAR_FLAGS.ordinal(), constantVarFlags, this.propListHead);
     }
 
     // Make sure the deserialized properties are valid.
