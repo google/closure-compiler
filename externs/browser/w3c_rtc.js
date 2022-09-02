@@ -1689,32 +1689,43 @@ RTCIceServerInterface_.prototype.credential;
 var RTCIceServer;
 
 /**
- * @typedef {{
- *   iceServers: !Array<!RTCIceServer>,
- *   iceTransportPolicy: (string|undefined),
- *   sdpSemantics: (string|undefined)
- * }}
- * @private
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcconfiguration
  */
-var RTCConfigurationRecord_;
-
-/**
- * @interface
- * @private
- */
-function RTCConfigurationInterface_() {}
+function RTCConfiguration() {}
 
 /**
  * @type {!Array<!RTCIceServer>}
  */
-RTCConfigurationInterface_.prototype.iceServers;
+RTCConfiguration.prototype.iceServers;
 
 /**
  * Allows specifying the ICE transport policy. Valid values are "all" and
  * "relay", with "all" being the default.
  * @type {string|undefined}
  */
-RTCConfigurationInterface_.prototype.iceTransportPolicy;
+RTCConfiguration.prototype.iceTransportPolicy;
+
+/**
+ * Indicates which media-bundling policy to use when gathering ICE candidates.
+ * Valid values are "balanced", "max-compat" and "max-bundle", with "balanced"
+ * being the default.
+ * @type {string|undefined}
+ */
+RTCConfiguration.prototype.bundlePolicy;
+
+/**
+ * Indicates which rtcp-mux policy to use when gathering ICE candidates. The
+ * only valid value is "require".
+ * @type {string|undefined}
+ */
+RTCConfiguration.prototype.rtcpMuxPolicy;
+
+/** @type {!Array<!RTCCertificate>|undefined} */
+RTCConfiguration.prototype.certificates;
+
+/** @type {number|undefined} */
+RTCConfiguration.prototype.iceCandidatePoolSize;
 
 /**
  * Allows specifying the SDP semantics. Valid values are "plan-b" and
@@ -1723,12 +1734,7 @@ RTCConfigurationInterface_.prototype.iceTransportPolicy;
  * @see {@link https://webrtc.org/web-apis/chrome/unified-plan/}
  * @type {string|undefined}
  */
-RTCConfigurationInterface_.prototype.sdpSemantics;
-
-/**
- * @typedef {RTCConfigurationRecord_|RTCConfigurationInterface_}
- */
-var RTCConfiguration;
+RTCConfiguration.prototype.sdpSemantics;
 
 /**
  * @typedef {function(!RTCSessionDescription)}
