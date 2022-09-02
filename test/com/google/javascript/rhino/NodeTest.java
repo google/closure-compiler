@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.serialization.NodeProperty;
+import com.google.javascript.rhino.Node.SideEffectFlags;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -73,6 +74,34 @@ public class NodeTest {
     n.validateProperties(violationMessageConsumer);
 
     return listBuilder.build();
+  }
+
+  @Test
+  public void testSideEffectFlagsSerialization() {
+    // Test each individual flag
+    checkSideEffectFlagsRoundTrip(SideEffectFlags.MUTATES_GLOBAL_STATE);
+    checkSideEffectFlagsRoundTrip(SideEffectFlags.MUTATES_THIS);
+    checkSideEffectFlagsRoundTrip(SideEffectFlags.MUTATES_ARGUMENTS);
+    checkSideEffectFlagsRoundTrip(SideEffectFlags.THROWS);
+    // Test an arbitrary combination of 2 flags
+    checkSideEffectFlagsRoundTrip(SideEffectFlags.THROWS | SideEffectFlags.MUTATES_THIS);
+  }
+
+  public void checkSideEffectFlagsRoundTrip(int testFlags) {
+    final Node original = IR.call(IR.name("f"));
+    // serialization only works for nodes that actually have a source file,
+    // because in actual execution they always must have that.
+    original.setSourceFileForTesting("sourcefile");
+
+    // Simulate the situation where we've deserialized the node itself, but not its non-source-file
+    // properties yet, by cloning the orignal node before adding the side effect flags to it.
+    final Node restored = original.cloneNode();
+
+    original.setSideEffectFlags(testFlags);
+    final long serializedProperties = original.serializeProperties();
+
+    restored.deserializeProperties(serializedProperties);
+    assertThat(restored.getSideEffectFlags()).isEqualTo(testFlags);
   }
 
   @Test
@@ -726,10 +755,10 @@ public class NodeTest {
   @Test
   public void testSerializeProperties_untranslatableRhinoProp() {
     Node node = getCall("A");
-    node.setSideEffectFlags(2);
+    node.setUseStrict(true);
     long result = node.serializeProperties();
-    // Rhino node prop SIDE_EFFECT_FLAGS does not have a corresponding NodeProperty
-    assertThat(node.getSideEffectFlags()).isEqualTo(2);
+    // Rhino node prop USE_STRICT does not have a corresponding NodeProperty
+    assertThat(node.isUseStrict()).isTrue();
     assertThat(result).isEqualTo(0);
   }
 
