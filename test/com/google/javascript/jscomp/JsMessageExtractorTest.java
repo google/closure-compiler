@@ -84,7 +84,11 @@ public final class JsMessageExtractorTest {
   public void testExtractNewStyleMessage1() {
     // A simple message with no description.
     assertEquals(
-        new JsMessage.Builder("MSG_SILLY").appendStringPart("silly test message").build(),
+        new JsMessage.Builder()
+            .setKey("MSG_SILLY")
+            .setId("MSG_SILLY")
+            .appendStringPart("silly test message")
+            .build(),
         extractMessage("var MSG_SILLY = goog.getMsg('silly test message');"));
   }
 
@@ -92,7 +96,9 @@ public final class JsMessageExtractorTest {
   public void testOriginalCodeAndExampleMaps() {
     // A message with placeholders and original code annotations.
     assertEquals(
-        new JsMessage.Builder("MSG_WELCOME")
+        new JsMessage.Builder()
+            .setKey("MSG_WELCOME")
+            .setId("MSG_WELCOME")
             .appendStringPart("Hi ")
             .appendPlaceholderReference("interpolation_0")
             .appendStringPart("! Welcome to ")
@@ -133,7 +139,9 @@ public final class JsMessageExtractorTest {
   public void testExtractNewStyleMessage2() {
     // A message with placeholders and meta data.
     assertEquals(
-        new JsMessage.Builder("MSG_WELCOME")
+        new JsMessage.Builder()
+            .setKey("MSG_WELCOME")
+            .setId("MSG_WELCOME")
             .appendStringPart("Hi ")
             .appendPlaceholderReference("userName")
             .appendStringPart("! Welcome to ")

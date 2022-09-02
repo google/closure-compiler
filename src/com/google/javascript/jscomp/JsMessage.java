@@ -22,7 +22,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,8 +51,8 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class JsMessage {
 
-  private static final String PH_JS_PREFIX = "{$";
-  private static final String PH_JS_SUFFIX = "}";
+  public static final String PH_JS_PREFIX = "{$";
+  public static final String PH_JS_SUFFIX = "}";
 
   /**
    * Thrown when parsing a message string into parts fails because of a misformatted place holder.
@@ -238,37 +237,16 @@ public abstract class JsMessage {
   @GwtIncompatible("java.util.regex")
   public static final class Builder {
 
-    // Allow arbitrary suffixes to allow for local variable disambiguation.
-    private static final String MSG_EXTERNAL_PREFIX = "MSG_EXTERNAL_";
-
-    /**
-     * @return an external message id or null if this is not an external message identifier
-     */
-    @Nullable
-    private static String getExternalMessageId(String identifier) {
-      if (identifier.startsWith(MSG_EXTERNAL_PREFIX)) {
-        int start = MSG_EXTERNAL_PREFIX.length();
-        int end = start;
-        for (; end < identifier.length(); end++) {
-          char c = identifier.charAt(end);
-          if (c > '9' || c < '0') {
-            break;
-          }
-        }
-        if (end > start) {
-          return identifier.substring(start, end);
-        }
-      }
-      return null;
-    }
-
-    private String key;
+    private String key = null;
 
     private String meaning;
 
     private String desc;
     private boolean hidden;
+    private boolean isAnonymous = false;
+    private boolean isExternal = false;
 
+    @Nullable private String id;
     @Nullable private String alternateId;
 
     private final List<Part> parts = new ArrayList<>();
@@ -277,15 +255,6 @@ public abstract class JsMessage {
     private ImmutableMap<String, String> placeholderNameToOriginalCodeMap = ImmutableMap.of();
 
     private String sourceName;
-
-    public Builder() {
-      this(null);
-    }
-
-    /** Creates an instance. */
-    public Builder(@Nullable String key) {
-      this.key = key;
-    }
 
     /** Gets the message's key (e.g. {@code "MSG_HELLO"}). */
     public String getKey() {
@@ -309,46 +278,6 @@ public abstract class JsMessage {
     public Builder setSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
-    }
-
-    @CanIgnoreReturnValue
-    public Builder setMsgText(String msgText) throws PlaceholderFormatException {
-      checkState(this.parts.isEmpty(), "cannot parse msg text after adding parts");
-      parseMsgTextIntoParts(msgText);
-      return this;
-    }
-
-    private void parseMsgTextIntoParts(String msgText) throws PlaceholderFormatException {
-      while (true) {
-        int phBegin = msgText.indexOf(PH_JS_PREFIX);
-        if (phBegin < 0) {
-          // Just a string literal
-          appendStringPart(msgText);
-          return;
-        } else {
-          if (phBegin > 0) {
-            // A string literal followed by a placeholder
-            appendStringPart(msgText.substring(0, phBegin));
-          }
-
-          // A placeholder. Find where it ends
-          int phEnd = msgText.indexOf(PH_JS_SUFFIX, phBegin);
-          if (phEnd < 0) {
-            throw new PlaceholderFormatException();
-          }
-
-          String phName = msgText.substring(phBegin + PH_JS_PREFIX.length(), phEnd);
-          appendPlaceholderReference(phName);
-          int nextPos = phEnd + PH_JS_SUFFIX.length();
-          if (nextPos < msgText.length()) {
-            // Iterate on the rest of the message value
-            msgText = msgText.substring(nextPos);
-          } else {
-            // The message is parsed
-            return;
-          }
-        }
-      }
     }
 
     /** Appends a placeholder reference to the message */
@@ -387,7 +316,7 @@ public abstract class JsMessage {
 
     /** Sets the description of the message, which helps translators. */
     @CanIgnoreReturnValue
-    public Builder setDesc(String desc) {
+    public Builder setDesc(@Nullable String desc) {
       this.desc = desc;
       return this;
     }
@@ -397,14 +326,14 @@ public abstract class JsMessage {
      * differently.
      */
     @CanIgnoreReturnValue
-    public Builder setMeaning(String meaning) {
+    public Builder setMeaning(@Nullable String meaning) {
       this.meaning = meaning;
       return this;
     }
 
     /** Sets the alternate message ID, to be used if the primary ID is not yet translated. */
     @CanIgnoreReturnValue
-    public Builder setAlternateId(String alternateId) {
+    public Builder setAlternateId(@Nullable String alternateId) {
       this.alternateId = alternateId;
       return this;
     }
@@ -413,6 +342,25 @@ public abstract class JsMessage {
     @CanIgnoreReturnValue
     public Builder setIsHidden(boolean hidden) {
       this.hidden = hidden;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setIsAnonymous(boolean isAnonymous) {
+      this.isAnonymous = isAnonymous;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setId(String id) {
+      checkState(this.id == null, "id already set to '%s': cannot change it to '%s'", this.id, id);
+      this.id = id;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setIsExternalMsg(boolean isExternalMsg) {
+      this.isExternal = isExternalMsg;
       return this;
     }
 
@@ -426,37 +374,9 @@ public abstract class JsMessage {
     }
 
     public JsMessage build() {
-      return build(null);
-    }
-
-    public JsMessage build(@Nullable IdGenerator idGenerator) {
-      boolean isAnonymous = false;
-      boolean isExternal = false;
-      String id = null;
-
-      if (getKey() == null) {
-        // Before constructing a message we need to change unnamed messages name
-        // to the unique one.
-        key = JsMessageVisitor.MSG_PREFIX + fingerprint(getParts());
-        isAnonymous = true;
-      }
-
-      if (!isAnonymous) {
-        String externalId = getExternalMessageId(key);
-        if (externalId != null) {
-          isExternal = true;
-          id = externalId;
-        }
-      }
-
-      if (!isExternal) {
-        String defactoMeaning = meaning != null ? meaning : key;
-        // handle prefix from ScopedAliases pass
-        if (JsMessageVisitor.isScopedAliasesPrefix(defactoMeaning)) {
-          defactoMeaning = JsMessageVisitor.removeScopedAliasesPrefix(defactoMeaning);
-        }
-        id = idGenerator == null ? defactoMeaning : idGenerator.generateId(defactoMeaning, parts);
-      }
+      checkNotNull(key, "key has not been set");
+      checkNotNull(id, "id has not been set");
+      checkState(!isExternal || !isAnonymous, "a message cannot be both anonymous and external");
 
       // An alternate ID that points to itself is a no-op, so just omit it.
       if ((alternateId != null) && alternateId.equals(id)) {
@@ -477,23 +397,6 @@ public abstract class JsMessage {
           placeholderNameToExampleMap,
           placeholderNameToOriginalCodeMap,
           ImmutableSet.copyOf(placeholders));
-    }
-
-    /**
-     * Generates a compact uppercase alphanumeric text representation of a 63-bit fingerprint of the
-     * content parts of a message.
-     */
-    private static String fingerprint(List<Part> messageParts) {
-      StringBuilder sb = new StringBuilder();
-      for (Part part : messageParts) {
-        if (part.isPlaceholder()) {
-          sb.append(PH_JS_PREFIX).append(part.getPlaceholderName()).append(PH_JS_SUFFIX);
-        } else {
-          sb.append(part.getString());
-        }
-      }
-      long nonnegativeHash = Long.MAX_VALUE & Hash.hash64(sb.toString());
-      return Ascii.toUpperCase(Long.toString(nonnegativeHash, 36));
     }
   }
 

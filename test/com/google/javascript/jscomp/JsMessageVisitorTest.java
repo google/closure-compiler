@@ -409,7 +409,7 @@ public final class JsMessageVisitorTest {
     assertThat(messages).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
     assertError(compiler.getWarnings().get(0))
-        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
+        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
@@ -450,7 +450,7 @@ public final class JsMessageVisitorTest {
     assertThat(messages).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
     assertError(compiler.getWarnings().get(0))
-        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
+        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
@@ -513,6 +513,24 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testMeaningGetsUsedAsIdIfTheresNoGenerator() {
+    extractMessagesSafely(
+        lines(
+            "/**", //
+            " * @desc some description",
+            " * @meaning some meaning",
+            " */",
+            "var MSG_HULLO = goog.getMsg('Hullo');"));
+
+    assertThat(messages).hasSize(1);
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getDesc()).isEqualTo("some description");
+    assertThat(msg.getKey()).isEqualTo("MSG_HULLO");
+    assertThat(msg.getMeaning()).isEqualTo("some meaning");
+    assertThat(msg.getId()).isEqualTo("some meaning");
+  }
+
+  @Test
   public void testEmptyTextMessage() {
     extractMessagesSafely("/** @desc text */ var MSG_FOO = goog.getMsg('');");
 
@@ -568,7 +586,8 @@ public final class JsMessageVisitorTest {
     assertThat(compiler.getErrors())
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
         .containsExactly(
-            "Message parse tree malformed. Cannot parse value of " + "message MSG_SILLY");
+            "Message parse tree malformed. Message must be initialized using goog.getMsg"
+                + " function.");
   }
 
   @Test

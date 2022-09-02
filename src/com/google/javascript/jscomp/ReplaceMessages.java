@@ -1019,6 +1019,8 @@ public final class ReplaceMessages {
       boolean unescapeHtmlEntitiesOption = false;
       JsMessage.Builder jsMessageBuilder = new JsMessage.Builder();
       checkState(propertiesNode.isObjectLit(), propertiesNode);
+      String msgKey = null;
+      String meaning = null;
       for (Node strKey = propertiesNode.getFirstChild();
           strKey != null;
           strKey = strKey.getNext()) {
@@ -1030,16 +1032,18 @@ public final class ReplaceMessages {
         switch (key) {
           case "key":
             jsMessageBuilder.setKey(value);
+            msgKey = value;
             break;
           case "meaning":
             jsMessageBuilder.setMeaning(value);
+            meaning = value;
             break;
           case "alt_id":
             jsMessageBuilder.setAlternateId(value);
             break;
           case "msg_text":
             try {
-              jsMessageBuilder.setMsgText(value);
+              JsMessageVisitor.parseMessageTextIntoPartsForBuilder(jsMessageBuilder, value);
             } catch (PlaceholderFormatException unused) {
               // Somehow we stored the protected message text incorrectly, which should never
               // happen.
@@ -1059,8 +1063,27 @@ public final class ReplaceMessages {
             throw new IllegalStateException("unknown protected message key: " + strKey);
         }
       }
+      final String externalMessageId = JsMessageVisitor.getExternalMessageId(msgKey);
+      if (externalMessageId != null) {
+        // MSG_EXTERNAL_12345 = ...
+        jsMessageBuilder.setIsExternalMsg(true).setId(externalMessageId);
+      } else {
+        // NOTE: If the message was anonymous one (assigned to a variable or property named
+        // MSG_UNNAMED_XXX), the key we have here will be the one generated from the message
+        // text, and we won't end up setting the isAnonymous flag. Nothing seems to use that
+        // flag...
+        // TODO(bradfordcsmith): Maybe remove the isAnonymous flag for jsMessage objects?
+        final String meaningForIdGeneration =
+            meaning != null ? meaning : JsMessageVisitor.removeScopedAliasesPrefix(msgKey);
+        if (idGenerator != null) {
+          jsMessageBuilder.setId(
+              idGenerator.generateId(meaningForIdGeneration, jsMessageBuilder.getParts()));
+        } else {
+          jsMessageBuilder.setId(meaningForIdGeneration);
+        }
+      }
       return new ProtectedJsMessage(
-          jsMessageBuilder.build(idGenerator),
+          jsMessageBuilder.build(),
           node,
           substitutionsNode,
           escapeLessThanOption,

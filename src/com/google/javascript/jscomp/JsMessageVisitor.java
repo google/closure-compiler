@@ -20,8 +20,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Ascii;
 import com.google.common.base.CaseFormat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.javascript.jscomp.JsMessage.Hash;
+import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -30,6 +33,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -44,6 +48,18 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
   private static final String MSG_FUNCTION_NAME = "goog.getMsg";
   private static final String MSG_FALLBACK_FUNCTION_NAME = "goog.getMsgWithFallback";
+
+  /**
+   * Identifies a message with a specific ID which doesn't get extracted from the JS code containing
+   * its declaration.
+   *
+   * <pre><code>
+   *   // A message with ID 1234 whose original definition comes from some source other than this
+   *   // JS code.
+   *   const MSG_EXTERNAL_1234 = goog.getMsg("Some message.");
+   * </code></pre>
+   */
+  private static final String MSG_EXTERNAL_PREFIX = "MSG_EXTERNAL_";
 
   static final DiagnosticType MESSAGE_HAS_NO_DESCRIPTION =
       DiagnosticType.warning(
@@ -70,9 +86,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           "JSC_MSG_ORPHANED_NODE",
           MSG_FUNCTION_NAME + "() function could be used only with MSG_* property or variable");
 
-  public static final DiagnosticType MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX =
+  public static final DiagnosticType MESSAGE_NOT_INITIALIZED_CORRECTLY =
       DiagnosticType.warning(
-          "JSC_MSG_NOT_INITIALIZED_USING_NEW_SYNTAX",
+          "JSC_MSG_NOT_INITIALIZED_CORRECTLY",
           "message not initialized using " + MSG_FUNCTION_NAME);
 
   public static final DiagnosticType BAD_FALLBACK_SYNTAX =
@@ -179,7 +195,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     final String originalMessageKey;
     String possiblyObfuscatedMessageKey;
     final Node msgNode;
-    final boolean isVar;
+    final JSDocInfo jsDocInfo;
 
     switch (node.getToken()) {
       case NAME:
@@ -191,7 +207,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         possiblyObfuscatedMessageKey = node.getString();
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
-        isVar = true;
+        jsDocInfo = parent.getJSDocInfo();
         break;
 
       case ASSIGN:
@@ -204,7 +220,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         possiblyObfuscatedMessageKey = getProp.getString();
         originalMessageKey = getProp.getOriginalName();
         msgNode = node.getLastChild();
-        isVar = false;
+        jsDocInfo = node.getJSDocInfo();
         break;
 
       case STRING_KEY:
@@ -225,7 +241,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         possiblyObfuscatedMessageKey = node.getString();
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
-        isVar = false;
+        jsDocInfo = node.getJSDocInfo();
         break;
 
       default:
@@ -241,9 +257,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // message or that the value is a call to goog.getMsg().
 
     // Is this a message name?
-    boolean isNewStyleMessage = msgNode != null && msgNode.isCall();
+    boolean msgNodeIsACall = msgNode != null && msgNode.isCall();
 
-    if (!isMessageName(messageKey, isNewStyleMessage)) {
+    if (!isMessageName(messageKey, msgNodeIsACall)) {
       return;
     }
 
@@ -258,70 +274,151 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     // Report a warning if a qualified messageKey that looks like a message (e.g. "a.b.MSG_X")
     // doesn't use goog.getMsg().
-    if (isNewStyleMessage) {
+    if (msgNodeIsACall) {
       googMsgNodes.remove(msgNode);
     } else if (style != JsMessage.Style.LEGACY) {
       // TODO(johnlenz): promote this to an error once existing conflicts have been
       // cleaned up.
-      compiler.report(JSError.make(node, MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX));
+      compiler.report(JSError.make(node, MESSAGE_NOT_INITIALIZED_CORRECTLY));
       if (style == JsMessage.Style.CLOSURE) {
         // Don't extract the message if we aren't accepting LEGACY messages
         return;
       }
     }
 
-    boolean isUnnamedMsg = isUnnamedMessageName(messageKey);
-
-    JsMessage.Builder builder = new JsMessage.Builder(isUnnamedMsg ? null : messageKey);
+    // Gather information from the JS code into this object instead of directly into the message
+    // builder. This allows us to refer to this information more easily as needed.
+    final MessageDataFromJsCode messageData = new MessageDataFromJsCode();
     OriginalMapping mapping =
         compiler.getSourceMapping(traversal.getSourceName(), node.getLineno(), node.getCharno());
     if (mapping != null) {
-      builder.setSourceName(mapping.getOriginalFile() + ":" + mapping.getLineNumber());
+      messageData.sourceName = mapping.getOriginalFile() + ":" + mapping.getLineNumber();
     } else {
-      builder.setSourceName(traversal.getSourceName() + ":" + node.getLineno());
+      messageData.sourceName = traversal.getSourceName() + ":" + node.getLineno();
     }
 
+    if (jsDocInfo != null) {
+      messageData.description = jsDocInfo.getDescription();
+      messageData.meaning = jsDocInfo.getMeaning();
+      messageData.alternateMessageId = jsDocInfo.getAlternateMessageId();
+    }
+
+    final JsMessage.Builder builder = new JsMessage.Builder();
     try {
-      if (isVar) {
-        extractMessageFromVariable(builder, node, parent);
-      } else {
-        extractMessageFrom(builder, msgNode, node);
-      }
+      // This method is responsible for setting messageData.messageText and
+      // messageData.messageParts, which are needed below.
+      // TODO(bradfordcsmith): Using the builder in this method makes the code harder to understand
+      //     and maintain.
+      extractFromCallNode(builder, msgNode, messageData);
     } catch (MalformedException ex) {
       compiler.report(JSError.make(ex.getNode(), MESSAGE_TREE_MALFORMED, ex.getMessage()));
       return;
     }
 
-    JsMessage extractedMessage = builder.build(idGenerator);
+    // non-null for `MSG_EXTERNAL_12345`
+    final String externalMessageId = getExternalMessageId(messageKey);
+
+    if (externalMessageId != null) {
+      // MSG_EXTERNAL_12345 = ...
+      messageData.isAnonymous = false;
+      messageData.isExternal = true;
+      messageData.messageId = externalMessageId;
+      messageData.key = messageKey;
+    } else {
+      messageData.isExternal = false;
+      // We will need to generate the message ID from a combination of the message text and
+      // its "meaning". If the code explicitly specifies a "meaning" string we'll use that,
+      // otherwise we'll use the message key as the meaning
+      String meaningForIdGeneration = messageData.meaning;
+      if (isUnnamedMessageName(messageKey)) {
+        // MSG_UNNAMED_XXXX = goog.getMsg(....);
+        // JS code that is automatically generated uses this, since it is harder for it to create
+        // message variable names that are guaranteed to be unique.
+        messageData.isAnonymous = true;
+        messageData.key = generateKeyFromMessageText(messageData.messageText);
+        if (meaningForIdGeneration == null) {
+          meaningForIdGeneration = messageData.key;
+        }
+      } else {
+        messageData.isAnonymous = false;
+        messageData.key = messageKey;
+        if (meaningForIdGeneration == null) {
+          // Transpilation of goog.scope() may have added a prefix onto the variable name,
+          // which we need to strip off when we treat it as a "meaning" for ID generation purposes.
+          // Otherwise, the message ID would change if a goog.scope() call were added or removed.
+          meaningForIdGeneration = removeScopedAliasesPrefix(messageKey);
+        }
+      }
+      messageData.messageId =
+          idGenerator == null
+              ? meaningForIdGeneration
+              : idGenerator.generateId(meaningForIdGeneration, messageData.messageParts);
+    }
+
+    JsMessage extractedMessage =
+        builder
+            .setIsAnonymous(messageData.isAnonymous)
+            .setIsExternalMsg(messageData.isExternal)
+            .setKey(messageData.key)
+            .setSourceName(messageData.sourceName)
+            .setDesc(messageData.description)
+            .setMeaning(messageData.meaning)
+            .setAlternateId(messageData.alternateMessageId)
+            .setId(messageData.messageId)
+            .build();
 
     // If asked to check named internal messages.
-    if (!isUnnamedMsg && !extractedMessage.isExternal()) {
-      checkIfMessageDuplicated(messageKey, msgNode);
+    if (!extractedMessage.isAnonymous() && !extractedMessage.isExternal()) {
+      checkIfMessageDuplicated(extractedMessage.getKey(), msgNode);
     }
-    if (isUnnamedMsg) {
+    if (extractedMessage.isAnonymous()) {
       trackUnnamedMessage(traversal, extractedMessage, possiblyObfuscatedMessageKey);
     } else {
-      trackNormalMessage(extractedMessage, messageKey, msgNode);
+      trackNormalMessage(extractedMessage, extractedMessage.getKey(), msgNode);
     }
 
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_TEXT, messageKey));
+      compiler.report(JSError.make(node, MESSAGE_HAS_NO_TEXT, extractedMessage.getKey()));
     }
 
-    // New-style messages must have descriptions. We don't emit a warning
-    // for legacy-style messages, because there are thousands of
-    // them in legacy code that are not worth the effort to fix, since they've
-    // already been translated anyway.
+    // Messages must have descriptions.
     String desc = extractedMessage.getDesc();
-    if (isNewStyleMessage
-        && (desc == null || desc.trim().isEmpty())
-        && !extractedMessage.isExternal()) {
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_DESCRIPTION, messageKey));
+    if ((desc == null || desc.trim().isEmpty()) && !extractedMessage.isExternal()) {
+      compiler.report(JSError.make(node, MESSAGE_HAS_NO_DESCRIPTION, extractedMessage.getKey()));
     }
 
     JsMessageDefinition msgDefinition = new JsMessageDefinition(msgNode);
     processJsMessage(extractedMessage, msgDefinition);
+  }
+
+  /**
+   * Extracts an external message ID from the message key, if it contains one.
+   *
+   * @param messageKey the message key (usually the variable or property name)
+   * @return the external ID if it is found, otherwise `null`
+   */
+  @Nullable
+  public static String getExternalMessageId(String messageKey) {
+    if (messageKey.startsWith(MSG_EXTERNAL_PREFIX)) {
+      int start = MSG_EXTERNAL_PREFIX.length();
+      int end = start;
+      for (; end < messageKey.length(); end++) {
+        char c = messageKey.charAt(end);
+        if (c > '9' || c < '0') {
+          break;
+        }
+      }
+      if (end > start) {
+        return messageKey.substring(start, end);
+      }
+    }
+    return null;
+  }
+
+  private String generateKeyFromMessageText(String msgText) {
+    long nonnegativeHash = Long.MAX_VALUE & Hash.hash64(msgText);
+    return MSG_PREFIX + Ascii.toUpperCase(Long.toString(nonnegativeHash, 36));
   }
 
   private void collectGetMsgCall(NodeTraversal traversal, Node call) {
@@ -443,69 +540,20 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /**
-   * Creates a {@link JsMessage} for a JS message defined using a JS variable declaration (e.g
-   * <code>var MSG_X = ...;</code>).
-   *
-   * @param builder the message builder
-   * @param nameNode a NAME node for a JS message variable
-   * @param parentNode a VAR node, parent of {@code nameNode}
-   * @throws MalformedException if {@code varNode} does not correspond to a valid JS message VAR
-   *     node
+   * A place in which to gather information from JS code in preparation for building a message from
+   * it.
    */
-  private void extractMessageFromVariable(JsMessage.Builder builder, Node nameNode, Node parentNode)
-      throws MalformedException {
-
-    // Determine the message's value
-    Node valueNode = checkNotNull(nameNode.getFirstChild());
-    if (valueNode.isCall()) {
-      maybeInitMetaDataFromJsDoc(builder, parentNode);
-      extractFromCallNode(builder, valueNode);
-    } else {
-      throw new MalformedException("Cannot parse value of message " + builder.getKey(), valueNode);
-    }
-  }
-
-  /**
-   * Creates a {@link JsMessage} for a JS message defined using an assignment to a qualified name
-   * (e.g <code>a.b.MSG_X = goog.getMsg(...);</code>).
-   *
-   * @param builder the message builder
-   * @param valueNode a node in a JS message value
-   * @param docNode the node containing the jsdoc.
-   * @throws MalformedException if {@code getPropNode} does not correspond to a valid JS message
-   *     node
-   */
-  private void extractMessageFrom(JsMessage.Builder builder, Node valueNode, Node docNode)
-      throws MalformedException {
-    maybeInitMetaDataFromJsDoc(builder, docNode);
-    extractFromCallNode(builder, valueNode);
-  }
-
-  /**
-   * Initializes the meta data in a message builder given a node that may contain JsDoc properties.
-   *
-   * @param builder the message builder whose meta data will be initialized
-   * @param node the node with the message's JSDoc properties
-   * @return true if message has JsDoc with valid description in @desc annotation
-   */
-  private static boolean maybeInitMetaDataFromJsDoc(JsMessage.Builder builder, Node node) {
-    boolean messageHasDesc = false;
-    JSDocInfo info = node.getJSDocInfo();
-    if (info != null) {
-      String desc = info.getDescription();
-      if (desc != null) {
-        builder.setDesc(desc);
-        messageHasDesc = true;
-      }
-      if (info.getMeaning() != null) {
-        builder.setMeaning(info.getMeaning());
-      }
-      if (info.getAlternateMessageId() != null) {
-        builder.setAlternateId(info.getAlternateMessageId());
-      }
-    }
-
-    return messageHasDesc;
+  private static class MessageDataFromJsCode {
+    boolean isAnonymous;
+    boolean isExternal;
+    @Nullable String key;
+    @Nullable String sourceName;
+    @Nullable String description;
+    @Nullable String meaning;
+    @Nullable String alternateMessageId;
+    @Nullable List<Part> messageParts;
+    @Nullable String messageText;
+    @Nullable String messageId;
   }
 
   /**
@@ -575,9 +623,12 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *
    * @param builder the message builder
    * @param node the call node from where we extract the message
+   * @param messageData set the messageText and messageParts fields of this object
    * @throws MalformedException if the parsed message is invalid
    */
-  private void extractFromCallNode(JsMessage.Builder builder, Node node) throws MalformedException {
+  private void extractFromCallNode(
+      JsMessage.Builder builder, Node node, MessageDataFromJsCode messageData)
+      throws MalformedException {
     // Check the function being called
     if (!node.isCall()) {
       throw new MalformedException(
@@ -600,7 +651,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       throw new MalformedException("Message string literal expected", stringLiteralNode);
     }
     // Parse the message string and append parts to the builder
-    parseMessageTextNode(builder, stringLiteralNode);
+    parseMessageTextNode(builder, stringLiteralNode, messageData);
 
     Node valuesObjLit = stringLiteralNode.getNext();
     Set<String> phNames = new LinkedHashSet<>();
@@ -729,17 +780,55 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *
    * @param builder the JS message builder to append parts to
    * @param node the node with string literal that contains the message text
+   * @param messageData set the messageText and messageParts fields of this object
    * @throws MalformedException if {@code value} contains a reference to an unregistered placeholder
    */
-  private static void parseMessageTextNode(JsMessage.Builder builder, Node node)
+  private static void parseMessageTextNode(
+      JsMessage.Builder builder, Node node, MessageDataFromJsCode messageData)
       throws MalformedException {
     String value = extractStringFromStringExprNode(node);
+    messageData.messageText = value;
 
     try {
-      builder.setMsgText(value);
+      parseMessageTextIntoPartsForBuilder(builder, value);
+      messageData.messageParts = builder.getParts();
     } catch (PlaceholderFormatException e) {
       throw new MalformedException(
           "Placeholder incorrectly formatted in: " + builder.getKey(), node);
+    }
+  }
+
+  public static void parseMessageTextIntoPartsForBuilder(JsMessage.Builder builder, String msgText)
+      throws PlaceholderFormatException {
+    while (true) {
+      int phBegin = msgText.indexOf(JsMessage.PH_JS_PREFIX);
+      if (phBegin < 0) {
+        // Just a string literal
+        builder.appendStringPart(msgText);
+        return;
+      } else {
+        if (phBegin > 0) {
+          // A string literal followed by a placeholder
+          builder.appendStringPart(msgText.substring(0, phBegin));
+        }
+
+        // A placeholder. Find where it ends
+        int phEnd = msgText.indexOf(JsMessage.PH_JS_SUFFIX, phBegin);
+        if (phEnd < 0) {
+          throw new PlaceholderFormatException();
+        }
+
+        String phName = msgText.substring(phBegin + JsMessage.PH_JS_PREFIX.length(), phEnd);
+        builder.appendPlaceholderReference(phName);
+        int nextPos = phEnd + JsMessage.PH_JS_SUFFIX.length();
+        if (nextPos < msgText.length()) {
+          // Iterate on the rest of the message value
+          msgText = msgText.substring(nextPos);
+        } else {
+          // The message is parsed
+          return;
+        }
+      }
     }
   }
 

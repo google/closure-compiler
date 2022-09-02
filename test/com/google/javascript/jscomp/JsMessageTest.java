@@ -30,20 +30,29 @@ public final class JsMessageTest {
 
   @Test
   public void testIsEmpty() {
-    assertThat(new JsMessage.Builder().build().isEmpty()).isTrue();
-    assertThat(new JsMessage.Builder().appendStringPart("").build().isEmpty()).isTrue();
-    assertThat(new JsMessage.Builder().appendStringPart("").appendStringPart("").build().isEmpty())
+    assertThat(newTestMessageBuilder("MSG_KEY").build().isEmpty()).isTrue();
+    assertThat(newTestMessageBuilder("MSG_KEY").appendStringPart("").build().isEmpty()).isTrue();
+    assertThat(
+            newTestMessageBuilder("MSG_KEY")
+                .appendStringPart("")
+                .appendStringPart("")
+                .build()
+                .isEmpty())
         .isTrue();
-    assertThat(new JsMessage.Builder().appendStringPart("s").appendStringPart("").build().isEmpty())
+    assertThat(
+            newTestMessageBuilder("MSG_KEY")
+                .appendStringPart("s")
+                .appendStringPart("")
+                .build()
+                .isEmpty())
         .isFalse();
-    assertThat(new JsMessage.Builder().appendPlaceholderReference("3").build().isEmpty()).isFalse();
+    assertThat(newTestMessageBuilder("MSG_KEY").appendPlaceholderReference("3").build().isEmpty())
+        .isFalse();
   }
 
-  @Test
-  public void testMeaningChangesId() {
-    String id1 = new JsMessage.Builder().appendStringPart("foo").build().getId();
-    String id2 = new JsMessage.Builder().appendStringPart("foo").setMeaning("bar").build().getId();
-    assertThat(id1.equals(id2)).isFalse();
+  /** Return a new message builder that uses the given string as both its key and its ID. */
+  private JsMessage.Builder newTestMessageBuilder(String keyAndId) {
+    return new JsMessage.Builder().setKey(keyAndId).setId(keyAndId);
   }
 
   @Test
@@ -57,41 +66,33 @@ public final class JsMessageTest {
 
   @Test
   public void testNoAlternateId() {
-    JsMessage msg = new JsMessage.Builder().setDesc("Hello.").build();
+    JsMessage msg = newTestMessageBuilder("MSG_SOME_KEY").setDesc("Hello.").build();
     assertThat(msg.getDesc()).isEqualTo("Hello.");
-    assertThat(msg.getId()).isEqualTo("MSG_12MI20AMYO9T6");
+    assertThat(msg.getId()).isEqualTo("MSG_SOME_KEY");
     assertThat(msg.getAlternateId()).isNull();
   }
 
   @Test
   public void testSelfReferentialAlternateId() {
     JsMessage msg =
-        new JsMessage.Builder().setDesc("Hello.").setAlternateId("MSG_12MI20AMYO9T6").build();
+        newTestMessageBuilder("MSG_SOME_NAME")
+            .setDesc("Hello.")
+            .setAlternateId("MSG_SOME_NAME")
+            .build();
     assertThat(msg.getDesc()).isEqualTo("Hello.");
-    assertThat(msg.getId()).isEqualTo("MSG_12MI20AMYO9T6");
+    assertThat(msg.getId()).isEqualTo("MSG_SOME_NAME");
     assertThat(msg.getAlternateId()).isNull();
-  }
-
-  @Test
-  public void testGenerateIdWithGoogScope() {
-    JsMessage msg1 =
-        new JsMessage.Builder().setDesc("Hello.").setKey("$jscomp$scope$12345$0$MSG_HELLO").build();
-    assertThat(msg1.getDesc()).isEqualTo("Hello.");
-    assertThat(msg1.getId()).isEqualTo("MSG_HELLO");
-
-    JsMessage msg2 =
-        new JsMessage.Builder().setDesc("Test.").setKey("$jscomp$scope$m12345$0$MSG_TEST").build();
-    assertThat(msg2.getDesc()).isEqualTo("Test.");
-    assertThat(msg2.getId()).isEqualTo("MSG_TEST");
   }
 
   @Test
   public void testAlternateId() {
     JsMessage msg =
         new JsMessage.Builder()
+            .setKey("MSG_KEY")
             .setDesc("Hello.")
             .setAlternateId("foo")
             .setMeaning("meaning")
+            .setId("meaning")
             .appendPlaceholderReference("placeholder0")
             .appendPlaceholderReference("placeholder1")
             .appendStringPart("part0")

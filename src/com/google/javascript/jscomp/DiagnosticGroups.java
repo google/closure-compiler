@@ -466,7 +466,7 @@ public class DiagnosticGroups {
           JsMessageVisitor.MESSAGE_TREE_MALFORMED,
           JsMessageVisitor.MESSAGE_HAS_NO_VALUE,
           JsMessageVisitor.MESSAGE_DUPLICATE_KEY,
-          JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
+          JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
 
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup(

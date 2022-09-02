@@ -185,7 +185,7 @@ public final class XtbMessageBundle implements MessageBundle {
           checkState(msgBuilder == null);
           String id = atts.getValue(MESSAGE_ID_ATT_NAME);
           checkState(id != null && !id.isEmpty());
-          msgBuilder = new JsMessage.Builder(id);
+          msgBuilder = new JsMessage.Builder().setKey(id).setId(id);
           break;
         case PLACEHOLDER_ELEM_NAME:
           checkState(msgBuilder != null);
