@@ -390,4 +390,10 @@ enum NodeProperty {
   // Indicates that an externs name declaration was synthesized by the compiler
   // because the name was referenced without being declared
   SYNTHESIZED_UNFULFILLED_NAME_DECLARATION = 45;
+
+  // These all come from the SIDE_EFFECT_FLAGS integer property
+  MUTATES_GLOBAL_STATE = 46;
+  MUTATES_THIS = 47;
+  MUTATES_ARGUMENTS = 48;
+  THROWS = 49;
 }
