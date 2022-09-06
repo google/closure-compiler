@@ -23,8 +23,6 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Ascii;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -33,7 +31,6 @@ import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessage.StringPart;
 import com.google.javascript.jscomp.JsMessageVisitor.MalformedException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
 import com.google.javascript.rhino.Token;
@@ -119,19 +116,9 @@ public final class ReplaceMessages {
             // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
             protectGetMsgCall(origValueNode, message);
             break;
-          case STRINGLIT:
-          case ADD:
-            // a legacy format
-            // `MSG_A = 'abc' + 'def';`
-            protectStringLiteralOrConcatMsg(origValueNode, message);
-            break;
-          case FUNCTION:
-            protectLegacyFunctionMsg(origValueNode, message);
-            break;
           default:
             throw new MalformedException(
-                "Expected FUNCTION, STRING, ADD, or CALL node; found: " + origValueNode,
-                origValueNode);
+                "Expected ALL node; found: " + origValueNode, origValueNode);
         }
       } catch (MalformedException e) {
         compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
@@ -180,66 +167,6 @@ public final class ReplaceMessages {
       // to it must also be marked as constant for consistency's sake.
       callee.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       return callee;
-    }
-
-    private void protectStringLiteralOrConcatMsg(Node valueNode, JsMessage message) {
-      final Node msgProps = createMsgPropertiesNode(message, new MsgOptions());
-      final Node newCallNode =
-          astFactory
-              .createCall(
-                  createProtectionFunctionCallee(ReplaceMessagesConstants.DEFINE_MSG_CALLEE),
-                  type(valueNode),
-                  msgProps)
-              .srcrefTreeIfMissing(valueNode);
-      newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
-      valueNode.replaceWith(newCallNode);
-      compiler.reportChangeToEnclosingScope(newCallNode);
-    }
-
-    private void protectLegacyFunctionMsg(Node functionNode, JsMessage message) {
-      // `MSG_X = function(name1, name2) { return expressionUsingName1AndName2; };`
-      // NOTE: The JsMessageVisitor code will have examined the return value and constructed a
-      // message string with placeholders matching the parameter names.
-      checkArgument(functionNode.isFunction(), functionNode);
-      final Node paramListNode = functionNode.getSecondChild();
-      final Node origBlock = paramListNode.getNext();
-      // NOTE: JsMessageVisitor would have thrown a MalformedException before reaching this point
-      // if the function body were not a single return statement.
-      final Node returnNode = origBlock.getOnlyChild();
-      final Node origValueNode = returnNode.getOnlyChild();
-
-      // Convert to
-      // ```javascript
-      // MSG_X = function(name1, name2) {
-      //     return __jscomp_define_msg__({<msg properties>}, {<substitutions>});
-      // };
-      // ```
-      final Node newCallee =
-          createProtectionFunctionCallee(ReplaceMessagesConstants.DEFINE_MSG_CALLEE);
-      final Node msgPropertiesNode = createMsgPropertiesNode(message, new MsgOptions());
-      // Convert the parameter list into a simple placeholders object
-      // ```javascript
-      // {
-      //   'name1': name1,
-      //   'name2': name2
-      // }
-      // ```
-      QuotedKeyObjectLitBuilder placeholderObjLlitBuilder = new QuotedKeyObjectLitBuilder();
-      for (Node paramName = paramListNode.getFirstChild();
-          paramName != null;
-          paramName = paramName.getNext()) {
-        // Just assert here, because JsMessageVisitor should have already reported it if the
-        // parameter list were malformed.
-        checkState(paramName.isName(), paramName);
-        placeholderObjLlitBuilder.addNode(paramName.getString(), paramName.cloneNode());
-      }
-      final Node placeholderNode = placeholderObjLlitBuilder.build();
-      final Node newValueNode =
-          astFactory
-              .createCall(newCallee, type(origValueNode), msgPropertiesNode, placeholderNode)
-              .srcrefTreeIfMissing(origValueNode);
-      origValueNode.replaceWith(newValueNode);
-      compiler.reportChangeToChangeScope(functionNode);
     }
 
     @Override
@@ -571,133 +498,13 @@ public final class ReplaceMessages {
      */
     private Node getNewValueNode(JsMessage message, Node origValueNode) throws MalformedException {
       switch (origValueNode.getToken()) {
-        case FUNCTION:
-          // The message is a function. Modify the function node.
-          updateFunctionNode(message, origValueNode);
-          return origValueNode;
-        case STRINGLIT:
-          // The message is a simple string. Modify the string node.
-          String newString = message.toString();
-          if (!origValueNode.getString().equals(newString)) {
-            origValueNode.setString(newString);
-            compiler.reportChangeToEnclosingScope(origValueNode);
-          }
-          return origValueNode;
-        case ADD:
-          // The message is a simple string. Create a string node.
-          return astFactory.createString(message.toString());
         case CALL:
           // The message is a function call. Replace it with a string expression.
           return replaceCallNode(message, origValueNode);
         default:
           throw new MalformedException(
-              "Expected FUNCTION, STRING, or ADD node; found: " + origValueNode.getToken(),
-              origValueNode);
+              "Expected CALL node; found: " + origValueNode.getToken(), origValueNode);
       }
-    }
-
-    /**
-     * Updates the descendants of a FUNCTION node to represent a message's value.
-     *
-     * <p>The tree looks something like:
-     *
-     * <pre>
-     * function
-     *  |-- name
-     *  |-- lp
-     *  |   |-- name <arg1>
-     *  |    -- name <arg2>
-     *   -- block
-     *      |
-     *       --return
-     *           |
-     *            --add
-     *               |-- string foo
-     *                -- name <arg1>
-     * </pre>
-     *
-     * @param message a message
-     * @param functionNode the message's original FUNCTION value node
-     * @throws MalformedException if the passed node's subtree structure is not as expected
-     */
-    private void updateFunctionNode(JsMessage message, Node functionNode)
-        throws MalformedException {
-      checkNode(functionNode, Token.FUNCTION);
-      Node nameNode = functionNode.getFirstChild();
-      checkNode(nameNode, Token.NAME);
-      Node argListNode = nameNode.getNext();
-      checkNode(argListNode, Token.PARAM_LIST);
-      Node oldBlockNode = argListNode.getNext();
-      checkNode(oldBlockNode, Token.BLOCK);
-
-      Node valueNode = constructAddOrStringNode(message.getParts(), argListNode);
-      Node newBlockNode = IR.block(astFactory.createReturn(valueNode));
-
-      if (!newBlockNode.isEquivalentTo(
-          oldBlockNode,
-          /* compareType= */ false,
-          /* recurse= */ true,
-          /* jsDoc= */ false,
-          /* sideEffect= */ false)) {
-        newBlockNode.srcrefTreeIfMissing(oldBlockNode);
-        oldBlockNode.replaceWith(newBlockNode);
-        compiler.reportChangeToEnclosingScope(newBlockNode);
-      }
-    }
-
-    /**
-     * Creates a parse tree corresponding to the remaining message parts in an iteration. The result
-     * will contain only STRING nodes, NAME nodes (corresponding to placeholder references), and/or
-     * ADD nodes used to combine the other two types.
-     *
-     * @param parts the message parts
-     * @param argListNode a PARAM_LIST node whose children are valid placeholder names
-     * @return the root of the constructed parse tree
-     * @throws MalformedException if {@code partsIterator} contains a placeholder reference that
-     *     does not correspond to a valid argument in the arg list
-     */
-    private Node constructAddOrStringNode(ImmutableList<Part> parts, Node argListNode)
-        throws MalformedException {
-      if (parts.isEmpty()) {
-        return astFactory.createString("");
-      }
-
-      Node resultNode = null;
-      for (Part part : parts) {
-        final Node partNode = constructLegacyFunctionMsgPart(argListNode, part);
-        resultNode = resultNode == null ? partNode : astFactory.createAdd(resultNode, partNode);
-      }
-      return resultNode;
-    }
-
-    private Node constructLegacyFunctionMsgPart(Node argListNode, Part part)
-        throws MalformedException {
-      Node partNode = null;
-      if (part.isPlaceholder()) {
-
-        for (Node node = argListNode.getFirstChild(); node != null; node = node.getNext()) {
-          if (node.isName()) {
-            String arg = node.getString();
-
-            // We ignore the case here because the transconsole only supports
-            // uppercase placeholder names, but function arguments in JavaScript
-            // code can have mixed case.
-            if (Ascii.equalsIgnoreCase(arg, part.getPlaceholderName())) {
-              partNode = IR.name(arg);
-            }
-          }
-        }
-
-        if (partNode == null) {
-          throw new MalformedException(
-              "Unrecognized message placeholder referenced: " + part.getPlaceholderName(),
-              argListNode);
-        }
-      } else {
-        // The part is just a string literal.
-        partNode = astFactory.createString(part.toString());
-      }
-      return partNode;
     }
 
     /**
