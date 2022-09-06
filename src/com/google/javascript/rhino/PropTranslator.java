@@ -184,30 +184,13 @@ final class PropTranslator {
 
   private static final void checkUnexpectedNullProtoProps() {
     for (NodeProperty protoProp : NodeProperty.values()) {
-      switch (protoProp) {
-        case NODE_PROPERTY_UNSPECIFIED:
-          // this is the "no properties are set" value
-          break;
-        case IS_DECLARED_CONSTANT:
-        case IS_INFERRED_CONSTANT:
-          // These are used for the CONSTANT_VAR_FLAGS bit field property
-          break;
-        case UNRECOGNIZED:
-        case UNUSED_11:
-          // unused
-          break;
-        case MUTATES_GLOBAL_STATE:
-        case MUTATES_THIS:
-        case MUTATES_ARGUMENTS:
-        case THROWS:
-          // these are used for the SIDE_EFFECT_FLAGS bit field property
-          break;
-        default:
-          // everything else should be a 1-to-1 match with a boolean property
-          checkState(
-              protoToRhinoProp[protoProp.ordinal()] != null,
-              "Hit unhandled node property: %s",
-              protoProp);
+      if (protoToRhinoProp[protoProp.ordinal()] == null
+          && protoProp != NodeProperty.NODE_PROPERTY_UNSPECIFIED
+          && protoProp != NodeProperty.IS_DECLARED_CONSTANT
+          && protoProp != NodeProperty.IS_INFERRED_CONSTANT
+          && protoProp != NodeProperty.UNRECOGNIZED
+          && protoProp != NodeProperty.UNUSED_11) {
+        throw new IllegalStateException("Hit unhandled node property: " + protoProp);
       }
     }
   }

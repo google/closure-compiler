@@ -1152,9 +1152,6 @@ public class Node {
             propSet = setNodePropertyBit(propSet, NodeProperty.IS_DECLARED_CONSTANT);
           }
           break;
-        case SIDE_EFFECT_FLAGS:
-          propSet = setNodePropertySideEffectFlags(propSet, propListItem.getIntValue());
-          break;
         default:
           if (propListItem instanceof Node.IntPropListItem) {
             NodeProperty nodeProperty = PropTranslator.serialize(prop);
@@ -1168,30 +1165,6 @@ public class Node {
     return propSet;
   }
 
-  /**
-   * Update a bit field to be used for serialized node properties to include bits from the
-   * `SIDE_EFFECT_FLAGS` Node property.
-   *
-   * @param propSet the bit field to update
-   * @param sideEffectFlags the integer value from the `SIDE_EFFECT_FLAGS` property
-   * @return the updated property set
-   */
-  private long setNodePropertySideEffectFlags(long propSet, int sideEffectFlags) {
-    if (anyBitSet(sideEffectFlags, SideEffectFlags.MUTATES_GLOBAL_STATE)) {
-      propSet = setNodePropertyBit(propSet, NodeProperty.MUTATES_GLOBAL_STATE);
-    }
-    if (anyBitSet(sideEffectFlags, SideEffectFlags.MUTATES_THIS)) {
-      propSet = setNodePropertyBit(propSet, NodeProperty.MUTATES_THIS);
-    }
-    if (anyBitSet(sideEffectFlags, SideEffectFlags.MUTATES_ARGUMENTS)) {
-      propSet = setNodePropertyBit(propSet, NodeProperty.MUTATES_ARGUMENTS);
-    }
-    if (anyBitSet(sideEffectFlags, SideEffectFlags.THROWS)) {
-      propSet = setNodePropertyBit(propSet, NodeProperty.THROWS);
-    }
-    return propSet;
-  }
-
   public final void deserializeProperties(long propSet) {
     if (this.isRoot()) {
       checkState(this.propListHead == null, this.propListHead);
@@ -1199,9 +1172,8 @@ public class Node {
       checkState(this.propListHead.propType == Prop.SOURCE_FILE.ordinal(), this.propListHead);
     }
 
-    // We'll gather the bits for CONST_VAR_FLAGS and SIDE_EFFECT_FLAGS into these variables.
+    // We'll gather the bits for CONST_VAR_FLAGS into this variable.
     int constantVarFlags = 0;
-    int sideEffectFlags = 0;
     // Exclude the sign bit for clarity.
     for (int i = 0; i < 63; i++) {
       if (!hasBitSet(propSet, i)) {
@@ -1214,18 +1186,6 @@ public class Node {
           break;
         case IS_INFERRED_CONSTANT:
           constantVarFlags |= ConstantVarFlags.INFERRED;
-          break;
-        case MUTATES_GLOBAL_STATE:
-          sideEffectFlags |= SideEffectFlags.MUTATES_GLOBAL_STATE;
-          break;
-        case MUTATES_THIS:
-          sideEffectFlags |= SideEffectFlags.MUTATES_THIS;
-          break;
-        case MUTATES_ARGUMENTS:
-          sideEffectFlags |= SideEffectFlags.MUTATES_ARGUMENTS;
-          break;
-        case THROWS:
-          sideEffectFlags |= SideEffectFlags.THROWS;
           break;
         default:
           // All other properties are booleans that are 1-to-1 equivalent with Node properties.
@@ -1243,12 +1203,6 @@ public class Node {
       this.propListHead =
           new IntPropListItem(
               (byte) Prop.CONSTANT_VAR_FLAGS.ordinal(), constantVarFlags, this.propListHead);
-    }
-
-    if (sideEffectFlags != 0) {
-      this.propListHead =
-          new IntPropListItem(
-              (byte) Prop.SIDE_EFFECT_FLAGS.ordinal(), sideEffectFlags, this.propListHead);
     }
 
     // Make sure the deserialized properties are valid.
