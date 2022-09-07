@@ -211,6 +211,39 @@ Intl.DateTimeFormat.prototype.resolvedOptions = function() {};
 
 /**
  * @constructor
+ * @param {string|!Array<string>=} locales
+ * @param {{localeMatcher: (string|undefined),
+ *    style: (string|undefined), type: string,
+ *    languageDisplay: (string|undefined), fallback: (string|undefined)}=}
+ *        options
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames
+ */
+Intl.DisplayNames = function(locales, options) {};
+
+/**
+ * @param {!Array<string>} locales
+ * @param {{localeMatcher: string}=} options
+ * @return {!Array<string>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf
+ */
+Intl.DisplayNames.supportedLocalesOf = function(locales, options) {};
+
+/**
+ * @param {string=} code
+ * @return {(string|undefined)}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames/of
+ */
+Intl.DisplayNames.prototype.of = function(code) {};
+
+/**
+ * @return {{locale: string, style: string, type: string,
+ *    fallback: string, languageDisplay: (string|undefined)}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames/resolvedOptions
+ */
+Intl.DisplayNames.prototype.resolvedOptions = function() {};
+
+/**
+ * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules#Syntax
  * @param {string|Array<string>=} locales
  * @param {{localeMatcher: (string|undefined), type: (string|undefined),
