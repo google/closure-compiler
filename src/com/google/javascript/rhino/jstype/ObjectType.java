@@ -123,7 +123,7 @@ public abstract class ObjectType extends JSType {
    * @see TemplatizedType
    */
   public ImmutableList<JSType> getTemplateTypes() {
-    return null;
+    return ImmutableList.of();
   }
 
   /**

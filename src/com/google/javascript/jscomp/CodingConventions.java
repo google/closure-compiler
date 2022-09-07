@@ -412,7 +412,7 @@ public final class CodingConventions {
 
     @Override
     public List<String> identifyTypeDeclarationCall(Node n) {
-      return null;
+      return ImmutableList.of();
     }
 
     @Override

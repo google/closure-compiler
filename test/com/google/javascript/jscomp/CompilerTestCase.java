@@ -1270,6 +1270,7 @@ public abstract class CompilerTestCase {
     return compiler;
   }
 
+  @Nullable
   private static ImmutableList<SourceFile> maybeCreateSources(String name, String srcText) {
     if (srcText != null) {
       return ImmutableList.of(SourceFile.fromCode(name, srcText));
@@ -1277,6 +1278,7 @@ public abstract class CompilerTestCase {
     return null;
   }
 
+  @Nullable
   protected static List<SourceFile> createSources(String name, String... sources) {
     if (sources == null) {
       return null;
@@ -1284,6 +1286,7 @@ public abstract class CompilerTestCase {
     return createSources(name, ImmutableList.copyOf(sources));
   }
 
+  @Nullable
   private static List<SourceFile> createSources(String name, List<String> sources) {
     if (sources == null) {
       return null;
