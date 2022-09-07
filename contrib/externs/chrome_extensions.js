@@ -2425,6 +2425,7 @@ chrome.enterprise.reportingPrivate.SettingValue = {
  *   windowsMachineDomain: (!string|undefined),
  *   windowsUserDomain: (!string|undefined),
  *   securityPatchLevel: (!string|undefined),
+ *   secureBootEnabled: (!chrome.enterprise.reportingPrivate.SettingValue|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.DeviceInfo;
