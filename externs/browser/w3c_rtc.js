@@ -1636,20 +1636,47 @@ RTCIceCandidateInit.prototype.usernameFragment;
  */
 function RTCIceCandidate(candidateInitDict) {}
 
-/**
- * @type {?string}
- */
+/** @type {string} */
 RTCIceCandidate.prototype.candidate;
 
-/**
- * @type {?string}
- */
+/** @type {?string} */
 RTCIceCandidate.prototype.sdpMid;
 
-/**
- * @type {?number}
- */
+/** @type {?number} */
 RTCIceCandidate.prototype.sdpMLineIndex;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.foundation;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.component;
+
+/** @type {?number} */
+RTCIceCandidate.prototype.priority;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.address;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.protocol;
+
+/** @type {?number} */
+RTCIceCandidate.prototype.port;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.type;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.tcpType;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.relatedAddress;
+
+/** @type {?number} */
+RTCIceCandidate.prototype.relatedPort;
+
+/** @type {?string} */
+RTCIceCandidate.prototype.usernameFragment;
 
 /**
  * @typedef {{urls: string}|{urls: !Array<string>}}
@@ -1773,6 +1800,7 @@ var RTCIceGatheringState;
 var RTCPeerConnectionState;
 
 /**
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcpeerconnectioniceevent
  * @param {string} type
  * @param {!Object} eventInitDict
  * @extends {Event}
@@ -1784,6 +1812,35 @@ function RTCPeerConnectionIceEvent(type, eventInitDict) {}
  * @const {RTCIceCandidate}
  */
 RTCPeerConnectionIceEvent.prototype.candidate;
+
+/**
+ * @const {?string}
+ */
+RTCPeerConnectionIceEvent.prototype.url;
+
+/**
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcpeerconnectioniceerrorevent
+ * @param {string} type
+ * @param {!Object} eventInitDict
+ * @extends {Event}
+ * @constructor
+ */
+function RTCPeerConnectionIceErrorEvent(type, eventInitDict) {}
+
+/** @const {?string} */
+RTCPeerConnectionIceErrorEvent.prototype.address;
+
+/** @const {?number} */
+RTCPeerConnectionIceErrorEvent.prototype.port;
+
+/** @const {string} */
+RTCPeerConnectionIceErrorEvent.prototype.url;
+
+/** @const {number} */
+RTCPeerConnectionIceErrorEvent.prototype.errorCode;
+
+/** @const {string} */
+RTCPeerConnectionIceErrorEvent.prototype.errorText;
 
 // Note: The specification of RTCStats types is still under development.
 // Declarations here will be updated and removed to follow the development of
@@ -3055,6 +3112,11 @@ RTCPeerConnection.prototype.onnegotiationneeded;
  * @type {?function(!RTCPeerConnectionIceEvent)}
  */
 RTCPeerConnection.prototype.onicecandidate;
+
+/**
+ * @type {?function(!RTCPeerConnectionIceErrorEvent)}
+ */
+RTCPeerConnection.prototype.onicecandidateerror;
 
 /**
  * @type {?function(!Event)}
