@@ -642,12 +642,10 @@ RTCRtpSender.prototype.track;
  */
 RTCRtpSender.prototype.replaceTrack = function(track) {};
 
-
 /**
  * @return {!RTCRtpSendParameters}
  */
 RTCRtpSender.prototype.getParameters = function() {};
-
 
 /**
  * @param {!RTCRtpSendParameters} params
@@ -655,6 +653,11 @@ RTCRtpSender.prototype.getParameters = function() {};
  */
 RTCRtpSender.prototype.setParameters = function(params) {};
 
+/**
+ * @param {...!MediaStream} streams
+ * @return {undefined}
+ */
+RTCRtpSender.prototype.setStreams = function(streams) {};
 
 /**
  * @return {!Promise<!RTCStatsReport>}
