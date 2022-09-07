@@ -1829,12 +1829,6 @@ public class CompilerOptions implements Serializable {
     return languageIn.toFeatureSet();
   }
 
-  /**
-   * @deprecated Does nothing
-   */
-  @Deprecated
-  final void setSkipUnsupportedPasses(boolean skipUnsupportedPasses) {}
-
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {
     // TODO(johnplaisted): This isn't really accurate. This should instead be the *parsed* language,
     // not the *input* language.

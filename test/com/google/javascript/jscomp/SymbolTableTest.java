@@ -1632,9 +1632,6 @@ public final class SymbolTableTest {
   @Test
   public void testSymbolSuperclassStaticInheritance() {
     // set this option so that typechecking sees untranspiled classes.
-    // TODO(b/76025401): remove this option after class transpilation is always post-typechecking
-    options.setSkipUnsupportedPasses(false);
-
     SymbolTable table =
         createSymbolTable(
             lines(
