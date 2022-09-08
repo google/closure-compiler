@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
@@ -50,6 +51,7 @@ import org.junit.runners.JUnit4;
 public final class GlobalNamespaceTest {
 
   @Nullable private Compiler lastCompiler = null;
+  private boolean assumeStaticInheritanceIsNotUsed = true;
 
   @Test
   public void detectsPropertySetsInAssignmentOperators() {
@@ -1469,20 +1471,11 @@ public final class GlobalNamespaceTest {
     assertThat(x.getDeclaration()).isNotNull();
   }
 
-  private boolean assumeStaticInheritanceIsNotUsed = true;
-
   // This method exists for testing module metadata lookups.
   private GlobalNamespace parseAndGatherModuleData(String js) {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    // Don't optimize, because we want to know how GlobalNamespace responds to the original code
-    // in `js`.
-    options.setSkipNonTranspilationPasses(true);
-    options.setWrapGoogModulesForWhitespaceOnly(false);
-    // Test the latest features supported for input and don't transpile, because we want to test how
-    // GlobalNamespace deals with the language features actually present in `js`.
-    options.setAssumeStaticInheritanceIsNotUsed(assumeStaticInheritanceIsNotUsed);
-    compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
+    CompilerOptions options = getDefaultOptions();
+    Compiler compiler = compile(js, options);
+
     // Disabling transpilation also disables these passes that we need to have run when
     // testing behavior related to module metadata.
     new GatherModuleMetadata(
@@ -1492,24 +1485,34 @@ public final class GlobalNamespaceTest {
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
     assertThat(compiler.getErrors()).isEmpty();
     this.lastCompiler = compiler;
-
     return new GlobalNamespace(compiler, compiler.getRoot());
   }
 
   private GlobalNamespace parse(String js) {
-    Compiler compiler = new Compiler();
+    CompilerOptions options = getDefaultOptions();
+    compile(js, options);
+    return new GlobalNamespace(this.lastCompiler, this.lastCompiler.getRoot());
+  }
+
+  private CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.UNSUPPORTED);
     // Don't optimize, because we want to know how GlobalNamespace responds to the original code
     // in `js`.
     options.setSkipNonTranspilationPasses(true);
+    options.setWrapGoogModulesForWhitespaceOnly(false);
     // Test the latest features supported for input and don't transpile, because we want to test how
     // GlobalNamespace deals with the language features actually present in `js`.
     options.setAssumeStaticInheritanceIsNotUsed(assumeStaticInheritanceIsNotUsed);
+    return options;
+  }
+
+  @CanIgnoreReturnValue
+  private Compiler compile(String js, CompilerOptions options) {
+    Compiler compiler = new Compiler();
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     assertThat(compiler.getErrors()).isEmpty();
     this.lastCompiler = compiler;
-
-    return new GlobalNamespace(compiler, compiler.getRoot());
+    return compiler;
   }
 }
