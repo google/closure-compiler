@@ -511,7 +511,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     Supplier<Node> ast = this.typedAstFilesystem.get(file);
     checkState(
-        ast != null || file.equals(SYNTHETIC_EXTERNS_FILE),
+        ast != null || file.getName().startsWith(SYNTHETIC_FILE_NAME_PREFIX),
         "TypedAST filesystem initialized, but missing requested file: %s",
         file);
     return ast;
@@ -2262,7 +2262,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public Node parseSyntheticCode(String fileName, String js) {
     initCompilerOptionsIfTesting();
-    SourceFile source = SourceFile.fromCode(" [synthetic:" + fileName + "] ", js);
+    SourceFile source = SourceFile.fromCode(SYNTHETIC_FILE_NAME_PREFIX + fileName + "] ", js);
     addFilesToSourceMap(ImmutableList.of(source));
     return parseCodeHelper(source);
   }
@@ -2623,14 +2623,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return cfg;
   }
 
-  private static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(" [synthetic:input] ");
+  private static final String SYNTHETIC_FILE_NAME_PREFIX = " [synthetic:";
+
+  private static final InputId SYNTHETIC_CODE_INPUT_ID =
+      new InputId(SYNTHETIC_FILE_NAME_PREFIX + "input] ");
 
   /**
    * Non-static because this file represents different content for every Compiler (and TSAN
    * complains if one instance is shared by all threads).
    */
   @VisibleForTesting
-  final SourceFile SYNTHETIC_EXTERNS_FILE = SourceFile.fromCode(" [synthetic:externs] ", "");
+  final SourceFile SYNTHETIC_EXTERNS_FILE =
+      SourceFile.fromCode(SYNTHETIC_FILE_NAME_PREFIX + "externs] ", "");
 
   @Nullable private CompilerInput syntheticExternsInput; // matches SYNTHETIC_EXTERNS_FILE
 

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -445,18 +444,19 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     }
     compiler.parse();
     compiler.stage2Passes();
-    // TODO(b/427535473): fix the crash in cross-chunk method motion.
-    IllegalStateException e = assertThrows(IllegalStateException.class, compiler::stage3Passes);
-    assertThat(e).hasMessageThat().contains("[synthetic:chunk_method_stubbing]");
+    compiler.stage3Passes();
 
-    // TODO(b/427535473): assert this expected output after the b/427535473 crash is fixed
-    String[] unusedExpected =
+    String[] expected =
         new String[] {
           CrossChunkMethodMotion.STUB_DECLARATIONS
               + "var Foo = function() {};"
               + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
           "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
         };
+    Node expectedRoot = parseExpectedCode(expected);
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
   }
 
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
