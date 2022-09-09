@@ -5279,6 +5279,23 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModule_moduleBodyScopeIsStoredOnTheInput() {
+    testSame("goog.module('a'); EXPORTS: exports;");
+
+    final TypedScope moduleScope = getLabeledStatement("EXPORTS").enclosingScope;
+    final Node moduleBodyNode = moduleScope.getRootNode();
+    assertNode(moduleBodyNode).hasToken(Token.MODULE_BODY);
+    final Compiler lastCompiler = getLastCompiler();
+    final InputId inputId = NodeUtil.getInputId(moduleBodyNode);
+    assertThat(inputId).isNotNull();
+    final CompilerInput compilerInput = lastCompiler.getInput(inputId);
+    assertThat(compilerInput).isNotNull();
+    final TypedScope typedScopeStoredOnTheCompilerInput = compilerInput.getTypedScope();
+    assertThat(typedScopeStoredOnTheCompilerInput).isNotNull();
+    assertThat(typedScopeStoredOnTheCompilerInput).isSameInstanceAs(moduleScope);
+  }
+
+  @Test
   public void testGoogModule_declaresExportsVariableImplicitly() {
     testSame("goog.module('a'); EXPORTS: exports;");
 
@@ -6327,9 +6344,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testLegacyGoogModule_declaresParentNamespacesGlobally() {
     processClosurePrimitives = true;
-    testSame(
-        srcs(
-            "goog.module('a.b.c'); goog.module.declareLegacyNamespace(); MOD: 0;"));
+    testSame(srcs("goog.module('a.b.c'); goog.module.declareLegacyNamespace(); MOD: 0;"));
 
     assertScope(globalScope).declares("a").directly();
     assertScope(globalScope).declares("a.b").directly();
@@ -6340,9 +6355,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testLegacyGoogModule_isDeclaredPropertyOnParentNamespace() {
     processClosurePrimitives = true;
-    testSame(
-        srcs(
-            "goog.module('a.b.c'); goog.module.declareLegacyNamespace(); MOD: 0;"));
+    testSame(srcs("goog.module('a.b.c'); goog.module.declareLegacyNamespace(); MOD: 0;"));
 
     assertThat(globalScope.getVar("a.b")).hasJSTypeThat().hasDeclaredProperty("c");
   }

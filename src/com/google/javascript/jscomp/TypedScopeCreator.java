@@ -404,6 +404,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       scopeBuilder = new ClassScopeBuilder(newScope);
     } else {
       scopeBuilder = new NormalScopeBuilder(newScope);
+      if (root.isModuleBody()) {
+        // Store the module scope on the CompilerInput object so it can be found and used for
+        // program analysis purposes.
+        // DefaultPassConfig is responsible for removing it when it is no longer needed.
+        final InputId inputId = checkNotNull(NodeUtil.getInputId(root));
+        final CompilerInput compilerInput = checkNotNull(compiler.getInput(inputId));
+        compilerInput.setTypedScope(newScope);
+      }
     }
     scopeBuilder.build();
 

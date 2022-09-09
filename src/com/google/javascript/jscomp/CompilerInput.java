@@ -68,6 +68,22 @@ public class CompilerInput extends DependencyInfo.Base {
   private boolean hasFullParseDependencyInfo = false;
   private ModuleType jsModuleType = ModuleType.NONE;
 
+  /**
+   * If this input file has a MODULE_BODY (i.e. it is a goog.module() or ES module),
+   * TypedScopeCreator will store the scope created for that Node here.
+   *
+   * <p>DefaultPassConfig is responsible for erasing this value when later use of it is not needed.
+   */
+  private @Nullable TypedScope typedScope;
+
+  public void setTypedScope(@Nullable TypedScope typedScope) {
+    this.typedScope = typedScope;
+  }
+
+  public @Nullable TypedScope getTypedScope() {
+    return this.typedScope;
+  }
+
   // An AbstractCompiler for doing parsing.
   private AbstractCompiler compiler;
   private ModulePath modulePath;
@@ -94,13 +110,17 @@ public class CompilerInput extends DependencyInfo.Base {
     }
   }
 
-  /** @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern) */
+  /**
+   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
+   */
   @Deprecated
   public CompilerInput(SourceAst ast, String inputId, boolean isExtern) {
     this(ast, new InputId(inputId), isExtern);
   }
 
-  /** @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern) */
+  /**
+   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
+   */
   @Deprecated
   public CompilerInput(SourceAst ast, InputId inputId, boolean isExtern) {
     this(ast, isExtern);
@@ -202,9 +222,8 @@ public class CompilerInput extends DependencyInfo.Base {
   }
 
   /**
-   * Gets a list of types provided, but does not attempt to
-   * regenerate the dependency information. Typically this occurs
-   * from module rewriting.
+   * Gets a list of types provided, but does not attempt to regenerate the dependency information.
+   * Typically this occurs from module rewriting.
    */
   ImmutableCollection<String> getKnownProvides() {
     return concat(
@@ -290,10 +309,9 @@ public class CompilerInput extends DependencyInfo.Base {
   }
 
   /**
-   * Generates the DependencyInfo by scanning and/or parsing the file.
-   * This is called lazily by getDependencyInfo, and does not take into
-   * account any extra requires/provides added by {@link #addRequire}
-   * or {@link #addProvide}.
+   * Generates the DependencyInfo by scanning and/or parsing the file. This is called lazily by
+   * getDependencyInfo, and does not take into account any extra requires/provides added by {@link
+   * #addRequire} or {@link #addProvide}.
    */
   private DependencyInfo generateDependencyInfo() {
     Preconditions.checkNotNull(compiler, "Expected setCompiler to be called first: %s", this);
@@ -316,8 +334,11 @@ public class CompilerInput extends DependencyInfo.Base {
                 .parseFile(getName(), getName(), getCode());
         return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
       } catch (IOException e) {
-        compiler.getErrorManager().report(CheckLevel.ERROR,
-            JSError.make(AbstractCompiler.READ_ERROR, getName(), e.getMessage()));
+        compiler
+            .getErrorManager()
+            .report(
+                CheckLevel.ERROR,
+                JSError.make(AbstractCompiler.READ_ERROR, getName(), e.getMessage()));
         return SimpleDependencyInfo.EMPTY;
       }
     } else {
@@ -476,8 +497,7 @@ public class CompilerInput extends DependencyInfo.Base {
           return;
       }
 
-      for (Node child = n.getFirstChild();
-           child != null; child = child.getNext()) {
+      for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
         visitSubtree(child, n);
       }
     }

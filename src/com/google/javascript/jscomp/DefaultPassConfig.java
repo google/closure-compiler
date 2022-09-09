@@ -1822,7 +1822,16 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory clearTopTypedScopePass =
       PassFactory.builder()
           .setName("clearTopTypedScopePass")
-          .setInternalFactory((compiler) -> (externs, root) -> compiler.setTopScope(null))
+          .setInternalFactory(
+              (compiler) ->
+                  (externs, root) -> {
+                    // clear these scopes which we don't need anymore so they can be garbage
+                    // collected
+                    compiler.setTopScope(null);
+                    for (CompilerInput compilerInput : compiler.getInputsInOrder()) {
+                      compilerInput.setTypedScope(null);
+                    }
+                  })
           .build();
 
   /** Runs type inference. */
