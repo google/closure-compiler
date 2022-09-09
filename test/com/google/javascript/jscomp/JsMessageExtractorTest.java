@@ -17,17 +17,14 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,22 +33,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class JsMessageExtractorTest {
 
-  private JsMessage.Style mode;
-
-  @Before
-  public void setUp() throws Exception {
-    mode = JsMessage.Style.LEGACY;
-  }
-
   private Collection<JsMessage> extractMessages(String... js) {
-    try {
-      String sourceCode = Joiner.on("\n").join(js);
-      return new JsMessageExtractor(null, mode)
-          .extractMessages(SourceFile.fromCode("testcode", sourceCode));
-    } catch (IOException e) {
-      assertWithMessage(e.getMessage()).fail();
-      return null;
-    }
+    String sourceCode = Joiner.on("\n").join(js);
+    return new JsMessageExtractor(null)
+        .extractMessages(SourceFile.fromCode("testcode", sourceCode));
   }
 
   private JsMessage extractMessage(String... js) {

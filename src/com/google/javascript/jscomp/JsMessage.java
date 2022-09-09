@@ -62,16 +62,6 @@ public abstract class JsMessage {
     public PlaceholderFormatException() {}
   }
 
-  /**
-   * Message style that could be used for JS code parsing. The enum order is from most relaxed to
-   * most restricted.
-   */
-  public enum Style {
-    LEGACY, // All legacy code is completely OK
-    RELAX, // You allowed to use legacy code but it would be reported as warn
-    CLOSURE; // Any legacy code is prohibited
-  }
-
   /** Gets the message's sourceName. */
   @Nullable
   public abstract String getSourceName();

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,52 +25,38 @@ import java.util.List;
 /**
  * Extracts messages and message comments from JS code.
  *
- * <p> Uses a special prefix (e.g. {@code MSG_}) to determine which variables
- * are messages. Here are the recognized formats:
- *
- *   <code>
+ * <p>Uses a special prefix (e.g. {@code MSG_}) to determine which variables are messages. Here are
+ * the recognized formats: <code>
  *   var MSG_FOO = "foo";
  *   var MSG_FOO_HELP = "this message is used for foo";
- *   </code>
- *
- *   <code>
+ *   </code> <code>
  *   var MSG_BAR = function(a, b) {
  *     return a + " bar " + b;
  *   }
  *   var MSG_BAR_HELP = "the bar message";
  *   </code>
  *
- * <p>This class enforces the policy that message variable names must be unique
- * across all JS files.
+ * <p>This class enforces the policy that message variable names must be unique across all JS files.
  */
 @GwtIncompatible("JsMessage.Builder")
 public final class JsMessageExtractor {
 
-  private final JsMessage.Style style;
   private final JsMessage.IdGenerator idGenerator;
   private final CompilerOptions options;
   private final boolean extractExternalMessages;
 
-  public JsMessageExtractor(
-      JsMessage.IdGenerator idGenerator,
-      JsMessage.Style style) {
-    this(idGenerator, style, new CompilerOptions(), false /* extractExternalMessages */);
+  public JsMessageExtractor(JsMessage.IdGenerator idGenerator) {
+    this(idGenerator, new CompilerOptions(), /* extractExternalMessages= */ false);
   }
 
   public JsMessageExtractor(
-      JsMessage.IdGenerator idGenerator,
-      JsMessage.Style style,
-      CompilerOptions options,
-      boolean extractExternalMessages) {
+      JsMessage.IdGenerator idGenerator, CompilerOptions options, boolean extractExternalMessages) {
     this.idGenerator = idGenerator;
-    this.style = style;
     this.options = options;
     this.extractExternalMessages = extractExternalMessages;
   }
 
-  /**
-   * Visitor that collects messages.
-   */
+  /** Visitor that collects messages. */
   private class ExtractMessagesVisitor extends JsMessageVisitor {
     // We use List here as we want to preserve insertion-order for found
     // messages.
@@ -81,12 +66,11 @@ public final class JsMessageExtractor {
     private final List<JsMessage> messages = new ArrayList<>();
 
     private ExtractMessagesVisitor(AbstractCompiler compiler) {
-      super(compiler, style, idGenerator);
+      super(compiler, idGenerator);
     }
 
     @Override
-    protected void processJsMessage(JsMessage message,
-        JsMessageDefinition definition) {
+    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
       if (extractExternalMessages || !message.isExternal()) {
         messages.add(message);
       }
@@ -102,11 +86,8 @@ public final class JsMessageExtractor {
     }
   }
 
-  /**
-   * Extracts JS messages from JavaScript code.
-   */
-  public Collection<JsMessage> extractMessages(SourceFile... inputs)
-      throws IOException {
+  /** Extracts JS messages from JavaScript code. */
+  public Collection<JsMessage> extractMessages(SourceFile... inputs) {
     return extractMessages(ImmutableList.copyOf(inputs));
   }
 
@@ -120,18 +101,14 @@ public final class JsMessageExtractor {
    */
   public Collection<JsMessage> extractMessages(Iterable<SourceFile> inputs) {
     final Compiler compiler = new Compiler();
-    compiler.init(
-        ImmutableList.<SourceFile>of(),
-        ImmutableList.copyOf(inputs),
-        options);
+    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.copyOf(inputs), options);
     compiler.runInCompilerThread(
         () -> {
           compiler.parseInputs();
           return null;
         });
 
-    ExtractMessagesVisitor extractCompilerPass =
-        new ExtractMessagesVisitor(compiler);
+    ExtractMessagesVisitor extractCompilerPass = new ExtractMessagesVisitor(compiler);
     if (compiler.getErrors().isEmpty()) {
       extractCompilerPass.process(null, compiler.getRoot());
     }

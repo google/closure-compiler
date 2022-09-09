@@ -125,10 +125,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
   private static final Pattern CAMELCASE_PATTERN = Pattern.compile("[a-z][a-zA-Z\\d]*[_\\d]*");
 
-  // For old-style JS messages
-  private static final String DESC_SUFFIX = "_HELP";
-
-  private final JsMessage.Style style;
   private final JsMessage.IdGenerator idGenerator;
   final AbstractCompiler compiler;
 
@@ -150,23 +146,16 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    */
   private final Set<Node> googMsgNodes = new LinkedHashSet<>();
 
-  private final CheckLevel checkLevel;
-
   /**
    * Creates JS message visitor.
    *
    * @param compiler the compiler instance
-   * @param style style that should be used during parsing
    * @param idGenerator generator that used for creating unique ID for the message
    */
-  protected JsMessageVisitor(
-      AbstractCompiler compiler, JsMessage.Style style, JsMessage.IdGenerator idGenerator) {
+  protected JsMessageVisitor(AbstractCompiler compiler, JsMessage.IdGenerator idGenerator) {
 
     this.compiler = compiler;
-    this.style = style;
     this.idGenerator = idGenerator;
-
-    checkLevel = (style == JsMessage.Style.CLOSURE) ? CheckLevel.ERROR : CheckLevel.WARNING;
 
     // TODO(anatol): add flag that decides whether to process UNNAMED messages.
     // Some projects would not want such functionality (unnamed) as they don't
@@ -178,7 +167,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     NodeTraversal.traverse(compiler, root, this);
 
     for (Node msgNode : googMsgNodes) {
-      compiler.report(JSError.make(msgNode, checkLevel, MESSAGE_NODE_IS_ORPHANED));
+      compiler.report(JSError.make(msgNode, CheckLevel.ERROR, MESSAGE_NODE_IS_ORPHANED));
     }
   }
 
@@ -259,7 +248,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // Is this a message name?
     boolean msgNodeIsACall = msgNode != null && msgNode.isCall();
 
-    if (!isMessageName(messageKey, msgNodeIsACall)) {
+    if (!isMessageName(messageKey)) {
       return;
     }
 
@@ -276,14 +265,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // doesn't use goog.getMsg().
     if (msgNodeIsACall) {
       googMsgNodes.remove(msgNode);
-    } else if (style != JsMessage.Style.LEGACY) {
-      // TODO(johnlenz): promote this to an error once existing conflicts have been
-      // cleaned up.
-      compiler.report(JSError.make(node, MESSAGE_NOT_INITIALIZED_CORRECTLY));
-      if (style == JsMessage.Style.CLOSURE) {
-        // Don't extract the message if we aren't accepting LEGACY messages
-        return;
-      }
+    } else {
+      compiler.report(JSError.make(node, CheckLevel.ERROR, MESSAGE_NOT_INITIALIZED_CORRECTLY));
+      return;
     }
 
     // Gather information from the JS code into this object instead of directly into the message
@@ -885,11 +869,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   void processMessageFallback(Node callNode, JsMessage message1, JsMessage message2) {}
 
   /** Returns whether the given JS identifier is a valid JS message name. */
-  boolean isMessageName(String identifier, boolean isNewStyleMessage) {
-    return (identifier.startsWith(MSG_PREFIX) || isScopedAliasesPrefix(identifier))
-        && (style == JsMessage.Style.CLOSURE
-            || isNewStyleMessage
-            || !identifier.endsWith(DESC_SUFFIX));
+  boolean isMessageName(String identifier) {
+    return identifier.startsWith(MSG_PREFIX) || isScopedAliasesPrefix(identifier);
   }
 
   private static boolean isMessageIdentifier(Node node) {

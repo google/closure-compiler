@@ -1455,7 +1455,6 @@ public final class DefaultPassConfig extends PassConfig {
                         compiler,
                         options.messageBundle,
                         /* allow messages with goog.getMsg */
-                        JsMessage.Style.CLOSURE,
                         options.getStrictMessageReplacement())
                     .getFullReplacementPass())
         .build();
@@ -1474,7 +1473,6 @@ public final class DefaultPassConfig extends PassConfig {
                         compiler,
                         options.messageBundle,
                         /* allow messages with goog.getMsg */
-                        JsMessage.Style.CLOSURE,
                         options.getStrictMessageReplacement())
                     .getMsgProtectionPass())
         .build();
@@ -1490,7 +1488,6 @@ public final class DefaultPassConfig extends PassConfig {
                         compiler,
                         options.messageBundle,
                         /* allow messages with goog.getMsg */
-                        JsMessage.Style.CLOSURE,
                         options.getStrictMessageReplacement())
                     .getReplacementCompletionPass())
         .build();
@@ -1502,10 +1499,9 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ReplaceMessagesForChrome(
-                      compiler,
-                      new GoogleJsMessageIdGenerator(options.tcProjectId),
+                      compiler, new GoogleJsMessageIdGenerator(options.tcProjectId)
                       /* allow messages with goog.getMsg */
-                      JsMessage.Style.CLOSURE))
+                      ))
           .build();
 
   /** Applies aliases and inlines goog.scope. */
