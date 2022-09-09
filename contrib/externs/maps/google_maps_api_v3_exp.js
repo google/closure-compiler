@@ -2952,33 +2952,33 @@ google.maps.GeocoderComponentRestrictions = function() {};
 
 /**
  * Matches all the <code>administrative_area levels</code>. Optional.
- * @type {string|undefined}
+ * @type {undefined|string}
  */
 google.maps.GeocoderComponentRestrictions.prototype.administrativeArea;
 
 /**
  * Matches a country name or a two letter ISO 3166-1 country code. Optional.
- * @type {string|undefined}
+ * @type {undefined|string}
  */
 google.maps.GeocoderComponentRestrictions.prototype.country;
 
 /**
  * Matches against both <code>locality</code> and <code>sublocality</code>
  * types. Optional.
- * @type {string|undefined}
+ * @type {undefined|string}
  */
 google.maps.GeocoderComponentRestrictions.prototype.locality;
 
 /**
  * Matches <code>postal_code</code> and <code>postal_code_prefix</code>.
  * Optional.
- * @type {string|undefined}
+ * @type {undefined|string}
  */
 google.maps.GeocoderComponentRestrictions.prototype.postalCode;
 
 /**
  * Matches the long or short name of a <code>route</code>. Optional.
- * @type {string|undefined}
+ * @type {undefined|string}
  */
 google.maps.GeocoderComponentRestrictions.prototype.route;
 
@@ -2990,7 +2990,7 @@ google.maps.GeocoderGeometry = function() {};
 
 /**
  * The precise bounds of this <code>GeocoderResult</code>, if applicable
- * @type {!google.maps.LatLngBounds|undefined}
+ * @type {undefined|!google.maps.LatLngBounds}
  */
 google.maps.GeocoderGeometry.prototype.bounds;
 
@@ -3053,13 +3053,13 @@ google.maps.GeocoderRequest = function() {};
 /**
  * Address to geocode. One, and only one, of <code>address</code>,
  * <code>location</code> and <code>placeId</code> must be supplied.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.GeocoderRequest.prototype.address;
 
 /**
  * <code>LatLngBounds</code> within which to search. Optional.
- * @type {?google.maps.LatLngBounds|?google.maps.LatLngBoundsLiteral|undefined}
+ * @type {undefined|null|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  */
 google.maps.GeocoderRequest.prototype.bounds;
 
@@ -3070,7 +3070,7 @@ google.maps.GeocoderRequest.prototype.bounds;
  * <code>country</code>. Only the results that match all the filters will be
  * returned. Filter values support the same methods of spelling correction and
  * partial matching as other geocoding requests. Optional.
- * @type {?google.maps.GeocoderComponentRestrictions|undefined}
+ * @type {undefined|null|!google.maps.GeocoderComponentRestrictions}
  */
 google.maps.GeocoderRequest.prototype.componentRestrictions;
 
@@ -3080,7 +3080,7 @@ google.maps.GeocoderRequest.prototype.componentRestrictions;
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
  * supported languages</a>.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.GeocoderRequest.prototype.language;
 
@@ -3091,7 +3091,7 @@ google.maps.GeocoderRequest.prototype.language;
  * Reverse Geocoding</a> for more information. One, and only one, of
  * <code>address</code>, <code>location</code> and <code>placeId</code> must be
  * supplied.
- * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|undefined}
+ * @type {undefined|null|!google.maps.LatLng|!google.maps.LatLngLiteral}
  */
 google.maps.GeocoderRequest.prototype.location;
 
@@ -3105,7 +3105,7 @@ google.maps.GeocoderRequest.prototype.location;
  * Geocoding</a> for more information. One, and only one, of
  * <code>address</code>, <code>location</code> and <code>placeId</code> must be
  * supplied.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.GeocoderRequest.prototype.placeId;
 
@@ -3114,7 +3114,7 @@ google.maps.GeocoderRequest.prototype.placeId;
  * (non-numeric) Unicode region subtag / CLDR identifier. Optional. See <a
  * href="http://developers.google.com/maps/coverage">Google Maps Platform
  * Coverage Details</a> for supported regions.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.GeocoderRequest.prototype.region;
 
@@ -3162,7 +3162,7 @@ google.maps.GeocoderResult.prototype.geometry;
  * Whether the geocoder did not return an exact match for the original request,
  * though it was able to match part of the requested address. If an exact match,
  * the value will be <code>undefined</code>.
- * @type {boolean|undefined}
+ * @type {undefined|boolean}
  */
 google.maps.GeocoderResult.prototype.partial_match;
 
@@ -3177,7 +3177,7 @@ google.maps.GeocoderResult.prototype.place_id;
 
 /**
  * The plus code associated with the location.
- * @type {!google.maps.places.PlacePlusCode|undefined}
+ * @type {undefined|!google.maps.places.PlacePlusCode}
  */
 google.maps.GeocoderResult.prototype.plus_code;
 
@@ -3185,7 +3185,7 @@ google.maps.GeocoderResult.prototype.plus_code;
  * An array of strings denoting all the localities contained in a postal code.
  * This is only present when the result is a postal code that contains multiple
  * localities.
- * @type {!Array<string>|undefined}
+ * @type {undefined|!Array<string>}
  */
 google.maps.GeocoderResult.prototype.postcode_localities;
 
@@ -9612,6 +9612,12 @@ google.maps.journeySharing.DefaultPolylineSetupOptions.prototype.defaultVisible;
  * @record
  */
 google.maps.journeySharing.DeliveryVehicle = function() {};
+
+/**
+ * Custom delivery vehicle attributes.
+ * @type {!Object<string, ?string>}
+ */
+google.maps.journeySharing.DeliveryVehicle.prototype.attributes;
 
 /**
  * The location where the current route segment ends.
