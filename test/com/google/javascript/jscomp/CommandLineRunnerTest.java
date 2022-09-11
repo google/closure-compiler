@@ -3056,6 +3056,15 @@ public final class CommandLineRunnerTest {
     assertThat(lastCompiler.getOptions().getIsolatePolyfills()).isTrue();
   }
 
+  @Test
+  public void testCrossChunkCodeMotionNoStubMethods() {
+    testSame("");
+    assertThat(lastCompiler.getOptions().crossChunkCodeMotionNoStubMethods).isFalse();
+    args.add("--assume_no_prototype_method_enumeration=true");
+    testSame("");
+    assertThat(lastCompiler.getOptions().crossChunkCodeMotionNoStubMethods).isTrue();
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
