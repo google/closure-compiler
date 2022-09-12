@@ -631,9 +631,14 @@ function RTCRtpSender() {}
 RTCRtpSender.prototype.dtmf;
 
 /**
- * @const {!MediaStreamTrack}
+ * @const {?MediaStreamTrack}
  */
 RTCRtpSender.prototype.track;
+
+/**
+ * @const {?RTCDtlsTransport}
+ */
+RTCRtpSender.prototype.transport;
 
 /**
  * @param {?MediaStreamTrack} track
@@ -750,6 +755,11 @@ function RTCRtpReceiver() {}
  * @const {!MediaStreamTrack}
  */
 RTCRtpReceiver.prototype.track;
+
+/**
+ * @const {?RTCDtlsTransport}
+ */
+RTCRtpReceiver.prototype.transport;
 
 /**
  * @return {!Array<!RTCRtpContributingSource>}
@@ -1844,6 +1854,124 @@ RTCPeerConnectionIceErrorEvent.prototype.errorCode;
 
 /** @const {string} */
 RTCPeerConnectionIceErrorEvent.prototype.errorText;
+
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcicecandidatepair
+ */
+function RTCIceCandidatePair() {}
+
+/** @const {!RTCIceCandidate|undefined} */
+RTCIceCandidatePair.prototype.local;
+
+/** @const {!RTCIceCandidate|undefined} */
+RTCIceCandidatePair.prototype.remote;
+
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/webrtc/#dom-rtciceparameters
+ */
+function RTCIceParameters() {}
+
+/** @const {string|undefined} */
+RTCIceParameters.prototype.usernameFragment;
+
+/** @const {string|undefined} */
+RTCIceParameters.prototype.password;
+
+
+/**
+ * @interface
+ * @extends {EventTarget}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcicetransport
+ */
+function RTCIceTransport() {}
+
+/** @const {string} */
+RTCIceTransport.prototype.role;
+
+/** @const {string} */
+RTCIceTransport.prototype.component;
+
+/** @const {string} */
+RTCIceTransport.prototype.state;
+
+/** @const {string} */
+RTCIceTransport.prototype.gatheringState;
+
+/** @return {!Array<!RTCIceCandidate>} */
+RTCIceTransport.prototype.getLocalCandidates = function() {};
+
+/** @return {!Array<!RTCIceCandidate>} */
+RTCIceTransport.prototype.getRemoteCandidates = function() {};
+
+/** @return {?RTCIceCandidatePair} */
+RTCIceTransport.prototype.getSelectedCandidatePair = function() {};
+
+/** @return {?RTCIceParameters} */
+RTCIceTransport.prototype.getLocalParameters = function() {};
+
+/** @return {?RTCIceParameters} */
+RTCIceTransport.prototype.getRemoteParameters = function() {};
+
+/** @type {?function(!Event)} */
+RTCIceTransport.prototype.onstatechange;
+
+/** @type {?function(!Event)} */
+RTCIceTransport.prototype.ongatheringstatechange;
+
+/** @type {?function(!Event)} */
+RTCIceTransport.prototype.onselectedcandidatepairchange;
+
+
+/**
+ * @interface
+ * @extends {EventTarget}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcdtlstransport
+ */
+function RTCDtlsTransport() {}
+
+/** @const {!RTCIceTransport} */
+RTCDtlsTransport.prototype.iceTransport;
+
+/** @const {string} */
+RTCDtlsTransport.prototype.state;
+
+/** @return {!Array<!ArrayBuffer>} */
+RTCDtlsTransport.prototype.getRemoteCertificates = function() {};
+
+/** @type {?function(!Event)} */
+RTCDtlsTransport.prototype.onstatechange;
+
+/** @type {?function(!RTCErrorEvent)} */
+RTCDtlsTransport.prototype.onerror;
+
+
+/**
+ * @interface
+ * @extends {EventTarget}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcsctptransport
+ */
+function RTCSctpTransport() {}
+
+/** @const {!RTCDtlsTransport} */
+RTCSctpTransport.prototype.transport;
+
+/** @const {string} */
+RTCSctpTransport.prototype.state;
+
+/** @const {number} */
+RTCSctpTransport.prototype.maxMessageSize;
+
+/** @const {?number} */
+RTCSctpTransport.prototype.maxChannels;
+
+/** @type {?function(!Event)} */
+RTCSctpTransport.prototype.onstatechange;
+
+
 
 // Note: The specification of RTCStats types is still under development.
 // Declarations here will be updated and removed to follow the development of
@@ -3031,6 +3159,11 @@ RTCPeerConnection.prototype.getSenders = function() {};
  * @return {!Array<!RTCRtpReceiver>}
  */
 RTCPeerConnection.prototype.getReceivers = function() {};
+
+/**
+ * @const {?RTCSctpTransport}
+ */
+RTCPeerConnection.prototype.sctp;
 
 /**
  * @param {?string} label
