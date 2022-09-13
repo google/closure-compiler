@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
-
-import com.google.javascript.jscomp.JsMessage.Style;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,11 +25,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
 
-  private Style style = RELAX;
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReplaceMessagesForChrome(compiler, new GoogleJsMessageIdGenerator(null), style);
+    return new ReplaceMessagesForChrome(compiler, new GoogleJsMessageIdGenerator(null));
   }
 
   @Override
@@ -45,7 +40,6 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    style = RELAX;
     enableTypeCheck();
     replaceTypesWithColors();
     enableTypeInfoValidation();

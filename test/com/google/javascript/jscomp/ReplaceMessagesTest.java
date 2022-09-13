@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -64,7 +63,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     final ReplaceMessages replaceMessages =
-        new ReplaceMessages(compiler, new SimpleMessageBundle(), CLOSURE, strictReplacement);
+        new ReplaceMessages(compiler, new SimpleMessageBundle(), strictReplacement);
     switch (testMode) {
       case FULL_REPLACE:
         return replaceMessages.getFullReplacementPass();
@@ -1182,42 +1181,6 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "};"),
         "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
-  }
-
-  @Test
-  public void testLegacyStylePlaceholderNameInLowerUnderscoreCase() {
-    registerMessage(
-        getTestMessageBuilder("MSG_F")
-            .appendStringPart("Sum: $")
-            .appendPlaceholderReference("amt_earned")
-            .build());
-
-    // Placeholder named in lower-underscore case (discouraged nowadays)
-    multiPhaseTestWarning(
-        "var MSG_F = function(amt_earned) {return amt_earned + 'x'};",
-        lines(
-            "var MSG_F = function(amt_earned) {",
-            "    return __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_F\",",
-            "          \"msg_text\":\"{$amt_earned}x\"",
-            "        },",
-            "        {\"amt_earned\":amt_earned});",
-            "};"),
-        "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}",
-        MESSAGE_NOT_INITIALIZED_CORRECTLY);
-  }
-
-  @Test
-  public void testLegacyStyleBadPlaceholderReferenceInReplacement() {
-    registerMessage(
-        getTestMessageBuilder("MSG_B")
-            .appendStringPart("Ola, ")
-            .appendPlaceholderReference("chimp")
-            .build());
-
-    testWarning(
-        "var MSG_B = function(chump) {return chump + 'x'};", MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
