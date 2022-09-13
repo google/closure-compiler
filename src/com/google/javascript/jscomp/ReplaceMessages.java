@@ -63,16 +63,19 @@ public final class ReplaceMessages {
 
   private final AbstractCompiler compiler;
   private final MessageBundle bundle;
+  private final JsMessage.Style style;
   private final boolean strictReplacement;
   private final AstFactory astFactory;
 
   ReplaceMessages(
       AbstractCompiler compiler,
       MessageBundle bundle,
+      JsMessage.Style style,
       boolean strictReplacement) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.bundle = bundle;
+    this.style = style;
     this.strictReplacement = strictReplacement;
   }
 
@@ -89,7 +92,7 @@ public final class ReplaceMessages {
   class MsgProtectionPass extends JsMessageVisitor {
 
     public MsgProtectionPass() {
-      super(ReplaceMessages.this.compiler, bundle.idGenerator());
+      super(ReplaceMessages.this.compiler, style, bundle.idGenerator());
     }
 
     @Override
@@ -431,7 +434,7 @@ public final class ReplaceMessages {
   class FullReplacementPass extends JsMessageVisitor {
 
     public FullReplacementPass() {
-      super(ReplaceMessages.this.compiler, bundle.idGenerator());
+      super(ReplaceMessages.this.compiler, style, bundle.idGenerator());
     }
 
     @Override

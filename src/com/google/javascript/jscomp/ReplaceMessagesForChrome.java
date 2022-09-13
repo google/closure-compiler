@@ -28,19 +28,21 @@ import java.util.List;
 import org.jspecify.nullness.Nullable;
 
 /**
- * Replaces user-visible messages with appropriate calls to chrome.i18n.getMessage. The first
- * argument to getMessage is the id of the message, as a string. If the message contains
- * placeholders, the second argument is an array of the values being used for the placeholders,
- * sorted by placeholder name.
+ * Replaces user-visible messages with appropriate calls to
+ * chrome.i18n.getMessage. The first argument to getMessage is the id of the
+ * message, as a string. If the message contains placeholders, the second
+ * argument is an array of the values being used for the placeholders, sorted
+ * by placeholder name.
  */
 @GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {
 
   private final AstFactory astFactory;
 
-  ReplaceMessagesForChrome(AbstractCompiler compiler, JsMessage.IdGenerator idGenerator) {
+  ReplaceMessagesForChrome(
+      AbstractCompiler compiler, JsMessage.IdGenerator idGenerator, JsMessage.Style style) {
 
-    super(compiler, idGenerator);
+    super(compiler, style, idGenerator);
 
     this.astFactory = compiler.createAstFactory();
   }
@@ -52,7 +54,8 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
   }
 
   @Override
-  protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
+  protected void processJsMessage(
+      JsMessage message, JsMessageDefinition definition) {
     try {
       Node msgNode = definition.getMessageNode();
       Node newValue = getNewValueNode(msgNode, message);
@@ -61,11 +64,13 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       msgNode.replaceWith(newValue);
       compiler.reportChangeToEnclosingScope(newValue);
     } catch (MalformedException e) {
-      compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
+      compiler.report(JSError.make(e.getNode(),
+          MESSAGE_TREE_MALFORMED, e.getMessage()));
     }
   }
 
-  private Node getNewValueNode(Node origNode, JsMessage message) throws MalformedException {
+  private Node getNewValueNode(Node origNode, JsMessage message)
+      throws MalformedException {
     Node newValueNode = getChromeI18nGetMessageNode(message.getId());
 
     boolean isHtml = isHtml(origNode);
@@ -81,7 +86,9 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       for (String name : placeholderNames) {
         Node value = getPlaceholderValue(placeholderValues, name);
         if (value == null) {
-          throw new MalformedException("No value was provided for placeholder " + name, origNode);
+          throw new MalformedException(
+              "No value was provided for placeholder " + name,
+              origNode);
         }
         placeholderValueArray.addChildToBack(value);
       }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -63,7 +64,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     final ReplaceMessages replaceMessages =
-        new ReplaceMessages(compiler, new SimpleMessageBundle(), strictReplacement);
+        new ReplaceMessages(compiler, new SimpleMessageBundle(), CLOSURE, strictReplacement);
     switch (testMode) {
       case FULL_REPLACE:
         return replaceMessages.getFullReplacementPass();
@@ -92,6 +93,28 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     test(originalJs, expectedJs);
     testMode = TestMode.PROTECT_MSGS;
     test(originalJs, protectedJs);
+    testMode = TestMode.REPLACE_PROTECTED_MSGS;
+    test(protectedJs, expectedJs);
+  }
+
+  /**
+   * Test for warnings that apply to both the full replace and the initial protection of messages.
+   *
+   * @param originalJs The original, input JS code
+   * @param protectedJs What the code should look like after message definitions are is protected
+   *     from mangling during optimizations, but before they are replaced with the localized message
+   *     data.
+   * @param expectedJs What the code should look like after full replacement with localized messages
+   * @param diagnosticType expected warning
+   */
+  private void multiPhaseTestWarning(
+      String originalJs, String protectedJs, String expectedJs, DiagnosticType diagnosticType) {
+    // The PROTECT_MSGS mode needs to add externs for the protection functions.
+    allowExternsChanges();
+    testMode = TestMode.FULL_REPLACE;
+    testWarning(originalJs, diagnosticType);
+    testMode = TestMode.PROTECT_MSGS;
+    testWarning(originalJs, diagnosticType);
     testMode = TestMode.REPLACE_PROTECTED_MSGS;
     test(protectedJs, expectedJs);
   }
@@ -908,11 +931,18 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLegacySimpleMessageReplacement() {
-    multiPhaseTestPreLookupError(
+  public void testSimpleMessageReplacementMissing() {
+    multiPhaseTestWarning(
         lines(
             "/** @desc d */", //
             "var MSG_E = 'd*6a0@z>t';"), //
+        lines(
+            "/** @desc d */", //
+            "var MSG_E =",
+            "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"d*6a0@z\\x3et\"});"),
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = 'd*6a0@z>t'"),
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
@@ -969,15 +999,36 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLegacyFunctionReplacement() {
-    multiPhaseTestPreLookupError(
-        "var MSG_F = function() {return 'asdf'};", MESSAGE_NOT_INITIALIZED_CORRECTLY);
+  public void testFunctionReplacementMissing() {
+    multiPhaseTestWarning(
+        "var MSG_F = function() {return 'asdf'};", //
+        lines(
+            "var MSG_F = function() {", //
+            "  return __jscomp_define_msg__(",
+            "      {",
+            "        \"key\":\"MSG_F\",",
+            "        \"msg_text\":\"asdf\"",
+            "      },",
+            "      {});",
+            "};"),
+        "var MSG_F = function() {return'asdf'}",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
-  public void testLegacyFunctionWithParamReplacement() {
-    multiPhaseTestPreLookupError(
+  public void testFunctionWithParamReplacementMissing() {
+    multiPhaseTestWarning(
         "var MSG_G = function(measly) { return 'asdf' + measly};",
+        lines(
+            "var MSG_G = function(measly) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_G\",",
+            "          \"msg_text\":\"asdf{$measly}\"",
+            "        },",
+            "        {\"measly\":measly});",
+            "    };"),
+        "var MSG_G = function(measly) { return 'asdf' + measly}",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
@@ -1029,20 +1080,39 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntaxConcat() {
     registerMessage(getTestMessageBuilder("MSG_A").appendStringPart("Hi\nthere").build());
-    multiPhaseTestPreLookupError("var MSG_A = 'abc' + 'def';", MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    multiPhaseTestWarning(
+        "var MSG_A = 'abc' + 'def';", //
+        "var MSG_A = __jscomp_define_msg__({\"key\":\"MSG_A\", \"msg_text\":\"abcdef\"});",
+        "var MSG_A = 'Hi\\nthere'",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntax() {
     registerMessage(getTestMessageBuilder("MSG_A").appendStringPart("Hi\nthere").build());
-    multiPhaseTestPreLookupError("var MSG_A = 'd*6a0@z>t';", MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    multiPhaseTestWarning(
+        "var MSG_A = 'd*6a0@z>t';", //
+        "var MSG_A = __jscomp_define_msg__({\"key\":\"MSG_A\", \"msg_text\":\"d*6a0@z\\x3et\"});",
+        "var MSG_A='Hi\\nthere'",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersFunctionSyntax() {
     registerMessage(getTestMessageBuilder("MSG_B").appendStringPart("Hi\nthere").build());
-    multiPhaseTestPreLookupError(
-        "var MSG_B = function() {return 'asdf'};", MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    multiPhaseTestWarning(
+        "var MSG_B = function() {return 'asdf'};", //
+        lines(
+            "var MSG_B = function() {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_B\",",
+            "          \"msg_text\":\"asdf\"",
+            "        },",
+            "        {});",
+            "};"),
+        "var MSG_B=function(){return'Hi\\nthere'}",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
@@ -1053,8 +1123,18 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
-    multiPhaseTestPreLookupError(
+    multiPhaseTestWarning(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
+        lines(
+            "var MSG_C = function(measly) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_C\",",
+            "          \"msg_text\":\"asdf{$measly}\"",
+            "        },",
+            "        {\"measly\":measly});",
+            "};"),
+        "var MSG_C=function(measly){ return 'One ' + measly + ' ph'; }",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
@@ -1066,9 +1146,78 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .appendStringPart(" and ")
             .appendPlaceholderReference("jane")
             .build());
-    multiPhaseTestPreLookupError(
+    multiPhaseTestWarning(
         "var MSG_D = function(jane, dick) {return jane + dick};", //
+        lines(
+            "var MSG_D = function(jane, dick) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_D\",",
+            "          \"msg_text\":\"{$jane}{$dick}\"",
+            "        },",
+            "        {\"jane\":jane, \"dick\":dick});",
+            "};",
+            ""),
+        "var MSG_D = function(jane,dick) { return dick + ' and ' + jane; }",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
+  }
+
+  @Test
+  public void testLegacyStylePlaceholderNameInLowerCamelCase() {
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .appendStringPart("Sum: $")
+            .appendPlaceholderReference("amtEarned")
+            .build());
+    multiPhaseTestWarning(
+        "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
+        lines(
+            "var MSG_E = function(amtEarned) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_E\",",
+            "          \"msg_text\":\"{$amtEarned}x\"",
+            "        },",
+            "        {\"amtEarned\":amtEarned});",
+            "};"),
+        "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
+  }
+
+  @Test
+  public void testLegacyStylePlaceholderNameInLowerUnderscoreCase() {
+    registerMessage(
+        getTestMessageBuilder("MSG_F")
+            .appendStringPart("Sum: $")
+            .appendPlaceholderReference("amt_earned")
+            .build());
+
+    // Placeholder named in lower-underscore case (discouraged nowadays)
+    multiPhaseTestWarning(
+        "var MSG_F = function(amt_earned) {return amt_earned + 'x'};",
+        lines(
+            "var MSG_F = function(amt_earned) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_F\",",
+            "          \"msg_text\":\"{$amt_earned}x\"",
+            "        },",
+            "        {\"amt_earned\":amt_earned});",
+            "};"),
+        "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
+  }
+
+  @Test
+  public void testLegacyStyleBadPlaceholderReferenceInReplacement() {
+    registerMessage(
+        getTestMessageBuilder("MSG_B")
+            .appendStringPart("Ola, ")
+            .appendPlaceholderReference("chimp")
+            .build());
+
+    testWarning(
+        "var MSG_B = function(chump) {return chump + 'x'};", MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test

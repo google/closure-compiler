@@ -17,7 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY;
+import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
+import static com.google.javascript.jscomp.JsMessage.Style.LEGACY;
+import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
+import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.jscomp.JsMessageVisitor.isLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
@@ -30,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.javascript.jscomp.JsMessage.Part;
+import com.google.javascript.jscomp.JsMessage.Style;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -67,11 +71,13 @@ public final class JsMessageVisitorTest {
   private CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
+  private JsMessage.Style mode;
   private boolean renameMessages = false;
 
   @Before
   public void setUp() throws Exception {
     messages = new ArrayList<>();
+    mode = JsMessage.Style.LEGACY;
     compilerOptions = null;
     renameMessages = false;
   }
@@ -196,7 +202,7 @@ public final class JsMessageVisitorTest {
         LINE_JOINER.join(
             "/**", " * @enum {number}", " */", "var MyEnum = {", "  MSG_ONE: 0", "};"));
     assertThat(compiler.getErrors()).hasSize(1);
-    assertError(compiler.getErrors().get(0)).hasType(MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertError(compiler.getErrors().get(0)).hasType(MESSAGE_TREE_MALFORMED);
   }
 
   @Test
@@ -233,7 +239,7 @@ public final class JsMessageVisitorTest {
     extractMessages(
         "" + "pint.sub = {" + "  /** @desc a */ MSG_MENU_MARK_AS_UNREAD: undefined" + "}");
     assertThat(compiler.getErrors()).hasSize(1);
-    assertError(compiler.getErrors().get(0)).hasType(MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertError(compiler.getErrors().get(0)).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   @Test
@@ -267,7 +273,7 @@ public final class JsMessageVisitorTest {
   public void testMessageAliasedToObject_nonMSGNameIsNotAllowed() {
     extractMessages("a.b.MSG_FOO_ALIAS = someVarName;");
     assertThat(compiler.getErrors()).hasSize(1);
-    assertError(compiler.getErrors().get(0)).hasType(MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertError(compiler.getErrors().get(0)).hasType(MESSAGE_TREE_MALFORMED);
   }
 
   @Test
@@ -318,10 +324,10 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testOrphanedJsMessage() {
-    extractMessages("goog.getMsg('a')");
+    extractMessagesSafely("goog.getMsg('a')");
     assertThat(messages).isEmpty();
 
-    assertThat(compiler.getErrors())
+    assertThat(compiler.getWarnings())
         .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
         .containsExactly(JsMessageVisitor.MESSAGE_NODE_IS_ORPHANED);
   }
@@ -396,17 +402,19 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testClosureMessageWithoutGoogGetmsg() {
+    mode = CLOSURE;
 
     extractMessages("var MSG_FOO_HELP = 'I am a bad message';");
 
     assertThat(messages).isEmpty();
-    final ImmutableList<JSError> errors = compiler.getErrors();
-    assertThat(errors).hasSize(1);
-    assertError(errors.get(0)).hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertThat(compiler.getWarnings()).hasSize(1);
+    assertError(compiler.getWarnings().get(0))
+        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
   public void testAllowOneMSGtoAliasAnotherMSG() {
+    mode = CLOSURE;
 
     // NOTE: tsickle code generation can end up creating new MSG_* variables that are temporary
     // aliases of existing ones that were defined correctly using goog.getMsg(). Don't complain
@@ -427,6 +435,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testDisallowOneMSGtoAliasNONMSG() {
+    mode = CLOSURE;
 
     // NOTE: tsickle code generation can end up creating new MSG_* variables that are temporary
     // aliases of existing ones that were defined correctly using goog.getMsg(). Don't complain
@@ -439,9 +448,9 @@ public final class JsMessageVisitorTest {
             ""));
 
     assertThat(messages).isEmpty();
-    final ImmutableList<JSError> errors = compiler.getErrors();
-    assertThat(errors).hasSize(1);
-    assertError(errors.get(0)).hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertThat(compiler.getWarnings()).hasSize(1);
+    assertError(compiler.getWarnings().get(0))
+        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
   @Test
@@ -576,7 +585,9 @@ public final class JsMessageVisitorTest {
 
     assertThat(compiler.getErrors())
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
-        .containsExactly("message not initialized using goog.getMsg");
+        .containsExactly(
+            "Message parse tree malformed. Message must be initialized using goog.getMsg"
+                + " function.");
   }
 
   @Test
@@ -586,11 +597,14 @@ public final class JsMessageVisitorTest {
     assertThat(messages).isEmpty();
     assertThat(compiler.getErrors())
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
-        .containsExactly("message not initialized using goog.getMsg");
+        .containsExactly(
+            "Message parse tree malformed."
+                + " Message must be initialized using goog.getMsg function.");
   }
 
   @Test
   public void testUnrecognizedFunction() {
+    mode = CLOSURE;
     extractMessages("DP_DatePicker.MSG_DATE_SELECTION = somefunc('a')");
 
     assertThat(messages).isEmpty();
@@ -668,15 +682,39 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testIsValidMessageNameStrict() {
-    JsMessageVisitor visitor = new DummyJsVisitor();
+    JsMessageVisitor visitor = new DummyJsVisitor(CLOSURE);
 
-    assertThat(visitor.isMessageName("MSG_HELLO")).isTrue();
-    assertThat(visitor.isMessageName("MSG_")).isTrue();
-    assertThat(visitor.isMessageName("MSG_HELP")).isTrue();
-    assertThat(visitor.isMessageName("MSG_FOO_HELP")).isTrue();
+    assertThat(visitor.isMessageName("MSG_HELLO", true)).isTrue();
+    assertThat(visitor.isMessageName("MSG_", true)).isTrue();
+    assertThat(visitor.isMessageName("MSG_HELP", true)).isTrue();
+    assertThat(visitor.isMessageName("MSG_FOO_HELP", true)).isTrue();
 
-    assertThat(visitor.isMessageName("_FOO_HELP")).isFalse();
-    assertThat(visitor.isMessageName("MSGFOOP")).isFalse();
+    assertThat(visitor.isMessageName("_FOO_HELP", true)).isFalse();
+    assertThat(visitor.isMessageName("MSGFOOP", true)).isFalse();
+  }
+
+  @Test
+  public void testIsValidMessageNameRelax() {
+    JsMessageVisitor visitor = new DummyJsVisitor(RELAX);
+
+    assertThat(visitor.isMessageName("MSG_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("MSG_FOO_HELP", false)).isFalse();
+  }
+
+  @Test
+  public void testIsValidMessageNameLegacy() {
+    theseAreLegacyMessageNames(new DummyJsVisitor(RELAX));
+    theseAreLegacyMessageNames(new DummyJsVisitor(LEGACY));
+  }
+
+  private void theseAreLegacyMessageNames(JsMessageVisitor visitor) {
+    assertThat(visitor.isMessageName("MSG_HELLO", false)).isTrue();
+    assertThat(visitor.isMessageName("MSG_", false)).isTrue();
+
+    assertThat(visitor.isMessageName("MSG_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("MSG_FOO_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("_FOO_HELP", false)).isFalse();
+    assertThat(visitor.isMessageName("MSGFOOP", false)).isFalse();
   }
 
   @Test
@@ -972,7 +1010,7 @@ public final class JsMessageVisitorTest {
   private class CollectMessages extends JsMessageVisitor {
 
     private CollectMessages(Compiler compiler) {
-      super(compiler, null);
+      super(compiler, mode, null);
     }
 
     @Override
@@ -983,8 +1021,8 @@ public final class JsMessageVisitorTest {
 
   private static class DummyJsVisitor extends JsMessageVisitor {
 
-    private DummyJsVisitor() {
-      super(null, null);
+    private DummyJsVisitor(Style style) {
+      super(null, style, null);
     }
 
     @Override

@@ -21,6 +21,7 @@ final class ReplaceMessages {
   ReplaceMessages(
       AbstractCompiler compiler,
       MessageBundle bundle,
+      JsMessage.Style style,
       boolean strictReplacement) {}
 
   public CompilerPass getFullReplacementPass() {
