@@ -397,7 +397,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .setDesc("B desc")
             .setMeaning("B meaning")
             .appendStringPart("Hello, ")
-            .appendJsPlaceholderReference("firstName")
+            .appendPlaceholderReference("first_name")
             .appendStringPart("!")
             .build());
 
@@ -606,7 +606,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_B")
             .appendStringPart("One ")
-            .appendJsPlaceholderReference("measly")
+            .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
 
@@ -632,7 +632,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_B")
             .appendStringPart("One ")
-            .appendJsPlaceholderReference("measly")
+            .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
 
@@ -676,7 +676,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testGetPropReplacement() {
-    registerMessage(getTestMessageBuilder("MSG_C").appendJsPlaceholderReference("amount").build());
+    registerMessage(getTestMessageBuilder("MSG_C").appendPlaceholderReference("amount").build());
 
     multiPhaseTest(
         lines(
@@ -700,7 +700,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionCallReplacement() {
-    registerMessage(getTestMessageBuilder("MSG_D").appendJsPlaceholderReference("amount").build());
+    registerMessage(getTestMessageBuilder("MSG_D").appendPlaceholderReference("amount").build());
 
     multiPhaseTest(
         lines("/** @desc d */", "var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});"),
@@ -722,7 +722,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testMethodCallReplacement() {
-    registerMessage(getTestMessageBuilder("MSG_E").appendJsPlaceholderReference("amount").build());
+    registerMessage(getTestMessageBuilder("MSG_E").appendPlaceholderReference("amount").build());
 
     multiPhaseTest(
         lines(
@@ -769,7 +769,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_F")
             .appendStringPart("#")
-            .appendJsPlaceholderReference("amount")
+            .appendPlaceholderReference("amount")
             .appendStringPart(".")
             .build());
 
@@ -793,7 +793,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testAddReplacement() {
-    registerMessage(getTestMessageBuilder("MSG_G").appendJsPlaceholderReference("amount").build());
+    registerMessage(getTestMessageBuilder("MSG_G").appendPlaceholderReference("amount").build());
 
     multiPhaseTest(
         lines(
@@ -817,11 +817,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testPlaceholderValueReferencedTwice() {
     registerMessage(
         getTestMessageBuilder("MSG_H")
-            .appendJsPlaceholderReference("dick")
+            .appendPlaceholderReference("dick")
             .appendStringPart(", ")
-            .appendJsPlaceholderReference("dick")
+            .appendPlaceholderReference("dick")
             .appendStringPart(" and ")
-            .appendJsPlaceholderReference("jane")
+            .appendPlaceholderReference("jane")
             .build());
 
     multiPhaseTest(
@@ -847,7 +847,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_I")
             .appendStringPart("Sum: $")
-            .appendJsPlaceholderReference("amtEarned")
+            .appendPlaceholderReference("amtEarned")
             .build());
 
     multiPhaseTest(
@@ -875,7 +875,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_J")
             .appendStringPart("One ")
-            .appendJsPlaceholderReference("measly")
+            .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
 
@@ -904,9 +904,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testPlaceholderInPlaceholderValue() {
     registerMessage(
         getTestMessageBuilder("MSG_L")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart(" has ")
-            .appendJsPlaceholderReference("b")
+            .appendPlaceholderReference("b")
             .build());
 
     multiPhaseTest(
@@ -982,7 +982,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_J")
             .appendStringPart("One ")
-            .appendJsPlaceholderReference("measly")
+            .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
 
@@ -1039,7 +1039,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadPlaceholderReferenceInReplacement() {
-    registerMessage(getTestMessageBuilder("MSG_K").appendJsPlaceholderReference("amount").build());
+    registerMessage(getTestMessageBuilder("MSG_K").appendPlaceholderReference("amount").build());
 
     multiPhaseTestPostLookupError(
         lines(
@@ -1058,7 +1058,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testEmptyObjLit() {
-    registerMessage(getTestMessageBuilder("MSG_E").appendJsPlaceholderReference("amount").build());
+    registerMessage(getTestMessageBuilder("MSG_E").appendPlaceholderReference("amount").build());
 
     multiPhaseTestPostLookupError(
         lines(
@@ -1119,7 +1119,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_C")
             .appendStringPart("One ")
-            .appendJsPlaceholderReference("measly")
+            .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
     multiPhaseTestWarning(
@@ -1141,9 +1141,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testLegacyStyleTwoPlaceholders() {
     registerMessage(
         getTestMessageBuilder("MSG_D")
-            .appendJsPlaceholderReference("dick")
+            .appendPlaceholderReference("dick")
             .appendStringPart(" and ")
-            .appendJsPlaceholderReference("jane")
+            .appendPlaceholderReference("jane")
             .build());
     multiPhaseTestWarning(
         "var MSG_D = function(jane, dick) {return jane + dick};", //
@@ -1166,7 +1166,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_E")
             .appendStringPart("Sum: $")
-            .appendJsPlaceholderReference("amtEarned")
+            .appendPlaceholderReference("amtEarned")
             .build());
     multiPhaseTestWarning(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
@@ -1187,7 +1187,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedPlaceHolderMissMatch() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1198,7 +1198,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedBadBooleanOptionValue() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1216,7 +1216,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedMisspelledExamples() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1230,7 +1230,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedMisspelledOriginalCode() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1244,7 +1244,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedExampleWithUnknownPlaceholder() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1257,7 +1257,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedExampleWithNonStringPlaceholderValue() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1270,7 +1270,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedExampleWithBadValue() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1283,7 +1283,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testTranslatedExampleWithComputedProperty() {
     registerMessage(
         getTestMessageBuilder("MSG_A")
-            .appendJsPlaceholderReference("a")
+            .appendPlaceholderReference("a")
             .appendStringPart("!")
             .build());
 
@@ -1525,7 +1525,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_B")
             .appendStringPart("One ")
-            .appendJsPlaceholderReference("measly")
+            .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
 
@@ -1711,13 +1711,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     registerMessage(
         getTestMessageBuilder("MSG_C")
-            .appendJsPlaceholderReference("br")
+            .appendPlaceholderReference("br")
             .appendStringPart("&")
             .appendStringPart("amp;")
-            .appendJsPlaceholderReference("x")
-            .appendJsPlaceholderReference("y")
+            .appendPlaceholderReference("x")
+            .appendPlaceholderReference("y")
             .appendStringPart("&ap")
-            .appendJsPlaceholderReference("z")
+            .appendPlaceholderReference("z")
             .appendStringPart("os;")
             .build());
     multiPhaseTest(
@@ -1753,7 +1753,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(
         getTestMessageBuilder("MSG_A")
             .appendStringPart("Hello <") // html option changes `<` to `&lt;
-            .appendJsPlaceholderReference("br")
+            .appendPlaceholderReference("br")
             .appendStringPart("&gt;")
             .build());
 

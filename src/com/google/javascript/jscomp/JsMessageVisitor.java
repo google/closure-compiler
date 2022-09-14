@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
+import com.google.common.base.CaseFormat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Hash;
 import com.google.javascript.jscomp.JsMessage.Part;
@@ -121,6 +122,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * MSG_UNNAMED.* . This pattern recognizes such messages.
    */
   private static final Pattern MSG_UNNAMED_PATTERN = Pattern.compile("MSG_UNNAMED.*");
+
+  private static final Pattern CAMELCASE_PATTERN = Pattern.compile("[a-z][a-zA-Z\\d]*[_\\d]*");
 
   private final JsMessage.IdGenerator idGenerator;
   final AbstractCompiler compiler;
@@ -648,7 +651,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           throw new MalformedException("STRING_KEY node expected as OBJLIT key", aNode);
         }
         String phName = aNode.getString();
-        if (!JsMessage.isLowerCamelCaseWithNumericSuffixes(phName)) {
+        if (!isLowerCamelCaseWithNumericSuffixes(phName)) {
           throw new MalformedException("Placeholder name not in lowerCamelCase: " + phName, aNode);
         }
 
@@ -776,7 +779,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       parseMessageTextIntoPartsForBuilder(builder, value);
       messageData.messageParts = builder.getParts();
     } catch (PlaceholderFormatException e) {
-      throw new MalformedException(e.getMessage(), node);
+      throw new MalformedException(
+          "Placeholder incorrectly formatted in: " + builder.getKey(), node);
     }
   }
 
@@ -797,14 +801,11 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         // A placeholder. Find where it ends
         int phEnd = msgText.indexOf(JsMessage.PH_JS_SUFFIX, phBegin);
         if (phEnd < 0) {
-          throw new PlaceholderFormatException("Placeholder incorrectly formatted");
+          throw new PlaceholderFormatException();
         }
 
         String phName = msgText.substring(phBegin + JsMessage.PH_JS_PREFIX.length(), phEnd);
-        if (!JsMessage.isLowerCamelCaseWithNumericSuffixes(phName)) {
-          throw new PlaceholderFormatException("Placeholder name not in lowerCamelCase: " + phName);
-        }
-        builder.appendJsPlaceholderReference(phName);
+        builder.appendPlaceholderReference(phName);
         int nextPos = phEnd + JsMessage.PH_JS_SUFFIX.length();
         if (nextPos < msgText.length()) {
           // Iterate on the rest of the message value
@@ -907,6 +908,48 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   /** Returns whether the given message name is in the unnamed namespace. */
   private static boolean isUnnamedMessageName(String identifier) {
     return MSG_UNNAMED_PATTERN.matcher(identifier).matches();
+  }
+
+  /**
+   * Returns whether a string is nonempty, begins with a lowercase letter, and contains only digits
+   * and underscores after the first underscore.
+   */
+  static boolean isLowerCamelCaseWithNumericSuffixes(String input) {
+    return CAMELCASE_PATTERN.matcher(input).matches();
+  }
+
+  /**
+   * Converts the given string from upper-underscore case to lower-camel case, preserving numeric
+   * suffixes. For example: "NAME" -> "name" "A4_LETTER" -> "a4Letter" "START_SPAN_1_23" ->
+   * "startSpan_1_23".
+   */
+  static String toLowerCamelCaseWithNumericSuffixes(String input) {
+    // Determine where the numeric suffixes begin
+    int suffixStart = input.length();
+    while (suffixStart > 0) {
+      char ch = '\0';
+      int numberStart = suffixStart;
+      while (numberStart > 0) {
+        ch = input.charAt(numberStart - 1);
+        if (Character.isDigit(ch)) {
+          numberStart--;
+        } else {
+          break;
+        }
+      }
+      if ((numberStart > 0) && (numberStart < suffixStart) && (ch == '_')) {
+        suffixStart = numberStart - 1;
+      } else {
+        break;
+      }
+    }
+
+    if (suffixStart == input.length()) {
+      return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, input);
+    } else {
+      return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, input.substring(0, suffixStart))
+          + input.substring(suffixStart);
+    }
   }
 
   /**

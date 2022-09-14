@@ -69,13 +69,13 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
     Node newValueNode = getChromeI18nGetMessageNode(message.getId());
 
     boolean isHtml = isHtml(origNode);
-    if (!message.jsPlaceholderNames().isEmpty() || isHtml) {
+    if (!message.placeholders().isEmpty() || isHtml) {
       Node placeholderValues = origNode.getChildAtIndex(2);
       checkNode(placeholderValues, Token.OBJECTLIT);
 
       // Output the placeholders, sorted alphabetically by placeholder name,
       // regardless of what order they appear in the original message.
-      List<String> placeholderNames = Ordering.natural().sortedCopy(message.jsPlaceholderNames());
+      List<String> placeholderNames = Ordering.natural().sortedCopy(message.placeholders());
 
       Node placeholderValueArray = astFactory.createArraylit();
       for (String name : placeholderNames) {

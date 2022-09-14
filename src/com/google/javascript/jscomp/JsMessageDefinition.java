@@ -18,15 +18,32 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
-/** Container class that holds information about the JS code a JsMessage was built from. */
+/**
+ * Container class that holds information about JS message source.
+ *
+ * This class is specific to our JsMessage syntax. Allows you to use the
+ * new-style or the old-style messages.
+ *
+ * Old-style:
+ * <code>
+ * var MSG_LEOPARD = 'Leopard';
+ * var MSG_LEOPARD_HELP = 'The Leopard operating system';
+ * </code>
+ *
+ * New-style:
+ * <code>
+ * /** @desc The leopard operating system * /
+ * var MSG_LEOPARD = goog.getMsg('Leopard');
+ * </code>
+ */
 public final class JsMessageDefinition {
 
   private final Node messageNode;
 
   /**
    * Constructs JS message definition.
-   *
-   * @param messageNode The `goog.getMsg()` call node.
+   * @param messageNode A node that contains the message. It could be node with
+   *     goog.getMsg() call or string/function for old-style messages.
    */
   JsMessageDefinition(Node messageNode) {
     this.messageNode = messageNode;

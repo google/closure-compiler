@@ -66,7 +66,10 @@ public final class ReplaceMessages {
   private final boolean strictReplacement;
   private final AstFactory astFactory;
 
-  ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle, boolean strictReplacement) {
+  ReplaceMessages(
+      AbstractCompiler compiler,
+      MessageBundle bundle,
+      boolean strictReplacement) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.bundle = bundle;
@@ -207,7 +210,7 @@ public final class ReplaceMessages {
     if (meaning != null) {
       msgPropsBuilder.addString("meaning", meaning);
     }
-    msgPropsBuilder.addString("msg_text", message.asJsMessageString());
+    msgPropsBuilder.addString("msg_text", message.toString());
     if (msgOptions.escapeLessThan) {
       // Just being present is what records this option as true
       msgPropsBuilder.addString("escapeLessThan", "");
@@ -302,7 +305,7 @@ public final class ReplaceMessages {
         msgOptions.unescapeHtmlEntities = protectedJsMessage.unescapeHtmlEntities;
         final Map<String, Node> placeholderMap =
             createPlaceholderNodeMap(protectedJsMessage.substitutionsNode);
-        final ImmutableSet<String> placeholderNames = msgToUse.jsPlaceholderNames();
+        final ImmutableSet<String> placeholderNames = msgToUse.placeholders();
         if (placeholderMap.isEmpty() && !placeholderNames.isEmpty()) {
           throw new MalformedException(
               "Empty placeholder value map for a translated message with placeholders.",
@@ -400,15 +403,15 @@ public final class ReplaceMessages {
     if (alternateMessage != null) {
       // Validate that the alternate message is compatible with this message. Ideally we'd also
       // check meaning and description, but they're not populated by `MessageBundle.getMessage`.
-      if (!Objects.equals(message.jsPlaceholderNames(), alternateMessage.jsPlaceholderNames())) {
+      if (!Objects.equals(message.placeholders(), alternateMessage.placeholders())) {
         compiler.report(
             JSError.make(
                 callNode,
                 INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS,
                 alternateId,
-                String.valueOf(alternateMessage.jsPlaceholderNames()),
+                String.valueOf(alternateMessage.placeholders()),
                 message.getKey(),
-                String.valueOf(message.jsPlaceholderNames())));
+                String.valueOf(message.placeholders())));
         return null;
       }
     }
@@ -537,7 +540,7 @@ public final class ReplaceMessages {
       MsgOptions options = getOptions(message, objLitNode != null ? objLitNode.getNext() : null);
 
       Map<String, Node> placeholderMap = createPlaceholderNodeMap(objLitNode);
-      final ImmutableSet<String> placeholderNames = message.jsPlaceholderNames();
+      final ImmutableSet<String> placeholderNames = message.placeholders();
       if (placeholderMap.isEmpty() && !placeholderNames.isEmpty()) {
         throw new MalformedException(
             "Empty placeholder value map for a translated message with placeholders.", callNode);
@@ -598,7 +601,7 @@ public final class ReplaceMessages {
       Part part, MsgOptions options, Map<String, Node> placeholderMap) {
     final Node partNode;
     if (part.isPlaceholder()) {
-      partNode = checkNotNull(placeholderMap.get(part.getJsPlaceholderName())).cloneTree();
+      partNode = checkNotNull(placeholderMap.get(part.getPlaceholderName())).cloneTree();
     } else {
       // The part is just a string literal.
       String s = part.getString();
@@ -671,7 +674,7 @@ public final class ReplaceMessages {
             if (!value.isObjectLit()) {
               throw new MalformedException(optName + ": object literal required", value);
             }
-            final ImmutableSet<String> placeholders = message.jsPlaceholderNames();
+            final ImmutableSet<String> placeholders = message.placeholders();
             Node stringKeyNode;
             for (stringKeyNode = value.getFirstChild();
                 stringKeyNode != null;
