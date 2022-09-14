@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -59,7 +62,9 @@ public abstract class JsMessage {
    */
   public static final class PlaceholderFormatException extends Exception {
 
-    public PlaceholderFormatException() {}
+    public PlaceholderFormatException(String msg) {
+      super(msg);
+    }
   }
 
   /** Gets the message's sourceName. */
@@ -111,25 +116,56 @@ public abstract class JsMessage {
   public abstract ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap();
 
   /** Gets a set of the registered placeholders in this message. */
-  public abstract ImmutableSet<String> placeholders();
+  public abstract ImmutableSet<String> jsPlaceholderNames();
 
   public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToOriginalCodeMap()
-        .getOrDefault(placeholderReference.getPlaceholderName(), "-");
+        .getOrDefault(placeholderReference.getJsPlaceholderName(), "-");
   }
 
   public String getPlaceholderExample(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToExampleMap()
-        .getOrDefault(placeholderReference.getPlaceholderName(), "-");
+        .getOrDefault(placeholderReference.getJsPlaceholderName(), "-");
   }
 
   /** Returns a String containing the original message text. */
   @Override
   public final String toString() {
+    throw new UnsupportedOperationException(
+        "TODO(bradfordcsmith): Remove this override when all code has been correctly updated");
+  }
+
+  /**
+   * Returns a single string representing the message.
+   *
+   * <p>In the returned string all placeholders are joined with the literal string parts in the form
+   * "literal string part {$jsPlaceholderName} more literal string", which is how placeholders are
+   * represented in `goog.getMsg()` text strings.
+   */
+  public String asJsMessageString() {
     StringBuilder sb = new StringBuilder();
     for (Part p : getParts()) {
       if (p.isPlaceholder()) {
-        sb.append(PH_JS_PREFIX).append(p.getPlaceholderName()).append(PH_JS_SUFFIX);
+        sb.append(PH_JS_PREFIX).append(p.getJsPlaceholderName()).append(PH_JS_SUFFIX);
+      } else {
+        sb.append(p.getString());
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Returns a single string representing the message.
+   *
+   * <p>In the returned string all placeholders are joined with the literal string parts in the form
+   * "literal string part {CANONICAL_PLACEHOLDER_NAME} more literal string", which is how
+   * placeholders are represented in ICU messages.
+   */
+  public final String asIcuMessageString() {
+    StringBuilder sb = new StringBuilder();
+    for (Part p : getParts()) {
+      if (p.isPlaceholder()) {
+        sb.append('{').append(p.getCanonicalPlaceholderName()).append('}');
       } else {
         sb.append(p.getString());
       }
@@ -156,12 +192,26 @@ public abstract class JsMessage {
     boolean isPlaceholder();
 
     /**
-     * Gets the name of the placeholder.
+     * Gets the name of the placeholder as it would appear in JS code.
+     *
+     * <p>In JS code placeholders are in lower camel case with zero or more trailing numeric
+     * suffixes (e.g. myPlaceholderName_123_456).
      *
      * @return the name for a placeholder
      * @throws UnsupportedOperationException if this is not a {@link PlaceholderReference}.
      */
-    String getPlaceholderName();
+    String getJsPlaceholderName();
+
+    /**
+     * Gets the name of the placeholder as it would appear in XMB or XTB files, and also the form it
+     * takes when generating message IDs.
+     *
+     * <p>This format is UPPER_SNAKE_CASE.
+     *
+     * @return the name for a placeholder
+     * @throws UnsupportedOperationException if this is not a {@link PlaceholderReference}.
+     */
+    String getCanonicalPlaceholderName();
 
     /**
      * Gets the literal string for this message part.
@@ -188,22 +238,103 @@ public abstract class JsMessage {
     }
 
     @Override
-    public String getPlaceholderName() {
+    public String getJsPlaceholderName() {
       throw new UnsupportedOperationException(
           SimpleFormat.format("not a placeholder: '%s'", getString()));
     }
+
+    @Override
+    public String getCanonicalPlaceholderName() {
+      throw new UnsupportedOperationException(
+          SimpleFormat.format("not a placeholder: '%s'", getString()));
+    }
+  }
+
+  /**
+   * In JS code we expect placeholder names to be lowerCamelCase with an optional _123_456 suffix.
+   */
+  private static final Pattern JS_PLACEHOLDER_NAME_RE = Pattern.compile("[a-z][a-zA-Z\\d]*[_\\d]*");
+
+  /**
+   * Returns whether a string is nonempty, begins with a lowercase letter, and contains only digits
+   * and underscores after the first underscore.
+   */
+  public static boolean isLowerCamelCaseWithNumericSuffixes(String input) {
+    return JS_PLACEHOLDER_NAME_RE.matcher(input).matches();
+  }
+
+  /**
+   * Converts the given string from upper-underscore case to lower-camel case, preserving numeric
+   * suffixes. For example: "NAME" -> "name" "A4_LETTER" -> "a4Letter" "START_SPAN_1_23" ->
+   * "startSpan_1_23".
+   */
+  public static String toLowerCamelCaseWithNumericSuffixes(String input) {
+    // Determine where the numeric suffixes begin
+    int suffixStart = input.length();
+    while (suffixStart > 0) {
+      char ch = '\0';
+      int numberStart = suffixStart;
+      while (numberStart > 0) {
+        ch = input.charAt(numberStart - 1);
+        if (Character.isDigit(ch)) {
+          numberStart--;
+        } else {
+          break;
+        }
+      }
+      if ((numberStart > 0) && (numberStart < suffixStart) && (ch == '_')) {
+        suffixStart = numberStart - 1;
+      } else {
+        break;
+      }
+    }
+
+    if (suffixStart == input.length()) {
+      return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, input);
+    } else {
+      return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, input.substring(0, suffixStart))
+          + input.substring(suffixStart);
+    }
+  }
+
+  /**
+   * In XMB and XTB files we expect the placeholder name to be in UPPER_SNAKE_CASE with optional
+   * _123_456 suffix.
+   *
+   * <p>This pattern will allow alpha sections after numeric sections (e.g. NOT_A_1234_VALID_NAME),
+   * but it is still probably good enough, since these name are usually automatically generated from
+   * the JS formatted lowerCamelCase_with_optional_12_34 names.
+   */
+  private static final Pattern CANONICAL_PLACEHOLDER_NAME_RE = Pattern.compile("[A-Z][A-Z\\d_]*");
+
+  /** Is the name in the canonical format for placeholder names in XTB and XMB files. */
+  public static boolean isCanonicalPlaceholderNameFormat(String name) {
+    return CANONICAL_PLACEHOLDER_NAME_RE.matcher(name).matches();
   }
 
   /** A reference to a placeholder in a translatable message. */
   @AutoValue
   public abstract static class PlaceholderReference implements Part {
 
-    static PlaceholderReference create(String name) {
+    static PlaceholderReference createForJsName(String name) {
+      checkArgument(
+          isLowerCamelCaseWithNumericSuffixes(name),
+          "invalid JS placeholder name format: '%s'",
+          name);
       return new AutoValue_JsMessage_PlaceholderReference(name);
     }
 
+    public static PlaceholderReference createForCanonicalName(String name) {
+      checkArgument(
+          isCanonicalPlaceholderNameFormat(name),
+          "not a canonical placeholder name format: '%s'",
+          name);
+      return new AutoValue_JsMessage_PlaceholderReference(
+          toLowerCamelCaseWithNumericSuffixes(name));
+    }
+
     @Override
-    public abstract String getPlaceholderName();
+    public abstract String getJsPlaceholderName();
 
     @Override
     public boolean isPlaceholder() {
@@ -211,9 +342,14 @@ public abstract class JsMessage {
     }
 
     @Override
+    public String getCanonicalPlaceholderName() {
+      return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, getJsPlaceholderName());
+    }
+
+    @Override
     public String getString() {
       throw new UnsupportedOperationException(
-          SimpleFormat.format("not a string part: '%s'", getPlaceholderName()));
+          SimpleFormat.format("not a string part: '%s'", getJsPlaceholderName()));
     }
   }
 
@@ -240,7 +376,8 @@ public abstract class JsMessage {
     @Nullable private String alternateId;
 
     private final List<Part> parts = new ArrayList<>();
-    private final Set<String> placeholders = new LinkedHashSet<>();
+    // Placeholder names in JS code format
+    private final Set<String> jsPlaceholderNames = new LinkedHashSet<>();
     private ImmutableMap<String, String> placeholderNameToExampleMap = ImmutableMap.of();
     private ImmutableMap<String, String> placeholderNameToOriginalCodeMap = ImmutableMap.of();
 
@@ -270,12 +407,30 @@ public abstract class JsMessage {
       return this;
     }
 
-    /** Appends a placeholder reference to the message */
+    /**
+     * Appends a placeholder reference to the message.
+     *
+     * @param name placeholder name in the format used in JS code (lowerCamelCaseWithOptional_12_34)
+     */
     @CanIgnoreReturnValue
-    public Builder appendPlaceholderReference(String name) {
+    public Builder appendJsPlaceholderReference(String name) {
       checkNotNull(name, "Placeholder name could not be null");
-      parts.add(PlaceholderReference.create(name));
-      placeholders.add(name);
+      parts.add(PlaceholderReference.createForJsName(name));
+      jsPlaceholderNames.add(name);
+      return this;
+    }
+
+    /**
+     * Appends a placeholder reference to the message.
+     *
+     * @param name placeholder name in the format used in XML files (UPPER_SNAKE_CASE_12_34)
+     */
+    @CanIgnoreReturnValue
+    public Builder appendCanonicalPlaceholderReference(String name) {
+      checkNotNull(name, "Placeholder name could not be null");
+      final PlaceholderReference placeholder = PlaceholderReference.createForCanonicalName(name);
+      parts.add(placeholder);
+      jsPlaceholderNames.add(placeholder.getJsPlaceholderName());
       return this;
     }
 
@@ -289,7 +444,7 @@ public abstract class JsMessage {
 
     /** Returns the message registered placeholders */
     public Set<String> getPlaceholders() {
-      return placeholders;
+      return jsPlaceholderNames;
     }
 
     @CanIgnoreReturnValue
@@ -386,7 +541,7 @@ public abstract class JsMessage {
           hidden,
           placeholderNameToExampleMap,
           placeholderNameToOriginalCodeMap,
-          ImmutableSet.copyOf(placeholders));
+          ImmutableSet.copyOf(jsPlaceholderNames));
     }
   }
 

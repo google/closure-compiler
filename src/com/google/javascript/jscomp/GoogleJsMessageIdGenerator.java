@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.JsMessage.IdGenerator;
 import com.google.javascript.jscomp.JsMessage.Part;
@@ -61,8 +60,7 @@ public final class GoogleJsMessageIdGenerator implements IdGenerator {
     StringBuilder sb = new StringBuilder();
     for (Part part : messageParts) {
       if (part.isPlaceholder()) {
-        sb.append(
-            CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, part.getPlaceholderName()));
+        sb.append(part.getCanonicalPlaceholderName());
       } else {
         sb.append(part.getString());
       }

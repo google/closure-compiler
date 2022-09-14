@@ -193,8 +193,7 @@ public final class XtbMessageBundle implements MessageBundle {
           if (isIcuMessage) {
             msgBuilder.appendStringPart(asIcuPlaceholder(phRef));
           } else {
-            phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
-            msgBuilder.appendPlaceholderReference(phRef);
+            msgBuilder.appendCanonicalPlaceholderReference(phRef);
           }
           break;
         default: // fall out

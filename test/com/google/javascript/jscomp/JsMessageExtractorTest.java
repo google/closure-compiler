@@ -85,9 +85,9 @@ public final class JsMessageExtractorTest {
             .setKey("MSG_WELCOME")
             .setId("MSG_WELCOME")
             .appendStringPart("Hi ")
-            .appendPlaceholderReference("interpolation_0")
+            .appendJsPlaceholderReference("interpolation_0")
             .appendStringPart("! Welcome to ")
-            .appendPlaceholderReference("interpolation_1")
+            .appendJsPlaceholderReference("interpolation_1")
             .appendStringPart(".")
             .setPlaceholderNameToOriginalCodeMap(
                 ImmutableMap.of(
@@ -128,9 +128,9 @@ public final class JsMessageExtractorTest {
             .setKey("MSG_WELCOME")
             .setId("MSG_WELCOME")
             .appendStringPart("Hi ")
-            .appendPlaceholderReference("userName")
+            .appendJsPlaceholderReference("userName")
             .appendStringPart("! Welcome to ")
-            .appendPlaceholderReference("product")
+            .appendJsPlaceholderReference("product")
             .appendStringPart(".")
             .setDesc("The welcome message.")
             .build(),
@@ -159,8 +159,8 @@ public final class JsMessageExtractorTest {
 
     assertThat(msgs).hasSize(2);
     final Iterator<JsMessage> iter = msgs.iterator();
-    assertThat(iter.next().toString()).isEqualTo("foo");
-    assertThat(iter.next().toString()).isEqualTo("bar");
+    assertThat(iter.next().asJsMessageString()).isEqualTo("foo");
+    assertThat(iter.next().asJsMessageString()).isEqualTo("bar");
   }
 
   @Test
@@ -187,7 +187,7 @@ public final class JsMessageExtractorTest {
     assertThat(actual.getId()).isEqualTo(expected.getId());
     assertThat(actual.getKey()).isEqualTo(expected.getKey());
     assertThat(actual.getParts()).isEqualTo(expected.getParts());
-    assertThat(actual.placeholders()).isEqualTo(expected.placeholders());
+    assertThat(actual.jsPlaceholderNames()).isEqualTo(expected.jsPlaceholderNames());
     assertThat(actual.getDesc()).isEqualTo(expected.getDesc());
     assertThat(actual.getMeaning()).isEqualTo(expected.getMeaning());
   }
