@@ -231,7 +231,7 @@ public final class AstAnalyzerTest {
 
     // Always include the index. If two cases have the same name, only one will be executed.
     @Parameters(name = "#{index} {0}")
-    public static Iterable<AnalysisCase> cases() {
+    public static ImmutableList<AnalysisCase> cases() {
       return ImmutableList.of(
           kase().js("i++").token(INC).expect(true),
           kase().js("[b, [a, i++]]").token(ARRAYLIT).expect(true),
@@ -358,7 +358,7 @@ public final class AstAnalyzerTest {
 
     // Always include the index. If two cases have the same name, only one will be executed.
     @Parameters(name = "#{index} {0}")
-    public static Iterable<AnalysisCase> cases() {
+    public static ImmutableList<AnalysisCase> cases() {
       return ImmutableList.of(
           // Cases in need of differentiation.
           kase().expect(false).js("[1]"),
@@ -683,7 +683,7 @@ public final class AstAnalyzerTest {
 
     // Always include the index. If two cases have the same name, only one will be executed.
     @Parameters(name = "#{index} {0}")
-    public static Iterable<AnalysisCase> cases() {
+    public static ImmutableList<AnalysisCase> cases() {
       return ImmutableList.of(
           kase().js("x = y").token(ASSIGN).expect(true),
           kase().js("x += y").token(ASSIGN_ADD).expect(true),
@@ -962,7 +962,7 @@ public final class AstAnalyzerTest {
 
     // Always include the index. If two cases have the same name, only one will be executed.
     @Parameters(name = "#{index} {0}")
-    public static final Iterable<Object[]> cases() {
+    public static final ImmutableList<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             {"Array"}, {"Date"}, {"Error"}, {"Object"}, {"RegExp"}, {"XMLHttpRequest"}

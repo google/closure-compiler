@@ -337,7 +337,7 @@ public final class JSChunkGraphTest {
     makeGraph();
     setUpManageDependenciesTest();
     DependencyOptions depOptions = DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of());
-    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     assertInputs(moduleA, "a1", "a3");
     assertInputs(moduleB, "a2", "b2");
@@ -356,7 +356,7 @@ public final class JSChunkGraphTest {
     DependencyOptions depOptions =
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     assertInputs(moduleA, "a1", "a3");
     assertInputs(moduleB, "a2", "b2");
@@ -374,7 +374,7 @@ public final class JSChunkGraphTest {
     setUpManageDependenciesTest();
     DependencyOptions depOptions =
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     // Everything gets pushed up into module c, because that's
     // the only one that has entry points.
@@ -403,7 +403,7 @@ public final class JSChunkGraphTest {
 
     DependencyOptions depOptions =
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
-    List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     // Everything gets pushed up into module c, because that's
     // the only one that has entry points.
@@ -417,7 +417,8 @@ public final class JSChunkGraphTest {
     makeDeps();
     makeGraph();
     setUpManageDependenciesTest();
-    List<CompilerInput> results = graph.manageDependencies(compiler, DependencyOptions.sortOnly());
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertInputs(moduleA, "a1", "a2", "a3");
     assertInputs(moduleB, "b1", "b2");
@@ -444,7 +445,8 @@ public final class JSChunkGraphTest {
       input.setCompiler(compiler);
     }
 
-    List<CompilerInput> results = graph.manageDependencies(compiler, DependencyOptions.sortOnly());
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertInputs(moduleA, "base.js", "a1", "a2");
 
@@ -455,7 +457,8 @@ public final class JSChunkGraphTest {
   public void testNoFiles() throws Exception {
     makeDeps();
     makeGraph();
-    List<CompilerInput> results = graph.manageDependencies(compiler, DependencyOptions.sortOnly());
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, DependencyOptions.sortOnly());
     assertThat(results).isEmpty();
   }
 
@@ -536,7 +539,7 @@ public final class JSChunkGraphTest {
         input.setCompiler(compiler);
       }
 
-      List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+      ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
       assertInputs(moduleA, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
 
@@ -594,7 +597,7 @@ public final class JSChunkGraphTest {
         input.setHasFullParseDependencyInfo(true);
       }
 
-      List<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+      ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
       assertInputs(
           moduleA,

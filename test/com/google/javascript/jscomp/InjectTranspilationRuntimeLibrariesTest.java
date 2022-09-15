@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.Set;
@@ -46,7 +47,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
    *
    * @return the set of paths to all the injected libraries
    */
-  private Set<String> parseAndRunInjectionPass(String js) {
+  private ImmutableSet<String> parseAndRunInjectionPass(String js) {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(this.languageOut);
 

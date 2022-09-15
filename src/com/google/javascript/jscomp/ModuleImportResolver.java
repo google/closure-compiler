@@ -164,7 +164,7 @@ final class ModuleImportResolver {
    *     references if not all module scopes are created and the caller should handle declaring
    *     these names later, e.g. in TypedScopeCreator.
    */
-  Map<Node, ScopedName> declareEsModuleImports(
+  ImmutableMap<Node, ScopedName> declareEsModuleImports(
       Module module, TypedScope scope, CompilerInput moduleInput) {
     checkArgument(module.metadata().isEs6Module(), module);
     checkArgument(scope.isModuleScope(), scope);

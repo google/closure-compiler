@@ -35,6 +35,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.JsFileLineParser;
@@ -58,7 +59,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -2622,7 +2622,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
     ObjectType fooProto = fooClass.getPrototype();
-    List<FunctionType.Parameter> params = fooClass.getParameters();
+    ImmutableList<FunctionType.Parameter> params = fooClass.getParameters();
     Node ctorDef = getLabeledStatement("CTOR_BODY").statementNode.getAncestor(3);
 
     // Test class typing.
@@ -2896,7 +2896,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
     ObjectType fooProto = fooClass.getPrototype();
-    List<FunctionType.Parameter> params = fooClass.getParameters();
+    ImmutableList<FunctionType.Parameter> params = fooClass.getParameters();
 
     // Test class typing.
     assertThat(fooClass.isConstructor()).isTrue();
@@ -2938,7 +2938,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(fooCtor).withTypeOfProp("method").isNotUnknown();
     assertType(fooCtor).withTypeOfProp("method").isNotEmpty();
 
-    List<FunctionType.Parameter> params = fooCtor.getParameters();
+    ImmutableList<FunctionType.Parameter> params = fooCtor.getParameters();
     assertThat(params).hasSize(1);
     assertType(params.get(0).getJSType()).isNumber();
     assertType(barConstructorProperty).toStringIsEqualTo("(typeof Bar)");
@@ -2964,7 +2964,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "}",
             "class Foo extends class extends class extends Bar {} {} {}"));
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    List<FunctionType.Parameter> params = foo.getParameters();
+    ImmutableList<FunctionType.Parameter> params = foo.getParameters();
     assertThat(params).hasSize(1);
     assertType(params.get(0).getJSType()).isString();
   }

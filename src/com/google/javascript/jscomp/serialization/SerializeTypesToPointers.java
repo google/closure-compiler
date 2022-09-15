@@ -27,7 +27,7 @@ import static java.util.Comparator.naturalOrder;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -198,7 +198,7 @@ final class SerializeTypesToPointers {
    * <p>Not part of the main API for this callback. For use when serializing additional types for
    * debug logging.
    */
-  private ImmutableSet<TypeMismatchJson> logTypeMismatches(
+  private ImmutableSortedSet<TypeMismatchJson> logTypeMismatches(
       Iterable<TypeMismatch> typeMismatches, JSTypeReconserializer serializer, TypePool typePool) {
     return stream(typeMismatches)
         .map(mismatch -> TypeMismatchJson.create(mismatch, serializer, typePool))

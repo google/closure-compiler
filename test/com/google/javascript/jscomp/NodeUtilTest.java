@@ -252,7 +252,7 @@ public final class NodeUtilTest {
     public Tri expectedResult;
 
     @Parameters(name = "getBooleanValue(\"{0}\") => {1}")
-    public static Iterable<Object[]> cases() {
+    public static ImmutableList<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             // truly literal, side-effect free values are always known
@@ -4420,7 +4420,7 @@ public final class NodeUtilTest {
   public static final class GoogRequireInfoTest {
 
     @Parameters(name = "src={0}, name={1}, GoogRequire={2}")
-    public static Iterable<Object[]> cases() {
+    public static ImmutableList<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             {
@@ -4493,7 +4493,7 @@ public final class NodeUtilTest {
   @RunWith(Parameterized.class)
   public static final class ReferencesReceiverTest {
     @Parameters(name = "\"{0}\"")
-    public static Iterable<Object[]> cases() {
+    public static ImmutableList<Object[]> cases() {
       //
       //
       ImmutableMap<String, Boolean> templateToDefinesOwnReceiver =
@@ -4610,7 +4610,7 @@ public final class NodeUtilTest {
   public static final class GetRValueOfLValueTest {
 
     @Parameters(name = "{0} in \"{1}\"")
-    public static Iterable<Object[]> cases() {
+    public static ImmutableList<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             // CLASS_MEMBERS
@@ -4641,7 +4641,7 @@ public final class NodeUtilTest {
   public static final class IteratesImpureIterableTest {
 
     @Parameters(name = "{0} in \"{1}\"")
-    public static Iterable<Object[]> cases() {
+    public static ImmutableList<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             // ITER_SPREAD < ARRAYLIT
@@ -4745,7 +4745,7 @@ public final class NodeUtilTest {
   public static final class CanBeSideEffectedTest {
 
     @Parameters(name = "{0} in \"{1}\"")
-    public static Iterable<Object[]> cases() {
+    public static ImmutableList<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             // TODO: Expand test cases for more node types.

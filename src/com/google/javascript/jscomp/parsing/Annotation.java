@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 
 /** All natively recognized JSDoc annotations. */
 enum Annotation {
@@ -100,7 +99,7 @@ enum Annotation {
   TS_TYPE,
   WIZCALLBACK;
 
-  static final Map<String, Annotation> recognizedAnnotations =
+  static final ImmutableMap<String, Annotation> recognizedAnnotations =
       new ImmutableMap.Builder<String, Annotation>()
           .put("ngInject", Annotation.NG_INJECT)
           .put("abstract", Annotation.ABSTRACT)

@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -250,22 +249,23 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   }
 
   private static void removeDuplicates(Requirement.Builder requirement) {
-    final Set<String> list1 = ImmutableSet.copyOf(requirement.getWhitelistList());
+    final ImmutableSet<String> list1 = ImmutableSet.copyOf(requirement.getWhitelistList());
     requirement.clearWhitelist().addAllWhitelist(list1);
 
-    final Set<String> allowlist = ImmutableSet.copyOf(requirement.getAllowlistList());
+    final ImmutableSet<String> allowlist = ImmutableSet.copyOf(requirement.getAllowlistList());
     requirement.clearAllowlist().addAllAllowlist(allowlist);
 
-    final Set<String> list2 = ImmutableSet.copyOf(requirement.getWhitelistRegexpList());
+    final ImmutableSet<String> list2 = ImmutableSet.copyOf(requirement.getWhitelistRegexpList());
     requirement.clearWhitelistRegexp().addAllWhitelistRegexp(list2);
 
-    final Set<String> allowlistRegexp = ImmutableSet.copyOf(requirement.getAllowlistRegexpList());
+    final ImmutableSet<String> allowlistRegexp =
+        ImmutableSet.copyOf(requirement.getAllowlistRegexpList());
     requirement.clearAllowlistRegexp().addAllAllowlistRegexp(allowlistRegexp);
 
-    final Set<String> list3 = ImmutableSet.copyOf(requirement.getOnlyApplyToList());
+    final ImmutableSet<String> list3 = ImmutableSet.copyOf(requirement.getOnlyApplyToList());
     requirement.clearOnlyApplyTo().addAllOnlyApplyTo(list3);
 
-    final Set<String> list4 = ImmutableSet.copyOf(requirement.getOnlyApplyToRegexpList());
+    final ImmutableSet<String> list4 = ImmutableSet.copyOf(requirement.getOnlyApplyToRegexpList());
     requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 

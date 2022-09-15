@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.rhino.Node;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -1904,8 +1903,7 @@ public final class FunctionInjectorTest {
       String code, final String expectedResult,
       final String fnName, final InliningMode mode) {
     final Compiler compiler = new Compiler();
-    List<SourceFile> externsInputs = ImmutableList.of(
-        SourceFile.fromCode("externs", ""));
+    ImmutableList<SourceFile> externsInputs = ImmutableList.of(SourceFile.fromCode("externs", ""));
 
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());

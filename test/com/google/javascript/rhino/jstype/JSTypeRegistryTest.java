@@ -56,6 +56,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
@@ -66,7 +67,6 @@ import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
@@ -154,7 +154,7 @@ public class JSTypeRegistryTest {
     // Test that it takes one parameter of type
     // function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?
     FunctionType promiseCtor = promiseType.getConstructor();
-    List<FunctionType.Parameter> paramList = promiseCtor.getParameters();
+    ImmutableList<FunctionType.Parameter> paramList = promiseCtor.getParameters();
     assertThat(paramList).hasSize(1);
     FunctionType.Parameter firstParameter = paramList.get(0);
     FunctionType paramType = firstParameter.getJSType().toMaybeFunctionType();

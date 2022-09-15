@@ -2588,7 +2588,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void performFinalizations() {
-    List<PassFactory> finalizations = getPassConfig().getFinalizations().build();
+    ImmutableList<PassFactory> finalizations = getPassConfig().getFinalizations().build();
     if (finalizations.isEmpty()) {
       return;
     }

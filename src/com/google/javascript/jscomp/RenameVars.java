@@ -23,6 +23,7 @@ import static java.util.Comparator.comparingInt;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -68,7 +69,7 @@ final class RenameVars implements CompilerPass {
   @Nullable private final Map<Node, String> pseudoNameMap;
 
   /** Set of extern variable names */
-  private Set<String> externNames;
+  private ImmutableSet<String> externNames;
 
   /** Set of reserved variable names */
   private final Set<String> reservedNames;

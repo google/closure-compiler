@@ -4204,12 +4204,13 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
   public void testEs6ModuleEntryPoint() throws Exception {
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/index"));
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -4229,12 +4230,13 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
   public void testEs6ModuleEntryPointWithSquareBracketsInFilename() throws Exception {
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

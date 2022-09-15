@@ -30,7 +30,6 @@ import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1169,8 +1168,8 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   private static void assertVariableMapsEqual(VariableMap a, VariableMap b) {
-    Map<String, String> ma = a.getOriginalNameToNewNameMap();
-    Map<String, String> mb = b.getOriginalNameToNewNameMap();
+    ImmutableMap<String, String> ma = a.getOriginalNameToNewNameMap();
+    ImmutableMap<String, String> mb = b.getOriginalNameToNewNameMap();
     assertWithMessage("VariableMaps not equal").that(mb).isEqualTo(ma);
   }
 

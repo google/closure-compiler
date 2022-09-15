@@ -1262,7 +1262,7 @@ class InlineAndCollapseProperties implements CompilerPass {
      * Runs through all namespaces (prefixes of classes and enums), and checks if any of them have
      * been used in an unsafe way.
      */
-    private Set<Name> checkNamespaces() {
+    private ImmutableSet<Name> checkNamespaces() {
       ImmutableSet.Builder<Name> escaped = ImmutableSet.builder();
       HashSet<String> dynamicallyImportedModuleRefs = new HashSet<>(dynamicallyImportedModules);
       if (!dynamicallyImportedModules.isEmpty()) {

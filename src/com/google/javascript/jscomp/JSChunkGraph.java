@@ -515,7 +515,7 @@ public final class JSChunkGraph implements Serializable {
       throws MissingProvideException, MissingChunkException {
 
     // Make a copy since we're going to mutate the graph below.
-    List<CompilerInput> originalInputs = ImmutableList.copyOf(getAllInputs());
+    ImmutableList<CompilerInput> originalInputs = ImmutableList.copyOf(getAllInputs());
 
     SortedDependencies<CompilerInput> sorter = new SortedDependencies<>(originalInputs);
 
@@ -547,7 +547,7 @@ public final class JSChunkGraph implements Serializable {
     }
 
     // The order of inputs, sorted independently of chunks.
-    List<CompilerInput> absoluteOrder =
+    ImmutableList<CompilerInput> absoluteOrder =
         sorter.getStrongDependenciesOf(originalInputs, dependencyOptions.shouldSort());
 
     // Figure out which sources *must* be in each chunk.
@@ -620,7 +620,7 @@ public final class JSChunkGraph implements Serializable {
     checkNotNull(weakChunk);
     // Mark all sources that are detected as weak.
     if (dependencyOptions.shouldPrune()) {
-      List<CompilerInput> weakInputs = sorter.getSortedWeakDependenciesOf(orderedInputs);
+      ImmutableList<CompilerInput> weakInputs = sorter.getSortedWeakDependenciesOf(orderedInputs);
       for (CompilerInput i : weakInputs) {
         // Add weak inputs to the weak chunk in dependency order. moveMarkedWeakSources will move
         // in command line flag order.

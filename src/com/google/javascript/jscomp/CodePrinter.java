@@ -151,7 +151,7 @@ public final class CodePrinter {
      */
     void generateSourceMap(String code, SourceMap map) {
       if (createSrcMap) {
-        List<Integer> lineLengths = computeLineLengths(code);
+        ImmutableList<Integer> lineLengths = computeLineLengths(code);
         for (Mapping mapping : allMappings) {
           map.addMapping(
               mapping.node, mapping.start, adjustEndPosition(lineLengths, mapping.end));

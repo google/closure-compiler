@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -349,7 +350,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     public void visitScript(NodeTraversal t, Node script) {
       checkState(script.isScript());
       JSChunk chunk = t.getChunk();
-      List<JSChunk> chunkDependencies = chunk.getDependencies();
+      ImmutableList<JSChunk> chunkDependencies = chunk.getDependencies();
 
       crossChunkExports.putIfAbsent(chunk, new LinkedHashSet<>());
 

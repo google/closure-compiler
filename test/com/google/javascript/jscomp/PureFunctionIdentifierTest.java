@@ -626,7 +626,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testNoSideEffectsSimple() {
     String prefix = "function f(){";
     String suffix = "} f()";
-    List<String> expected = ImmutableList.of("f");
+    ImmutableList<String> expected = ImmutableList.of("f");
 
     assertPureCallsMarked(prefix + "" + suffix, expected);
     assertPureCallsMarked(prefix + "return 1" + suffix, expected);

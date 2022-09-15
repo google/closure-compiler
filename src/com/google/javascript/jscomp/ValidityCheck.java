@@ -15,8 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-import java.util.Set;
 
 /**
  * A compiler pass that verifies the structure of the AST conforms to a number of invariants.
@@ -94,7 +94,7 @@ class ValidityCheck implements CompilerPass {
   }
 
   private void checkExternProperties(Node externs) {
-    Set<String> externProperties = compiler.getExternProperties();
+    ImmutableSet<String> externProperties = compiler.getExternProperties();
     if (externProperties == null) {
       // GatherExternProperties hasn't run yet. Don't report a violation.
       return;

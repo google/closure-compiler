@@ -295,7 +295,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                 "",
                 "let /** symbol|!Bar|string */ x;"));
 
-    List<UnionTypeProto> unionsContainingUnions =
+    ImmutableList<UnionTypeProto> unionsContainingUnions =
         typePool.stream()
             .filter(TypeProto::hasUnion)
             .map(TypeProto::getUnion)

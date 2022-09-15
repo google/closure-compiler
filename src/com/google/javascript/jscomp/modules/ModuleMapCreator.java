@@ -217,7 +217,7 @@ public class ModuleMapCreator implements CompilerPass {
     // modification exception if we just iterated over unresolvedModules. So the first loop through
     // should resolve any "known" modules, and the second any "unrecognized" modules.
     do {
-      Set<String> toResolve =
+      ImmutableSet<String> toResolve =
           Sets.difference(unresolvedModules.keySet(), resolvedModules.keySet()).immutableCopy();
 
       for (String key : toResolve) {
@@ -232,7 +232,7 @@ public class ModuleMapCreator implements CompilerPass {
     } while (!resolvedModules.keySet().containsAll(unresolvedModules.keySet()));
 
     do {
-      Set<String> toResolve =
+      ImmutableSet<String> toResolve =
           Sets.difference(
                   unresolvedModulesByClosureNamespace.keySet(), resolvedClosureModules.keySet())
               .immutableCopy();

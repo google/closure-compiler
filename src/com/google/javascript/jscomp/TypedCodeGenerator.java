@@ -248,7 +248,7 @@ class TypedCodeGenerator extends CodeGenerator {
       StringBuilder sb, FunctionType funType, Node paramNode) {
     int minArity = funType.getMinArity();
     int maxArity = funType.getMaxArity();
-    List<FunctionType.Parameter> formals = funType.getParameters();
+    ImmutableList<FunctionType.Parameter> formals = funType.getParameters();
     for (int i = 0; i < formals.size(); i++) {
       sb.append(" * ");
       appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));

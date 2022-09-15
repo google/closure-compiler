@@ -107,7 +107,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * </pre>
      */
     void appendExtern(String path, Node valueToExport) {
-      List<String> pathPrefixes = computePathPrefixes(path);
+      ImmutableList<String> pathPrefixes = computePathPrefixes(path);
 
       for (int i = 0; i < pathPrefixes.size(); ++i) {
         String pathPrefix = pathPrefixes.get(i);

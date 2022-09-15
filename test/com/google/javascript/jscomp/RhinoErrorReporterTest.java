@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -134,9 +133,8 @@ public final class RhinoErrorReporterTest {
 
     options.setLanguageIn(languageIn);
 
-    List<SourceFile> externs = ImmutableList.of();
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("input", code));
+    ImmutableList<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("input", code));
     compiler.init(externs, inputs, options);
     compiler.parseInputs();
     return compiler;

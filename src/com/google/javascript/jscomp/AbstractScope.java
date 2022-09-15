@@ -149,7 +149,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     checkState(hasOwnSlot(name) || canDeclare(name), "Illegal shadow: %s", var.getNode());
 
     // For memory savings, only initialize the map once it needs to add its first element
-    Map<String, V> emptySentinel = ImmutableMap.of();
+    ImmutableMap<String, V> emptySentinel = ImmutableMap.of();
     if (vars == emptySentinel) {
       vars = Maps.newLinkedHashMapWithExpectedSize(1);
     }
@@ -189,7 +189,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     }
 
     // For memory savings, only initialize the map once it needs to add its first element
-    Map<ImplicitVar, V> emptySentinel = ImmutableMap.of();
+    ImmutableMap<ImplicitVar, V> emptySentinel = ImmutableMap.of();
     if (implicitVars == emptySentinel) {
       implicitVars = new EnumMap<>(ImplicitVar.class);
     }

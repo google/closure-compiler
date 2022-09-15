@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -372,7 +371,7 @@ class FunctionInjector {
     // no need to check for conflicts.
 
     // Create an argName -> expression map, checking for side effects.
-    Map<String, Node> argMap =
+    ImmutableMap<String, Node> argMap =
         functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.safeNameIdSupplier);
 

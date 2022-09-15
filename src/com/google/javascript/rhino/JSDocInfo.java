@@ -1298,7 +1298,7 @@ public class JSDocInfo implements Serializable {
     if (suppressions == null) {
       return ImmutableSet.of();
     }
-    Set<ImmutableSet<String>> nameSets = suppressions.keySet();
+    ImmutableSet<ImmutableSet<String>> nameSets = suppressions.keySet();
     Set<String> names = new LinkedHashSet<>();
     for (Set<String> nameSet : nameSets) {
       names.addAll(nameSet);

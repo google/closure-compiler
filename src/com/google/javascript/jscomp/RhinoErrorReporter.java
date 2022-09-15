@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Msg;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import org.jspecify.nullness.Nullable;
@@ -123,7 +122,7 @@ class RhinoErrorReporter {
               + "{0} assigned to template type {1} is not a subtype of bound {2}");
 
   // A map of Rhino messages to their DiagnosticType.
-  private static final Map<Pattern, DiagnosticType> typeMap =
+  private static final ImmutableMap<Pattern, DiagnosticType> typeMap =
       ImmutableMap.<Pattern, DiagnosticType>builder()
           // Trailing comma
           .put(

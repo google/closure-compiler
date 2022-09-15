@@ -67,7 +67,6 @@ import com.google.javascript.rhino.jstype.Visitor;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -1234,7 +1233,7 @@ class TypeValidator implements Serializable {
 
     @Override
     public Boolean caseTemplatizedType(TemplatizedType type) {
-      List<TemplateType> referencedTemplates =
+      ImmutableList<TemplateType> referencedTemplates =
           type.getReferencedType().getTemplateTypeMap().getTemplateKeys();
       for (int i = 0; i < type.getTemplateTypes().size(); i++) {
         JSType assignedType = type.getTemplateTypes().get(i);

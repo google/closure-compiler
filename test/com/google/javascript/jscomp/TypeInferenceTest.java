@@ -383,7 +383,7 @@ public final class TypeInferenceTest {
 
   /** Returns a record type with a field `fieldName` and JSType specified by `fieldType`. */
   private JSType createRecordType(String fieldName, JSType fieldType) {
-    Map<String, JSType> property = ImmutableMap.of(fieldName, fieldType);
+    ImmutableMap<String, JSType> property = ImmutableMap.of(fieldName, fieldType);
     return registry.createRecordType(property);
   }
 

@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
-import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -155,7 +154,7 @@ public class ConformanceAllowlisterTest {
     options.setCheckTypes(true);
     // TODO(bangert): Support banned property on OBJECT even if types are not checked.
     options.setChecksOnly(true);
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources, options);
     assertThat(result.success).isTrue();

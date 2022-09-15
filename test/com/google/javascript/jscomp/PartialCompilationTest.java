@@ -29,7 +29,6 @@ import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
@@ -173,7 +172,7 @@ public class PartialCompilationTest {
     assertWithMessage("type %s", x.getType()).that(x.getType().isUnionType()).isTrue();
     UnionType unionType = (UnionType) x.getType();
 
-    Collection<JSType> alternatives = unionType.getAlternates();
+    ImmutableList<JSType> alternatives = unionType.getAlternates();
     assertThat(alternatives).hasSize(3);
 
     int nullTypeCount = 0;

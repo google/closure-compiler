@@ -30,6 +30,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -140,7 +141,7 @@ public final class CommandLineRunnerTest {
                       "/** @param {...*} x */ function alert(x) {}",
                       "function Symbol() {}")));
 
-  private List<SourceFile> externs;
+  private ImmutableList<SourceFile> externs;
 
   @Before
   public void setUp() throws Exception {
@@ -1711,7 +1712,7 @@ public final class CommandLineRunnerTest {
     args.add("--source_map_input=input2|input2.sourcemap");
     testSame("var x = 3;");
 
-    Map<String, SourceMapInput> inputMaps = lastCompiler.getOptions().inputSourceMaps;
+    ImmutableMap<String, SourceMapInput> inputMaps = lastCompiler.getOptions().inputSourceMaps;
     assertThat(inputMaps).hasSize(2);
     assertThat(inputMaps.get("input1").getOriginalPath()).isEqualTo("input1.sourcemap");
     assertThat(inputMaps.get("input2").getOriginalPath()).isEqualTo("input2.sourcemap");

@@ -232,7 +232,7 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
 
     Set<String> jsDocParamNames = jsDoc.getParameterNames();
     List<String> astParamNames = getFunctionParamNamesOrPlaceholder(fnNode);
-    List<Parameter> fnTypeParams = fnType.getParameters();
+    ImmutableList<Parameter> fnTypeParams = fnType.getParameters();
 
     for (int paramIndex = 0; paramIndex < astParamNames.size(); paramIndex++) {
       String astName = astParamNames.get(paramIndex);

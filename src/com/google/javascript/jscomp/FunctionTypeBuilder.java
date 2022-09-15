@@ -97,7 +97,7 @@ final class FunctionTypeBuilder {
   private boolean isRecord = false;
   private boolean isAbstract = false;
   private boolean isKnownAmbiguous = false;
-  @Nullable private List<Parameter> parameters = null;
+  @Nullable private ImmutableList<Parameter> parameters = null;
   @Nullable private ClosurePrimitive closurePrimitiveId = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
   private ImmutableList<TemplateType> constructorTemplateTypeNames = ImmutableList.of();

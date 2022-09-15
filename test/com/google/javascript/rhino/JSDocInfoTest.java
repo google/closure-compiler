@@ -155,7 +155,7 @@ public class JSDocInfoTest {
     mockedModuleLocals.add("AnotherItem");
 
     JSTypeExpression newExpr = jsTypeExpression.replaceNamesWithUnknownType(mockedModuleLocals);
-    Set<String> replacedNames = newExpr.getAllTypeNames();
+    ImmutableSet<String> replacedNames = newExpr.getAllTypeNames();
     assertThat(replacedNames).doesNotContain("Item");
     assertThat(replacedNames).contains("string");
     assertThat(replacedNames).contains("boolean");
@@ -742,7 +742,7 @@ public class JSDocInfoTest {
     JSDocInfo info = builder.build();
 
     // Then
-    Collection<Node> upperBoundRoots =
+    ImmutableList<Node> upperBoundRoots =
         info.getTemplateTypes().values().stream()
             .map(JSTypeExpression::getRoot)
             .collect(toImmutableList());

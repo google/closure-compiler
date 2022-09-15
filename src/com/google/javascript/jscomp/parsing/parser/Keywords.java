@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.parsing.parser;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * The JavaScript keywords.
@@ -79,8 +78,8 @@ public enum Keywords {
     TRUE("true", TokenType.TRUE),
   FALSE("false", TokenType.FALSE);
 
-  private static final Map<String, Keywords> KEYWORDS_BY_NAME;
-  private static final Map<TokenType, Keywords> KEYWORDS_BY_TYPE;
+  private static final ImmutableMap<String, Keywords> KEYWORDS_BY_NAME;
+  private static final ImmutableMap<TokenType, Keywords> KEYWORDS_BY_TYPE;
 
   static {
     ImmutableMap.Builder<String, Keywords> keywordsByName = ImmutableMap.builder();

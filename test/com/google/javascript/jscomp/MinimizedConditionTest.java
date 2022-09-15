@@ -39,8 +39,7 @@ public final class MinimizedConditionTest {
 
   private static Node parseExpr(String code) {
     Compiler compiler = new Compiler();
-    List<SourceFile> input =
-        ImmutableList.of(SourceFile.fromCode("code", code));
+    ImmutableList<SourceFile> input = ImmutableList.of(SourceFile.fromCode("code", code));
     List<SourceFile> externs = new ArrayList<>();
     CompilerOptions options = new CompilerOptions();
     compiler.init(externs, input, options);

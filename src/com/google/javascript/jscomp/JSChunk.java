@@ -249,7 +249,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
    *
    * @return A list that may be empty but not null
    */
-  public List<CompilerInput> getInputs() {
+  public ImmutableList<CompilerInput> getInputs() {
     return ImmutableList.copyOf(inputs.values());
   }
 

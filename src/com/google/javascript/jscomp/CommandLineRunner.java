@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
@@ -988,7 +987,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       }
     }
 
-    private static final Multimap<String, String> categories =
+    private static final ImmutableMultimap<String, String> categories =
         new ImmutableMultimap.Builder<String, String>()
             .putAll(
                 "Basic Usage",
@@ -1689,7 +1688,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     // Handle --compilation_level=BUNDLE
-    List<String> bundleFiles = ImmutableList.of();
+    ImmutableList<String> bundleFiles = ImmutableList.of();
     boolean skipNormalOutputs = false;
     if (flags.compilationLevelParsed == CompilationLevel.BUNDLE) {
       if (flags.jsOutputFile.isEmpty()) {

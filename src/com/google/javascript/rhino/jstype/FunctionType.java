@@ -712,7 +712,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
             .withReturnType(isCall ? getReturnType() : getBindReturnType(-1))
             .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
 
-    List<Parameter> origParams = getInternalArrowType().getParameterList();
+    ImmutableList<Parameter> origParams = getInternalArrowType().getParameterList();
 
     List<Parameter> params = new ArrayList<>(origParams);
 
@@ -846,7 +846,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   /** Try to get the sup/inf of two functions by looking at the piecewise components. */
   @Nullable
   private FunctionType tryMergeFunctionPiecewise(FunctionType other, boolean leastSuper) {
-    List<Parameter> newParamsNode = null;
+    ImmutableList<Parameter> newParamsNode = null;
     if (new EqualityChecker()
         .setEqMethod(EqMethod.IDENTITY)
         .checkParameters(this.call, other.call)) {
@@ -1216,7 +1216,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       }
     }
     // retrieve all property types from its super class
-    Iterable<ObjectType> iterable = type.getExtendedInterfaces();
+    ImmutableList<ObjectType> iterable = type.getExtendedInterfaces();
     if (iterable != null) {
       for (ObjectType interfaceType : iterable) {
         FunctionType superConstructor = interfaceType.getConstructor();
@@ -1241,7 +1241,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
 
   @Nullable
   private List<FunctionType> checkExtendsLoop(Set<FunctionType> cache, List<FunctionType> path) {
-    Iterable<ObjectType> iterable = this.getExtendedInterfaces();
+    ImmutableList<ObjectType> iterable = this.getExtendedInterfaces();
     if (iterable != null) {
       for (ObjectType interfaceType : iterable) {
         FunctionType superConstructor = interfaceType.getConstructor();
@@ -1437,7 +1437,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     private JSType returnType = null;
     private JSType typeOfThis = null;
     private ObjectType setPrototypeBasedOn = null;
-    private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
+    private ImmutableSet<TemplateType> constructorOnlyKeys = ImmutableSet.of();
     private Kind kind = Kind.ORDINARY;
     private boolean isAbstract;
     private boolean isKnownAmbiguous = false;

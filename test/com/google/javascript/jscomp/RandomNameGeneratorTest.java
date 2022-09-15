@@ -69,7 +69,7 @@ public final class RandomNameGeneratorTest {
     // mocking Random to get nicer values. Instead, let's just try to
     // verify the sanity of the results.
     Random random = new Random(0);
-    Set<String> reservedNames = ImmutableSet.of();
+    ImmutableSet<String> reservedNames = ImmutableSet.of();
     String prefix = "prefix";
     int prefixLen = prefix.length();
     // Add a prefix to avoid dropping JavaScript keywords.
@@ -130,7 +130,7 @@ public final class RandomNameGeneratorTest {
   @Test
   public void testFirstCharAlphabet() throws Exception {
     Random random = new Random(0);
-    Set<String> reservedNames = ImmutableSet.of();
+    ImmutableSet<String> reservedNames = ImmutableSet.of();
     RandomNameGenerator ng = new RandomNameGenerator(
         reservedNames, "", null, random);
     // Generate all 1- and 2-character names.
@@ -162,7 +162,7 @@ public final class RandomNameGeneratorTest {
   @Test
   public void testPrefix() throws Exception {
     Random random = new Random(0);
-    Set<String> reservedNames = ImmutableSet.of();
+    ImmutableSet<String> reservedNames = ImmutableSet.of();
     String prefix = "prefix";
     RandomNameGenerator ng = new RandomNameGenerator(
         reservedNames, prefix, null, random);
@@ -183,7 +183,7 @@ public final class RandomNameGeneratorTest {
     // Using different seeds should return different names.
     Random random0 = new Random(0);
     Random random1 = new Random(1);
-    Set<String> reservedNames = ImmutableSet.of();
+    ImmutableSet<String> reservedNames = ImmutableSet.of();
     RandomNameGenerator ng0 = new RandomNameGenerator(
         reservedNames, "", null, random0);
     RandomNameGenerator ng1 = new RandomNameGenerator(
@@ -206,7 +206,7 @@ public final class RandomNameGeneratorTest {
   @Test
   public void testReservedNames() throws Exception {
     Random random = new Random(0);
-    Set<String> reservedNames = ImmutableSet.of("x", "ba");
+    ImmutableSet<String> reservedNames = ImmutableSet.of("x", "ba");
     RandomNameGenerator ng = new RandomNameGenerator(
         reservedNames, "", null, random);
     // Generate all 1- and 2-character names (and a couple 3-character names,
@@ -226,7 +226,7 @@ public final class RandomNameGeneratorTest {
   @Test
   public void testReservedCharacters() throws Exception {
     Random random = new Random(0);
-    Set<String> reservedNames = ImmutableSet.of();
+    ImmutableSet<String> reservedNames = ImmutableSet.of();
     RandomNameGenerator ng = new RandomNameGenerator(
         reservedNames, "", new char[]{'a', 'b'}, random);
     // Generate all 1- and 2-character names (and also many 3-character names,

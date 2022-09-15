@@ -31,7 +31,6 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Rewrites potential polyfill usages to use the hidden JSCompiler polyfills instead of the global.
@@ -95,7 +94,7 @@ class IsolatePolyfills implements CompilerPass {
   public void process(Node externs, Node root) {
     // Calculate the set of polyfills that are actually present in the AST. It may be a subset of
     // the potential polyfills which PolyfillFindingCallback finds (it's fine if it's a superset.)
-    Set<String> injectedPolyfills = findAllInjectedPolyfills();
+    ImmutableSet<String> injectedPolyfills = findAllInjectedPolyfills();
 
     List<PolyfillUsage> polyfillUsages = new ArrayList<>();
     new PolyfillUsageFinder(compiler, this.polyfills)

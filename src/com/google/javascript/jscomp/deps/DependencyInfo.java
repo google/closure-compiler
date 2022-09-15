@@ -175,7 +175,7 @@ public interface DependencyInfo {
       writeJsArray(out, info.getProvides());
       out.append(", ");
       writeJsArray(out, Require.asSymbolList(info.getRequires()));
-      Map<String, String> loadFlags = info.getLoadFlags();
+      ImmutableMap<String, String> loadFlags = info.getLoadFlags();
       if (!loadFlags.isEmpty()) {
         out.append(", ");
         writeJsObject(out, loadFlags);

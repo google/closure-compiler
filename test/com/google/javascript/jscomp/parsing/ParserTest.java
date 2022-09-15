@@ -2666,7 +2666,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     Node a = Node.newString(Token.NAME, "a");
     a.addChildToFront(Node.newString(Token.NAME, "b"));
-    List<ParserResult> testCases =
+    ImmutableList<ParserResult> testCases =
         ImmutableList.of(
             new ParserResult("3;", createScript(new Node(Token.EXPR_RESULT, Node.newNumber(3.0)))),
             new ParserResult("var a = b;", createScript(new Node(Token.VAR, a))));
@@ -7091,7 +7091,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testDynamicImport() {
-    List<String> dynamicImportUses =
+    ImmutableList<String> dynamicImportUses =
         ImmutableList.of(
             "import('foo')",
             "import('foo').then(function(a) { return a; })",
@@ -7120,7 +7120,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testAwaitDynamicImport() {
-    List<String> awaitDynamicImportUses =
+    ImmutableList<String> awaitDynamicImportUses =
         ImmutableList.of(
             "(async function() { return await import('foo'); })()",
             "(async function() { await import('foo').then(function(a) { return a; }); })()",

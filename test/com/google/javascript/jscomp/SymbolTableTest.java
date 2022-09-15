@@ -105,7 +105,7 @@ public final class SymbolTableTest {
     Symbol global = getGlobalVar(table, "*global*");
     assertThat(global).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(global);
+    ImmutableList<Reference> refs = table.getReferenceList(global);
     assertThat(refs).hasSize(1);
   }
 
@@ -117,7 +117,7 @@ public final class SymbolTableTest {
     Symbol global = getGlobalVar(table, "*global*");
     assertThat(global).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(global);
+    ImmutableList<Reference> refs = table.getReferenceList(global);
     assertThat(refs).isEmpty();
   }
 
@@ -128,7 +128,7 @@ public final class SymbolTableTest {
     Symbol global = getGlobalVar(table, "*global*");
     assertThat(global).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(global);
+    ImmutableList<Reference> refs = table.getReferenceList(global);
     assertThat(refs).hasSize(2);
   }
 
@@ -159,7 +159,7 @@ public final class SymbolTableTest {
     Symbol foo = getGlobalVar(table, "Foo");
     assertThat(foo).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(foo);
+    ImmutableList<Reference> refs = table.getReferenceList(foo);
     assertThat(refs).hasSize(2);
   }
 
@@ -167,7 +167,7 @@ public final class SymbolTableTest {
   public void testGlobalVarReferences() {
     SymbolTable table = createSymbolTable("/** @type {number} */ var x = 5; x = 6;");
     Symbol x = getGlobalVar(table, "x");
-    List<Reference> refs = table.getReferenceList(x);
+    ImmutableList<Reference> refs = table.getReferenceList(x);
 
     assertThat(refs).hasSize(2);
     assertThat(refs.get(0)).isEqualTo(x.getDeclaration());
@@ -179,7 +179,7 @@ public final class SymbolTableTest {
   public void testLocalVarReferences() {
     SymbolTable table = createSymbolTable("function f(x) { return x; }");
     Symbol x = getLocalVar(table, "x");
-    List<Reference> refs = table.getReferenceList(x);
+    ImmutableList<Reference> refs = table.getReferenceList(x);
 
     assertThat(refs).hasSize(2);
     assertThat(refs.get(0)).isEqualTo(x.getDeclaration());
@@ -198,7 +198,7 @@ public final class SymbolTableTest {
     Symbol t = table.getParameterInFunction(f, "this");
     assertThat(t).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(t);
+    ImmutableList<Reference> refs = table.getReferenceList(t);
     assertThat(refs).hasSize(2);
   }
 
@@ -239,7 +239,7 @@ public final class SymbolTableTest {
 
     Symbol objFn = getGlobalVar(table, "obj.fn");
     assertThat(objFn).isNotNull();
-    List<Reference> references = table.getReferenceList(objFn);
+    ImmutableList<Reference> references = table.getReferenceList(objFn);
     assertThat(references).hasSize(2);
 
     // The declaration node corresponds to "fn", not "fn() {}", in the source info.
@@ -666,7 +666,7 @@ public final class SymbolTableTest {
     SymbolTable table =
         createSymbolTable("customExternFn(1);", "function customExternFn(customExternArg) {}");
     Symbol fn = getGlobalVar(table, "customExternFn");
-    List<Reference> refs = table.getReferenceList(fn);
+    ImmutableList<Reference> refs = table.getReferenceList(fn);
     assertThat(refs).hasSize(3);
 
     SymbolScope scope = table.getEnclosingScope(refs.get(0).getNode());
@@ -678,7 +678,7 @@ public final class SymbolTableTest {
   public void testLocalVarInExterns() {
     SymbolTable table = createSymbolTable("", "function customExternFn(customExternArg) {}");
     Symbol arg = getLocalVar(table, "customExternArg");
-    List<Reference> refs = table.getReferenceList(arg);
+    ImmutableList<Reference> refs = table.getReferenceList(arg);
     assertThat(refs).hasSize(1);
 
     Symbol fn = getGlobalVar(table, "customExternFn");
@@ -840,7 +840,7 @@ public final class SymbolTableTest {
     Symbol prototype = getGlobalVar(table, "DomHelper.prototype");
     assertThat(prototype).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(prototype);
+    ImmutableList<Reference> refs = table.getReferenceList(prototype);
 
     // One of the refs is implicit in the declaration of the function.
     assertWithMessage(refs.toString()).that(refs).hasSize(2);
@@ -854,7 +854,7 @@ public final class SymbolTableTest {
     Symbol prototype = getGlobalVar(table, "Snork.prototype");
     assertThat(prototype).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(prototype);
+    ImmutableList<Reference> refs = table.getReferenceList(prototype);
     assertThat(refs).hasSize(2);
   }
 
@@ -864,7 +864,7 @@ public final class SymbolTableTest {
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     assertThat(fooPrototype).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(fooPrototype);
+    ImmutableList<Reference> refs = table.getReferenceList(fooPrototype);
     assertThat(refs).hasSize(1);
     assertThat(refs.get(0).getNode().getToken()).isEqualTo(Token.NAME);
 
@@ -882,7 +882,7 @@ public final class SymbolTableTest {
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     assertThat(fooPrototype).isNotNull();
 
-    List<Reference> refs = ImmutableList.copyOf(table.getReferences(fooPrototype));
+    ImmutableList<Reference> refs = ImmutableList.copyOf(table.getReferences(fooPrototype));
     assertThat(refs).hasSize(1);
     assertThat(refs.get(0).getNode().getToken()).isEqualTo(Token.GETPROP);
     assertThat(refs.get(0).getNode().getQualifiedName()).isEqualTo("Foo.prototype");
@@ -895,7 +895,7 @@ public final class SymbolTableTest {
     Symbol fooPrototype = getGlobalVar(table, "goog.Foo.prototype");
     assertThat(fooPrototype).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(fooPrototype);
+    ImmutableList<Reference> refs = table.getReferenceList(fooPrototype);
     assertThat(refs).hasSize(1);
     assertThat(refs.get(0).getNode().getToken()).isEqualTo(Token.GETPROP);
 
@@ -910,7 +910,7 @@ public final class SymbolTableTest {
     SymbolTable table = createSymbolTable(lines("class DomHelper { method() {} }"));
     Symbol prototype = getGlobalVar(table, "DomHelper.prototype");
     assertThat(prototype).isNotNull();
-    List<Reference> refs = table.getReferenceList(prototype);
+    ImmutableList<Reference> refs = table.getReferenceList(prototype);
 
     // The class declaration creates an implicit .prototype reference.
     assertWithMessage(refs.toString()).that(refs).hasSize(1);
@@ -933,7 +933,7 @@ public final class SymbolTableTest {
     Symbol foo = getGlobalVar(table, "Foo");
     assertThat(foo).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(foo);
+    ImmutableList<Reference> refs = table.getReferenceList(foo);
     assertThat(refs).hasSize(5);
 
     assertThat(refs.get(0).getNode().getLineno()).isEqualTo(1);
@@ -960,7 +960,7 @@ public final class SymbolTableTest {
     Symbol str = getGlobalVar(table, "String");
     assertThat(str).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(str);
+    ImmutableList<Reference> refs = table.getReferenceList(str);
 
     // We're going to pick up a lot of references from the externs,
     // so it's not meaningful to check the number of references.
@@ -995,7 +995,7 @@ public final class SymbolTableTest {
     Symbol foo = getGlobalVar(table, "goog.Foo");
     assertThat(foo).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(foo);
+    ImmutableList<Reference> refs = table.getReferenceList(foo);
     assertThat(refs).hasSize(5);
 
     assertThat(refs.get(0).getNode().getLineno()).isEqualTo(2);
@@ -1022,7 +1022,7 @@ public final class SymbolTableTest {
     Symbol x = getLocalVar(table, "x");
     assertThat(x).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(x);
+    ImmutableList<Reference> refs = table.getReferenceList(x);
     assertThat(refs).hasSize(2);
 
     assertThat(refs.get(0).getNode().getCharno()).isEqualTo(code.indexOf("x) {"));
@@ -1073,7 +1073,7 @@ public final class SymbolTableTest {
                 "goog.addSingletonGetter = function(x) {};"));
 
     Symbol method = getGlobalVar(table, "goog.addSingletonGetter");
-    List<Reference> refs = table.getReferenceList(method);
+    ImmutableList<Reference> refs = table.getReferenceList(method);
     assertThat(refs).hasSize(2);
 
     // Note that the declaration should show up second.
@@ -1119,14 +1119,14 @@ public final class SymbolTableTest {
     Symbol bCtor = getGlobalVar(table, "goog.B.prototype.constructor");
     assertThat(bCtor).isNotNull();
 
-    List<Reference> bRefs = table.getReferenceList(bCtor);
+    ImmutableList<Reference> bRefs = table.getReferenceList(bCtor);
     assertThat(bRefs).hasSize(2);
     assertThat(bCtor.getDeclaration().getNode().getLineno()).isEqualTo(11);
 
     Symbol cCtor = getGlobalVar(table, "goog.C.prototype.constructor");
     assertThat(cCtor).isNotNull();
 
-    List<Reference> cRefs = table.getReferenceList(cCtor);
+    ImmutableList<Reference> cRefs = table.getReferenceList(cCtor);
     assertThat(cRefs).hasSize(2);
     assertThat(cCtor.getDeclaration().getNode().getLineno()).isEqualTo(26);
   }
@@ -1219,7 +1219,7 @@ public final class SymbolTableTest {
     Symbol good = getGlobalVar(table, "a.b.BaseClass.prototype.doSomething");
     assertThat(good).isNotNull();
 
-    List<Reference> refs = table.getReferenceList(good);
+    ImmutableList<Reference> refs = table.getReferenceList(good);
     assertThat(refs).hasSize(2);
     assertThat(refs.get(1).getNode().getQualifiedName())
         .isEqualTo("a.b.DerivedClass.superClass_.doSomething");
@@ -1774,8 +1774,9 @@ public final class SymbolTableTest {
   }
 
   private SymbolTable createSymbolTable(String input, String externsCode) {
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
-    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", externsCode));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
+    ImmutableList<SourceFile> externs =
+        ImmutableList.of(SourceFile.fromCode("externs1", externsCode));
 
     Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.compile(externs, inputs, options);
@@ -1787,7 +1788,7 @@ public final class SymbolTableTest {
     for (int i = 0; i < inputs.length; i++) {
       sources.add(SourceFile.fromCode("file" + (i + 1) + ".js", inputs[i]));
     }
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.compile(externs, sources.build(), options);
@@ -1824,7 +1825,7 @@ public final class SymbolTableTest {
     assertThat(global.getDeclaration()).isNotNull();
     assertThat(global.getDeclaration().getNode().getToken()).isEqualTo(Token.SCRIPT);
 
-    List<Reference> globalRefs = table.getReferenceList(global);
+    ImmutableList<Reference> globalRefs = table.getReferenceList(global);
 
     // The main reference list should never contain the synthetic declaration
     // for the global root.

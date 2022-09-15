@@ -127,7 +127,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = 'goog-colorswatch-disabled'");
     test("setClass(goog.getCssName('active-buttonbar'))",
          "setClass('active-buttonbar')");
-    Map<String, Integer> expected =
+    ImmutableMap<String, Integer> expected =
         new ImmutableMap.Builder<String, Integer>()
             .put("goog", 2)
             .put("footer", 1)
@@ -162,7 +162,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = 'c'");
     test("setClass(goog.getCssName('elephant'))",
          "setClass('e')");
-    Map<String, Integer> expected =
+    ImmutableMap<String, Integer> expected =
         new ImmutableMap.Builder<String, Integer>()
             .put("buttonbar", 1)
             .put("colorswatch", 1)
@@ -183,7 +183,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = 'g-c-d'");
     test("setClass(goog.getCssName('active-buttonbar'))",
          "setClass('a-b')");
-    Map<String, Integer> expected =
+    ImmutableMap<String, Integer> expected =
         new ImmutableMap.Builder<String, Integer>()
             .put("goog", 2)
             .put("footer", 1)

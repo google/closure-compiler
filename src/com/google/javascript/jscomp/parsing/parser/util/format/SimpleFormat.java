@@ -509,7 +509,7 @@ public final class SimpleFormat {
   }
 
   private CharSequence transformFromBoolean() {
-    CharSequence result;
+    String result;
     if (arg instanceof Boolean) {
       result = arg.toString();
     } else if (arg == null) {
@@ -521,7 +521,7 @@ public final class SimpleFormat {
   }
 
   private CharSequence transformFromHashCode() {
-    CharSequence result;
+    String result;
     if (arg == null) {
       result = "null";
     } else {
@@ -531,7 +531,7 @@ public final class SimpleFormat {
   }
 
   private CharSequence transformFromString() {
-    CharSequence result = String.valueOf(arg);
+    String result = String.valueOf(arg);
     return padding(result, 0);
   }
 
@@ -560,7 +560,7 @@ public final class SimpleFormat {
     return padding("%", 0);
   }
 
-  private static CharSequence transformFromLineSeparator() {
+  private static String transformFromLineSeparator() {
     return "\n";
   }
 

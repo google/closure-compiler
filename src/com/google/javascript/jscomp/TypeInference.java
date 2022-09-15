@@ -2297,7 +2297,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> bindings =
+    ImmutableMap<TemplateType, JSType> bindings =
         new InvocationTemplateTypeMatcher(this.registry, fnType, scope.getTypeOfThis(), n).match();
     Map<TemplateType, JSType> inferred = new LinkedHashMap<>();
     for (TemplateType key : keys) {
@@ -2368,7 +2368,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         instantiatedType = instantiatedType.toMaybeTemplatizedType().getRawType();
       }
       // If necessary, templatized the instance type based on the the constructor parameters.
-      Map<TemplateType, JSType> inferredTypes =
+      ImmutableMap<TemplateType, JSType> inferredTypes =
           new InvocationTemplateTypeMatcher(this.registry, ctorFnType, scope.getTypeOfThis(), n)
               .match();
       instantiatedType =

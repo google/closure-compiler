@@ -54,7 +54,6 @@ import com.google.javascript.rhino.jstype.Property;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -1999,7 +1998,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      Collection<String> tagNames = getTagNames(n.getSecondChild());
+      ImmutableCollection<String> tagNames = getTagNames(n.getSecondChild());
       Node attrs = n.getChildAtIndex(2);
       JSType attrsType = attrs.getJSType();
 

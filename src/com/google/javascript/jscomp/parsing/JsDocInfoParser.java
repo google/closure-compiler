@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.ErrorReporter;
@@ -39,7 +40,6 @@ import com.google.javascript.rhino.TokenUtil;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -117,15 +117,15 @@ public final class JsDocInfoParser {
   @Nullable private JSDocInfo fileOverviewJSDocInfo = null;
   private State state;
 
-  private final Map<String, Annotation> annotations;
-  private final Set<String> suppressionNames;
-  private final Set<String> closurePrimitiveNames;
+  private final ImmutableMap<String, Annotation> annotations;
+  private final ImmutableSet<String> suppressionNames;
+  private final ImmutableSet<String> closurePrimitiveNames;
   private final boolean preserveWhitespace;
-  private static final Set<String> modifiesAnnotationKeywords =
+  private static final ImmutableSet<String> modifiesAnnotationKeywords =
       ImmutableSet.of("this", "arguments");
-  private static final Set<String> idGeneratorAnnotationKeywords =
+  private static final ImmutableSet<String> idGeneratorAnnotationKeywords =
       ImmutableSet.of("unique", "consistent", "stable", "mapped", "xid");
-  private static final Set<String> primitiveTypes =
+  private static final ImmutableSet<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
 
   @Nullable private String licenseText;

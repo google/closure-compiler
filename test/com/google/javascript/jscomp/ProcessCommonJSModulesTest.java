@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1003,7 +1002,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                 + " __WEBPACK_AMD_DEFINE_RESULT__$$module$test))",
             "})()"));
 
-    Map<String, String> webpackModulesById =
+    ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
             "1", "other.js",
             "yet_another.js", "yet_another.js",
@@ -1335,7 +1334,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testWebpackRequire() {
-    Map<String, String> webpackModulesById =
+    ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
             "1", "other.js",
             "2", "yet_another.js",
@@ -1354,7 +1353,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testWebpackRequireString() {
-    Map<String, String> webpackModulesById =
+    ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
             "1", "other.js",
             "yet_another.js", "yet_another.js",
@@ -1373,7 +1372,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testWebpackAMDModuleShim() {
-    Map<String, String> webpackModulesById =
+    ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
             "1", "test.js",
             "2", "/webpack/buildin/module.js");
@@ -1547,7 +1546,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testWebpackRequireNamespace() {
-    Map<String, String> webpackModulesById =
+    ImmutableMap<String, String> webpackModulesById =
         ImmutableMap.of(
             "1", "other.js",
             "yet_another.js", "yet_another.js",

@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
@@ -1009,7 +1010,7 @@ public abstract class CompilerTestCase {
     gatherExternPropertiesEnabled = true;
   }
 
-  protected final Set<String> getGatheredExternProperties() {
+  protected final ImmutableSet<String> getGatheredExternProperties() {
     checkState(this.gatherExternPropertiesEnabled, "Must enable gatherExternProperties");
     return lastCompiler.getExternProperties();
   }
@@ -1338,9 +1339,9 @@ public abstract class CompilerTestCase {
     List<SourceFile> inputs =
         (inputsObj instanceof FlatSources) ? ((FlatSources) inputsObj).sources : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
-    List<Diagnostic> expectedErrors =
+    ImmutableList<Diagnostic> expectedErrors =
         diagnostics.stream().filter(d -> d.level == CheckLevel.ERROR).collect(toImmutableList());
-    List<Diagnostic> expectedWarnings =
+    ImmutableList<Diagnostic> expectedWarnings =
         diagnostics.stream().filter(d -> d.level == CheckLevel.WARNING).collect(toImmutableList());
     checkState(
         expectedErrors.isEmpty() || expectedWarnings.isEmpty(),

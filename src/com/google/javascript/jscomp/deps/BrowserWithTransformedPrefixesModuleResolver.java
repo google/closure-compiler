@@ -23,6 +23,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
@@ -30,7 +31,6 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Comparator;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -90,7 +90,7 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
       PathEscaper pathEscaper,
       ImmutableMap<String, String> prefixReplacements) {
     super(modulePaths, moduleRootPaths, errorHandler, pathEscaper);
-    Set<PrefixReplacement> p =
+    ImmutableSortedSet<PrefixReplacement> p =
         prefixReplacements.entrySet().stream()
             .map(entry -> PrefixReplacement.of(entry.getKey(), entry.getValue()))
             .collect(

@@ -347,7 +347,7 @@ public final class UnionType extends JSType {
     }
 
     if (that.isUnionType()) {
-      List<JSType> thoseAlternates = that.toMaybeUnionType().getAlternates();
+      ImmutableList<JSType> thoseAlternates = that.toMaybeUnionType().getAlternates();
       for (int i = 0; i < thoseAlternates.size(); i++) {
         JSType otherAlternate = thoseAlternates.get(i);
         if (otherAlternate.isSubtypeOf(union)) {

@@ -43,10 +43,10 @@ import javax.annotation.Nullable;
 /** parser runner */
 public final class ParserRunner {
 
-  @Nullable private static Set<String> annotationNames = null;
-  @Nullable private static Set<String> suppressionNames = null;
-  @Nullable private static Set<String> reservedVars = null;
-  @Nullable private static Set<String> closurePrimitiveNames = null;
+  @Nullable private static ImmutableSet<String> annotationNames = null;
+  @Nullable private static ImmutableSet<String> suppressionNames = null;
+  @Nullable private static ImmutableSet<String> reservedVars = null;
+  @Nullable private static ImmutableSet<String> closurePrimitiveNames = null;
 
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}

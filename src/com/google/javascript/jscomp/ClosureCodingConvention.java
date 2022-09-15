@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
@@ -371,7 +370,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public ImmutableCollection<AssertionFunctionSpec> getAssertionFunctions() {
+  public ImmutableSet<AssertionFunctionSpec> getAssertionFunctions() {
     return ImmutableSet.<AssertionFunctionSpec>builder()
         .addAll(super.getAssertionFunctions())
         .add(
@@ -464,7 +463,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public ImmutableCollection<String> getIndirectlyDeclaredProperties() {
+  public ImmutableSet<String> getIndirectlyDeclaredProperties() {
     return indirectlyDeclaredProperties;
   }
 

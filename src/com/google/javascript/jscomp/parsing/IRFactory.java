@@ -225,7 +225,7 @@ class IRFactory {
           "yield");
 
   /** If non-null, use this set of keywords instead of TokenStream.isKeyword(). */
-  @Nullable private final Set<String> reservedKeywords;
+  @Nullable private final ImmutableSet<String> reservedKeywords;
 
   private final Set<Comment> parsedComments = new HashSet<>();
 
@@ -2278,7 +2278,7 @@ class IRFactory {
 
     private void checkParenthesizedExpression(ParenExpressionTree exprNode) {
       if (exprNode.expression.type == ParseTreeType.COMMA_EXPRESSION) {
-        List<ParseTree> commaNodes = exprNode.expression.asCommaExpression().expressions;
+        ImmutableList<ParseTree> commaNodes = exprNode.expression.asCommaExpression().expressions;
         ParseTree lastChild = Iterables.getLast(commaNodes);
         if (lastChild.type == ParseTreeType.ITER_REST) {
           errorReporter.error(

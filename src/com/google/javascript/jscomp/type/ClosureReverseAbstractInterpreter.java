@@ -29,7 +29,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Visitor;
-import java.util.Map;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -71,7 +70,7 @@ public final class ClosureReverseAbstractInterpreter extends ChainableReverseAbs
       };
 
   /** Functions used to restrict types. */
-  private final Map<String, Function<TypeRestriction, JSType>> restricters;
+  private final ImmutableMap<String, Function<TypeRestriction, JSType>> restricters;
 
   public ClosureReverseAbstractInterpreter(final JSTypeRegistry typeRegistry) {
     super(typeRegistry);

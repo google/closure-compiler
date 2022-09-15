@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
 /** An object type that is an instance of some function constructor. */
@@ -212,12 +213,12 @@ final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  public Iterable<ObjectType> getCtorImplementedInterfaces() {
+  public ImmutableList<ObjectType> getCtorImplementedInterfaces() {
     return getConstructor().getImplementedInterfaces();
   }
 
   @Override
-  public Iterable<ObjectType> getCtorExtendedInterfaces() {
+  public ImmutableList<ObjectType> getCtorExtendedInterfaces() {
     return getConstructor().getExtendedInterfaces();
   }
 

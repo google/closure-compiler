@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -166,7 +167,7 @@ final class InvocationTemplateTypeMatcher {
         if (argObjectType != null
             && !argObjectType.isUnknownType()
             && !argObjectType.isEmptyType()) {
-          Set<String> names = paramRecordType.getPropertyNames();
+          ImmutableSortedSet<String> names = paramRecordType.getPropertyNames();
           for (String name : names) {
             if (paramRecordType.hasOwnProperty(name) && argObjectType.hasProperty(name)) {
               this.matchTemplateTypesRecursive(

@@ -344,7 +344,7 @@ final class PolymerClassDefinition {
       ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
     }
 
-    List<MemberDefinition> properties =
+    ImmutableList<MemberDefinition> properties =
         PolymerPassStaticUtils.extractProperties(
             propertiesDescriptor, DefinitionType.ES6Class, compiler, constructor);
 

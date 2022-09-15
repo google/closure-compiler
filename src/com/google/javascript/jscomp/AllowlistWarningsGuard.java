@@ -82,7 +82,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
    *
    * @return known legacy warnings without line numbers.
    */
-  public static Set<String> normalizeAllowlist(Set<String> allowlist) {
+  public static ImmutableSet<String> normalizeAllowlist(Set<String> allowlist) {
     Set<String> result = new HashSet<>();
     for (String line : allowlist) {
       String trimmed = line.trim();

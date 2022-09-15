@@ -409,10 +409,11 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   public void testWriteMetaMap() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
-    List<SourceMapSection> appSections = ImmutableList.of(
-        SourceMapSection.forURL("src1", 0, 0),
-        SourceMapSection.forURL("src2", 100, 10),
-        SourceMapSection.forURL("src3", 150, 5));
+    ImmutableList<SourceMapSection> appSections =
+        ImmutableList.of(
+            SourceMapSection.forURL("src1", 0, 0),
+            SourceMapSection.forURL("src2", 100, 10),
+            SourceMapSection.forURL("src3", 150, 5));
 
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     generator.appendIndexMapTo(out, name, appSections);
@@ -458,10 +459,11 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   public void testWriteMetaMap2() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
-    List<SourceMapSection> appSections = ImmutableList.of(
-        // Map and URLs can be mixed.
-        SourceMapSection.forMap(getEmptyMapFor("./part.js"), 0, 0),
-        SourceMapSection.forURL("src2", 100, 10));
+    ImmutableList<SourceMapSection> appSections =
+        ImmutableList.of(
+            // Map and URLs can be mixed.
+            SourceMapSection.forMap(getEmptyMapFor("./part.js"), 0, 0),
+            SourceMapSection.forURL("src2", 100, 10));
 
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     generator.appendIndexMapTo(out, name, appSections);

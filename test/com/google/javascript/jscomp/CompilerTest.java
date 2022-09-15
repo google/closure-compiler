@@ -111,7 +111,7 @@ public final class CompilerTest {
 
   @Test
   public void testCyclicalDependencyInInputs() {
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("gin", "goog.provide('gin'); goog.require('tonic'); var gin = {};"),
             SourceFile.fromCode(
@@ -134,7 +134,7 @@ public final class CompilerTest {
 
   @Test
   public void testPrintExterns() {
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(SourceFile.fromCode("extern", "/** @externs */ function alert(x) {}"));
     CompilerOptions options = new CompilerOptions();
     options.setPreserveTypeAnnotations(true);
@@ -180,7 +180,7 @@ public final class CompilerTest {
                 normalize("../original/source.html"),
                 originalSourcePosition));
     String origSourceName = normalize("original/source.html");
-    List<SourceFile> originalSources =
+    ImmutableList<SourceFile> originalSources =
         ImmutableList.of(SourceFile.fromCode(origSourceName, "<div ng-show='foo()'>"));
 
     CompilerOptions options = new CompilerOptions();
@@ -450,7 +450,7 @@ public final class CompilerTest {
     options.setPrintInputDelimiter(true);
 
     String fileOverview = "/** @fileoverview Foo */";
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("i1", ""), SourceFile.fromCode("i2", fileOverview));
 
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
@@ -515,7 +515,7 @@ public final class CompilerTest {
   public void testNormalInputs() {
     CompilerOptions options = new CompilerOptions();
     Compiler compiler = new Compiler();
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("in1", ""), SourceFile.fromCode("in2", ""));
     compiler.compile(EMPTY_EXTERNS, inputs, options);
 
@@ -526,7 +526,7 @@ public final class CompilerTest {
 
   @Test
   public void testRebuildInputsFromModule() {
-    List<JSChunk> modules = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
+    ImmutableList<JSChunk> modules = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
     modules.get(0).add(SourceFile.fromCode("in1", ""));
     modules.get(1).add(SourceFile.fromCode("in2", ""));
 
@@ -564,7 +564,7 @@ public final class CompilerTest {
 
   @Test
   public void testFileoverviewTwice() {
-    List<SourceFile> input =
+    ImmutableList<SourceFile> input =
         ImmutableList.of(
             SourceFile.fromCode("foo", "/** @fileoverview */ var x; /** @fileoverview */ var y;"));
     assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
@@ -583,7 +583,7 @@ public final class CompilerTest {
   // Make sure we output license text even if followed by @fileoverview.
   @Test
   public void testImportantCommentAndOverviewDirectiveWarning() {
-    List<SourceFile> input =
+    ImmutableList<SourceFile> input =
         ImmutableList.of(
             SourceFile.fromCode(
                 "foo",
@@ -683,7 +683,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
@@ -700,7 +700,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
@@ -721,7 +721,7 @@ public final class CompilerTest {
   // Make sure we output license text even if followed by @fileoverview.
   @Test
   public void testLicenseAndOverviewDirectiveWarning() {
-    List<SourceFile> input =
+    ImmutableList<SourceFile> input =
         ImmutableList.of(
             SourceFile.fromCode(
                 "foo",
@@ -820,7 +820,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
@@ -841,7 +841,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1),
             SourceFile.fromCode("testcode2", js2),
@@ -860,7 +860,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
@@ -878,10 +878,10 @@ public final class CompilerTest {
 
   @Test
   public void testDefineOverriding1() {
-    List<String> defines =
+    ImmutableList<String> defines =
         ImmutableList.of(
             "COMPILED", "DEF_TRUE=true", "DEF_FALSE=false", "DEF_NUMBER=5.5", "DEF_STRING='bye'");
-    Map<String, Node> expected =
+    ImmutableMap<String, Node> expected =
         ImmutableMap.of(
             "COMPILED", new Node(Token.TRUE),
             "DEF_TRUE", new Node(Token.TRUE),
@@ -893,33 +893,33 @@ public final class CompilerTest {
 
   @Test
   public void testDefineOverriding2() {
-    List<String> defines = ImmutableList.of("DEF_STRING='='");
-    Map<String, Node> expected = ImmutableMap.of("DEF_STRING", Node.newString("="));
+    ImmutableList<String> defines = ImmutableList.of("DEF_STRING='='");
+    ImmutableMap<String, Node> expected = ImmutableMap.of("DEF_STRING", Node.newString("="));
     assertDefineOverrides(expected, defines);
   }
 
   @Test
   public void testDefineOverriding3() {
-    List<String> defines = ImmutableList.of("a.DEBUG");
-    Map<String, Node> expected = ImmutableMap.of("a.DEBUG", new Node(Token.TRUE));
+    ImmutableList<String> defines = ImmutableList.of("a.DEBUG");
+    ImmutableMap<String, Node> expected = ImmutableMap.of("a.DEBUG", new Node(Token.TRUE));
     assertDefineOverrides(expected, defines);
   }
 
   @Test
   public void testBadDefineOverriding1() {
-    List<String> defines = ImmutableList.of("DEF_STRING=");
+    ImmutableList<String> defines = ImmutableList.of("DEF_STRING=");
     assertCreateDefinesThrowsException(defines);
   }
 
   @Test
   public void testBadDefineOverriding2() {
-    List<String> defines = ImmutableList.of("=true");
+    ImmutableList<String> defines = ImmutableList.of("=true");
     assertCreateDefinesThrowsException(defines);
   }
 
   @Test
   public void testBadDefineOverriding3() {
-    List<String> defines = ImmutableList.of("DEF_STRING='''");
+    ImmutableList<String> defines = ImmutableList.of("DEF_STRING='''");
     assertCreateDefinesThrowsException(defines);
   }
 
@@ -937,7 +937,7 @@ public final class CompilerTest {
   static void assertDefineOverrides(Map<String, Node> expected, List<String> defines) {
     CompilerOptions options = new CompilerOptions();
     AbstractCommandLineRunner.createDefineReplacements(defines, options);
-    Map<String, Node> actual = options.getDefineReplacements();
+    ImmutableMap<String, Node> actual = options.getDefineReplacements();
 
     // equality of nodes compares by reference, so instead,
     // compare the maps manually using Node.checkTreeEqualsSilent
@@ -955,7 +955,7 @@ public final class CompilerTest {
   static Result test(String js, String expected, DiagnosticType error) {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     if (error == null) {
@@ -1004,7 +1004,7 @@ public final class CompilerTest {
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
 
     String js = "var goog, x; goog.exportSymbol('a', x);";
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(result.success).isTrue();
@@ -1021,7 +1021,7 @@ public final class CompilerTest {
     options.setGenerateExports(true);
 
     String js = "var goog; /** @export */ var a={};";
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(result.success).isTrue();
@@ -1122,7 +1122,7 @@ public final class CompilerTest {
         });
 
     String js = "var x = 1;";
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(before[0]).isTrue(); // should run these custom passes
@@ -1143,7 +1143,7 @@ public final class CompilerTest {
 
   @Test
   public void testExternsDependencySorting() {
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("leaf", "/** @fileoverview @typeSummary */ goog.require('beer');"),
             SourceFile.fromCode(
@@ -1154,7 +1154,7 @@ public final class CompilerTest {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.sortOnly());
 
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
 
@@ -1480,8 +1480,8 @@ public final class CompilerTest {
     options.setDoLateLocalization(true);
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    List<SourceFile> externs = ImmutableList.of();
-    List<SourceFile> srcs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> srcs = ImmutableList.of();
     compiler.init(externs, srcs, options);
 
     compiler.parse();
@@ -1691,7 +1691,7 @@ public final class CompilerTest {
 
   @Test
   public void testExternsDependencyPruning() {
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "unused", "/** @fileoverview @typeSummary */ goog.provide('unused');"),
@@ -1703,7 +1703,7 @@ public final class CompilerTest {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
 
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
 
@@ -1721,7 +1721,7 @@ public final class CompilerTest {
   // https://github.com/google/closure-compiler/issues/2692
   @Test
   public void testGoogNamespaceEntryPoint() throws Exception {
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/index.js",
@@ -1733,7 +1733,7 @@ public final class CompilerTest {
                     "foo('hello');")),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
-    List<ModuleIdentifier> entryPoints =
+    ImmutableList<ModuleIdentifier> entryPoints =
         ImmutableList.of(ModuleIdentifier.forClosure("goog:foobar"));
 
     CompilerOptions options = createNewFlagBasedOptions();
@@ -1741,7 +1741,7 @@ public final class CompilerTest {
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
     options.setProcessCommonJSModules(true);
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addAlert().buildExternsFile("default_externs.js"));
 
@@ -1757,16 +1757,17 @@ public final class CompilerTest {
   public void testEs6ModulePathWithOddCharacters() throws Exception {
     // Note that this is not yet compatible with transpilation, since the generated goog.provide
     // statements are not valid identifiers.
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addAlert().buildExternsFile("default_externs.js"));
 
@@ -1782,18 +1783,19 @@ public final class CompilerTest {
     // Test that you can specify externs as entry points.
     // This allows all inputs to be passed to the compiler under the --js flag,
     // relying on dependency management to sort out which ones are externs or weak files
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
             SourceFile.fromCode("/foo.js", "console.log(0);"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
@@ -1809,18 +1811,19 @@ public final class CompilerTest {
   public void testExternsFileAsEntryPoint2() throws Exception {
     // Test code reference to an extern that doesn't exist,
     // but the extern is still the sole entry point.
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
             SourceFile.fromCode("/foo.js", "console.log(nonexistentExtern);"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
@@ -1836,20 +1839,20 @@ public final class CompilerTest {
   public void testExternsFileAsEntryPoint3() throws Exception {
     // Test code reference to an extern that doesn't exist,
     // but the extern and source files are both entry points
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
             SourceFile.fromCode("/foo.js", "console.log(nonexistentExtern);"));
 
-    List<ModuleIdentifier> entryPoints =
+    ImmutableList<ModuleIdentifier> entryPoints =
         ImmutableList.of(
             ModuleIdentifier.forFile("/externs.js"), ModuleIdentifier.forFile("/foo.js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
@@ -1865,20 +1868,20 @@ public final class CompilerTest {
   public void testExternsFileAsEntryPoint4() throws Exception {
     // Test that has a code reference to an extern that does exist,
     // and the extern and source files are both entry points
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
             SourceFile.fromCode("/foo.js", "console.log(bar);"));
 
-    List<ModuleIdentifier> entryPoints =
+    ImmutableList<ModuleIdentifier> entryPoints =
         ImmutableList.of(
             ModuleIdentifier.forFile("/externs.js"), ModuleIdentifier.forFile("/foo.js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
@@ -1894,18 +1897,19 @@ public final class CompilerTest {
   public void testExternsFileAsEntryPoint5() throws Exception {
     // Test that has a code reference to an extern that does exist,
     // and only the source source file is an entry point
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/externs.js", "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;"),
             SourceFile.fromCode("/foo.js", "console.log(bar);"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/foo.js"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/foo.js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
@@ -1920,19 +1924,20 @@ public final class CompilerTest {
   @Test
   public void testWeakExternsFileAsEntryPointNoError() throws Exception {
     // Test that if a weak extern file is passed in as entry point, there is no error thrown.
-    List<SourceFile> inputs =
+    ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode(
                 "/externs.js",
                 "/** @fileoverview @externs */ /** @const {number} */ var bar = 1;",
                 SourceKind.WEAK));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
+    ImmutableList<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forFile("/externs.js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -2205,7 +2210,7 @@ public final class CompilerTest {
     options.setDependencyOptions(
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
@@ -2249,7 +2254,7 @@ public final class CompilerTest {
     options.setDependencyOptions(
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources.build(), options);
@@ -2294,7 +2299,7 @@ public final class CompilerTest {
     options.setDependencyOptions(
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("entry.js"))));
-    List<SourceFile> externs = ImmutableList.of();
+    ImmutableList<SourceFile> externs = ImmutableList.of();
 
     for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
       java.util.Collections.shuffle(sources);
@@ -2342,7 +2347,7 @@ public final class CompilerTest {
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
     Compiler compiler = new Compiler();
@@ -2387,7 +2392,7 @@ public final class CompilerTest {
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
     Compiler compiler = new Compiler();
@@ -2431,7 +2436,7 @@ public final class CompilerTest {
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
     Compiler compiler = new Compiler();
@@ -2449,9 +2454,9 @@ public final class CompilerTest {
 
   @Test
   public void testCodeReferenceToTypeImport() throws Exception {
-    List<SourceFile> externs =
+    ImmutableList<SourceFile> externs =
         ImmutableList.of(SourceFile.fromCode("extern.js", "/** @externs */ function alert(x) {}"));
-    List<SourceFile> sources =
+    ImmutableList<SourceFile> sources =
         ImmutableList.of(
             SourceFile.fromCode(
                 "type.js",
@@ -2485,7 +2490,7 @@ public final class CompilerTest {
 
   @Test
   public void testWeakSources() throws Exception {
-    List<SourceFile> sources =
+    ImmutableList<SourceFile> sources =
         ImmutableList.of(
             SourceFile.fromCode("weak1.js", "goog.provide('a');", SourceKind.WEAK),
             SourceFile.fromCode("strong1.js", "goog.provide('a.b');", SourceKind.STRONG),
@@ -2931,7 +2936,7 @@ public final class CompilerTest {
     options.setCheckTypes(false);
     Compiler compiler = new Compiler();
 
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
     compiler.init(ImmutableList.of(), inputs, options);
 
     compiler.parse();
@@ -2958,7 +2963,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
     compiler.init(ImmutableList.of(), inputs, options);
 
     compiler.parse();
@@ -2988,7 +2993,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
     compiler.init(ImmutableList.of(), inputs, options);
 
     compiler.parse();

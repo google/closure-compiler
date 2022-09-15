@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.SourceMap.DetailLevel;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.junit.Before;
@@ -290,7 +289,7 @@ public abstract class SourceMapTestCase {
 
     options.setChecksOnly(true);
 
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode(fileName1, js1));
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode(fileName1, js1));
 
     if (js2 != null && fileName2 != null) {
       inputs =

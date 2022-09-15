@@ -194,7 +194,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       String additionalInfo = "";
       if (requested instanceof UnresolvedGoogModule) {
         // Detect some edge cases and given more helpful error messages.
-        Map<String, Binding> exports = ((UnresolvedGoogModule) requested).namespace;
+        ImmutableMap<String, Binding> exports = ((UnresolvedGoogModule) requested).namespace;
         if (exports.containsKey(Export.NAMESPACE)) {
           // Can't use destructuring imports on a goog.module with a default export like
           //   exports = class {

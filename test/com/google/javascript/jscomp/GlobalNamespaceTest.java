@@ -40,7 +40,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import java.util.Collection;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -531,9 +530,9 @@ public final class GlobalNamespaceTest {
     Name foo = namespace.getOwnSlot("Foo");
     Name bar = namespace.getOwnSlot("Bar");
     Name baz = namespace.getOwnSlot("Baz");
-    Collection<Ref> originalFooRefs = ImmutableList.copyOf(foo.getRefs());
-    Collection<Ref> originalBarRefs = ImmutableList.copyOf(bar.getRefs());
-    Collection<Ref> originalBazRefs = ImmutableList.copyOf(baz.getRefs());
+    ImmutableList<Ref> originalFooRefs = ImmutableList.copyOf(foo.getRefs());
+    ImmutableList<Ref> originalBarRefs = ImmutableList.copyOf(bar.getRefs());
+    ImmutableList<Ref> originalBazRefs = ImmutableList.copyOf(baz.getRefs());
 
     // Rescan all of the nodes for which we got refs as if they were newly added
     Node root = lastCompiler.getJsRoot();

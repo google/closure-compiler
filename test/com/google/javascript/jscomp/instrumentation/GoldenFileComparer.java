@@ -115,8 +115,8 @@ public class GoldenFileComparer {
    */
   public static void compileAndCompareSubsetOfActualToExpected(
       String goldenFileName, CompilerOptions options, String sourceFileName) throws Exception {
-    List<SourceFile> sourceFiles = ImmutableList.of(readSource(sourceFileName));
-    List<SourceFile> externsFiles = ImmutableList.of();
+    ImmutableList<SourceFile> sourceFiles = ImmutableList.of(readSource(sourceFileName));
+    ImmutableList<SourceFile> externsFiles = ImmutableList.of();
     String compiledSource = compile(externsFiles, sourceFiles, options);
     String goldenSource = readFile(toFullPath(goldenFileName));
 
@@ -144,8 +144,8 @@ public class GoldenFileComparer {
    */
   public static void compileAndCompare(
       String goldenFileName, CompilerOptions options, String sourceFileName) throws Exception {
-    List<SourceFile> sourceFiles = ImmutableList.of(readSource(sourceFileName));
-    List<SourceFile> externsFiles = ImmutableList.of();
+    ImmutableList<SourceFile> sourceFiles = ImmutableList.of(readSource(sourceFileName));
+    ImmutableList<SourceFile> externsFiles = ImmutableList.of();
     compileAndCompare(goldenFileName, options, sourceFiles, externsFiles);
   }
 
@@ -161,10 +161,10 @@ public class GoldenFileComparer {
       String externsFileName)
       throws Exception {
     // Prepare sources
-    List<SourceFile> sourceFiles =
+    ImmutableList<SourceFile> sourceFiles =
         ImmutableList.of(readSource(sourceFileName1), readSource(sourceFileName2));
 
-    List<SourceFile> externsFiles =
+    ImmutableList<SourceFile> externsFiles =
         ImmutableList.of(SourceFile.fromFile(toFullPath(externsFileName)));
 
     compileAndCompare(goldenFileName, options, sourceFiles, externsFiles);

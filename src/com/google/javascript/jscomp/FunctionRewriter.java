@@ -58,11 +58,13 @@ class FunctionRewriter implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    List<Reducer> reducers = ImmutableList.of(new ReturnConstantReducer(),
-                                              new GetterReducer(),
-                                              new SetterReducer(),
-                                              new EmptyFunctionReducer(),
-                                              new IdentityReducer());
+    ImmutableList<Reducer> reducers =
+        ImmutableList.of(
+            new ReturnConstantReducer(),
+            new GetterReducer(),
+            new SetterReducer(),
+            new EmptyFunctionReducer(),
+            new IdentityReducer());
 
     Multimap<Reducer, Reduction> reductionMap = HashMultimap.create();
 

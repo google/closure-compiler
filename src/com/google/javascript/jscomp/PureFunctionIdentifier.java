@@ -497,7 +497,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   /** Set no side effect property at pure-function call sites. */
   private void markPureFunctionCalls() {
     for (Node callNode : allFunctionCalls) {
-      List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(callNode);
+      ImmutableList<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(callNode);
 
       // Default to side effects, non-local results
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
@@ -1030,7 +1030,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return;
       }
 
-      List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(invocation);
+      ImmutableList<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(invocation);
       if (calleeSummaries.isEmpty()) {
         callerInfo.setMutatesGlobalStateAndAllOtherFlags();
         return;

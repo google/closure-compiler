@@ -19,13 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,7 +64,7 @@ public final class CompilerOptionsTest {
     options.setDefineToNumberLiteral("threeVar", 3);
     options.setDefineToStringLiteral("strVar", "str");
 
-    Map<String, Node> actual = options.getDefineReplacements();
+    ImmutableMap<String, Node> actual = options.getDefineReplacements();
     assertEquivalent(new Node(Token.TRUE), actual.get("trueVar"));
     assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
     assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
@@ -117,7 +117,7 @@ public final class CompilerOptionsTest {
     options =
         CompilerOptions.deserialize(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
 
-    Map<String, Node> actual = options.getDefineReplacements();
+    ImmutableMap<String, Node> actual = options.getDefineReplacements();
     assertEquivalent(new Node(Token.TRUE), actual.get("trueVar"));
     assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
     assertEquivalent(Node.newNumber(3), actual.get("threeVar"));

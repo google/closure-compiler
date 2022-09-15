@@ -35,7 +35,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -535,7 +534,7 @@ class TypeTransformation {
 
     // Otherwise obtain the elements in the union type. Note that the block
     // above guarantees the casting to be safe
-    Collection<JSType> unionElms = ImmutableList.copyOf(unionType.getUnionMembers());
+    ImmutableList<JSType> unionElms = ImmutableList.copyOf(unionType.getUnionMembers());
     // Evaluate the map function body using each element in the union type
     int unionSize = unionElms.size();
     JSType[] newUnionElms = new JSType[unionSize];

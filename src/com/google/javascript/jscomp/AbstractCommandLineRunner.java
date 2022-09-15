@@ -198,7 +198,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   @Nullable
   @GwtIncompatible("Unnecessary")
-  private Map<String, String> parsedModuleOutputFiles = null;
+  private ImmutableMap<String, String> parsedModuleOutputFiles = null;
 
   @GwtIncompatible("Unnecessary")
   private final Gson gson;
@@ -323,7 +323,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       ArrayList<FlagEntry<CheckLevel>> warningGuards,
       DiagnosticGroups diagnosticGroups) {
     if (warningGuards != null) {
-      final Set<String> groupNames = DiagnosticGroups.getRegisteredGroups().keySet();
+      final ImmutableSet<String> groupNames = DiagnosticGroups.getRegisteredGroups().keySet();
       for (FlagEntry<CheckLevel> entry : warningGuards) {
         if ("*".equals(entry.value)) {
           for (String groupName : groupNames) {

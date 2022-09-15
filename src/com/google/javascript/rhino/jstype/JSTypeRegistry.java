@@ -967,7 +967,7 @@ public final class JSTypeRegistry {
     if (slot == null) {
       return null;
     }
-    List<String> componentNames =
+    ImmutableList<String> componentNames =
         ImmutableList.copyOf(Iterables.skip(DOT_SPLITTER.split(qualifiedName), 1));
     JSType slotType = slot.getType();
     return resolveViaPropertyGivenSlot(slotType, null, componentNames);
@@ -1626,7 +1626,7 @@ public final class JSTypeRegistry {
    */
   public JSType createFunctionTypeWithInstanceType(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
-    List<FunctionType.Parameter> paramsNode =
+    ImmutableList<FunctionType.Parameter> paramsNode =
         createParameters(parameterTypes.toArray(new JSType[0]));
     return FunctionType.builder(this)
         .withParameters(paramsNode)

@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +32,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
 
   private ImmutableMap<String, String> prefixReplacements;
   private ResolutionMode moduleResolutionMode;
-  private List<String> moduleRoots;
+  private ImmutableList<String> moduleRoots;
 
   @Override
   @Before

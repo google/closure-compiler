@@ -20,13 +20,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -287,7 +287,7 @@ final class PolyfillUsageFinder {
         // e.g. `obj.includes(x)` could be a usage of `Array.prototype.includes` or
         // `String.prototype.includes`.
         final String propertyName = getPropNode.getString();
-        Collection<Polyfill> methodPolyfills = polyfills.methods.get(propertyName);
+        ImmutableCollection<Polyfill> methodPolyfills = polyfills.methods.get(propertyName);
         // Note that we use ".foo" as the guard check for methods to keep them distinct in case
         // there is also a static "foo" polyfill.
         if (!methodPolyfills.isEmpty()

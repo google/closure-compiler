@@ -58,17 +58,13 @@ import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /** Named groups of DiagnosticTypes exposed by Compiler. */
 public class DiagnosticGroups {
   static final DiagnosticType UNUSED = DiagnosticType.warning("JSC_UNUSED", "{0}");
 
-  public static final Set<String> wildcardExcludedGroups =
-      ImmutableSet.of(
-          "reportUnknownTypes",
-          "analyzerChecks",
-          "missingSourcesWarnings");
+  public static final ImmutableSet<String> wildcardExcludedGroups =
+      ImmutableSet.of("reportUnknownTypes", "analyzerChecks", "missingSourcesWarnings");
 
   public DiagnosticGroups() {}
 

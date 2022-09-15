@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
@@ -63,7 +64,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final Set<String> crossModuleNames = new HashSet<>();
   /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new HashSet<>();
-  private Set<String> externNames;
+
+  private ImmutableSet<String> externNames;
 
   /**
    * Constructor for the RescopeGlobalSymbols compiler pass.

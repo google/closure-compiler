@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.lint;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -132,7 +133,7 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
 
   private void checkCanonical(NodeTraversal t) {
     @Nullable
-    List<String> canonicalProvides =
+    ImmutableList<String> canonicalProvides =
         originalProvides.stream().distinct().sorted().collect(toImmutableList());
     if (!originalProvides.equals(canonicalProvides)) {
       needsFix = true;
