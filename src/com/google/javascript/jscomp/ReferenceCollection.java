@@ -50,7 +50,7 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
    * before it's assigned. It just means that we don't have enough information to make a definitive
    * judgment.
    */
-  protected boolean isWellDefined() {
+  boolean isWellDefined() {
     int size = references.size();
     if (size == 0) {
       return false;

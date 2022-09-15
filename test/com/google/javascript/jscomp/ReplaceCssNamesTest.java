@@ -84,7 +84,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     };
   }
 
-  protected CssRenamingMap getPartialMap() {
+  CssRenamingMap getPartialMap() {
     return new CssRenamingMap.ByPart() {
       @Override
       public String get(String value) {
@@ -93,7 +93,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     };
   }
 
-  protected CssRenamingMap getFullMap() {
+  CssRenamingMap getFullMap() {
     return new CssRenamingMap.ByWhole() {
       @Override public String get(String value) {
         return replacementMapFull.get(value);

@@ -37,7 +37,7 @@ import org.jspecify.nullness.Nullable;
  */
 public final class LinkedUndirectedGraph<N, E>
     extends UndiGraph<N, E> implements GraphvizGraph {
-  protected final Map<N, LinkedUndirectedGraphNode<N, E>> nodes = new LinkedHashMap<>();
+  final Map<N, LinkedUndirectedGraphNode<N, E>> nodes = new LinkedHashMap<>();
 
   @Override
   public SubGraph<N, E> newSubGraph() {
@@ -51,8 +51,7 @@ public final class LinkedUndirectedGraph<N, E>
   private final boolean useNodeAnnotations;
   private final boolean useEdgeAnnotations;
 
-  protected LinkedUndirectedGraph(
-      boolean useNodeAnnotations, boolean useEdgeAnnotations) {
+  LinkedUndirectedGraph(boolean useNodeAnnotations, boolean useEdgeAnnotations) {
     this.useNodeAnnotations = useNodeAnnotations;
     this.useEdgeAnnotations = useEdgeAnnotations;
   }

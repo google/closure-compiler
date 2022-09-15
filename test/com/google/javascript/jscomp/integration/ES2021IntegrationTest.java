@@ -35,7 +35,7 @@ import org.junit.runners.JUnit4;
 public final class ES2021IntegrationTest extends IntegrationTestCase {
 
   /** Creates a CompilerOptions object with google coding conventions. */
-  protected CompilerOptions createCompilerOptions() {
+  CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setDevMode(DevMode.EVERY_PASS);

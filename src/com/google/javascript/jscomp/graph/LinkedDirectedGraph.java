@@ -457,7 +457,7 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
   /** A directed graph node with annotations. */
   static final class AnnotatedLinkedDiGraphNode<N, E> extends LinkedDiGraphNode<N, E> {
 
-    protected Annotation annotation;
+    Annotation annotation;
 
     /** @param nodeValue Node's value. */
     private AnnotatedLinkedDiGraphNode(N nodeValue) {
@@ -572,7 +572,7 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
   /** A directed graph edge that stores the source and destination nodes at each edge. */
   static final class AnnotatedLinkedDiGraphEdge<N, E> extends LinkedDiGraphEdge<N, E> {
 
-    protected Annotation annotation;
+    Annotation annotation;
 
     /**
      * Constructor.
