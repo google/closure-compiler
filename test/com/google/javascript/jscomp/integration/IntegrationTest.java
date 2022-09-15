@@ -4513,4 +4513,53 @@ public final class IntegrationTest extends IntegrationTestCase {
             "})"),
         DiagnosticGroups.CHECK_TYPES);
   }
+
+  @Test
+  public void forceClassTranspilationKeepAsync_withNoTranspile() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+    options.setForceClassTranspilation(true);
+
+    // test transpiling classes but leave async functions untranspiled
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        lines(
+            "const i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
+            "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
+  public void forceClassTranspilationKeepAsyncFunctions_withEs2021Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setForceClassTranspilation(true);
+
+    // test transpiling classes but leave async functions untranspiled
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        lines(
+            "const i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
+            "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
+  public void forceClassTranspilationKeepDestructuring_withEs2015Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setForceClassTranspilation(true);
+
+    // check that we can transpile the ES2016 `**` + classes, but leave the ES2015 destructuring
+    // parameter behind.
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { f({num}) { return num ** 3; } }",
+        lines(
+            "const i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = function({num}) { return Math.pow(num, 3); };",
+            "window['C'] = i0$classdecl$var0"));
+  }
 }

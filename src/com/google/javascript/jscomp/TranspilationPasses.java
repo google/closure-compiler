@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -65,7 +64,7 @@ public class TranspilationPasses {
   public static void addEarlyOptimizationTranspilationPasses(
       PassListBuilder passes, CompilerOptions options) {
 
-    // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
+    // Note that we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
     // However, RegExp features are not transpiled, and this does not imply that we allow arbitrary
     // selection of features to transpile.  They still must be done in chronological order based on.
@@ -118,7 +117,7 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.maybeAdd(rewriteObjectSpread);
-      if (!options.needsTranspilationFrom(ES2015)
+      if (!options.needsTranspilationOf(Feature.OBJECT_DESTRUCTURING)
           && options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
         // We only need to transpile away object destructuring that uses `...`, rather than
         // all destructuring.
@@ -143,9 +142,12 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteExponentialOperator);
     }
 
-    // TODO(lharker): break up this if block into individual Feature conditions
-    // as CompilerOptions.getOutputFeatureSet() may include some but not all ES2015 features
-    if (options.needsTranspilationFrom(ES2015)) {
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(
+            Feature.BINARY_LITERALS,
+            Feature.OCTAL_LITERALS,
+            Feature.REGEXP_FLAG_U,
+            Feature.REGEXP_FLAG_Y))) {
       // Binary and octal literals are effectively transpiled by the parser.
       // There's no transpilation we can do for the new regexp flags.
       passes.maybeAdd(
@@ -155,23 +157,52 @@ public class TranspilationPasses {
               Feature.OCTAL_LITERALS,
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
+    }
 
+    if (options.needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
       passes.maybeAdd(es6NormalizeShorthandProperties);
+    }
+    if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6RewriteClassExtends);
       passes.maybeAdd(es6ConvertSuper);
+    }
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
       passes.maybeAdd(es6RenameVariablesInParamLists);
       passes.maybeAdd(es6SplitVariableDeclarations);
       passes.maybeAdd(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
+    }
+    if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
       passes.maybeAdd(rewriteNewDotTarget);
+    }
+    if (options.needsTranspilationOf(Feature.ARROW_FUNCTIONS)) {
       passes.maybeAdd(es6RewriteArrowFunction);
+    }
+    if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6ExtractClasses);
       passes.maybeAdd(es6RewriteClass);
+    }
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS))) {
       passes.maybeAdd(es6RewriteRestAndSpread);
+    }
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(
+            Feature.COMPUTED_PROPERTIES, Feature.MEMBER_DECLARATIONS, Feature.TEMPLATE_LITERALS))) {
       passes.maybeAdd(lateConvertEs6ToEs3);
+    }
+    if (options.needsTranspilationOf(Feature.FOR_OF)) {
       passes.maybeAdd(es6ForOf);
+    }
+    if (options.needsTranspilationOf(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
       passes.maybeAdd(rewriteBlockScopedFunctionDeclaration);
+    }
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS))) {
       passes.maybeAdd(rewriteBlockScopedDeclaration);
+    }
+    if (options.needsTranspilationOf(Feature.GENERATORS)) {
       passes.maybeAdd(rewriteGenerators);
     }
   }

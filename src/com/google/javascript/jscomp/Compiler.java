@@ -344,6 +344,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void initOptions(CompilerOptions options) {
     this.options = options;
     this.setFeatureSet(options.getLanguageIn().toFeatureSet());
+    if (options.getForceClassTranspilation()) {
+      options.setOutputFeatureSet(
+          options
+              .getOutputFeatureSet()
+              .without(
+                  Feature.CLASSES,
+                  Feature.CLASS_EXTENDS,
+                  Feature.CLASS_GETTER_SETTER,
+                  Feature.PUBLIC_CLASS_FIELDS,
+                  Feature.CLASS_STATIC_BLOCK,
+                  Feature.NEW_TARGET));
+    }
     if (errorManager == null) {
       if (this.outStream == null) {
         setErrorManager(new LoggerErrorManager(createMessageFormatter(), logger));

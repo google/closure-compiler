@@ -127,6 +127,19 @@ public class CompilerOptions implements Serializable {
   /** The JavaScript features that are allowed to be in the output. */
   private Optional<FeatureSet> outputFeatureSet = Optional.absent();
 
+  /**
+   * Causes classes to always be removed from the output featureset if present previously.
+   *
+   * <pre>{@code
+   * For targets that set `options.setForceClassTranspilation(true)`:
+   * - if they already set <= ES5 output, no change
+   * - if they set >= ES6 output, then { force transpile classes + rewrite ESModules +
+   * isolatePolyfills + rewritePolyfills}
+   *
+   * }</pre>
+   */
+  private boolean forceClassTranspilation = false;
+
   private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
 
   /** The builtin set of externs to be used */
@@ -1827,6 +1840,14 @@ public class CompilerOptions implements Serializable {
 
     // Backwards compatibility for those that predate language out.
     return languageIn.toFeatureSet();
+  }
+
+  public void setForceClassTranspilation(boolean forceClassTranspilation) {
+    this.forceClassTranspilation = forceClassTranspilation;
+  }
+
+  public boolean getForceClassTranspilation() {
+    return forceClassTranspilation;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {
