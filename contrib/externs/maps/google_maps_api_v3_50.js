@@ -173,7 +173,7 @@ google.maps.Circle.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this circle is displayed.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.Circle.prototype.getMap = function() {};
 
@@ -215,7 +215,7 @@ google.maps.Circle.prototype.setEditable = function(editable) {};
 /**
  * Renders the circle on the specified map. If map is set to <code>null</code>,
  * the circle will be removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.Circle.prototype.setMap = function(map) {};
@@ -4334,6 +4334,14 @@ google.maps.LatLngBounds.prototype.toUrlValue = function(precision) {};
 google.maps.LatLngBounds.prototype.union = function(other) {};
 
 /**
+ * LatLngBounds for the max bounds of the Earth. These bounds will encompass the
+ * entire globe.
+ * @const
+ * @type {!google.maps.LatLngBounds}
+ */
+google.maps.LatLngBounds.MAX_BOUNDS;
+
+/**
  * Object literals are accepted in place of <code>LatLngBounds</code> objects
  * throughout the API. These are automatically converted to
  * <code>LatLngBounds</code> objects. All <code>south</code>, <code>west</code>,
@@ -7043,7 +7051,7 @@ google.maps.Rectangle.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this rectangle is displayed.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.Rectangle.prototype.getMap = function() {};
 
@@ -7078,7 +7086,7 @@ google.maps.Rectangle.prototype.setEditable = function(editable) {};
 /**
  * Renders the rectangle on the specified map. If map is set to
  * <code>null</code>, the rectangle will be removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.Rectangle.prototype.setMap = function(map) {};
