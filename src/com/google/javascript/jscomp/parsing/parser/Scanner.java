@@ -248,7 +248,7 @@ public class Scanner {
   }
 
   private boolean isValidIndex(int index) {
-    return index >= 0 & index < contentsLength;
+    return index >= 0 && index < contentsLength;
   }
 
   // 7.2 White Space
