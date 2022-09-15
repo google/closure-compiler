@@ -583,9 +583,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   @SuppressWarnings("unused")
-  private static void appendFieldEnd(Appendable out)
-     throws IOException {
-  }
+  private static void appendFieldEnd(Appendable out) {}
 
   /**
    * Assigns sequential ids to used mappings, and returns the last line mapped.

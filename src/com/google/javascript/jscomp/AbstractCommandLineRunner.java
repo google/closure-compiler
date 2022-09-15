@@ -840,8 +840,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * @param inputs A list of JS file paths, not null
    * @return An array of module objects
    */
-  public static List<JSChunk> createJsModules(List<JsChunkSpec> specs, List<CompilerInput> inputs)
-      throws IOException {
+  public static List<JSChunk> createJsModules(List<JsChunkSpec> specs, List<CompilerInput> inputs) {
     checkState(specs != null);
     checkState(!specs.isEmpty());
     checkState(inputs != null);
@@ -2022,7 +2021,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   /** Create a writer with the legacy output charset. */
   @GwtIncompatible("Unnecessary")
-  private Writer streamToLegacyOutputWriter(OutputStream stream) throws IOException {
+  private Writer streamToLegacyOutputWriter(OutputStream stream) {
     if (legacyOutputCharset == null) {
       return createWriter(stream, UTF_8);
     } else {

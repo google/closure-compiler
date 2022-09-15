@@ -69,7 +69,7 @@ final class JSCompZipFileCache {
           .build(
               new CacheLoader<String, CachedZipFile>() {
                 @Override
-                public CachedZipFile load(String key) throws IOException {
+                public CachedZipFile load(String key) {
                   return new CachedZipFile(key);
                 }
               });

@@ -120,7 +120,7 @@ public final class Linter {
     lint(Paths.get(filename), new Compiler(System.out));
   }
 
-  void lint(Path path, Compiler compiler) throws IOException {
+  void lint(Path path, Compiler compiler) {
     SourceFile file = SourceFile.fromFile(path.toString());
     compiler.setPassConfig(new LintPassConfig(options));
     compiler.disableThreads();

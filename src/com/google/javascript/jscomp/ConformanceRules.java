@@ -972,8 +972,7 @@ public final class ConformanceRules {
 
     /** Extracts the method name from a provided name. */
     @Nullable
-    private static String getPropertyFromDeclarationName(String specName)
-        throws InvalidRequirementSpec {
+    private static String getPropertyFromDeclarationName(String specName) {
       String[] parts = specName.split("\\.prototype\\.");
       checkState(parts.length == 1 || parts.length == 2);
       if (parts.length == 2) {
@@ -984,8 +983,7 @@ public final class ConformanceRules {
 
     /** Extracts the class name from a provided name. */
     @Nullable
-    private static String getClassFromDeclarationName(String specName)
-        throws InvalidRequirementSpec {
+    private static String getClassFromDeclarationName(String specName) {
       String tmp = specName;
       String[] parts = tmp.split("\\.prototype\\.");
       checkState(parts.length == 1 || parts.length == 2);

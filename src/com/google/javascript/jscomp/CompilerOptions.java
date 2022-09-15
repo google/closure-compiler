@@ -3347,7 +3347,7 @@ public class CompilerOptions implements Serializable {
   }
 
   @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(ObjectOutputStream out) throws IOException, ClassNotFoundException {
+  private void writeObject(ObjectOutputStream out) throws IOException {
     out.defaultWriteObject();
     out.writeObject(outputCharset == null ? null : outputCharset.name());
   }
