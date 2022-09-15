@@ -2769,14 +2769,14 @@ public class CompilerOptions implements Serializable {
   /** Serializes compiler options to a stream. */
   @GwtIncompatible("ObjectOutputStream")
   public void serialize(OutputStream objectOutputStream) throws IOException {
-    new java.io.ObjectOutputStream(objectOutputStream).writeObject(this);
+    new ObjectOutputStream(objectOutputStream).writeObject(this);
   }
 
   /** Deserializes compiler options from a stream. */
   @GwtIncompatible("ObjectInputStream")
   public static CompilerOptions deserialize(InputStream objectInputStream)
       throws IOException, ClassNotFoundException {
-    return (CompilerOptions) new java.io.ObjectInputStream(objectInputStream).readObject();
+    return (CompilerOptions) new ObjectInputStream(objectInputStream).readObject();
   }
 
   public void setStrictMessageReplacement(boolean strictMessageReplacement) {

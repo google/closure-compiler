@@ -2302,7 +2302,7 @@ public final class CompilerTest {
     ImmutableList<SourceFile> externs = ImmutableList.of();
 
     for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
-      java.util.Collections.shuffle(sources);
+      Collections.shuffle(sources);
       Compiler compiler = new Compiler();
       Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
       assertThat(result.success).isTrue();

@@ -27,6 +27,7 @@ import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
@@ -551,8 +552,7 @@ public final class CodingConventions {
 
       if (callTarget.isGetProp() && callTarget.getString().equals("bind")) {
         Node maybeFn = callTarget.getFirstChild();
-        com.google.javascript.rhino.jstype.JSType maybeFnType =
-            maybeFn.getJSType();
+        JSType maybeFnType = maybeFn.getJSType();
         FunctionType fnType = null;
         if (iCheckTypes && maybeFnType != null) {
           fnType = maybeFnType.restrictByNotNullOrUndefined()

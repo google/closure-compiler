@@ -768,7 +768,7 @@ public final class RenameVarsTest extends CompilerTestCase {
       makeVariableMap("Foo", "z", "Bar", "z");
       testSame("");
       throw new AssertionError();
-    } catch (java.lang.IllegalArgumentException expected) {
+    } catch (IllegalArgumentException expected) {
     }
   }
 
