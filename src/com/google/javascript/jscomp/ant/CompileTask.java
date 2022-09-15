@@ -41,9 +41,9 @@ import com.google.javascript.jscomp.SourceMap.PrefixLocationMapping;
 import com.google.javascript.jscomp.WarningLevel;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -409,7 +409,7 @@ public final class CompileTask
   }
 
   private void flushSourceMap(SourceMap sourceMap) {
-    try (FileWriter out = new FileWriter(sourceMapOutputFile)) {
+    try (Writer out = Files.newWriter(sourceMapOutputFile, UTF_8)) {
       sourceMap.appendTo(out, outputFile.getName());
     } catch (IOException e) {
       throw new BuildException("Cannot write sourcemap to file.", e);
