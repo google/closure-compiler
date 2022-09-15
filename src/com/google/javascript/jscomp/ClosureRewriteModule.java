@@ -338,7 +338,7 @@ final class ClosureRewriteModule implements CompilerPass {
           return true;
 
         case NAME:
-          preprocessExportDeclaration(n);
+          preprocessExportDeclaration(t, n);
           return true;
 
         default:
@@ -393,7 +393,7 @@ final class ClosureRewriteModule implements CompilerPass {
           break;
 
         case GETPROP:
-          if (isExportPropertyAssignment(n)) {
+          if (isExportPropertyAssignment(t, n)) {
             recordExportsPropertyAssignment(t, n);
           }
           break;
@@ -473,7 +473,7 @@ final class ClosureRewriteModule implements CompilerPass {
           break;
 
         case GETPROP:
-          if (isExportPropertyAssignment(n)) {
+          if (isExportPropertyAssignment(t, n)) {
             updateExportsPropertyAssignment(n, t);
           }
           break;
@@ -500,7 +500,7 @@ final class ClosureRewriteModule implements CompilerPass {
           maybeUpdateTopLevelName(t, n);
           maybeUpdateExportDeclaration(t, n);
           t.getScope(); // Creating the scope here has load-bearing side-effects.
-          maybeUpdateExportNameRef(n);
+          maybeUpdateExportNameRef(t, n);
           break;
 
         case SCRIPT:
@@ -812,10 +812,8 @@ final class ClosureRewriteModule implements CompilerPass {
    * to exports.Foo = Foo; exports.Bar = Bar; This makes the module exports into a more standard
    * format for later passes.
    */
-  private void preprocessExportDeclaration(Node n) {
-    if (!n.getString().equals("exports")
-        || !isAssignTarget(n)
-        || !n.getGrandparent().isExprResult()) {
+  private void preprocessExportDeclaration(NodeTraversal t, Node n) {
+    if (!isGoogModuleExportsRef(t, n) || !isAssignTarget(n) || !n.getGrandparent().isExprResult()) {
       return;
     }
 
@@ -1008,7 +1006,7 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   private void maybeRecordExportDeclaration(NodeTraversal t, Node n) {
-    if (!currentScript.isModule || !n.getString().equals("exports") || !isAssignTarget(n)) {
+    if (!currentScript.isModule || !isGoogModuleExportsRef(t, n) || !isAssignTarget(n)) {
       return;
     }
 
@@ -1394,7 +1392,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
   /** In module "foo.Bar", rewrite "exports = Bar" to "var module$exports$foo$Bar = Bar". */
   private void maybeUpdateExportDeclaration(NodeTraversal t, Node n) {
-    if (!currentScript.isModule || !n.getString().equals("exports") || !isAssignTarget(n)) {
+    if (!currentScript.isModule || !isGoogModuleExportsRef(t, n) || !isAssignTarget(n)) {
       return;
     }
 
@@ -1446,8 +1444,8 @@ final class ClosureRewriteModule implements CompilerPass {
     return;
   }
 
-  private void maybeUpdateExportNameRef(Node n) {
-    if (!currentScript.isModule || !"exports".equals(n.getString()) || n.getParent() == null) {
+  private void maybeUpdateExportNameRef(NodeTraversal t, Node n) {
+    if (!currentScript.isModule || !isGoogModuleExportsRef(t, n) || n.getParent() == null) {
       return;
     }
     if (n.getParent().isParamList()) {
@@ -1819,15 +1817,28 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   /**
+   * Returns whether this is a) a reference to the name "exports" and b) based on scoping, actually
+   * refers to the implicit goog.module exports object.
+   */
+  private static boolean isGoogModuleExportsRef(NodeTraversal t, Node target) {
+    if (!target.isName() || !target.matchesName("exports")) {
+      return false;
+    }
+    Var exportsVar = t.getScope().getVar("exports");
+    // note: exportsVar may be null for third-party code using UMD patterns like
+    //   if ("object"==typeof exports) { [...]
+    // and if null, is not in a goog.module => not a goog.module exports var
+    return exportsVar != null && exportsVar.isGoogModuleExports();
+  }
+
+  /**
    * @return Whether the getprop is used as an assignment target, and that target represents a
    *     module export. Note: that "export.name = value" is an export, while "export.name.foo =
    *     value" is not (it is an assignment to a property of an exported value).
    */
-  private static boolean isExportPropertyAssignment(Node n) {
+  private static boolean isExportPropertyAssignment(NodeTraversal t, Node n) {
     Node target = n.getFirstChild();
-    return (isAssignTarget(n) || isTypedefTarget(n))
-        && target.isName()
-        && target.getString().equals("exports");
+    return (isAssignTarget(n) || isTypedefTarget(n)) && isGoogModuleExportsRef(t, target);
   }
 
   private static boolean isAssignTarget(Node n) {

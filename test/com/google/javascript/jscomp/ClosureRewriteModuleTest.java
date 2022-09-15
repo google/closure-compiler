@@ -1754,6 +1754,52 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExport_initializedWithVar() {
+    test(
+        // TODO(lharker): should `var exports = ...` be banned?
+        lines(
+            "goog.module('ns.a');", //
+            "/** @suppress {checkTypes} */",
+            // this statement causes a "type mismatch" error
+            "var exports = {};"),
+        lines(
+            "/** @const */ var module$exports$ns$a = {};",
+            "/** @suppress {checkTypes} */",
+            "var module$contents$ns$a_exports = {};"));
+  }
+
+  @Test
+  public void testExport_dontMangleLocalVariableNamedExports() {
+    test(
+        lines(
+            "goog.module('ns.a');",
+            "",
+            "function f(exports, a) {",
+            // test the various syntactic froms of doing goog.module exports
+            "  exports.prop = 0;",
+            "  exports = {a};",
+            "  exports = function() {};",
+            "  if (true) {",
+            "    const exports = {};",
+            "  }",
+            "  return exports;",
+            "}"),
+        lines(
+            "/** @const */",
+            "var module$exports$ns$a = {};",
+            "",
+            "function module$contents$ns$a_f(exports, a) {",
+            "  exports.prop = 0;",
+            "  exports = {a};",
+            "  exports = function() {};",
+            "  if (true) {",
+            "    const exports = {};",
+            "  }",
+            "  return exports;",
+            "}"));
+  }
+
+  @Test
   public void testExportEnhancedObjectLiteral() {
     test(
         lines("goog.module('ns.a');", "class Something {}", "exports = { Something };"),
