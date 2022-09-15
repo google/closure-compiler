@@ -158,7 +158,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
    * Determines both what to do when visiting a node and how to determine the context for its
    * descendents.
    */
-  private abstract class LexicalContext {
+  private abstract static class LexicalContext {
     final Node contextRootNode;
 
     LexicalContext(Node contextRootNode) {

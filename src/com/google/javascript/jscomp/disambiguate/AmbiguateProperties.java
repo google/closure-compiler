@@ -299,10 +299,10 @@ public class AmbiguateProperties implements CompilerPass {
   }
 
   /**
-   * A {@link SubGraph} that represents properties. The related types of
-   * the properties are used to efficiently calculate adjacency information.
+   * A {@link SubGraph} that represents properties. The related types of the properties are used to
+   * efficiently calculate adjacency information.
    */
-  class PropertySubGraph implements SubGraph<Property, Void> {
+  static class PropertySubGraph implements SubGraph<Property, Void> {
     /** Types related to properties referenced in this subgraph. */
     final BitSet relatedTypes = new BitSet();
 

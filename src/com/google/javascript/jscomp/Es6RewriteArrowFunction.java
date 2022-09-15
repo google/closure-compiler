@@ -162,7 +162,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
    * They can't be immutable because a context isn't fully defined by a single node (`super()` makes
    * this hard).
    */
-  private class ThisAndArgumentsContext {
+  private static class ThisAndArgumentsContext {
     final Node scopeBody;
     final boolean isConstructor;
     @Nullable Node lastSuperStatement = null; // Last statement in the body that refers to super().

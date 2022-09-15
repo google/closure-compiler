@@ -40,7 +40,7 @@ public final class GuardedCallbackTest extends CompilerTestCase {
    * Replaces all guarded name and property references with "GUARDED_NAME" and "GUARDED_PROP",
    * respectively.
    */
-  private class GuardSwitchingCallback extends GuardedCallback<String> {
+  private static class GuardSwitchingCallback extends GuardedCallback<String> {
 
     GuardSwitchingCallback(AbstractCompiler compiler) {
       super(compiler);
