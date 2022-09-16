@@ -961,6 +961,15 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + " optimizations that could break code that did those things.")
     private boolean assumeStaticInheritanceIsNotUsed = true;
 
+    @Option(
+        name = "--assume_no_prototype_method_enumeration",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Assume that prototype method enumeration is not being used. This allows the compiler "
+                + "to move a prototype method declaration into a deeper chunk without creating "
+                + "stub functions in a parent chunk.")
+    private boolean assumeNoPrototypeMethodEnumeration = false;
+
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -2016,6 +2025,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setAllowDynamicImport(flags.allowDynamicImport);
     options.setDynamicImportAlias(flags.dynamicImportAlias);
     options.setAssumeStaticInheritanceIsNotUsed(flags.assumeStaticInheritanceIsNotUsed);
+    options.setCrossChunkCodeMotionNoStubMethods(flags.assumeNoPrototypeMethodEnumeration);
 
     if (flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
       if (flags.renamePrefixNamespace != null) {
