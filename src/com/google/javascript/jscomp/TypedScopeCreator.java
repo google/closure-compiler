@@ -777,7 +777,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           markGoogModuleExportsAsConst(moduleBody);
           break;
         case ES6_MODULE:
-          Map<Node, ScopedName> unresolvedImports =
+          ImmutableMap<Node, ScopedName> unresolvedImports =
               moduleImportResolver.declareEsModuleImports(
                   this.getModule(),
                   currentScope,

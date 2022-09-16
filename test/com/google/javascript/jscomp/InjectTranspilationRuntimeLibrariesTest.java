@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,61 +63,61 @@ public class InjectTranspilationRuntimeLibrariesTest {
 
   @Test
   public void testEmptyInjected() {
-    Set<String> injected = parseAndRunInjectionPass("");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("");
 
     assertThat(injected).isEmpty();
   }
 
   @Test
   public void testMakeIteratorAndObjectAssignInjectedForObjectPatternRest() {
-    Set<String> injected = parseAndRunInjectionPass("const {a, ...rest} = something();");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("const {a, ...rest} = something();");
     assertThat(injected).containsExactly("es6/util/makeiterator", "es6/object/assign");
   }
 
   @Test
   public void testObjectAssignInjectedForObjectSpread() {
-    Set<String> injected = parseAndRunInjectionPass("const obj = {a, ...rest};");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("const obj = {a, ...rest};");
     assertThat(injected).containsExactly("es6/object/assign");
   }
 
   @Test
   public void testForOf_injectsMakeIterator() {
-    Set<String> injected = parseAndRunInjectionPass("for (x of []) {}");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("for (x of []) {}");
 
     assertThat(injected).containsExactly("es6/util/makeiterator");
   }
 
   @Test
   public void testArrayPattern_injectsMakeIterator() {
-    Set<String> injected = parseAndRunInjectionPass("var [a] = [];");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("var [a] = [];");
 
     assertThat(injected).containsExactly("es6/util/makeiterator");
   }
 
   @Test
   public void testObjectPattern_injectsNothing() {
-    Set<String> injected = parseAndRunInjectionPass("var {a} = {};");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("var {a} = {};");
 
     assertThat(injected).isEmpty();
   }
 
   @Test
   public void testArrayPatternRest_injectsArrayFromIterator() {
-    Set<String> injected = parseAndRunInjectionPass("var [...a] = [];");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("var [...a] = [];");
 
     assertThat(injected).containsExactly("es6/util/makeiterator", "es6/util/arrayfromiterator");
   }
 
   @Test
   public void testArrayPatternRest_injectsExecuteAsyncFunctionSupport() {
-    Set<String> injected = parseAndRunInjectionPass("async function foo() {}");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("async function foo() {}");
 
     assertThat(injected).containsExactly("es6/execute_async_generator");
   }
 
   @Test
   public void testTaggedTemplateFirstArgCreaterInjected() {
-    Set<String> injected = parseAndRunInjectionPass("function tag(...a) {}; tag`hello`;");
+    ImmutableSet<String> injected = parseAndRunInjectionPass("function tag(...a) {}; tag`hello`;");
     assertThat(injected)
         .containsExactly("es6/util/createtemplatetagfirstarg", "es6/util/restarguments");
   }

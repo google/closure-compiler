@@ -1207,7 +1207,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
       nameMap = checkNotNull(namespace, "namespace was not initialized").getNameIndex();
       List<Name> globalNames = namespace.getNameForest();
-      Set<Name> escaped = checkNamespaces();
+      ImmutableSet<Name> escaped = checkNamespaces();
       for (Name name : globalNames) {
         flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
         // We collapse property definitions after collapsing property references

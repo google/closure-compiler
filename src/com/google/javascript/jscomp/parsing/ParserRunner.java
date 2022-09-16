@@ -90,12 +90,12 @@ public final class ParserRunner {
         .build();
   }
 
-  public static Set<String> getReservedVars() {
+  public static ImmutableSet<String> getReservedVars() {
     initResourceConfig();
     return reservedVars;
   }
 
-  public static Set<String> getSuppressionNames() {
+  public static ImmutableSet<String> getSuppressionNames() {
     initResourceConfig();
     return suppressionNames;
   }

@@ -52,7 +52,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 
   /** The set of allowlisted warnings, same format as {@code formatWarning}. */
-  private final Set<String> allowlist;
+  private final ImmutableSet<String> allowlist;
 
   /** Pattern to match line number in error descriptions. */
   private static final Pattern LINE_NUMBER = Pattern.compile(":-?\\d+");

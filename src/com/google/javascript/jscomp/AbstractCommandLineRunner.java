@@ -2378,7 +2378,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
   void printBundleTo(JSChunk module, Appendable out) throws IOException {
-    Iterable<CompilerInput> inputs = module.getInputs();
+    ImmutableList<CompilerInput> inputs = module.getInputs();
     // Prebuild ASTs before they're needed in getLoadFlags, for performance and because
     // StackOverflowErrors can be hit if not prebuilt.
     if (compiler.getOptions().numParallelThreads > 1) {

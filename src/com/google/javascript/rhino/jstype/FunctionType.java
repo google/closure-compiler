@@ -194,7 +194,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
         case INTERFACE:
           InstanceObjectType.Builder typeOfThisBuilder = InstanceObjectType.builderForCtor(this);
 
-          Set<TemplateType> ctorKeys = builder.constructorOnlyKeys;
+          ImmutableSet<TemplateType> ctorKeys = builder.constructorOnlyKeys;
           if (!ctorKeys.isEmpty()) {
             typeOfThisBuilder
                 .setTemplateTypeMap(this.templateTypeMap.copyWithoutKeys(ctorKeys))

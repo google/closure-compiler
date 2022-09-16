@@ -2362,7 +2362,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public String toSource(final JSChunk module) {
     return runInCompilerThread(
         () -> {
-          List<CompilerInput> inputs = module.getInputs();
+          ImmutableList<CompilerInput> inputs = module.getInputs();
           int numInputs = inputs.size();
           if (numInputs == 0) {
             return "";
@@ -2488,7 +2488,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public String[] toSourceArray(final JSChunk module) {
     return runInCompilerThread(
         () -> {
-          List<CompilerInput> inputs = module.getInputs();
+          ImmutableList<CompilerInput> inputs = module.getInputs();
           int numInputs = inputs.size();
           if (numInputs == 0) {
             return new String[0];
@@ -3127,7 +3127,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return firstInput.getAstRoot(this);
     }
 
-    List<CompilerInput> moduleInputs = module.getInputs();
+    ImmutableList<CompilerInput> moduleInputs = module.getInputs();
     if (!moduleInputs.isEmpty()) {
       return checkNotModule(
           moduleInputs.get(0).getAstRoot(this), "Cannot insert code into a module");
