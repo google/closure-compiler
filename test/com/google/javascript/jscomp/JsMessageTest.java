@@ -29,6 +29,30 @@ import org.junit.runners.JUnit4;
 public final class JsMessageTest {
 
   @Test
+  public void testIsLowerCamelCaseWithNumericSuffixes() {
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("name")).isTrue();
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("NAME")).isFalse();
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("Name")).isFalse();
+
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("a4Letter")).isTrue();
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("A4_LETTER")).isFalse();
+
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("startSpan_1_23")).isTrue();
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("startSpan_1_23b")).isFalse();
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23")).isFalse();
+
+    assertThat(JsMessage.isLowerCamelCaseWithNumericSuffixes("")).isFalse();
+  }
+
+  @Test
+  public void testToLowerCamelCaseWithNumericSuffixes() {
+    assertThat(JsMessage.toLowerCamelCaseWithNumericSuffixes("NAME")).isEqualTo("name");
+    assertThat(JsMessage.toLowerCamelCaseWithNumericSuffixes("A4_LETTER")).isEqualTo("a4Letter");
+    assertThat(JsMessage.toLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23"))
+        .isEqualTo("startSpan_1_23");
+  }
+
+  @Test
   public void testIsEmpty() {
     assertThat(newTestMessageBuilder("MSG_KEY").build().isEmpty()).isTrue();
     assertThat(newTestMessageBuilder("MSG_KEY").appendStringPart("").build().isEmpty()).isTrue();
@@ -46,7 +70,8 @@ public final class JsMessageTest {
                 .build()
                 .isEmpty())
         .isFalse();
-    assertThat(newTestMessageBuilder("MSG_KEY").appendPlaceholderReference("3").build().isEmpty())
+    assertThat(
+            newTestMessageBuilder("MSG_KEY").appendJsPlaceholderReference("ph").build().isEmpty())
         .isFalse();
   }
 
@@ -93,8 +118,8 @@ public final class JsMessageTest {
             .setAlternateId("foo")
             .setMeaning("meaning")
             .setId("meaning")
-            .appendPlaceholderReference("placeholder0")
-            .appendPlaceholderReference("placeholder1")
+            .appendJsPlaceholderReference("placeholder0")
+            .appendJsPlaceholderReference("placeholder1")
             .appendStringPart("part0")
             .appendStringPart("part1")
             .appendStringPart("part2")

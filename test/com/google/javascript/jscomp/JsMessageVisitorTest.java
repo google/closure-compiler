@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
-import static com.google.javascript.jscomp.JsMessageVisitor.isLowerCamelCaseWithNumericSuffixes;
-import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
@@ -364,7 +362,7 @@ public final class JsMessageVisitorTest {
 
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
-    assertThat(msg.toString()).isEqualTo("hello");
+    assertThat(msg.asJsMessageString()).isEqualTo("hello");
   }
 
   @Test
@@ -392,7 +390,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_FOO_HELP");
     assertThat(msg.getDesc()).isEqualTo("help text");
-    assertThat(msg.toString()).isEqualTo("Help!");
+    assertThat(msg.asJsMessageString()).isEqualTo("Help!");
   }
 
   @Test
@@ -422,7 +420,7 @@ public final class JsMessageVisitorTest {
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_FOO");
-    assertThat(msg.toString()).isEqualTo("Foo message");
+    assertThat(msg.asJsMessageString()).isEqualTo("Foo message");
     assertThat(compiler.getWarnings()).isEmpty();
   }
 
@@ -456,7 +454,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
     assertThat(msg.getDesc()).isEqualTo("help text");
-    assertThat(msg.toString()).isEqualTo("{$adjective} message");
+    assertThat(msg.asJsMessageString()).isEqualTo("{$adjective} message");
   }
 
   @Test
@@ -486,7 +484,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HUGE");
     assertThat(msg.getDesc()).isEqualTo("A message with lots of stuff.");
-    assertThat(msg.toString())
+    assertThat(msg.asJsMessageString())
         .isEqualTo(
             "{$startLink_1}Google{$endLink}{$startLink_2}blah{$endLink}"
                 + "{$boo}{$foo_001}{$boo}{$foo_002}{$xxx_001}{$image}"
@@ -615,7 +613,7 @@ public final class JsMessageVisitorTest {
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
-    assertThat(msg.toString()).isEqualTo("{$adjective} {$someNoun}");
+    assertThat(msg.asJsMessageString()).isEqualTo("{$adjective} {$someNoun}");
     assertThat(msg.getDesc()).isEqualTo("A message that demonstrates placeholders");
   }
 
@@ -636,7 +634,7 @@ public final class JsMessageVisitorTest {
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
-    assertThat(msg.toString()).isEqualTo("{$adjective} {$someNoun}");
+    assertThat(msg.asJsMessageString()).isEqualTo("{$adjective} {$someNoun}");
     assertThat(msg.getDesc()).isEqualTo("A message that demonstrates placeholders");
   }
 
@@ -725,7 +723,7 @@ public final class JsMessageVisitorTest {
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
-    assertThat(msg.toString()).isEqualTo("{$foo}:, {$foo}");
+    assertThat(msg.asJsMessageString()).isEqualTo("{$foo}:, {$foo}");
   }
 
   @Test
@@ -737,17 +735,20 @@ public final class JsMessageVisitorTest {
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_WITH_CAMELCASE");
-    assertThat(msg.toString()).isEqualTo("Slide {$slideNumber}:");
+    assertThat(msg.asJsMessageString()).isEqualTo("Slide {$slideNumber}:");
     ImmutableList<Part> parts = msg.getParts();
     assertThat(parts).hasSize(3);
-    assertThat(parts.get(1).getPlaceholderName()).isEqualTo("slideNumber");
+    assertThat(parts.get(1).getJsPlaceholderName()).isEqualTo("slideNumber");
+    assertThat(parts.get(1).getCanonicalPlaceholderName()).isEqualTo("SLIDE_NUMBER");
   }
 
   @Test
-  public void testWithNonCamelcasePlaceholderNamesAreNotOk() {
+  public void testNonCamelcasePlaceholderNamesAreNotOkInMsgText() {
     extractMessages(
-        "var MSG_WITH_CAMELCASE = goog.getMsg("
-            + "'Slide {$slide_number}:', {'slide_number': opt_index + 1});");
+        lines(
+            "var MSG_WITH_CAMELCASE = goog.getMsg(",
+            "    'Slide {$SLIDE_NUMBER}:',",
+            "    {'slideNumber': opt_index + 1});"));
 
     assertThat(messages).isEmpty();
     ImmutableList<JSError> errors = compiler.getErrors();
@@ -756,8 +757,25 @@ public final class JsMessageVisitorTest {
     assertThat(error.getType()).isEqualTo(MESSAGE_TREE_MALFORMED);
     assertThat(error.getDescription())
         .isEqualTo(
-            "Message parse tree malformed. Placeholder name not in "
-                + "lowerCamelCase: slide_number");
+            "Message parse tree malformed. Placeholder name not in lowerCamelCase: SLIDE_NUMBER");
+  }
+
+  @Test
+  public void testNonCamelcasePlaceholderNamesAreNotOkInPlaceholderObject() {
+    extractMessages(
+        lines(
+            "var MSG_WITH_CAMELCASE = goog.getMsg(",
+            "    'Slide {$slideNumber}:',",
+            "    {'SLIDE_NUMBER': opt_index + 1});"));
+
+    assertThat(messages).isEmpty();
+    ImmutableList<JSError> errors = compiler.getErrors();
+    assertThat(errors).hasSize(1);
+    JSError error = errors.get(0);
+    assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    assertThat(error.getDescription())
+        .isEqualTo(
+            "Message parse tree malformed. Placeholder name not in lowerCamelCase: SLIDE_NUMBER");
   }
 
   @Test
@@ -767,29 +785,6 @@ public final class JsMessageVisitorTest {
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).isEmpty();
-  }
-
-  @Test
-  public void testIsLowerCamelCaseWithNumericSuffixes() {
-    assertThat(isLowerCamelCaseWithNumericSuffixes("name")).isTrue();
-    assertThat(isLowerCamelCaseWithNumericSuffixes("NAME")).isFalse();
-    assertThat(isLowerCamelCaseWithNumericSuffixes("Name")).isFalse();
-
-    assertThat(isLowerCamelCaseWithNumericSuffixes("a4Letter")).isTrue();
-    assertThat(isLowerCamelCaseWithNumericSuffixes("A4_LETTER")).isFalse();
-
-    assertThat(isLowerCamelCaseWithNumericSuffixes("startSpan_1_23")).isTrue();
-    assertThat(isLowerCamelCaseWithNumericSuffixes("startSpan_1_23b")).isFalse();
-    assertThat(isLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23")).isFalse();
-
-    assertThat(isLowerCamelCaseWithNumericSuffixes("")).isFalse();
-  }
-
-  @Test
-  public void testToLowerCamelCaseWithNumericSuffixes() {
-    assertThat(toLowerCamelCaseWithNumericSuffixes("NAME")).isEqualTo("name");
-    assertThat(toLowerCamelCaseWithNumericSuffixes("A4_LETTER")).isEqualTo("a4Letter");
-    assertThat(toLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23")).isEqualTo("startSpan_1_23");
   }
 
   @Test

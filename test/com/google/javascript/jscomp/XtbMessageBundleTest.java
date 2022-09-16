@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.JsMessage.Part;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,20 +57,20 @@ public final class XtbMessageBundleTest {
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
     JsMessage message = bundle.getMessage("7639678437384034548");
-    assertThat(message.toString()).isEqualTo("descargar");
+    assertThat(message.asJsMessageString()).isEqualTo("descargar");
 
     message = bundle.getMessage("2398375912250604550");
-    assertThat(message.toString()).isEqualTo("Se han\nignorado {$num} conversaciones.");
+    assertThat(message.asJsMessageString()).isEqualTo("Se han\nignorado {$num} conversaciones.");
 
     message = bundle.getMessage("6323937743550839320");
-    assertThat(message.toString())
+    assertThat(message.asJsMessageString())
         .isEqualTo(
             "{$pStart}Si, puede {$linkStart_1_3}hacer "
                 + "clic{$linkEnd_1_3} para utilizar.{$pEnd}{$pStart}Esperamos "
                 + "poder ampliar.{$pEnd}");
 
     message = bundle.getMessage("3945720239421293834");
-    assertThat(message.toString()).isEmpty();
+    assertThat(message.asJsMessageString()).isEmpty();
     assertThat(message.getParts()).isNotEmpty();
   }
 
@@ -100,16 +102,38 @@ public final class XtbMessageBundleTest {
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
     assertThat(bundle.getAllMessages()).hasSize(2);
-    assertThat(bundle.getMessage("123456").toString())
+    final JsMessage icuMsg = bundle.getMessage("123456");
+    assertThat(icuMsg.asIcuMessageString())
         .isEqualTo(
             "{USER_GENDER,select,"
                 + "female{Hello {USER_IDENTIFIER}.}"
                 + "male{Hello {USER_IDENTIFIER}.}"
                 + "other{Hello {USER_IDENTIFIER}.}}");
+    // For an ICU selector formatted message, XtbMessageBundle automatically converts all the
+    // placeholders into normal strings.
+    final ImmutableList<Part> icuMsgParts = icuMsg.getParts();
+    assertThat(icuMsgParts).hasSize(7);
+    assertThat(icuMsgParts.get(0).getString()).isEqualTo("{USER_GENDER,select,female{Hello ");
+    assertThat(icuMsgParts.get(1).getString()).isEqualTo("{USER_IDENTIFIER}");
+    assertThat(icuMsgParts.get(2).getString()).isEqualTo(".}male{Hello ");
+    assertThat(icuMsgParts.get(3).getString()).isEqualTo("{USER_IDENTIFIER}");
+    assertThat(icuMsgParts.get(4).getString()).isEqualTo(".}other{Hello ");
+    assertThat(icuMsgParts.get(5).getString()).isEqualTo("{USER_IDENTIFIER}");
+    assertThat(icuMsgParts.get(6).getString()).isEqualTo(".}}");
 
     // Previous ICU message should not to affect next message
-    assertThat(bundle.getMessage("123457").toString())
+    final JsMessage normalMsg = bundle.getMessage("123457");
+    assertThat(normalMsg.asJsMessageString())
         .isEqualTo("{$startParagraph}p1{$endParagraph}{$startParagraph}p1{$endParagraph}");
+    final ImmutableList<Part> normalMsgParts = normalMsg.getParts();
+    // For a normal message the placeholders are not turned into strings
+    assertThat(normalMsgParts).hasSize(6);
+    assertThat(normalMsgParts.get(0).getJsPlaceholderName()).isEqualTo("startParagraph");
+    assertThat(normalMsgParts.get(1).getString()).isEqualTo("p1");
+    assertThat(normalMsgParts.get(2).getJsPlaceholderName()).isEqualTo("endParagraph");
+    assertThat(normalMsgParts.get(3).getJsPlaceholderName()).isEqualTo("startParagraph");
+    assertThat(normalMsgParts.get(4).getString()).isEqualTo("p1");
+    assertThat(normalMsgParts.get(5).getJsPlaceholderName()).isEqualTo("endParagraph");
   }
 
   /**
@@ -146,7 +170,7 @@ public final class XtbMessageBundleTest {
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
     assertThat(bundle.getAllMessages()).hasSize(2);
-    assertThat(bundle.getMessage("123456").toString())
+    assertThat(bundle.getMessage("123456").asIcuMessageString())
         .isEqualTo(
             "{NUM,plural, "
                 + "=1{Setting: {START_STRONG}{UDC_SETTING}{END_STRONG}"
@@ -154,7 +178,7 @@ public final class XtbMessageBundleTest {
                 + "other{Settings: {START_STRONG}{UDC_SETTING_LIST}{END_STRONG}"
                 + " Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}}");
     // Both translation entries should result into the same message in JavaScript.
-    assertThat(bundle.getMessage("987654").toString())
-        .isEqualTo(bundle.getMessage("123456").toString());
+    assertThat(bundle.getMessage("987654").asIcuMessageString())
+        .isEqualTo(bundle.getMessage("123456").asIcuMessageString());
   }
 }
