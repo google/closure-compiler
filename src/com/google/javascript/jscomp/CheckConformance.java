@@ -300,10 +300,8 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           return new ConformanceRules.RestrictedMethodCall(compiler, requirement);
         case RESTRICTED_PROPERTY_WRITE:
           return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
-        default:
-          reportInvalidRequirement(compiler, requirement, "unknown requirement type");
-          return null;
       }
+      throw new AssertionError();
     } catch (InvalidRequirementSpec e) {
       reportInvalidRequirement(compiler, requirement, e.getMessage());
       return null;

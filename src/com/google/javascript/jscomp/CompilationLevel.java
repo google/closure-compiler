@@ -86,8 +86,6 @@ public enum CompilationLevel {
       case ADVANCED_OPTIMIZATIONS:
         applyFullCompilationOptions(options);
         break;
-      default:
-        throw new RuntimeException("Unknown compilation level.");
     }
   }
 

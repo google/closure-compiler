@@ -326,8 +326,6 @@ class ProcessTweaks implements CompilerPass {
         case GET_STRING:
           tweakInfo.addGetterCall(t.getSourceName(), tweakFunc, n);
           break;
-        default:
-          break;
       }
     }
   }

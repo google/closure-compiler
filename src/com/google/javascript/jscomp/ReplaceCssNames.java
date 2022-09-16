@@ -236,9 +236,6 @@ class ReplaceCssNames implements CompilerPass {
             }
             replacement = Joiner.on("-").join(replaced);
             break;
-          default:
-            throw new IllegalStateException(
-              "Unknown replacement style: " + symbolMap.getStyle());
         }
         n.setString(replacement);
       }

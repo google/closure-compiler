@@ -37,8 +37,6 @@ public enum WarningLevel {
       case VERBOSE:
         addVerboseWarnings(options);
         break;
-      default:
-        throw new RuntimeException("Unknown warning level.");
     }
   }
 

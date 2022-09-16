@@ -1525,8 +1525,6 @@ class GlobalNamespace
           subclassingGets++;
           totalGets++;
           break;
-        default:
-          throw new IllegalStateException();
       }
     }
 
@@ -1802,9 +1800,8 @@ class GlobalNamespace
             continue;
           case DELETE_PROP:
             return Inlinability.DO_NOT_INLINE;
-          default:
-            throw new IllegalStateException();
         }
+        throw new AssertionError();
       }
       return collapsibility;
     }

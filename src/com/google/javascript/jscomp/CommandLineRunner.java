@@ -1457,8 +1457,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         case SINGLE_QUOTES:
           options.setPreferSingleQuotes(true);
           break;
-        default:
-          throw new RuntimeException("Unknown formatting option: " + this);
       }
     }
   }

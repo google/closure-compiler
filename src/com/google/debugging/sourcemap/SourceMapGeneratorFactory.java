@@ -25,9 +25,8 @@ public final class SourceMapGeneratorFactory {
       case DEFAULT:
       case V3:
         return new SourceMapGeneratorV3();
-      default:
-        throw new IllegalStateException("unsupported source map format");
     }
+    throw new AssertionError();
   }
 
   private SourceMapGeneratorFactory() {}

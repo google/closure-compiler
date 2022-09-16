@@ -291,7 +291,6 @@ public class DepsGenerator {
               break;
             case COMMON_JS:
             case COMPILER_MODULE:
-            default:
               throw new IllegalStateException("Unexpected import type: " + require.getType());
           }
         }

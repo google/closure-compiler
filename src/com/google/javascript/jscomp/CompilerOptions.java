@@ -1593,8 +1593,6 @@ public class CompilerOptions implements Serializable {
         this.inlineVariables = false;
         this.inlineLocalVariables = false;
         break;
-      default:
-        throw new IllegalStateException("unexpected");
     }
   }
 
@@ -1622,8 +1620,6 @@ public class CompilerOptions implements Serializable {
         this.removeUnusedVars = false;
         this.removeUnusedLocalVars = false;
         break;
-      default:
-        throw new IllegalStateException("unexpected");
     }
   }
 
