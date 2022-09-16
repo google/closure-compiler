@@ -620,6 +620,112 @@ var RTCRtpCapabilities;
 
 
 /**
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpheaderextensionparameters
+ */
+function RTCRtpHeaderExtensionParameters() {}
+
+/** @type {string} */
+RTCRtpHeaderExtensionParameters.prototype.uri;
+
+/** @type {number} */
+RTCRtpHeaderExtensionParameters.prototype.id;
+
+/** @type {boolean|undefined} */
+RTCRtpHeaderExtensionParameters.prototype.encrypted;
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtcpparameters
+ */
+function RTCRtcpParameters() {}
+
+/** @type {string|undefined} */
+RTCRtcpParameters.prototype.cname;
+
+/** @type {boolean|undefined} */
+RTCRtcpParameters.prototype.reducedSize;
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpcodecparameters
+ */
+function RTCRtpCodecParameters() {}
+
+/** @type {number} */
+RTCRtpCodecParameters.prototype.cname;
+
+/** @type {string} */
+RTCRtpCodecParameters.prototype.mimeType;
+
+/** @type {number} */
+RTCRtpCodecParameters.prototype.clockRate;
+
+/** @type {number} */
+RTCRtpCodecParameters.prototype.channels;
+
+/** @type {string|undefined} */
+RTCRtpCodecParameters.prototype.sdpFmtpLine;
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpparameters
+ */
+function RTCRtpParameters() {}
+
+/**
+ * @type {!Array<!RTCRtpHeaderExtensionParameters>}
+ */
+RTCRtpParameters.prototype.headerExtensions;
+
+/**
+ * @type {!RTCRtcpParameters}
+ */
+RTCRtpParameters.prototype.rtcp;
+
+/**
+ * @type {!Array<!RTCRtpCodecParameters>}
+ */
+RTCRtpParameters.prototype.codecs;
+
+
+/**
+ * @record
+ * @extends {RTCRtpParameters}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpsendparameters
+ */
+function RTCRtpSendParameters() {}
+
+/**
+ * @type {string}
+ */
+RTCRtpSendParameters.prototype.transactionId;
+
+/**
+ * @type {!Array<!RTCRtpEncodingParameters>}
+ */
+RTCRtpSendParameters.prototype.encodings;
+
+/**
+ * Possible string values are "maintain-framerate", "maintain-resolution", and
+ * "balanced".
+ * @type {string|undefined}
+ */
+RTCRtpSendParameters.prototype.degradationPreference;
+
+
+/**
+ * @record
+ * @extends {RTCRtpParameters}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpreceiveparameters
+ */
+function RTCRtpReceiveParameters() {}
+
+
+/**
  * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcrtpsender-interface
  */
@@ -674,30 +780,6 @@ RTCRtpSender.prototype.getStats = function() {};
  * @return {?RTCRtpCapabilities}
  */
 RTCRtpSender.getCapabilities = function(kind) {};
-
-
-/**
- * @record
- * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpsendparameters
- */
-function RTCRtpSendParameters() {}
-
-/**
- * @type {string|undefined}
- */
-RTCRtpSendParameters.prototype.transactionId;
-
-/**
- * @type {!Array<!RTCRtpEncodingParameters>}
- */
-RTCRtpSendParameters.prototype.encodings;
-
-/**
- * Possible string values are "maintain-framerate", "maintain-resolution", and
- * "balanced".
- * @type {string|undefined}
- */
-RTCRtpSendParameters.prototype.degradationPreference;
 
 
 /**
@@ -760,6 +842,11 @@ RTCRtpReceiver.prototype.track;
  * @const {?RTCDtlsTransport}
  */
 RTCRtpReceiver.prototype.transport;
+
+/**
+ * @return {!RTCRtpReceiveParameters}
+ */
+RTCRtpReceiver.prototype.getParameters = function() {};
 
 /**
  * @return {!Array<!RTCRtpContributingSource>}
