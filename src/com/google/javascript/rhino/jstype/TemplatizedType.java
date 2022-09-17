@@ -61,7 +61,7 @@ public final class TemplatizedType extends ProxyObjectType {
   /** Whether all type parameter values for this specialization are `?`. */
   private final boolean isSpecializedOnlyWithUnknown;
 
-  private transient TemplateTypeReplacer replacer;
+  private final TemplateTypeReplacer replacer;
 
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
