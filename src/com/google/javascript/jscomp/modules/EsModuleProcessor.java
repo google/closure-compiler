@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.TranspilationUtil;
 import com.google.javascript.jscomp.Var;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -189,13 +188,13 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
    * </ul>
    */
   private final class UnresolvedModuleBuilder {
-    private final ModuleLoader.ModulePath path;
+    private final ModulePath path;
     private final Node root;
     private final Map<String, Import> importsByLocalName;
     private final List<Export> exports;
     private final Set<String> exportedNames;
 
-    UnresolvedModuleBuilder(ModuleLoader.ModulePath path, Node root) {
+    UnresolvedModuleBuilder(ModulePath path, Node root) {
       this.path = path;
       this.root = root;
       importsByLocalName = new HashMap<>();
@@ -271,7 +270,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
   private final class UnresolvedEsModule extends UnresolvedModule {
 
     private final ModuleMetadata metadata;
-    private final ModuleLoader.ModulePath path;
+    private final ModulePath path;
     private final ImmutableMap<String, Import> importsByLocalName;
     private final ImmutableList<Export> localExports;
     private final ImmutableList<Export> indirectExports;
@@ -283,7 +282,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
 
     private UnresolvedEsModule(
         ModuleMetadata metadata,
-        ModuleLoader.ModulePath path,
+        ModulePath path,
         ImmutableMap<String, Import> importsByLocalName,
         ImmutableList<Export> localExports,
         ImmutableList<Export> indirectExports,

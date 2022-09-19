@@ -37,7 +37,6 @@ import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
@@ -197,7 +196,7 @@ public abstract class CompilerTestCase {
   private Integer browserFeaturesetYear;
 
   /** How to interpret ES6 module imports */
-  private ModuleLoader.ResolutionMode moduleResolutionMode;
+  private ResolutionMode moduleResolutionMode;
 
   /** How to parse JS Documentation. */
   private JsDocParsing parseJsDocDocumentation;
@@ -622,7 +621,7 @@ public abstract class CompilerTestCase {
     // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass
     // is changing them in the constructor, rather than in their own setUp method.
     this.acceptedLanguage = LanguageMode.UNSUPPORTED;
-    this.moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    this.moduleResolutionMode = ResolutionMode.BROWSER;
     this.parseJsDocDocumentation = JsDocParsing.TYPES_ONLY;
     this.allowExternsChanges = false;
     this.allowSourcelessWarnings = false;
@@ -791,7 +790,7 @@ public abstract class CompilerTestCase {
     this.browserFeaturesetYear = year;
   }
 
-  protected final void setModuleResolutionMode(ModuleLoader.ResolutionMode moduleResolutionMode) {
+  protected final void setModuleResolutionMode(ResolutionMode moduleResolutionMode) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.moduleResolutionMode = moduleResolutionMode;
   }
@@ -1559,7 +1558,7 @@ public abstract class CompilerTestCase {
         // Transpilation passes are allowed to leave the AST in a bad state when there is a halting
         // error.
         if (astValidationEnabled && !compiler.hasHaltingErrors()) {
-          AstValidator.TypeInfoValidation typeValidationMode =
+          TypeInfoValidation typeValidationMode =
               typeInfoValidationEnabled
                   ? compiler.hasOptimizationColors()
                       ? TypeInfoValidation.COLOR

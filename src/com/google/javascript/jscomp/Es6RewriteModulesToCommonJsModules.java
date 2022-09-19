@@ -401,7 +401,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       compiler.reportChangeToChangeScope(getterFunction);
     }
 
-    private void visitImport(ModuleLoader.ModulePath path, Node importDecl) {
+    private void visitImport(ModulePath path, Node importDecl) {
       if (importDecl.getLastChild().getString().contains("://")) {
         compiler.report(
             JSError.make(

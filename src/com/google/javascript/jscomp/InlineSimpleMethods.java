@@ -259,23 +259,17 @@ class InlineSimpleMethods extends MethodCompilerPass {
     return false;
   }
 
-  /**
-   * A do-nothing signature store.
-   */
-  static final MethodCompilerPass.SignatureStore DUMMY_SIGNATURE_STORE =
-      new MethodCompilerPass.SignatureStore() {
+  /** A do-nothing signature store. */
+  static final SignatureStore DUMMY_SIGNATURE_STORE =
+      new SignatureStore() {
         @Override
-        public void addSignature(
-            String functionName, Node functionNode, String sourceFile) {
-        }
+        public void addSignature(String functionName, Node functionNode, String sourceFile) {}
 
         @Override
-        public void removeSignature(String functionName) {
-        }
+        public void removeSignature(String functionName) {}
 
         @Override
-        public void reset() {
-        }
+        public void reset() {}
       };
 
   @Override

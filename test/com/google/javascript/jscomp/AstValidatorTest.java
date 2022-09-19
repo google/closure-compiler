@@ -53,8 +53,7 @@ import org.junit.runners.JUnit4;
 public final class AstValidatorTest extends CompilerTestCase {
 
   private List<String> lastCheckViolationMessages;
-  private AstValidator.TypeInfoValidation typeInfoValidationMode =
-      AstValidator.TypeInfoValidation.JSTYPE;
+  private TypeInfoValidation typeInfoValidationMode = TypeInfoValidation.JSTYPE;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -96,7 +95,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testParenthesizedProperty() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.string("a");
     n.setIsParenthesized(true);
@@ -308,7 +307,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testClassStaticBlock_this() {
     // TODO (user): re-enable TypeInfoValidation and TypeCheck
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     valid(
         lines(
@@ -323,7 +322,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testClassStaticBlock_superProperty() {
     // TODO (user): re-enable TypeInfoValidation and TypeCheck
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     valid(
         lines(
@@ -341,7 +340,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testClassStaticBlock_invalidSuperConstructorCall() {
     // TODO (user): re-enable TypeInfoValidation and TypeCheck
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     invalid(
         lines(
@@ -385,7 +384,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(a in {});");
 
     // Test that initializers are banned (except for simple vars - see testQuestionableForIn)
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     expectInvalid(
         new Node(Token.FOR_IN, IR.constNode(IR.name("a"), IR.number(1)), IR.name("b")),
         Check.STATEMENT);
@@ -409,7 +408,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for (const {} of b);");
 
     // Test that initializers are banned
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     expectInvalid(
         new Node(Token.FOR_OF, IR.var(IR.name("a"), IR.number(1)), IR.name("b")), Check.STATEMENT);
     expectInvalid(
@@ -434,7 +433,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("async () => { for await(a of /** @type {!Iterable<?>} */ ({})); }");
 
     // Test that initializers are banned
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     expectInvalid(
         new Node(Token.FOR_AWAIT_OF, IR.var(IR.name("a"), IR.number(1)), IR.name("b")),
         Check.STATEMENT);
@@ -459,7 +458,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("a['b']++");
     valid("/** @type {number} */ (x)++;");
 
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     expectInvalid(new Node(Token.INC, IR.name("x"), IR.name("x")), Check.EXPRESSION);
     expectInvalid(new Node(Token.INC, IR.arrayPattern()), Check.EXPRESSION);
     expectInvalid(new Node(Token.INC, IR.objectPattern()), Check.EXPRESSION);
@@ -472,7 +471,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("const a = {b: 0}; a.b += 1;");
     valid("const a = {b: '0'}; /** @type {?} */ (a.b) += 1;");
 
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     expectInvalid(new Node(Token.ASSIGN_ADD, IR.arrayPattern(), IR.number(0)), Check.EXPRESSION);
     expectInvalid(new Node(Token.ASSIGN_ADD, IR.objectPattern(), IR.number(0)), Check.EXPRESSION);
   }
@@ -492,7 +491,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidScript() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = new Node(Token.SCRIPT);
     expectInvalid(n, Check.SCRIPT);
@@ -506,7 +505,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidStatement1() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = new Node(Token.RETURN);
     setTestSourceLocationForTree(n);
@@ -518,7 +517,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidExpression1() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = new Node(Token.ARRAYLIT, new Node(Token.EMPTY));
     setTestSourceLocationForTree(n);
@@ -530,7 +529,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidExpression2() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = new Node(Token.NOT, new Node(Token.TRUE));
     setTestSourceLocationForTree(n);
@@ -567,7 +566,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidConstLanguageLevel() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.constNode(IR.name("x"), IR.number(3));
     setTestSourceLocationForTree(n);
@@ -582,7 +581,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidLetLanguageLevel() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.let(IR.name("x"), IR.number(3));
     setTestSourceLocationForTree(n);
@@ -597,7 +596,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testNewTargetIsValidExpression() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = new Node(Token.NEW_TARGET);
     setTestSourceLocationForTree(n);
@@ -607,7 +606,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testImportMetaIsValidExpression() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = new Node(Token.IMPORT_META);
     setTestSourceLocationForTree(n);
@@ -617,7 +616,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testCastOnLeftSideOfAssign() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     JSDocInfo.Builder jsdoc = JSDocInfo.builder();
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
@@ -639,7 +638,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidNumberStatement() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.number(1);
     setTestSourceLocationForTree(n);
@@ -652,7 +651,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidBigIntStatement() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.bigint(BigInteger.ONE);
     setTestSourceLocationForTree(n);
@@ -678,7 +677,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testAwaitExpression() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
@@ -694,7 +693,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testNoAwaitExpressionInDefaultParams() {
     // We're inserting our own Nodes below, and we won't be bothering to put valid type
     // information on them.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     Node scriptNode =
         parseValidScript(
             lines(
@@ -722,7 +721,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testNoYieldExpressionInDefaultParams() {
     // We're inserting our own Nodes below, and we won't be bothering to put valid type
     // information on them.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     Node scriptNode =
         parseValidScript(
             lines(
@@ -770,7 +769,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testAwaitExpressionNoFunction() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node n = new Node(Token.AWAIT);
@@ -781,7 +780,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testYieldExpressionNoFunction() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node n = new Node(Token.YIELD);
@@ -792,7 +791,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidArrayPattern0() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -885,7 +884,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidObjectRestForLanguageLevel() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.assign(IR.objectPattern(IR.objectRest(IR.name("x"))), IR.objectlit());
     setTestSourceLocationForTree(n);
@@ -900,7 +899,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidArrayRestForLanguageLevel() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node n = IR.assign(IR.arrayPattern(IR.iterRest(IR.name("x"))), IR.arraylit());
     setTestSourceLocationForTree(n);
@@ -915,7 +914,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidDestructuringDeclaration() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -943,7 +942,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testInvalidDestructuringAssignment() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -978,7 +977,7 @@ public final class AstValidatorTest extends CompilerTestCase {
             ""));
 
     // Since we're modifying the AST by hand below, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
     Node members = new Node(Token.CLASS_MEMBERS);
@@ -1233,7 +1232,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     // Since we're modifying the AST by hand below, there won't be types on some nodes that need
     // them.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
     Node members = new Node(Token.CLASS_MEMBERS);
@@ -1456,7 +1455,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testFeatureValidation_logicalAssignmentOp() {
     // TODO (user): re-enable TypeInfoValidation and TypeCheck
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     testFeatureValidation("x ||= y", Feature.LOGICAL_ASSIGNMENT);
     testFeatureValidation("x &&= y", Feature.LOGICAL_ASSIGNMENT);
@@ -1501,7 +1500,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidFeatureInScript() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -1566,7 +1565,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testSwitchStatement() {
     // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    typeInfoValidationMode = TypeInfoValidation.NONE;
 
     String switchStatement =
         lines(

@@ -1737,8 +1737,8 @@ public final class CompilerTest {
         ImmutableList.of(ModuleIdentifier.forClosure("goog:foobar"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
     options.setProcessCommonJSModules(true);
     ImmutableList<SourceFile> externs =

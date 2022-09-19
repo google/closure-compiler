@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
@@ -173,7 +172,7 @@ public abstract class Export {
 
   /** Returns the path of the containing module */
   @Nullable
-  public abstract ModuleLoader.ModulePath modulePath();
+  public abstract ModulePath modulePath();
 
   /**
    * Node that this export originates from. Used for its source location.

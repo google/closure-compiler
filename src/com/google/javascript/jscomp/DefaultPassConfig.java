@@ -65,7 +65,6 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
@@ -133,7 +132,7 @@ public final class DefaultPassConfig extends PassConfig {
     passes.maybeAdd(gatherModuleMetadataPass);
     passes.maybeAdd(createModuleMapPass);
 
-    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+    if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
       passes.maybeAdd(rewriteGoogJsImports);
       switch (options.getEs6ModuleTranspilation()) {
         case COMPILE:
@@ -181,7 +180,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getProcessCommonJSModules()) {
       passes.maybeAdd(rewriteCommonJsModules);
-    } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+    } else if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
       passes.maybeAdd(rewriteScriptsToEs6Modules);
     }
 
@@ -192,7 +191,7 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addModuleRewritingPasses(PassListBuilder checks, CompilerOptions options) {
-    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+    if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
       checks.maybeAdd(rewriteGoogJsImports);
       TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
     }
@@ -265,7 +264,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.maybeAdd(createEmptyPass("beforeStandardChecks"));
 
     if (!options.getProcessCommonJSModules()
-        && options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+        && options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
       checks.maybeAdd(rewriteScriptsToEs6Modules);
     }
 
@@ -2812,8 +2811,7 @@ public final class DefaultPassConfig extends PassConfig {
                                 : SerializationOptions.SKIP_DEBUG_INFO)
                         .process(externs, js);
 
-                    compiler.setLifeCycleStage(
-                        AbstractCompiler.LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
+                    compiler.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
                   })
           .build();
 

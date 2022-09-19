@@ -2022,7 +2022,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     for (Node call : calls) {
       assertThat(call.getSideEffectFlags())
           .isEqualTo(
-              new Node.SideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS)
+              new SideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS)
                   .setMutatesGlobalState()
                   .valueOf());
     }

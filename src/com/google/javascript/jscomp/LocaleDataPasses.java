@@ -54,7 +54,7 @@ final class LocaleDataPasses {
   }
 
   /** Protect `goog.LOCALE` by replacing it with an extern-defined name. */
-  private static class ProtectCurrentLocale extends NodeTraversal.AbstractPostOrderCallback {
+  private static class ProtectCurrentLocale extends AbstractPostOrderCallback {
     private final AbstractCompiler compiler;
     private final AstFactory astFactory;
 

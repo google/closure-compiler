@@ -630,7 +630,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
 
     // Use class visibility if specifically set
     Visibility visibility = classInfo.getVisibility();
-    if (visibility != null && visibility != JSDocInfo.Visibility.INHERITED) {
+    if (visibility != null && visibility != Visibility.INHERITED) {
       mergedInfo.recordVisibility(classInfo.getVisibility());
     }
 

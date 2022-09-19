@@ -47,7 +47,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
   @Override
   protected Format getSourceMapFormat() {
-    return SourceMap.Format.V3;
+    return Format.V3;
   }
 
   private static String getEncodedFileName() {

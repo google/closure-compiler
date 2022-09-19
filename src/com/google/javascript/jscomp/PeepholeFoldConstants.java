@@ -650,7 +650,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Node result = null;
 
-    NodeUtil.ValueType leftVal = NodeUtil.getKnownValueType(left);
+    ValueType leftVal = NodeUtil.getKnownValueType(left);
 
     switch (leftVal) {
       case NULL:

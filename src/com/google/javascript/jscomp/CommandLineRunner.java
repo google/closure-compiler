@@ -1285,7 +1285,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       return mixedSources;
     }
 
-    List<SourceMap.LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
+    List<LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
       ImmutableList.Builder<LocationMapping> locationMappings = ImmutableList.builder();
 
       ImmutableMap<String, String> split =
@@ -1836,8 +1836,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     CompilerOptions options = new CompilerOptions();
 
     if (!flags.languageIn.isEmpty()) {
-      CompilerOptions.LanguageMode languageMode =
-          CompilerOptions.LanguageMode.fromString(flags.languageIn);
+      LanguageMode languageMode = LanguageMode.fromString(flags.languageIn);
       if (languageMode == LanguageMode.UNSUPPORTED) {
         throw new FlagUsageException(
             "Cannot specify the unsupported set of features for language_in.");
@@ -1849,8 +1848,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       }
     }
 
-    CompilerOptions.LanguageMode languageMode =
-        CompilerOptions.LanguageMode.fromString(flags.languageOut);
+    LanguageMode languageMode = LanguageMode.fromString(flags.languageOut);
     if (languageMode == LanguageMode.UNSUPPORTED) {
       throw new FlagUsageException(
           "Cannot specify the unsupported set of features for language_out.");

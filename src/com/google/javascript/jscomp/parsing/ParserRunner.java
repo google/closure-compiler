@@ -125,7 +125,7 @@ public final class ParserRunner {
     String sourceName = sourceFile.getName();
     try {
       SourceFile file = new SourceFile(sourceName, sourceString);
-      boolean keepGoing = config.runMode() == Config.RunMode.KEEP_GOING;
+      boolean keepGoing = config.runMode() == RunMode.KEEP_GOING;
       Es6ErrorReporter es6ErrorReporter = new Es6ErrorReporter(errorReporter, keepGoing);
       com.google.javascript.jscomp.parsing.parser.Parser.Config es6config = newParserConfig(config);
       Parser p = new Parser(es6config, es6ErrorReporter, file);

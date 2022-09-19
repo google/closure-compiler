@@ -344,7 +344,7 @@ public final class PolyfillUsageFinderTest {
       return this;
     }
 
-    PolyfillSubject hasKind(Polyfill.Kind expectedKind) {
+    PolyfillSubject hasKind(Kind expectedKind) {
       check("kind").that(actual.kind).isEqualTo(expectedKind);
       return this;
     }

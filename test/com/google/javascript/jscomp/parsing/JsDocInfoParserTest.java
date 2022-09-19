@@ -3258,7 +3258,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo jsdoc =
         parse("@return {Foo} some long \n * multiline" + " \n * description */", true);
 
-    JSDocInfo.Marker returnDoc = assertAnnotationMarker(jsdoc, "return", 0, 0);
+    Marker returnDoc = assertAnnotationMarker(jsdoc, "return", 0, 0);
     assertDocumentationInMarker(returnDoc, "some long multiline description", 14, 2, 15);
     assertThat(returnDoc.getType().getPositionOnStartLine()).isEqualTo(8);
     assertThat(returnDoc.getType().getPositionOnEndLine()).isEqualTo(12);
@@ -5671,8 +5671,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param endCharno The ending character of the text.
    * @return The marker, for chaining purposes.
    */
-  private static JSDocInfo.Marker assertDocumentationInMarker(
-      JSDocInfo.Marker marker, String description, int startCharno, int endLineno, int endCharno) {
+  private static Marker assertDocumentationInMarker(
+      Marker marker, String description, int startCharno, int endLineno, int endCharno) {
     assertThat(marker.getDescription()).isNotNull();
     assertThat(marker.getDescription().getItem()).isEqualTo(description);
 
@@ -5694,8 +5694,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param hasBrackets Whether the type in the type field is expected to have brackets.
    * @return The marker, for chaining purposes.
    */
-  private static JSDocInfo.Marker assertTypeInMarker(
-      JSDocInfo.Marker marker,
+  private static Marker assertTypeInMarker(
+      Marker marker,
       String typeName,
       int startLineno,
       int startCharno,
@@ -5727,8 +5727,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param startCharno The starting character of the text.
    * @return The marker, for chaining purposes.
    */
-  private static JSDocInfo.Marker assertNameInMarker(
-      JSDocInfo.Marker marker, String name, int startLine, int startCharno) {
+  private static Marker assertNameInMarker(
+      Marker marker, String name, int startLine, int startCharno) {
     assertThat(marker.getNameNode()).isNotNull();
     assertThat(marker.getNameNode().getItem().getString()).isEqualTo(name);
 
@@ -5751,7 +5751,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param startCharno The expected character on the starting line.
    * @return The marker found, for further testing.
    */
-  private static JSDocInfo.Marker assertAnnotationMarker(
+  private static Marker assertAnnotationMarker(
       JSDocInfo jsdoc, String annotationName, int startLineno, int startCharno) {
     return assertAnnotationMarker(jsdoc, annotationName, startLineno, startCharno, 0);
   }
@@ -5768,16 +5768,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param index The index of the marker.
    * @return The marker found, for further testing.
    */
-  private static JSDocInfo.Marker assertAnnotationMarker(
+  private static Marker assertAnnotationMarker(
       JSDocInfo jsdoc, String annotationName, int startLineno, int startCharno, int index) {
 
-    Collection<JSDocInfo.Marker> markers = jsdoc.getMarkers();
+    Collection<Marker> markers = jsdoc.getMarkers();
 
     assertThat(markers).isNotEmpty();
 
     int counter = 0;
 
-    for (JSDocInfo.Marker marker : markers) {
+    for (Marker marker : markers) {
       if (marker.getAnnotation() != null) {
         if (annotationName.equals(marker.getAnnotation().getItem())) {
 
@@ -5842,8 +5842,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     return parse(
         comment,
         parseDocumentation
-            ? Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
-            : Config.JsDocParsing.TYPES_ONLY,
+            ? JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
+            : JsDocParsing.TYPES_ONLY,
         warnings);
   }
 
@@ -5866,7 +5866,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             .setClosurePrimitiveNames(extraPrimitives)
             .setLanguageMode(LanguageMode.ECMASCRIPT3)
             .setParseInlineSourceMaps(true)
-            .setStrictMode(Config.StrictMode.SLOPPY)
+            .setStrictMode(StrictMode.SLOPPY)
             .build();
 
     StaticSourceFile file = new SimpleSourceFile("testcode", SourceKind.STRONG);

@@ -368,7 +368,7 @@ public final class DisambiguateProperties implements CompilerPass {
     @Keep final boolean invalidating;
     @Keep final String colorId;
     @Keep final ImmutableSortedSet<TypeEdgeJson> edges;
-    @Keep final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
+    @Keep final ImmutableSortedMap<String, PropAssociation> props;
 
     TypeNodeJson(DiGraphNode<ColorGraphNode, Object> n) {
       ColorGraphNode t = n.getValue();

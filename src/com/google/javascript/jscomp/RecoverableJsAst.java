@@ -58,7 +58,7 @@ public class RecoverableJsAst implements SourceAst {
         root = realSource.getAstRoot(compiler).cloneTree(true);
 
         // Maybe replay parse error
-        JsAst.ParseResult result = (JsAst.ParseResult) root.getProp(Node.PARSE_RESULTS);
+        ParseResult result = (ParseResult) root.getProp(Node.PARSE_RESULTS);
         if (reportParseErrors && result != null) {
           replay(compiler, result);
         }

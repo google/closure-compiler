@@ -92,8 +92,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static final String SEMICOLON_EXPECTED = "Semi-colon expected";
 
-  private Config.LanguageMode mode;
-  private Config.JsDocParsing parsingMode;
+  private LanguageMode mode;
+  private JsDocParsing parsingMode;
   private Config.StrictMode strictMode;
   private boolean isIdeMode = false;
   private FeatureSet expectedFeatures;
@@ -7463,11 +7463,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     return doParse(string, warnings).ast;
   }
 
-  private ParserRunner.ParseResult doParse(String string, String... warnings) {
+  private ParseResult doParse(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     StaticSourceFile file = new SimpleSourceFile("input", SourceKind.STRONG);
-    ParserRunner.ParseResult result =
-        ParserRunner.parse(file, string, createConfig(), testErrorReporter);
+    ParseResult result = ParserRunner.parse(file, string, createConfig(), testErrorReporter);
 
     // check expected features if specified
     assertFS(result.features).contains(expectedFeatures);

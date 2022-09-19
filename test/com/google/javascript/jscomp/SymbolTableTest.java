@@ -419,7 +419,7 @@ public final class SymbolTableTest {
                 (s) -> s.getSourceFileName().equals("file1.js") && s.getName().equals(symbolName))
             .findFirst()
             .get();
-    for (SymbolTable.Reference ref : table.getReferences(symbol)) {
+    for (Reference ref : table.getReferences(symbol)) {
       if (ref.getNode().getSourceFileName().equals("file2.js")) {
         return;
       }
@@ -454,7 +454,7 @@ public final class SymbolTableTest {
             .filter((s) -> s.getSourceFileName().equals("file2.js") && s.getName().equals("one"))
             .findFirst()
             .get();
-    for (SymbolTable.Reference ref : table.getReferences(symbol)) {
+    for (Reference ref : table.getReferences(symbol)) {
       if (ref.getNode().getSourceFileName().equals("file1.js")) {
         return;
       }

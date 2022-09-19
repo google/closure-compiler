@@ -64,7 +64,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of("."))
             .setInputs(inputs("js/a.js", "js/b.js"))
             .setFactory(new NodeModuleResolver.Factory(PACKAGE_JSON_MAIN_ENTRIES))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
     assertUri("js/a.js", loader.resolve("js/a.js"));
     assertUri("js/b.js", resolveJsModule(loader.resolve("js/a.js"), "./b"));
@@ -78,7 +78,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of("."))
             .setInputs(inputs("A/index.js", "B/index.js", "app.js"))
             .setFactory(new NodeModuleResolver.Factory(PACKAGE_JSON_MAIN_ENTRIES))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     input("A/index.js");
@@ -113,7 +113,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of())
             .setInputs(compilerInputs)
             .setFactory(new NodeModuleResolver.Factory(PACKAGE_JSON_MAIN_ENTRIES))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     assertUri("/A/index.js", resolveJsModule(loader.resolve(" /foo.js"), "/A"));
@@ -321,7 +321,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of())
             .setInputs(compilerInputs)
             .setFactory(new NodeModuleResolver.Factory(PACKAGE_JSON_MAIN_ENTRIES))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     assertUri("/A/index.js", resolveJsModule(loader.resolve(" /foo.js"), "/A"));
@@ -378,7 +378,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of())
             .setInputs(compilerInputs)
             .setFactory(new NodeModuleResolver.Factory(packageJsonMainEntries))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     assertUri(
@@ -420,7 +420,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of("generated_files/"))
             .setInputs(compilerInputs)
             .setFactory(new NodeModuleResolver.Factory(ImmutableMap.of()))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     assertUri("/node_modules/second.js", resolveJsModule(loader.resolve("/foo.js"), "second"));
@@ -451,7 +451,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of("generated_files/"))
             .setInputs(compilerInputs)
             .setFactory(new NodeModuleResolver.Factory(ImmutableMap.of()))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     // 'first' and 'second' should resolve from foo.js
@@ -475,7 +475,7 @@ public final class ModuleLoaderTest {
             .setModuleRoots(ImmutableList.of("."))
             .setInputs(inputs("A/index.js", "B/index.js", "app.js"))
             .setFactory(new WebpackModuleResolver.Factory(webpackModulesById))
-            .setPathResolver(ModuleLoader.PathResolver.RELATIVE)
+            .setPathResolver(PathResolver.RELATIVE)
             .build();
 
     input("A/index.js");

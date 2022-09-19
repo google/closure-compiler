@@ -1877,8 +1877,7 @@ public final class SymbolTable {
     }
   }
 
-  private class PropertyRefCollector extends NodeTraversal.AbstractPostOrderCallback
-      implements CompilerPass {
+  private class PropertyRefCollector extends AbstractPostOrderCallback implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       NodeTraversal.traverseRoots(compiler, this, externs, root);
@@ -2119,7 +2118,7 @@ public final class SymbolTable {
   }
 
   /** Collects references to types in JSDocInfo. */
-  private class JSDocInfoCollector extends NodeTraversal.AbstractPostOrderCallback {
+  private class JSDocInfoCollector extends AbstractPostOrderCallback {
     private final JSTypeRegistry typeRegistry;
 
     private JSDocInfoCollector(JSTypeRegistry registry) {
@@ -2200,7 +2199,7 @@ public final class SymbolTable {
   }
 
   /** Collects the visibility information for each name/property. */
-  private class VisibilityCollector extends NodeTraversal.AbstractPostOrderCallback {
+  private class VisibilityCollector extends AbstractPostOrderCallback {
     private final ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap;
 
     private VisibilityCollector(ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {

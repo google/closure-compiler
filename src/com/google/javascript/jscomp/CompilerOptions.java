@@ -1300,7 +1300,7 @@ public class CompilerOptions implements Serializable {
     browserResolverPrefixReplacements = ImmutableMap.of();
 
     // Modules
-    moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    moduleResolutionMode = ResolutionMode.BROWSER;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
     rewriteModulesBeforeTypechecking = false;

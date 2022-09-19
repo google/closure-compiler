@@ -23,7 +23,6 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser.Keywords;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -129,7 +128,7 @@ class TypeTransformation {
   }
 
   private Keywords nameToKeyword(String s) {
-    return TypeTransformationParser.Keywords.valueOf(Ascii.toUpperCase(s));
+    return Keywords.valueOf(Ascii.toUpperCase(s));
   }
 
   private @Nullable JSType getType(String typeName) {

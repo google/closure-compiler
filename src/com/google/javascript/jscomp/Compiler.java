@@ -771,7 +771,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     if (hasZone
         && !options.allowsZoneJsWithAsyncFunctionsInOutput()
-        && options.getOutputFeatureSet().contains(FeatureSet.Feature.ASYNC_FUNCTIONS)) {
+        && options.getOutputFeatureSet().contains(Feature.ASYNC_FUNCTIONS)) {
       throw new UnsupportedOperationException(
           "ZoneJS is incompatible with language level ES2017 or higher (See go/ngissue/31730)\n"
               + "Please set `--language_out=ECMASCRIPT_2016` (or older) in your flags.");

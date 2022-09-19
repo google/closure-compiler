@@ -56,7 +56,7 @@ public abstract class SourceMapTestCase {
   static final ImmutableList<SourceFile> EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", ""));
 
-  protected DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
+  protected DetailLevel detailLevel = DetailLevel.ALL;
   protected boolean sourceMapIncludeSourcesContent = false;
 
   private static final Joiner LINE_JOINER = Joiner.on('\n');
@@ -84,7 +84,7 @@ public abstract class SourceMapTestCase {
 
   @Before
   public void setUp() {
-    detailLevel = SourceMap.DetailLevel.ALL;
+    detailLevel = DetailLevel.ALL;
   }
 
   /**

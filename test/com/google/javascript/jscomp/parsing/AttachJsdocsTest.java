@@ -37,7 +37,7 @@ import org.junit.runners.JUnit4;
 /** Ported from rhino/testsrc/org/mozilla/javascript/tests/AttachJsDocsTest.java */
 @RunWith(JUnit4.class)
 public final class AttachJsdocsTest extends BaseJSTypeTestCase {
-  private Config.LanguageMode mode;
+  private LanguageMode mode;
 
   @Before
   public void setUp() throws Exception {

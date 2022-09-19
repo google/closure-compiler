@@ -107,12 +107,12 @@ public final class FunctionParamBuilder {
   }
 
   /** Copies the existing parameter into this builder */
-  public void newParameterFrom(FunctionType.Parameter n) {
+  public void newParameterFrom(Parameter n) {
     parameters.add(n);
   }
 
   /** Copies the parameter specification from the given parameter, but makes sure it's optional. */
-  public void newOptionalParameterFrom(FunctionType.Parameter p) {
+  public void newOptionalParameterFrom(Parameter p) {
     boolean isOptional = p.isOptional() || !p.isVariadic();
     if (isOptional != p.isOptional()) {
       newParameter(p.getJSType(), isOptional, p.isVariadic());

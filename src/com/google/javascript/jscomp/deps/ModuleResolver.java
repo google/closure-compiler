@@ -39,7 +39,7 @@ public abstract class ModuleResolver {
       ImmutableSet<String> modulePaths,
       ImmutableList<String> moduleRootPaths,
       ErrorHandler errorHandler,
-      ModuleLoader.PathEscaper pathEscaper) {
+      PathEscaper pathEscaper) {
     this.modulePaths = modulePaths;
     this.moduleRootPaths = moduleRootPaths;
     this.errorHandler = errorHandler;

@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
@@ -44,7 +43,7 @@ public class ModuleMapCreator implements CompilerPass {
           "Requested module does not have an export \"{0}\".{1}");
 
   private final class ModuleRequestResolverImpl implements ModuleRequestResolver {
-    private UnresolvedModule getFallbackForMissingNonClosureModule(ModuleLoader.ModulePath path) {
+    private UnresolvedModule getFallbackForMissingNonClosureModule(ModulePath path) {
       ModuleMetadata metadata =
           ModuleMetadata.builder()
               .rootNode(null)
@@ -143,14 +142,14 @@ public class ModuleMapCreator implements CompilerPass {
 
     @Nullable
     private UnresolvedModule resolve(
-        String moduleRequest, ModuleLoader.ModulePath modulePath, Node forLineInfo) {
+        String moduleRequest, ModulePath modulePath, Node forLineInfo) {
 
       if (GoogEsImports.isGoogImportSpecifier(moduleRequest)) {
         String namespace = GoogEsImports.getClosureIdFromGoogImportSpecifier(moduleRequest);
         return resolveForClosure(namespace);
       }
 
-      ModuleLoader.ModulePath requestedPath =
+      ModulePath requestedPath =
           modulePath.resolveJsModule(
               moduleRequest,
               forLineInfo.getSourceFileName(),

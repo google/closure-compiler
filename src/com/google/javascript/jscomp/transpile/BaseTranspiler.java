@@ -119,7 +119,7 @@ public final class BaseTranspiler implements Transpiler {
      */
     public CompilerSupplier(
         FeatureSet outputFeatureSet,
-        ModuleLoader.ResolutionMode moduleResolution,
+        ResolutionMode moduleResolution,
         ImmutableList<String> moduleRoots,
         ImmutableMap<String, String> prefixReplacements) {
       this.outputFeatureSet = outputFeatureSet;
