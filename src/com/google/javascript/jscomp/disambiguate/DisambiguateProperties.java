@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.errorprone.annotations.Keep;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -363,10 +364,11 @@ public final class DisambiguateProperties implements CompilerPass {
 
   private static final class TypeNodeJson {
     final int index;
-    final boolean invalidating;
-    final String colorId;
-    final ImmutableSortedSet<TypeEdgeJson> edges;
-    final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
+    // These fields are used reflectively via GSON.
+    @Keep final boolean invalidating;
+    @Keep final String colorId;
+    @Keep final ImmutableSortedSet<TypeEdgeJson> edges;
+    @Keep final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
 
     TypeNodeJson(DiGraphNode<ColorGraphNode, Object> n) {
       ColorGraphNode t = n.getValue();
@@ -388,7 +390,8 @@ public final class DisambiguateProperties implements CompilerPass {
 
   private static final class TypeEdgeJson implements Comparable<TypeEdgeJson> {
     final int dest;
-    final Object value;
+    // This field is used reflectively via GSON.
+    @Keep final Object value;
 
     TypeEdgeJson(DiGraphEdge<ColorGraphNode, Object> e) {
       this.dest = e.getDestination().getValue().getIndex();
