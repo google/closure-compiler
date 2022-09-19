@@ -258,7 +258,7 @@ public class AmbiguateProperties implements CompilerPass {
     }
   }
 
-  class PropertyGraph implements AdjacencyGraph<Property, Void> {
+  static class PropertyGraph implements AdjacencyGraph<Property, Void> {
     private final ArrayList<PropertyGraphNode> nodes;
 
     PropertyGraph(ArrayList<PropertyGraphNode> nodes) {
