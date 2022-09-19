@@ -951,6 +951,61 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInvalidMessageStringType() {
+    multiPhaseTestPreLookupError(
+        lines(
+            "/** @desc d */", //
+            "const MSG_H = goog.getMsg(10);"),
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testPlaceholderValueDefinedTwice() {
+    multiPhaseTestPreLookupError(
+        lines(
+            "/** @desc d */",
+            "const MSG_H = goog.getMsg(",
+            "    '{$dick}{$jane}',",
+            "    {jane: x, dick: y, jane: x});"),
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testInvalidPlaceholderArgument() {
+    multiPhaseTestPreLookupError(
+        lines(
+            "/** @desc d */",
+            "const MSG_H = goog.getMsg(",
+            "    '{$dick}{$jane}',",
+            "    'this should be an object literal');"),
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testInvalidOptionsArgumentType() {
+    multiPhaseTestPreLookupError(
+        lines(
+            "/** @desc d */",
+            "const MSG_H = goog.getMsg(",
+            "    '{$dick}{$jane}',",
+            "    {jane: x, dick: y},",
+            "    'should be an object literal');"),
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testComputedKeyInOptions() {
+    multiPhaseTestPreLookupError(
+        lines(
+            "/** @desc d */",
+            "const MSG_H = goog.getMsg(",
+            "    '{$dick}{$jane}',",
+            "    {jane: x, dick: y},",
+            "    {[computedOpt]: true});"),
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
   public void testPlaceholderNameInLowerCamelCase() {
     registerMessage(
         getTestMessageBuilder("MSG_I")
@@ -1292,6 +1347,22 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {\"amtEarned\":amtEarned});",
             "};"),
         "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
+  }
+
+  @Test
+  public void testInvalidRhs() {
+    // If the RHS of a variable named `MSG_*` is not a function call, just report a warning.
+    multiPhaseTestWarning(
+        "var MSG_A = 'string value';",
+        "var MSG_A = 'string value';",
+        "var MSG_A = 'string value';",
+        MESSAGE_NOT_INITIALIZED_CORRECTLY);
+
+    multiPhaseTestWarning(
+        "var MSG_A = 15 * 12;",
+        "var MSG_A = 15 * 12;",
+        "var MSG_A = 15 * 12;",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 

@@ -103,17 +103,9 @@ public final class ReplaceMessages {
     @Override
     protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
       try {
-        final Node origValueNode = definition.getMessageNode();
-        switch (origValueNode.getToken()) {
-          case CALL:
-            // This is the currently preferred form.
-            // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
-            protectGetMsgCall(origValueNode, message);
-            break;
-          default:
-            throw new MalformedException(
-                "Expected ALL node; found: " + origValueNode, origValueNode);
-        }
+        // This is the currently preferred form.
+        // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
+        protectGetMsgCall(definition.getMessageNode(), message);
       } catch (MalformedException e) {
         compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
       }
@@ -126,7 +118,7 @@ public final class ReplaceMessages {
       final Node originalMessageString = checkNotNull(googGetMsg.getNext());
       final Node placeholdersNode = originalMessageString.getNext();
       final Node optionsNode = placeholdersNode == null ? null : placeholdersNode.getNext();
-      final MsgOptions msgOptions = getOptions(message, optionsNode);
+      final MsgOptions msgOptions = getOptions(optionsNode);
 
       // Construct
       // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
@@ -512,18 +504,15 @@ public final class ReplaceMessages {
      *   not as expected
      */
     private Node replaceCallNode(JsMessage message, Node callNode) throws MalformedException {
-      if (!callNode.isCall()) {
-        throw new MalformedException("Expected CALL node; found: " + callNode.getToken(), callNode);
-      }
+      checkNode(callNode, Token.CALL);
       // `goog.getMsg`
       Node getPropNode = callNode.getFirstChild();
       checkNode(getPropNode, Token.GETPROP);
       Node stringExprNode = getPropNode.getNext();
-      checkStringExprNode(stringExprNode);
       // optional `{ key1: value, key2: value2 }` replacements
       Node objLitNode = stringExprNode.getNext();
       // optional replacement options, e.g. `{ html: true }`
-      MsgOptions options = getOptions(message, objLitNode != null ? objLitNode.getNext() : null);
+      MsgOptions options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
 
       Map<String, Node> placeholderMap = createPlaceholderNodeMap(objLitNode);
       // Build the replacement tree.
@@ -538,9 +527,9 @@ public final class ReplaceMessages {
         checkState(key.isStringKey(), key);
         String name = key.getString();
         boolean isKeyAlreadySeen = placeholderMap.put(name, key.getOnlyChild()) != null;
-        if (isKeyAlreadySeen) {
-          throw new MalformedException("Duplicate placeholder name", key);
-        }
+        // JsMessageVisitor should have already reported an error for the message and skipped
+        // it if there is a duplicate placeholder name, so this code will never see such a case.
+        checkState(!isKeyAlreadySeen, "duplicate placeholder name: %s", key);
       }
     }
     return placeholderMap;
@@ -644,19 +633,17 @@ public final class ReplaceMessages {
     return astFactory.createString(s);
   }
 
-  private static MsgOptions getOptions(JsMessage message, @Nullable Node optionsNode)
-      throws MalformedException {
+  private static MsgOptions getOptions(@Nullable Node optionsNode) throws MalformedException {
     MsgOptions options = new MsgOptions();
     if (optionsNode == null) {
       return options;
     }
-    if (!optionsNode.isObjectLit()) {
-      throw new MalformedException("OBJLIT node expected", optionsNode);
-    }
+    // JsMessageVisitor reports an error and skips any message where the options argument
+    // is not an object literal.
+    checkState(optionsNode.isObjectLit(), "OBJLIT node expected: %s", optionsNode);
     for (Node aNode = optionsNode.getFirstChild(); aNode != null; aNode = aNode.getNext()) {
-      if (!aNode.isStringKey()) {
-        throw new MalformedException("STRING_KEY node expected as OBJLIT key", aNode);
-      }
+      // JsMessageVisitor reports errors and skips any messages with non-string-key options.
+      checkState(aNode.isStringKey(), "Expected a string key: %s", aNode);
       String optName = aNode.getString();
       Node value = aNode.getFirstChild();
       switch (optName) {
@@ -675,44 +662,12 @@ public final class ReplaceMessages {
           break;
         case "example":
         case "original_code":
-          {
-            // Verify this format to inform users ASAP if they're supplying something unexpected.
-            // These options are only used when generating the XMB file, but normal compilations
-            // happen much more frequently than that, so we want to report these errors now.
-            // ```
-            // {
-            //    example: {
-            //      'name': 'George'
-            //    },
-            //    original_code: {
-            //      'name': 'getName()'
-            //    }
-            // }
-            // ```
-            if (!value.isObjectLit()) {
-              throw new MalformedException(optName + ": object literal required", value);
-            }
-            final ImmutableSet<String> placeholders = message.jsPlaceholderNames();
-            Node stringKeyNode;
-            for (stringKeyNode = value.getFirstChild();
-                stringKeyNode != null;
-                stringKeyNode = stringKeyNode.getNext()) {
-              if (!stringKeyNode.isStringKey()) {
-                throw new MalformedException("placeholder name required", stringKeyNode);
-              }
-              String placeholderName = stringKeyNode.getString();
-              if (!placeholders.contains(placeholderName)) {
-                throw new MalformedException("unknown placeholder name", stringKeyNode);
-              }
-              Node placeholderValue = stringKeyNode.getOnlyChild();
-              if (!placeholderValue.isStringLit()) {
-                throw new MalformedException("string literal required", placeholderValue);
-              }
-            }
-            break;
-          }
+          // JsMessageVisitor checks the validity of these two options and reports any errors, so
+          // we don't need to do it here. They aren't needed during message replacement anyway.
+          break;
 
         default:
+          // JsMessageVisitor doesn't complain about unexpected option names, so we'll do that here.
           throw new MalformedException("Unexpected option", aNode);
       }
     }
@@ -749,30 +704,6 @@ public final class ReplaceMessages {
       }
     }
     return result;
-  }
-
-  /**
-   * Checks that a node is a valid string expression (either a string literal or a concatenation of
-   * string literals).
-   *
-   * @throws IllegalArgumentException if the node is null or the wrong type
-   */
-  private static void checkStringExprNode(@Nullable Node node) {
-    if (node == null) {
-      throw new IllegalArgumentException("Expected a string; found: null");
-    }
-    switch (node.getToken()) {
-      case STRINGLIT:
-      case TEMPLATELIT:
-        break;
-      case ADD:
-        Node c = node.getFirstChild();
-        checkStringExprNode(c);
-        checkStringExprNode(c.getNext());
-        break;
-      default:
-        throw new IllegalArgumentException("Expected a string; found: " + node.getToken());
-    }
   }
 
   /**
@@ -890,7 +821,7 @@ public final class ReplaceMessages {
         // MSG_EXTERNAL_12345 = ...
         jsMessageBuilder.setIsExternalMsg(true).setId(externalMessageId);
       } else {
-        // NOTE: If the message was anonymous one (assigned to a variable or property named
+        // NOTE: If the message was anonymous (assigned to a variable or property named
         // MSG_UNNAMED_XXX), the key we have here will be the one generated from the message
         // text, and we won't end up setting the isAnonymous flag. Nothing seems to use that
         // flag...
