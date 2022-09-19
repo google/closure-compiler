@@ -70,18 +70,12 @@ class CollapseVariableDeclarations implements CompilerPass {
      */
     final Node startNode;
 
-    /** Parent of the nodes to the collapse */
-    final Node parent;
-
     Collapse(Node startNode, Node endNode, Node parent) {
       this.startNode = startNode;
-      this.parent = parent;
     }
   }
 
-  /**
-   * Collapses to do in this pass.
-   */
+  /** Collapses to do in this pass. */
   private final List<Collapse> collapses = new ArrayList<>();
 
   /**

@@ -256,18 +256,14 @@ class ProcessTweaks implements CompilerPass {
 
   private static final class CollectTweaksResult {
     final Map<String, TweakInfo> tweakInfos;
-    final List<TweakFunctionCall> getOverridesCalls;
 
-    CollectTweaksResult(Map<String, TweakInfo> tweakInfos,
-        List<TweakFunctionCall> getOverridesCalls) {
+    CollectTweaksResult(
+        Map<String, TweakInfo> tweakInfos, List<TweakFunctionCall> getOverridesCalls) {
       this.tweakInfos = tweakInfos;
-      this.getOverridesCalls = getOverridesCalls;
     }
   }
 
-  /**
-   * Processes all calls to goog.tweak functions.
-   */
+  /** Processes all calls to goog.tweak functions. */
   private final class CollectTweaks extends AbstractPostOrderCallback {
     final Map<String, TweakInfo> allTweaks = new HashMap<>();
     final List<TweakFunctionCall> getOverridesCalls = new ArrayList<>();

@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -197,11 +196,6 @@ public final class PhaseOptimizerTest {
   }
 
   private PassFactory createPassFactory(String name, final CompilerPass pass, boolean isOneTime) {
-    return createPassFactory(name, pass, isOneTime, FeatureSet.latest());
-  }
-
-  private PassFactory createPassFactory(
-      String name, final CompilerPass pass, boolean isOneTime, FeatureSet featureSet) {
     return PassFactory.builder()
         .setName(name)
         .setRunInFixedPointLoop(!isOneTime)

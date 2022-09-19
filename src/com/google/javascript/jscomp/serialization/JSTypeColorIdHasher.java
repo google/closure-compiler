@@ -133,7 +133,6 @@ final class JSTypeColorIdHasher {
    */
   private static final class Marker {
     static final int HAS_INSTANCE_TYPE = 0x8c8b70db;
-    static final int IS_PROTOTYPE_TYPE = 0x4c906855;
     static final int NO_GOOG_MODULE_ID = 0x2593c5ff;
     static final int UNKNOWN_SOURCEREF = 0x660be782;
   }

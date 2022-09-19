@@ -147,8 +147,7 @@ public final class DependencyResolverTest {
     Set<String> seen = new HashSet<>();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1), true);
     try {
-      Collection<String> deps = resolver.getDependencies(
-          "goog.require('foo');goog.require('a');", seen, false);
+      resolver.getDependencies("goog.require('foo');goog.require('a');", seen, false);
       assertWithMessage("Service exception should be thrown").fail();
     } catch (ServiceException expected) {
     }

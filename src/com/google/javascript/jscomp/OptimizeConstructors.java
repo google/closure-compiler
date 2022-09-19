@@ -301,14 +301,10 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     final int formalParameterCount;
     // "var args" means any number of parameters are allowed
     final boolean isVarArgs;
-    // "arguments" means "arguments.length" may be referenced and changing the parameters does
-    // matter.
-    final boolean referencesArguments;
 
     ClassConstructorSummary(
         boolean isVarArgs, boolean referencesArguments, int formalParameterCount) {
       this.isVarArgs = isVarArgs;
-      this.referencesArguments = referencesArguments;
       this.formalParameterCount = formalParameterCount;
     }
 
