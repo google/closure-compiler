@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -48,32 +47,6 @@ import org.xml.sax.XMLReader;
 @GwtIncompatible("Currently not used in GWT version")
 @SuppressWarnings("sunapi")
 public final class XtbMessageBundle implements MessageBundle {
-  /**
-   * Detects an ICU-formatted plural or select message. Any placeholders occurring inside these
-   * messages must be rewritten in ICU format.
-   */
-  static boolean isStartOfIcuMessage(String part) {
-    // ICU messages start with a '{' followed by an identifier, followed by a ',' and then 'plural'
-    // or 'select' follows by another comma.
-    // the 'startsWith' check is redundant but should allow us to skip using the matcher
-    if (!part.startsWith("{")) {
-      return false;
-    }
-    int commaIndex = part.indexOf(',', 1);
-    // if commaIndex == 1 that means the identifier is empty, which isn't allowed.
-    if (commaIndex <= 1) {
-      return false;
-    }
-    int nextBracketIndex = part.indexOf('{', 1);
-    return (nextBracketIndex == -1 || nextBracketIndex > commaIndex)
-        && (part.startsWith("plural,", commaIndex + 1)
-            || part.startsWith("select,", commaIndex + 1));
-  }
-
-  static String asIcuPlaceholder(String phName) {
-    return SimpleFormat.format("{%s}", phName);
-  }
-
   private static final SecureEntityResolver NOOP_RESOLVER
       = new SecureEntityResolver();
 
@@ -152,8 +125,6 @@ public final class XtbMessageBundle implements MessageBundle {
     private static final String PLACEHOLDER_ELEM_NAME = "ph";
     private static final String PLACEHOLDER_NAME_ATT_NAME = "name";
 
-    boolean isIcuMessage;
-
     String lang;
     @Nullable JsMessage.Builder msgBuilder;
 
@@ -190,11 +161,7 @@ public final class XtbMessageBundle implements MessageBundle {
         case PLACEHOLDER_ELEM_NAME:
           checkState(msgBuilder != null);
           String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
-          if (isIcuMessage) {
-            msgBuilder.appendStringPart(asIcuPlaceholder(phRef));
-          } else {
-            msgBuilder.appendCanonicalPlaceholderReference(phRef);
-          }
+          msgBuilder.appendCanonicalPlaceholderReference(phRef);
           break;
         default: // fall out
       }
@@ -210,7 +177,6 @@ public final class XtbMessageBundle implements MessageBundle {
         String key = msgBuilder.getKey();
         messages.put(key, msgBuilder.build());
         msgBuilder = null;
-        isIcuMessage = false;
       }
     }
 
@@ -218,9 +184,6 @@ public final class XtbMessageBundle implements MessageBundle {
     public void characters(char ch[], int start, int length) {
       if (msgBuilder != null) {
         String part = String.valueOf(ch, start, length);
-        if (!msgBuilder.hasParts()) {
-          isIcuMessage = isStartOfIcuMessage(part);
-        }
         // Append a string literal to the message.
         msgBuilder.appendStringPart(part);
       }

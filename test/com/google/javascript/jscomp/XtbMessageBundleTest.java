@@ -114,11 +114,11 @@ public final class XtbMessageBundleTest {
     final ImmutableList<Part> icuMsgParts = icuMsg.getParts();
     assertThat(icuMsgParts).hasSize(7);
     assertThat(icuMsgParts.get(0).getString()).isEqualTo("{USER_GENDER,select,female{Hello ");
-    assertThat(icuMsgParts.get(1).getString()).isEqualTo("{USER_IDENTIFIER}");
+    assertThat(icuMsgParts.get(1).getCanonicalPlaceholderName()).isEqualTo("USER_IDENTIFIER");
     assertThat(icuMsgParts.get(2).getString()).isEqualTo(".}male{Hello ");
-    assertThat(icuMsgParts.get(3).getString()).isEqualTo("{USER_IDENTIFIER}");
+    assertThat(icuMsgParts.get(3).getCanonicalPlaceholderName()).isEqualTo("USER_IDENTIFIER");
     assertThat(icuMsgParts.get(4).getString()).isEqualTo(".}other{Hello ");
-    assertThat(icuMsgParts.get(5).getString()).isEqualTo("{USER_IDENTIFIER}");
+    assertThat(icuMsgParts.get(5).getCanonicalPlaceholderName()).isEqualTo("USER_IDENTIFIER");
     assertThat(icuMsgParts.get(6).getString()).isEqualTo(".}}");
 
     // Previous ICU message should not to affect next message

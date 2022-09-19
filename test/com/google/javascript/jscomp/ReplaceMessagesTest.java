@@ -295,6 +295,54 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceExternalIcuSelectorMessageWithPlaceholders() {
+    // Message in the bundle is in ICU selector format with has placeholders with explicit
+    // placeholders.
+    // The JS code treats the message as a simple string without placeholders.
+    // The compiler should join the placeholder names together with the string parts in order to
+    // get the runtime string value.
+    registerMessage(
+        getTestMessageBuilder("123456")
+            .appendStringPart("{USER_GENDER,select,female{Saluton ")
+            .appendCanonicalPlaceholderReference("USER_IDENTIFIER")
+            .appendStringPart(".}male{Saluton ")
+            .appendCanonicalPlaceholderReference("USER_IDENTIFIER")
+            .appendStringPart(".}other{Saluton ")
+            .appendCanonicalPlaceholderReference("USER_IDENTIFIER")
+            .appendStringPart(".}}")
+            .build());
+
+    multiPhaseTest(
+        lines(
+            "/** @desc ICU gender-sensitive greeting */",
+            // Message in the JS code does not define placeholders for the compiler.
+            "const MSG_EXTERNAL_123456 = goog.getMsg(",
+            "    '{USER_GENDER,select,' +",
+            "    'female{Hello {USER_IDENTIFIER}.}' +",
+            "    'male{Hello {USER_IDENTIFIER}.}' +",
+            "    'other{Hello {USER_IDENTIFIER}.}}');"),
+        lines(
+            "/** @desc ICU gender-sensitive greeting */",
+            "const MSG_EXTERNAL_123456 =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_EXTERNAL_123456\",",
+            "          \"msg_text\":",
+            "    '{USER_GENDER,select,"
+                + "female{Hello {USER_IDENTIFIER}.}"
+                + "male{Hello {USER_IDENTIFIER}.}"
+                + "other{Hello {USER_IDENTIFIER}.}}',",
+            "        });"),
+        lines(
+            "/** @desc ICU gender-sensitive greeting */", //
+            "const MSG_EXTERNAL_123456 =",
+            "    '{USER_GENDER,select,"
+                + "female{Saluton {USER_IDENTIFIER}.}"
+                + "male{Saluton {USER_IDENTIFIER}.}"
+                + "other{Saluton {USER_IDENTIFIER}.}}';"));
+  }
+
+  @Test
   public void testReplaceSimpleMessageDefinedWithAdd() {
     registerMessage(getTestMessageBuilder("MSG_A").appendStringPart("Hi\nthere").build());
 
@@ -381,6 +429,66 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             " * @alternateMessageId 1984",
             " */",
             "var MSG_A = 'Hello! Welcome!';"));
+  }
+
+  @Test
+  public void testAlternateIcuSelectorMessageWithPlaceholders() {
+    // Message in the bundle is in ICU selector format with has placeholders with explicit
+    // placeholders.
+    // The JS code treats the message as a simple string without placeholders.
+    // The compiler should join the placeholder names together with the string parts in order to
+    // get the runtime string value.
+    // Note that we are not putting a translation for the actual message from the JS Code into the
+    // bundle here. Instead, we are providing the alternate message.
+    registerMessage(
+        getTestMessageBuilder("1984")
+            .appendStringPart("{USER_GENDER,select,female{Saluton ")
+            .appendCanonicalPlaceholderReference("USER_IDENTIFIER")
+            .appendStringPart(".}male{Saluton ")
+            .appendCanonicalPlaceholderReference("USER_IDENTIFIER")
+            .appendStringPart(".}other{Saluton ")
+            .appendCanonicalPlaceholderReference("USER_IDENTIFIER")
+            .appendStringPart(".}}")
+            .build());
+
+    multiPhaseTest(
+        lines(
+            "/**",
+            " * @desc ICU gender-sensitive greeting",
+            " * @alternateMessageId 1984",
+            " */",
+            // Message in the JS code does not define placeholders for the compiler.
+            "const MSG_ICU_SELECT = goog.getMsg(",
+            "    '{USER_GENDER,select,' +",
+            "    'female{Hello {USER_IDENTIFIER}.}' +",
+            "    'male{Hello {USER_IDENTIFIER}.}' +",
+            "    'other{Hello {USER_IDENTIFIER}.}}');"),
+        lines(
+            "/**",
+            " * @desc ICU gender-sensitive greeting",
+            " * @alternateMessageId 1984",
+            " */",
+            "const MSG_ICU_SELECT =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_ICU_SELECT\",",
+            "          \"alt_id\": \"1984\",",
+            "          \"msg_text\":",
+            "    '{USER_GENDER,select,"
+                + "female{Hello {USER_IDENTIFIER}.}"
+                + "male{Hello {USER_IDENTIFIER}.}"
+                + "other{Hello {USER_IDENTIFIER}.}}',",
+            "        });"),
+        lines(
+            "/**",
+            " * @desc ICU gender-sensitive greeting",
+            " * @alternateMessageId 1984",
+            " */",
+            "const MSG_ICU_SELECT =",
+            "    '{USER_GENDER,select,"
+                + "female{Saluton {USER_IDENTIFIER}.}"
+                + "male{Saluton {USER_IDENTIFIER}.}"
+                + "other{Saluton {USER_IDENTIFIER}.}}';"));
   }
 
   /**
@@ -1057,8 +1165,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testEmptyObjLit() {
-    registerMessage(getTestMessageBuilder("MSG_E").appendJsPlaceholderReference("amount").build());
+  public void testTranslatedMessageWithPlaceholdersForGoogGetMsgWithoutAny() {
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .appendStringPart("You have purchased ")
+            .appendJsPlaceholderReference("amount")
+            .appendStringPart(" items.")
+            .build());
 
     multiPhaseTestPostLookupError(
         lines(
@@ -1071,9 +1184,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"no placeholders\"});",
             ""),
         MESSAGE_TREE_MALFORMED,
-        "Message parse tree malformed. "
-            + "Empty placeholder value map for a translated message "
-            + "with placeholders.");
+        "Message parse tree malformed. The translated message has placeholders, but the definition"
+            + " in the JS code does not.");
   }
 
   @Test
