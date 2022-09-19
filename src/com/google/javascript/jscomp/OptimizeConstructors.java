@@ -302,8 +302,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     // "var args" means any number of parameters are allowed
     final boolean isVarArgs;
 
-    ClassConstructorSummary(
-        boolean isVarArgs, boolean referencesArguments, int formalParameterCount) {
+    ClassConstructorSummary(boolean isVarArgs, int formalParameterCount) {
       this.isVarArgs = isVarArgs;
       this.formalParameterCount = formalParameterCount;
     }
@@ -323,7 +322,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
       boolean argumentsReference = NodeUtil.doesFunctionReferenceOwnArgumentsObject(fn);
       boolean hasVarArgs = argumentsReference || functionHasRest(fn);
       return new ClassConstructorSummary(
-          hasVarArgs, argumentsReference, NodeUtil.getFunctionParameters(fn).getChildCount());
+          hasVarArgs, NodeUtil.getFunctionParameters(fn).getChildCount());
     }
 
     public boolean isEquivalentConstructorDefinition(Node constructorMember) {

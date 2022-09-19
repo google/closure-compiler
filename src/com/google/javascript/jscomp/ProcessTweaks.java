@@ -32,18 +32,18 @@ import org.jspecify.nullness.Nullable;
 
 /**
  * Process goog.tweak primitives. Checks that:
+ *
  * <ul>
- * <li>parameters to goog.tweak.register* are literals of the correct type.
- * <li>the parameter to goog.tweak.get* is a string literal.
- * <li>parameters to goog.tweak.overrideDefaultValue are literals of the correct
- *     type.
- * <li>tweak IDs passed to goog.tweak.get* and goog.tweak.overrideDefaultValue
- *     correspond to registered tweaks.
- * <li>all calls to goog.tweak.register* and goog.tweak.overrideDefaultValue are
- *     within the top-level context.
- * <li>each tweak is registered only once.
- * <li>calls to goog.tweak.overrideDefaultValue occur before the call to the
- *     corresponding goog.tweak.register* function.
+ *   <li>parameters to goog.tweak.register* are literals of the correct type.
+ *   <li>the parameter to goog.tweak.get* is a string literal.
+ *   <li>parameters to goog.tweak.overrideDefaultValue are literals of the correct type.
+ *   <li>tweak IDs passed to goog.tweak.get* and goog.tweak.overrideDefaultValue correspond to
+ *       registered tweaks.
+ *   <li>all calls to goog.tweak.register* and goog.tweak.overrideDefaultValue are within the
+ *       top-level context.
+ *   <li>each tweak is registered only once.
+ *   <li>calls to goog.tweak.overrideDefaultValue occur before the call to the corresponding
+ *       goog.tweak.register* function.
  * </ul>
  */
 class ProcessTweaks implements CompilerPass {
@@ -51,24 +51,21 @@ class ProcessTweaks implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean stripTweaks;
 
-  private static final CharMatcher ID_MATCHER = CharMatcher.inRange('a', 'z').
-      or(CharMatcher.inRange('A', 'Z')).or(CharMatcher.anyOf("0123456789_."));
+  private static final CharMatcher ID_MATCHER =
+      CharMatcher.inRange('a', 'z')
+          .or(CharMatcher.inRange('A', 'Z'))
+          .or(CharMatcher.anyOf("0123456789_."));
 
   // Warnings and Errors.
   static final DiagnosticType UNKNOWN_TWEAK_WARNING =
-      DiagnosticType.warning(
-          "JSC_UNKNOWN_TWEAK_WARNING",
-          "no tweak registered with ID {0}");
+      DiagnosticType.warning("JSC_UNKNOWN_TWEAK_WARNING", "no tweak registered with ID {0}");
 
   static final DiagnosticType TWEAK_MULTIPLY_REGISTERED_ERROR =
       DiagnosticType.error(
-          "JSC_TWEAK_MULTIPLY_REGISTERED_ERROR",
-          "Tweak {0} has already been registered.");
+          "JSC_TWEAK_MULTIPLY_REGISTERED_ERROR", "Tweak {0} has already been registered.");
 
   static final DiagnosticType NON_LITERAL_TWEAK_ID_ERROR =
-      DiagnosticType.error(
-          "JSC_NON_LITERAL_TWEAK_ID_ERROR",
-          "tweak ID must be a string literal");
+      DiagnosticType.error("JSC_NON_LITERAL_TWEAK_ID_ERROR", "tweak ID must be a string literal");
 
   static final DiagnosticType INVALID_TWEAK_DEFAULT_VALUE_WARNING =
       DiagnosticType.warning(
@@ -95,12 +92,9 @@ class ProcessTweaks implements CompilerPass {
           "JSC_INVALID_TWEAK_ID_ERROR",
           "tweak ID contains illegal characters. Only letters, numbers, _ and . are allowed");
 
-  /**
-   * An enum of goog.tweak functions.
-   */
+  /** An enum of goog.tweak functions. */
   private static enum TweakFunction {
-    REGISTER_BOOLEAN("goog.tweak.registerBoolean", "boolean", Token.TRUE,
-        Token.FALSE),
+    REGISTER_BOOLEAN("goog.tweak.registerBoolean", "boolean", Token.TRUE, Token.FALSE),
     REGISTER_NUMBER("goog.tweak.registerNumber", "number", Token.NUMBER),
     REGISTER_STRING("goog.tweak.registerString", "string", Token.STRINGLIT),
     GET_BOOLEAN("goog.tweak.getBoolean", REGISTER_BOOLEAN),
@@ -117,13 +111,12 @@ class ProcessTweaks implements CompilerPass {
       this(name, null, Token.EMPTY, Token.EMPTY, null);
     }
 
-    TweakFunction(String name, String expectedTypeName,
-        Token validNodeTypeA) {
+    TweakFunction(String name, String expectedTypeName, Token validNodeTypeA) {
       this(name, expectedTypeName, validNodeTypeA, Token.EMPTY, null);
     }
 
-    TweakFunction(String name, String expectedTypeName,
-        Token validNodeTypeA, Token validNodeTypeB) {
+    TweakFunction(
+        String name, String expectedTypeName, Token validNodeTypeA, Token validNodeTypeB) {
       this(name, expectedTypeName, validNodeTypeA, validNodeTypeB, null);
     }
 
@@ -181,6 +174,7 @@ class ProcessTweaks implements CompilerPass {
 
   // A map of function name -> TweakFunction.
   private static final Map<String, TweakFunction> TWEAK_FUNCTIONS_MAP;
+
   static {
     TWEAK_FUNCTIONS_MAP = new HashMap<>();
     for (TweakFunction func : TweakFunction.values()) {
@@ -203,8 +197,8 @@ class ProcessTweaks implements CompilerPass {
   }
 
   /**
-   * Removes all CALL nodes in the given TweakInfos, replacing calls to getter
-   * functions with the tweak's default value.
+   * Removes all CALL nodes in the given TweakInfos, replacing calls to getter functions with the
+   * tweak's default value.
    */
   private void stripAllCalls(Map<String, TweakInfo> tweakInfos) {
     for (TweakInfo tweakInfo : tweakInfos.values()) {
@@ -220,15 +214,13 @@ class ProcessTweaks implements CompilerPass {
             // When we find a getter of an unregistered tweak, there has
             // already been a warning about it, so now just use a default
             // value when stripping.
-            TweakFunction registerFunction =
-                functionCall.tweakFunc.registerFunction;
+            TweakFunction registerFunction = functionCall.tweakFunc.registerFunction;
             newValue = registerFunction.createDefaultValueNode();
           }
           callNode.replaceWith(newValue);
           compiler.reportChangeToEnclosingScope(parent);
         } else {
-          Node voidZeroNode = IR.voidNode(IR.number(0).srcref(callNode))
-              .srcref(callNode);
+          Node voidZeroNode = IR.voidNode(IR.number(0).srcref(callNode)).srcref(callNode);
           callNode.replaceWith(voidZeroNode);
           compiler.reportChangeToEnclosingScope(parent);
         }
@@ -236,11 +228,10 @@ class ProcessTweaks implements CompilerPass {
     }
   }
 
-
-
   /**
-   * Finds all calls to goog.tweak functions and emits warnings/errors if any
-   * of the calls have issues.
+   * Finds all calls to goog.tweak functions and emits warnings/errors if any of the calls have
+   * issues.
+   *
    * @return A map of {@link TweakInfo} structures, keyed by tweak ID.
    */
   private CollectTweaksResult collectTweaks(Node root) {
@@ -251,14 +242,13 @@ class ProcessTweaks implements CompilerPass {
     for (TweakInfo tweakInfo : tweakInfos.values()) {
       tweakInfo.emitAllWarnings();
     }
-    return new CollectTweaksResult(tweakInfos, pass.getOverridesCalls);
+    return new CollectTweaksResult(tweakInfos);
   }
 
   private static final class CollectTweaksResult {
     final Map<String, TweakInfo> tweakInfos;
 
-    CollectTweaksResult(
-        Map<String, TweakInfo> tweakInfos, List<TweakFunctionCall> getOverridesCalls) {
+    CollectTweaksResult(Map<String, TweakInfo> tweakInfos) {
       this.tweakInfos = tweakInfos;
     }
   }
@@ -266,7 +256,6 @@ class ProcessTweaks implements CompilerPass {
   /** Processes all calls to goog.tweak functions. */
   private final class CollectTweaks extends AbstractPostOrderCallback {
     final Map<String, TweakInfo> allTweaks = new HashMap<>();
-    final List<TweakFunctionCall> getOverridesCalls = new ArrayList<>();
 
     @SuppressWarnings("incomplete-switch")
     @Override
@@ -314,8 +303,7 @@ class ProcessTweaks implements CompilerPass {
           }
 
           Node tweakDefaultValueNode = tweakIdNode.getNext().getNext();
-          tweakInfo.addRegisterCall(t.getSourceName(), tweakFunc, n,
-              tweakDefaultValueNode);
+          tweakInfo.addRegisterCall(t.getSourceName(), tweakFunc, n, tweakDefaultValueNode);
           break;
         case GET_BOOLEAN:
         case GET_NUMBER:
@@ -326,9 +314,7 @@ class ProcessTweaks implements CompilerPass {
     }
   }
 
-  /**
-   * Holds information about a call to a goog.tweak function.
-   */
+  /** Holds information about a call to a goog.tweak function. */
   private static final class TweakFunctionCall {
     final TweakFunction tweakFunc;
     final Node callNode;
@@ -349,9 +335,7 @@ class ProcessTweaks implements CompilerPass {
     }
   }
 
-  /**
-   * Stores information about a single tweak.
-   */
+  /** Stores information about a single tweak. */
   private final class TweakInfo {
     final String tweakId;
     final List<TweakFunctionCall> functionCalls;
@@ -364,9 +348,8 @@ class ProcessTweaks implements CompilerPass {
     }
 
     /**
-     * If this tweak is registered, then looks for type warnings in default
-     * value parameters and getter functions. If it is not registered, emits an
-     * error for each function call.
+     * If this tweak is registered, then looks for type warnings in default value parameters and
+     * getter functions. If it is not registered, emits an error for each function call.
      */
     void emitAllWarnings() {
       if (isRegistered()) {
@@ -375,8 +358,8 @@ class ProcessTweaks implements CompilerPass {
     }
 
     /**
-     * Emits a warning for each default value parameter that has the wrong type
-     * and for each getter function that was used for the wrong type of tweak.
+     * Emits a warning for each default value parameter that has the wrong type and for each getter
+     * function that was used for the wrong type of tweak.
      */
     void emitAllTypeWarnings() {
       for (TweakFunctionCall call : functionCalls) {
@@ -387,38 +370,41 @@ class ProcessTweaks implements CompilerPass {
           // For register* and overrideDefaultValue calls, ensure the default
           // value is a literal of the correct type.
           if (!registerFunc.isValidNodeType(valueNode.getToken())) {
-            compiler.report(JSError.make(
-                valueNode, INVALID_TWEAK_DEFAULT_VALUE_WARNING,
-                tweakId, registerFunc.getName(),
-                registerFunc.getExpectedTypeName()));
+            compiler.report(
+                JSError.make(
+                    valueNode,
+                    INVALID_TWEAK_DEFAULT_VALUE_WARNING,
+                    tweakId,
+                    registerFunc.getName(),
+                    registerFunc.getExpectedTypeName()));
           }
         } else if (tweakFunc.isGetterFunction()) {
           // For getter calls, ensure the correct getter was used.
           if (!tweakFunc.isCorrectRegisterFunction(registerFunc)) {
-            compiler.report(JSError.make(
-                call.callNode, TWEAK_WRONG_GETTER_TYPE_WARNING,
-                tweakFunc.getName(), registerFunc.getName()));
+            compiler.report(
+                JSError.make(
+                    call.callNode,
+                    TWEAK_WRONG_GETTER_TYPE_WARNING,
+                    tweakFunc.getName(),
+                    registerFunc.getName()));
           }
         }
       }
     }
 
-    void addRegisterCall(String sourceName, TweakFunction tweakFunc,
-        Node callNode, Node defaultValueNode) {
-      registerCall = new TweakFunctionCall(tweakFunc, callNode,
-          defaultValueNode);
+    void addRegisterCall(
+        String sourceName, TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
+      registerCall = new TweakFunctionCall(tweakFunc, callNode, defaultValueNode);
       functionCalls.add(registerCall);
     }
 
-    void addOverrideDefaultValueCall(String sourceName,
-        TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
-      functionCalls.add(new TweakFunctionCall(tweakFunc, callNode,
-          defaultValueNode));
+    void addOverrideDefaultValueCall(
+        String sourceName, TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
+      functionCalls.add(new TweakFunctionCall(tweakFunc, callNode, defaultValueNode));
       this.defaultValueNode = defaultValueNode;
     }
 
-    void addGetterCall(String sourceName, TweakFunction tweakFunc,
-        Node callNode) {
+    void addGetterCall(String sourceName, TweakFunction tweakFunc, Node callNode) {
       functionCalls.add(new TweakFunctionCall(tweakFunc, callNode));
     }
 
