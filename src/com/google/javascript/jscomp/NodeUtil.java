@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.base.Tri;
@@ -4027,6 +4028,9 @@ public final class NodeUtil {
         && isLatin(name);
   }
 
+  @InlineMe(
+      replacement = "NodeUtil.isValidQualifiedName(mode.toFeatureSet(), name)",
+      imports = "com.google.javascript.jscomp.NodeUtil")
   @Deprecated
   public static boolean isValidQualifiedName(LanguageMode mode, String name) {
     return isValidQualifiedName(mode.toFeatureSet(), name);

@@ -26,6 +26,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.serialization.SourceFileProto;
 import com.google.javascript.jscomp.serialization.SourceFileProto.FileOnDisk;
 import com.google.javascript.jscomp.serialization.SourceFileProto.ZipEntryOnDisk;
@@ -237,6 +238,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   /**
    * @deprecated alias of {@link #getName()}. Use that instead
    */
+  @InlineMe(replacement = "this.getName()")
   @Deprecated
   public String getOriginalPath() {
     return this.getName();

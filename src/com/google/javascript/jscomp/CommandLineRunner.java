@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -2140,6 +2141,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     return builder.build();
   }
 
+  @InlineMe(
+      replacement = "CommandLineRunner.getBuiltinExterns(CompilerOptions.Environment.BROWSER)",
+      imports = {
+        "com.google.javascript.jscomp.CommandLineRunner",
+        "com.google.javascript.jscomp.CompilerOptions"
+      })
   @Deprecated
   public static List<SourceFile> getDefaultExterns() throws IOException {
     return getBuiltinExterns(CompilerOptions.Environment.BROWSER);

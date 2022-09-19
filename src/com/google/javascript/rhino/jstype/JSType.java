@@ -46,6 +46,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1456,7 +1457,10 @@ public abstract class JSType {
     return this.isSubtypeOf(supertype);
   }
 
-  /** @deprecated Prefer {@link #isSubtype(JSType)} instead. */
+  /**
+   * @deprecated Prefer {@link #isSubtype(JSType)} instead.
+   */
+  @InlineMe(replacement = "this.isSubtypeOf(supertype, mode)")
   @Deprecated
   public final boolean isSubtype(JSType supertype, SubtypingMode mode) {
     return this.isSubtypeOf(supertype, mode);

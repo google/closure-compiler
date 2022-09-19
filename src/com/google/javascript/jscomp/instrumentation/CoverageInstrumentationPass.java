@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.instrumentation;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerPass;
@@ -62,6 +63,9 @@ public class CoverageInstrumentationPass implements CompilerPass {
     instrumentationData = new LinkedHashMap<>();
   }
 
+  @InlineMe(
+      replacement = "this(compiler, reach, InstrumentOption.LINE_ONLY, \"\")",
+      imports = "com.google.javascript.jscomp.CompilerOptions.InstrumentOption")
   @Deprecated
   public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {
     this(compiler, reach, InstrumentOption.LINE_ONLY, "");

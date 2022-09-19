@@ -33,6 +33,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.errorprone.annotations.RestrictedApi;
 import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
@@ -1554,8 +1555,11 @@ public class CompilerOptions implements Serializable {
   private Reach inlineFunctionsLevel;
 
   /** Use {@link #setInlineFunctions(Reach)} instead */
+  @InlineMe(
+      replacement = "this.setInlineFunctions(inlineFunctions ? Reach.ALL : Reach.NONE)",
+      imports = "com.google.javascript.jscomp.CompilerOptions.Reach")
   @Deprecated
-  public void setInlineFunctions(boolean inlineFunctions) {
+  public final void setInlineFunctions(boolean inlineFunctions) {
     this.setInlineFunctions(inlineFunctions ? Reach.ALL : Reach.NONE);
   }
 
@@ -2406,8 +2410,11 @@ public class CompilerOptions implements Serializable {
     this.defineReplacements.putAll(defineReplacements);
   }
 
+  @InlineMe(
+      replacement =
+          "this.setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations)")
   @Deprecated
-  public void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
+  public final void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
     setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations);
   }
 
@@ -2419,8 +2426,9 @@ public class CompilerOptions implements Serializable {
     this.cssRenamingMap = cssRenamingMap;
   }
 
+  @InlineMe(replacement = "this.setCssRenamingSkiplist(skiplist)")
   @Deprecated
-  public void setCssRenamingWhitelist(Set<String> skiplist) {
+  public final void setCssRenamingWhitelist(Set<String> skiplist) {
     setCssRenamingSkiplist(skiplist);
   }
 
