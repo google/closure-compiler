@@ -84,12 +84,11 @@ public class JSTypeRegistryTest {
   // now much larger
 
   private final JSTypeRegistry registry = new JSTypeRegistry(null, null);
-  private JSTypeResolver.Closer closer;
 
   @Before
   @SuppressWarnings({"MustBeClosedChecker"})
   public void setUp() throws Exception {
-    this.closer = registry.getResolver().openForDefinition();
+    JSTypeResolver.Closer unused = registry.getResolver().openForDefinition();
   }
 
   @Test
