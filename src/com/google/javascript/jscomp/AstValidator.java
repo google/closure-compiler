@@ -1033,7 +1033,7 @@ public final class AstValidator implements CompilerPass {
         violation("Expected non-null string.", n);
         return false;
       }
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       violation("Expected non-null string.", n);
       return false;
     }

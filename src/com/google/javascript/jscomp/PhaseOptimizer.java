@@ -199,7 +199,7 @@ class PhaseOptimizer implements CompilerPass {
     try {
       validityCheck.create(compiler).process(externs, root);
       changeVerifier.checkRecordedChanges(passName, jsRoot);
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       throw new IllegalStateException("Validity checks failed for pass: " + passName, e);
     }
   }
