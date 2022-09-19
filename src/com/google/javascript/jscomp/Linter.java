@@ -116,7 +116,7 @@ public final class Linter {
     return new Builder();
   }
 
-  void lint(String filename) throws IOException {
+  void lint(String filename) {
     lint(Paths.get(filename), new Compiler(System.out));
   }
 
