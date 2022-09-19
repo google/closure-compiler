@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
@@ -2197,8 +2196,35 @@ public final class ConformanceRules {
    * Checks nodes for conformance with banning the setting of attributes that are on the blocklist.
    */
   public static final class SecuritySensitiveAttributes {
+    /**
+     * Security-sensitive attributes that are banned from being set.
+     *
+     * <p>Making updates to these attributes requires a new JSCompiler release. You must test the
+     * change using a global presubmit "at head" and update any affected allowlists. See
+     * go/jscompiler-global-presubmit and go/tsjs-conformance-team-docs.
+     */
+    public static final ImmutableSet<String> BANNED_ATTRS =
+        ImmutableSet.of(
+            "href",
+            "rel",
+            "src",
+            "srcdoc",
+            "action",
+            "formaction",
+            "sandbox",
+            "cite",
+            "poster",
+            "icon");
+
+    /**
+     * Given a {@code NodeTraversal} and {@code Node}, check if the attribute violates conformance.
+     *
+     * <p>A violation is returned if the attribute name cannot be determined (and it is not an xid),
+     * if the attribute is on a list of banned attributes, or if it begins with the letters "on".
+     * Otherwise, it is a conforming attribute.
+     */
     public static ConformanceResult checkConformanceForAttributeName(
-        NodeTraversal traversal, Node attrName, ImmutableSet<String> bannedAttrs) {
+        NodeTraversal traversal, Node attrName) {
       String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
       if (literalName == null) {
         // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
@@ -2209,7 +2235,7 @@ public final class ConformanceRules {
 
       literalName = literalName.toLowerCase(Locale.ROOT);
 
-      if (bannedAttrs.contains(literalName)
+      if (BANNED_ATTRS.contains(literalName)
           || ConformanceUtil.isEventHandlerAttrName(literalName)) {
         return ConformanceResult.VIOLATION;
       }
@@ -2229,8 +2255,6 @@ public final class ConformanceRules {
    * Element}.
    */
   public static final class BanSetAttribute extends AbstractRule {
-    private final ImmutableSet<String> bannedAttrs;
-
     private static final String SET_ATTRIBUTE = "setAttribute";
     private static final String SET_ATTRIBUTE_NS = "setAttributeNS";
     private static final String SET_ATTRIBUTE_NODE = "setAttributeNode";
@@ -2240,16 +2264,11 @@ public final class ConformanceRules {
 
     /**
      * Create a custom checker to ban {@code Element#setAttribute} based on conformance a
-     * requirement spec. Names in {@code value} fields indicate the attribute names that should be
-     * blocked. Throws {@link InvalidRequirementSpec} if the requirement is malformed.
+     * requirement spec. Throws {@link InvalidRequirementSpec} if the requirement is malformed.
      */
     public BanSetAttribute(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      bannedAttrs =
-          requirement.getValueList().stream()
-              .map(v -> v.toLowerCase(Locale.ROOT))
-              .collect(toImmutableSet());
     }
 
     @Override
@@ -2279,7 +2298,7 @@ public final class ConformanceRules {
       }
 
       return SecuritySensitiveAttributes.checkConformanceForAttributeName(
-          traversal, node.getSecondChild(), bannedAttrs);
+          traversal, node.getSecondChild());
     }
 
     private Optional<String> getBannedPropertyName(Node node) {
@@ -2306,7 +2325,8 @@ public final class ConformanceRules {
       Node key = node.getSecondChild();
       if (key.isStringLit()) {
         String keyName = key.getString().toLowerCase(Locale.ROOT);
-        if (!bannedAttrs.contains(keyName) && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
+        if (!SecuritySensitiveAttributes.BANNED_ATTRS.contains(keyName)
+            && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
           return ConformanceResult.CONFORMANCE;
         } else if (hasElementType(node)) {
           return ConformanceResult.VIOLATION;
@@ -2359,7 +2379,8 @@ public final class ConformanceRules {
    * Can be used to ban any function like {@code Element#setAttribute} which takes two parameters,
    * an attribute name and a value.
    *
-   * <p>The specific attribute names that are banned are specified in {@code BANNED_ATTRS} below.
+   * <p>The specific attribute names that are banned are specified in {@code
+   * SecuritySensitiveAttributes.BANNED_ATTRS}.
    */
   public static final class BanSettingAttributes extends AbstractRule {
     private static class AttributeSettingRestriction {
@@ -2373,27 +2394,6 @@ public final class ConformanceRules {
     }
 
     private final ImmutableList<AttributeSettingRestriction> restrictions;
-
-    /**
-     * Security-sensitive attributes that are banned from being set.
-     *
-     * <p>Making updates to these attributes requires a new JSCompiler release. You must test the
-     * change using a global presubmit "at head" and update any affected allowlists. See
-     * go/jscompiler-global-presubmit and go/tsjs-conformance-team-docs.
-     */
-    public static final ImmutableSet<String> BANNED_ATTRS =
-        ImmutableSet.of(
-            "href",
-            "rel",
-            "src",
-            "srcdoc",
-            "action",
-            "formaction",
-            "sandbox",
-            "cite",
-            "poster",
-            "icon",
-            "style");
 
     /**
      * Create a custom checker to ban a function like {@code Element#setAttribute} based on a
@@ -2445,7 +2445,7 @@ public final class ConformanceRules {
       }
 
       return SecuritySensitiveAttributes.checkConformanceForAttributeName(
-          traversal, node.getSecondChild(), BANNED_ATTRS);
+          traversal, node.getSecondChild());
     }
 
     private Optional<String> getBannedPropertyName(Node node) {
