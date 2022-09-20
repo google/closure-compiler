@@ -108,6 +108,14 @@ public final class CheckSuperTest extends CompilerTestCase {
         error(THIS_BEFORE_SUPER));
   }
 
+  @Test
+  public void testThisAndSuperPropAccessBeforeSuperCall_inSuperConstructorArgs() {
+    test(
+        srcs("class C extends D { constructor() { super(this.foo(), super.foo()); } }"),
+        error(SUPER_ACCESS_BEFORE_SUPER_CONSTRUCTOR),
+        error(THIS_BEFORE_SUPER));
+  }
+
   // We could require that the super() call is the first statement in the constructor, except that
   // doing so breaks J2CL-compiled code, which needs to do the static initialization for the class
   // before anything else.

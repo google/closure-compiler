@@ -153,12 +153,21 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
     switch (n.getToken()) {
       case SUPER:
         if (isSuperConstructorCall(n)) {
-          currentContext.visitSuperConstructorCall(t, n);
+          // Note: defer recording the call in `currentContext.visitSuperConstructorCall` until
+          // visitng the parent CALL node. This ensures any this/super references in the
+          // call arguments are treated as invalid, pre-super() call, references.
         } else if (isSuperPropertyAccess(n)) {
           currentContext.visitSuperPropertyAccess(t, n);
         } else {
           // super used some way other than `super()`, `super.prop`, or `super[expr]`.
           t.report(n, INVALID_SUPER_USAGE);
+        }
+        break;
+
+      case CALL:
+        Node callee = n.getFirstChild();
+        if (callee.isSuper()) {
+          currentContext.visitSuperConstructorCall(t, callee);
         }
         break;
 
