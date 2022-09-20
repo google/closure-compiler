@@ -516,8 +516,8 @@ public final class NodeSubject extends Subject {
    *
    * @param jsDoc Whether to check for differences in JSDoc.
    */
-  @Nullable
-  private static NodeMismatch findFirstMismatch(Node actual, Node expected, boolean jsDoc) {
+  private static @Nullable NodeMismatch findFirstMismatch(
+      Node actual, Node expected, boolean jsDoc) {
     if (!actual.isEquivalentTo(
         expected, /* compareType= */ false, /* recurse= */ false, jsDoc, /* sideEffect= */ false)) {
       return new NodeMismatch(actual, expected);

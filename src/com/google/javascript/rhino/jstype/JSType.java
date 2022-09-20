@@ -428,9 +428,8 @@ public abstract class JSType {
   }
 
   /** Null-safe version of toMaybeFunctionType(). */
-  @Nullable
   @SuppressWarnings("AmbiguousMethodReference")
-  public static FunctionType toMaybeFunctionType(JSType type) {
+  public static @Nullable FunctionType toMaybeFunctionType(JSType type) {
     return type == null ? null : type.toMaybeFunctionType();
   }
 
@@ -438,8 +437,7 @@ public abstract class JSType {
     return toMaybeEnumElementType() != null;
   }
 
-  @Nullable
-  public final JSType getEnumeratedTypeOfEnumElement() {
+  public final @Nullable JSType getEnumeratedTypeOfEnumElement() {
     EnumElementType e = toMaybeEnumElementType();
     return e == null ? null : e.getPrimitiveType();
   }
@@ -801,8 +799,7 @@ public abstract class JSType {
    * @return The property's type. {@code null} if the current type cannot have properties, or if the
    *     type is not found.
    */
-  @Nullable
-  public final JSType findPropertyType(String propertyName) {
+  public final @Nullable JSType findPropertyType(String propertyName) {
     @Nullable JSType propertyType = findPropertyTypeWithoutConsideringTemplateTypes(propertyName);
     if (propertyType == null) {
       return null;
@@ -829,8 +826,7 @@ public abstract class JSType {
    * need to lookup a property on a random JSType
    */
   @ForOverride
-  @Nullable
-  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected @Nullable JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
     if (autoboxObjType != null) {
       return autoboxObjType.findPropertyType(propertyName);
@@ -877,8 +873,7 @@ public abstract class JSType {
    * type, it will *not* be converted to an object type. If you want to simulate JS autoboxing or
    * dereferencing, you should use autoboxesTo() or dereference().
    */
-  @Nullable
-  public ObjectType toObjectType() {
+  public @Nullable ObjectType toObjectType() {
     return this instanceof ObjectType ? (ObjectType) this : null;
   }
 
@@ -897,11 +892,10 @@ public abstract class JSType {
   /**
    * Dereferences a type for property access.
    *
-   * Filters null/undefined, autoboxes the resulting type, and returns it
-   * iff it's an object. If not an object, returns null.
+   * <p>Filters null/undefined, autoboxes the resulting type, and returns it iff it's an object. If
+   * not an object, returns null.
    */
-  @Nullable
-  public final ObjectType dereference() {
+  public final @Nullable ObjectType dereference() {
     return autobox().toObjectType();
   }
 
@@ -932,8 +926,7 @@ public abstract class JSType {
     return testForEqualityHelper(this, that);
   }
 
-  @Nullable
-  final Tri testForEqualityHelper(JSType aType, JSType bType) {
+  final @Nullable Tri testForEqualityHelper(JSType aType, JSType bType) {
     if (bType.isAllType() || bType.isUnknownType() ||
         bType.isNoResolvedType() ||
         aType.isAllType() || aType.isUnknownType() ||
@@ -1379,8 +1372,7 @@ public abstract class JSType {
     return this.isNullType() || this.isVoidType();
   }
 
-  @Nullable
-  public Iterable<JSType> getUnionMembers() {
+  public @Nullable Iterable<JSType> getUnionMembers() {
     return isUnionType() ? this.toMaybeUnionType().getAlternates() : null;
   }
 
@@ -1566,8 +1558,7 @@ public abstract class JSType {
    *
    * @see #resolve
    */
-  @Nullable
-  static final JSType safeResolve(JSType type, ErrorReporter reporter) {
+  static final @Nullable JSType safeResolve(JSType type, ErrorReporter reporter) {
     return type == null ? null : type.resolve(reporter);
   }
 

@@ -73,7 +73,7 @@ final class PropertyMap {
    * (e.g. structural type equality). Since the results don't change often, this cache eliminates
    * most of the cost.
    */
-  @Nullable private ImmutableSortedSet<String> cachedKeySet = null;
+  private @Nullable ImmutableSortedSet<String> cachedKeySet = null;
 
   /**
    * A "timestamp" for map mutations to validate {@link #cachedKeySet}.

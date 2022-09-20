@@ -73,8 +73,7 @@ public abstract class QualifiedName {
    * Returns the qualified name of the owner, or null for simple names. For the name "foo.bar.baz",
    * this returns an object representing "foo.bar".
    */
-  @Nullable
-  public abstract QualifiedName getOwner();
+  public abstract @Nullable QualifiedName getOwner();
 
   /**
    * Returns outer-most term of this qualified name, or the entire name for simple names. For the
@@ -147,9 +146,8 @@ public abstract class QualifiedName {
       this.size = size;
     }
 
-    @Nullable
     @Override
-    public QualifiedName getOwner() {
+    public @Nullable QualifiedName getOwner() {
       return size > 1 ? new StringListQname(terms, size - 1) : null;
     }
 
@@ -257,9 +255,8 @@ public abstract class QualifiedName {
       this.node = n;
     }
 
-    @Nullable
     @Override
-    public QualifiedName getOwner() {
+    public @Nullable QualifiedName getOwner() {
       return node.isGetProp() ? new NodeQname(node.getFirstChild()) : null;
     }
 

@@ -385,7 +385,7 @@ public class Node {
      * <p>Null iff the raw string contains an uncookable escape sequence.
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#es2018_revision_of_illegal_escape_sequences
      */
-    @Nullable private final String cooked;
+    private final @Nullable String cooked;
 
     /** The raw version of the template literal substring, is not null */
     private final String raw;
@@ -580,8 +580,7 @@ public class Node {
     return first;
   }
 
-  @Nullable
-  public final Node getFirstChild() {
+  public final @Nullable Node getFirstChild() {
     return first;
   }
 
@@ -590,28 +589,23 @@ public class Node {
    *
    * @return The first child of the first child.
    */
-  @Nullable
-  public final Node getFirstFirstChild() {
+  public final @Nullable Node getFirstFirstChild() {
     return first.first;
   }
 
-  @Nullable
-  public final Node getSecondChild() {
+  public final @Nullable Node getSecondChild() {
     return first.next;
   }
 
-  @Nullable
-  public final Node getLastChild() {
+  public final @Nullable Node getLastChild() {
     return first != null ? first.previous : null;
   }
 
-  @Nullable
-  public final Node getNext() {
+  public final @Nullable Node getNext() {
     return next;
   }
 
-  @Nullable
-  public final Node getPrevious() {
+  public final @Nullable Node getPrevious() {
     return this == parent.first ? null : previous;
   }
 
@@ -896,8 +890,7 @@ public class Node {
    *
    * @return The removed Node.
    */
-  @Nullable
-  public final Node removeFirstChild() {
+  public final @Nullable Node removeFirstChild() {
     Node child = first;
     if (child != null) {
       child.detach();
@@ -910,8 +903,7 @@ public class Node {
    *
    * @return The first child node
    */
-  @Nullable
-  public final Node removeChildren() {
+  public final @Nullable Node removeChildren() {
     Node children = first;
     for (Node child = first; child != null; child = child.next) {
       child.parent = null;
@@ -933,8 +925,7 @@ public class Node {
   }
 
   @VisibleForTesting
-  @Nullable
-  final PropListItem lookupProperty(Prop prop) {
+  final @Nullable PropListItem lookupProperty(Prop prop) {
     byte propType = (byte) prop.ordinal();
     PropListItem x = propListHead;
     while (x != null && propType != x.propType) {
@@ -1060,8 +1051,8 @@ public class Node {
    * @param prop The property to look for
    * @return The replacement list if the property was removed, or 'item' otherwise.
    */
-  @Nullable
-  private static PropListItem rebuildListWithoutProp(@Nullable PropListItem item, Prop prop) {
+  private static @Nullable PropListItem rebuildListWithoutProp(
+      @Nullable PropListItem item, Prop prop) {
     if (item == null) {
       return null;
     } else if (item.propType == prop.ordinal()) {
@@ -1072,8 +1063,7 @@ public class Node {
     }
   }
 
-  @Nullable
-  public final Object getProp(Prop propType) {
+  public final @Nullable Object getProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return null;
@@ -1268,8 +1258,7 @@ public class Node {
    * Returns the syntactical type specified on this node. Not to be confused with {@link
    * #getJSType()} which returns the compiler-inferred type.
    */
-  @Nullable
-  public final Node getDeclaredTypeExpression() {
+  public final @Nullable Node getDeclaredTypeExpression() {
     return (Node) getProp(Prop.DECLARED_TYPE_EXPR);
   }
 
@@ -1282,8 +1271,7 @@ public class Node {
    * Returns the type of this node before casting. This annotation will only exist on the first
    * child of a CAST node after type checking.
    */
-  @Nullable
-  public final JSType getJSTypeBeforeCast() {
+  public final @Nullable JSType getJSTypeBeforeCast() {
     return (JSType) getProp(Prop.TYPE_BEFORE_CAST);
   }
 
@@ -1352,8 +1340,7 @@ public class Node {
     return ((TemplateLiteralSubstringNode) this).raw;
   }
 
-  @Nullable
-  public final String getCookedString() {
+  public final @Nullable String getCookedString() {
     return ((TemplateLiteralSubstringNode) this).cooked;
   }
 
@@ -1462,10 +1449,10 @@ public class Node {
   }
 
   private transient Token token; // Type of the token of the node; NAME for example
-  @Nullable private transient Node next; // next sibling, a linked list
-  @Nullable private transient Node previous; // previous sibling, a circular linked list
-  @Nullable private transient Node first; // first element of a linked list of children
-  @Nullable private transient Node parent;
+  private transient @Nullable Node next; // next sibling, a linked list
+  private transient @Nullable Node previous; // previous sibling, a circular linked list
+  private transient @Nullable Node first; // first element of a linked list of children
+    private transient @Nullable  Node parent;
   // We get the last child as first.previous. But last.next is null, not first.
 
   /**
@@ -1478,16 +1465,16 @@ public class Node {
   /** The length of the code represented by the node. */
   private transient int length;
 
-  @Nullable private transient Object jstypeOrColor;
+  private transient @Nullable Object jstypeOrColor;
 
-  @Nullable private transient String originalName;
+  private transient @Nullable String originalName;
 
   /**
    * Linked list of properties. Since vast majority of nodes would have no more than 2 properties,
    * linked list saves memory and provides fast lookup. If this does not holds, propListHead can be
    * replaced by UintMap.
    */
-  @Nullable private transient PropListItem propListHead;
+  private transient @Nullable PropListItem propListHead;
 
   // ==========================================================================
   // Source position management
@@ -1522,15 +1509,13 @@ public class Node {
   }
 
   // TODO(johnlenz): make this final
-  @Nullable
-  public String getSourceFileName() {
+  public @Nullable String getSourceFileName() {
     StaticSourceFile file = getStaticSourceFile();
     return file == null ? null : file.getName();
   }
 
   /** Returns the source file associated with this input. */
-  @Nullable
-  public StaticSourceFile getStaticSourceFile() {
+  public @Nullable StaticSourceFile getStaticSourceFile() {
     return ((StaticSourceFile) this.getProp(Prop.SOURCE_FILE));
   }
 
@@ -1540,8 +1525,7 @@ public class Node {
   }
 
   /** Returns the Id of the CompilerInput associated with this Node. */
-  @Nullable
-  public InputId getInputId() {
+   public @Nullable  InputId getInputId() {
     return ((InputId) this.getProp(Prop.INPUT_ID));
   }
 
@@ -1556,9 +1540,8 @@ public class Node {
    *
    * @deprecated "original name" is poorly defined.
    */
-  @Nullable
   @Deprecated
-  public final String getOriginalName() {
+  public final @Nullable String getOriginalName() {
     return this.originalName;
   }
 
@@ -1712,7 +1695,7 @@ public class Node {
    * @see Node#children()
    */
   private static final class SiblingNodeIterator implements Iterator<Node> {
-    @Nullable private Node current;
+      private @Nullable  Node current;
 
     SiblingNodeIterator(Node start) {
       this.current = start;
@@ -1742,8 +1725,7 @@ public class Node {
   // ==========================================================================
   // Accessors
 
-  @Nullable
-  final PropListItem getPropListHeadForTesting() {
+  final @Nullable PropListItem getPropListHeadForTesting() {
     return propListHead;
   }
 
@@ -1751,8 +1733,7 @@ public class Node {
     this.propListHead = propListHead;
   }
 
-  @Nullable
-  public final Node getParent() {
+   public final @Nullable  Node getParent() {
     return parent;
   }
 
@@ -1760,8 +1741,7 @@ public class Node {
     return parent != null;
   }
 
-  @Nullable
-  public final Node getGrandparent() {
+   public final @Nullable  Node getGrandparent() {
     return parent == null ? null : parent.parent;
   }
 
@@ -1770,8 +1750,7 @@ public class Node {
    *
    * @param level 0 = this, 1 = the parent, etc.
    */
-  @Nullable
-  public final Node getAncestor(int level) {
+   public final @Nullable  Node getAncestor(int level) {
     checkArgument(level >= 0);
     Node node = this;
     while (node != null && level-- > 0) {
@@ -1811,7 +1790,7 @@ public class Node {
 
   /** Iterator to go up the ancestor tree. */
   public static final class AncestorIterable implements Iterable<Node> {
-    @Nullable private Node cur;
+      private @Nullable  Node cur;
 
     /**
      * @param cur The node to start.
@@ -2073,8 +2052,7 @@ public class Node {
    * @return a null if this is not a qualified name, or a dot-separated string of the name and
    *     properties.
    */
-  @Nullable
-  public final String getQualifiedName() {
+   public final @Nullable  String getQualifiedName() {
     switch (token) {
       case NAME:
         String name = getString();
@@ -2091,8 +2069,7 @@ public class Node {
     }
   }
 
-  @Nullable
-  public final QualifiedName getQualifiedNameObject() {
+   public final @Nullable  QualifiedName getQualifiedNameObject() {
     return isQualifiedName() ? new QualifiedName.NodeQname(this) : null;
   }
 
@@ -2103,8 +2080,7 @@ public class Node {
    * @return {@code null} if this is not a qualified name or a StringBuilder if it is a complex
    *     qualified name.
    */
-  @Nullable
-  private StringBuilder getQualifiedNameForGetProp(int reserve) {
+   private @Nullable  StringBuilder getQualifiedNameForGetProp(int reserve) {
     String propName = this.getString();
     reserve += 1 + propName.length(); // +1 for the '.'
     StringBuilder builder;
@@ -2135,9 +2111,7 @@ public class Node {
    *     properties.
    * @deprecated "original name" is poorly defined. See #getOriginalName
    */
-  @Nullable
-  @Deprecated
-  public final String getOriginalQualifiedName() {
+  @Deprecated public final @Nullable  String getOriginalQualifiedName() {
     if (token == Token.NAME) {
       String name = getOriginalName();
       if (name == null) {
@@ -2429,8 +2403,7 @@ public class Node {
    * Returns the compiler inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
-  @Nullable
-  public final JSType getJSType() {
+   public final @Nullable  JSType getJSType() {
     return (this.jstypeOrColor instanceof JSType) ? (JSType) this.jstypeOrColor : null;
   }
 
@@ -2449,8 +2422,7 @@ public class Node {
    * Returns the compiled inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
-  @Nullable
-  public final Color getColor() {
+   public final @Nullable  Color getColor() {
     return (this.jstypeOrColor instanceof Color) ? (Color) this.jstypeOrColor : null;
   }
 
@@ -2471,8 +2443,7 @@ public class Node {
    *
    * @return the information or {@code null} if no JSDoc is attached to this node
    */
-  @Nullable
-  public final JSDocInfo getJSDocInfo() {
+   public final @Nullable  JSDocInfo getJSDocInfo() {
     return (JSDocInfo) getProp(Prop.JSDOC_INFO);
   }
 

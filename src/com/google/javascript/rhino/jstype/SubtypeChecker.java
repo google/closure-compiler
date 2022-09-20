@@ -624,8 +624,7 @@ final class SubtypeChecker {
    * Determines if the specified type should be checked as covariant rather than the standard
    * invariant type. If so, returns the template type to check covariantly.
    */
-  @Nullable
-  static TemplateType getTemplateKeyIfCovariantType(JSType type) {
+  static @Nullable TemplateType getTemplateKeyIfCovariantType(JSType type) {
     if (type.isTemplatizedType()) {
       // Unlike other covariant/bivariant types, even non-native subtypes of IThenable are
       // covariant, so IThenable is special-cased here.
@@ -699,8 +698,7 @@ final class SubtypeChecker {
     }
   }
 
-  @Nullable
-  private static ObjectType getObjectTypeIfNative(JSType type) {
+  private static @Nullable ObjectType getObjectTypeIfNative(JSType type) {
     ObjectType objType = type.toObjectType();
     ObjectType unwrapped = ObjectType.deeplyUnwrap(objType);
     return unwrapped != null && unwrapped.isNativeObjectType() ? unwrapped : null;

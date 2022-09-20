@@ -462,8 +462,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * Returns the child for the given bit, which must have exactly one bit set. Returns null if there
    * is no child for that bit.
    */
-  @Nullable
-  private HamtPMap<K, V> getChild(int bit) {
+  private @Nullable HamtPMap<K, V> getChild(int bit) {
     return (mask & bit) != 0 ? children[index(bit)] : null;
   }
 
@@ -595,8 +594,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * Returns a new map with the elements from children. One element is removed from one of the
    * children and promoted to a root node. If there are no children, returns null.
    */
-  @Nullable
-  private static <K, V> HamtPMap<K, V> deleteRoot(int mask, HamtPMap<K, V>[] children) {
+  private static <K, V> @Nullable HamtPMap<K, V> deleteRoot(int mask, HamtPMap<K, V>[] children) {
     if (mask == 0) {
       return null;
     }

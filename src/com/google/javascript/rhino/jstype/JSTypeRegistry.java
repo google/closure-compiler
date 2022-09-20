@@ -300,8 +300,7 @@ public final class JSTypeRegistry {
   }
 
   /** Returns an immutable list of template types of the given builtin. */
-  @Nullable
-  public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(
+  public @Nullable ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(
       StaticScope scope, String fnName) {
     JSType type = getType(scope, fnName);
     ObjectType objType = type == null ? null : type.toObjectType();
@@ -868,8 +867,7 @@ public final class JSTypeRegistry {
     return scope;
   }
 
-  @Nullable
-  private Node getRootNodeForScope(StaticScope scope) {
+  private @Nullable Node getRootNodeForScope(StaticScope scope) {
     Node root = scope != null ? scope.getRootNode() : null;
     return (root == null || root.isRoot() || root.isScript()) ? nameTableGlobalRoot : root;
   }
@@ -899,8 +897,7 @@ public final class JSTypeRegistry {
     return resolveViaComponents(bestScope, name);
   }
 
-  @Nullable
-  private JSType resolveViaComponents(StaticScope scope, String qualifiedName) {
+  private @Nullable JSType resolveViaComponents(StaticScope scope, String qualifiedName) {
     if (qualifiedName.isEmpty() || !(scope instanceof StaticTypedScope)) {
       return null;
     }
@@ -927,8 +924,7 @@ public final class JSTypeRegistry {
    * if any, then attempting to resolve via properties based on the type of the `exports` object in
    * that namespace.
    */
-  @Nullable
-  public JSType resolveViaClosureNamespace(String reference) {
+  public @Nullable JSType resolveViaClosureNamespace(String reference) {
     // Find the `exports` type of the longest prefix match of this namespace, if any. Then resolve
     // it via property.
     String prefix = reference;
@@ -958,8 +954,8 @@ public final class JSTypeRegistry {
     }
   }
 
-  @Nullable
-  private JSType resolveViaProperties(StaticTypedScope declarationScope, String qualifiedName) {
+  private @Nullable JSType resolveViaProperties(
+      StaticTypedScope declarationScope, String qualifiedName) {
     checkNotNull(qualifiedName);
     checkArgument(!qualifiedName.isEmpty());
     String rootName = getRootElementOfName(qualifiedName);
@@ -979,8 +975,7 @@ public final class JSTypeRegistry {
    * @param slotType the JSType of the slot, possibly null
    * @param definitionNode If known, the Node representing the type definition.
    */
-  @Nullable
-  private JSType resolveViaPropertyGivenSlot(
+  private @Nullable JSType resolveViaPropertyGivenSlot(
       JSType slotType, Node definitionNode, List<String> componentNames) {
     if (componentNames.isEmpty()) {
       JSType typedefType = resolveTypeFromNodeIfTypedef(definitionNode);
@@ -1029,8 +1024,7 @@ public final class JSTypeRegistry {
   }
 
   /** Checks the given Node for a typedef annotation, resolving to that type if existent. */
-  @Nullable
-  private static JSType resolveTypeFromNodeIfTypedef(Node node) {
+  private static @Nullable JSType resolveTypeFromNodeIfTypedef(Node node) {
     if (node == null) {
       return null;
     }
@@ -1308,8 +1302,7 @@ public final class JSTypeRegistry {
     return getReadableJSTypeName(n, false);
   }
 
-  @Nullable
-  private static String getSimpleReadableJSTypeName(JSType type) {
+  private static @Nullable String getSimpleReadableJSTypeName(JSType type) {
     if (type instanceof AllType) {
       return type.toString();
     } else if (type instanceof ValueType) {
@@ -2110,8 +2103,7 @@ public final class JSTypeRegistry {
     }
   }
 
-  @Nullable
-  private ImmutableList<JSType> parseTemplateArgs(
+  private @Nullable ImmutableList<JSType> parseTemplateArgs(
       JSType nominalType, Node typeNode, String sourceName, StaticTypedScope scope) {
     Node typeList = typeNode.getFirstChild();
     if (typeList == null) {
@@ -2339,11 +2331,9 @@ public final class JSTypeRegistry {
      */
     abstract boolean isLegacy();
 
-    @Nullable
-    abstract Node definitionNode();
+    abstract @Nullable Node definitionNode();
 
-    @Nullable
-    abstract JSType type();
+    abstract @Nullable JSType type();
 
     static ClosureNamespace create(boolean isLegacy, Node definitionNode, JSType type) {
       return new AutoValue_JSTypeRegistry_ClosureNamespace(isLegacy, definitionNode, type);

@@ -197,9 +197,8 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
     return visitor.caseObjectType(this, that);
   }
 
-  @Nullable
   @Override
-  public FunctionType getConstructor() {
+  public @Nullable FunctionType getConstructor() {
     return null;
   }
 
@@ -224,8 +223,7 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
   }
 
   @Override
-  @Nullable
-  public String getGoogModuleId() {
+  public @Nullable String getGoogModuleId() {
     return this.googModuleId;
   }
 

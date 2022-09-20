@@ -103,8 +103,7 @@ public abstract class ObjectType extends JSType {
    * Default getSlot implementation. This gets overridden by FunctionType for lazily-resolved
    * prototypes.
    */
-  @Nullable
-  public Property getSlot(String name) {
+  public @Nullable Property getSlot(String name) {
     OwnedProperty property = getPropertyMap().findClosest(name);
     return property == null ? null : property.getValue();
   }
@@ -198,8 +197,7 @@ public abstract class ObjectType extends JSType {
    *
    * @return the object's name or {@code null} if this is an anonymous object
    */
-  @Nullable
-  public abstract String getReferenceName();
+  public abstract @Nullable String getReferenceName();
 
   /**
    * INVARIANT: {@code hasReferenceName()} is true if and only if {@code getReferenceName()} returns
@@ -212,18 +210,15 @@ public abstract class ObjectType extends JSType {
   }
 
   /**
-   * Due to the complexity of some of our internal type systems, sometimes
-   * we have different types constructed by the same constructor.
-   * In other parts of the type system, these are called delegates.
-   * We construct these types by appending suffixes to the constructor name.
+   * Due to the complexity of some of our internal type systems, sometimes we have different types
+   * constructed by the same constructor. In other parts of the type system, these are called
+   * delegates. We construct these types by appending suffixes to the constructor name.
    *
-   * The normalized reference name does not have these suffixes, and as such,
-   * recollapses these implicit types back to their real type.  Note that
-   * suffixes such as ".prototype" can be added <i>after</i> the delegate
-   * suffix, so anything after the parentheses must still be retained.
+   * <p>The normalized reference name does not have these suffixes, and as such, recollapses these
+   * implicit types back to their real type. Note that suffixes such as ".prototype" can be added
+   * <i>after</i> the delegate suffix, so anything after the parentheses must still be retained.
    */
-  @Nullable
-  public final String getNormalizedReferenceName() {
+  public final @Nullable String getNormalizedReferenceName() {
     String name = getReferenceName();
     if (name != null) {
       int start = name.indexOf('(');
@@ -285,8 +280,7 @@ public abstract class ObjectType extends JSType {
    */
   public abstract FunctionType getConstructor();
 
-  @Nullable
-  public FunctionType getSuperClassConstructor() {
+  public @Nullable FunctionType getSuperClassConstructor() {
     ObjectType iproto = getImplicitPrototype();
     if (iproto == null) {
       return null;
@@ -296,8 +290,7 @@ public abstract class ObjectType extends JSType {
   }
 
   /** Returns the closest ancestor that defines the property including this type itself. */
-  @Nullable
-  public final ObjectType getClosestDefiningType(String propertyName) {
+  public final @Nullable ObjectType getClosestDefiningType(String propertyName) {
     OwnedProperty property = getPropertyMap().findClosest(propertyName);
     return property == null ? null : property.getOwner();
   }
@@ -439,8 +432,7 @@ public abstract class ObjectType extends JSType {
    * @param propertyName the name of the property
    * @return the {@code Node} corresponding to the property or null.
    */
-  @Nullable
-  public final Node getPropertyNode(String propertyName) {
+  public final @Nullable Node getPropertyNode(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getNode();
   }
@@ -449,8 +441,7 @@ public abstract class ObjectType extends JSType {
     return getPropertyNode(propertyName);
   }
 
-  @Nullable
-  public final JSDocInfo getPropertyJSDocInfo(String propertyName) {
+  public final @Nullable JSDocInfo getPropertyJSDocInfo(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
@@ -460,14 +451,12 @@ public abstract class ObjectType extends JSType {
    * recursively, as you generally need to know exactly on which type in the prototype chain the
    * JSDocInfo exists.
    */
-  @Nullable
-  public final JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
+  public final @Nullable JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
 
-  @Nullable
-  public final Node getOwnPropertyDefSite(String propertyName) {
+  public final @Nullable Node getOwnPropertyDefSite(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getNode();
   }
@@ -487,9 +476,8 @@ public abstract class ObjectType extends JSType {
     // by default, do nothing
   }
 
-  @Nullable
   @Override
-  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected @Nullable JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     return hasProperty(propertyName) ? getPropertyType(propertyName) : null;
   }
 
@@ -716,8 +704,7 @@ public abstract class ObjectType extends JSType {
   }
 
   /** A null-safe version of JSType#toObjectType. */
-  @Nullable
-  public static ObjectType cast(JSType type) {
+  public static @Nullable ObjectType cast(JSType type) {
     return type == null ? null : type.toObjectType();
   }
 

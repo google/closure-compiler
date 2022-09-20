@@ -921,8 +921,7 @@ public final class UnionType extends JSType {
     }
 
     /** Returns ALL_TYPE, UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE, or null as specified by the flags. */
-    @Nullable
-    private JSType getNativeWildcardType() {
+    private @Nullable JSType getNativeWildcardType() {
       if (isAllType) {
         return registry.getNativeType(ALL_TYPE);
       } else if (isNativeUnknownType) {

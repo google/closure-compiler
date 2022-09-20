@@ -130,7 +130,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   private Node source;
 
   /** The ID of the goog.module in which this function was declared. */
-  @Nullable private final String googModuleId;
+  private final @Nullable String googModuleId;
 
   /** if this is an interface, indicate whether or not it supports structural interface matching */
   private boolean isStructuralInterface;
@@ -844,8 +844,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   /** Try to get the sup/inf of two functions by looking at the piecewise components. */
-  @Nullable
-  private FunctionType tryMergeFunctionPiecewise(FunctionType other, boolean leastSuper) {
+  private @Nullable FunctionType tryMergeFunctionPiecewise(FunctionType other, boolean leastSuper) {
     ImmutableList<Parameter> newParamsNode = null;
     if (new EqualityChecker()
         .setEqMethod(EqMethod.IDENTITY)
@@ -886,9 +885,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * Given a constructor or an interface type, get its superclass constructor or {@code null} if
    * none exists.
    */
-  @Nullable
   @Override
-  public final FunctionType getSuperClassConstructor() {
+  public final @Nullable FunctionType getSuperClassConstructor() {
     checkArgument(isConstructor() || isInterface());
     ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
     if (maybeSuperInstanceType == null) {
@@ -1043,8 +1041,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  @Nullable
-  public String getGoogModuleId() {
+  public @Nullable String getGoogModuleId() {
     return this.googModuleId;
   }
 
@@ -1133,8 +1130,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * Resolve each item in the list, and return a new list if any references changed. Otherwise,
    * return null.
    */
-  @Nullable
-  private ImmutableList<ObjectType> resolveTypeListHelper(
+  private @Nullable ImmutableList<ObjectType> resolveTypeListHelper(
       ImmutableList<ObjectType> list, ErrorReporter reporter) {
     boolean changed = false;
     ImmutableList.Builder<ObjectType> resolvedList = ImmutableList.builder();
@@ -1239,8 +1235,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     return checkExtendsLoop(new HashSet<FunctionType>(), new ArrayList<FunctionType>());
   }
 
-  @Nullable
-  private List<FunctionType> checkExtendsLoop(Set<FunctionType> cache, List<FunctionType> path) {
+  private @Nullable List<FunctionType> checkExtendsLoop(
+      Set<FunctionType> cache, List<FunctionType> path) {
     ImmutableList<ObjectType> iterable = this.getExtendedInterfaces();
     if (iterable != null) {
       for (ObjectType interfaceType : iterable) {

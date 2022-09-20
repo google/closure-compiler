@@ -48,8 +48,8 @@ import org.jspecify.nullness.Nullable;
  * {@link #errors} and {@link #warnings}.
  */
 public class SimpleErrorReporter implements ErrorReporter {
-  @Nullable private List<String> warnings = null;
-  @Nullable private List<String> errors = null;
+  private @Nullable List<String> warnings = null;
+  private @Nullable List<String> errors = null;
 
   @Override
   public void warning(String message, String sourceName, int line, int lineOffset) {

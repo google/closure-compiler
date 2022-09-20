@@ -101,7 +101,7 @@ public final class NamedType extends ProxyObjectType {
   private final int charno;
   private final ResolutionKind resolutionKind;
 
-  @Nullable private StaticTypedScope resolutionScope;
+  private @Nullable StaticTypedScope resolutionScope;
 
   /** Validates the type resolution. */
   private transient Predicate<JSType> validator;
