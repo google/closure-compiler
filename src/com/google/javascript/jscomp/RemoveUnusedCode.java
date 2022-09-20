@@ -2836,8 +2836,6 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private interface VarInfo {
 
-    String getVarName();
-
     /**
      * Add a Removable representing code that must be removed if this variable is removed.
      *
@@ -2885,13 +2883,6 @@ class RemoveUnusedCode implements CompilerPass {
    * memory.
    */
   private final class CanonicalUnremovableVarInfo implements VarInfo {
-
-    @Override
-    public String getVarName() {
-      // Logging of the decision to keep these should be done when the canonicalUnremovableVarInfo
-      // is selected to represent the Var, not later on when the connection to the name is gone.
-      throw new UnsupportedOperationException("CanonicalUnremovableVarInfo has no recorded name");
-    }
 
     @Override
     public void addRemovable(Removable removable) {
@@ -2960,11 +2951,6 @@ class RemoveUnusedCode implements CompilerPass {
 
     public RealVarInfo(String varName) {
       this.varName = varName;
-    }
-
-    @Override
-    public String getVarName() {
-      return varName;
     }
 
     @Override

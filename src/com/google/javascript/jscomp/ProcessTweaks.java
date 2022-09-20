@@ -107,9 +107,6 @@ class ProcessTweaks implements CompilerPass {
     final Token validNodeTypeB;
     final TweakFunction registerFunction;
 
-    TweakFunction(String name) {
-      this(name, null, Token.EMPTY, Token.EMPTY, null);
-    }
 
     TweakFunction(String name, String expectedTypeName, Token validNodeTypeA) {
       this(name, expectedTypeName, validNodeTypeA, Token.EMPTY, null);
@@ -329,10 +326,6 @@ class ProcessTweaks implements CompilerPass {
       this.tweakFunc = tweakFunc;
       this.valueNode = valueNode;
     }
-
-    Node getIdNode() {
-      return callNode.getSecondChild();
-    }
   }
 
   /** Stores information about a single tweak. */
@@ -396,12 +389,6 @@ class ProcessTweaks implements CompilerPass {
         String sourceName, TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
       registerCall = new TweakFunctionCall(tweakFunc, callNode, defaultValueNode);
       functionCalls.add(registerCall);
-    }
-
-    void addOverrideDefaultValueCall(
-        String sourceName, TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
-      functionCalls.add(new TweakFunctionCall(tweakFunc, callNode, defaultValueNode));
-      this.defaultValueNode = defaultValueNode;
     }
 
     void addGetterCall(String sourceName, TweakFunction tweakFunc, Node callNode) {
