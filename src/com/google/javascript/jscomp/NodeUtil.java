@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Sets.immutableEnumSet;
 import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isAtLeastIntegerPrecision;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isEitherZero;
@@ -60,7 +61,6 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2487,8 +2487,8 @@ public final class NodeUtil {
         || (n.isRoot() && n.getParent() == null);
   }
 
-  private static final Set<Token> DEFINITE_CFG_ROOTS =
-      EnumSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
+  private static final ImmutableSet<Token> DEFINITE_CFG_ROOTS =
+      immutableEnumSet(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
 
   static boolean isValidCfgRoot(Node n) {
     return DEFINITE_CFG_ROOTS.contains(n.getToken()) || isClassStaticBlock(n);
@@ -2501,8 +2501,8 @@ public final class NodeUtil {
     return !n.isModuleBody() && !n.isScript() && !n.isRoot() && isStatementParent(n.getParent());
   }
 
-  private static final Set<Token> IS_STATEMENT_PARENT =
-      EnumSet.of(
+  private static final ImmutableSet<Token> IS_STATEMENT_PARENT =
+      immutableEnumSet(
           Token.SCRIPT,
           Token.MODULE_BODY,
           Token.BLOCK,
