@@ -41,7 +41,7 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Abstraction over a qualified name. Unifies Node-based qualified names and string-based names,

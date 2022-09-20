@@ -64,7 +64,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * JSDoc information describing JavaScript code. JSDoc is represented as a unified object with

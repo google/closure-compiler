@@ -47,7 +47,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import java.util.List;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Models a "bare" function type: from some parameter types to a return type.

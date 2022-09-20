@@ -65,7 +65,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * This class implements the root of the intermediate representation.

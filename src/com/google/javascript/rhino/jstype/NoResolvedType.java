@@ -40,7 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An unresolved type that was forward declared. So we know it exists,

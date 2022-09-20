@@ -51,7 +51,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Representation for a collection of properties on an object. */
 final class PropertyMap {

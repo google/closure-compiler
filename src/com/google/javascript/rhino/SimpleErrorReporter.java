@@ -41,7 +41,7 @@ package com.google.javascript.rhino;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A simple {@link ErrorReporter} that collects warnings and errors and makes them accessible via

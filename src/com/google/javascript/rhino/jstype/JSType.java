@@ -53,7 +53,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Represents JavaScript value types.

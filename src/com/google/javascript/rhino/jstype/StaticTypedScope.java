@@ -41,7 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * The {@code StaticTypedScope} interface must be implemented by any object that defines variables

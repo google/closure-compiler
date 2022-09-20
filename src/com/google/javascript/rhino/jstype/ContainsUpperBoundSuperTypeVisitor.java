@@ -43,7 +43,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A type visitor that traverse through the referenced types of "forwaring types" to search for a
