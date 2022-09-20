@@ -814,12 +814,18 @@ class ScopedAliases implements CompilerPass {
           }
         }
 
-        if (type == Token.RETURN) {
-          report(n, GOOG_SCOPE_USES_RETURN);
-        } else if (type == Token.THIS) {
-          report(n, GOOG_SCOPE_REFERENCES_THIS);
-        } else if (type == Token.THROW) {
-          report(n, GOOG_SCOPE_USES_THROW);
+        switch (type) {
+          case RETURN:
+            report(n, GOOG_SCOPE_USES_RETURN);
+            break;
+          case THIS:
+            report(n, GOOG_SCOPE_REFERENCES_THIS);
+            break;
+          case THROW:
+            report(n, GOOG_SCOPE_USES_THROW);
+            break;
+          default:
+            break;
         }
       }
 

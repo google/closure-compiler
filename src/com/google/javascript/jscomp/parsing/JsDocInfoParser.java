@@ -2058,53 +2058,54 @@ public final class JsDocInfoParser {
     // Save the source position before we consume additional tokens.
     int lineno = stream.getLineno();
     int charno = stream.getCharno();
-    if (token == JsDocToken.QMARK) {
-      // A QMARK could mean that a type is nullable, or that it's unknown.
-      // We use look-ahead 1 to determine whether it's unknown. Otherwise,
-      // we assume it means nullable. There are 8 cases:
-      // {?} - right curly
-      // ? - EOF (possible when the parseTypeString method is given a bare type expression)
-      // {?=} - equals
-      // {function(?, number)} - comma
-      // {function(number, ?)} - right paren
-      // {function(): ?|number} - pipe
-      // {Array.<?>} - greater than
-      // /** ? */ - EOC (inline types)
-      // I'm not a big fan of using look-ahead for this, but it makes
-      // the type language a lot nicer.
-      token = next();
-      if (token == JsDocToken.COMMA
-          || token == JsDocToken.EQUALS
-          || token == JsDocToken.RIGHT_SQUARE
-          || token == JsDocToken.RIGHT_CURLY
-          || token == JsDocToken.RIGHT_PAREN
-          || token == JsDocToken.PIPE
-          || token == JsDocToken.RIGHT_ANGLE
-          || token == JsDocToken.EOC
-          || token == JsDocToken.EOL
-          || token == JsDocToken.EOF) {
-        restoreLookAhead(token);
-        return newNode(Token.QMARK);
-      }
-
-      return wrapNode(Token.QMARK, parseBasicTypeExpression(token), lineno, charno);
-    } else if (token == JsDocToken.BANG) {
-      return wrapNode(Token.BANG, parseBasicTypeExpression(next()), lineno, charno);
-    } else {
-      Node basicTypeExpr = parseBasicTypeExpression(token);
-      lineno = stream.getLineno();
-      charno = stream.getCharno();
-      if (basicTypeExpr != null) {
-        if (match(JsDocToken.QMARK)) {
-          next();
-          return wrapNode(Token.QMARK, basicTypeExpr, lineno, charno);
-        } else if (match(JsDocToken.BANG)) {
-          next();
-          return wrapNode(Token.BANG, basicTypeExpr, lineno, charno);
+    switch (token) {
+      case QMARK:
+        // A QMARK could mean that a type is nullable, or that it's unknown.
+        // We use look-ahead 1 to determine whether it's unknown. Otherwise,
+        // we assume it means nullable. There are 8 cases:
+        // {?} - right curly
+        // ? - EOF (possible when the parseTypeString method is given a bare type expression)
+        // {?=} - equals
+        // {function(?, number)} - comma
+        // {function(number, ?)} - right paren
+        // {function(): ?|number} - pipe
+        // {Array.<?>} - greater than
+        // /** ? */ - EOC (inline types)
+        // I'm not a big fan of using look-ahead for this, but it makes
+        // the type language a lot nicer.
+        token = next();
+        if (token == JsDocToken.COMMA
+            || token == JsDocToken.EQUALS
+            || token == JsDocToken.RIGHT_SQUARE
+            || token == JsDocToken.RIGHT_CURLY
+            || token == JsDocToken.RIGHT_PAREN
+            || token == JsDocToken.PIPE
+            || token == JsDocToken.RIGHT_ANGLE
+            || token == JsDocToken.EOC
+            || token == JsDocToken.EOL
+            || token == JsDocToken.EOF) {
+          restoreLookAhead(token);
+          return newNode(Token.QMARK);
         }
-      }
 
-      return basicTypeExpr;
+        return wrapNode(Token.QMARK, parseBasicTypeExpression(token), lineno, charno);
+      case BANG:
+        return wrapNode(Token.BANG, parseBasicTypeExpression(next()), lineno, charno);
+      default:
+        Node basicTypeExpr = parseBasicTypeExpression(token);
+        lineno = stream.getLineno();
+        charno = stream.getCharno();
+        if (basicTypeExpr != null) {
+          if (match(JsDocToken.QMARK)) {
+            next();
+            return wrapNode(Token.QMARK, basicTypeExpr, lineno, charno);
+          } else if (match(JsDocToken.BANG)) {
+            next();
+            return wrapNode(Token.BANG, basicTypeExpr, lineno, charno);
+          }
+        }
+
+        return basicTypeExpr;
     }
   }
 
