@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.errorprone.annotations.InlineMe;
+import com.google.errorprone.annotations.Keep;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -220,6 +221,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage = "The file containing JavaScript externs. You may specify" + " multiple")
     private List<String> externs = new ArrayList<>();
 
+    @Keep
     @Option(
         name = "--js",
         handler = JsOptionHandler.class,
@@ -1329,6 +1331,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       private static final ImmutableSet<String> TRUES = ImmutableSet.of("true", "on", "yes", "1");
       private static final ImmutableSet<String> FALSES = ImmutableSet.of("false", "off", "no", "0");
 
+      // Handlers are used reflectively by args4j
+      @Keep
       public BooleanOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super Boolean> setter) {
         super(parser, option, setter);
@@ -1369,6 +1373,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     // Our own parser for warning guards that preserves the original order
     // of the flags.
     public static class WarningGuardErrorOptionHandler extends StringOptionHandler {
+      // Handlers are used reflectively by args4j
+      @Keep
       public WarningGuardErrorOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
         super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.ERROR, guardLevels));
@@ -1376,6 +1382,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     public static class WarningGuardWarningOptionHandler extends StringOptionHandler {
+      // Handlers are used reflectively by args4j
+      @Keep
       public WarningGuardWarningOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
         super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.WARNING, guardLevels));
@@ -1383,6 +1391,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     public static class WarningGuardOffOptionHandler extends StringOptionHandler {
+      // Handlers are used reflectively by args4j
+      @Keep
       public WarningGuardOffOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
         super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.OFF, guardLevels));
@@ -1390,6 +1400,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     public static class JsOptionHandler extends StringOptionHandler {
+      // Handlers are used reflectively by args4j
+      @Keep
       public JsOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
         super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS, mixedJsSources));
@@ -1397,6 +1409,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     public static class JsZipOptionHandler extends StringOptionHandler {
+      // Handlers are used reflectively by args4j
+      @Keep
       public JsZipOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
         super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS_ZIP, mixedJsSources));
