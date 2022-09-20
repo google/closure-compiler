@@ -504,8 +504,7 @@ public class Parser {
 
   //  ExportSpecifierSet ::= '{' (ExportSpecifier (',' ExportSpecifier)* (,)? )?  '}'
   private ImmutableList<ParseTree> parseExportSpecifierSet() {
-    ImmutableList.Builder<ParseTree> elements;
-    elements = ImmutableList.builder();
+    ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
     while (peekIdOrKeyword()) {
       elements.add(parseExportSpecifier());
@@ -1637,7 +1636,6 @@ public class Parser {
 
   private CatchTree parseCatch() {
     SourcePosition start = getTreeStartLocation();
-    CatchTree catchBlock;
     eat(TokenType.CATCH);
 
     ParseTree exception =
@@ -1656,7 +1654,7 @@ public class Parser {
     }
 
     BlockTree catchBody = parseBlock();
-    catchBlock = new CatchTree(getTreeLocation(start), exception, catchBody);
+    CatchTree catchBlock = new CatchTree(getTreeLocation(start), exception, catchBody);
     return catchBlock;
   }
 
