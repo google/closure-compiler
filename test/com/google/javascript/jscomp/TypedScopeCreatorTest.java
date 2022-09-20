@@ -77,7 +77,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   private TypedScope globalScope;
   private TypedScope lastLocalScope;
   private TypedScope lastFunctionScope;
-  private final ResolutionMode moduleResolutionMode = ResolutionMode.BROWSER;
   private boolean processClosurePrimitives = false;
 
   /**
@@ -149,7 +148,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // Create a fresh statement map for each test case.
     labeledStatementMap = new HashMap<>();
     return (Node externs, Node root) -> {
-      new GatherModuleMetadata(compiler, false, moduleResolutionMode).process(externs, root);
+      new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER).process(externs, root);
       new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
       new InferConsts(compiler).process(externs, root);
 
