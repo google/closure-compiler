@@ -41,7 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Deserializes a list of TypedAst protos into the JSCompiler AST structure. */
 @GwtIncompatible("protobuf.lite")

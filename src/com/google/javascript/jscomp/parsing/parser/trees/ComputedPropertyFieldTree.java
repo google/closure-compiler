@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Tree for public comptuted property fields */
 public class ComputedPropertyFieldTree extends ParseTree {

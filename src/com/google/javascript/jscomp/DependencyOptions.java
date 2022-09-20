@@ -24,7 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.Immutable;
 import java.io.Serializable;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Options for how to manage dependencies between input files.

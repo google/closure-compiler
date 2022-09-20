@@ -32,7 +32,7 @@ import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Looks for references to Closure's goog.js file and globalizes. The goog.js file is an ES6 module

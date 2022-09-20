@@ -27,7 +27,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Generates goog.exportSymbol/goog.exportProperty for the @export annotation. */
 public class GenerateExports implements CompilerPass {

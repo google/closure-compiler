@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 public class FunctionDeclarationTree extends ParseTree {
 

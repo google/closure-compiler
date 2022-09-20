@@ -19,8 +19,7 @@ package com.google.debugging.sourcemap;
 
 import java.io.IOException;
 import java.util.List;
-
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Collects information mapping the generated (compiled) source back to

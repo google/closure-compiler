@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Checks that goog.provide statements are sorted and deduplicated, exposing the necessary

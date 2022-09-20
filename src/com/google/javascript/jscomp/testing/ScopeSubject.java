@@ -35,7 +35,7 @@ import com.google.javascript.jscomp.AbstractVar;
 import com.google.javascript.jscomp.TypedVar;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.TypeSubject;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A Truth Subject for the AbstractScope class. Usage:

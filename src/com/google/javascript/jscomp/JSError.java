@@ -20,7 +20,7 @@ import static com.google.common.base.Strings.emptyToNull;
 import com.google.auto.value.AutoValue;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Compile error description. */
 @AutoValue

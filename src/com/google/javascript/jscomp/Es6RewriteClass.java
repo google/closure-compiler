@@ -34,7 +34,7 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Converts ES6 classes to valid ES5 or ES3 code. */
 public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPass {

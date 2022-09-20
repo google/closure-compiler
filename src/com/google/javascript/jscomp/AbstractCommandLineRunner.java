@@ -81,7 +81,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Implementations of AbstractCommandLineRunner translate flags into Java API calls on the Compiler.

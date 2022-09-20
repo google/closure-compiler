@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import java.io.Serializable;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** A class that generates unique JavaScript variable/property names. */
 public interface NameGenerator extends Serializable {

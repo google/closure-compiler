@@ -141,7 +141,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** IRFactory transforms the external AST to the internal AST. */
 class IRFactory {

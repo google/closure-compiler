@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.modules.Binding.CreatedBy;
 import com.google.javascript.rhino.Node;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Handles creating an {@link Import} from goog.require(Type) or goog.forwardDeclare.

@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Checks for misplaced, misused or deprecated JSDoc annotations. */
 final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass {

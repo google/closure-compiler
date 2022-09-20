@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.base.Tri;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Sets the level for a particular DiagnosticGroup. */
 public final class DiagnosticGroupWarningsGuard extends WarningsGuard {

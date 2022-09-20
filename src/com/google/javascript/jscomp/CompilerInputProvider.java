@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.InputId;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** A provider mapping a InputId to a CompilerInput. */
 public interface CompilerInputProvider {

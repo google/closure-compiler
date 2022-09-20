@@ -32,7 +32,7 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.PriorityQueue;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * This class computes a {@link ControlFlowGraph} for a given AST

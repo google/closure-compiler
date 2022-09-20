@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Resolution algorithm for NodeJS. See https://nodejs.org/api/modules.html#modules_all_together

@@ -34,7 +34,7 @@ import com.google.javascript.rhino.QualifiedName;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Gathers metadata around modules that is useful for checking imports / requires and creates a

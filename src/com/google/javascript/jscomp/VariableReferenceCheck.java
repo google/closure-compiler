@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Checks variables to see if they are referenced before their declaration, or if they are

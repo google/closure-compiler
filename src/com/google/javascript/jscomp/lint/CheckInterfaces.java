@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Checks for errors related to interfaces. */
 public final class CheckInterfaces extends AbstractPostOrderCallback implements CompilerPass {

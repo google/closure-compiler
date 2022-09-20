@@ -30,7 +30,7 @@ import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A pass for stripping a list of provided JavaScript object types.

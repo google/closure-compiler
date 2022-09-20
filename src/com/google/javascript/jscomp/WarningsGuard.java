@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.base.Tri;
 import java.io.Serializable;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Class that allows to flexibly manage what to do with a reported warning/error.

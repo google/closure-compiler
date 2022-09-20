@@ -31,7 +31,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** This class walks the AST and validates that the structure is correct. */
 public final class AstValidator implements CompilerPass {

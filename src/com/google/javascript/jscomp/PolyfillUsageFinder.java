@@ -30,7 +30,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Detects all potential usages of polyfilled classes or methods */
 final class PolyfillUsageFinder {

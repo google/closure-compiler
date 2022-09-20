@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.modules;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A map containing information about all modules in the compilation.

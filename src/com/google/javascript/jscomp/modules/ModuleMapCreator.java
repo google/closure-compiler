@@ -29,7 +29,7 @@ import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Creates a {@link ModuleMap}. */
 public class ModuleMapCreator implements CompilerPass {
