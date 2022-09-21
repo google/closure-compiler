@@ -66,8 +66,8 @@ public class ProxyObjectType extends ObjectType {
     this(registry, referencedType, null);
   }
 
-  ProxyObjectType(JSTypeRegistry registry, JSType referencedType,
-                  TemplateTypeMap templateTypeMap) {
+  ProxyObjectType(
+      JSTypeRegistry registry, JSType referencedType, @Nullable TemplateTypeMap templateTypeMap) {
     super(registry, templateTypeMap);
     setReferencedType(checkNotNull(referencedType));
 

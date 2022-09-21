@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -314,7 +315,7 @@ public class JSTypeRegistryTest {
   /** Returns a scope that overrides a few methods from {@link AbstractStaticScope} */
   private StaticTypedScope createStaticTypedScope(
       Node root,
-      StaticTypedScope parentScope,
+      @Nullable StaticTypedScope parentScope,
       Map<String, StaticTypedSlot> slots,
       Set<String> reservedNames) {
     return new AbstractStaticScope() {

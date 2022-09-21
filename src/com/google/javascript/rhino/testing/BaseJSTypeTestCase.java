@@ -56,6 +56,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
+import org.jspecify.nullness.Nullable;
 import org.junit.After;
 
 /** A base class for tests on {@code JSType}s. */
@@ -117,7 +118,7 @@ public abstract class BaseJSTypeTestCase {
     this(null);
   }
 
-  public BaseJSTypeTestCase(JSTypeRegistry registry) {
+  public BaseJSTypeTestCase(@Nullable JSTypeRegistry registry) {
     this.registry =
         (registry == null)
             ? new JSTypeRegistry(errorReporter, ImmutableSet.of())

@@ -976,7 +976,7 @@ public final class JSTypeRegistry {
    * @param definitionNode If known, the Node representing the type definition.
    */
   private @Nullable JSType resolveViaPropertyGivenSlot(
-      JSType slotType, Node definitionNode, List<String> componentNames) {
+      JSType slotType, @Nullable Node definitionNode, List<String> componentNames) {
     if (componentNames.isEmpty()) {
       JSType typedefType = resolveTypeFromNodeIfTypedef(definitionNode);
       if (typedefType != null) {
@@ -1045,7 +1045,7 @@ public final class JSTypeRegistry {
     register(null, type, name);
   }
 
-  private void register(StaticScope scope, JSType type, String name) {
+  private void register(@Nullable StaticScope scope, JSType type, String name) {
     checkTypeName(name);
     registerForScope(getLookupScope(scope, name), type, name);
   }
@@ -1431,7 +1431,7 @@ public final class JSTypeRegistry {
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
-  public JSType getType(StaticScope scope, String jsTypeName) {
+  public JSType getType(@Nullable StaticScope scope, String jsTypeName) {
     return getTypeInternal(scope, jsTypeName);
   }
 
@@ -1745,9 +1745,10 @@ public final class JSTypeRegistry {
 
   /**
    * Create an anonymous object type.
+   *
    * @param info Used to mark object literals as structs; can be {@code null}
    */
-  public ObjectType createAnonymousObjectType(JSDocInfo info) {
+  public ObjectType createAnonymousObjectType(@Nullable JSDocInfo info) {
     PrototypeObjectType type = PrototypeObjectType.builder(this).setAnonymous(true).build();
     type.setPrettyPrint(true);
     type.setJSDocInfo(info);
@@ -1878,7 +1879,7 @@ public final class JSTypeRegistry {
   }
 
   /** Identifies the name of a typedef or enum before we actually declare it. */
-  public void identifyNonNullableName(StaticScope scope, String name) {
+  public void identifyNonNullableName(@Nullable StaticScope scope, String name) {
     checkNotNull(name);
     StaticScope lookupScope = getLookupScope(scope, name);
     nonNullableTypeNames.put(getRootNodeForScope(lookupScope), name);
@@ -1906,7 +1907,8 @@ public final class JSTypeRegistry {
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
-  public JSType createTypeFromCommentNode(Node n, String sourceName, StaticTypedScope scope) {
+  public JSType createTypeFromCommentNode(
+      Node n, String sourceName, @Nullable StaticTypedScope scope) {
     switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(
@@ -2335,7 +2337,8 @@ public final class JSTypeRegistry {
 
     abstract @Nullable JSType type();
 
-    static ClosureNamespace create(boolean isLegacy, Node definitionNode, JSType type) {
+    static ClosureNamespace create(
+        boolean isLegacy, @Nullable Node definitionNode, @Nullable JSType type) {
       return new AutoValue_JSTypeRegistry_ClosureNamespace(isLegacy, definitionNode, type);
     }
   }

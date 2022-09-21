@@ -632,7 +632,7 @@ public class JSDocInfo implements Serializable {
   }
 
   @SuppressWarnings("unchecked")
-  private Builder toBuilder(TypeTransform transform) {
+  private Builder toBuilder(@Nullable TypeTransform transform) {
     Builder builder = new Builder();
     // inline type isn't copied...?
     builder.bits = propertyBits & ~Bit.INLINE_TYPE.mask;
@@ -1820,7 +1820,7 @@ public class JSDocInfo implements Serializable {
       return recordTemplateTypeName(name, null);
     }
 
-    public boolean recordTemplateTypeName(String name, JSTypeExpression bound) {
+    public boolean recordTemplateTypeName(String name, @Nullable JSTypeExpression bound) {
       if (bound == null) {
         bound = JSTypeExpression.IMPLICIT_TEMPLATE_BOUND;
       }

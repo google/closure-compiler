@@ -472,7 +472,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     setPrototypeBasedOn(baseType, null);
   }
 
-  private void setPrototypeBasedOn(ObjectType baseType, Node propertyNode) {
+  private void setPrototypeBasedOn(ObjectType baseType, @Nullable Node propertyNode) {
     // First handle class-side inheritance for ES6 classes, before reassigning baseType.
     if (source != null && source.isClass()) {
       FunctionType superCtor = baseType.getConstructor();
@@ -517,7 +517,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    *
    * @param prototype the prototype. If this value is {@code null} it will silently be discarded.
    */
-  final boolean setPrototype(ObjectType prototype, Node propertyNode) {
+  final boolean setPrototype(ObjectType prototype, @Nullable Node propertyNode) {
     if (prototype == null) {
       return false;
     }
@@ -529,7 +529,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   /** Set the prototype without doing any sanity checks. */
-  private boolean setPrototypeNoCheck(ObjectType prototype, Node propertyNode) {
+  private boolean setPrototypeNoCheck(ObjectType prototype, @Nullable Node propertyNode) {
     ObjectType oldPrototype = prototypeSlot == null ? null : (ObjectType) prototypeSlot.getType();
     boolean replacedPrototype = oldPrototype != null;
 

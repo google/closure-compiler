@@ -275,7 +275,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * Internal recursive implementation of minus(K). The value of the removed node is returned via
    * the 'value' array, if it is non-null.
    */
-  private HamtPMap<K, V> minus(K key, int hash, V[] value) {
+  private HamtPMap<K, V> minus(K key, int hash, V @Nullable [] value) {
     if (hash == this.hash && key.equals(this.key)) {
       HamtPMap<K, V> result = deleteRoot(mask, children);
       if (value != null) {
@@ -515,7 +515,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    * Internal recursive version of pivot. If parent is null then the result is used for the value in
    * the returned map. The value, if found, is stored in the 'result' array as a secondary return.
    */
-  private HamtPMap<K, V> pivot(K key, int hash, HamtPMap<K, V> parent, V[] result) {
+  private HamtPMap<K, V> pivot(K key, int hash, @Nullable HamtPMap<K, V> parent, V[] result) {
     int newMask = mask;
     HamtPMap<K, V>[] newChildren = this.children;
     if (hash == this.hash && key.equals(this.key)) {

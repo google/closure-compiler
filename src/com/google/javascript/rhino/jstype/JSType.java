@@ -91,7 +91,7 @@ public abstract class JSType {
     this(registry, null);
   }
 
-  JSType(JSTypeRegistry registry, TemplateTypeMap templateTypeMap) {
+  JSType(JSTypeRegistry registry, @Nullable TemplateTypeMap templateTypeMap) {
     this.registry = registry;
 
     this.templateTypeMap =
@@ -1577,7 +1577,7 @@ public abstract class JSType {
     public final JSType typeA;
     public final JSType typeB;
 
-    public TypePair(JSType typeA, JSType typeB) {
+    public TypePair(@Nullable JSType typeA, @Nullable JSType typeB) {
       this.typeA = typeA;
       this.typeB = typeB;
     }

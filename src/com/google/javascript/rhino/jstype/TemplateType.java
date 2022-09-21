@@ -49,6 +49,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /** A placeholder type, used as keys in {@link TemplateTypeMap}s. */
 public final class TemplateType extends ProxyObjectType {
@@ -71,7 +72,10 @@ public final class TemplateType extends ProxyObjectType {
   }
 
   private TemplateType(
-      JSTypeRegistry registry, String name, JSType bound, Node typeTransformation) {
+      JSTypeRegistry registry,
+      String name,
+      @Nullable JSType bound,
+      @Nullable Node typeTransformation) {
     super(
         registry, bound == null ? registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE) : bound);
     this.name = name;
