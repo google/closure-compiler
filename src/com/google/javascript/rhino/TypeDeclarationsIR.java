@@ -54,7 +54,7 @@ import java.util.Map;
  * @author alexeagle@google.com (Alex Eagle)
  * @author moz@google.com (Michael Zhou)
  */
-public class TypeDeclarationsIR {
+public final class TypeDeclarationsIR {
 
   /** @return a new node representing the string built-in type. */
   public static Node stringType() {
@@ -289,4 +289,6 @@ public class TypeDeclarationsIR {
   public static Node optionalParameter(Node parameterType) {
     return new Node(Token.OPTIONAL_PARAMETER, parameterType);
   }
+
+  private TypeDeclarationsIR() {}
 }

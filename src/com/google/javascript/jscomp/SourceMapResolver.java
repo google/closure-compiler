@@ -28,7 +28,7 @@ import org.jspecify.nullness.Nullable;
 
 /** Utility class for resolving source maps and files referenced in source maps. */
 @GwtIncompatible("Accesses the file system")
-public class SourceMapResolver {
+public final class SourceMapResolver {
   private static final String BASE64_URL_PREFIX = "data:";
   private static final String BASE64_START = "base64,";
 
@@ -105,4 +105,6 @@ public class SourceMapResolver {
         .withKind(SourceKind.NON_CODE)
         .build();
   }
+
+  private SourceMapResolver() {}
 }

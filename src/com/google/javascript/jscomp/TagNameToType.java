@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Contains a mapping from HTML Element tag name to the javascript type of that element at runtime.
  */
-class TagNameToType {
+final class TagNameToType {
   static ImmutableMap<String, String> getMap() {
     return new ImmutableMap.Builder<String, String>()
         .put("a", "HTMLAnchorElement")
@@ -97,4 +97,6 @@ class TagNameToType {
         .put("video", "HTMLVideoElement")
         .buildOrThrow();
   }
+
+  private TagNameToType() {}
 }

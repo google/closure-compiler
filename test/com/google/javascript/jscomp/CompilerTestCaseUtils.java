@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 /** CompilerTestCase utilities that can be super sourced out for GWT/J2CL implementation. */
-public class CompilerTestCaseUtils {
+public final class CompilerTestCaseUtils {
   @GwtIncompatible
   public static Compiler multistageSerializeAndDeserialize(
       CompilerTestCase testCase,
@@ -53,4 +53,6 @@ public class CompilerTestCaseUtils {
   @GwtIncompatible
   public static void setDebugLogDirectoryOn(CompilerOptions options) {
   }
+
+  private CompilerTestCaseUtils() {}
 }

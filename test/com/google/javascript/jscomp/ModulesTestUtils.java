@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Test utilities for testing modules, used by {@link Es6RewriteModulesTest}
- * and {@link ProcessCommonJSModulesTest}.
+ * Test utilities for testing modules, used by {@link Es6RewriteModulesTest} and {@link
+ * ProcessCommonJSModulesTest}.
  */
-class ModulesTestUtils {
+final class ModulesTestUtils {
 
   static void testModules(CompilerTestCase test, String fileName, String input, String expected) {
     // Shared with ProcessCommonJSModulesTest.
@@ -58,4 +58,6 @@ class ModulesTestUtils {
             SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
     test.testWarning(CompilerTestCase.srcs(inputs), CompilerTestCase.warning(warning));
   }
+
+  private ModulesTestUtils() {}
 }

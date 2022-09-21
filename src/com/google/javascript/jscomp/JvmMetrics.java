@@ -30,12 +30,11 @@ import java.util.StringTokenizer;
 import org.jspecify.nullness.Nullable;
 
 /**
- * A class to report jvm/jmx statistics.
- * Borrowed from:
+ * A class to report jvm/jmx statistics. Borrowed from:
  * http://code.google.com/p/dart/source/browse/trunk/dart/compiler/java/com/google/dart/compiler/metrics/JvmMetrics.java
  */
 @GwtIncompatible("Unneccesary")
-class JvmMetrics {
+final class JvmMetrics {
 
   private static final int TABULAR_COLON_POS = 40;
   private static final long ONE_KILO_BYTE = 1L << 10L;
@@ -279,4 +278,6 @@ class JvmMetrics {
       return String.format("%d GB", numBytes / ONE_GIGA_BYTE);
     }
   }
+
+  private JvmMetrics() {}
 }

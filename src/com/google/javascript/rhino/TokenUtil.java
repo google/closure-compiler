@@ -49,13 +49,14 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.base.Tri;
 
 /**
- * Helper methods for parsing JavaScript.
- * These methods use unsupported features in GWT's emulation of java.lang.Character.
+ * Helper methods for parsing JavaScript. These methods use unsupported features in GWT's emulation
+ * of java.lang.Character.
  *
- * TODO(moz): Add a GWT-compatible version in the super-source directory.
+ * <p>TODO(moz): Add a GWT-compatible version in the super-source directory.
+ *
  */
 @GwtIncompatible("Unsupported java.lang.Character fields")
-public class TokenUtil {
+public final class TokenUtil {
   /* As defined in ECMA.  jsscan.c uses C isspace() (which allows
    * \v, I think.)  note that code in getChar() implicitly accepts
    * '\r' == \u000D as well.
@@ -96,4 +97,6 @@ public class TokenUtil {
         return (Character.getType(c) == Character.SPACE_SEPARATOR) ? Tri.TRUE : Tri.FALSE;
     }
   }
+
+  private TokenUtil() {}
 }

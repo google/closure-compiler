@@ -279,4 +279,6 @@ final class PolymerPassStaticUtils {
         : CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, cls.nativeBaseElement);
     return SimpleFormat.format("Polymer%sElement", nativeElementName);
   }
+
+  private PolymerPassStaticUtils() {}
 }

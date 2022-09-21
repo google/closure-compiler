@@ -52,11 +52,11 @@ import com.google.common.annotations.GwtIncompatible;
  *
  * <p>Separated into its own class because it is not GWT compatible.
  *
- * IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file
- * due to limitations on some internal Google projects that depend on it.
+ * <p>IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file due
+ * to limitations on some internal Google projects that depend on it.
  */
 @GwtIncompatible
-public class JSIdentifier {
+public final class JSIdentifier {
   static boolean isJSIdentifier(String s) {
     int length = s.length();
 
@@ -74,4 +74,6 @@ public class JSIdentifier {
     }
     return true;
   }
+
+  private JSIdentifier() {}
 }

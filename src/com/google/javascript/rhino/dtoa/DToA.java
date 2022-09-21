@@ -62,7 +62,7 @@ import com.google.common.annotations.GwtIncompatible;
 import java.math.BigInteger;
 
 @GwtIncompatible("unnecessarily complex")
-public class DToA {
+public final class DToA {
 
   private static final int
       DTOSTR_STANDARD = 0, /* Either fixed or exponential format; round-trip */
@@ -1034,4 +1034,6 @@ public class DToA {
     DToA.JS_dtostr(buffer, DToA.DTOSTR_STANDARD, 0, value);
     return buffer.toString();
   }
+
+  private DToA() {}
 }

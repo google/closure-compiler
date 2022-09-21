@@ -31,10 +31,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Test compiler by comparing output to data files aka golden files.
- * Always start with the options object from this class.
+ * Test compiler by comparing output to data files aka golden files. Always start with the options
+ * object from this class.
  */
-public class GoldenFileComparer {
+public final class GoldenFileComparer {
 
   private static final String DATA_DIR =
       "test/"
@@ -178,4 +178,6 @@ public class GoldenFileComparer {
     options.setPrettyPrint(true);
     return options;
   }
+
+  private GoldenFileComparer() {}
 }

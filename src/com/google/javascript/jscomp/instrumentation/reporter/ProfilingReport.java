@@ -124,4 +124,6 @@ final class ProfilingReport {
     private long totalTimesExecuted = 0;
     private int numberOfReports = 0;
   }
+
+  private ProfilingReport() {}
 }

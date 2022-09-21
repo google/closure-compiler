@@ -891,4 +891,6 @@ public final class CodePrinter {
 
     return code;
   }
+
+  private CodePrinter() {}
 }
