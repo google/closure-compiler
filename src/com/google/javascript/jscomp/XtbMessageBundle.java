@@ -181,7 +181,7 @@ public final class XtbMessageBundle implements MessageBundle {
     }
 
     @Override
-    public void characters(char ch[], int start, int length) {
+    public void characters(char[] ch, int start, int length) {
       if (msgBuilder != null) {
         String part = String.valueOf(ch, start, length);
         // Append a string literal to the message.
@@ -190,7 +190,7 @@ public final class XtbMessageBundle implements MessageBundle {
     }
 
     @Override
-    public void ignorableWhitespace(char ch[], int start, int length) {
+    public void ignorableWhitespace(char[] ch, int start, int length) {
       if (msgBuilder != null) {
         // Preserve whitespace in messages.
         msgBuilder.appendStringPart(String.valueOf(ch, start, length));
