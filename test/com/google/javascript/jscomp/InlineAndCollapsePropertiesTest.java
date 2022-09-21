@@ -65,6 +65,16 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDoNotCollapseDeletedProperty() {
+    testSame(
+        srcs(
+            lines(
+                "const global = window;", //
+                "delete global.HTMLElement;",
+                "global.HTMLElement = (class {});")));
+  }
+
+  @Test
   public void testConstObjRefInTemplateLiteralComputedPropKey() {
     test(
         srcs(

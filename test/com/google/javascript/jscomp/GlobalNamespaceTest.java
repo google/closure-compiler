@@ -1238,6 +1238,19 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testCannotCollapseOrInlineDeletedProperty() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const global = window;", //
+                "delete global.HTMLElement;",
+                "global.HTMLElement = (class {});"));
+
+    Name deletedProp = namespace.getSlot("global.HTMLElement");
+    assertThat(deletedProp.canCollapseOrInline()).isEqualTo(Inlinability.DO_NOT_INLINE);
+  }
+
+  @Test
   public void testCanCollapse_objectLitProperty_declaredBeforeASpread() {
     GlobalNamespace namespace = parse("var foo = {prop: 0, ...bar}; use(foo.prop);");
 

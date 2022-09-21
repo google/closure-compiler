@@ -111,7 +111,6 @@ class GlobalNamespace
     }
   }
 
-
   /** Global namespace tree */
   private final List<Name> globalNames = new ArrayList<>();
 
@@ -361,8 +360,7 @@ class GlobalNamespace
     return firstDotIndex == -1 ? name : name.substring(0, firstDotIndex);
   }
 
-  @Nullable
-  Name getNameFromModule(ModuleMetadata moduleMetadata, String name) {
+  @Nullable Name getNameFromModule(ModuleMetadata moduleMetadata, String name) {
     checkNotNull(moduleMetadata);
     checkNotNull(name);
     ensureGenerated();
@@ -688,8 +686,7 @@ class GlobalNamespace
      * @return The global name, or null if {@code n} doesn't correspond to the key of an object
      *     literal that can be named
      */
-    @Nullable
-    String getNameForObjectPatternKey(Node stringKey) {
+    @Nullable String getNameForObjectPatternKey(Node stringKey) {
       Node parent = stringKey.getParent();
       checkState(parent.isObjectPattern());
 
@@ -1862,6 +1859,12 @@ class GlobalNamespace
             Inlinability.DO_NOT_INLINE,
             "references explicit definition of toString/valueOf functions used implicitly in the JS"
                 + " language");
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      if (deleteProps > 0) {
+        // If we inline or collapse, then the delete operation will be incorrect.
+        logDecision(Inlinability.DO_NOT_INLINE, "delete operator is used on this property");
         return Inlinability.DO_NOT_INLINE;
       }
 
