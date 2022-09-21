@@ -520,7 +520,7 @@ public final class ReplaceMessages {
     }
   }
 
-  private Map<String, Node> createPlaceholderNodeMap(Node objLitNode) throws MalformedException {
+  private Map<String, Node> createPlaceholderNodeMap(Node objLitNode) {
     Map<String, Node> placeholderMap = new HashMap<>();
     if (objLitNode != null) {
       for (Node key = objLitNode.getFirstChild(); key != null; key = key.getNext()) {
