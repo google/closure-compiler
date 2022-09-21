@@ -1654,8 +1654,7 @@ public class Parser {
     }
 
     BlockTree catchBody = parseBlock();
-    CatchTree catchBlock = new CatchTree(getTreeLocation(start), exception, catchBody);
-    return catchBlock;
+    return new CatchTree(getTreeLocation(start), exception, catchBody);
   }
 
   private FinallyTree parseFinallyBlock() {
