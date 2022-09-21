@@ -88,6 +88,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryOptimizeNameDeclaration(subtree);
       case DEFAULT_VALUE:
         return tryRemoveDefaultValue(subtree);
+      case OPTCHAIN_CALL:
+        return tryRemoveOptionalCall(subtree);
       default:
           return subtree;
     }
@@ -1360,6 +1362,27 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportChangeToEnclosingScope(forCondition);
       forCondition.replaceWith(IR.empty());
     }
+  }
+
+  private Node tryRemoveOptionalCall(Node optionalCall) {
+    Node callee = optionalCall.getFirstChild();
+    if (!NodeUtil.isNullOrUndefined(callee)) {
+      return optionalCall;
+    }
+    final Node result;
+    if (this.mayHaveSideEffects(callee)) {
+      // Simplify `(void sideEffectFunction())?.()` to `(void sideEffectFunction())`
+      // The optional chain call won't execute but sideEffectFunction() is still evaluated.
+      optionalCall.replaceWith(callee.detach());
+      result = callee;
+    } else {
+      // Remove `(void 0)?.()` and (null)?.()
+      result = NodeUtil.newUndefinedNode(callee);
+      optionalCall.replaceWith(result);
+    }
+    this.markFunctionsDeleted(optionalCall);
+    this.reportChangeToEnclosingScope(result);
+    return result;
   }
 
   @Nullable

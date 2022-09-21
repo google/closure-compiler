@@ -1775,4 +1775,22 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "  }",
             "}"));
   }
+
+  @Test
+  public void testRemoveUnreachableOptionalChainingCall() {
+    fold("(null)?.();", "");
+    fold("(void 0)?.();", "");
+    fold("(undefined)?.();", "");
+    fold("(void 0)?.(0)", "");
+    fold("(void 0)?.(function f() {})", "");
+    // arguments with unknown side effects are also removed
+    fold("(void 0)?.(f(), g())", "");
+
+    // void arguments with unknown side effects are preserved
+    fold("(void f())?.();", "f();");
+    fold("g((void f())?.());", "g(void f());");
+
+    foldSame("(f(), null)?.()");
+    foldSame("f?.()");
+  }
 }
