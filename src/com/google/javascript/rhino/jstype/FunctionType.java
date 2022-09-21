@@ -1427,20 +1427,20 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   /** A builder class for function and arrow types. */
   public static final class Builder extends PrototypeObjectType.Builder<Builder> {
 
-    private Node sourceNode = null;
-    private String googModuleId = null;
-    private List<Parameter> parameters = null;
-    private JSType returnType = null;
-    private JSType typeOfThis = null;
-    private ObjectType setPrototypeBasedOn = null;
+    private @Nullable Node sourceNode = null;
+    private @Nullable String googModuleId = null;
+    private @Nullable List<Parameter> parameters = null;
+    private @Nullable JSType returnType = null;
+    private @Nullable JSType typeOfThis = null;
+    private @Nullable ObjectType setPrototypeBasedOn = null;
     private ImmutableSet<TemplateType> constructorOnlyKeys = ImmutableSet.of();
     private Kind kind = Kind.ORDINARY;
     private boolean isAbstract;
     private boolean isKnownAmbiguous = false;
     private boolean returnTypeIsInferred;
     private boolean returnsOwnInstanceType;
-    private ClosurePrimitive primitiveId = null;
-    private FunctionType canonicalRepresentation = null;
+    private @Nullable ClosurePrimitive primitiveId = null;
+    private @Nullable FunctionType canonicalRepresentation = null;
 
     private Builder(JSTypeRegistry registry) {
       super(registry);

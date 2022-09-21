@@ -114,7 +114,7 @@ public final class NamedType extends ProxyObjectType {
   // TODO(lharker): Generalize this pattern instead of storing these arbitrary fields.
 
   /** Property-defining continuations. */
-  private transient List<PropertyContinuation> propertyContinuations = null;
+  private transient @Nullable List<PropertyContinuation> propertyContinuations = null;
 
   /**
    * Template types defined on a named, not yet resolved type, or {@code null} if none. These are

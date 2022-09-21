@@ -74,7 +74,7 @@ import org.jspecify.nullness.Nullable;
 public abstract class JSType {
   private static final long serialVersionUID = 1L;
 
-  private JSType resolveResult = null;
+  private @Nullable JSType resolveResult = null;
   protected TemplateTypeMap templateTypeMap;
   private boolean loosenTypecheckingDueToForwardReferencedSupertype;
 
@@ -82,7 +82,7 @@ public abstract class JSType {
 
   private boolean inTemplatedCheckVisit = false;
   // Use "Boolean" as a 3-state value where not set is `null`.
-  private Boolean templateCheckResult = null;
+  private @Nullable Boolean templateCheckResult = null;
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR = new CanCastToVisitor();
 
   final JSTypeRegistry registry;

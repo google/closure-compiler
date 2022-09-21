@@ -61,7 +61,7 @@ final class PropertyMap {
   // Because the extended interfaces are resolved dynamically, this gets
   // messy :(. If type-resolution was more well-defined, we could
   // just reference primary parents and secondary parents directly.
-  private ObjectType parentSource = null;
+  private @Nullable ObjectType parentSource = null;
 
   // The map of our own properties.
   private final Map<String, Property> properties;

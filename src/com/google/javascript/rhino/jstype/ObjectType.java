@@ -81,7 +81,7 @@ import org.jspecify.nullness.Nullable;
  */
 public abstract class ObjectType extends JSType {
   private boolean visited;
-  private JSDocInfo docInfo = null;
+  private @Nullable JSDocInfo docInfo = null;
   private boolean unknown = true;
 
   ObjectType(JSTypeRegistry registry) {

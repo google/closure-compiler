@@ -106,8 +106,8 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
    */
   private Node propertyNode;
 
-  /**  The JSDocInfo for this property. */
-  private JSDocInfo docInfo = null;
+  /** The JSDocInfo for this property. */
+  private @Nullable JSDocInfo docInfo = null;
 
   Property(String name, JSType type, boolean inferred,
       Node propertyNode) {

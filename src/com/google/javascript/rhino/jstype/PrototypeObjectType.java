@@ -85,7 +85,7 @@ public class PrototypeObjectType extends ObjectType {
   // If this is a function prototype, then this is the owner.
   // A PrototypeObjectType can only be the prototype of one function. If we try
   // to do this for multiple functions, then we'll have to create a new one.
-  private FunctionType ownerFunction = null;
+  private @Nullable FunctionType ownerFunction = null;
 
   // Whether the toString representation of this should be pretty-printed,
   // by printing all properties.

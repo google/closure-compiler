@@ -626,11 +626,11 @@ public final class UnionType extends JSType {
    * <p>Most users of this class should prefer {@link JSTypeRegistry#createUnionType} instead.
    */
   public static final class Builder {
-    private final UnionType rebuildTarget;
+    private final @Nullable UnionType rebuildTarget;
     private final JSTypeRegistry registry;
 
     private final List<JSType> alternates = new ArrayList<>();
-    private ImmutableList<JSType> finalAlternates = null;
+    private @Nullable ImmutableList<JSType> finalAlternates = null;
 
     // If a union has ? or *, we do not care about any other types, except for undefined (for
     // optional properties).
