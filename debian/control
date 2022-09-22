@@ -11,7 +11,6 @@ Build-Depends:
     libprotobuf-java,
     libargs4j-java,
     libguava-java (>= 15.0),
-    libjsr305-java,
     librhino-java (>= 1.7.7),
     ant,
     libjarjar-java,

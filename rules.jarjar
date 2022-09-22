@@ -5,7 +5,6 @@ rule com.google.debugging.sourcemap.** @0
 # Deps to shade
 rule com.google.**         com.google.javascript.jscomp.jarjar.@0
 rule javax.**              com.google.javascript.jscomp.jarjar.@0
-rule jsr305_annotations.** com.google.javascript.jscomp.jarjar.@0
 rule org.json.**           com.google.javascript.jscomp.jarjar.@0
 rule org.kohsuke.args4j.** com.google.javascript.jscomp.jarjar.@0
 rule org.apache.tools.**   com.google.javascript.jscomp.jarjar.@0
