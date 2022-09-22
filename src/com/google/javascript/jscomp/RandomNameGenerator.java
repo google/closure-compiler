@@ -110,7 +110,7 @@ public final class RandomNameGenerator implements NameGenerator {
   RandomNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      @Nullable char[] reservedCharacters,
+      char @Nullable [] reservedCharacters,
       Random random) {
     this.random = random;
     reset(reservedNames, prefix, reservedCharacters);
@@ -133,8 +133,8 @@ public final class RandomNameGenerator implements NameGenerator {
   RandomNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      @Nullable char[] reservedFirstCharacters,
-      @Nullable char[] reservedNonFirstCharacters,
+      char @Nullable [] reservedFirstCharacters,
+      char @Nullable [] reservedNonFirstCharacters,
       Random random) {
     this.random = random;
     reset(reservedNames, prefix, reservedFirstCharacters, reservedNonFirstCharacters);
@@ -142,9 +142,7 @@ public final class RandomNameGenerator implements NameGenerator {
 
   @Override
   public void reset(
-      Set<String> reservedNames,
-      String prefix,
-      @Nullable char[] reservedCharacters) {
+      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
     reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -152,8 +150,8 @@ public final class RandomNameGenerator implements NameGenerator {
   public void reset(
       Set<String> reservedNames,
       String prefix,
-      @Nullable char[] reservedFirstCharacters,
-      @Nullable char[] reservedNonFirstCharacters) {
+      char @Nullable [] reservedFirstCharacters,
+      char @Nullable [] reservedNonFirstCharacters) {
     this.reservedNames = ImmutableSet.copyOf(reservedNames);
     this.prefix = prefix;
     nameCount = 0;
@@ -169,14 +167,12 @@ public final class RandomNameGenerator implements NameGenerator {
 
   @Override
   public NameGenerator clone(
-      Set<String> reservedNames,
-      String prefix,
-      @Nullable char[] reservedCharacters) {
+      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
     return new RandomNameGenerator(
         reservedNames, prefix, reservedCharacters, random);
   }
 
-  private static ImmutableSet<Character> asSet(@Nullable char[] chars) {
+  private static ImmutableSet<Character> asSet(char @Nullable [] chars) {
     return chars == null ? ImmutableSet.of() : ImmutableSet.copyOf(Chars.asList(chars));
   }
 

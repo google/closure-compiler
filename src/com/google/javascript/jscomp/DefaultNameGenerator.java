@@ -116,7 +116,7 @@ public final class DefaultNameGenerator implements NameGenerator {
   }
 
   public DefaultNameGenerator(
-      Set<String> reservedNames, String prefix, @Nullable char[] reservedCharacters) {
+      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
     this(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -135,14 +135,16 @@ public final class DefaultNameGenerator implements NameGenerator {
   public DefaultNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      @Nullable char[] reservedFirstCharacters,
-      @Nullable char[] reservedNonFirstCharacters) {
+      char @Nullable [] reservedFirstCharacters,
+      char @Nullable [] reservedNonFirstCharacters) {
     buildPriorityLookupMap();
     reset(reservedNames, prefix, reservedFirstCharacters, reservedNonFirstCharacters);
   }
 
-  private DefaultNameGenerator(Set<String> reservedNames, String prefix,
-      @Nullable char[] reservedCharacters,
+  private DefaultNameGenerator(
+      Set<String> reservedNames,
+      String prefix,
+      char @Nullable [] reservedCharacters,
       Map<Character, CharPriority> priorityLookupMap) {
     // Clone the priorityLookupMap to preserve information about how often
     // characters are used.
@@ -170,7 +172,8 @@ public final class DefaultNameGenerator implements NameGenerator {
   }
 
   @Override
-  public void reset(Set<String> reservedNames, String prefix, @Nullable char[] reservedCharacters) {
+  public void reset(
+      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
     reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -184,8 +187,8 @@ public final class DefaultNameGenerator implements NameGenerator {
   public void reset(
       Set<String> reservedNames,
       String prefix,
-      @Nullable char[] reservedFirstCharacters,
-      @Nullable char[] reservedNonFirstCharacters) {
+      char @Nullable [] reservedFirstCharacters,
+      char @Nullable [] reservedNonFirstCharacters) {
 
     this.reservedNames = reservedNames;
     this.prefix = prefix;
@@ -202,9 +205,7 @@ public final class DefaultNameGenerator implements NameGenerator {
 
   @Override
   public NameGenerator clone(
-      Set<String> reservedNames,
-      String prefix,
-      @Nullable char[] reservedCharacters) {
+      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
     return new DefaultNameGenerator(reservedNames, prefix, reservedCharacters,
         priorityLookupMap);
   }

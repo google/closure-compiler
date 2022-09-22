@@ -148,7 +148,7 @@ final class RenameVars implements CompilerPass {
       boolean generatePseudoNames,
       boolean preferStableNames,
       VariableMap prevUsedRenameMap,
-      @Nullable char[] reservedCharacters,
+      char @Nullable [] reservedCharacters,
       @Nullable Set<String> reservedNames,
       NameGenerator nameGenerator) {
     this.compiler = compiler;
