@@ -25,11 +25,11 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import org.jspecify.nullness.Nullable;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.EntityResolver;
@@ -126,7 +126,7 @@ public final class XtbMessageBundle implements MessageBundle {
     private static final String PLACEHOLDER_NAME_ATT_NAME = "name";
 
     String lang;
-    @Nullable JsMessage.Builder msgBuilder;
+    JsMessage.@Nullable Builder msgBuilder;
 
     @Override
     public void setDocumentLocator(Locator locator) {}

@@ -24,7 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Converts ES6 arrow functions to standard anonymous ES3 functions. */
 public class Es6RewriteArrowFunction implements NodeTraversal.Callback, CompilerPass {
@@ -168,7 +168,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     @Nullable Node lastSuperStatement = null; // Last statement in the body that refers to super().
 
     boolean needsThisVar = false;
-    @Nullable private AstFactory.Type thisType;
+    private AstFactory.@Nullable Type thisType;
 
     boolean needsArgumentsVar = false;
 
@@ -177,8 +177,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
       this.isConstructor = isConstructor;
     }
 
-    @Nullable
-    AstFactory.Type getThisType() {
+    AstFactory.@Nullable Type getThisType() {
       return thisType;
     }
 

@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Converts ES6 generator functions to valid ES3 code. This pass runs after all ES6 features except
@@ -406,8 +406,8 @@ final class Es6RewriteGenerators implements CompilerPass {
      */
     void transpileStatement(
         Node statement,
-        @Nullable TranspilationContext.Case breakCase,
-        @Nullable TranspilationContext.Case continueCase) {
+        TranspilationContext.@Nullable Case breakCase,
+        TranspilationContext.@Nullable Case continueCase) {
       checkState(IR.mayBeStatement(statement));
       checkState(statement.getParent() == null);
 
@@ -674,7 +674,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     /** Transpiles marked "if" stetement. */
-    void transpileIf(Node n, @Nullable TranspilationContext.Case breakCase) {
+    void transpileIf(Node n, TranspilationContext.@Nullable Case breakCase) {
       // Decompose condition first
       Node condition = maybeDecomposeExpression(n.removeFirstChild());
       Node ifBlock = n.getFirstChild();
@@ -737,8 +737,8 @@ final class Es6RewriteGenerators implements CompilerPass {
     /** Transpiles marked "for" statement. */
     void transpileFor(
         Node n,
-        @Nullable TranspilationContext.Case breakCase,
-        @Nullable TranspilationContext.Case continueCase) {
+        TranspilationContext.@Nullable Case breakCase,
+        TranspilationContext.@Nullable Case continueCase) {
       // Decompose init first
       Node init = maybeDecomposeExpression(n.removeFirstChild());
       Node condition = n.getFirstChild();
@@ -809,8 +809,8 @@ final class Es6RewriteGenerators implements CompilerPass {
      */
     void transpileForIn(
         Node n,
-        @Nullable TranspilationContext.Case breakCase,
-        @Nullable TranspilationContext.Case continueCase) {
+        TranspilationContext.@Nullable Case breakCase,
+        TranspilationContext.@Nullable Case continueCase) {
       // Decompose condition first
       Node detachedExpr = maybeDecomposeExpression(n.getSecondChild().detach());
       Node target = n.getFirstChild();
@@ -884,8 +884,8 @@ final class Es6RewriteGenerators implements CompilerPass {
     /** Transpiles "while" statement. */
     void transpileWhile(
         Node n,
-        @Nullable TranspilationContext.Case breakCase,
-        @Nullable TranspilationContext.Case continueCase) {
+        TranspilationContext.@Nullable Case breakCase,
+        TranspilationContext.@Nullable Case continueCase) {
       TranspilationContext.Case startCase = context.maybeCreateCase(continueCase);
       TranspilationContext.Case endCase = context.maybeCreateCase(breakCase);
 
@@ -917,8 +917,8 @@ final class Es6RewriteGenerators implements CompilerPass {
     /** Transpiles "do while" statement. */
     void transpileDo(
         Node n,
-        @Nullable TranspilationContext.Case breakCase,
-        @Nullable TranspilationContext.Case continueCase) {
+        TranspilationContext.@Nullable Case breakCase,
+        TranspilationContext.@Nullable Case continueCase) {
       TranspilationContext.Case startCase = context.createCase();
       breakCase = context.maybeCreateCase(breakCase);
       continueCase = context.maybeCreateCase(continueCase);
@@ -948,7 +948,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     /** Transpiles "try" statement */
-    void transpileTry(Node n, @Nullable TranspilationContext.Case breakCase) {
+    void transpileTry(Node n, TranspilationContext.@Nullable Case breakCase) {
       Node tryBlock = n.removeFirstChild();
       Node catchBlock = n.removeFirstChild();
       Node finallyBlock = n.removeFirstChild();
@@ -989,7 +989,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     // Transpiles "switch" statement.
-    void transpileSwitch(Node n, @Nullable TranspilationContext.Case breakCase) {
+    void transpileSwitch(Node n, TranspilationContext.@Nullable Case breakCase) {
       // Transpile condition first
       n.addChildToFront(maybeDecomposeExpression(n.removeFirstChild()));
 

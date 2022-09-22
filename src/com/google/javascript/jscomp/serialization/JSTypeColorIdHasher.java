@@ -32,7 +32,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 final class JSTypeColorIdHasher {
 
@@ -99,8 +99,7 @@ final class JSTypeColorIdHasher {
     }
   }
 
-  @Nullable
-  private static JSType.WithSourceRef sourceRefFor(ObjectType type) {
+  private static JSType.@Nullable WithSourceRef sourceRefFor(ObjectType type) {
     if (type.isEnumType()) {
       return type.toMaybeEnumType();
     } else if (type.isEnumElementType()) {

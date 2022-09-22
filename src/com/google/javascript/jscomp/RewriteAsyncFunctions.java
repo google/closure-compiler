@@ -32,7 +32,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Converts async functions to valid ES6 generator functions code.
@@ -77,7 +77,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     private final String wrapperFunctionName;
     // The type to use for the wrapper function.
     // Will be null if type checking has not run.
-    @Nullable private final AstFactory.Type wrapperFunctionReturnType;
+    private final AstFactory.@Nullable Type wrapperFunctionReturnType;
 
     private SuperPropertyWrapperInfo(
         Node firstSuperDotPropertyNode,
@@ -255,7 +255,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
 
     boolean mustAddAsyncThisVariable = false;
     // null if mustAddAsyncThisVariable is false
-    @Nullable AstFactory.Type typeOfThis;
+    AstFactory.@Nullable Type typeOfThis;
     boolean mustAddAsyncArgumentsVariable = false;
 
     FunctionContext(Node contextRootNode) {
