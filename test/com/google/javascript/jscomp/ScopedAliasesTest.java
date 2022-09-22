@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1512,7 +1513,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
 
   private static class TypeVerifyingPass implements CompilerPass, NodeTraversal.Callback {
     private final Compiler compiler;
-    private List<Node> actualTypes = null;
+    private @Nullable List<Node> actualTypes = null;
 
     public TypeVerifyingPass(Compiler compiler) {
       this.compiler = compiler;

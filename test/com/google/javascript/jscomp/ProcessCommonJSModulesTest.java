@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -27,7 +28,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
-  private ImmutableList<String> moduleRoots = null;
+  private @Nullable ImmutableList<String> moduleRoots = null;
   private ModuleLoader.ResolutionMode resolutionMode = ModuleLoader.ResolutionMode.NODE;
 
   @Override

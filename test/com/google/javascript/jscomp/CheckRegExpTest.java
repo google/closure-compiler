@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +27,7 @@ import org.junit.runners.JUnit4;
 /** @author johnlenz@google.com (John Lenz) */
 @RunWith(JUnit4.class)
 public final class CheckRegExpTest extends CompilerTestCase {
-  CheckRegExp last = null;
+  @Nullable CheckRegExp last = null;
   boolean reportErrors;
 
   public CheckRegExpTest() {

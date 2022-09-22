@@ -103,7 +103,7 @@ public final class NodeUtilTest {
 
   /** Provides methods for parsing and accessing the compiler used for the parsing. */
   private static class ParseHelper {
-    private Compiler compiler = null;
+    private @Nullable Compiler compiler = null;
 
     private Node parse(String js) {
       CompilerOptions options = new CompilerOptions();

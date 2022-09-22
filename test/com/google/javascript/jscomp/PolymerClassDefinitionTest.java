@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +31,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
-  private Node polymerCall;
+  private @Nullable Node polymerCall;
 
   @Override
   @Before

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -82,7 +83,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler() {
-      Node lastInjected = null;
+      @Nullable Node lastInjected = null;
 
       @Override
       public Node ensureLibraryInjected(String library, boolean force) {

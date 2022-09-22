@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -63,7 +64,7 @@ public final class JsMessageVisitorTest {
     }
   }
 
-  private CompilerOptions compilerOptions;
+  private @Nullable CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
   private boolean renameMessages = false;

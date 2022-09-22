@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +47,7 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class ChangeVerifierTest {
-  private Compiler compiler;
+  private @Nullable Compiler compiler;
 
   @Before
   public void setup() {

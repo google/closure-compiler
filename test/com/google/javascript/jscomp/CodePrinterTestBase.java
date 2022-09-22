@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import java.nio.charset.Charset;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 
 /** Base class for tests that exercise {@link CodePrinter}. */
@@ -35,8 +36,8 @@ public abstract class CodePrinterTestBase {
   protected boolean preserveTypeAnnotations = false;
   protected boolean preserveNonJSDocComments = false;
   protected LanguageMode languageMode = LanguageMode.ECMASCRIPT5;
-  protected Compiler lastCompiler = null;
-  protected Charset outputCharset = null;
+  protected @Nullable Compiler lastCompiler = null;
+  protected @Nullable Charset outputCharset = null;
 
   @Before
   public void setUp() throws Exception {

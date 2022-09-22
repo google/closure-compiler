@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import org.jspecify.nullness.Nullable;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +28,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class CheckDebuggerStatementTest extends CompilerTestCase {
 
-  private CheckLevel checkLevel;
+  private @Nullable CheckLevel checkLevel;
 
   @Override
   @After

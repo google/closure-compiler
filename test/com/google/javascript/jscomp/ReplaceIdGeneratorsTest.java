@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,8 +34,8 @@ import org.junit.runners.JUnit4;
 public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private boolean generatePseudoNames = false;
-  private ReplaceIdGenerators lastPass = null;
-  private String previousMappings = null;
+  private @Nullable ReplaceIdGenerators lastPass = null;
+  private @Nullable String previousMappings = null;
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

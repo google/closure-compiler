@@ -44,7 +44,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
   private String[] names;
   private int lineCount;
   // Slots in the lines list will be null if the line does not have any entries.
-  private ArrayList<ArrayList<Entry>> lines = null;
+  private @Nullable ArrayList<ArrayList<Entry>> lines = null;
   /** originalFile path ==> original line ==> target mappings */
   private Map<String, Map<Integer, Collection<OriginalMapping>>>
       reverseSourceMapping;

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,8 +32,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class TranspileOnlyIntegrationTest {
 
-  private Compiler compiler = null;
-  private CompilerOptions options = null;
+  private @Nullable Compiler compiler = null;
+  private @Nullable CompilerOptions options = null;
 
   @Before
   public void init() {

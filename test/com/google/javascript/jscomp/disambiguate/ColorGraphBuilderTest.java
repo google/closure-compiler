@@ -72,7 +72,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
       ColorGraphNodeFactory.createFactory(
           ColorRegistry.builder().setDefaultNativeColorsForTesting().build());
 
-  private CompilerPass processor;
+  private @Nullable CompilerPass processor;
   private DiGraph<ColorGraphNode, Object> result;
   private LinkedHashMap<String, ColorId> labelToId;
 

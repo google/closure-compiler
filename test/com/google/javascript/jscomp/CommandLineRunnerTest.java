@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -75,16 +76,16 @@ public final class CommandLineRunnerTest {
   @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  private Compiler lastCompiler = null;
-  private CommandLineRunner lastCommandLineRunner = null;
-  private List<Integer> exitCodes = null;
-  private ByteArrayOutputStream outReader = null;
-  private ByteArrayOutputStream errReader = null;
+  private @Nullable Compiler lastCompiler = null;
+  private @Nullable CommandLineRunner lastCommandLineRunner = null;
+  private @Nullable List<Integer> exitCodes = null;
+  private @Nullable ByteArrayOutputStream outReader = null;
+  private @Nullable ByteArrayOutputStream errReader = null;
   private Map<Integer, String> filenames;
 
   // If set, this will be appended to the end of the args list.
   // For testing args parsing.
-  private String lastArg = null;
+  private @Nullable String lastArg = null;
 
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;

@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.SortingErrorManager.LeveledJSErrorComparator;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,7 +34,7 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class SortingErrorManagerTest {
-  private static final String NULL_SOURCE = null;
+  private static final @Nullable String NULL_SOURCE = null;
 
   private final LeveledJSErrorComparator comparator = new LeveledJSErrorComparator();
 

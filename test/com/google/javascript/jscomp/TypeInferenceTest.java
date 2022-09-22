@@ -79,6 +79,7 @@ import com.google.javascript.rhino.testing.TypeSubject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,7 +94,7 @@ public final class TypeInferenceTest {
   private JSTypeResolver.Closer closer;
   private Map<String, JSType> assumptions;
   private JSType assumedThisType;
-  private FlowScope returnScope;
+  private @Nullable FlowScope returnScope;
   private static final AssertionFunctionLookup ASSERTION_FUNCTION_MAP =
       AssertionFunctionLookup.of(new ClosureCodingConvention().getAssertionFunctions());
 

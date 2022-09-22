@@ -359,7 +359,7 @@ public abstract class JsMessage {
   @GwtIncompatible("java.util.regex")
   public static final class Builder {
 
-    private String key = null;
+    private @Nullable String key = null;
 
     private String meaning;
 

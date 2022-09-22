@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,7 +39,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class LiveVariablesAnalysisTest {
 
-  private LiveVariablesAnalysis liveness = null;
+  private @Nullable LiveVariablesAnalysis liveness = null;
 
   @Test
   public void testStraightLine() {

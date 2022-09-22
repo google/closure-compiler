@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +43,7 @@ public final class VarCheckTest extends CompilerTestCase {
   private CheckLevel strictModuleDepErrorLevel;
   private boolean validityCheck = false;
 
-  private CheckLevel externValidationErrorLevel;
+  private @Nullable CheckLevel externValidationErrorLevel;
 
   private boolean declarationCheck;
 

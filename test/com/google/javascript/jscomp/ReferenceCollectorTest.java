@@ -24,6 +24,7 @@ import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +32,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class ReferenceCollectorTest extends CompilerTestCase {
-  private Behavior behavior;
+  private @Nullable Behavior behavior;
 
   @Override
   @Before

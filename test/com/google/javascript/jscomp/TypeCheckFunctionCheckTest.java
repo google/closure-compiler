@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.FunctionTypeBuilder.VAR_ARGS_MUST_BE_
 import static com.google.javascript.jscomp.TypeCheck.WRONG_ARGUMENT_COUNT;
 
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +34,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
-  private CodingConvention convention = null;
+  private @Nullable CodingConvention convention = null;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

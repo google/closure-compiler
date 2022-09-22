@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,7 +85,7 @@ public class TypedAstSerializerTest extends CompilerTestCase {
       ImmutableList.of(OBJECT_UUID);
 
   /** Holds the serialized AST created by the last executed test method. */
-  private TypedAst testResult = null;
+  private @Nullable TypedAst testResult = null;
 
   @Override
   @Before

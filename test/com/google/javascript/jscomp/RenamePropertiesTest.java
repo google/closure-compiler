@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +39,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
 
   private RenameProperties renameProperties;
   private boolean generatePseudoNames;
-  private VariableMap prevUsedPropertyMap;
+  private @Nullable VariableMap prevUsedPropertyMap;
 
   public RenamePropertiesTest() {
     super(EXTERNS);

@@ -34,6 +34,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +50,7 @@ public final class JSChunkGraphTest {
   private JSChunk moduleD;
   private JSChunk moduleE;
   private JSChunk moduleF;
-  private JSChunkGraph graph = null;
+  private @Nullable JSChunkGraph graph = null;
 
   // For resolving dependencies only.
   private Compiler compiler;

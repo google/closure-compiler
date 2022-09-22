@@ -320,7 +320,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    */
   private static final class ClassRecord {
     // During traversal, contains the current member being traversed. After traversal, always null
-    Node currentMember;
+    @Nullable Node currentMember;
     boolean cannotConvert;
 
     // Instance fields

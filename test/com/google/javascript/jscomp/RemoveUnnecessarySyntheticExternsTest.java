@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashSet;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +29,7 @@ import org.junit.runners.JUnit4;
 public final class RemoveUnnecessarySyntheticExternsTest extends CompilerTestCase {
 
   // use this set to simulate an earlier compiler pass declaring a synthetic extern
-  private LinkedHashSet<Node> syntheticExternsToAdd = null;
+  private @Nullable LinkedHashSet<Node> syntheticExternsToAdd = null;
 
   @Override
   @Before

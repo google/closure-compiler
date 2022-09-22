@@ -46,7 +46,7 @@ public class NodeTraversal {
   /** Contains the current node */
   private Node currentNode;
 
-  private Node currentHoistScopeRoot;
+  private @Nullable Node currentHoistScopeRoot;
 
   /** Contains the current FUNCTION node if there is one, otherwise null. */
   private Node currentFunction;

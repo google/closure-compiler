@@ -67,7 +67,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
 
   private final Compiler compiler = new Compiler();
 
-  private CompilerPass processor;
+  private @Nullable CompilerPass processor;
   private ImmutableSet<String> expectedOriginalNameTypes = ImmutableSet.of();
 
   /**

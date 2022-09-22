@@ -132,11 +132,11 @@ public final class SuggestedFix {
    * Builder class for {@link SuggestedFix} that contains helper functions to manipulate JS nodes.
    */
   public static final class Builder {
-    private MatchedNodeInfo matchedNodeInfo = null;
+    private @Nullable MatchedNodeInfo matchedNodeInfo = null;
     private final ImmutableSetMultimap.Builder<String, CodeReplacement> replacements =
         ImmutableSetMultimap.builder();
     private final ImmutableList.Builder<SuggestedFix> alternatives = ImmutableList.builder();
-    private String description = null;
+    private @Nullable String description = null;
 
     /**
      * Sets the node on this SuggestedFix that caused this SuggestedFix to be built in the first

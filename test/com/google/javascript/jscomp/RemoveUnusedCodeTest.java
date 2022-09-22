@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -2214,17 +2215,17 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     // Input source code, which will be prefixed with the polyfills.
     // A value of `null` just means this hasn't been set yet.
-    private String inputSource = null;
+    private @Nullable String inputSource = null;
 
     // Expected output source code, which will be prefixed with the output version of each polyfill.
     // A value of `null` means this value hasn't been set yet or needs to be reset because
     // inputSource has changed.
-    private String expectedSource = null;
+    private @Nullable String expectedSource = null;
 
     // Set of polyfills that are expected to be removed by RemoveUnusedCode.
     // A value of `null` indicates that no expectation has been set since the last time inputSource
     // was modified.
-    private HashSet<String> polyfillsExpectedToBeRemoved = new HashSet<>();
+    private @Nullable HashSet<String> polyfillsExpectedToBeRemoved = new HashSet<>();
 
     @CanIgnoreReturnValue
     PolyfillRemovalTester addExterns(String moreExterns) {

@@ -30,6 +30,7 @@ import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,7 +52,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   private boolean withNormalize = false;
 
   // NameGenerator to use, or null for a default.
-  private DefaultNameGenerator nameGenerator = null;
+  private @Nullable DefaultNameGenerator nameGenerator = null;
 
   @Override
   protected CodingConvention getCodingConvention() {

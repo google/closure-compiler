@@ -170,7 +170,7 @@ public abstract class CompilerTestCase {
   private boolean expectParseWarningsInThisTest;
 
   /** An expected symbol table error. Only useful for testing the symbol table error-handling. */
-  private DiagnosticType expectedSymbolTableError;
+  private @Nullable DiagnosticType expectedSymbolTableError;
 
   /** Whether the PureFunctionIdentifier pass runs before the pass being tested */
   private boolean computeSideEffects;
@@ -193,7 +193,7 @@ public abstract class CompilerTestCase {
 
   private LanguageMode languageOut;
 
-  private Integer browserFeaturesetYear;
+  private @Nullable Integer browserFeaturesetYear;
 
   /** How to interpret ES6 module imports */
   private ResolutionMode moduleResolutionMode;

@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +34,7 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestCase {
-  private ImmutableList<String> moduleRoots = null;
+  private @Nullable ImmutableList<String> moduleRoots = null;
 
   private static final SourceFile other =
       SourceFile.fromCode(

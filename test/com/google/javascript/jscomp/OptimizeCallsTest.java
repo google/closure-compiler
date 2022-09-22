@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +37,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   private OptimizeCalls.ReferenceMap references;
 
   // Whether to consider externs during the next collection. Must be explicitly set.
-  private Boolean considerExterns = null;
+  private @Nullable Boolean considerExterns = null;
 
   @Override
   @Before

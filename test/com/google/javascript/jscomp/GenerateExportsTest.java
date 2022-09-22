@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,8 +36,8 @@ public final class GenerateExportsTest extends CompilerTestCase {
           "goog.exportProperty = function(a, b, c) {};");
 
   private boolean allowNonGlobalExports = true;
-  private String exportSymbolFunction;
-  private String exportPropertyFunction;
+  private @Nullable String exportSymbolFunction;
+  private @Nullable String exportPropertyFunction;
 
   public GenerateExportsTest() {
     super(EXTERNS);

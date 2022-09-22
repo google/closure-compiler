@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +40,7 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesTest extends CompilerTestCase {
-  private ImmutableList<String> moduleRoots = null;
+  private @Nullable ImmutableList<String> moduleRoots = null;
   private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
   private static final SourceFile other =

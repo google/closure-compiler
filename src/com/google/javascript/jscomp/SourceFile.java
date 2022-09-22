@@ -84,7 +84,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   private final CodeLoader loader;
 
   // Source Line Information
-  @Nullable private transient int[] lineOffsets = null;
+  private transient int @Nullable [] lineOffsets = null;
 
   @Nullable private transient volatile String code = null;
 

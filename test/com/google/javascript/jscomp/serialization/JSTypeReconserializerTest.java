@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Predicate;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +49,7 @@ import org.junit.runners.JUnit4;
 public final class JSTypeReconserializerTest extends CompilerTestCase {
 
   // individual test cases may override this
-  private ImmutableSet<String> typesToForwardDeclare = null;
+  private @Nullable ImmutableSet<String> typesToForwardDeclare = null;
   private Predicate<String> shouldSerializeProperty;
 
   private TypePool typePool;

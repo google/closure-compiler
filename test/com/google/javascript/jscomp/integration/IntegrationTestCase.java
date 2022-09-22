@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 
 /** Framework for end-to-end test cases. */
@@ -140,7 +141,7 @@ abstract class IntegrationTestCase {
   protected List<SourceFile> externs = DEFAULT_EXTERNS;
 
   // The most recently used compiler.
-  protected Compiler lastCompiler;
+  protected @Nullable Compiler lastCompiler;
 
   protected boolean useNoninjectingCompiler = false;
 

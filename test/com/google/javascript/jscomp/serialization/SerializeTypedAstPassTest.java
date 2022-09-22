@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +54,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   private Consumer<TypedAst> astConsumer;
   // individual test cases may override this
-  private ImmutableSet<String> typesToForwardDeclare = null;
+  private @Nullable ImmutableSet<String> typesToForwardDeclare = null;
 
   // Proto fields commonly ignored in tests because hardcoding their values is brittle
   private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =

@@ -89,6 +89,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.Optional;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -151,7 +152,7 @@ public final class AstAnalyzerTest {
 
   /** Provides methods for parsing and accessing the compiler used for the parsing. */
   private static final class ParseHelper {
-    private Compiler compiler = null;
+    private @Nullable Compiler compiler = null;
 
     private void resetCompiler() {
       CompilerOptions options = new CompilerOptions();

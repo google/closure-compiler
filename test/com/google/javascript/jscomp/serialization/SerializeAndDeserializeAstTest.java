@@ -47,6 +47,7 @@ import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,7 +65,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
-  private Consumer<TypedAst> consumer = null;
+  private @Nullable Consumer<TypedAst> consumer = null;
   private boolean includeTypes;
 
   @Override

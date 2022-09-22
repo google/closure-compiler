@@ -88,20 +88,16 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   private final LinkedHashMap<String, Integer> originalNameMap =
        new LinkedHashMap<>();
 
-  /**
-   * Cache of the last mappings source name.
-   */
-  private String lastSourceFile = null;
+  /** Cache of the last mappings source name. */
+  private @Nullable String lastSourceFile = null;
 
   /**
    * Cache of the last mappings source name index.
    */
   private int lastSourceFileIndex = -1;
 
-  /**
-   * For validation store the last mapping added.
-   */
-  private Mapping lastMapping;
+  /** For validation store the last mapping added. */
+  private @Nullable Mapping lastMapping;
 
   /**
    * The position that the current source map is offset in the

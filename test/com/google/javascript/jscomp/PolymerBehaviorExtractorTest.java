@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,7 +39,7 @@ import org.junit.runners.JUnit4;
 public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
   private PolymerBehaviorExtractor extractor;
-  private Node behaviorArray;
+  private @Nullable Node behaviorArray;
   private ModuleMetadataMap moduleMetadataMap;
 
   @Override
