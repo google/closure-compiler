@@ -176,6 +176,7 @@ final class PropTranslator {
       case PARSE_RESULTS:
       case IS_TYPESCRIPT_ABSTRACT:
       case TYPEDEF_TYPE:
+      case MARK_FOR_PARENTHESIZE:
         // These cases cannot be translated to a NodeProperty
         return null;
     }

@@ -1627,7 +1627,8 @@ public class CodeGenerator {
   }
 
   private void addFunction(Node n, Node first, Node last, Context context) {
-    boolean funcNeedsParens = (context == Context.START_OF_EXPR);
+    boolean funcNeedsParens =
+        (context == Context.START_OF_EXPR || n.getBooleanProp(Node.MARK_FOR_PARENTHESIZE));
     if (funcNeedsParens) {
       add("(");
     }

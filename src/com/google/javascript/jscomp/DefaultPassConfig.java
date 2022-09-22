@@ -522,7 +522,6 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
-
     if (options.isPropertyRenamingOnlyCompilationMode()) {
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
       passes.maybeAdd(closureProvidesRequires);
@@ -951,6 +950,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(optimizeToEs6);
     }
 
+    if (!options.parenthesizeFunctionsInChunks.isEmpty()) {
+      passes.maybeAdd(parenthesizeFunctionsInChunks);
+    }
+
     // Must run after all non-safety-check passes as the optimizations do not support modules.
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.maybeAdd(convertChunksToESModules);
@@ -959,7 +962,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Safety checks.  These should always be the last passes.
     passes.maybeAdd(checkAstValidity);
     passes.maybeAdd(varCheckValidity);
-
     return passes;
   }
 
@@ -2201,6 +2203,16 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new DisambiguateProperties(compiler, options.getPropertiesThatMustDisambiguate()))
+          .build();
+
+  /** Marks all functions for wrapping with () in the specified chunks. */
+  private final PassFactory parenthesizeFunctionsInChunks =
+      PassFactory.builder()
+          .setName(PassNames.PARENTHESIZE_FUNCTIONS_IN_CHUNKS)
+          .setInternalFactory(
+              (compiler) ->
+                  new ParenthesizeFunctionsInChunks(
+                      compiler, new HashSet<>(options.parenthesizeFunctionsInChunks)))
           .build();
 
   /** Rewrite instance methods as static methods, to make them easier to inline. */

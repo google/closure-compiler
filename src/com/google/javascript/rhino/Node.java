@@ -206,6 +206,10 @@ public class Node {
     // "TypedAST filesystem" will delete any such declarations present in a different compilation
     // shard
     SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
+    // Marks a function for eager compile by wrapping with (). This has potential performance
+    // benefits when focused on critical functions but needs to be sparingly applied, since too many
+    // functions eager compiled will lead to performance regressions.
+    MARK_FOR_PARENTHESIZE
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -293,6 +297,7 @@ public class Node {
   public static final Prop MODULE_EXPORT = Prop.MODULE_EXPORT;
   public static final Prop IS_SHORTHAND_PROPERTY = Prop.IS_SHORTHAND_PROPERTY;
   public static final Prop ES6_MODULE = Prop.ES6_MODULE;
+  public static final Prop MARK_FOR_PARENTHESIZE = Prop.MARK_FOR_PARENTHESIZE;
 
   private static final class NumberNode extends Node {
 
