@@ -161,7 +161,7 @@ public final class FixedPointGraphTraversal<N, E> {
   }
 
   /** Edge callback */
-  public interface EdgeCallback<Node, Edge> {
+  public interface EdgeCallback<NodeT, EdgeT> {
     /**
      * Update the state of the destination node when the given edge is traversed.
      *
@@ -174,6 +174,6 @@ public final class FixedPointGraphTraversal<N, E> {
      * @param destination The end node.
      * @return Whether the state of the destination node changed.
      */
-    boolean traverseEdge(Node source, Edge e, Node destination);
+    boolean traverseEdge(NodeT source, EdgeT e, NodeT destination);
   }
 }
