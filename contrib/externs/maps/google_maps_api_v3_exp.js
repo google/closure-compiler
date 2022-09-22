@@ -6201,7 +6201,7 @@ google.maps.MaxZoomResult = function() {};
  * Status of the request. This property is only defined when using callbacks
  * with {@link google.maps.MaxZoomService.getMaxZoomAtLatLng} (it is not defined
  * when using Promises).
- * @type {?google.maps.MaxZoomStatus}
+ * @type {null|!google.maps.MaxZoomStatus}
  */
 google.maps.MaxZoomResult.prototype.status;
 
