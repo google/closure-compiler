@@ -3370,7 +3370,6 @@ public final class NodeUtil {
    *   import {foo as bar} from './foo'; // getRootTarget(bar) returns bar
    * </code></pre>
    *
-   * @param targetNode
    * @throws IllegalStateException if targetNode is not actually used as a target
    */
   public static Node getRootTarget(Node targetNode) {
@@ -3387,7 +3386,6 @@ public final class NodeUtil {
    * Returns the immediately enclosing target node for a given target node, or null if none found.
    *
    * @see #getRootTarget(Node) for examples
-   * @param targetNode
    */
   private static @Nullable Node getEnclosingTarget(Node targetNode) {
     checkState(checkNotNull(targetNode).isValidAssignmentTarget(), targetNode);
@@ -3756,12 +3754,7 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * Copy any annotations that follow a named value.
-   *
-   * @param source
-   * @param destination
-   */
+  /** Copy any annotations that follow a named value. */
   static void copyNameAnnotations(Node source, Node destination) {
     if (source.getBooleanProp(Node.IS_CONSTANT_NAME)) {
       destination.putBooleanProp(Node.IS_CONSTANT_NAME, true);

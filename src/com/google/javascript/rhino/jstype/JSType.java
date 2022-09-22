@@ -1618,10 +1618,9 @@ public abstract class JSType {
   /**
    * Modify this type so that it matches the specified type.
    *
-   * This is useful for reverse type-inference, where we want to
-   * infer that an object literal matches its constraint (much like
-   * how the java compiler does reverse-inference to figure out generics).
-   * @param constraint
+   * <p>This is useful for reverse type-inference, where we want to infer that an object literal
+   * matches its constraint (much like how the java compiler does reverse-inference to figure out
+   * generics).
    */
   public void matchConstraint(JSType constraint) {}
 

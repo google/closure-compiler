@@ -103,12 +103,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     new MappingBuilder(sourceMapObject.getMappings()).build();
   }
 
-  /**
-   * @param sourceMapObject
-   * @throws SourceMapParseException
-   */
-  private void parseMetaMap(
-      SourceMapObject sourceMapObject, SourceMapSupplier sectionSupplier)
+  /** */
+  private void parseMetaMap(SourceMapObject sourceMapObject, SourceMapSupplier sectionSupplier)
       throws SourceMapParseException {
     if (sectionSupplier == null) {
       sectionSupplier = new DefaultSourceMapSupplier();

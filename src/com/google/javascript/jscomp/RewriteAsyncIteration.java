@@ -468,8 +468,6 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
    *    }
    * }
    * }</pre>
-   *
-   * @param forAwaitOf
    */
   private void replaceForAwaitOf(LexicalContext ctx, Node forAwaitOf) {
     int forAwaitId = nextForAwaitId++;

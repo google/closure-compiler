@@ -3513,7 +3513,6 @@ public class Parser {
    * Consumes the next token if it is of the expected type. Otherwise returns null. Never reports
    * errors.
    *
-   * @param expectedTokenType
    * @return The consumed token, or null if the next token is not of the expected type.
    */
   private @Nullable Token eatOpt(TokenType expectedTokenType) {
@@ -3609,7 +3608,6 @@ public class Parser {
    * Consumes the next token. If the consumed token is not of the expected type then report an error
    * and return null. Otherwise return the consumed token.
    *
-   * @param expectedTokenType
    * @return The consumed token, or null if the next token is not of the expected type.
    */
   private @Nullable Token eat(TokenType expectedTokenType) {

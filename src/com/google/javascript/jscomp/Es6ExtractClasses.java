@@ -218,11 +218,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     compiler.reportChangeToEnclosingScope(classDeclaration);
   }
 
-  /**
-   * Add at-constructor to the JSDoc of the given node.
-   *
-   * @param node
-   */
+  /** Add at-constructor to the JSDoc of the given node. */
   private void addAtConstructor(Node node) {
     JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(node.getJSDocInfo());
     builder.recordConstructor();

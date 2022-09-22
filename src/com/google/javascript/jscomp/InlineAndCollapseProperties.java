@@ -2302,8 +2302,6 @@ class InlineAndCollapseProperties implements CompilerPass {
       /**
        * Use the alias table to look up the resolved name of the given alias. If the result is also
        * an alias repeat until the real name is resolved.
-       *
-       * @param n
        */
       private String resolveAlias(String name, Node n) {
         Set<String> aliasPath = new LinkedHashSet<>();

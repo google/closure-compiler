@@ -219,9 +219,6 @@ public final class TypeDeclarationsIR {
    *   STRING_TYPE
    *   NUMBER_TYPE
    * </pre>
-   *
-   * @param baseType
-   * @param typeParameters
    */
   public static Node parameterizedType(Node baseType, Iterable<Node> typeParameters) {
     if (Iterables.isEmpty(typeParameters)) {

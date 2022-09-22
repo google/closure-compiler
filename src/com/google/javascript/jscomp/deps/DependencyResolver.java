@@ -37,22 +37,18 @@ public interface DependencyResolver {
   /**
    * @param code The raw code to be parsed for requires.
    * @param seen The set of already seen symbols.
-   * @param addClosureBaseFile Indicates whether the closure base file should be
-   *        added to the dependency list.
-   * @return A list of filenames for each of the dependencies for the provided
-   *         code.
-   * @throws ServiceException
+   * @param addClosureBaseFile Indicates whether the closure base file should be added to the
+   *     dependency list.
+   * @return A list of filenames for each of the dependencies for the provided code.
    */
-  public Collection<String> getDependencies(String code,
-      Set<String> seen, boolean addClosureBaseFile) throws ServiceException;
+  public Collection<String> getDependencies(
+      String code, Set<String> seen, boolean addClosureBaseFile) throws ServiceException;
 
   /**
    * @param symbols A list of required symbols.
    * @param seen The set of already seen symbols.
    * @return A list of filenames for each of the required symbols.
-   * @throws ServiceException
    */
-  public Collection<String> getDependencies(Collection<String> symbols,
-      Set<String> seen) throws ServiceException;
-
+  public Collection<String> getDependencies(Collection<String> symbols, Set<String> seen)
+      throws ServiceException;
 }

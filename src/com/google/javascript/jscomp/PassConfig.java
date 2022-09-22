@@ -34,18 +34,12 @@ public abstract class PassConfig {
    * Gets additional checking passes that are run always, even in "whitespace only" mode. For very
    * specific cases where processing is required even in a mode which is intended not to have any
    * processing - specifically introduced to support goog.module() usage.
-   *
-   * @return
    */
   protected PassListBuilder getWhitespaceOnlyPasses() {
     return new PassListBuilder(options);
   }
 
-  /**
-   * Gets the transpilation passes
-   *
-   * @return
-   */
+  /** Gets the transpilation passes */
   protected PassListBuilder getTranspileOnlyPasses() {
     return new PassListBuilder(options);
   }
@@ -58,8 +52,6 @@ public abstract class PassConfig {
    *
    * <p>Clients that only want to analyze code (like IDEs) and not emit code will only run checks
    * and not optimizations.
-   *
-   * @return
    */
   protected abstract PassListBuilder getChecks();
 
@@ -68,8 +60,6 @@ public abstract class PassConfig {
    *
    * <p>Optimization passes revolve around producing smaller and faster code. They should always run
    * after checking passes.
-   *
-   * @return
    */
   protected abstract PassListBuilder getOptimizations();
 
@@ -78,8 +68,6 @@ public abstract class PassConfig {
    *
    * <p>Finalization passes include the injection of locale-specific code and converting the AST to
    * its final form for output.
-   *
-   * @return
    */
   protected abstract PassListBuilder getFinalizations();
 

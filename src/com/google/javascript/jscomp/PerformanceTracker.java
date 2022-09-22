@@ -119,10 +119,7 @@ public final class PerformanceTracker {
     }
   }
 
-  /**
-   * Updates the saved jsRoot and resets the size tracking fields accordingly.
-   * @param jsRoot
-   */
+  /** Updates the saved jsRoot and resets the size tracking fields accordingly. */
   void updateAfterDeserialize(Node jsRoot) {
     // TODO(bradfordcsmith): Restore line counts for inputs and externs.
     this.jsRoot = jsRoot;

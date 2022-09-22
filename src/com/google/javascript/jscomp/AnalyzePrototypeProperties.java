@@ -514,7 +514,6 @@ class AnalyzePrototypeProperties implements CompilerPass {
      * record this reference as the definition of one or more prototype properties and return
      * `true`.
      *
-     * @param t
      * @param ref A reference to some qualified name that ends with `.prototype`
      * @return True if a declaration was added.
      */

@@ -1279,7 +1279,6 @@ public final class AstValidator implements CompilerPass {
   /**
    * @param contextType A {@link Token} constant value indicating that {@code n} should be validated
    *     appropriately for a descendant of a {@link Node} of this type.
-   * @param n
    */
   private void validateRest(Token contextType, Node n) {
     switch (n.getToken()) {
@@ -1391,7 +1390,6 @@ public final class AstValidator implements CompilerPass {
   /**
    * @param contextType A {@link Token} constant value indicating that {@code n} should be validated
    *     appropriately for a descendant of a {@link Node} of this type.
-   * @param n
    */
   private void validateLHS(Token contextType, Node n) {
     switch (n.getToken()) {

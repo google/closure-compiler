@@ -138,10 +138,8 @@ class LiveVariablesAnalysis
    * function parameters, and it from the function block scope when we are ignoring function
    * parameters.
    *
-   * @param cfg
    * @param jsScope the function scope
    * @param jsScopeChild null or function block scope
-   * @param compiler
    * @param scopeCreator Es6 Scope creator
    * @param allVarsDeclaredInFunction mapping of names to vars of everything reachable in a function
    */

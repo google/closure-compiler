@@ -998,8 +998,6 @@ class FunctionInjector {
   /**
    * Gets an estimate of the cost in characters of making the function call: the sum of the
    * identifiers and the separators.
-   *
-   * @param referencesThis
    */
   private static int estimateCallCost(Node fnNode, boolean referencesThis) {
     Node argsNode = NodeUtil.getFunctionParameters(fnNode);

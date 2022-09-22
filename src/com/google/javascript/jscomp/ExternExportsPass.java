@@ -223,7 +223,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * the same instead of generating arbitrary parameter names.
      *
      * @param exportedFunction FUNCTION Node of the original function
-     * @return
      */
     private Node createExternsParamListFromOriginalFunction(Node exportedFunction) {
       final Node originalParamList = NodeUtil.getFunctionParameters(exportedFunction);

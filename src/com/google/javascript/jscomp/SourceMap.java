@@ -259,7 +259,7 @@ public final class SourceMap {
     generator.validate(validate);
   }
 
-  /** @param sourceMapLocationMappings */
+  /** */
   public void setPrefixMappings(List<? extends LocationMapping> sourceMapLocationMappings) {
     this.prefixMappings = sourceMapLocationMappings;
   }

@@ -1378,7 +1378,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      *
      * @param name The {@link Token#NAME} node.
      * @param value Optionally, the value assigned to the name node.
-     * @param scope
      * @param info the {@link JSDocInfo} information relating to this {@code name} node.
      */
     private void defineName(Node name, Node value, TypedScope scope, JSDocInfo info) {

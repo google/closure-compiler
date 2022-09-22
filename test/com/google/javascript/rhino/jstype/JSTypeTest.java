@@ -3356,11 +3356,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(subclassCtor.getOwnPropertyJSDocInfo("prototype")).isNull();
   }
 
-  /**
-   * Tests operation of {@code isVoidable}.
-   *
-   * @throws Exception
-   */
+  /** Tests operation of {@code isVoidable}. */
   @Test
   public void testIsVoidable() {
     assertThat(VOID_TYPE.isVoidable()).isTrue();

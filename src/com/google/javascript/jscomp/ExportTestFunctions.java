@@ -41,13 +41,12 @@ public class ExportTestFunctions implements CompilerPass {
 
   /**
    * Creates a new export test functions compiler pass.
-   * @param compiler
+   *
    * @param exportSymbolFunction The function name used to export symbols in JS.
-   * @param exportPropertyFunction The function name used to export properties
-   *     in JS.
+   * @param exportPropertyFunction The function name used to export properties in JS.
    */
-  ExportTestFunctions(AbstractCompiler compiler,
-      String exportSymbolFunction, String exportPropertyFunction) {
+  ExportTestFunctions(
+      AbstractCompiler compiler, String exportSymbolFunction, String exportPropertyFunction) {
 
     checkNotNull(compiler);
     this.compiler = compiler;
@@ -173,8 +172,6 @@ public class ExportTestFunctions implements CompilerPass {
     /**
      * Get the node that corresponds to an expression declared with var, let or const. This has the
      * AST structure VAR/LET/CONST -> NAME -> NODE
-     *
-     * @param node
      */
     private @Nullable Node getNameDeclaredGrandchild(Node node) {
       if (!NodeUtil.isNameDeclaration(node)) {
@@ -184,15 +181,16 @@ public class ExportTestFunctions implements CompilerPass {
     }
 
     /**
-     * Whether node corresponds to a function expression declared with var, let
-     * or const which is of the form:
+     * Whether node corresponds to a function expression declared with var, let or const which is of
+     * the form:
+     *
      * <pre>
      * var/let/const functionName = function() {
      *   // Implementation
      * };
      * </pre>
+     *
      * This has the AST structure VAR/LET/CONST -> NAME -> FUNCTION
-     * @param node
      */
     private boolean isNameDeclaredFunction(Node node) {
       Node grandchild = getNameDeclaredGrandchild(node);
@@ -200,15 +198,15 @@ public class ExportTestFunctions implements CompilerPass {
     }
 
     /**
-     * Whether node corresponds to a class declared with var, let or const which
-     * is of the form:
+     * Whether node corresponds to a class declared with var, let or const which is of the form:
+     *
      * <pre>
      * var/let/const className = class {
      *   // Implementation
      * };
      * </pre>
+     *
      * This has the AST structure VAR/LET/CONST -> NAME -> CLASS
-     * @param node
      */
     private boolean isNameDeclaredClass(Node node) {
       Node grandchild = getNameDeclaredGrandchild(node);

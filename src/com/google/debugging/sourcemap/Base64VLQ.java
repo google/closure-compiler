@@ -71,12 +71,8 @@ public final class Base64VLQ {
     return -value | 0x80000000;
   }
 
-  /**
-   * Writes a VLQ encoded value to the provide appendable.
-   * @throws IOException
-   */
-  public static void encode(Appendable out, int value)
-      throws IOException {
+  /** Writes a VLQ encoded value to the provide appendable. */
+  public static void encode(Appendable out, int value) throws IOException {
     value = toVLQSigned(value);
     do {
       int digit = value & VLQ_BASE_MASK;

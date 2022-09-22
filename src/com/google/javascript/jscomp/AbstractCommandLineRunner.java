@@ -489,7 +489,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   /**
    * @return a mutable list
-   * @throws IOException
    */
   @GwtIncompatible("Unnecessary")
   public static List<SourceFile> getBuiltinExterns(CompilerOptions.Environment env)

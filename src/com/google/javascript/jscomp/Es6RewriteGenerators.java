@@ -401,8 +401,6 @@ final class Es6RewriteGenerators implements CompilerPass {
      * TranspilationContext.Case#currentCase currentCase} of the {@link #context}.
      *
      * @param statement Node to transpile
-     * @param breakCase
-     * @param continueCase
      */
     void transpileStatement(
         Node statement,

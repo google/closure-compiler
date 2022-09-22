@@ -657,10 +657,8 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
   /**
    * Is a variable with the given name defined in the source code being compiled?
    *
-   * <p>Please note that the call to {@code t.getScope()} is expensive, so we should avoid
-   * calling this method when possible.
-   * @param t
-   * @param varName
+   * <p>Please note that the call to {@code t.getScope()} is expensive, so we should avoid calling
+   * this method when possible.
    */
   private boolean isDefinedInSources(NodeTraversal t, String varName) {
     Var objectVar = t.getScope().getVar(varName);

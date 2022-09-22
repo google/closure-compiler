@@ -1257,9 +1257,6 @@ class RemoveUnusedCode implements CompilerPass {
   /**
    * Handle a class that is not the RHS child of an assignment or a variable declaration
    * initializer.
-   *
-   * @param classNode
-   * @param scope
    */
   private void traverseClass(Node classNode, Scope scope) {
     checkArgument(classNode.isClass());
@@ -1530,7 +1527,6 @@ class RemoveUnusedCode implements CompilerPass {
    * Mark any remaining unused parameters as being unused so it can be used elsewhere.
    *
    * @param paramList list of function's parameters
-   * @param fparamScope
    */
   private void markUnusedParameters(Node paramList, Scope fparamScope) {
     checkArgument(paramList.isParamList(), paramList);
@@ -1565,7 +1561,6 @@ class RemoveUnusedCode implements CompilerPass {
    * calls.
    *
    * @param argList list of function's arguments
-   * @param fparamScope
    */
   private void maybeRemoveUnusedTrailingParameters(Node argList, Scope fparamScope) {
     checkArgument(argList.isParamList(), argList);

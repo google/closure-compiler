@@ -185,7 +185,6 @@ class NodeIterators {
     }
 
     /**
-     * @param compiler
      * @param iterator The iterator to use while inspecting the node
      */
     private LocalVarMotion(

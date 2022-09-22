@@ -536,10 +536,8 @@ public final class CompileTask
   }
 
   /**
-   * Converts project properties beginning with the replacement prefix
-   * into Compiler {@code @define} replacements.
-   *
-   * @param options
+   * Converts project properties beginning with the replacement prefix into Compiler {@code @define}
+   * replacements.
    */
   private void convertPropertiesMap(CompilerOptions options) {
     @SuppressWarnings("unchecked")

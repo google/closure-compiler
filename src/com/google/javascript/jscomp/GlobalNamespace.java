@@ -783,11 +783,6 @@ class GlobalNamespace
     /**
      * If Refs already exist for the given Node confirm they match what we would create. Otherwise,
      * create them.
-     *
-     * @param nameObj
-     * @param node
-     * @param setRefType
-     * @param scope
      */
     private void addOrConfirmTwinRefs(Name nameObj, Node node, Ref.Type setRefType, Scope scope) {
       ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
@@ -1404,8 +1399,6 @@ class GlobalNamespace
      * <p>This covers cases like `var a = b = 0`. The 'b' node needs a ALIASING_GET reference and a
      * SET_FROM_GLOBAL or SET_FROM_LOCAL reference.
      *
-     * @param scope
-     * @param node
      * @param setType either SET_FROM_LOCAL or SET_FROM_GLOBAL
      */
     private void addTwinRefs(Scope scope, Node node, Ref.Type setType) {
@@ -1586,8 +1579,6 @@ class GlobalNamespace
      *
      * <p>NOTE: if ref has a twin, they will no longer be twins after this method finishes. Use
      * removeTwinRefs() to remove a pair of twins at the same time.
-     *
-     * @param ref
      */
     void removeRef(Ref ref) {
       checkState(
@@ -1600,11 +1591,7 @@ class GlobalNamespace
       removeRefAndUpdateState(ref);
     }
 
-    /**
-     * Update counts, declaration, and JSDoc to reflect removal of the given Ref.
-     *
-     * @param ref
-     */
+    /** Update counts, declaration, and JSDoc to reflect removal of the given Ref. */
     private void removeRefAndUpdateState(Ref ref) {
       refs.remove(ref);
       if (ref == declaration) {

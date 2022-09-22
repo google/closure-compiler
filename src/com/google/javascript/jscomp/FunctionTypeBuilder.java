@@ -1177,10 +1177,9 @@ final class FunctionTypeBuilder {
   }
 
   /**
-   * Check whether a type is resolvable in the future
-   * If this has a supertype that hasn't been resolved yet, then we can assume
-   * this type will be OK once the super type resolves.
-   * @param objectType
+   * Check whether a type is resolvable in the future If this has a supertype that hasn't been
+   * resolved yet, then we can assume this type will be OK once the super type resolves.
+   *
    * @return true if objectType is resolvable in the future
    */
   private static boolean hasMoreTagsToResolve(ObjectType objectType) {

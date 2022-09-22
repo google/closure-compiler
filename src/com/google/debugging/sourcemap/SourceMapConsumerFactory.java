@@ -27,10 +27,8 @@ public final class SourceMapConsumerFactory {
   /**
    * @param contents The string representing the source map file contents.
    * @return The parsed source map.
-   * @throws SourceMapParseException
    */
-  public static SourceMapping parse(String contents)
-      throws SourceMapParseException {
+  public static SourceMapping parse(String contents) throws SourceMapParseException {
      return parse(contents, null);
   }
 
@@ -38,7 +36,6 @@ public final class SourceMapConsumerFactory {
    * @param contents The string representing the source map file contents.
    * @param supplier A supplier for any referenced maps.
    * @return The parsed source map.
-   * @throws SourceMapParseException
    */
   public static SourceMapping parse(String contents, SourceMapSupplier supplier)
       throws SourceMapParseException {

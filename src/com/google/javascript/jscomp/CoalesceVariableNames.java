@@ -264,7 +264,6 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
    * that ensures any interfering variables are marked in different color groups, while variables
    * that can safely be coalesced are assigned the same color group.
    *
-   * @param cfg
    * @param escaped we don't want to coalesce any escaped variables
    * @return graph with variable nodes and edges representing variable interference
    */

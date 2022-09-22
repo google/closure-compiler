@@ -77,8 +77,6 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   }
 
   /**
-   * @param n
-   * @param block
    * @return The statement Node that is a child of block and contains n.
    */
   private Node getEnclosingStatement(Node n, Node block) {

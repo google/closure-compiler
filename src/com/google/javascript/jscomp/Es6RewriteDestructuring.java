@@ -288,14 +288,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   }
 
   /**
-   * Replace a destructuring pattern parameter with a a temporary parameter name and add a new
-   * local variable declaration to the function assigning the temporary parameter to the pattern.
+   * Replace a destructuring pattern parameter with a a temporary parameter name and add a new local
+   * variable declaration to the function assigning the temporary parameter to the pattern.
    *
-   * <p> Note: Rewrites of variable declaration destructuring will happen later to rewrite
-   * this declaration as non-destructured code.
-   * @param function
+   * <p>Note: Rewrites of variable declaration destructuring will happen later to rewrite this
+   * declaration as non-destructured code.
+   *
    * @param insertSpot The local variable declaration will be inserted after this statement.
-   * @param patternParam
    * @param tempVarName the name to use for the temporary variable
    * @return the declaration statement that was generated for the local variable
    */

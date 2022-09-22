@@ -67,7 +67,6 @@ public final class SourceMapResolver {
   /**
    * Based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
    *
-   * @param url
    * @return String or null.
    */
   private static @Nullable String extractBase64String(String url) {

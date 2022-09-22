@@ -460,15 +460,10 @@ class FunctionToBlockMutator {
   }
 
   /**
-   * Replace the 'return' statement with its child expression.
-   *   "return foo()" becomes "foo()" or "resultName = foo()"
-   *   "return" is removed or becomes "resultName = void 0".
-   *
-   * @param block
-   * @param resultName
+   * Replace the 'return' statement with its child expression. "return foo()" becomes "foo()" or
+   * "resultName = foo()" "return" is removed or becomes "resultName = void 0".
    */
-  private static void convertLastReturnToStatement(
-      Node block, String resultName) {
+  private static void convertLastReturnToStatement(Node block, String resultName) {
     Node ret = block.getLastChild();
     checkArgument(ret.isReturn());
     Node resultNode = getReplacementReturnStatement(ret, resultName);
