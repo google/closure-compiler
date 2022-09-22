@@ -1254,6 +1254,12 @@ MediaStreamConstraints.prototype.audio;
 MediaStreamConstraints.prototype.video;
 
 /**
+ * @see https://wicg.github.io/prefer-current-tab/
+ * @type {boolean|undefined}
+ */
+MediaStreamConstraints.prototype.preferCurrentTab;
+
+/**
  * @see {http://dev.w3.org/2011/webrtc/editor/getusermedia.html#
  *     navigatorusermediaerror-and-navigatorusermediaerrorcallback}
  * @interface
