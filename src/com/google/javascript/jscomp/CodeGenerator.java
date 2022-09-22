@@ -41,7 +41,7 @@ public class CodeGenerator {
 
   private final CodeConsumer cc;
 
-  @Nullable private final OutputCharsetEncoder outputCharsetEncoder;
+  private final @Nullable OutputCharsetEncoder outputCharsetEncoder;
 
   private final boolean preferSingleQuotes;
   private final boolean preserveTypeAnnotations;
@@ -2330,8 +2330,7 @@ public class CodeGenerator {
   }
 
   /** Gets the first non-empty child of the given node. */
-  @Nullable
-  private static Node getFirstNonEmptyChild(Node n) {
+  private static @Nullable Node getFirstNonEmptyChild(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isBlock()) {
         Node result = getFirstNonEmptyChild(c);

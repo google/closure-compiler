@@ -149,38 +149,32 @@ public abstract class Export {
   }
 
   /** Returns the name of this export or null if this is an {@code export * from}. */
-  @Nullable
-  public abstract String exportName();
+  public abstract @Nullable String exportName();
 
   /**
    * Returns the module identifier of an export from or null if this is not an {@code export {}
    * from} or {@code export * from}.
    */
-  @Nullable
-  public abstract String moduleRequest();
+  public abstract @Nullable String moduleRequest();
 
   /**
    * Returns the name imported from another module. * if import all or null if not an {@code export
    * {} from}.
    */
-  @Nullable
-  public abstract String importName();
+  public abstract @Nullable String importName();
 
   /** Returns the local name of this export or null if none. *default* if default. */
-  @Nullable
-  public abstract String localName();
+  public abstract @Nullable String localName();
 
   /** Returns the path of the containing module */
-  @Nullable
-  public abstract ModulePath modulePath();
+  public abstract @Nullable ModulePath modulePath();
 
   /**
    * Node that this export originates from. Used for its source location.
    *
    * <p>Null only if from non-ES module or from a missing ES module.
    */
-  @Nullable
-  public abstract Node exportNode();
+  public abstract @Nullable Node exportNode();
 
   /**
    * Node that this export originates from. Used for its source location.
@@ -188,14 +182,12 @@ public abstract class Export {
    * <p>Null only if from non-ES6 module or an export syntax that has no associated name, e.g.
    * {@code export * from}.
    */
-  @Nullable
-  public abstract Node nameNode();
+  public abstract @Nullable Node nameNode();
 
   /** The module that contains this export. */
   public abstract ModuleMetadata moduleMetadata();
 
-  @Nullable
-  public abstract String closureNamespace();
+  public abstract @Nullable String closureNamespace();
 
   /**
    * Whether or not this export is potentially mutated after module execution (i.e. in a function

@@ -116,7 +116,7 @@ class InlineAndCollapseProperties implements CompilerPass {
    * <p>This field is allocated and cleaned up by process(). It's a class field to avoid having to
    * pass it as an extra argument through a lot of methods.
    */
-  @Nullable private LogFile decisionsLog = null;
+  private @Nullable LogFile decisionsLog = null;
 
   /** A `GlobalNamespace` that is shared by alias inlining and property collapsing code. */
   private GlobalNamespace namespace;
@@ -988,8 +988,7 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
   }
 
-  @Nullable
-  private static Node maybeGetInnerNameNode(Node maybeFunctionOrClassNode) {
+  private static @Nullable Node maybeGetInnerNameNode(Node maybeFunctionOrClassNode) {
     if (NodeUtil.isFunctionExpression(maybeFunctionOrClassNode)) {
       Node nameNode = maybeFunctionOrClassNode.getFirstChild();
       checkState(nameNode.isName(), nameNode);
@@ -1140,8 +1139,7 @@ class InlineAndCollapseProperties implements CompilerPass {
    * <p>Only handles cases where we have either a class declaration or a class expression in an
    * assignment or name declaration. Otherwise returns null.
    */
-  @Nullable
-  private static Node getSubclassForEs6Superclass(Node superclass) {
+  private static @Nullable Node getSubclassForEs6Superclass(Node superclass) {
     Node classNode = superclass.getParent();
     checkArgument(classNode.isClass(), classNode);
     if (NodeUtil.isNameDeclaration(classNode.getGrandparent())) {

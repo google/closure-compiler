@@ -46,16 +46,14 @@ final class NonEsModuleProcessor implements ModuleProcessor {
       this.scriptNode = scriptNode;
     }
 
-    @Nullable
     @Override
-    public ResolveExportResult resolveExport(
+    public @Nullable ResolveExportResult resolveExport(
         ModuleRequestResolver moduleRequestResolver, String exportName) {
       throw new UnsupportedOperationException();
     }
 
-    @Nullable
     @Override
-    public ResolveExportResult resolveExport(
+    public @Nullable ResolveExportResult resolveExport(
         ModuleRequestResolver moduleRequestResolver,
         @Nullable String moduleSpecifier,
         String exportName,

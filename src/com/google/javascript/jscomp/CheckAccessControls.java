@@ -204,8 +204,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    *   <li>CLASS extends clause: secondary root of the scope defined by the CLASS.
    * </ul>
    */
-  @Nullable
-  private static Node primaryAccessControlScopeRootFor(Node node) {
+  private static @Nullable Node primaryAccessControlScopeRootFor(Node node) {
     if (isExtendsTarget(node)) {
       return node.getParent();
     } else if (isFunctionOrClass(node)) {
@@ -226,8 +225,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    *   <li>Object-literal members => The object-literal type
    * </ul>
    */
-  @Nullable
-  private ObjectType bestInstanceTypeForMethodOrCtor(Node n) {
+  private @Nullable ObjectType bestInstanceTypeForMethodOrCtor(Node n) {
     checkState(isFunctionOrClass(n), n);
     Node parent = n.getParent();
 
@@ -306,8 +304,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    *   <li>Object-literal type => The type
    * </ul>
    */
-  @Nullable
-  private static ObjectType instanceTypeFor(JSType type) {
+  private static @Nullable ObjectType instanceTypeFor(JSType type) {
     if (type == null) {
       return null;
     } else if (type.isUnionType()) {
@@ -572,8 +569,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  @Nullable
-  private static Visibility getOverridingPropertyVisibility(PropertyReference propRef) {
+  private static @Nullable Visibility getOverridingPropertyVisibility(PropertyReference propRef) {
     JSDocInfo overridingInfo = propRef.getJSDocInfo();
     return overridingInfo == null || !overridingInfo.isOverride()
         ? null
@@ -665,8 +661,8 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     this.recordConstPropertyInit(propRef, objectType, constness);
   }
 
-  @Nullable
-  private ConstantDeclaration getConstPropertyInit(PropertyReference ref, ObjectType type) {
+  private @Nullable ConstantDeclaration getConstPropertyInit(
+      PropertyReference ref, ObjectType type) {
     String name = ref.getName();
     while (type != null) {
       ConstantDeclaration init = this.constPropertyInits.get(type, name);
@@ -712,8 +708,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
   }
 
   /** Dereference a type, autoboxing it and filtering out null. */
-  @Nullable
-  private static ObjectType dereference(JSType type) {
+  private static @Nullable ObjectType dereference(JSType type) {
     return type == null ? null : type.dereference();
   }
 
@@ -1076,8 +1071,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    * string if the type is deprecated but no reason was given. Returns null if the type is not
    * deprecated.
    */
-  @Nullable
-  private static String getTypeDeprecationInfo(JSType type) {
+  private static @Nullable String getTypeDeprecationInfo(JSType type) {
     if (type == null) {
       return null;
     }
@@ -1085,8 +1079,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     return getDeprecationReason(type.getJSDocInfo());
   }
 
-  @Nullable
-  private static String getDeprecationReason(JSDocInfo info) {
+  private static @Nullable String getDeprecationReason(JSDocInfo info) {
     if (info != null && info.isDeprecated()) {
       if (info.getDeprecationReason() != null) {
         return info.getDeprecationReason();
@@ -1116,8 +1109,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    * empty string if the property is deprecated but no reason was given. Returns null if the
    * property is not deprecated.
    */
-  @Nullable
-  private static String getPropertyDeprecationInfo(ObjectType type, String prop) {
+  private static @Nullable String getPropertyDeprecationInfo(ObjectType type, String prop) {
     String depReason = getDeprecationReason(type.getOwnPropertyJSDocInfo(prop));
     if (depReason != null) {
       return depReason;
@@ -1131,8 +1123,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
   }
 
   /** If the superclass is final, this method returns an instance of the superclass. */
-  @Nullable
-  private static ObjectType getSuperClassInstanceIfFinal(FunctionType subCtor) {
+  private static @Nullable ObjectType getSuperClassInstanceIfFinal(FunctionType subCtor) {
     FunctionType ctor = subCtor.getSuperClassConstructor();
     JSDocInfo doc = (ctor == null) ? null : ctor.getJSDocInfo();
     if (doc != null && doc.isFinal()) {
@@ -1142,8 +1133,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     return null;
   }
 
-  @Nullable
-  private static ObjectType castToObject(@Nullable JSType type) {
+  private static @Nullable ObjectType castToObject(@Nullable JSType type) {
     return type == null ? null : type.toMaybeObjectType();
   }
 
@@ -1156,8 +1146,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     return parent.isClass() && node.isSecondChildOf(parent);
   }
 
-  @Nullable
-  private JSType getTypeOfThis(Node scopeRoot) {
+  private @Nullable JSType getTypeOfThis(Node scopeRoot) {
     if (scopeRoot.isRoot() || scopeRoot.isScript()) {
       return castToObject(scopeRoot.getJSType());
     } else if (scopeRoot.isModuleBody()) {
@@ -1295,8 +1284,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
       return getSourceNode().getJSType();
     }
 
-    @Nullable
-    public final JSDocInfo getJSDocInfo() {
+    public final @Nullable JSDocInfo getJSDocInfo() {
       return NodeUtil.getBestJSDocInfo(getSourceNode());
     }
 
@@ -1314,8 +1302,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  @Nullable
-  private PropertyReference createPropertyReference(Node sourceNode) {
+  private @Nullable PropertyReference createPropertyReference(Node sourceNode) {
     Node parent = sourceNode.getParent();
     @Nullable JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(sourceNode);
 

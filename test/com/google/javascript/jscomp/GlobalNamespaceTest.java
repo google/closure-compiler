@@ -49,7 +49,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class GlobalNamespaceTest {
 
-  @Nullable private Compiler lastCompiler = null;
+  private @Nullable Compiler lastCompiler = null;
   private boolean assumeStaticInheritanceIsNotUsed = true;
 
   @Test

@@ -33,8 +33,7 @@ public final class DiagnosticGroupWarningsGuard extends WarningsGuard {
   }
 
   @Override
-  @Nullable
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     return this.group.matches(error) ? this.level : null;
   }
 

@@ -122,7 +122,7 @@ public final class SymbolTable {
   /** All Nodes with JSDocInfo in the program. */
   private final List<Node> docInfos = new ArrayList<>();
 
-  @Nullable private SymbolScope globalScope = null;
+  private @Nullable SymbolScope globalScope = null;
 
   private final AbstractCompiler compiler;
 
@@ -173,8 +173,7 @@ public final class SymbolTable {
    * Gets the scope that contains the given node. If {@code n} is a function name, we return the
    * scope that contains the function, not the function itself.
    */
-  @Nullable
-  public SymbolScope getEnclosingScope(Node n) {
+  public @Nullable SymbolScope getEnclosingScope(Node n) {
     Node current = n.getParent();
     if (n.isName() && n.getParent().isFunction()) {
       current = current.getParent();
@@ -219,8 +218,7 @@ public final class SymbolTable {
    * var x = x() ? function(y) {} : function(y) {};
    * </code>
    */
-  @Nullable
-  public Symbol getParameterInFunction(Symbol sym, String paramName) {
+  public @Nullable Symbol getParameterInFunction(Symbol sym, String paramName) {
     SymbolScope scope = getScopeInFunction(sym);
     if (scope != null) {
       Symbol param = scope.getSlot(paramName);
@@ -231,8 +229,7 @@ public final class SymbolTable {
     return null;
   }
 
-  @Nullable
-  private SymbolScope getScopeInFunction(Symbol sym) {
+  private @Nullable SymbolScope getScopeInFunction(Symbol sym) {
     FunctionType type = sym.getFunctionType();
     if (type == null) {
       return null;
@@ -262,8 +259,7 @@ public final class SymbolTable {
    * out this association dynamically, so sometimes we'll just create the association when we create
    * the scope.
    */
-  @Nullable
-  private Symbol findSymbolForScope(SymbolScope scope) {
+  private @Nullable Symbol findSymbolForScope(SymbolScope scope) {
     Node rootNode = scope.getRootNode();
     if (rootNode.getParent() == null) {
       return globalScope.getSlot(GLOBAL_THIS);
@@ -305,8 +301,7 @@ public final class SymbolTable {
   }
 
   /** Gets the symbol for the prototype if this is the symbol for a constructor or interface. */
-  @Nullable
-  public Symbol getSymbolForInstancesOf(Symbol sym) {
+  public @Nullable Symbol getSymbolForInstancesOf(Symbol sym) {
     FunctionType fn = sym.getFunctionType();
     if (fn != null && fn.isNominalConstructorOrInterface()) {
       return getSymbolForInstancesOf(fn);
@@ -321,8 +316,7 @@ public final class SymbolTable {
     return getSymbolForName(fn.getSource(), pType.getReferenceName());
   }
 
-  @Nullable
-  private Symbol getSymbolForName(@Nullable Node source, String name) {
+  private @Nullable Symbol getSymbolForName(@Nullable Node source, String name) {
     if (name == null || globalScope == null) {
       return null;
     }
@@ -392,8 +386,7 @@ public final class SymbolTable {
    *     of this file for more information on how our internal type system is more granular than
    *     Symbols.
    */
-  @Nullable
-  private Symbol getSymbolForTypeHelper(JSType type, boolean linkToCtor) {
+  private @Nullable Symbol getSymbolForTypeHelper(JSType type, boolean linkToCtor) {
     if (type == null) {
       return null;
     }
@@ -664,8 +657,7 @@ public final class SymbolTable {
   }
 
   /** Helper for addSymbolsFrom, to determine the best declaration spot. */
-  @Nullable
-  private <S extends StaticSlot, R extends StaticRef> StaticRef findBestDeclToAdd(
+  private <S extends StaticSlot, R extends StaticRef> @Nullable StaticRef findBestDeclToAdd(
       StaticSymbolTable<S, R> otherSymbolTable, S slot) {
     StaticRef decl = slot.getDeclaration();
     if (isGoodRefToAdd(decl)) {
@@ -1207,8 +1199,7 @@ public final class SymbolTable {
    * <p>Note that currently we only handle cases where the implicit prototype is a) a class or b) is
    * an instance object.
    */
-  @Nullable
-  private SymbolScope maybeGetParentPropertyScope(ObjectType symbolObjectType) {
+  private @Nullable SymbolScope maybeGetParentPropertyScope(ObjectType symbolObjectType) {
     ObjectType proto = symbolObjectType.getImplicitPrototype();
     if (proto == null || proto == symbolObjectType) {
       return null;
@@ -1593,19 +1584,19 @@ public final class SymbolTable {
 
     private final SymbolScope scope;
 
-    @Nullable private SymbolScope propertyScope = null;
+    private @Nullable SymbolScope propertyScope = null;
 
-    @Nullable private Reference declaration = null;
+    private @Nullable Reference declaration = null;
 
-    @Nullable private JSDocInfo docInfo = null;
+    private @Nullable JSDocInfo docInfo = null;
 
     /**
      * Stored separately from {@link #docInfo}, because the visibility stored in JSDocInfo is not
      */
-    @Nullable private Visibility visibility = null;
+    private @Nullable Visibility visibility = null;
 
     // A scope for symbols that are only documented in JSDoc.
-    @Nullable private SymbolScope docScope = null;
+    private @Nullable SymbolScope docScope = null;
 
     Symbol(String name, JSType type, boolean inferred, SymbolScope scope) {
       super(name, type, inferred);
@@ -1649,13 +1640,11 @@ public final class SymbolTable {
       this.declaration = ref;
     }
 
-    @Nullable
-    public Node getDeclarationNode() {
+    public @Nullable Node getDeclarationNode() {
       return declaration == null ? null : declaration.getNode();
     }
 
-    @Nullable
-    public String getSourceFileName() {
+    public @Nullable String getSourceFileName() {
       Node n = getDeclarationNode();
       return n == null ? null : n.getSourceFileName();
     }
@@ -1680,8 +1669,7 @@ public final class SymbolTable {
       this.docInfo = info;
     }
 
-    @Nullable
-    public Visibility getVisibility() {
+    public @Nullable Visibility getVisibility() {
       return this.visibility;
     }
 
@@ -1780,8 +1768,7 @@ public final class SymbolTable {
      * Get the slot for a fully-qualified name (e.g., "a.b.c") by trying to find property scopes at
      * each part of the path.
      */
-    @Nullable
-    public Symbol getQualifiedSlot(String name) {
+    public @Nullable Symbol getQualifiedSlot(String name) {
       Symbol fullyNamedSym = getSlot(name);
       if (fullyNamedSym != null) {
         return fullyNamedSym;
@@ -1798,8 +1785,7 @@ public final class SymbolTable {
       return null;
     }
 
-    @Nullable
-    public Symbol getSlot(String name) {
+    public @Nullable Symbol getSlot(String name) {
       Symbol own = getOwnSlot(name);
       if (own != null) {
         return own;
@@ -2346,16 +2332,14 @@ public final class SymbolTable {
     }
   }
 
-  @Nullable
-  private JSType getType(StaticSlot sym) {
+  private @Nullable JSType getType(StaticSlot sym) {
     if (sym instanceof StaticTypedSlot) {
       return ((StaticTypedSlot) sym).getType();
     }
     return null;
   }
 
-  @Nullable
-  private JSType getTypeOfThis(StaticScope s) {
+  private @Nullable JSType getTypeOfThis(StaticScope s) {
     if (s instanceof StaticTypedScope) {
       return ((StaticTypedScope) s).getTypeOfThis();
     }

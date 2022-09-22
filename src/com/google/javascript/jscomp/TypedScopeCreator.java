@@ -248,8 +248,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   /** Stores the type and qualified name for a destructuring rvalue. */
   private static class RValueInfo {
-    @Nullable final JSType type;
-    @Nullable final QualifiedName qualifiedName;
+    final @Nullable JSType type;
+    final @Nullable QualifiedName qualifiedName;
 
     RValueInfo(@Nullable JSType type, @Nullable QualifiedName qualifiedName) {
       this.type = type;
@@ -724,7 +724,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     final TypedScope currentHoistScope;
 
     /** The current source file that we're in. */
-    @Nullable private String sourceName = null;
+    private @Nullable String sourceName = null;
 
     /** The InputId of the current node. */
     private InputId inputId;
@@ -1326,8 +1326,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    @Nullable
-    private String getBestTypeName(Node lvalue, @Nullable String syntacticLvalueName) {
+    private @Nullable String getBestTypeName(Node lvalue, @Nullable String syntacticLvalueName) {
       if (syntacticLvalueName == null) {
         return null;
       }
@@ -1584,8 +1583,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * Look at the {@code extends} clause to find the instance type being extended. Returns {@code
      * null} if there is no such clause, and unknown if the type cannot be determined.
      */
-    @Nullable
-    private ObjectType findSuperClassFromNodes(Node extendsNode, @Nullable JSDocInfo info) {
+    private @Nullable ObjectType findSuperClassFromNodes(
+        Node extendsNode, @Nullable JSDocInfo info) {
       if (extendsNode.isEmpty()) {
         // No extends clause: return null.
         return null;
@@ -1657,8 +1656,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      *
      * @param extendsNode `goog.module.get('x');` or a getprop `goog.module.get('x').y.z
      */
-    @Nullable
-    private JSType getCtorForGoogModuleGet(Node extendsNode) {
+    private @Nullable JSType getCtorForGoogModuleGet(Node extendsNode) {
       Node call = extendsNode;
       ArrayList<String> properties = new ArrayList<>();
       while (!call.isCall()) {
@@ -1906,8 +1904,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    @Nullable
-    private ObjectType getPrototypeOwnerType(ObjectType ownerType) {
+    private @Nullable ObjectType getPrototypeOwnerType(ObjectType ownerType) {
       if (ownerType != null && ownerType.isFunctionPrototypeType()) {
         return ownerType.getOwnerFunction();
       }
@@ -2502,8 +2499,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /** Returns the AST node associated with the definition, if any. */
-    @Nullable
-    private Node getDefinitionNode(QualifiedName qname, TypedScope scope) {
+    private @Nullable Node getDefinitionNode(QualifiedName qname, TypedScope scope) {
       if (qname.isSimple()) {
         TypedVar var = scope.getVar(qname.getComponent());
         return var != null ? var.getNameNode() : null;
@@ -2521,8 +2517,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      *
      * @param lValue is the lvalue node if this is a simple assignment, null for destructuring
      */
-    @Nullable
-    private JSType getDeclaredRValueType(@Nullable Node lValue, Node rValue) {
+    private @Nullable JSType getDeclaredRValueType(@Nullable Node lValue, Node rValue) {
       // If rValue has a type-cast, we use the type in the type-cast.
       JSDocInfo rValueInfo = rValue.getJSDocInfo();
       if (rValue.isCast() && rValueInfo != null && rValueInfo.hasType()) {
@@ -2959,8 +2954,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param slotName The name of the slot to find the type in.
      * @return An object type, or null if this slot does not contain an object.
      */
-    @Nullable
-    private ObjectType getObjectSlot(String slotName) {
+    private @Nullable ObjectType getObjectSlot(String slotName) {
       TypedVar ownerVar = currentScope.getVar(slotName);
       if (ownerVar != null) {
         JSType ownerVarType = ownerVar.getType();
@@ -2974,8 +2968,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * When a class has a stub for a property, and the property exists on a super interface, use
      * that type.
      */
-    @Nullable
-    private JSType getInheritedInterfacePropertyType(ObjectType obj, String propName) {
+    private @Nullable JSType getInheritedInterfacePropertyType(ObjectType obj, String propName) {
       if (obj != null && obj.isFunctionPrototypeType()) {
         FunctionType f = obj.getOwnerFunction();
         for (ObjectType i : f.getImplementedInterfaces()) {
@@ -3628,8 +3621,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
   }
 
-  @Nullable
-  static String containingGoogModuleIdOf(TypedScope scope) {
+  static @Nullable String containingGoogModuleIdOf(TypedScope scope) {
     Module module = scope.getModule();
     if (module == null) {
       TypedScope parent = scope.getParent();

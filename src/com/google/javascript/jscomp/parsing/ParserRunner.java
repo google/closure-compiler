@@ -43,10 +43,10 @@ import org.jspecify.nullness.Nullable;
 /** parser runner */
 public final class ParserRunner {
 
-  @Nullable private static ImmutableSet<String> annotationNames = null;
-  @Nullable private static ImmutableSet<String> suppressionNames = null;
-  @Nullable private static ImmutableSet<String> reservedVars = null;
-  @Nullable private static ImmutableSet<String> closurePrimitiveNames = null;
+  private static @Nullable ImmutableSet<String> annotationNames = null;
+  private static @Nullable ImmutableSet<String> suppressionNames = null;
+  private static @Nullable ImmutableSet<String> reservedVars = null;
+  private static @Nullable ImmutableSet<String> closurePrimitiveNames = null;
 
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
@@ -222,7 +222,7 @@ public final class ParserRunner {
     public final Node ast;
     public final List<Comment> comments;
     public final FeatureSet features;
-    @Nullable public final String sourceMapURL;
+    public final @Nullable String sourceMapURL;
 
     public ParseResult(Node ast, List<Comment> comments, FeatureSet features, String sourceMapURL) {
       this.ast = ast;

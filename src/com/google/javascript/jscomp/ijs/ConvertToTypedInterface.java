@@ -137,8 +137,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     new SimplifyDeclarations(compiler, currentFile).simplifyAll();
   }
 
-  @Nullable
-  private static Var findNameDeclaration(Scope scope, Node rhs) {
+  private static @Nullable Var findNameDeclaration(Scope scope, Node rhs) {
     if (!rhs.isName()) {
       return null;
     }

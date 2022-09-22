@@ -29,7 +29,7 @@ public final class SourceMapInput implements Serializable {
   private final SourceFile sourceFile;
   // No need to serialize the consumer, it will be recreated because the serialized version will
   // have cached = false.
-  @Nullable private transient volatile SourceMapConsumerV3 parsedSourceMap = null;
+  private transient volatile @Nullable SourceMapConsumerV3 parsedSourceMap = null;
   private transient volatile boolean cached = false;
 
   static final DiagnosticType SOURCEMAP_RESOLVE_FAILED =

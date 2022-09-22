@@ -41,12 +41,12 @@ public final class DestructuredTarget {
    * Holds the STRING_KEY or COMPUTED_PROPERTY for a target in an object pattern. Null for targets
    * in array patterns.
    */
-  @Nullable private final Node objectPatternKey;
+  private final @Nullable Node objectPatternKey;
   /**
    * The target being assigned to. Can be a destructuring pattern or name, if from a declaration, or
    * an arbitrary lhs expression in an assign.
    */
-  @Nullable private final Node node;
+  private final @Nullable Node node;
   /**
    * A supplier to get the type of the pattern containing this target. e.g. for `a` in `const {a} =
    * {a: 3}`, the supplier provides the record type `{a: number}`
@@ -56,7 +56,7 @@ public final class DestructuredTarget {
   private final Supplier<JSType> patternTypeSupplier;
 
   /** The default value of this target, or null if none. e.g. for `[a = 3] = rhs`, this is `3`. */
-  @Nullable private final Node defaultValue;
+  private final @Nullable Node defaultValue;
 
   /** Whether this is a rest key */
   private final boolean isRest;
@@ -82,8 +82,7 @@ public final class DestructuredTarget {
   }
 
   /** Returns a COMPUTED_PROP node or null */
-  @Nullable
-  public Node getComputedProperty() {
+  public @Nullable Node getComputedProperty() {
     return hasComputedProperty() ? objectPatternKey : null;
   }
 
@@ -96,13 +95,11 @@ public final class DestructuredTarget {
   }
 
   /** Returns a STRING_KEY node or null */
-  @Nullable
-  public Node getStringKey() {
+  public @Nullable Node getStringKey() {
     return hasStringKey() ? objectPatternKey : null;
   }
 
-  @Nullable
-  public Node getDefaultValue() {
+  public @Nullable Node getDefaultValue() {
     return defaultValue;
   }
 
@@ -119,8 +116,8 @@ public final class DestructuredTarget {
     private final Supplier<JSType> patternTypeSupplier;
     private final Node pattern;
     private Node node;
-    @Nullable private Node defaultValue = null;
-    @Nullable private Node objectPatternKey = null;
+    private @Nullable Node defaultValue = null;
+    private @Nullable Node objectPatternKey = null;
     private boolean isRest = false;
 
     Builder(JSTypeRegistry registry, Node pattern, Supplier<JSType> patternTypeSupplier) {

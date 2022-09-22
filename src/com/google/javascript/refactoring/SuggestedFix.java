@@ -62,7 +62,7 @@ public final class SuggestedFix {
 
   // An optional description of the fix, to distinguish between the various possible fixes
   // for errors that have multiple fixes.
-  @Nullable private final String description;
+  private final @Nullable String description;
 
   // Alternative fixes for the same problem. The fix itself is always the first entry in this list.
   // If you cannot ask the developer which fix is appropriate, apply the first fix instead of
@@ -97,7 +97,7 @@ public final class SuggestedFix {
     return replacements;
   }
 
-  @Nullable public String getDescription() {
+  public @Nullable String getDescription() {
     return description;
   }
 
@@ -793,8 +793,8 @@ public final class SuggestedFix {
      *   <li>If not, this will return the first goog.require.
      * </ul>
      */
-    @Nullable
-    private static Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {
+    private static @Nullable Node findGoogRequireNode(
+        Node n, NodeMetadata metadata, String namespace) {
       Node script = metadata.getCompiler().getScriptNode(n.getSourceFileName());
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();

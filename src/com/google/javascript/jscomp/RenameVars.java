@@ -66,7 +66,7 @@ final class RenameVars implements CompilerPass {
    * Maps a name node to its pseudo name, null if we are not generating so there will be no overhead
    * unless we are debugging.
    */
-  @Nullable private final Map<Node, String> pseudoNameMap;
+  private final @Nullable Map<Node, String> pseudoNameMap;
 
   /** Set of extern variable names */
   private ImmutableSet<String> externNames;
@@ -367,8 +367,7 @@ final class RenameVars implements CompilerPass {
     }
   }
 
-  @Nullable
-  private String getNewGlobalName(Node n) {
+  private @Nullable String getNewGlobalName(Node n) {
     String oldName = n.getString();
     Assignment a = assignments.get(oldName);
     if (a.newName != null && !a.newName.equals(oldName)) {
@@ -381,8 +380,7 @@ final class RenameVars implements CompilerPass {
     }
   }
 
-  @Nullable
-  private String getNewLocalName(Node n) {
+  private @Nullable String getNewLocalName(Node n) {
     String oldTempName = n.getString();
     Assignment a = assignments.get(oldTempName);
     if (!a.newName.equals(oldTempName)) {

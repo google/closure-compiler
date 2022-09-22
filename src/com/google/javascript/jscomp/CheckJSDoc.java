@@ -290,8 +290,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
    * @return The function node associated with the function declaration associated with the
    *     specified node, no null if no such function exists.
    */
-  @Nullable
-  private static Node getFunctionDecl(Node n) {
+  private static @Nullable Node getFunctionDecl(Node n) {
     if (n.isFunction()) {
       return n;
     }

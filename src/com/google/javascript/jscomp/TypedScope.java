@@ -52,9 +52,9 @@ import org.jspecify.nullness.Nullable;
  */
 public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements StaticTypedScope {
 
-  @Nullable private final TypedScope parent;
+  private final @Nullable TypedScope parent;
   private final int depth;
-  @Nullable private final Module module;
+  private final @Nullable Module module;
 
   /** Whether this is a bottom scope for the purposes of type inference. */
   private final boolean isBottom;
@@ -150,9 +150,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   }
 
   /** Gets the type of {@code this} in the current scope. */
-  @Nullable
   @Override
-  public JSType getTypeOfThis() {
+  public @Nullable JSType getTypeOfThis() {
     Node root = getRootNode();
     if (isGlobal()) {
       return ObjectType.cast(root.getJSType());
@@ -191,9 +190,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     return var;
   }
 
-  @Nullable
   @Override
-  TypedVar makeImplicitVar(ImplicitVar var) {
+  @Nullable TypedVar makeImplicitVar(ImplicitVar var) {
     if (this.isGlobal()) {
       // TODO(sdh): This is incorrect for 'global this', but since that's currently not handled
       // by this code, it's okay to bail out now until we find the root cause.  See b/74980936.
@@ -211,8 +209,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     return name != null && !name.equals(ImplicitVar.EXPORTS) && name.isMadeByScope(this);
   }
 
-  @Nullable
-  private JSType getImplicitVarType(ImplicitVar var) {
+  private @Nullable JSType getImplicitVarType(ImplicitVar var) {
     switch (var) {
       case ARGUMENTS:
         // Look for an extern named "arguments" and use its type if available.
@@ -286,9 +283,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
    * function scope contains "a". When looking up "a.b" in the function scope, AbstractScope::getVar
    * returns "a.b". This method returns null because the global "a" is shadowed.
    */
-  @Nullable
   @Override
-  public final TypedVar getVar(String name) {
+  public final @Nullable TypedVar getVar(String name) {
     TypedVar ownSlot = getOwnSlot(name);
     if (ownSlot != null) {
       // Micro-optimization: variables declared directly in this scope cannot have been shadowed.
@@ -313,9 +309,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     }
   }
 
-  @Nullable
   @Override
-  public StaticScope getTopmostScopeOfEventualDeclaration(String name) {
+  public @Nullable StaticScope getTopmostScopeOfEventualDeclaration(String name) {
     if (getOwnSlot(name) != null || reservedNames.contains(name)) {
       return this;
     } else if (this.getParent() == null) {

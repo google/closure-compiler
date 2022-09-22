@@ -173,32 +173,26 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private boolean testMode = false;
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Supplier<List<SourceFile>> externsSupplierForTesting = null;
+  private @Nullable Supplier<List<SourceFile>> externsSupplierForTesting = null;
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Supplier<List<SourceFile>> inputsSupplierForTesting = null;
+  private @Nullable Supplier<List<SourceFile>> inputsSupplierForTesting = null;
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Supplier<List<JSChunk>> modulesSupplierForTesting = null;
+  private @Nullable Supplier<List<JSChunk>> modulesSupplierForTesting = null;
 
   @GwtIncompatible("Unnecessary")
   private Function<Integer, Void> exitCodeReceiver = SystemExitCodeReceiver.INSTANCE;
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Map<String, String> rootRelativePathsMap = null;
+  private @Nullable Map<String, String> rootRelativePathsMap = null;
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Map<String, String> parsedModuleWrappers = null;
+  private @Nullable Map<String, String> parsedModuleWrappers = null;
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private ImmutableMap<String, String> parsedModuleOutputFiles = null;
+  private @Nullable ImmutableMap<String, String> parsedModuleOutputFiles = null;
 
   @GwtIncompatible("Unnecessary")
   private final Gson gson;
@@ -788,9 +782,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /** Creates JS source code inputs from a list of files. */
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private List<SourceFile> createSourceInputs(
+  private @Nullable List<SourceFile> createSourceInputs(
       List<JsChunkSpec> jsChunkSpecs,
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles,
@@ -1762,10 +1755,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
   }
 
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private DiagnosticType outputModuleBinaryAndSourceMaps(Iterable<JSChunk> modules, B options)
-      throws IOException {
+  private @Nullable DiagnosticType outputModuleBinaryAndSourceMaps(
+      Iterable<JSChunk> modules, B options) throws IOException {
     parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
     if (!isOutputInJson()) {
       maybeCreateDirsForPath(config.moduleOutputPathPrefix);
@@ -1920,9 +1912,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * @param path The path of the generated JS source file.
    * @return The stream or null if no extern-ed exports are being generated.
    */
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Writer openExternExportsStream(B options, String path) throws IOException {
+  private @Nullable Writer openExternExportsStream(B options, String path) throws IOException {
     final String externExportsPath = options.getExternExportsPath();
     if (externExportsPath == null) {
       return null;
@@ -1965,10 +1956,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /** Expansion function for source map. */
-  @Nullable
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
-  String expandSourceMapPath(B options, @Nullable JSChunk forModule) {
+  @Nullable String expandSourceMapPath(B options, @Nullable JSChunk forModule) {
     if (!options.shouldGatherSourceMapInfo()) {
       return null;
     }
@@ -1979,9 +1969,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * Converts a file name into a Writer taking in account the output charset. Returns null if the
    * file name is null.
    */
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Writer fileNameToLegacyOutputWriter(String fileName) throws IOException {
+  private @Nullable Writer fileNameToLegacyOutputWriter(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
@@ -1996,9 +1985,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * Converts a file name into a Writer taking in account the output charset. Returns null if the
    * file name is null.
    */
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  private Writer fileNameToOutputWriter2(String fileName) throws IOException {
+  private @Nullable Writer fileNameToOutputWriter2(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
@@ -2010,9 +1998,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /** Converts a file name into a Outputstream. Returns null if the file name is null. */
-  @Nullable
   @GwtIncompatible("Unnecessary")
-  protected OutputStream filenameToOutputStream(String fileName) throws IOException {
+  protected @Nullable OutputStream filenameToOutputStream(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
@@ -2541,7 +2528,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
      * When non-null specifies a file containing saved compiler state to restore and continue
      * compiling.
      */
-    @Nullable private String continueSavedCompilationFileName = null;
+    private @Nullable String continueSavedCompilationFileName = null;
 
     /**
      * When > 0 indicates the stage at which compilation stopped for the compilation state that is
@@ -2666,7 +2653,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           || shouldRestoreTypedAstsPerformStage2AndSave();
     }
 
-    @Nullable private String typedAstListInputFilename;
+    private @Nullable String typedAstListInputFilename;
 
     @CanIgnoreReturnValue
     public CommandLineConfig setTypedAstListInputFilename(@Nullable String fileName) {
@@ -2674,7 +2661,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    @Nullable private String saveCompilationStateToFilename = null;
+    private @Nullable String saveCompilationStateToFilename = null;
 
     /** Set the compiler to perform the first phase and save the intermediate result to a file. */
     @CanIgnoreReturnValue
@@ -2983,7 +2970,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    @Nullable private DependencyOptions dependencyOptions = null;
+    private @Nullable DependencyOptions dependencyOptions = null;
 
     /** Sets the dependency management options. */
     @CanIgnoreReturnValue
@@ -3007,7 +2994,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    @Nullable private String outputModuleDependencies = null;
+    private @Nullable String outputModuleDependencies = null;
 
     /** Sets whether a JSON file representing the dependencies between modules should be created. */
     @CanIgnoreReturnValue
@@ -3131,20 +3118,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   /** Representation of a source file from an encoded json stream input */
   @GwtIncompatible("Unnecessary")
   public static class JsonFileSpec {
-    @Nullable private final String src;
-    @Nullable private final String path;
+    private final @Nullable String src;
+    private final @Nullable String path;
 
-    @Nullable
     @SerializedName(
         value = "source_map",
         alternate = {"sourceMap"})
-    private String sourceMap;
+    private @Nullable String sourceMap;
 
-    @Nullable
     @SerializedName(
         value = "webpack_id",
         alternate = {"webpackId"})
-    private final String webpackId;
+    private final @Nullable String webpackId;
 
     // Graal requires a non-arg constructor for use with GSON
     // See https://github.com/oracle/graal/issues/680

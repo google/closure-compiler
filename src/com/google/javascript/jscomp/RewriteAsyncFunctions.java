@@ -88,8 +88,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       this.wrapperFunctionReturnType = wrapperFunctionReturnType;
     }
 
-    @Nullable
-    private Color getPropertyType() {
+    private @Nullable Color getPropertyType() {
       return firstInstanceOfSuperDotProperty.getColor();
     }
 
@@ -250,7 +249,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     // TODO(bradfordcsmith): It would cost less memory if we defined a separate object to hold
     // the data for async context accounting instead of having the booleans and super property
     // wrapper fields on every FunctionContext.
-    @Nullable final FunctionContext asyncThisAndArgumentsContext;
+    final @Nullable FunctionContext asyncThisAndArgumentsContext;
     final SuperPropertyWrappers superPropertyWrappers = new SuperPropertyWrappers();
 
     boolean mustAddAsyncThisVariable = false;

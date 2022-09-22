@@ -342,8 +342,7 @@ public final class ReplaceMessages {
       this.secondMsgValue = secondMsgValue;
     }
 
-    @Nullable
-    static ProtectedMsgFallback fromAstNode(Node n) {
+    static @Nullable ProtectedMsgFallback fromAstNode(Node n) {
       if (!n.isCall()) {
         return null;
       }
@@ -362,8 +361,8 @@ public final class ReplaceMessages {
     }
   }
 
-  @Nullable
-  private JsMessage lookupMessage(Node callNode, MessageBundle bundle, JsMessage message) {
+  private @Nullable JsMessage lookupMessage(
+      Node callNode, MessageBundle bundle, JsMessage message) {
     JsMessage translatedMessage = bundle.getMessage(message.getId());
     if (translatedMessage != null) {
       return translatedMessage;
@@ -732,7 +731,7 @@ public final class ReplaceMessages {
     // message.
     private final Node definitionNode;
     // e.g. `{ name: x.getName(), age: x.getAgeString() }`
-    @Nullable private final Node substitutionsNode;
+    private final @Nullable Node substitutionsNode;
     // Replace `'<'` with `'&lt;'` in the message.
     private final boolean escapeLessThan;
     // Replace these escaped entities with their literal characters in the message
@@ -757,8 +756,8 @@ public final class ReplaceMessages {
       this.unescapeHtmlEntities = unescapeHtmlEntities;
     }
 
-    @Nullable
-    public static ProtectedJsMessage fromAstNode(Node node, JsMessage.IdGenerator idGenerator) {
+    public static @Nullable ProtectedJsMessage fromAstNode(
+        Node node, JsMessage.IdGenerator idGenerator) {
       if (!node.isCall()) {
         return null;
       }

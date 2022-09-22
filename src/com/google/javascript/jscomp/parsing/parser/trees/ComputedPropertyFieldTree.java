@@ -23,7 +23,7 @@ import org.jspecify.nullness.Nullable;
 public class ComputedPropertyFieldTree extends ParseTree {
   public final ParseTree property;
   public final boolean isStatic;
-  @Nullable public final ParseTree initializer;
+  public final @Nullable ParseTree initializer;
 
   public ComputedPropertyFieldTree(
       SourceRange location, ParseTree property, boolean isStatic, ParseTree initializer) {

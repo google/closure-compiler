@@ -31,8 +31,7 @@ import org.jspecify.nullness.Nullable;
 final class JsFlumeCallback implements NodeTraversal.Callback {
 
   private final Scanner scanner;
-  @Nullable
-  private final Pattern includeFilePattern;
+  private final @Nullable Pattern includeFilePattern;
   private final List<Match> matches = new ArrayList<>();
   private final List<SuggestedFix> fixes = new ArrayList<>();
 

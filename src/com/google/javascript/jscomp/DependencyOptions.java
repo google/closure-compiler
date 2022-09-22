@@ -152,8 +152,7 @@ public abstract class DependencyOptions implements Serializable {
    * <p>TODO(tjgq): Simplify this once we deprecate and remove all legacy flags and standardize on
    * --dependency_mode and --entry_point.
    */
-  @Nullable
-  public static DependencyOptions fromFlags(
+  public static @Nullable DependencyOptions fromFlags(
       @Nullable DependencyMode dependencyModeFlag,
       List<String> entryPointFlag,
       List<String> closureEntryPointFlag,

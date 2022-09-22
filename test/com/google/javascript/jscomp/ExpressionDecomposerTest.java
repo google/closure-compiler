@@ -49,7 +49,7 @@ public final class ExpressionDecomposerTest {
   private final Set<String> knownConstants = new HashSet<>();
 
   /** The language out to set in the compiler options. If null, use the default. */
-  @Nullable private LanguageMode languageOut;
+  private @Nullable LanguageMode languageOut;
   // Whether we should run type checking and test the type information in the output expression
   private boolean shouldTestTypes;
 
@@ -2190,8 +2190,7 @@ public final class ExpressionDecomposerTest {
     compiler.setTypeCheckingHasRun(true);
   }
 
-  @Nullable
-  private static Node findClass(Node n) {
+  private static @Nullable Node findClass(Node n) {
     if (n.isClass()) {
       return n;
     }

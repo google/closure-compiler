@@ -383,7 +383,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // explicitly turned off.
   private boolean reportMissingProperties = true;
 
-  @Nullable private InferJSDocInfo inferJSDocInfo = null;
+  private @Nullable InferJSDocInfo inferJSDocInfo = null;
 
   // These fields are used to calculate the percentage of expressions typed.
   private int typedCount = 0;
@@ -1822,8 +1822,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param key A OBJECTLIT key node.
    * @return The type expected when using the key.
    */
-  @Nullable
-  static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
+  static @Nullable JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
     if (valueType != null) {
       switch (key.getToken()) {
         case GETTER_DEF:
@@ -2292,8 +2291,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     return n.isQualifiedName() && parent.isAssign() && parent.getFirstChild() == n;
   }
 
-  @Nullable
-  private static SuggestionPair getClosestPropertySuggestion(
+  private static @Nullable SuggestionPair getClosestPropertySuggestion(
       JSType objectType, String propName, int maxDistance) {
     return null;
   }
@@ -3373,8 +3371,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    *
    * @return non-stringifiable type which is used as key or null if all there are no such types.
    */
-  @Nullable
-  private JSType findObjectWithNonStringifiableKey(JSType type, Set<JSType> alreadyCheckedTypes) {
+  private @Nullable JSType findObjectWithNonStringifiableKey(
+      JSType type, Set<JSType> alreadyCheckedTypes) {
     if (alreadyCheckedTypes.contains(type)) {
       // This can happen in recursive types. Current type already being checked earlier in
       // stacktrace so now we just skip it.

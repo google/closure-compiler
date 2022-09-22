@@ -67,8 +67,7 @@ public abstract class WarningsGuard implements Serializable {
    * @param error a reported error.
    * @return what level given error should have.
    */
-  @Nullable
-  public abstract CheckLevel level(JSError error);
+  public abstract @Nullable CheckLevel level(JSError error);
 
   /**
    * Do checks for `group` still need to be run if this guard is installed?

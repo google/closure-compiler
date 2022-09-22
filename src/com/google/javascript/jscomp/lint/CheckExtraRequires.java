@@ -54,7 +54,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
    * This is only relevant for the standalone CheckExtraRequires run. This is used to restrict the
    * linter rule only for the modules listed in this set
    */
-  @Nullable private final ImmutableSet<String> requiresToRemove;
+  private final @Nullable ImmutableSet<String> requiresToRemove;
 
   public static final DiagnosticType EXTRA_REQUIRE_WARNING =
       DiagnosticType.disabled(
@@ -82,8 +82,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, root, this);
   }
 
-  @Nullable
-  private String extractNamespace(Node call, String... primitiveNames) {
+  private @Nullable String extractNamespace(Node call, String... primitiveNames) {
     Node callee = call.getFirstChild();
     if (!callee.isGetProp()) {
       return null;

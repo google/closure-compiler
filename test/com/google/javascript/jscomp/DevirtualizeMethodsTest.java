@@ -133,8 +133,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
         label);
   }
 
-  @Nullable
-  private static Node getLabelledExpressionIfPresent(String label, Node root) {
+  private static @Nullable Node getLabelledExpressionIfPresent(String label, Node root) {
     if (root.isLabel() && root.getFirstChild().getString().equals(label)) {
       Node labelledBlock = root.getSecondChild();
       checkState(labelledBlock.isBlock(), labelledBlock);

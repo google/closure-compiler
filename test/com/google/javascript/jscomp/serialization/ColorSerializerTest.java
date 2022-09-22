@@ -649,8 +649,7 @@ public class ColorSerializerTest {
      * `TypeProto`. Generally test code should call `getExpectedTypeProto()` instead in order to get
      * an exception if an attempt is made to serialize an axiomatic color.
      */
-    @Nullable
-    public abstract TypeProto getNullableExpectedTypeProto();
+    public abstract @Nullable TypeProto getNullableExpectedTypeProto();
 
     // The Integer we expect ColorSerializer to create for this Color.
     public abstract Integer getExpectedTypePointer();

@@ -301,8 +301,7 @@ final class PolyfillUsageFinder {
     }
   }
 
-  @Nullable
-  private PolyfillUsage maybeCreateStaticPolyfillUsageForGetPropChain(
+  private @Nullable PolyfillUsage maybeCreateStaticPolyfillUsageForGetPropChain(
       NodeTraversal traversal, final Node getPropNode) {
     checkArgument(getPropNode.isGetProp() || getPropNode.isOptChainGetProp(), getPropNode);
     final String lastComponent = getPropNode.getString();
@@ -376,8 +375,7 @@ final class PolyfillUsageFinder {
         || t.getScope().getVar(globalName) == null);
   }
 
-  @Nullable
-  private static String findGlobalPrefix(String qualifiedName) {
+  private static @Nullable String findGlobalPrefix(String qualifiedName) {
     for (String global : GLOBAL_NAMES) {
       if (qualifiedName.startsWith(global)) {
         return global;

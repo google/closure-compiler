@@ -148,9 +148,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       DiagnosticType.error(
           "JSC_MISSING_MODULE_ERROR", "unknown module \"{0}\" specified in entry point spec");
 
-  @Nullable private CompilerOptions options = null;
+  private @Nullable CompilerOptions options = null;
 
-  @Nullable private PassConfig passes = null;
+  private @Nullable PassConfig passes = null;
 
   // The externs inputs
   private final ArrayList<CompilerInput> externs = new ArrayList<>();
@@ -175,7 +175,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   // Node of the final injected library. Future libraries will be injected
   // after this node.
-  @Nullable private Node lastInjectedLibrary;
+  private @Nullable Node lastInjectedLibrary;
 
   // Parse tree root nodes
   private Node externsRoot;
@@ -183,7 +183,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private Node externAndJsRoot;
 
   // Used for debugging; to see the compiled code between passes
-  @Nullable private String lastJsSource = null;
+  private @Nullable String lastJsSource = null;
 
   private FeatureSet featureSet;
 
@@ -219,7 +219,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private SourceMap sourceMap;
 
   /** The externs created from the exports. */
-  @Nullable private String externExports = null;
+  private @Nullable String externExports = null;
 
   private UniqueIdSupplier uniqueIdSupplier = new UniqueIdSupplier();
 
@@ -234,16 +234,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Detects Google-specific coding conventions. */
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
-  @Nullable private JSTypeRegistry typeRegistry;
-  @Nullable private ColorRegistry colorRegistry;
-  @Nullable private volatile Config parserConfig = null;
-  @Nullable private volatile Config externsParserConfig = null;
+  private @Nullable JSTypeRegistry typeRegistry;
+  private @Nullable ColorRegistry colorRegistry;
+  private volatile @Nullable Config parserConfig = null;
+  private volatile @Nullable Config externsParserConfig = null;
 
-  @Nullable private ReverseAbstractInterpreter abstractInterpreter;
-  @Nullable private TypeValidator typeValidator;
+  private @Nullable ReverseAbstractInterpreter abstractInterpreter;
+  private @Nullable TypeValidator typeValidator;
   // The compiler can ask phaseOptimizer for things like which pass is currently
   // running, or which functions have been changed by optimizations
-  @Nullable private PhaseOptimizer phaseOptimizer = null;
+  private @Nullable PhaseOptimizer phaseOptimizer = null;
 
   public PerformanceTracker tracker;
 
@@ -270,8 +270,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private String lastPassName;
 
-  @Nullable private ImmutableSet<String> externProperties = null;
-  @Nullable private AccessorSummary accessorSummary = null;
+  private @Nullable ImmutableSet<String> externProperties = null;
+  private @Nullable AccessorSummary accessorSummary = null;
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 
@@ -512,11 +512,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  @Nullable private ImmutableMap<SourceFile, Supplier<Node>> typedAstFilesystem;
+  private @Nullable ImmutableMap<SourceFile, Supplier<Node>> typedAstFilesystem;
 
-  @Nullable
   @Override
-  Supplier<Node> getTypedAstDeserializer(SourceFile file) {
+  @Nullable Supplier<Node> getTypedAstDeserializer(SourceFile file) {
     if (this.typedAstFilesystem == null) {
       return null;
     }
@@ -1414,8 +1413,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  @Nullable
-  public final Node getScriptNode(String filename) {
+  public final @Nullable Node getScriptNode(String filename) {
     return scriptNodeByFilename.get(checkNotNull(filename));
   }
 
@@ -1536,9 +1534,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // TODO(nicksantos): Decide which parts of these belong in an AbstractCompiler
   // interface, and which ones should always be injected.
 
-  @Nullable
   @Override
-  public CompilerInput getInput(InputId id) {
+  public @Nullable CompilerInput getInput(InputId id) {
     // TODO(bradfordcsmith): Allowing null id is less ideal. Add checkNotNull(id) here and fix
     // call sites that break.
     if (id == null) {
@@ -1558,9 +1555,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>Returns null if {@code #init} or {@code #initModules} hasn't been called yet. Otherwise, the
    * result is always a module graph, even in the degenerate case where there's only one module.
    */
-  @Nullable
   @Override
-  JSChunkGraph getModuleGraph() {
+  @Nullable JSChunkGraph getModuleGraph() {
     return moduleGraph;
   }
 
@@ -1570,8 +1566,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>Returns null if {@code #init} or {@code #initModules} hasn't been called yet. Otherwise, the
    * result is always non-empty, even in the degenerate case where there's only one module.
    */
-  @Nullable
-  public Iterable<JSChunk> getModules() {
+  public @Nullable Iterable<JSChunk> getModules() {
     return moduleGraph != null ? moduleGraph.getAllChunks() : null;
   }
 
@@ -1631,7 +1626,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return this.colorRegistry != null;
   }
 
-  @Nullable private TypedScopeCreator typedScopeCreator;
+  private @Nullable TypedScopeCreator typedScopeCreator;
 
   @Override
   public ScopeCreator getTypedScopeCreator() {
@@ -1698,7 +1693,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return symbolTable;
   }
 
-  @Nullable private TypedScope topScope = null;
+  private @Nullable TypedScope topScope = null;
 
   @Override
   public TypedScope getTopScope() {
@@ -2648,7 +2643,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   final SourceFile SYNTHETIC_EXTERNS_FILE =
       SourceFile.fromCode(SYNTHETIC_FILE_NAME_PREFIX + "externs] ", "");
 
-  @Nullable private CompilerInput syntheticExternsInput; // matches SYNTHETIC_EXTERNS_FILE
+  private @Nullable CompilerInput syntheticExternsInput; // matches SYNTHETIC_EXTERNS_FILE
 
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
@@ -2947,9 +2942,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return hasHaltingErrors();
   }
 
-  @Nullable
   @Override
-  SourceFile getSourceFileByName(String sourceName) {
+  @Nullable SourceFile getSourceFileByName(String sourceName) {
     // Here we assume that the source name is the input name, this
     // is true of JavaScript parsed from source.
     if (sourceName != null) {
@@ -2965,8 +2959,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
-  @Nullable
-  public CharSequence getSourceFileContentByName(String sourceName) {
+  public @Nullable CharSequence getSourceFileContentByName(String sourceName) {
     SourceFile file = getSourceFileByName(sourceName);
     checkNotNull(file);
     try {
@@ -3016,8 +3009,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  @Nullable
-  public OriginalMapping getSourceMapping(String sourceName, int lineNumber, int columnNumber) {
+  public @Nullable OriginalMapping getSourceMapping(
+      String sourceName, int lineNumber, int columnNumber) {
     if (sourceName == null) {
       return null;
     }
@@ -3070,9 +3063,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         .build();
   }
 
-  @Nullable
   @Override
-  public String getSourceLine(String sourceName, int lineNumber) {
+  public @Nullable String getSourceLine(String sourceName, int lineNumber) {
     if (lineNumber < 1) {
       return null;
     }
@@ -3083,9 +3075,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
-  @Nullable
   @Override
-  public Region getSourceLines(String sourceName, int lineNumber, int length) {
+  public @Nullable Region getSourceLines(String sourceName, int lineNumber, int length) {
     if (lineNumber < 1) {
       return null;
     }
@@ -3096,9 +3087,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
-  @Nullable
   @Override
-  public Region getSourceRegion(String sourceName, int lineNumber) {
+  public @Nullable Region getSourceRegion(String sourceName, int lineNumber) {
     if (lineNumber < 1) {
       return null;
     }
@@ -3146,22 +3136,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Keys are arguments passed to getCssName() found during compilation; values are the number of
    * times the key appeared as an argument to getCssName().
    */
-  @Nullable private LinkedHashMap<String, Integer> cssNames = null;
+  private @Nullable LinkedHashMap<String, Integer> cssNames = null;
 
   /** The variable renaming map */
-  @Nullable private VariableMap variableMap = null;
+  private @Nullable VariableMap variableMap = null;
 
   /** The property renaming map */
-  @Nullable private VariableMap propertyMap = null;
+  private @Nullable VariableMap propertyMap = null;
 
   /** String replacement map */
-  @Nullable private VariableMap stringMap = null;
+  private @Nullable VariableMap stringMap = null;
 
   /** Mapping for Instrumentation parameter encoding */
-  @Nullable private VariableMap instrumentationMapping = null;
+  private @Nullable VariableMap instrumentationMapping = null;
 
   /** Id generator map */
-  @Nullable private String idGeneratorMap = null;
+  private @Nullable String idGeneratorMap = null;
 
   /** Names exported by goog.exportSymbol. */
   private final LinkedHashSet<String> exportedNames = new LinkedHashSet<>();
@@ -3289,9 +3279,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return Collections.unmodifiableList(externs);
   }
 
-  @Nullable
   @VisibleForTesting
-  List<CompilerInput> getInputsForTesting() {
+  @Nullable List<CompilerInput> getInputsForTesting() {
     return moduleGraph != null ? ImmutableList.copyOf(moduleGraph.getAllInputs()) : null;
   }
 

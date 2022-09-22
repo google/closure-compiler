@@ -33,8 +33,7 @@ public final class DiagnosticGroupPathSuppressingWarningsGuard extends WarningsG
 
   /** Does not touch warnings in other paths. */
   @Override
-  @Nullable
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     if (error.getSourceName() == null || !error.getSourceName().contains(this.part)) {
       return null;
     }

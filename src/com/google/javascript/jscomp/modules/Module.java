@@ -94,8 +94,7 @@ public abstract class Module {
    * The specific Closure namespace this module represents, if any. This can be from {@code
    * goog.provide}, {@code goog.module}, or {@code goog.module.declareNamespace}. Null otherwise.
    */
-  @Nullable
-  public abstract String closureNamespace();
+  public abstract @Nullable String closureNamespace();
 
   /** Creates a new builder. */
   public static Builder builder() {

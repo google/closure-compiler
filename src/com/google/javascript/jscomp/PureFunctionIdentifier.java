@@ -180,8 +180,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * @see {@link #collectCallableLeavesInternal}
    * @return the disovered callables, or {@code null} if an unexpected possible value was found.
    */
-  @Nullable
-  private static ImmutableList<Node> collectCallableLeaves(Node expr) {
+  private static @Nullable ImmutableList<Node> collectCallableLeaves(Node expr) {
     ArrayList<Node> callables = new ArrayList<>();
     boolean allLegal = collectCallableLeavesInternal(expr, callables);
     return allLegal ? ImmutableList.copyOf(callables) : null;
@@ -1078,8 +1077,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    *
    * <p>For NAMEs this is the name. For GETPROPs this is the last segment including a leading dot.
    */
-  @Nullable
-  private static String nameForReference(Node nameRef) {
+  private static @Nullable String nameForReference(Node nameRef) {
     switch (nameRef.getToken()) {
       case NAME:
         return nameRef.getString();
@@ -1126,7 +1124,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private final boolean propagateThrows;
 
     // The token used to invoke the callee by the caller.
-    @Nullable private final Node invocation;
+    private final @Nullable Node invocation;
 
     private SideEffectPropagation(
         boolean callerIsAlias,
@@ -1168,7 +1166,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return true;
       }
 
-      @Nullable final Node thisArg;
+      final @Nullable Node thisArg;
       if (isInvocationViaCallOrApply(invocation)) {
         // If the call site is actually a `.call` or `.apply`, then `this` will be an argument.
         thisArg = invocation.getSecondChild();

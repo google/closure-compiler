@@ -89,7 +89,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   private final JSType unknownType;
   private static final Splitter DOT_SPLITTER = Splitter.on(".");
 
-  @Nullable private final PreprocessorSymbolTable preprocessorSymbolTable;
+  private final @Nullable PreprocessorSymbolTable preprocessorSymbolTable;
 
   /**
    * Local variable names that were goog.require'd to qualified name we need to line.

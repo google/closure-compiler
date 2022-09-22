@@ -603,9 +603,8 @@ public final class ModuleLoaderTest {
                     ErrorHandler errorHandler,
                     PathEscaper pathEscaper) ->
                     new ModuleResolver(modulePaths, moduleRootPaths, errorHandler, pathEscaper) {
-                      @Nullable
                       @Override
-                      public String resolveJsModule(
+                      public @Nullable String resolveJsModule(
                           String scriptAddress,
                           String moduleAddress,
                           String sourcename,

@@ -91,7 +91,7 @@ class GlobalNamespace
    *
    * <p>Since this class is a utility used by others, the creating class may provide the log file.
    */
-  @Nullable private final LogFile decisionsLog;
+  private final @Nullable LogFile decisionsLog;
 
   private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
 
@@ -201,8 +201,7 @@ class GlobalNamespace
    * @param s The scope in which the name is referenced
    * @return The root node of the scope in which this is defined, or null if this is undeclared.
    */
-  @Nullable
-  private Node getRootNode(String name, Scope s) {
+  private @Nullable Node getRootNode(String name, Scope s) {
     name = getTopVarName(name);
     Var v = s.getVar(name);
     if (v == null) {
@@ -409,8 +408,8 @@ class GlobalNamespace
 
   /** Builds a tree representation of the global namespace. Omits prototypes. */
   private class BuildGlobalNamespace extends NodeTraversal.AbstractPreOrderCallback {
-    @Nullable private Node curModuleRoot = null;
-    @Nullable private ModuleMetadata curMetadata = null;
+    private @Nullable Node curModuleRoot = null;
+    private @Nullable ModuleMetadata curMetadata = null;
     /** Collect the references in pre-order. */
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -1258,7 +1257,7 @@ class GlobalNamespace
     // The children of this name. Must be null if there are no children.
     @Nullable List<Name> props;
     /** The first global assignment to a name. */
-    @Nullable private Ref declaration;
+    private @Nullable Ref declaration;
 
     /** All references to a name. This must contain {@code declaration}. */
     private final LinkedHashSet<Ref> refs = new LinkedHashSet<>();
@@ -1287,14 +1286,14 @@ class GlobalNamespace
     // e.g.
     // /** @type {number} */
     // X.numberProp = 3;
-    @Nullable private JSDocInfo firstDeclarationJSDocInfo = null;
+    private @Nullable JSDocInfo firstDeclarationJSDocInfo = null;
 
     // Will be set to the JSDocInfo associated with the first get reference that is a statement
     // by itself.
     // e.g.
     // /** @type {number} */
     // X.numberProp;
-    @Nullable private JSDocInfo firstQnameDeclarationWithoutAssignmentJsDocInfo = null;
+    private @Nullable JSDocInfo firstQnameDeclarationWithoutAssignmentJsDocInfo = null;
 
     private Name(String name, Name parent, SourceKind sourceKind) {
       this.baseName = name;
@@ -1341,9 +1340,8 @@ class GlobalNamespace
       return usedHasOwnProperty;
     }
 
-    @Nullable
     @Override
-    public Ref getDeclaration() {
+    public @Nullable Ref getDeclaration() {
       return declaration;
     }
 
@@ -2252,9 +2250,8 @@ class GlobalNamespace
                   "subclassingGets=" + subclassingGets);
     }
 
-    @Nullable
     @Override
-    public JSDocInfo getJSDocInfo() {
+    public @Nullable JSDocInfo getJSDocInfo() {
       // e.g.
       // /** @type {string} */ X.numProp;     // could be a declaration, but...
       // /** @type {number} */ X.numProp = 3; // assignment wins
@@ -2264,8 +2261,7 @@ class GlobalNamespace
     }
 
     /** Tries to get the doc info for a given declaration ref. */
-    @Nullable
-    private JSDocInfo getDocInfoForDeclaration(Ref ref) {
+    private @Nullable JSDocInfo getDocInfoForDeclaration(Ref ref) {
       if (ref.node != null) {
         Node refParent = ref.node.getParent();
         if (refParent == null) {
@@ -2372,7 +2368,7 @@ class GlobalNamespace
      *
      * <p>We create two Refs for this node, and mark them as twins of each other.
      */
-    @Nullable private Ref twin = null;
+    private @Nullable Ref twin = null;
 
     /**
      * Creates a Ref
@@ -2393,9 +2389,8 @@ class GlobalNamespace
       return node;
     }
 
-    @Nullable
     @Override
-    public StaticSourceFile getSourceFile() {
+    public @Nullable StaticSourceFile getSourceFile() {
       return node != null ? node.getStaticSourceFile() : null;
     }
 
@@ -2428,11 +2423,9 @@ class GlobalNamespace
 
   @AutoValue
   abstract static class ObjLitStringKeyAnalysis {
-    @Nullable
-    public abstract String getNameString();
+    public abstract @Nullable String getNameString();
 
-    @Nullable
-    public abstract NameType getNameType();
+    public abstract @Nullable NameType getNameType();
 
     /**
      * The object literal key is used to define a property. <code>

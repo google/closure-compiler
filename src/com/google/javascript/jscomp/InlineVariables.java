@@ -995,7 +995,7 @@ class InlineVariables implements CompilerPass {
 
   private static class InitiallyUnknown<T> {
     protected boolean isKnown = false;
-    @Nullable protected T value = null;
+    protected @Nullable T value = null;
 
     boolean isKnown() {
       return isKnown;

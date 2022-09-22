@@ -49,8 +49,7 @@ public abstract class Color {
    */
   public abstract ImmutableSet<String> getOwnProperties();
 
-  @Nullable
-  public abstract ColorId getBoxId();
+  public abstract @Nullable ColorId getBoxId();
 
   /**
    * Whether this type is some Closure assertion function removable by Closure-specific

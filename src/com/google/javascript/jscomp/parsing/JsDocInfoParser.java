@@ -114,7 +114,7 @@ public final class JsDocInfoParser {
   }
 
   // The DocInfo with the fileoverview tag for the whole file.
-  @Nullable private JSDocInfo fileOverviewJSDocInfo = null;
+  private @Nullable JSDocInfo fileOverviewJSDocInfo = null;
   private State state;
 
   private final ImmutableMap<String, Annotation> annotations;
@@ -128,7 +128,7 @@ public final class JsDocInfoParser {
   private static final ImmutableSet<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
 
-  @Nullable private String licenseText;
+  private @Nullable String licenseText;
 
   private void setLicenseTextMonotonic(String x) {
     checkNotNull(x);
@@ -186,15 +186,13 @@ public final class JsDocInfoParser {
     this.templateNode = templateNode == null ? IR.script() : templateNode;
   }
 
-  @Nullable
-  private String getSourceName() {
+  private @Nullable String getSourceName() {
     StaticSourceFile sourceFile = getSourceFile();
     return sourceFile == null ? null : sourceFile.getName();
   }
 
   /** Parse a description as a {@code @type}. */
-  @Nullable
-  public JSDocInfo parseInlineTypeDoc() {
+  public @Nullable JSDocInfo parseInlineTypeDoc() {
     skipEOLs();
 
     JsDocToken token = next();
@@ -1222,8 +1220,7 @@ public final class JsDocInfoParser {
     return next();
   }
 
-  @Nullable
-  private Node parseTtlAst(ExtractionInfo ttlExtraction, int lineno, int charno) {
+  private @Nullable Node parseTtlAst(ExtractionInfo ttlExtraction, int lineno, int charno) {
     String ttlExpression = ttlExtraction.string;
     if (!ttlExpression.startsWith(TTL_START_DELIMITER)) {
       return null;
@@ -2024,8 +2021,7 @@ public final class JsDocInfoParser {
   /**
    * TypeExpressionList := TopLevelTypeExpression | TopLevelTypeExpression ',' TypeExpressionList
    */
-  @Nullable
-  private Node parseTypeExpressionList(String typeName, JsDocToken token) {
+  private @Nullable Node parseTypeExpressionList(String typeName, JsDocToken token) {
     Node typeExpr = parseTopLevelTypeExpression(token);
     if (typeExpr == null) {
       return null;
@@ -2155,8 +2151,7 @@ public final class JsDocInfoParser {
     return reportGenericTypeSyntaxWarning();
   }
 
-  @Nullable
-  private Node parseNameExpression(JsDocToken token) {
+  private @Nullable Node parseNameExpression(JsDocToken token) {
     if (token != JsDocToken.STRING) {
       addParserWarning(Msg.JSDOC_NAME_SYNTAX, stream.getLineno(), stream.getCharno());
       return null;
@@ -2214,8 +2209,7 @@ public final class JsDocInfoParser {
   }
 
   /** TypeofType := 'typeof' NameExpression | 'typeof' '(' NameExpression ')' */
-  @Nullable
-  private Node parseTypeofType(JsDocToken token) {
+  private @Nullable Node parseTypeofType(JsDocToken token) {
     if (token == JsDocToken.LEFT_CURLY) {
       return reportTypeSyntaxWarning(Msg.JSDOC_UNNECESSARY_BRACES);
     }
@@ -2246,8 +2240,7 @@ public final class JsDocInfoParser {
    * added as a child. This means that the parameters could be the first or second child, and the
    * return type could be the first, second, or third child.
    */
-  @Nullable
-  private Node parseFunctionType(JsDocToken token) {
+  private @Nullable Node parseFunctionType(JsDocToken token) {
     // NOTE(nicksantos): We're not implementing generics at the moment, so
     // just throw out TypeParameters.
     if (token != JsDocToken.LEFT_PAREN) {
@@ -2345,8 +2338,7 @@ public final class JsDocInfoParser {
   // the same as the order-checking for @param annotations. And the latter
   // has to happen during type resolution. Rather than duplicate the
   // order-checking in two places, we just do all of it in type resolution.
-  @Nullable
-  private Node parseParametersType(JsDocToken token) {
+  private @Nullable Node parseParametersType(JsDocToken token) {
     Node paramsType = newNode(Token.PARAM_LIST);
     boolean isVarArgs = false;
     Node paramType = null;
@@ -2432,8 +2424,7 @@ public final class JsDocInfoParser {
    * Create a new union type, with an alternate that has already been parsed. The alternate may be
    * null.
    */
-  @Nullable
-  private Node parseUnionTypeWithAlternate(JsDocToken token, @Nullable Node alternate) {
+  private @Nullable Node parseUnionTypeWithAlternate(JsDocToken token, @Nullable Node alternate) {
     Node union = newNode(Token.PIPE);
     if (alternate != null) {
       union.addChildToBack(alternate);
@@ -2493,8 +2484,7 @@ public final class JsDocInfoParser {
   }
 
   /** FieldTypeList := FieldType | FieldType ',' FieldTypeList */
-  @Nullable
-  private Node parseFieldTypeList(JsDocToken token) {
+  private @Nullable Node parseFieldTypeList(JsDocToken token) {
     Node fieldTypeList = newNode(Token.LB);
 
     Set<String> names = new HashSet<>();
@@ -2537,8 +2527,7 @@ public final class JsDocInfoParser {
   }
 
   /** FieldType := FieldName | FieldName ':' TypeExpression */
-  @Nullable
-  private Node parseFieldType(JsDocToken token) {
+  private @Nullable Node parseFieldType(JsDocToken token) {
     Node fieldName = parseFieldName(token);
 
     if (fieldName == null) {
@@ -2569,8 +2558,7 @@ public final class JsDocInfoParser {
   }
 
   /** FieldName := NameExpression | StringLiteral | NumberLiteral | ReservedIdentifier */
-  @Nullable
-  private Node parseFieldName(JsDocToken token) {
+  private @Nullable Node parseFieldName(JsDocToken token) {
     if (token != JsDocToken.STRING) {
       return null;
     }
@@ -2583,13 +2571,11 @@ public final class JsDocInfoParser {
     return n;
   }
 
-  @Nullable
-  private Node wrapNode(Token type, Node n) {
+  private @Nullable Node wrapNode(Token type, Node n) {
     return n == null ? null : wrapNode(type, n, n.getLineno(), n.getCharno());
   }
 
-  @Nullable
-  private Node wrapNode(Token type, Node n, int lineno, int charno) {
+  private @Nullable Node wrapNode(Token type, Node n, int lineno, int charno) {
     return n == null
         ? null
         : new Node(type, n).setLinenoCharno(lineno, charno).clonePropsFrom(templateNode);
@@ -2610,8 +2596,7 @@ public final class JsDocInfoParser {
     return n;
   }
 
-  @Nullable
-  private Node reportTypeSyntaxWarning(Msg warning) {
+  private @Nullable Node reportTypeSyntaxWarning(Msg warning) {
     addTypeWarning(warning, stream.getLineno(), stream.getCharno());
     return null;
   }
@@ -2655,7 +2640,7 @@ public final class JsDocInfoParser {
   }
 
   /** Specific value indicating that the {@link #unreadToken} contains no token. */
-  @Nullable private static final JsDocToken NO_UNREAD_TOKEN = null;
+  private static final @Nullable JsDocToken NO_UNREAD_TOKEN = null;
 
   /** One token buffer. */
   private JsDocToken unreadToken = NO_UNREAD_TOKEN;

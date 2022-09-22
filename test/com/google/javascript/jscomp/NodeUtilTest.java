@@ -189,8 +189,7 @@ public final class NodeUtilTest {
    * @return the first matching node, or {@code null} if none match.
    */
   // TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
-  @Nullable
-  private static Node getNodeOrNull(Node root, Token token) {
+  private static @Nullable Node getNodeOrNull(Node root, Token token) {
     for (Node n = root.getFirstChild(); n != null; n = n.getNext()) {
       if (n.getToken() == token) {
         return n;
@@ -4897,8 +4896,7 @@ public final class NodeUtilTest {
   /**
    * @return The first node in {@code tree} that is an array pattern or object pattern.
    */
-  @Nullable
-  private static Node getPattern(Node tree) {
+  private static @Nullable Node getPattern(Node tree) {
     if (tree.isDestructuringPattern()) {
       return tree;
     }

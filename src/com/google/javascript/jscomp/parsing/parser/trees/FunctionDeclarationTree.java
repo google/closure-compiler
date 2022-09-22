@@ -32,7 +32,7 @@ public class FunctionDeclarationTree extends ParseTree {
     ARROW
   }
 
-  @Nullable public final IdentifierToken name;
+  public final @Nullable IdentifierToken name;
   public final FormalParameterListTree formalParameterList;
   public final ParseTree functionBody;
   public final boolean isStatic;
@@ -64,9 +64,9 @@ public class FunctionDeclarationTree extends ParseTree {
   public static class Builder {
     private final Kind kind;
 
-    @Nullable private IdentifierToken name = null;
-    @Nullable private FormalParameterListTree formalParameterList = null;
-    @Nullable private ParseTree functionBody = null;
+    private @Nullable IdentifierToken name = null;
+    private @Nullable FormalParameterListTree formalParameterList = null;
+    private @Nullable ParseTree functionBody = null;
     private boolean isStatic = false;
     private boolean isGenerator = false;
     private boolean isOptional = false;

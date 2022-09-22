@@ -69,10 +69,10 @@ final class AstFactory {
 
   private static final Splitter DOT_SPLITTER = Splitter.on(".");
 
-  @Nullable private final ColorRegistry colorRegistry;
-  @Nullable private final JSTypeRegistry registry;
+  private final @Nullable ColorRegistry colorRegistry;
+  private final @Nullable JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
-  @Nullable private final JSType unknownType;
+  private final @Nullable JSType unknownType;
   private static final Supplier<Color> bigintNumberStringColor =
       Suppliers.memoize(
           () ->
@@ -337,8 +337,7 @@ final class AstFactory {
     }
   }
 
-  @Nullable
-  private JSType getTypeOfThisForFunctionNode(Node functionNode) {
+  private @Nullable JSType getTypeOfThisForFunctionNode(Node functionNode) {
     assertNotAddingColors();
     if (isAddingTypes()) {
       FunctionType functionType = getFunctionType(functionNode);
@@ -348,8 +347,7 @@ final class AstFactory {
     }
   }
 
-  @Nullable
-  private Type getTypeOfThisForEs6Class(Node functionNode) {
+  private @Nullable Type getTypeOfThisForEs6Class(Node functionNode) {
     checkArgument(functionNode.isClass(), functionNode);
     switch (this.typeMode) {
       case JSTYPE:
@@ -1418,10 +1416,10 @@ final class AstFactory {
   }
 
   private static final class JSTypeOrColor implements Type {
-    @Nullable private final JSType jstype;
-    @Nullable private final JSTypeNative jstypeNative;
-    @Nullable private final Color color;
-    @Nullable private final ColorId colorId;
+    private final @Nullable JSType jstype;
+    private final @Nullable JSTypeNative jstypeNative;
+    private final @Nullable Color color;
+    private final @Nullable ColorId colorId;
 
     JSTypeOrColor(@Nullable JSTypeNative jstypeNative, ColorId colorId) {
       this.jstypeNative = jstypeNative;

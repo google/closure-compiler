@@ -60,7 +60,7 @@ class ProcessDefines implements CompilerPass {
   private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
 
   private final AbstractCompiler compiler;
-  @Nullable private final JSTypeRegistry registry;
+  private final @Nullable JSTypeRegistry registry;
   private final ImmutableMap<String, Node> replacementValuesFromFlags;
   private final Mode mode;
   private final Supplier<GlobalNamespace> namespaceSupplier;
@@ -270,8 +270,7 @@ class ProcessDefines implements CompilerPass {
    *   <li>If nothing was found, and this is defined via a goog.define call, replace the call with
    *       the default value.
    */
-  @Nullable
-  private Node getReplacementForDefine(Define define) {
+  private @Nullable Node getReplacementForDefine(Define define) {
     Node replacementFromFlags = this.replacementValuesFromFlags.get(define.defineName);
     if (replacementFromFlags != null) {
       return replacementFromFlags;
@@ -350,8 +349,7 @@ class ProcessDefines implements CompilerPass {
     }
   }
 
-  @Nullable
-  private Ref selectDefineDeclaration(Name name) {
+  private @Nullable Ref selectDefineDeclaration(Name name) {
     for (Ref ref : name.getRefs()) {
       // Make sure we don't select a local set as the declaration.
       if (!Ref.Type.SET_FROM_GLOBAL.equals(ref.type)) {
@@ -375,8 +373,7 @@ class ProcessDefines implements CompilerPass {
     return null;
   }
 
-  @Nullable
-  private static Node getValueParentForDefine(Ref declaration) {
+  private static @Nullable Node getValueParentForDefine(Ref declaration) {
     // Note: this may be a NAME, a GETPROP, or even STRING_KEY or GETTER_DEF. We only care
     // about the first two, in which case the parent should be either VAR/CONST or ASSIGN.
     // We could accept STRING_KEY (i.e. `@define` on a property in an object literal), but
@@ -672,8 +669,7 @@ class ProcessDefines implements CompilerPass {
    * Checks whether the NAME node is inside either a CONST or a @const VAR. Returns the RHS node if
    * so, otherwise returns null.
    */
-  @Nullable
-  private static Node getConstantDeclValue(Node name) {
+  private static @Nullable Node getConstantDeclValue(Node name) {
     Node parent = name.getParent();
     if (parent == null) {
       return null;
@@ -704,8 +700,8 @@ class ProcessDefines implements CompilerPass {
      */
     final Ref declaration;
 
-    @Nullable final Node valueParent;
-    @Nullable final Node value;
+    final @Nullable Node valueParent;
+    final @Nullable Node value;
 
     public Define(
         String defineName,

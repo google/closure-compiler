@@ -249,8 +249,7 @@ final class CheckClosureImports implements CompilerPass {
      * Given a call node determines what kind of {@link ClosureImport} it is. Returns null if not a
      * {@link ClosureImport}.
      */
-    @Nullable
-    private ClosureImport kindOfCall(Node callNode) {
+    private @Nullable ClosureImport kindOfCall(Node callNode) {
       checkState(callNode.isCall());
       if (callNode.getFirstChild().matchesQualifiedName(GOOG_REQUIRE)) {
         return ClosureImport.REQUIRE;

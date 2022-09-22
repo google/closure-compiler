@@ -24,7 +24,7 @@ import org.jspecify.nullness.Nullable;
 public class FieldDeclarationTree extends ParseTree {
   public final IdentifierToken name;
   public final boolean isStatic;
-  @Nullable public final ParseTree initializer;
+  public final @Nullable ParseTree initializer;
 
   public FieldDeclarationTree(
       SourceRange location, IdentifierToken name, boolean isStatic, ParseTree initializer) {

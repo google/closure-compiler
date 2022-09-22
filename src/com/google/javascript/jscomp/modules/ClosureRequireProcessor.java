@@ -91,8 +91,7 @@ final class ClosureRequireProcessor {
    *
    * @return A Closure require (where {@link CreatedBy#isClosureImport()} is true) or null.
    */
-  @Nullable
-  private static CreatedBy getModuleDependencyTypeFromRhs(@Nullable Node value) {
+  private static @Nullable CreatedBy getModuleDependencyTypeFromRhs(@Nullable Node value) {
     if (value == null
         || !value.isCall()
         || !value.hasTwoChildren()

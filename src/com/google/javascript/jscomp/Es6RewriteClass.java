@@ -482,8 +482,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
     abstract JSDocInfo jsDocInfo();
 
-    @Nullable
-    abstract Color propertyType();
+    abstract @Nullable Color propertyType();
 
     /**
      * Returns an EXPR_RESULT node that declares this property on the given node.
@@ -621,13 +620,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
      * Creates an instance for a class statement or a class expression in a simple assignment or var
      * statement with a qualified name. In any other case, returns null.
      */
-    @Nullable
-    static ClassDeclarationMetadata create(Node classNode, Node parent) {
+    static @Nullable ClassDeclarationMetadata create(Node classNode, Node parent) {
       return create(classNode, parent, AstFactory.createFactoryWithoutTypes());
     }
 
-    @Nullable
-    private static ClassDeclarationMetadata create(
+    private static @Nullable ClassDeclarationMetadata create(
         Node classNode, Node parent, AstFactory astFactory) {
       Node classNameNode = classNode.getFirstChild();
       Node superClassNameNode = classNameNode.getNext();

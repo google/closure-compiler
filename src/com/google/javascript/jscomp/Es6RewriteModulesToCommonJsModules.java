@@ -130,7 +130,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
    * compiler's module runtime.
    */
   private class Rewriter extends AbstractPostOrderCallback {
-    @Nullable private Node requireInsertSpot;
+    private @Nullable Node requireInsertSpot;
     private final Node script;
     private final Map<String, LocalQName> exportedNameToLocalQName;
     private final Set<Node> imports;
@@ -242,8 +242,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      * @return qualified name to use to reference an imported value if the given node is an imported
      *     name or null if the value is not imported or if it is in the import statement itself
      */
-    @Nullable
-    private String maybeGetNameOfImportedValue(Scope s, Node nameNode) {
+    private @Nullable String maybeGetNameOfImportedValue(Scope s, Node nameNode) {
       checkState(nameNode.isName());
       Var var = s.getVar(nameNode.getString());
 

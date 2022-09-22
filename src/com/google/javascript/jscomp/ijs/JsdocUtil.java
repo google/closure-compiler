@@ -97,8 +97,7 @@ final class JsdocUtil {
         || jsdoc.hasEnumParameterType();
   }
 
-  @Nullable
-  static JSDocInfo getJSDocForRhs(Node rhs, JSDocInfo oldJSDoc) {
+  static @Nullable JSDocInfo getJSDocForRhs(Node rhs, JSDocInfo oldJSDoc) {
     switch (NodeUtil.getKnownValueType(rhs)) {
       case BOOLEAN:
         return getConstJSDoc(oldJSDoc, "boolean");
@@ -129,8 +128,7 @@ final class JsdocUtil {
     return null;
   }
 
-  @Nullable
-  static JSDocInfo getJSDocForName(Var decl, JSDocInfo oldJSDoc) {
+  static @Nullable JSDocInfo getJSDocForName(Var decl, JSDocInfo oldJSDoc) {
     if (decl == null) {
       return null;
     }

@@ -241,8 +241,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
   }
 
   /** Nullsafe wrapper for {@code JSType#dereference()}. */
-  @Nullable
-  private static ObjectType dereferenced(@Nullable JSType type) {
+  private static @Nullable ObjectType dereferenced(@Nullable JSType type) {
     return type == null ? null : type.dereference();
   }
 

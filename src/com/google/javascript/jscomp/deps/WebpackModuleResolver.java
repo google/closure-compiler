@@ -83,8 +83,7 @@ public class WebpackModuleResolver extends NodeModuleResolver {
   }
 
   @Override
-  @Nullable
-  public String resolveJsModule(
+  public @Nullable String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
     String loadAddress = modulesById.get(moduleAddress);
     if (loadAddress == null) {

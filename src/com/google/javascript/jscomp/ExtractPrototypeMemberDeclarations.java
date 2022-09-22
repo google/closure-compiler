@@ -397,8 +397,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       return qualifiedClassName.equals(other.qualifiedClassName);
     }
 
-    @Nullable
-    private static Node getPrototypeClassName(Node qName) {
+    private static @Nullable Node getPrototypeClassName(Node qName) {
       Node cur = qName;
       while (cur.isGetProp()) {
         if (cur.getString().equals("prototype")) {
@@ -431,8 +430,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
      * @return A prototype member declaration representation if there is one else it returns {@code
      *     null}.
      */
-    @Nullable
-    private static PrototypeMemberDeclaration extractDeclaration(Node n) {
+    private static @Nullable PrototypeMemberDeclaration extractDeclaration(Node n) {
       if (!isPrototypePropertyDeclaration(n)) {
         return null;
       }

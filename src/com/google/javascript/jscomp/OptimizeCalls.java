@@ -70,7 +70,7 @@ class OptimizeCalls implements CompilerPass {
   static final class Builder {
     private AbstractCompiler compiler;
     private final ImmutableList.Builder<CallGraphCompilerPass> passes = ImmutableList.builder();
-    @Nullable private Boolean considerExterns; // Nullable to force users to specify a value.
+    private @Nullable Boolean considerExterns; // Nullable to force users to specify a value.
 
     @CanIgnoreReturnValue
     public Builder setCompiler(AbstractCompiler compiler) {

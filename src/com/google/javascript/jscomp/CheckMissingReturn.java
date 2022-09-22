@@ -144,17 +144,16 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
   }
 
   /**
-   * Determines if the given scope should explicitly return. All functions
-   * with non-void or non-unknown return types must have explicit returns.
+   * Determines if the given scope should explicitly return. All functions with non-void or
+   * non-unknown return types must have explicit returns.
    *
-   * Exception: Constructors which specifically specify a return type are
-   * used to allow invocation without requiring the "new" keyword. They
-   * have an implicit return type. See unit tests.
+   * <p>Exception: Constructors which specifically specify a return type are used to allow
+   * invocation without requiring the "new" keyword. They have an implicit return type. See unit
+   * tests.
    *
    * @return If a return type is expected, returns it. Otherwise, returns null.
    */
-  @Nullable
-  private JSType getExplicitReturnTypeIfExpected(Node scopeRoot) {
+  private @Nullable JSType getExplicitReturnTypeIfExpected(Node scopeRoot) {
     if (!scopeRoot.isFunction()) {
       // Nothing to do in a global/module/block scope.
       return null;

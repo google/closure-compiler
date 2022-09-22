@@ -120,8 +120,7 @@ public class ModuleMapCreator implements CompilerPass {
     }
 
     @Override
-    @Nullable
-    public UnresolvedModule resolve(Import i) {
+    public @Nullable UnresolvedModule resolve(Import i) {
       if (i.modulePath() == null) {
         return resolveForClosure(i.moduleRequest());
       }
@@ -129,19 +128,16 @@ public class ModuleMapCreator implements CompilerPass {
     }
 
     @Override
-    @Nullable
-    public UnresolvedModule resolve(Export e) {
+    public @Nullable UnresolvedModule resolve(Export e) {
       return resolve(e.moduleRequest(), e.modulePath(), e.exportNode());
     }
 
-    @Nullable
-    private UnresolvedModule resolveForClosure(String namespace) {
+    private @Nullable UnresolvedModule resolveForClosure(String namespace) {
       return unresolvedModulesByClosureNamespace.computeIfAbsent(
           namespace, this::getFallbackForMissingClosureModule);
     }
 
-    @Nullable
-    private UnresolvedModule resolve(
+    private @Nullable UnresolvedModule resolve(
         String moduleRequest, ModulePath modulePath, Node forLineInfo) {
 
       if (GoogEsImports.isGoogImportSpecifier(moduleRequest)) {

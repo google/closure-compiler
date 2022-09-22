@@ -181,7 +181,7 @@ final class Tracer {
   private long[] extraTracingValues;
 
   /** The type for grouping traces, may be null */
-  @Nullable private final String type;
+  private final @Nullable String type;
 
   /** A comment string for the report */
   private final String comment;
@@ -558,20 +558,14 @@ final class Tracer {
 
   }
 
-  /**
-   * This map tracks counts of tracers for each type over all time.
-   */
-  @Nullable private static AtomicTracerStatMap typeToCountMap;
+  /** This map tracks counts of tracers for each type over all time. */
+  private static @Nullable AtomicTracerStatMap typeToCountMap;
 
-  /**
-   * This map tracks counts of silent tracers for each type over all time.
-   */
-  @Nullable private static AtomicTracerStatMap typeToSilentMap;
+  /** This map tracks counts of silent tracers for each type over all time. */
+  private static @Nullable AtomicTracerStatMap typeToSilentMap;
 
-  /**
-   * This map tracks time (ms) for each type over all time.
-   */
-  @Nullable private static AtomicTracerStatMap typeToTimeMap;
+  /** This map tracks time (ms) for each type over all time. */
+  private static @Nullable AtomicTracerStatMap typeToTimeMap;
 
   /**
    * This method MUST be called before getTypeToCountMap (and friends)
@@ -587,29 +581,26 @@ final class Tracer {
   }
 
   /**
-   * Used for exporting this data via varz.  Accesses to this
-   * map must be synchronized on the map.  If enableTypeMaps has not
-   * been called, this will return null.
+   * Used for exporting this data via varz. Accesses to this map must be synchronized on the map. If
+   * enableTypeMaps has not been called, this will return null.
    */
-  @Nullable static Map<String, Long> getTypeToCountMap() {
+  static @Nullable Map<String, Long> getTypeToCountMap() {
     return typeToCountMap != null ? typeToCountMap.getMap() : null;
   }
 
   /**
-   * Used for exporting this data via varz.  Accesses to this
-   * map must be synchronized on the map.  If enableTypeMaps has not
-   * been called, this will return null.
+   * Used for exporting this data via varz. Accesses to this map must be synchronized on the map. If
+   * enableTypeMaps has not been called, this will return null.
    */
-  @Nullable static Map<String, Long> getTypeToSilentMap() {
+  static @Nullable Map<String, Long> getTypeToSilentMap() {
     return typeToSilentMap != null ? typeToSilentMap.getMap() : null;
   }
 
   /**
-   * Used for exporting this data via varz.  Accesses to this
-   * map must be synchronized on the map.  If enableTypeMaps has not
-   * been called, this will return null.
+   * Used for exporting this data via varz. Accesses to this map must be synchronized on the map. If
+   * enableTypeMaps has not been called, this will return null.
    */
-  @Nullable static Map<String, Long> getTypeToTimeMap() {
+  static @Nullable Map<String, Long> getTypeToTimeMap() {
     return typeToTimeMap != null ? typeToTimeMap.getMap() : null;
   }
 

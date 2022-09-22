@@ -233,13 +233,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
 
-    @Nullable
     @Option(
         name = "--jszip",
         hidden = true,
         handler = JsZipOptionHandler.class,
         usage = "The JavaScript zip filename. You may specify multiple.")
-    private List<String> unusedJsZip = null;
+    private @Nullable List<String> unusedJsZip = null;
 
     @Option(
         name = "--js_output_file",
@@ -262,48 +261,42 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private List<String> chunk = new ArrayList<>();
 
     // TODO(bradfordcsmith): deprecate and remove this in favor of --restore_stage1_from_file
-    @Nullable
     @Option(
         name = "--continue-saved-compilation",
         usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
-    private String continueSavedCompilationFile = null;
+    private @Nullable String continueSavedCompilationFile = null;
 
-    @Nullable
     @Option(
         name = "--restore_stage1_from_file",
         usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
-    private String restoreStage1FromFile = null;
+    private @Nullable String restoreStage1FromFile = null;
 
-    @Nullable
     @Option(
         name = "--restore_stage2_from_file",
         usage = "Filename where a stage 2 compilation state was previously saved.",
         hidden = true)
-    private String restoreStage2FromFile = null;
+    private @Nullable String restoreStage2FromFile = null;
 
     // TODO(bradfordcsmith): deprecate and remove this in favor of --save_stage1_to_file
-    @Nullable
     @Option(
         name = "--save-after-checks",
         usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
         hidden = true)
-    private String saveAfterChecksFile = null;
+    private @Nullable String saveAfterChecksFile = null;
 
-    @Nullable
     @Option(
         name = "--save_stage1_to_file",
         usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
         hidden = true)
-    private String saveStage1ToFile = null;
+    private @Nullable String saveStage1ToFile = null;
 
-    @Nullable
     @Option(
         name = "--save_stage2_to_file",
         usage = "Filename to save stage 2 state so that the compilation can be resumed later.",
         hidden = true)
-    private String saveStage2ToFile = null;
+    private @Nullable String saveStage2ToFile = null;
 
     @Option(
         name = "--variable_renaming_report",
@@ -521,7 +514,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "ADVANCED")
     private String compilationLevel = "SIMPLE";
 
-    @Nullable private CompilationLevel compilationLevelParsed = null;
+    private @Nullable CompilationLevel compilationLevelParsed = null;
 
     @Option(
         name = "--num_parallel_threads",
@@ -582,12 +575,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "mapped back to the original name.")
     private boolean debug = false;
 
-    @Nullable
     @Option(
         name = "--typed_ast_output_file__INTENRNAL_USE_ONLY",
         usage = "Sets file to output in-progress typedAST format. DO NOT USE!",
         hidden = true)
-    private String typedAstOutputFile = null;
+    private @Nullable String typedAstOutputFile = null;
 
     @Option(
         name = "--generate_exports",
@@ -636,9 +628,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             "Generate $inject properties for AngularJS for functions " + "annotated with @ngInject")
     private boolean angularPass = false;
 
-    @Nullable
     @Option(name = "--polymer_version", usage = "Which version of Polymer is being used (1 or 2).")
-    private Integer polymerVersion = null;
+    private @Nullable Integer polymerVersion = null;
 
     @Option(
         name = "--polymer_export_policy",
@@ -717,7 +708,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage = "Source of translated messages. Currently only supports XTB.")
     private String translationsFile = "";
 
-    @Nullable
     @Option(
         name = "--translations_project",
         hidden = true,
@@ -725,7 +715,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             "Scopes all translations to the specified project."
                 + "When specified, we will use different message ids so that messages "
                 + "in different projects can have different translations.")
-    private String translationsProject = null;
+    private @Nullable String translationsProject = null;
 
     @Option(
         name = "--flagfile",
@@ -763,19 +753,17 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "Options: ALL, AST_SIZE, RAW_SIZE, TIMING_ONLY, OFF")
     private CompilerOptions.TracerMode tracerMode = CompilerOptions.TracerMode.OFF;
 
-    @Nullable
     @Option(
         name = "--rename_variable_prefix",
         usage = "Specifies a prefix that will be prepended to all variables.")
-    private String renamePrefix = null;
+    private @Nullable String renamePrefix = null;
 
-    @Nullable
     @Option(
         name = "--rename_prefix_namespace",
         usage =
             "Specifies the name of an object that will be used to store all "
                 + "non-extern globals")
-    private String renamePrefixNamespace = null;
+    private @Nullable String renamePrefixNamespace = null;
 
     @Option(
         name = "--conformance_configs",
@@ -831,8 +819,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "PRUNE_LEGACY same as PRUNE but files that do not goog.provide a namespace and "
                 + "are not modules will be automatically added as --entry_point entries. Defaults "
                 + "to PRUNE_LEGACY if entry points are defined, otherwise to NONE.")
-    @Nullable
-    private DependencyMode dependencyMode = null; // so we can tell whether it was explicitly set
+    private @Nullable DependencyMode dependencyMode =
+        null; // so we can tell whether it was explicitly set
 
     @Option(
         name = "--entry_point",
@@ -882,7 +870,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
     private Map<String, String> browserResolverPrefixReplacements = new HashMap<>();
 
-    @Nullable
     @Option(
         name = "--package_json_entry_names",
         usage =
@@ -890,7 +877,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + " with the NODE module resolution strategy (i.e. esnext:main,browser,main)."
                 + " Defaults to a list with the following entries: \"browser\", \"module\","
                 + " \"main\".")
-    private String packageJsonEntryNames = null;
+    private @Nullable String packageJsonEntryNames = null;
 
     @Option(name = "--error_format", usage = "Specifies format for error messages.")
     private ErrorFormatOption errorFormat = ErrorFormatOption.STANDARD;
@@ -945,7 +932,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "expressions are not yet fully supported and may lead to broken output code.")
     private boolean allowDynamicImport = true;
 
-    @Nullable
     @Option(
         name = "--dynamic_import_alias",
         usage =
@@ -953,7 +939,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "using the specified name. Allows dynamic import expressions to be externally "
                 + "polyfilled when the output language level does not natively support them. "
                 + "An alias of 'import' is allowed.")
-    private String dynamicImportAlias = null;
+    private @Nullable String dynamicImportAlias = null;
 
     @Option(
         name = "--assume_static_inheritance_is_not_used",
@@ -1492,7 +1478,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   private boolean runCompiler = false;
 
   /** Cached error stream to avoid passing it as a parameter to helper functions. */
-  @Nullable private PrintStream errorStream;
+  private @Nullable PrintStream errorStream;
 
   /**
    * Create a new command-line runner. You should only need to call the constructor if you're

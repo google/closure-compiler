@@ -39,11 +39,11 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   private final String name;
 
-  @Nullable private final Node nameNode;
+  private final @Nullable Node nameNode;
 
   // null if not an implicit goog namespace; otherwise starts out as an ArrayList then is frozen
   // into an ImmutableList.
-  @Nullable private SourceKind implicitGoogNamespaceStrength;
+  private @Nullable SourceKind implicitGoogNamespaceStrength;
 
   /** Input source */
   private final CompilerInput input;
@@ -120,8 +120,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return this.getNode() == null ? null : thisVar();
   }
 
-  @Nullable
-  public final Node getParentNode() {
+  public final @Nullable Node getParentNode() {
     return this.getNode() == null ? null : this.getNode().getParent();
   }
 
@@ -180,8 +179,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return info != null && info.isDefine();
   }
 
-  @Nullable
-  public final Node getInitialValue() {
+  public final @Nullable Node getInitialValue() {
     return this.getNode() == null ? null : NodeUtil.getRValueOfLValue(this.getNode());
   }
 
@@ -189,9 +187,8 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return this.getNode();
   }
 
-  @Nullable
   @Override
-  public final JSDocInfo getJSDocInfo() {
+  public final @Nullable JSDocInfo getJSDocInfo() {
     return this.getNode() == null ? null : NodeUtil.getBestJSDocInfo(this.getNode());
   }
 
@@ -259,8 +256,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       Token.IMPORT,
       Token.PARAM_LIST);
 
-  @Nullable
-  final Token declarationType() {
+  final @Nullable Token declarationType() {
     if (isImplicitGoogNamespace()) {
       return null;
     }

@@ -68,8 +68,7 @@ public abstract class JsMessage {
   }
 
   /** Gets the message's sourceName. */
-  @Nullable
-  public abstract String getSourceName();
+  public abstract @Nullable String getSourceName();
 
   /** Gets the message's key, or name (e.g. {@code "MSG_HELLO"}). */
   public abstract String getKey();
@@ -91,19 +90,16 @@ public abstract class JsMessage {
    * Gets the message's alternate ID (e.g. {@code "92430284230902938293"}), if available. This will
    * be used if a translation for `id` is not available.
    */
-  @Nullable
-  public abstract String getAlternateId();
+  public abstract @Nullable String getAlternateId();
 
   /**
    * Gets the description associated with this message, intended to help translators, or null if
    * this message has no description.
    */
-  @Nullable
-  public abstract String getDesc();
+  public abstract @Nullable String getDesc();
 
   /** Gets the meaning annotated to the message, intended to force different translations. */
-  @Nullable
-  public abstract String getMeaning();
+  public abstract @Nullable String getMeaning();
 
   /**
    * Gets whether this message should be hidden from volunteer translators (to reduce the chances of
@@ -368,8 +364,8 @@ public abstract class JsMessage {
     private boolean isAnonymous = false;
     private boolean isExternal = false;
 
-    @Nullable private String id;
-    @Nullable private String alternateId;
+    private @Nullable String id;
+    private @Nullable String alternateId;
 
     private final List<Part> parts = new ArrayList<>();
     // Placeholder names in JS code format

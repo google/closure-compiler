@@ -57,15 +57,13 @@ final class PreprocessorSymbolTable
     return root;
   }
 
-  @Nullable
   @Override
-  public JSType getTypeOfThis() {
+  public @Nullable JSType getTypeOfThis() {
     return null;
   }
 
-  @Nullable
   @Override
-  public StaticTypedScope getParentScope() {
+  public @Nullable StaticTypedScope getParentScope() {
     return null;
   }
 
@@ -129,7 +127,7 @@ final class PreprocessorSymbolTable
    */
   public static class CachedInstanceFactory {
 
-    @Nullable private PreprocessorSymbolTable instance;
+    private @Nullable PreprocessorSymbolTable instance;
 
     public void maybeInitialize(AbstractCompiler compiler) {
       if (compiler.getOptions().preservesDetailedSourceInfo()) {
@@ -140,8 +138,7 @@ final class PreprocessorSymbolTable
       }
     }
 
-    @Nullable
-    public PreprocessorSymbolTable getInstanceOrNull() {
+    public @Nullable PreprocessorSymbolTable getInstanceOrNull() {
       return instance;
     }
   }

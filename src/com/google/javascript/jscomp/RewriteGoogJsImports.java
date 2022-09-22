@@ -100,7 +100,7 @@ public class RewriteGoogJsImports implements CompilerPass {
   private final Mode mode;
   private final ModuleMap moduleMap;
   private final AbstractCompiler compiler;
-  @Nullable private Module googModule;
+  private @Nullable Module googModule;
   private final Map<Module, Module> moduleReplacements = new HashMap<>();
 
   public RewriteGoogJsImports(AbstractCompiler compiler, Mode mode, ModuleMap moduleMap) {
@@ -252,8 +252,7 @@ public class RewriteGoogJsImports implements CompilerPass {
     }
   }
 
-  @Nullable
-  private Node findGoogImportNode(Node scriptRoot) {
+  private @Nullable Node findGoogImportNode(Node scriptRoot) {
     // Cannot use the module map here - information is lost about the imports. The "bound names"
     // could be from transitive imports, but we lose the original import.
     boolean valid = true;
@@ -320,8 +319,7 @@ public class RewriteGoogJsImports implements CompilerPass {
     }
   }
 
-  @Nullable
-  private Node findGoogJsScriptNode(Node root) {
+  private @Nullable Node findGoogJsScriptNode(Node root) {
     ModulePath expectedGoogPath = null;
 
     // Find Closure's base.js file. goog.js should be right next to it.

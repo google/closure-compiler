@@ -145,8 +145,7 @@ public class RewritePolyfills implements CompilerPass {
    *
    * <p>Otherwise, return `null`.
    */
-  @Nullable
-  private FeatureSet getPolyfillSupportedFeatureSet(Node maybePolyfill) {
+  private @Nullable FeatureSet getPolyfillSupportedFeatureSet(Node maybePolyfill) {
     FeatureSet polyfillSupportFeatureSet = null;
     if (NodeUtil.isExprCall(maybePolyfill)) {
       Node call = maybePolyfill.getFirstChild();

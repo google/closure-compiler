@@ -86,7 +86,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   // Source Line Information
   private transient int @Nullable [] lineOffsets = null;
 
-  @Nullable private transient volatile String code = null;
+  private transient volatile @Nullable String code = null;
 
   // Code statistics used for metrics.
   //
@@ -304,8 +304,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    * @return The line indicated. Does not include the newline at the end of the file. Returns {@code
    *     null} if it does not exist, or if there was an IO exception.
    */
-  @Nullable
-  public String getLine(int lineNumber) {
+  public @Nullable String getLine(int lineNumber) {
     findLineOffsets();
     if (lineNumber > lineOffsets.length) {
       return null;
@@ -350,8 +349,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    * @return The line(s) indicated. Returns {@code null} if it does not exist or if there was an IO
    *     exception.
    */
-  @Nullable
-  public Region getLines(int lineNumber, int length) {
+  public @Nullable Region getLines(int lineNumber, int length) {
     findLineOffsets();
     if (lineNumber > lineOffsets.length) {
       return null;
@@ -398,8 +396,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    * @return The line indicated. Returns {@code null} if it does not exist, or if there was an IO
    *     exception.
    */
-  @Nullable
-  public Region getRegion(int lineNumber) {
+  public @Nullable Region getRegion(int lineNumber) {
     String js = "";
     try {
       js = getCode();
@@ -567,13 +564,13 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   public static final class Builder {
     private SourceKind kind = SourceKind.STRONG;
     private Charset charset = UTF_8;
-    @Nullable private String originalPath = null;
+    private @Nullable String originalPath = null;
 
-    @Nullable private String path = null;
-    @Nullable private Path pathWithFilesystem = null;
-    @Nullable private String zipEntryPath = null;
+    private @Nullable String path = null;
+    private @Nullable Path pathWithFilesystem = null;
+    private @Nullable String zipEntryPath = null;
 
-    @Nullable private Supplier<String> lazyContent = null;
+    private @Nullable Supplier<String> lazyContent = null;
 
     private Builder() {}
 

@@ -107,8 +107,7 @@ public final class ComposeWarningsGuard extends WarningsGuard {
   }
 
   @Override
-  @Nullable
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     for (WarningsGuard guard : guards) {
       CheckLevel newLevel = guard.level(error);
       if (newLevel != null) {

@@ -225,8 +225,7 @@ public final class NodeUtil {
    *
    * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
    */
-  @Nullable
-  public static String getStringValue(Node n) {
+  public static @Nullable String getStringValue(Node n) {
     // TODO(user): regex literals as well.
     switch (n.getToken()) {
       case STRINGLIT:
@@ -316,8 +315,7 @@ public final class NodeUtil {
     return (NodeUtil.isNullOrUndefined(n) || n.isEmpty()) ? "" : getStringValue(n);
   }
 
-  @Nullable
-  static String arrayToString(Node literal) {
+  static @Nullable String arrayToString(Node literal) {
     Node first = literal.getFirstChild();
     StringBuilder result = new StringBuilder();
     for (Node n = first; n != null; n = n.getNext()) {
@@ -343,8 +341,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
-  @Nullable
-  static Double getNumberValue(Node n) {
+  static @Nullable Double getNumberValue(Node n) {
     switch (n.getToken()) {
       case NUMBER:
         return n.getDouble();
@@ -420,8 +417,7 @@ public final class NodeUtil {
     return null;
   }
 
-  @Nullable
-  static Double getStringNumberValue(String rawJsString) {
+  static @Nullable Double getStringNumberValue(String rawJsString) {
     if (rawJsString.contains("\u000b")) {
       // vertical tab is not always whitespace
       return null;
@@ -473,8 +469,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The value of a node as a BigInt, or null if it cannot be converted.
    */
-  @Nullable
-  static BigInteger getBigIntValue(Node n) {
+  static @Nullable BigInteger getBigIntValue(Node n) {
     switch (n.getToken()) {
       case NUMBER:
         {
@@ -536,8 +531,7 @@ public final class NodeUtil {
     }
   }
 
-  @Nullable
-  static BigInteger getStringBigIntValue(String rawJsString) {
+  static @Nullable BigInteger getStringBigIntValue(String rawJsString) {
     if (rawJsString.contains("\u000b")) {
       // vertical tab is not always whitespace
       return null;
@@ -599,8 +593,7 @@ public final class NodeUtil {
    * @param n A function or class node.
    * @return The name of the given function or class, if it has one.
    */
-  @Nullable
-  public static String getName(Node n) {
+  public static @Nullable String getName(Node n) {
     Node nameNode = getNameNode(n);
     return nameNode == null ? null : nameNode.getQualifiedName();
   }
@@ -622,8 +615,7 @@ public final class NodeUtil {
    * @param n A function or class node
    * @return the node best representing the class's name
    */
-  @Nullable
-  public static Node getNameNode(Node n) {
+  public static @Nullable Node getNameNode(Node n) {
     checkState(n.isFunction() || n.isClass(), n);
     Node parent = n.getParent();
     switch (parent.getToken()) {
@@ -678,8 +670,7 @@ public final class NodeUtil {
    * @param n a node whose type is {@link Token#FUNCTION}
    * @return the function's name, or {@code null} if it has no name
    */
-  @Nullable
-  public static String getNearestFunctionName(Node n) {
+  public static @Nullable String getNearestFunctionName(Node n) {
     if (!n.isFunction()) {
       return null;
     }
@@ -712,8 +703,7 @@ public final class NodeUtil {
     return n.getLastChild();
   }
 
-  @Nullable
-  public static Node getEs6ClassConstructorMemberFunctionDef(Node classNode) {
+  public static @Nullable Node getEs6ClassConstructorMemberFunctionDef(Node classNode) {
     checkArgument(classNode.isClass(), classNode);
     Node classMembers = checkNotNull(classNode.getLastChild(), classNode);
     for (Node memberFunctionDef = classMembers.getFirstChild();
@@ -1984,8 +1974,7 @@ public final class NodeUtil {
   /**
    * @return The first property in the objlit or class members, that matches the key.
    */
-  @Nullable
-  static Node getFirstPropMatchingKey(Node n, String keyName) {
+  static @Nullable Node getFirstPropMatchingKey(Node n, String keyName) {
     checkState(n.isObjectLit() || n.isClassMembers());
     for (Node keyNode = n.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if ((keyNode.isStringKey() || keyNode.isMemberFunctionDef())
@@ -1999,8 +1988,7 @@ public final class NodeUtil {
   /**
    * @return The first getter in the class members that matches the key.
    */
-  @Nullable
-  static Node getFirstGetterMatchingKey(Node n, String keyName) {
+  static @Nullable Node getFirstGetterMatchingKey(Node n, String keyName) {
     checkState(n.isClassMembers() || n.isObjectLit(), n);
     for (Node keyNode = n.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if (keyNode.isGetterDef() && keyNode.getString().equals(keyName)) {
@@ -2266,8 +2254,7 @@ public final class NodeUtil {
    *
    * @return The value node representing the new value.
    */
-  @Nullable
-  public static Node getAssignedValue(Node n) {
+  public static @Nullable Node getAssignedValue(Node n) {
     checkState(n.isName() || n.isGetProp(), n);
     Node parent = n.getParent();
     if (NodeUtil.isNameDeclaration(parent)) {
@@ -2331,8 +2318,7 @@ public final class NodeUtil {
    * @return If the node, is a FOR, WHILE, or DO, it returns the node for the code BLOCK, null
    *     otherwise.
    */
-  @Nullable
-  public static Node getLoopCodeBlock(Node n) {
+  public static @Nullable Node getLoopCodeBlock(Node n) {
     switch (n.getToken()) {
       case FOR:
       case FOR_IN:
@@ -2420,8 +2406,7 @@ public final class NodeUtil {
    * @param n a node with an outgoing conditional CFG edge
    * @return the condition node or null if the condition is not obviously a node
    */
-  @Nullable
-  static Node getConditionExpression(Node n) {
+  static @Nullable Node getConditionExpression(Node n) {
     switch (n.getToken()) {
       case IF:
       case WHILE:
@@ -3404,8 +3389,7 @@ public final class NodeUtil {
    * @see #getRootTarget(Node) for examples
    * @param targetNode
    */
-  @Nullable
-  private static Node getEnclosingTarget(Node targetNode) {
+  private static @Nullable Node getEnclosingTarget(Node targetNode) {
     checkState(checkNotNull(targetNode).isValidAssignmentTarget(), targetNode);
     Node parent = checkNotNull(targetNode.getParent(), targetNode);
     boolean targetIsFirstChild = parent.getFirstChild() == targetNode;
@@ -3594,8 +3578,7 @@ public final class NodeUtil {
    *
    * @param key A node
    */
-  @Nullable
-  static Node getObjectOrClassLitKeyNode(Node key) {
+  static @Nullable Node getObjectOrClassLitKeyNode(Node key) {
     switch (key.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
@@ -3641,8 +3624,7 @@ public final class NodeUtil {
    * @param operator the operator's token value to convert
    * @return the string representation or {@code null} if the token value is not an operator
    */
-  @Nullable
-  public static String opToStr(Token operator) {
+  public static @Nullable String opToStr(Token operator) {
     switch (operator) {
       case COALESCE:
         return "??";
@@ -4344,8 +4326,7 @@ public final class NodeUtil {
    *     prototype, e.g. foo.Bar.prototype, or foo.Bar.prototype.toString.
    * @return The class name part of a qualified prototype name, e.g. foo.Bar.
    */
-  @Nullable
-  static Node getPrototypeClassName(Node qName) {
+  static @Nullable Node getPrototypeClassName(Node qName) {
     if (!qName.isGetProp()) {
       return null;
     }
@@ -4510,8 +4491,7 @@ public final class NodeUtil {
   }
 
   /** Returns the first Node matching the given pred via a pre-order traversal. */
-  @Nullable
-  public static Node findPreorder(
+  public static @Nullable Node findPreorder(
       Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
       return node;
@@ -4641,7 +4621,7 @@ public final class NodeUtil {
 
     private final Predicate<Node> traverseNodePredicate;
 
-    @Nullable private Node current;
+    private @Nullable Node current;
 
     public PreOrderIterator(Node root, Predicate<Node> traverseNodePredicate) {
       Preconditions.checkNotNull(root);
@@ -4660,8 +4640,7 @@ public final class NodeUtil {
       return returnValue;
     }
 
-    @Nullable
-    private Node calculateNextNode(Node currentNode) {
+    private @Nullable Node calculateNextNode(Node currentNode) {
       Preconditions.checkNotNull(currentNode);
 
       // If node does not match the predicate, do not descend into it.
@@ -4856,8 +4835,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The InputId property on the node or its ancestors.
    */
-  @Nullable
-  public static InputId getInputId(Node n) {
+  public static @Nullable InputId getInputId(Node n) {
     while (n != null && !n.isScript()) {
       n = n.getParent();
     }
@@ -5120,8 +5098,7 @@ public final class NodeUtil {
   }
 
   /** Return declared JSDoc type for the given name declaration, or null if none present. */
-  @Nullable
-  public static JSTypeExpression getDeclaredTypeExpression(Node declaration) {
+  public static @Nullable JSTypeExpression getDeclaredTypeExpression(Node declaration) {
     checkArgument(declaration.isName() || declaration.isStringKey());
     JSDocInfo nameJsdoc = getBestJSDocInfo(declaration);
     if (nameJsdoc != null) {
@@ -5141,14 +5118,12 @@ public final class NodeUtil {
   }
 
   /** Find the best JSDoc for the given node. */
-  @Nullable
-  public static JSDocInfo getBestJSDocInfo(Node n) {
+  public static @Nullable JSDocInfo getBestJSDocInfo(Node n) {
     Node jsdocNode = getBestJSDocInfoNode(n);
     return jsdocNode == null ? null : jsdocNode.getJSDocInfo();
   }
 
-  @Nullable
-  public static Node getBestJSDocInfoNode(Node n) {
+  public static @Nullable Node getBestJSDocInfoNode(Node n) {
     if (n.isExprResult()) {
       return getBestJSDocInfoNode(n.getFirstChild());
     }
@@ -5186,8 +5161,7 @@ public final class NodeUtil {
   }
 
   /** Find the l-value that the given r-value is being assigned to. */
-  @Nullable
-  public static Node getBestLValue(Node n) {
+  public static @Nullable Node getBestLValue(Node n) {
     Node parent = n.getParent();
     if (isFunctionDeclaration(n) || isClassDeclaration(n)) {
       return n.getFirstChild();
@@ -5211,8 +5185,7 @@ public final class NodeUtil {
   }
 
   /** Gets the r-value (or initializer) of a node returned by getBestLValue. */
-  @Nullable
-  public static Node getRValueOfLValue(Node n) {
+  public static @Nullable Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case ASSIGN:
@@ -5251,8 +5224,7 @@ public final class NodeUtil {
 
   // TODO(b/189993301): do I have to add logic for class fields in these LValue functions?
   /** Get the owner of the given l-value node. */
-  @Nullable
-  static Node getBestLValueOwner(@Nullable Node lValue) {
+  static @Nullable Node getBestLValueOwner(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
@@ -5266,8 +5238,7 @@ public final class NodeUtil {
   }
 
   /** Get the name of the given l-value node. */
-  @Nullable
-  public static String getBestLValueName(@Nullable Node lValue) {
+  public static @Nullable String getBestLValueName(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
@@ -5297,8 +5268,7 @@ public final class NodeUtil {
   }
 
   /** Gets the root of a qualified name l-value. */
-  @Nullable
-  static Node getBestLValueRoot(@Nullable Node lValue) {
+  static @Nullable Node getBestLValueRoot(@Nullable Node lValue) {
     if (lValue == null) {
       return null;
     }
@@ -5801,7 +5771,7 @@ public final class NodeUtil {
     @Override
     public Iterator<Node> iterator() {
       return new AbstractIterator<Node>() {
-        @Nullable private Node nextChild = templateLit.getFirstChild();
+        private @Nullable Node nextChild = templateLit.getFirstChild();
 
         @Override
         protected Node computeNext() {
@@ -5961,8 +5931,7 @@ public final class NodeUtil {
    * <p>The feature set will be null if the script node was created artificially or if the parser
    * didn't detect any interesting features.
    */
-  @Nullable
-  static FeatureSet getFeatureSetOfScript(Node scriptNode) {
+  static @Nullable FeatureSet getFeatureSetOfScript(Node scriptNode) {
     checkState(scriptNode.isScript(), scriptNode);
     return (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
   }
@@ -5993,8 +5962,7 @@ public final class NodeUtil {
   public abstract static class GoogRequire {
     public abstract String namespace(); // The Closure namespace inside the require call
 
-    @Nullable
-    public abstract String property(); // Non-null for destructuring requires.
+    public abstract @Nullable String property(); // Non-null for destructuring requires.
 
     static GoogRequire fromNamespace(String namespace) {
       return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null);
@@ -6005,8 +5973,7 @@ public final class NodeUtil {
     }
   }
 
-  @Nullable
-  public static GoogRequire getGoogRequireInfo(String name, Scope scope) {
+  public static @Nullable GoogRequire getGoogRequireInfo(String name, Scope scope) {
     Var var = scope.getVar(name);
     if (var == null || !var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
       return null;

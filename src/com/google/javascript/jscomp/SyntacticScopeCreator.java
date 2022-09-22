@@ -70,8 +70,7 @@ public final class SyntacticScopeCreator implements ScopeCreator {
     private final RedeclarationHandler redeclarationHandler;
 
     // Will be null, when a detached node is traversed.
-    @Nullable
-    private InputId inputId;
+    private @Nullable InputId inputId;
     private final Set<Node> changeRootSet;
 
     ScopeScanner(AbstractCompiler compiler, Scope scope) {

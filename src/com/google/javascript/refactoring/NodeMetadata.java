@@ -28,7 +28,7 @@ public final class NodeMetadata {
 
   private final AbstractCompiler compiler;
 
-  @Nullable private final NodeTraversal traversal;
+  private final @Nullable NodeTraversal traversal;
 
   public NodeMetadata(AbstractCompiler compiler) {
     this(compiler, null);
@@ -47,8 +47,7 @@ public final class NodeMetadata {
     return compiler;
   }
 
-  @Nullable
-  public NodeTraversal getTraversal() {
+  public @Nullable NodeTraversal getTraversal() {
     return traversal;
   }
 }

@@ -35,7 +35,7 @@ import org.jspecify.nullness.Nullable;
  * </ul>
  */
 public final class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
-  @Nullable private final String sourceFileToCheck;
+  private final @Nullable String sourceFileToCheck;
 
   private SourceInformationAnnotator(@Nullable String sourceFileToCheck) {
     this.sourceFileToCheck = sourceFileToCheck;

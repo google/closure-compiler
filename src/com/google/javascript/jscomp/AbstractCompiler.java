@@ -88,15 +88,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract CompilerInput getInput(InputId inputId);
 
   /** Looks up a source file by name. May return null. */
-  @Nullable
-  abstract SourceFile getSourceFileByName(String sourceName);
+  abstract @Nullable SourceFile getSourceFileByName(String sourceName);
 
-  @Nullable
-  public abstract Node getScriptNode(String filename);
+  public abstract @Nullable Node getScriptNode(String filename);
 
   /** Gets the module graph. */
-  @Nullable
-  abstract JSChunkGraph getModuleGraph();
+  abstract @Nullable JSChunkGraph getModuleGraph();
 
   /**
    * Gets the inputs in the order in which they are being processed. Only for use by {@code

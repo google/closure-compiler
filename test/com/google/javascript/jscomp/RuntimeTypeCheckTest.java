@@ -35,7 +35,7 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class RuntimeTypeCheckTest extends CompilerTestCase {
-  @Nullable private String logFunction = null;
+  private @Nullable String logFunction = null;
 
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");

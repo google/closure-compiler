@@ -205,8 +205,7 @@ public final class ScopeSubject extends Subject {
   }
 
   /** Returns the name of the label applied to n, or null if none exists. */
-  @Nullable
-  private String getLabel(Node n) {
+  private @Nullable String getLabel(Node n) {
     // If the node is labeled it will be the second child of a LABEL and the first child
     // will be a LABEL_NAME.
     Node parent = n.getParent();

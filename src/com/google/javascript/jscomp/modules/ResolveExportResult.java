@@ -32,7 +32,7 @@ final class ResolveExportResult {
     ERROR,
   }
 
-  @Nullable private final Binding binding;
+  private final @Nullable Binding binding;
   private final State state;
 
   private ResolveExportResult(@Nullable Binding binding, State state) {
@@ -74,8 +74,7 @@ final class ResolveExportResult {
     return state != State.NOT_FOUND;
   }
 
-  @Nullable
-  public Binding getBinding() {
+  public @Nullable Binding getBinding() {
     return binding;
   }
 

@@ -254,8 +254,7 @@ public final class TypedAstDeserializer {
      * Returns a list of all known extern properties, including properties that were present in type
      * annotations in source code but not serialized on the AST
      */
-    @Nullable
-    public abstract ImmutableSet<String> getExternProperties();
+    public abstract @Nullable ImmutableSet<String> getExternProperties();
 
     private static DeserializedAst create(
         ImmutableMap<SourceFile, Supplier<Node>> filesystem,

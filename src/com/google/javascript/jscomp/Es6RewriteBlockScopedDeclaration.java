@@ -561,7 +561,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
       // label to put on break statements created that replace continue statements.
       private final String breakLabel;
-      @Nullable private final String originalLoopLabel;
+      private final @Nullable String originalLoopLabel;
       // Track how many levels of loops deep we go below this one.
 
       int loopDepth = 0;

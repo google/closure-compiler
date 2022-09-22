@@ -82,11 +82,11 @@ class FunctionInjector {
   static class Builder {
 
     private final AbstractCompiler compiler;
-    @Nullable private Supplier<String> safeNameIdSupplier = null;
+    private @Nullable Supplier<String> safeNameIdSupplier = null;
     private boolean assumeStrictThis = true;
     private boolean assumeMinimumCapture = true;
     private boolean allowDecomposition = true;
-    @Nullable private FunctionArgumentInjector functionArgumentInjector = null;
+    private @Nullable FunctionArgumentInjector functionArgumentInjector = null;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = checkNotNull(compiler);

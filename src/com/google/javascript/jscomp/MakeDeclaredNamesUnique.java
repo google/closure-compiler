@@ -142,8 +142,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   }
 
   /** Walks the stack of name maps and finds the replacement name for the current scope. */
-  @Nullable
-  private String getReplacementName(String oldName) {
+  private @Nullable String getReplacementName(String oldName) {
     for (Renamer renamer : renamerStack) {
       String newName = renamer.getReplacementName(oldName);
       if (newName != null) {
@@ -373,8 +372,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
    * @see Normalize
    */
   static class ContextualRenamer implements Renamer {
-    @Nullable
-    private final Node scopeRoot;
+    private final @Nullable Node scopeRoot;
 
     // This multiset is shared between this ContextualRenamer and its parent (and its parent's
     // parent, etc.) because it tracks counts of variables across the entire JS program.
@@ -627,9 +625,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       }
     }
 
-    @Nullable
     @Override
-    public String getReplacementName(String oldName) {
+    public @Nullable String getReplacementName(String oldName) {
       return targets.contains(oldName) ? delegate.getReplacementName(oldName) : null;
     }
 

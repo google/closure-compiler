@@ -288,8 +288,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    *
    * @return null if the class cannot be extracted
    */
-  @Nullable
-  private Node getStatementDeclaringClass(Node classNode, Node classNameNode) {
+  private @Nullable Node getStatementDeclaringClass(Node classNode, Node classNameNode) {
 
     if (NodeUtil.isClassDeclaration(classNode)) {
       // `class C {}` -> can use `C.staticMember` to extract static fields

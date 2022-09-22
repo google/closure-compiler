@@ -109,9 +109,8 @@ public final class SourceMap {
       this.replacement = replacement;
     }
 
-    @Nullable
     @Override
-    public String map(String location) {
+    public @Nullable String map(String location) {
       if (location.startsWith(prefix)) {
         return replacement + location.substring(prefix.length());
       }
@@ -146,7 +145,7 @@ public final class SourceMap {
    * compilation job have been generated from, and used to create a source map that maps all the way
    * back to original inputs. {@code null} if no such mapping is wanted.
    */
-  @Nullable private SourceFileMapping mapping;
+  private @Nullable SourceFileMapping mapping;
 
   private SourceMap(SourceMapGenerator generator) {
     this.generator = generator;
@@ -198,8 +197,7 @@ public final class SourceMap {
     generator.addSourcesContent(fixupSourceLocation(name), code);
   }
 
-  @Nullable
-  private static String getOriginalName(Node node) {
+  private static @Nullable String getOriginalName(Node node) {
     if (node.getOriginalName() != null) {
       return node.getOriginalName();
     }

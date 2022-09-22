@@ -122,8 +122,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return defaultValue;
   }
 
-  @Nullable
-  private Node tryFoldLabel(Node n) {
+  private @Nullable Node tryFoldLabel(Node n) {
     String labelName = n.getFirstChild().getString();
     Node stmt = n.getLastChild();
     if (stmt.isEmpty()) {
@@ -161,8 +160,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * otherwise return null. For purposes of this method, a node is considered "interesting" unless
    * it is an empty synthetic block.
    */
-  @Nullable
-  private static Node getOnlyInterestingChild(Node block) {
+  private static @Nullable Node getOnlyInterestingChild(Node block) {
     if (!block.isBlock()) {
       return null;
     }
@@ -190,8 +188,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    *
    * @return the replacement node, if changed, or the original if not
    */
-  @Nullable
-  private Node tryFoldTry(Node n) {
+  private @Nullable Node tryFoldTry(Node n) {
     checkState(n.isTry(), n);
     Node body = n.getFirstChild();
     Node catchBlock = body.getNext();
@@ -301,8 +298,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    *
    * @return The replacement expression, or {@code null} if there were no side-effects to preserve.
    */
-  @Nullable
-  private Node trySimplifyUnusedResult(Node expression) {
+  private @Nullable Node trySimplifyUnusedResult(Node expression) {
     ArrayDeque<Node> sideEffectRoots = new ArrayDeque<>();
     boolean atFixedPoint = trySimplifyUnusedResultInternal(expression, sideEffectRoots);
 
@@ -643,8 +639,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the default case node or null if there is no default case or if the default case is
    *     removed.
    */
-  @Nullable
-  private Node tryOptimizeDefaultCase(Node n) {
+  private @Nullable Node tryOptimizeDefaultCase(Node n) {
     checkState(n.isSwitch(), n);
 
     Node lastNonRemovable = n.getFirstChild();  // The switch condition
@@ -957,8 +952,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    * @return the root node if a conditional statement or else null
    */
-  @Nullable
-  private Node getConditionalRoot(Node n) {
+  private @Nullable Node getConditionalRoot(Node n) {
     // We defined a conditional statement to be a IF or EXPR_RESULT rooted with
     // a HOOK, AND, or OR node.
     if (n == null) {
@@ -1005,8 +999,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    *
    * @return the replacement node, if changed, or the original if not
    */
-  @Nullable
-  private Node tryFoldIf(Node n) {
+  private @Nullable Node tryFoldIf(Node n) {
     checkState(n.isIf(), n);
     Node parent = n.getParent();
     checkNotNull(parent);
@@ -1385,8 +1378,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return result;
   }
 
-  @Nullable
-  private static IllegalStateException checkNormalization(boolean condition, String feature) {
+  private static @Nullable IllegalStateException checkNormalization(
+      boolean condition, String feature) {
     checkState(condition, "Unexpected %s. AST should be normalized.", feature);
     return null;
   }

@@ -790,8 +790,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** Try to fold arithmetic binary operators */
-  @Nullable
-  private Node performArithmeticOp(Node n, Node left, Node right) {
+  private @Nullable Node performArithmeticOp(Node n, Node left, Node right) {
     // Unlike other operations, ADD operands are not always converted
     // to Number.
     if (n.isAdd()
@@ -907,8 +906,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return maybeReplaceBinaryOpWithNumericResult(result, lval, rval);
   }
 
-  @Nullable
-  private Node performBigIntArithmeticOp(Node n, Node left, Node right) {
+  private @Nullable Node performBigIntArithmeticOp(Node n, Node left, Node right) {
     BigInteger lVal = getSideEffectFreeBigIntValue(left);
     BigInteger rVal = getSideEffectFreeBigIntValue(right);
     if (lVal != null && rVal != null) {
@@ -1000,8 +998,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return false;
   }
 
-  @Nullable
-  private Node maybeReplaceBinaryOpWithNumericResult(double result, double lval, double rval) {
+  private @Nullable Node maybeReplaceBinaryOpWithNumericResult(
+      double result, double lval, double rval) {
     // TODO(johnlenz): consider removing the result length check.
     // length of the left and right value plus 1 byte for the operator.
     if ((String.valueOf(result).length() <=

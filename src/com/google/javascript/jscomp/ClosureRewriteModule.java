@@ -160,8 +160,8 @@ final class ClosureRewriteModule implements CompilerPass {
   private final boolean preserveSugar;
   private final LinkedHashMap<String, Node> syntheticExterns = new LinkedHashMap<>();
 
-  @Nullable
-  private Scope globalScope = null; // non-final because it must be set after process() is called
+  private @Nullable Scope globalScope =
+      null; // non-final because it must be set after process() is called
 
   /** Indicates where new nodes should be added in relation to some other node. */
   private static enum AddAt {
@@ -263,7 +263,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
   private static class AliasName {
     final String newName;
-    @Nullable final String namespaceId; // non-null only if this is an alias of a module itself
+    final @Nullable String namespaceId; // non-null only if this is an alias of a module itself
 
     AliasName(String newName, @Nullable String namespaceId) {
       this.newName = newName;
@@ -639,7 +639,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
   // Per script state needed for rewriting.
   private final Deque<ScriptDescription> scriptStack = new ArrayDeque<>();
-  @Nullable private ScriptDescription currentScript = null;
+  private @Nullable ScriptDescription currentScript = null;
 
   // Global state tracking an association between the dotted names of goog.module()s and whether
   // the goog.module declares itself as a legacy namespace.
@@ -673,8 +673,7 @@ final class ClosureRewriteModule implements CompilerPass {
       return googModule == null ? null : googModule.rootNode.getJSType();
     }
 
-    @Nullable
-    private String getExportedNamespaceOrScript(String namespaceId) {
+    private @Nullable String getExportedNamespaceOrScript(String namespaceId) {
       if (providedNamespaces.contains(namespaceId)) {
         return namespaceId;
       }

@@ -85,8 +85,7 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
     }
   }
 
-  @Nullable
-  private JSDocInfo getOverrideJSDoc(Node n) {
+  private @Nullable JSDocInfo getOverrideJSDoc(Node n) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
     return (jsDoc != null && jsDoc.isOverride()) ? jsDoc : null;
   }

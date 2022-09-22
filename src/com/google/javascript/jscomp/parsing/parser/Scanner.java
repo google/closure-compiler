@@ -830,8 +830,7 @@ public class Scanner {
    * Converts unicode escapes in the given string to the equivalent unicode character. If there are
    * no escapes, returns the input unchanged. If there is an invalid escape sequence, returns null.
    */
-  @Nullable
-  private static String processUnicodeEscapes(String value) {
+  private static @Nullable String processUnicodeEscapes(String value) {
     while (value.contains("\\")) {
       int escapeStart = value.indexOf('\\');
       try {
@@ -994,9 +993,9 @@ public class Scanner {
     return result;
   }
 
-  @Nullable
-  @SuppressWarnings("IdentityBinaryExpression") // for "skipHexDigit() && skipHexDigit()"
-  private SkipTemplateCharactersResult skipTemplateLiteralEscapeSequence() {
+  // for "skipHexDigit() && skipHexDigit()"
+  @SuppressWarnings("IdentityBinaryExpression")
+  private @Nullable SkipTemplateCharactersResult skipTemplateLiteralEscapeSequence() {
     nextChar();
     if (isAtEnd()) {
       reportError("Unterminated template literal escape sequence");
@@ -1363,7 +1362,7 @@ public class Scanner {
   }
 
   private static class SkipTemplateCharactersResult {
-    @Nullable private final String errorMessage;
+    private final @Nullable String errorMessage;
     private final SourcePosition position;
     private final ErrorLevel errorLevel;
 

@@ -189,7 +189,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     }
   }
 
-  @Nullable private ModuleInfo currentModuleInfo = null;
+  private @Nullable ModuleInfo currentModuleInfo = null;
 
   public ClosureCheckModule(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     super(compiler, moduleMetadataMap);
@@ -438,8 +438,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     }
   }
 
-  @Nullable
-  private static String extractFirstArgumentName(Node callNode) {
+  private static @Nullable String extractFirstArgumentName(Node callNode) {
     Node firstArg = callNode.getSecondChild();
     if (firstArg != null && firstArg.isStringLit()) {
       return firstArg.getString();

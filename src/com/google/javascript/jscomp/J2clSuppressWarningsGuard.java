@@ -43,8 +43,7 @@ public final class J2clSuppressWarningsGuard extends WarningsGuard {
           DiagnosticGroups.forName("transitionalSuspiciousCodeWarnings"));
 
   @Override
-  @Nullable
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     if (error.getSourceName() == null || !error.getSourceName().endsWith(".java.js")) {
       return null;
     }

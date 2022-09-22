@@ -36,9 +36,9 @@ public class GenerateExports implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  @Nullable private final String exportSymbolFunction;
+  private final @Nullable String exportSymbolFunction;
 
-  @Nullable private final String exportPropertyFunction;
+  private final @Nullable String exportPropertyFunction;
 
   private final boolean allowNonGlobalExports;
 

@@ -44,8 +44,7 @@ public final class SourceMapResolver {
    *
    * @param parseInlineSourceMaps Whether to parse Base64 encoded source maps.
    */
-  @Nullable
-  static SourceFile extractSourceMap(
+  static @Nullable SourceFile extractSourceMap(
       SourceFile jsFile, String sourceMapURL, boolean parseInlineSourceMaps) {
     if (parseInlineSourceMaps && sourceMapURL.startsWith(BASE64_URL_PREFIX)) {
       String extractedString = extractBase64String(sourceMapURL);
@@ -67,11 +66,11 @@ public final class SourceMapResolver {
 
   /**
    * Based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
+   *
    * @param url
    * @return String or null.
    */
-  @Nullable
-  private static String extractBase64String(String url) {
+  private static @Nullable String extractBase64String(String url) {
     if (url.startsWith(BASE64_URL_PREFIX) && url.contains(BASE64_START)) {
       int base64StartIndex = url.indexOf(BASE64_START);
       String mediaType = url.substring(BASE64_URL_PREFIX.length(), base64StartIndex);
@@ -97,8 +96,7 @@ public final class SourceMapResolver {
    * interpreted as a filename rather than a directory. E.g.: getRelativeTo("../foo/bar.js",
    * "baz/bam/qux.js") --> "baz/foo/bar.js"
    */
-  @Nullable
-  static SourceFile getRelativePath(String baseFilePath, String relativePath) {
+  static @Nullable SourceFile getRelativePath(String baseFilePath, String relativePath) {
     return SourceFile.builder()
         .withPath(
             FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize())

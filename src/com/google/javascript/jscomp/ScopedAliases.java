@@ -187,10 +187,10 @@ class ScopedAliases implements CompilerPass {
   static class Builder {
 
     private final AbstractCompiler compiler;
-    @Nullable private PreprocessorSymbolTable preprocessorSymbolTable = null;
+    private @Nullable PreprocessorSymbolTable preprocessorSymbolTable = null;
     private AliasTransformationHandler transformationHandler =
         CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
-    @Nullable private ModuleMetadataMap moduleMetadataMap = null;
+    private @Nullable ModuleMetadataMap moduleMetadataMap = null;
     private InvalidModuleGetHandling invalidModuleGetHandling = InvalidModuleGetHandling.PRESERVE;
 
     private Builder(AbstractCompiler compiler) {
@@ -429,11 +429,11 @@ class ScopedAliases implements CompilerPass {
 
     private boolean hasErrors = false;
 
-    @Nullable private AliasTransformation transformation = null;
+    private @Nullable AliasTransformation transformation = null;
 
     // The body of the function that is passed to goog.scope.
     // Set when the traversal enters the body, and set back to null when it exits.
-    @Nullable private Node scopeFunctionBody = null;
+    private @Nullable Node scopeFunctionBody = null;
 
     Collection<Node> getAliasDefinitionsToDelete() {
       return aliasDefinitionsToDelete;
@@ -470,8 +470,7 @@ class ScopedAliases implements CompilerPass {
      * @return the goog.scope() CALL node containing the scopeRoot, or null if scopeRoot is not in a
      *     goog.scope() call.
      */
-    @Nullable
-    private Node findScopeMethodCall(Node scopeRoot) {
+    private @Nullable Node findScopeMethodCall(Node scopeRoot) {
       Node n = scopeRoot.getGrandparent();
       if (isCallToScopeMethod(n)) {
         return n;

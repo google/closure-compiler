@@ -375,8 +375,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * If the given value is a qualified name which refers a function or object literal, the node is
      * returned. Otherwise, {@code null} is returned.
      */
-    @Nullable
-    protected Node getValue() {
+    protected @Nullable Node getValue() {
       String qualifiedName = value.getQualifiedName();
 
       if (qualifiedName == null) {

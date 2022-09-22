@@ -182,8 +182,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     return false;
   }
 
-  @Nullable
-  private final V getOwnImplicitSlot(@Nullable ImplicitVar name) {
+  private final @Nullable V getOwnImplicitSlot(@Nullable ImplicitVar name) {
     if (!hasOwnImplicitSlot(name)) {
       return null;
     }
@@ -518,8 +517,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
       throw new AssertionError();
     }
 
-    @Nullable
-    static ImplicitVar of(String name) {
+    static @Nullable ImplicitVar of(String name) {
       switch (name) {
         case "arguments":
           return ARGUMENTS;

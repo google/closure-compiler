@@ -1733,8 +1733,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     }
   }
 
-  @Nullable
-  private static Node getRhsOfField(Node fieldNode) {
+  private static @Nullable Node getRhsOfField(Node fieldNode) {
     switch (fieldNode.getToken()) {
       case MEMBER_FIELD_DEF:
         if (fieldNode.hasOneChild()) {
@@ -1954,8 +1953,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     return scopeAfterChildren;
   }
 
-  @Nullable
-  private JSType getGoogModuleDependencyCallResultType(Node callNode) {
+  private @Nullable JSType getGoogModuleDependencyCallResultType(Node callNode) {
     String moduleId = callNode.getSecondChild().getString();
     Module module = compiler.getModuleMap().getClosureModule(moduleId);
     // Only declared module ids.
@@ -2462,7 +2460,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private static class OptChainInfo {
     private final Node endOfChain;
     private final Node startOfChain;
-    @Nullable private FlowScope unconditionalScope;
+    private @Nullable FlowScope unconditionalScope;
 
     OptChainInfo(Node endOfChain, Node startOfChain) {
       this.endOfChain = endOfChain;

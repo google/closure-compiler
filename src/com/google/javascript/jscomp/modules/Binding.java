@@ -165,22 +165,19 @@ public abstract class Binding {
    *
    * <p>Null for missing ES modules and non-ES modules as they are currently not scanned.
    */
-  @Nullable
-  public abstract Node sourceNode();
+  public abstract @Nullable Node sourceNode();
 
   /**
    * Returns the original export if this binding was created by an export.
    *
    * <p>For transitive exports this will still be the *original* export, not the transitive link.
    */
-  @Nullable
-  public abstract Export originatingExport();
+  public abstract @Nullable Export originatingExport();
 
   /** True if this represents a module namespace, e.g. created by {@code import *} */
   public abstract boolean isModuleNamespace();
 
-  @Nullable
-  public abstract String closureNamespace();
+  public abstract @Nullable String closureNamespace();
 
   public abstract CreatedBy createdBy();
 

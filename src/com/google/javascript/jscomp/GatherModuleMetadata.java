@@ -110,10 +110,10 @@ public final class GatherModuleMetadata implements CompilerPass {
    * The module currentModule is nested under, if any. Modules are expected to be at most two deep
    * (a script and then a goog.loadModule call).
    */
-  @Nullable private ModuleMetadataBuilder parentModule;
+  private @Nullable ModuleMetadataBuilder parentModule;
 
   /** The call to goog.loadModule we are traversing. */
-  @Nullable private Node loadModuleCall;
+  private @Nullable Node loadModuleCall;
 
   private final AbstractCompiler compiler;
   private final boolean processCommonJsModules;

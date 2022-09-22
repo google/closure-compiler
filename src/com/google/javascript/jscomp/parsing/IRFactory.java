@@ -192,7 +192,7 @@ class IRFactory {
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final StaticSourceFile sourceFile;
-  @Nullable private final String sourceName;
+  private final @Nullable String sourceName;
   /** Source file reference that also contains the file content. */
   private final SourceFile fileWithContent;
 
@@ -225,12 +225,12 @@ class IRFactory {
           "yield");
 
   /** If non-null, use this set of keywords instead of TokenStream.isKeyword(). */
-  @Nullable private final ImmutableSet<String> reservedKeywords;
+  private final @Nullable ImmutableSet<String> reservedKeywords;
 
   private final Set<Comment> parsedComments = new HashSet<>();
 
   private final LinkedHashSet<String> licenseBuilder = new LinkedHashSet<>();
-  @Nullable private JSDocInfo firstFileoverview = null;
+  private @Nullable JSDocInfo firstFileoverview = null;
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
@@ -664,8 +664,7 @@ class IRFactory {
     return closestPreviousComment;
   }
 
-  @Nullable
-  private JSDocInfo parseJSDocInfoFrom(Comment comment) {
+  private @Nullable JSDocInfo parseJSDocInfoFrom(Comment comment) {
     if (comment != null) {
       JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
       parsedComments.add(comment);
@@ -676,8 +675,7 @@ class IRFactory {
     return null;
   }
 
-  @Nullable
-  private JSDocInfo parseJSDocInfoOnTree(ParseTree tree) {
+  private @Nullable JSDocInfo parseJSDocInfoOnTree(ParseTree tree) {
     switch (tree.type) {
       case EXPRESSION_STATEMENT:
       case LABELLED_STATEMENT:
@@ -723,8 +721,7 @@ class IRFactory {
    *
    * <p>It would be legal to replace all comments associated with this node with that one string.
    */
-  @Nullable
-  private NonJSDocComment parseNonJSDocCommentAt(SourcePosition pos, boolean isInline) {
+  private @Nullable NonJSDocComment parseNonJSDocCommentAt(SourcePosition pos, boolean isInline) {
     if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
       return null;
     }
@@ -769,8 +766,7 @@ class IRFactory {
    * @param possibleNextTokenStart last source position that we're interested in when looking for a
    *     trailing comment
    */
-  @Nullable
-  private NonJSDocComment parseTrailingNonJSDocCommentAt(
+  private @Nullable NonJSDocComment parseTrailingNonJSDocCommentAt(
       SourcePosition tokenEnd, SourcePosition possibleNextTokenStart) {
     if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
       return null;
@@ -3190,8 +3186,7 @@ class IRFactory {
    * in pre-order traversal or `null` if none found. Will not traverse into function or class
    * expressions.
    */
-  @Nullable
-  private static Node findNodeTypeInExpression(Node expressionNode, Token token) {
+  private static @Nullable Node findNodeTypeInExpression(Node expressionNode, Token token) {
     Deque<Node> worklist = new ArrayDeque<>();
     worklist.add(expressionNode);
     while (!worklist.isEmpty()) {

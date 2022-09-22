@@ -174,8 +174,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
     compiler.reportChangeToEnclosingScope(isCrDefinePropertyCall ? call : getPropNode);
   }
 
-  @Nullable
-  private Node getTypeByCrPropertyKind(@Nullable Node propertyKind) {
+  private @Nullable Node getTypeByCrPropertyKind(@Nullable Node propertyKind) {
     if (propertyKind == null || CR_PROPERTYKIND_JS.matches(propertyKind)) {
       // This is valid, it just doesn't tell us much about the type.
       return null;

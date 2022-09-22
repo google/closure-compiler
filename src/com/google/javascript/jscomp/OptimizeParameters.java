@@ -57,7 +57,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   private Scope globalScope;
 
   // Allocated & cleaned up by process()
-  @Nullable private LogFile decisionsLog;
+  private @Nullable LogFile decisionsLog;
 
   OptimizeParameters(AbstractCompiler compiler) {
     this.compiler = checkNotNull(compiler);
@@ -790,8 +790,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    * @return A list of Parameter objects, in the declaration order, which represent potentially
    *     movable values fixed values from all call sites or null if there are no candidate values.
    */
-  @Nullable
-  private List<Parameter> findFixedArguments(ArrayList<Node> refs) {
+  private @Nullable List<Parameter> findFixedArguments(ArrayList<Node> refs) {
     List<Parameter> parameters = new ArrayList<>();
     boolean firstCall = true;
 

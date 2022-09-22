@@ -223,8 +223,7 @@ final class PolymerPassStaticUtils {
    *
    * @see https://github.com/Polymer/polymer/blob/0.8-preview/PRIMER.md#configuring-properties
    */
-  @Nullable
-  static JSTypeExpression getTypeFromProperty(
+  static @Nullable JSTypeExpression getTypeFromProperty(
       MemberDefinition property, AbstractCompiler compiler) {
     if (property.info != null && property.info.hasType()) {
       return property.info.getType().copy();

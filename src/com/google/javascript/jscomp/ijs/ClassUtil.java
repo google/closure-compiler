@@ -44,8 +44,7 @@ final class ClassUtil {
     return className + ".prototype." + getprop.getString();
   }
 
-  @Nullable
-  private static String getClassNameOfThisProp(Node getprop) {
+  private static @Nullable String getClassNameOfThisProp(Node getprop) {
     if (!getprop.isGetProp() || !getprop.getFirstChild().isThis()) {
       return null;
     }

@@ -473,11 +473,9 @@ public interface CodingConvention extends Serializable {
   @AutoValue
   abstract class AssertionFunctionSpec {
     // TODO(b/126254920): remove this field and always use ClosurePrimitive
-    @Nullable
-    abstract String getFunctionName();
+    abstract @Nullable String getFunctionName();
 
-    @Nullable
-    abstract ClosurePrimitive getClosurePrimitive();
+    abstract @Nullable ClosurePrimitive getClosurePrimitive();
 
     abstract AssertionKind getAssertionKind();
 

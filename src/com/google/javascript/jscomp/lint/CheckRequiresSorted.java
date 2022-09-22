@@ -88,8 +88,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
      * <p>`goog.require` is stronger than `goog.requireType`, which is stronger than
      * `goog.forwardDeclare`.
      */
-    @Nullable
-    static ImportPrimitive stronger(ImportPrimitive p1, ImportPrimitive p2) {
+    static @Nullable ImportPrimitive stronger(ImportPrimitive p1, ImportPrimitive p2) {
       return p1.ordinal() < p2.ordinal() ? p1 : p2;
     }
 
@@ -311,12 +310,12 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
   private final List<ImportStatement> originalImports = new ArrayList<>();
 
   // The import statements in canonical order.
-  @Nullable private Node firstNode = null;
-  @Nullable private Node lastNode = null;
+  private @Nullable Node firstNode = null;
+  private @Nullable Node lastNode = null;
   private boolean finished = false;
 
   private boolean needsFix = false;
-  @Nullable private String replacement = null;
+  private @Nullable String replacement = null;
 
   public CheckRequiresSorted(Mode mode) {
     this.mode = mode;

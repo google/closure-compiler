@@ -49,10 +49,10 @@ public final class CodePrinter {
   // version.
 
   private abstract static class MappedCodePrinter extends CodeConsumer {
-    @Nullable private final Deque<Mapping> mappings;
-    @Nullable private final List<Mapping> allMappings;
+    private final @Nullable Deque<Mapping> mappings;
+    private final @Nullable List<Mapping> allMappings;
     // The ordered list of finalized mappings since the last line break. See #reportLineCut.
-    @Nullable private final List<Mapping> completeMappings;
+    private final @Nullable List<Mapping> completeMappings;
     // The index into allMappings to find the mappings added since the last line
     // break. See #reportLineCut.
     private int firstCandidateMappingForCut = 0;
@@ -546,8 +546,7 @@ public final class CodePrinter {
       maybeEndStatement();
     }
 
-    @Nullable
-    private static String getNumberFromSource(Node n) {
+    private static @Nullable String getNumberFromSource(Node n) {
       if (!n.isNumber()) {
         return null;
       }
@@ -701,10 +700,10 @@ public final class CodePrinter {
     private boolean lineBreak;
     private boolean prettyPrint;
     private boolean outputTypes = false;
-    @Nullable private SourceMap sourceMap = null;
+    private @Nullable SourceMap sourceMap = null;
     private boolean tagAsTypeSummary;
     private boolean tagAsStrict;
-    @Nullable private JSTypeRegistry registry; // may be null unless using Format.TYPED
+    private @Nullable JSTypeRegistry registry; // may be null unless using Format.TYPED
     private CodeGeneratorFactory codeGeneratorFactory = new CodeGeneratorFactory() {
       @Override
       public CodeGenerator getCodeGenerator(Format outputFormat, CodeConsumer cc) {

@@ -275,10 +275,10 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
     private final ImmutableList<Export> localExports;
     private final ImmutableList<Export> indirectExports;
     private final ImmutableList<Export> starExports;
-    @Nullable private ImmutableSet<String> exportedNames;
+    private @Nullable ImmutableSet<String> exportedNames;
     private final Map<String, ResolveExportResult> resolvedImports;
     private final Map<String, ResolveExportResult> resolvedExports;
-    @Nullable private Module resolved;
+    private @Nullable Module resolved;
 
     private UnresolvedEsModule(
         ModuleMetadata metadata,
@@ -669,8 +669,8 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
   }
 
   private final AbstractCompiler compiler;
-  @Nullable private UnresolvedModuleBuilder currentModuleBuilder;
-  @Nullable private ModuleMetadata metadata;
+  private @Nullable UnresolvedModuleBuilder currentModuleBuilder;
+  private @Nullable ModuleMetadata metadata;
 
   @Override
   public UnresolvedModule process(

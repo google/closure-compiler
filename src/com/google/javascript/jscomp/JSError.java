@@ -33,8 +33,7 @@ public abstract class JSError implements Serializable {
   public abstract String getDescription();
 
   /** Name of the source */
-  @Nullable
-  public abstract String getSourceName();
+  public abstract @Nullable String getSourceName();
 
   /** One-indexed line number of the error location. */
   public abstract int getLineno();
@@ -43,16 +42,15 @@ public abstract class JSError implements Serializable {
   public abstract int getCharno();
 
   /** Node where the warning occurred. */
-  @Nullable
-  public abstract Node getNode();
+  public abstract @Nullable Node getNode();
 
   /** The default level, before any of the {@code WarningsGuard}s are applied. */
   public abstract CheckLevel getDefaultLevel();
 
   private static final int DEFAULT_LINENO = -1;
   private static final int DEFAULT_CHARNO = -1;
-  @Nullable private static final String DEFAULT_SOURCENAME = null;
-  @Nullable private static final Node DEFAULT_NODE = null;
+  private static final @Nullable String DEFAULT_SOURCENAME = null;
+  private static final @Nullable Node DEFAULT_NODE = null;
 
   /**
    * Creates a JSError with no source information
@@ -162,8 +160,7 @@ public abstract class JSError implements Serializable {
    *
    * @return the formatted message or {@code null}
    */
-  @Nullable
-  public final String format(CheckLevel level, MessageFormatter formatter) {
+  public final @Nullable String format(CheckLevel level, MessageFormatter formatter) {
     switch (level) {
       case ERROR:
         return formatter.formatError(this);

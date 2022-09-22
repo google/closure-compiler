@@ -193,8 +193,7 @@ class TypeValidator implements Serializable {
   }
 
   /** Utility function that attempts to get an instance type from a potential constructor type */
-  @Nullable
-  static ObjectType getInstanceOfCtor(@Nullable JSType t) {
+  static @Nullable ObjectType getInstanceOfCtor(@Nullable JSType t) {
     if (t == null) {
       return null;
     }

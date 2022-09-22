@@ -255,8 +255,7 @@ abstract class MethodCompilerPass implements CompilerPass {
     }
   }
 
-  @Nullable
-  private static String getPropName(Node getPropElem) {
+  private static @Nullable String getPropName(Node getPropElem) {
     if (getPropElem.isGetProp()) {
       return getPropElem.getString();
     } else if (getPropElem.getSecondChild().isStringLit()) {

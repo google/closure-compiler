@@ -140,7 +140,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean assumeGettersArePure;
 
   // Allocated & cleaned up by process()
-  @Nullable private LogFile removalLog;
+  private @Nullable LogFile removalLog;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -1641,8 +1641,7 @@ class RemoveUnusedCode implements CompilerPass {
    * Return the NAME node associated with a function parameter (the child of a PARAM_LIST), or null
    * if there is no single name.
    */
-  @Nullable
-  private static Node nameOfParam(Node param) {
+  private static @Nullable Node nameOfParam(Node param) {
     switch (param.getToken()) {
       case NAME:
         return param;
@@ -1783,13 +1782,13 @@ class RemoveUnusedCode implements CompilerPass {
      * If this object represents an assignment of a value to a property. This is the name of the
      * property.
      */
-    @Nullable private final String propertyName;
+    private final @Nullable String propertyName;
 
     /**
      * If this object represents a variable declaration or assignment of a value, this is the node
      * representing where the value is being stored. e.g. the LHS of an assignment.
      */
-    @Nullable protected final Node targetNode;
+    protected final @Nullable Node targetNode;
 
     private final boolean isPrototypeDotPropertyReference;
     private final boolean isThisDotPropertyReference;
@@ -2112,7 +2111,7 @@ class RemoveUnusedCode implements CompilerPass {
   /** Represents an increment or decrement operation that could be removed. */
   private class IncOrDecOp extends Removable {
     final Node incOrDecNode;
-    @Nullable final Node toPreserve;
+    final @Nullable Node toPreserve;
 
     IncOrDecOp(RemovableBuilder builder, Node incOrDecNode, @Nullable Node toPreserve) {
       super(incOrDecNode.getOnlyChild(), builder);
@@ -2325,9 +2324,8 @@ class RemoveUnusedCode implements CompilerPass {
       return true;
     }
 
-    @Nullable
     @Override
-    Node getLocalAssignedValue() {
+    @Nullable Node getLocalAssignedValue() {
       return classDeclarationNode;
     }
 
@@ -2440,9 +2438,8 @@ class RemoveUnusedCode implements CompilerPass {
       return true;
     }
 
-    @Nullable
     @Override
-    Node getLocalAssignedValue() {
+    @Nullable Node getLocalAssignedValue() {
       return functionDeclarationNode;
     }
 
@@ -2494,9 +2491,8 @@ class RemoveUnusedCode implements CompilerPass {
       return NodeUtil.evaluatesToLocalValue(valueNode);
     }
 
-    @Nullable
     @Override
-    Node getLocalAssignedValue() {
+    @Nullable Node getLocalAssignedValue() {
       final Node nameNode = declarationStatement.getOnlyChild();
       final Node initialValueNode = nameNode.getFirstChild();
       if (initialValueNode == null) {
@@ -2560,7 +2556,7 @@ class RemoveUnusedCode implements CompilerPass {
      *   </code>
      * </pre>
      */
-    @Nullable final VarInfo varInfo;
+    final @Nullable VarInfo varInfo;
 
     Assign(
         RemovableBuilder builder,
@@ -2599,9 +2595,8 @@ class RemoveUnusedCode implements CompilerPass {
       return getLocalAssignedValue() != null;
     }
 
-    @Nullable
     @Override
-    Node getLocalAssignedValue() {
+    @Nullable Node getLocalAssignedValue() {
       if (NodeUtil.isExpressionResultUsed(assignNode)) {
         // assigned value may escape or be aliased
         return null;

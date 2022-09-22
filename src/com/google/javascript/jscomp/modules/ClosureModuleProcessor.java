@@ -54,11 +54,11 @@ final class ClosureModuleProcessor implements ModuleProcessor {
 
     private final ModuleMetadata metadata;
     private final String srcFileName;
-    @Nullable private final ModulePath path;
+    private final @Nullable ModulePath path;
     private final ImmutableMap<String, Binding> namespace;
     private final ImmutableMap<String, Require> requiresByLocalName;
     private final AbstractCompiler compiler;
-    @Nullable private Module resolved = null;
+    private @Nullable Module resolved = null;
 
     UnresolvedGoogModule(
         ModuleMetadata metadata,
@@ -75,9 +75,8 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       this.compiler = compiler;
     }
 
-    @Nullable
     @Override
-    public ResolveExportResult resolveExport(
+    public @Nullable ResolveExportResult resolveExport(
         ModuleRequestResolver moduleRequestResolver, String exportName) {
       if (namespace.containsKey(exportName)) {
         return ResolveExportResult.of(namespace.get(exportName));
@@ -85,9 +84,8 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       return ResolveExportResult.NOT_FOUND;
     }
 
-    @Nullable
     @Override
-    public ResolveExportResult resolveExport(
+    public @Nullable ResolveExportResult resolveExport(
         ModuleRequestResolver moduleRequestResolver,
         @Nullable String moduleSpecifier,
         String exportName,

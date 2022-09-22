@@ -381,8 +381,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param messageKey the message key (usually the variable or property name)
    * @return the external ID if it is found, otherwise `null`
    */
-  @Nullable
-  public static String getExternalMessageId(String messageKey) {
+  public static @Nullable String getExternalMessageId(String messageKey) {
     if (messageKey.startsWith(MSG_EXTERNAL_PREFIX)) {
       int start = MSG_EXTERNAL_PREFIX.length();
       int end = start;
@@ -487,8 +486,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /** Get a previously tracked unnamed message */
-  @Nullable
-  private JsMessage getTrackedUnnamedMessage(NodeTraversal t, String msgNameInScope) {
+  private @Nullable JsMessage getTrackedUnnamedMessage(NodeTraversal t, String msgNameInScope) {
     Var var = t.getScope().getVar(msgNameInScope);
     if (var != null) {
       return unnamedMessages.get(var);
@@ -497,8 +495,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /** Get a previously tracked message. */
-  @Nullable
-  private JsMessage getTrackedNormalMessage(String msgName) {
+  private @Nullable JsMessage getTrackedNormalMessage(String msgName) {
     MessageLocation location = messageNames.get(msgName);
     return location == null ? null : location.message;
   }
@@ -889,8 +886,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *   <li>a GETPROP node (e.g. some.import.MSG_FOO)
    * </ol>
    */
-  @Nullable
-  private JsMessage getJsMessageFromNode(NodeTraversal t, Node node) {
+  private @Nullable JsMessage getJsMessageFromNode(NodeTraversal t, Node node) {
     String messageName = node.getQualifiedName();
     if (messageName == null || !messageName.contains(MSG_PREFIX)) {
       return null;

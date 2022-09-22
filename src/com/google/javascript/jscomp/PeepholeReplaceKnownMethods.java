@@ -1161,7 +1161,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   private abstract static class ConcatFunctionCall {
     private final Node callNode;
     private final Node calleeNode;
-    @Nullable private final Node firstArgumentNode;
+    private final @Nullable Node firstArgumentNode;
 
     ConcatFunctionCall(Node callNode, Node calleeNode, Node firstArgumentNode) {
       this.callNode = checkNotNull(callNode);
@@ -1174,8 +1174,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * If the argument node is a call to `Array.prototype.concat`, then return a `ConcatFunctionCall`
    * object for it, otherwise return `null`.
    */
-  @Nullable
-  private static ConcatFunctionCall createConcatFunctionCallForNode(Node n) {
+  private static @Nullable ConcatFunctionCall createConcatFunctionCallForNode(Node n) {
     checkArgument(n.isCall(), n);
     Node callTarget = checkNotNull(n.getFirstChild());
     if (!callTarget.isGetProp() || !callTarget.getString().equals("concat")) {

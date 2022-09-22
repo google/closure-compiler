@@ -53,11 +53,11 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
   private final List<String> originalProvides = new ArrayList<>();
 
   // The provided namespaces in canonical order.
-  @Nullable private Node firstNode = null;
-  @Nullable private Node lastNode = null;
+  private @Nullable Node firstNode = null;
+  private @Nullable Node lastNode = null;
   private boolean finished = false;
 
-  @Nullable private String replacement = null;
+  private @Nullable String replacement = null;
   private boolean needsFix = false;
 
   public CheckProvidesSorted(Mode mode) {

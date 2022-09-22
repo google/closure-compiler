@@ -133,8 +133,7 @@ final class ModuleImportResolver {
   }
 
   /** Returns the corresponding scope root Node from a goog.module. */
-  @Nullable
-  private Node getGoogModuleScopeRoot(@Nullable Module module) {
+  private @Nullable Node getGoogModuleScopeRoot(@Nullable Module module) {
     checkArgument(module.metadata().isGoogModule(), module.metadata());
     Node scriptNode = module.metadata().rootNode();
 
@@ -305,8 +304,7 @@ final class ModuleImportResolver {
   }
 
   /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */
-  @Nullable
-  static Module getModuleFromScopeRoot(
+  static @Nullable Module getModuleFromScopeRoot(
       ModuleMap moduleMap, CompilerInputProvider inputProvider, Node moduleBody) {
     if (isGoogModuleBody(moduleBody)) {
       Node googModuleCall = moduleBody.getFirstChild();

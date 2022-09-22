@@ -65,7 +65,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
   private ControlFlowGraph<Node> cfg;
 
-  @Nullable private IdentityHashMap<Node, Integer> astPosition;
+  private @Nullable IdentityHashMap<Node, Integer> astPosition;
 
   // We order CFG nodes by by looking at the AST positions.
   // CFG nodes that come first lexically should be visited first, because
@@ -757,8 +757,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    * @param fromNode The original source node since {@code node} is changed during recursion.
    * @param node The node that follow() should compute.
    */
-  @Nullable
-  private static Node computeFollowNode(
+  private static @Nullable Node computeFollowNode(
       Node fromNode, Node node, @Nullable ControlFlowAnalysis cfa) {
     /*
      * This is the case where:
@@ -935,8 +934,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   }
 
   /** Get the next sibling (including itself) of one of the given types. */
-  @Nullable
-  private static Node getNextSiblingOfType(Node first, Token... types) {
+  private static @Nullable Node getNextSiblingOfType(Node first, Token... types) {
     for (Node c = first; c != null; c = c.getNext()) {
       for (Token type : types) {
         if (c.getToken() == type) {
@@ -1036,8 +1034,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    *
    * @return The CATCH node or null if it there isn't a CATCH before the function terminates.
    */
-  @Nullable
-  static Node getExceptionHandler(Node n) {
+  static @Nullable Node getExceptionHandler(Node n) {
     for (Node cur = n; !cur.isScript() && !cur.isFunction(); cur = cur.getParent()) {
       Node catchNode = getCatchHandlerForBlock(cur);
       if (catchNode != null) {
@@ -1052,8 +1049,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    *
    * @return The CATCH node or null there is no catch handler.
    */
-  @Nullable
-  static Node getCatchHandlerForBlock(Node block) {
+  static @Nullable Node getCatchHandlerForBlock(Node block) {
     if (block.isBlock()
         && block.getParent().isTry()
         && block.getParent().getFirstChild() == block) {

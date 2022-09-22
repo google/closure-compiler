@@ -29,7 +29,7 @@ import org.jspecify.nullness.Nullable;
  * tagged template literals. The scanner does not know if it's in a tagged or untagged template lit.
  */
 public class TemplateLiteralToken extends LiteralToken {
-  @Nullable public final String errorMessage;
+  public final @Nullable String errorMessage;
   public final SourcePosition errorPosition;
   public final ErrorLevel errorLevel;
 

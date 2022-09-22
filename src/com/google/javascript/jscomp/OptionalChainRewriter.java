@@ -54,7 +54,7 @@ class OptionalChainRewriter {
   final AstFactory astFactory;
   final TmpVarNameCreator tmpVarNameCreator;
   // If a scope is provided, newly created variables will be declared in that scope
-  @Nullable final Scope scope;
+  final @Nullable Scope scope;
   final Node chainParent;
   final Node wholeChain;
   final Node insertionPoint;

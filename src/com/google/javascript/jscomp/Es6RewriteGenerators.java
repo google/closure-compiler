@@ -86,7 +86,7 @@ final class Es6RewriteGenerators implements CompilerPass {
   private final StaticScope namespace;
   private final AstFactory astFactory;
 
-  @Nullable private final Color nullableStringType;
+  private final @Nullable Color nullableStringType;
   private final Supplier<AstFactory.Type> generatorContextType;
   private final Supplier<AstFactory.Type> propertyIteratorType;
 
@@ -1644,8 +1644,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Returns the case section of the next catch block that is not hidden by finally blocks. */
-      @Nullable
-      private Case getNextCatchCase() {
+      private @Nullable Case getNextCatchCase() {
         for (CatchCase catchCase : catchCases) {
           if (catchCase.finallyBlocks == 0) {
             return catchCase.catchCase;
@@ -1656,8 +1655,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Returns the case section of the next finally block. */
-      @Nullable
-      private Case getNextFinallyCase() {
+      private @Nullable Case getNextFinallyCase() {
         return finallyCases.isEmpty() ? null : finallyCases.getFirst();
       }
 
@@ -2209,8 +2207,7 @@ final class Es6RewriteGenerators implements CompilerPass {
          * @param varDeclaration VAR node
          * @return null or expression node (e.g. `varName1 = 1, varName2 = y`)
          */
-        @Nullable
-        private Node extractAssignmentsToCommaExpression(Node varDeclaration) {
+        private @Nullable Node extractAssignmentsToCommaExpression(Node varDeclaration) {
           ArrayList<Node> assignments = new ArrayList<>();
           for (Node varName = varDeclaration.getFirstChild();
               varName != null;
@@ -2255,7 +2252,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
         final Case breakCase;
 
-        @Nullable final Case continueCase;
+        final @Nullable Case continueCase;
 
         LabelCases(Case breakCase, @Nullable Case continueCase) {
           this.breakCase = breakCase;

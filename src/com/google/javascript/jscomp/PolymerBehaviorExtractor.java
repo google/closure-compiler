@@ -289,8 +289,7 @@ final class PolymerBehaviorExtractor {
    * <p>Returns null if the name is not from a legacy module, and resolution should continue
    * normally.
    */
-  @Nullable
-  private ResolveBehaviorNameResult resolveReferenceToLegacyGoogModule(String name) {
+  private @Nullable ResolveBehaviorNameResult resolveReferenceToLegacyGoogModule(String name) {
     int dot = name.length();
     while (dot >= 0) {
       String subNamespace = name.substring(0, dot);
@@ -340,8 +339,8 @@ final class PolymerBehaviorExtractor {
    * <p>Returns null if the given name is not imported or {@link #FAILED_RESOLVE_RESULT} if it is
    * imported but is not annotated @polymerBehavior.
    */
-  @Nullable
-  private ResolveBehaviorNameResult getNameIfModuleImport(String name, ModuleMetadata metadata) {
+  private @Nullable ResolveBehaviorNameResult getNameIfModuleImport(
+      String name, ModuleMetadata metadata) {
     if (metadata == null || (!metadata.isEs6Module() && !metadata.isGoogModule())) {
       return null;
     }
@@ -438,11 +437,10 @@ final class PolymerBehaviorExtractor {
 
   /**
    * Similar to {@link Node#getQualifiedName} but also handles CAST nodes. For example, given a
-   * GETPROP representing "(/** @type {?} *\/ (x)).y.z" returns "x.y.z". Returns null if node is
-   * not a NAME, GETPROP, or CAST. See b/64389806 for Polymer-specific context.
+   * GETPROP representing "(/** @type {?} *\/ (x)).y.z" returns "x.y.z". Returns null if node is not
+   * a NAME, GETPROP, or CAST. See b/64389806 for Polymer-specific context.
    */
-  @Nullable
-  private static String getQualifiedNameThroughCast(Node node) {
+  private static @Nullable String getQualifiedNameThroughCast(Node node) {
     if (node.isName()) {
       String name = node.getString();
       return name.isEmpty() ? null : name;

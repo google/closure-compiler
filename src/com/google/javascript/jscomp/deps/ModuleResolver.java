@@ -50,8 +50,7 @@ public abstract class ModuleResolver {
     return ImmutableMap.of();
   }
 
-  @Nullable
-  public abstract String resolveJsModule(
+  public abstract @Nullable String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno);
 
   public String resolveModuleAsPath(String scriptAddress, String moduleAddress) {
@@ -73,8 +72,7 @@ public abstract class ModuleResolver {
    * Locates the module with the given name, but returns null if there is no JS file in the expected
    * location.
    */
-  @Nullable
-  protected String locate(String scriptAddress, String name) {
+  protected @Nullable String locate(String scriptAddress, String name) {
     String canonicalizedPath = canonicalizePath(scriptAddress, name);
 
     String normalizedPath = canonicalizedPath;

@@ -114,8 +114,7 @@ public final class AccessControlUtils {
   }
 
   /** Returns the source file in which the given property is defined, or null if it is not known. */
-  @Nullable
-  static StaticSourceFile getDefiningSource(
+  static @Nullable StaticSourceFile getDefiningSource(
       Node node, @Nullable ObjectType referenceType, String propertyName) {
     if (referenceType != null) {
       Node propDefNode = referenceType.getPropertyDefSite(propertyName);
@@ -126,13 +125,9 @@ public final class AccessControlUtils {
     return node.getStaticSourceFile();
   }
 
-  /**
-   * Returns the lowest property defined on a class with visibility information.
-   */
-  @Nullable static ObjectType getObjectType(
-      @Nullable ObjectType referenceType,
-      boolean isOverride,
-      String propertyName) {
+  /** Returns the lowest property defined on a class with visibility information. */
+  static @Nullable ObjectType getObjectType(
+      @Nullable ObjectType referenceType, boolean isOverride, String propertyName) {
     if (referenceType == null) {
       return null;
     }

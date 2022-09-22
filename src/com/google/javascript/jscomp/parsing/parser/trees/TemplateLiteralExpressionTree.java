@@ -25,7 +25,7 @@ import org.jspecify.nullness.Nullable;
  */
 public class TemplateLiteralExpressionTree extends ParseTree {
 
-  @Nullable public final ParseTree operand;
+  public final @Nullable ParseTree operand;
   public final ImmutableList<ParseTree> elements;
 
   public TemplateLiteralExpressionTree(SourceRange location, ParseTree operand,

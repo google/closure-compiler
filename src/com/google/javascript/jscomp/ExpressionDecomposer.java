@@ -79,7 +79,7 @@ class ExpressionDecomposer {
   private final ImmutableSet<String> knownConstantFunctions;
   private final Scope scope;
   private final EnumSet<Workaround> enabledWorkarounds;
-  @Nullable private final JSType unknownType;
+  private final @Nullable JSType unknownType;
 
   /**
    * Create an ExpressionDecomposer.
@@ -831,8 +831,7 @@ class ExpressionDecomposer {
    * @return For the subExpression, find the nearest statement Node before which it can be inlined.
    *     Null if no such location can be found.
    */
-  @Nullable
-  static Node findInjectionPoint(Node subExpression) {
+  static @Nullable Node findInjectionPoint(Node subExpression) {
     Node expressionRoot = findExpressionRoot(subExpression);
     checkNotNull(expressionRoot);
 
@@ -870,8 +869,7 @@ class ExpressionDecomposer {
    * <p>If {@code subExpression} is not contained by a statement where inlining is known to be
    * possible, {@code null} is returned. For example, the condition expression of a WHILE loop.
    */
-  @Nullable
-  private static Node findExpressionRoot(Node subExpression) {
+  private static @Nullable Node findExpressionRoot(Node subExpression) {
     Node child = subExpression;
     for (Node current : child.getAncestors()) {
       Node parent = current.getParent();

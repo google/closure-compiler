@@ -203,8 +203,7 @@ public final class ModuleLoader {
      *
      * @return The normalized module URI, or {@code null} if not found.
      */
-    @Nullable
-    public ModulePath resolveJsModule(
+    public @Nullable ModulePath resolveJsModule(
         String moduleAddress, String sourcename, int lineno, int colno) {
       String loadAddress =
           moduleResolver.resolveJsModule(this.path, moduleAddress, sourcename, lineno, colno);

@@ -92,8 +92,7 @@ public abstract class Source {
   // hash code.  Thus, we use an internal-only Supplier subtype.
   abstract Lazy<String> codeSupplier();
 
-  @Nullable
-  abstract Lazy<String> originalCodeSupplier();
+  abstract @Nullable Lazy<String> originalCodeSupplier();
 
   /** Builder for Source instances. */
   @AutoValue.Builder
@@ -143,8 +142,7 @@ public abstract class Source {
     abstract Lazy<String> codeSupplier();
     abstract Source autoBuild();
 
-    @Nullable
-    abstract Lazy<String> originalCodeSupplier();
+    abstract @Nullable Lazy<String> originalCodeSupplier();
   }
 
   /** An automorphic transformation on sources. */

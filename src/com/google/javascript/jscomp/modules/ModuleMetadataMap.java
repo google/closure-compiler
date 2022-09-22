@@ -141,8 +141,7 @@ public final class ModuleMetadataMap {
      * <p>May be null if this is a synthetic piece of metadata - e.g. in a test, or something used
      * as a fallback.
      */
-    @Nullable
-    public abstract Node rootNode();
+    public abstract @Nullable Node rootNode();
 
     /**
      * Whether this file uses Closure Library at all. Note that a file could use Closure Library
@@ -189,8 +188,7 @@ public final class ModuleMetadataMap {
 
     public abstract ImmutableList<ModuleMetadata> nestedModules();
 
-    @Nullable
-    public abstract ModulePath path();
+    public abstract @Nullable ModulePath path();
 
     public static Builder builder() {
       return new AutoValue_ModuleMetadataMap_ModuleMetadata.Builder();

@@ -43,8 +43,7 @@ public class BrowserModuleResolver extends ModuleResolver {
   }
 
   @Override
-  @Nullable
-  public String resolveJsModule(
+  public @Nullable String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
 
     if (ModuleLoader.isAmbiguousIdentifier(moduleAddress)) {

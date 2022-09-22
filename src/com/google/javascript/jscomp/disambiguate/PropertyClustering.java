@@ -40,9 +40,9 @@ final class PropertyClustering {
 
   private final StandardUnionFind<ColorGraphNode> clusters = new StandardUnionFind<>();
 
-  @Nullable private ColorGraphNode originalNameClusterRep;
+  private @Nullable ColorGraphNode originalNameClusterRep;
 
-  @Nullable private Invalidation lastInvalidation;
+  private @Nullable Invalidation lastInvalidation;
 
   PropertyClustering(String name) {
     this.name = checkNotNull(name);

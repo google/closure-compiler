@@ -75,8 +75,7 @@ public class ErrorToFixMapperTest {
   @AutoValue
   abstract static class ExpectedFix {
     /** Optional string describing the fix. */
-    @Nullable
-    abstract String description();
+    abstract @Nullable String description();
     /** What the code should look like after applying the fix. */
     abstract String fixedCode();
 

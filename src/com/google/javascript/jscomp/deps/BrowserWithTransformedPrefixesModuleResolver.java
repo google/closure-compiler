@@ -106,9 +106,8 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
             .collect(joining(", "));
   }
 
-  @Nullable
   @Override
-  public String resolveJsModule(
+  public @Nullable String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
     String transformedAddress = moduleAddress;
 

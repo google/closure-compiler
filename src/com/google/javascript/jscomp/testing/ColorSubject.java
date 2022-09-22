@@ -29,7 +29,7 @@ import org.jspecify.nullness.Nullable;
 /** Subject for {@link Color} */
 public final class ColorSubject extends Subject {
 
-  @Nullable private final Color actual;
+  private final @Nullable Color actual;
 
   private ColorSubject(FailureMetadata metadata, @Nullable Color actual) {
     super(metadata, actual);

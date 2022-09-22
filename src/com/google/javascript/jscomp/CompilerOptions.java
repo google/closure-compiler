@@ -182,7 +182,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Represents browserFeaturesetYear to use for compilation */
-  @Nullable private BrowserFeaturesetYear browserFeaturesetYear;
+  private @Nullable BrowserFeaturesetYear browserFeaturesetYear;
 
   public int getBrowserFeaturesetYear() {
     return this.browserFeaturesetYear != null ? this.browserFeaturesetYear.year : 0;
@@ -207,7 +207,7 @@ public class CompilerOptions implements Serializable {
     return instrumentForCoverageOnly;
   }
 
-  @Nullable private Path typedAstOutputFile = null;
+  private @Nullable Path typedAstOutputFile = null;
 
   /** Sets file to output in-progress TypedAST format to. DO NOT USE! */
   public void setTypedAstOutputFile(@Nullable Path file) {
@@ -361,7 +361,7 @@ public class CompilerOptions implements Serializable {
   private DependencyOptions dependencyOptions = DependencyOptions.none();
 
   /** Returns localized replacement for MSG_* variables */
-  @Nullable public MessageBundle messageBundle = null;
+  public @Nullable MessageBundle messageBundle = null;
 
   /** Whether we should report an error if a message is absent from a bundle. */
   private boolean strictMessageReplacement;
@@ -569,7 +569,7 @@ public class CompilerOptions implements Serializable {
   public boolean generatePseudoNames;
 
   /** Specifies a prefix for all globals */
-  @Nullable public String renamePrefix;
+  public @Nullable String renamePrefix;
 
   /** Specifies the name of an object that will be used to store all non-extern globals. */
   public String renamePrefixNamespace;
@@ -714,11 +714,11 @@ public class CompilerOptions implements Serializable {
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
-  @Nullable public String syntheticBlockStartMarker;
-  @Nullable public String syntheticBlockEndMarker;
+  public @Nullable String syntheticBlockStartMarker;
+  public @Nullable String syntheticBlockEndMarker;
 
   /** Compiling locale */
-  @Nullable public String locale;
+  public @Nullable String locale;
 
   /**
    * If true, then perform localization passes as late as possible.
@@ -780,7 +780,7 @@ public class CompilerOptions implements Serializable {
   ImmutableSet<String> stripNamePrefixes;
 
   /** Custom passes */
-  @Nullable protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
+  protected transient @Nullable Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
   private final LinkedHashMap<String, Object> defineReplacements;
@@ -810,7 +810,7 @@ public class CompilerOptions implements Serializable {
   boolean exportLocalPropertyDefinitions;
 
   /** Map used in the renaming of CSS class names. */
-  @Nullable public CssRenamingMap cssRenamingMap;
+  public @Nullable CssRenamingMap cssRenamingMap;
 
   /** Skiplist used in the renaming of CSS class names. */
   @Nullable Set<String> cssRenamingSkiplist;
@@ -912,7 +912,7 @@ public class CompilerOptions implements Serializable {
    *
    * <p>{@code null} indicates that no such files should be written.
    */
-  @Nullable private Path debugLogDirectory;
+  private @Nullable Path debugLogDirectory;
 
   /**
    * A comma separated list of strings used to filter which debug logs are written. If a filter is
@@ -1014,7 +1014,7 @@ public class CompilerOptions implements Serializable {
   // --------------------------------
 
   /** The output path for the created externs file. */
-  @Nullable private String externExportsPath;
+  private @Nullable String externExportsPath;
 
   private final List<SortingErrorManager.ErrorReportGenerator> extraReportGenerators =
       new ArrayList<>();
@@ -1148,7 +1148,7 @@ public class CompilerOptions implements Serializable {
   private transient AliasTransformationHandler aliasHandler;
 
   /** Handler for compiler warnings and errors. */
-  @Nullable transient ErrorHandler errorHandler;
+  transient @Nullable ErrorHandler errorHandler;
 
   private InstrumentOption instrumentForCoverageOption;
 
@@ -1268,7 +1268,7 @@ public class CompilerOptions implements Serializable {
     return this.allowDynamicImport;
   }
 
-  @Nullable private String dynamicImportAlias = null;
+  private @Nullable String dynamicImportAlias = null;
 
   /** Set the alias name for dynamic import expressions */
   public String getDynamicImportAlias() {
@@ -2484,8 +2484,7 @@ public class CompilerOptions implements Serializable {
     this.debugLogDirectory = dir;
   }
 
-  @Nullable
-  public Path getDebugLogDirectory() {
+  public @Nullable Path getDebugLogDirectory() {
     return debugLogDirectory;
   }
 
@@ -2541,8 +2540,7 @@ public class CompilerOptions implements Serializable {
     this.externExportsPath = externExportsPath;
   }
 
-  @Nullable
-  public String getExternExportsPath() {
+  public @Nullable String getExternExportsPath() {
     return this.externExportsPath;
   }
 
@@ -2666,8 +2664,7 @@ public class CompilerOptions implements Serializable {
     this.unusedImportsToRemove = unusedImportsToRemove;
   }
 
-  @Nullable
-  public ImmutableSet<String> getUnusedImportsToRemove() {
+  public @Nullable ImmutableSet<String> getUnusedImportsToRemove() {
     return this.unusedImportsToRemove;
   }
 
@@ -2990,8 +2987,7 @@ public class CompilerOptions implements Serializable {
     BRANCH_ONLY, // Collect coverage for control-flow branches.
     PRODUCTION; // Collect coverage for functions where code is compiled for production.
 
-    @Nullable
-    public static InstrumentOption fromString(String value) {
+    public static @Nullable InstrumentOption fromString(String value) {
       if (value == null) {
         return null;
       }
@@ -3093,8 +3089,7 @@ public class CompilerOptions implements Serializable {
       }
     }
 
-    @Nullable
-    public static LanguageMode fromString(String value) {
+    public static @Nullable LanguageMode fromString(String value) {
       if (value == null) {
         return null;
       }

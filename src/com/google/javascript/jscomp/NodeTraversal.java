@@ -39,7 +39,7 @@ import org.jspecify.nullness.Nullable;
 public class NodeTraversal {
   private final AbstractCompiler compiler;
   private final Callback callback;
-  @Nullable private final ScopedCallback scopeCallback;
+  private final @Nullable ScopedCallback scopeCallback;
   private final ScopeCreator scopeCreator;
   private final boolean obeyDestructuringAndDefaultValueExecutionOrder;
 
@@ -68,12 +68,12 @@ public class NodeTraversal {
   private final ArrayList<Object> scopes = new ArrayList<>();
 
   /** The current source file name */
-  @Nullable private String sourceName;
+  private @Nullable String sourceName;
 
   /** The current input */
-  @Nullable private InputId inputId;
+  private @Nullable InputId inputId;
 
-  @Nullable private CompilerInput compilerInput;
+  private @Nullable CompilerInput compilerInput;
 
   /** Callback for tree-based traversals */
   public interface Callback {
@@ -272,8 +272,8 @@ public class NodeTraversal {
     protected final AbstractCompiler compiler;
     private final ModuleMetadataMap moduleMetadataMap;
 
-    @Nullable private ModuleMetadata currentModule;
-    @Nullable private Node scopeRoot;
+    private @Nullable ModuleMetadata currentModule;
+    private @Nullable Node scopeRoot;
     private boolean inLoadModule;
 
     AbstractModuleCallback(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
@@ -824,8 +824,7 @@ public class NodeTraversal {
   }
 
   /** Gets the current input chunk. */
-  @Nullable
-  public JSChunk getChunk() {
+  public @Nullable JSChunk getChunk() {
     CompilerInput input = getInput();
     return input == null ? null : input.getChunk();
   }
@@ -1138,8 +1137,7 @@ public class NodeTraversal {
    * Examines the functions stack for the last instance of a function node. When possible, prefer
    * this method over NodeUtil.getEnclosingFunction() because this in general looks at less nodes.
    */
-  @Nullable
-  public Node getEnclosingFunction() {
+  public @Nullable Node getEnclosingFunction() {
     return currentFunction;
   }
 
@@ -1196,8 +1194,7 @@ public class NodeTraversal {
   }
 
   /** Returns the current scope's root. */
-  @Nullable
-  public Node getScopeRoot() {
+  public @Nullable Node getScopeRoot() {
     int roots = scopes.size();
     if (roots > 0) {
       return getNodeRootFromScopeObj(scopes.get(roots - 1));
@@ -1247,8 +1244,7 @@ public class NodeTraversal {
     return isHoistScopeRootNode(getScopeRoot());
   }
 
-  @Nullable
-  public Node getClosestHoistScopeRoot() {
+  public @Nullable Node getClosestHoistScopeRoot() {
     for (int i = scopes.size() - 1; i >= 0; i--) {
       Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
       if (isHoistScopeRootNode(rootNode)) {
@@ -1259,8 +1255,7 @@ public class NodeTraversal {
     return null;
   }
 
-  @Nullable
-  public AbstractScope<?, ?> getClosestContainerScope() {
+  public @Nullable AbstractScope<?, ?> getClosestContainerScope() {
     for (int i = scopes.size() - 1; i >= 0; i--) {
       Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
       if (!NodeUtil.createsBlockScope(rootNode)) {
@@ -1270,8 +1265,7 @@ public class NodeTraversal {
     return null;
   }
 
-  @Nullable
-  public AbstractScope<?, ?> getClosestHoistScope() {
+  public @Nullable AbstractScope<?, ?> getClosestHoistScope() {
     for (int i = scopes.size() - 1; i >= 0; i--) {
       Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
       if (isHoistScopeRootNode(rootNode)) {

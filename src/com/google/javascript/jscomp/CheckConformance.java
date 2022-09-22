@@ -70,8 +70,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
      * <p>Returning null means that there is no precondition. This is convenient, but can be a major
      * performance hit.
      */
-    @Nullable
-    default Precondition getPrecondition() {
+    default @Nullable Precondition getPrecondition() {
       return Precondition.CHECK_ALL;
     }
 
@@ -269,8 +268,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 
-  @Nullable
-  private static Rule initRule(AbstractCompiler compiler, Requirement requirement) {
+  private static @Nullable Rule initRule(AbstractCompiler compiler, Requirement requirement) {
     try {
       switch (requirement.getType()) {
         case CUSTOM:

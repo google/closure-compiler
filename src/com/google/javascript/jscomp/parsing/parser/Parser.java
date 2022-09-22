@@ -180,7 +180,7 @@ public class Parser {
   private final ArrayDeque<FunctionFlavor> functionContextStack = new ArrayDeque<>();
   private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private SourcePosition lastSourcePosition;
-  @Nullable private String sourceMapURL;
+  private @Nullable String sourceMapURL;
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
     this.config = config;
@@ -253,8 +253,7 @@ public class Parser {
   }
 
   /** Returns the url provided by the sourceMappingURL if any was found. */
-  @Nullable
-  public String getSourceMapURL() {
+  public @Nullable String getSourceMapURL() {
     return sourceMapURL;
   }
 
@@ -264,8 +263,7 @@ public class Parser {
   }
 
   // 14 Program
-  @Nullable
-  public ProgramTree parseProgram() {
+  public @Nullable ProgramTree parseProgram() {
     try {
       // Set the start location at the beginning of the file rather than the beginning of the first
       // token.  This ensures that it accounts for leading comments.
@@ -1197,8 +1195,8 @@ public class Parser {
     return parseVariableDeclarationList(Expression.NO_IN);
   }
 
-  @Nullable
-  private VariableDeclarationListTree parseVariableDeclarationList(Expression expressionIn) {
+  private @Nullable VariableDeclarationListTree parseVariableDeclarationList(
+      Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     TokenType token = peekType();
 
@@ -2080,8 +2078,7 @@ public class Parser {
     return peekPredefinedString(0, string);
   }
 
-  @Nullable
-  private Token eatPredefinedString(String string) {
+  private @Nullable Token eatPredefinedString(String string) {
     Token token = eatId();
     if (token == null || !token.asIdentifier().value.equals(string)) {
       reportExpectedError(token, string);
@@ -3519,8 +3516,7 @@ public class Parser {
    * @param expectedTokenType
    * @return The consumed token, or null if the next token is not of the expected type.
    */
-  @Nullable
-  private Token eatOpt(TokenType expectedTokenType) {
+  private @Nullable Token eatOpt(TokenType expectedTokenType) {
     if (peek(expectedTokenType)) {
       return eat(expectedTokenType);
     }
@@ -3556,8 +3552,7 @@ public class Parser {
   }
 
   /** Shorthand for eatOpt(TokenType.IDENTIFIER) */
-  @Nullable
-  private IdentifierToken eatIdOpt() {
+  private @Nullable IdentifierToken eatIdOpt() {
     return (peekId()) ? eatIdOrKeywordAsId() : null;
   }
 
@@ -3566,8 +3561,7 @@ public class Parser {
    *
    * @see "http://www.ecma-international.org/ecma-262/5.1/#sec-7.6"
    */
-  @Nullable
-  private IdentifierToken eatId() {
+  private @Nullable IdentifierToken eatId() {
     if (peekId()) {
       return eatIdOrKeywordAsId();
     } else {
@@ -3599,8 +3593,7 @@ public class Parser {
    *
    * @see "http://www.ecma-international.org/ecma-262/5.1/#sec-7.6"
    */
-  @Nullable
-  private IdentifierToken eatIdOrKeywordAsId() {
+  private @Nullable IdentifierToken eatIdOrKeywordAsId() {
     Token token = nextToken();
     if (token.type == TokenType.IDENTIFIER) {
       return (IdentifierToken) token;
@@ -3619,8 +3612,7 @@ public class Parser {
    * @param expectedTokenType
    * @return The consumed token, or null if the next token is not of the expected type.
    */
-  @Nullable
-  private Token eat(TokenType expectedTokenType) {
+  private @Nullable Token eat(TokenType expectedTokenType) {
     Token token = nextToken();
     if (token.type != expectedTokenType) {
       reportExpectedError(token, expectedTokenType);

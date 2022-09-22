@@ -127,8 +127,8 @@ public final class ConformanceRules {
     VIOLATION,
   }
 
-  @Nullable
-  private static Pattern buildPattern(List<String> reqPatterns) throws InvalidRequirementSpec {
+  private static @Nullable Pattern buildPattern(List<String> reqPatterns)
+      throws InvalidRequirementSpec {
     if (reqPatterns == null || reqPatterns.isEmpty()) {
       return null;
     }
@@ -153,8 +153,8 @@ public final class ConformanceRules {
   }
 
   private static class AllowList {
-    @Nullable final ImmutableList<String> prefixes;
-    @Nullable final Pattern regexp;
+    final @Nullable ImmutableList<String> prefixes;
+    final @Nullable Pattern regexp;
     final @Nullable WhitelistEntry allowlistEntry;
 
     AllowList(List<String> prefixes, List<String> regexps) throws InvalidRequirementSpec {
@@ -202,7 +202,7 @@ public final class ConformanceRules {
     final String message;
     final Severity severity;
     final ImmutableList<AllowList> allowlists;
-    @Nullable final AllowList onlyApplyTo;
+    final @Nullable AllowList onlyApplyTo;
     final boolean reportLooseTypeViolations;
     final TypeMatchingStrategy typeMatchingStrategy;
     final Requirement requirement;
@@ -286,8 +286,7 @@ public final class ConformanceRules {
     protected abstract ConformanceResult checkConformance(NodeTraversal t, Node n);
 
     /** Returns the first AllowList entry that matches the given path, and null otherwise. */
-    @Nullable
-    private AllowList findAllowListForPath(String path) {
+    private @Nullable AllowList findAllowListForPath(String path) {
       Optional<Pattern> pathRegex = compiler.getOptions().getConformanceRemoveRegexFromPath();
       if (pathRegex.isPresent()) {
         path = pathRegex.get().matcher(path).replaceFirst("");
@@ -432,8 +431,7 @@ public final class ConformanceRules {
       return type.isEmptyType();
     }
 
-    @Nullable
-    protected JSType union(List<String> typeNames) {
+    protected @Nullable JSType union(List<String> typeNames) {
       JSTypeRegistry registry = compiler.getTypeRegistry();
       List<JSType> types = new ArrayList<>();
 
@@ -537,7 +535,7 @@ public final class ConformanceRules {
 
   /** Banned dependency via regex rule */
   static class BannedDependencyRegex extends AbstractRule {
-    @Nullable private final Pattern pathRegexp;
+    private final @Nullable Pattern pathRegexp;
 
     BannedDependencyRegex(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -838,8 +836,7 @@ public final class ConformanceRules {
       return false;
     }
 
-    @Nullable
-    private JSType extractType(Node n) {
+    private @Nullable JSType extractType(Node n) {
       switch (n.getToken()) {
         case GETELEM:
         case GETPROP:
@@ -867,8 +864,7 @@ public final class ConformanceRules {
       }
     }
 
-    @Nullable
-    private String extractName(Node n) {
+    private @Nullable String extractName(Node n) {
 
       switch (n.getToken()) {
         case GETPROP:
@@ -971,8 +967,7 @@ public final class ConformanceRules {
     }
 
     /** Extracts the method name from a provided name. */
-    @Nullable
-    private static String getPropertyFromDeclarationName(String specName) {
+    private static @Nullable String getPropertyFromDeclarationName(String specName) {
       String[] parts = specName.split("\\.prototype\\.");
       checkState(parts.length == 1 || parts.length == 2);
       if (parts.length == 2) {
@@ -982,8 +977,7 @@ public final class ConformanceRules {
     }
 
     /** Extracts the class name from a provided name. */
-    @Nullable
-    private static String getClassFromDeclarationName(String specName) {
+    private static @Nullable String getClassFromDeclarationName(String specName) {
       String tmp = specName;
       String[] parts = tmp.split("\\.prototype\\.");
       checkState(parts.length == 1 || parts.length == 2);
@@ -1001,8 +995,7 @@ public final class ConformanceRules {
       return specName.substring(0, index);
     }
 
-    @Nullable
-    private static String getTypeFromValue(String specName) {
+    private static @Nullable String getTypeFromValue(String specName) {
       int index = specName.indexOf(':');
       if (index < 1) {
         return null;
@@ -1010,8 +1003,7 @@ public final class ConformanceRules {
       return specName.substring(index + 1);
     }
 
-    @Nullable
-    private static String inferStringValue(@Nullable Scope scope, Node node) {
+    private static @Nullable String inferStringValue(@Nullable Scope scope, Node node) {
       if (node == null) {
         return null;
       }
@@ -1137,8 +1129,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    @Nullable
-    private static String getNameFromValue(String specName) {
+    private static @Nullable String getNameFromValue(String specName) {
       int index = specName.indexOf(':');
       if (index < 1) {
         return null;
@@ -2065,8 +2056,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    @Nullable
-    private ImmutableCollection<String> getTagNames(Node tag) {
+    private @Nullable ImmutableCollection<String> getTagNames(Node tag) {
       if (tag.isStringLit()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       } else if (tag.isGetProp() && GOOG_DOM_TAGNAME.matches(tag.getFirstChild())) {

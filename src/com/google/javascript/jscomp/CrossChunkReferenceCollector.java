@@ -57,7 +57,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
   private final AbstractCompiler compiler;
 
   private int statementCounter = 0;
-  @Nullable private TopLevelStatementDraft topLevelStatementDraft = null;
+  private @Nullable TopLevelStatementDraft topLevelStatementDraft = null;
 
   /** Constructor initializes block stack. */
   CrossChunkReferenceCollector(AbstractCompiler compiler, ScopeCreator creator) {
