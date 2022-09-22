@@ -346,8 +346,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "renaming map produced should be saved")
     private String propertyMapOutputFile = "";
 
-    // TEST TEST TEST DO NOT SUBMIT
-
     @Option(
         name = "--third_party",
         handler = BooleanOptionHandler.class,
@@ -2265,3 +2263,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
   }
 }
+
+
+    // TEST TEST TEST DO NOT SUBMIT
