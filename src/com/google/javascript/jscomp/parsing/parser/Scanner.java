@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import java.util.ArrayList;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Scans javascript source code into tokens. All entrypoints assume the caller is not expecting a
@@ -1358,17 +1358,16 @@ public class Scanner {
   }
 
   private SkipTemplateCharactersResult createSkipTemplateCharactersResult(
-      @Nullable String message, @Nullable TemplateLiteralToken.ErrorLevel errorLevel) {
+      @Nullable String message, @Nullable ErrorLevel errorLevel) {
     return new SkipTemplateCharactersResult(message, errorLevel, getPosition());
   }
 
   private static class SkipTemplateCharactersResult {
     @Nullable private final String errorMessage;
     private final SourcePosition position;
-    private final TemplateLiteralToken.ErrorLevel errorLevel;
+    private final ErrorLevel errorLevel;
 
-    SkipTemplateCharactersResult(
-        String message, TemplateLiteralToken.ErrorLevel errorLevel, SourcePosition position) {
+    SkipTemplateCharactersResult(String message, ErrorLevel errorLevel, SourcePosition position) {
       this.errorMessage = message;
       this.errorLevel = errorLevel;
       this.position = position;
@@ -1378,7 +1377,7 @@ public class Scanner {
       return this.errorMessage;
     }
 
-    TemplateLiteralToken.ErrorLevel getErrorLevel() {
+    ErrorLevel getErrorLevel() {
       return this.errorLevel;
     }
 

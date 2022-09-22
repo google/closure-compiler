@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.CheckConformance.Precondition;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.Requirement.Severity;
+import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -59,7 +60,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Standard conformance rules. See
@@ -154,7 +155,7 @@ public final class ConformanceRules {
   private static class AllowList {
     @Nullable final ImmutableList<String> prefixes;
     @Nullable final Pattern regexp;
-    @Nullable final Requirement.WhitelistEntry allowlistEntry;
+    final @Nullable WhitelistEntry allowlistEntry;
 
     AllowList(List<String> prefixes, List<String> regexps) throws InvalidRequirementSpec {
       this.prefixes = ImmutableList.<String>copyOf(prefixes);
@@ -162,7 +163,7 @@ public final class ConformanceRules {
       this.allowlistEntry = null;
     }
 
-    AllowList(Requirement.WhitelistEntry allowlistEntry) throws InvalidRequirementSpec {
+    AllowList(WhitelistEntry allowlistEntry) throws InvalidRequirementSpec {
       this.prefixes = ImmutableList.copyOf(allowlistEntry.getPrefixList());
       this.regexp = buildPattern(allowlistEntry.getRegexpList());
       this.allowlistEntry = allowlistEntry;
@@ -226,10 +227,10 @@ public final class ConformanceRules {
 
       // build allowlists
       ImmutableList.Builder<AllowList> allowlistsBuilder = new ImmutableList.Builder<>();
-      for (Requirement.WhitelistEntry entry : requirement.getWhitelistEntryList()) {
+      for (WhitelistEntry entry : requirement.getWhitelistEntryList()) {
         allowlistsBuilder.add(new AllowList(entry));
       }
-      for (Requirement.WhitelistEntry entry : requirement.getAllowlistEntryList()) {
+      for (WhitelistEntry entry : requirement.getAllowlistEntryList()) {
         allowlistsBuilder.add(new AllowList(entry));
       }
 

@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A module which has had some of its imports and exports statements scanned but has yet to resolve

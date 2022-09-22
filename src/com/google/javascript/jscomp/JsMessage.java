@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A representation of a translatable message in JavaScript source code.
@@ -618,7 +618,7 @@ public abstract class JsMessage {
      * @param seed the seed
      * @return 64 bit hash value
      */
-    private static long hash64(@Nullable byte[] value, int offset, int length, long seed) {
+    private static long hash64(byte @Nullable [] value, int offset, int length, long seed) {
       long a = CONSTANT64;
       long b = a;
       long c = seed;
