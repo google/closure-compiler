@@ -133,6 +133,7 @@ public class DiagnosticGroups {
           + "functionParams, "
           + "globalThis, "
           + "invalidCasts, "
+          + "lintVarDeclarations, "
           + "misplacedTypeAnnotation, "
           + "missingOverride, "
           + "missingPolyfill, "
@@ -505,7 +506,9 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
       DiagnosticGroups.registerGroup("deprecatedAnnotations", CheckJSDoc.ANNOTATION_DEPRECATED);
 
-  /** @deprecated this check has been moved into the "lintChecks" group */
+  /**
+   * @deprecated this check has been moved into the "lintChecks" group
+   */
   @Deprecated
   public static final DiagnosticGroup UNUSED_PRIVATE_PROPERTY =
       DiagnosticGroups.registerDeprecatedGroup("unusedPrivateMembers");
@@ -514,7 +517,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "unusedLocalVariables", VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
 
-  /** @deprecated this check has been moved into the "lintChecks" group */
+  /**
+   * @deprecated this check has been moved into the "lintChecks" group
+   */
   @Deprecated
   public static final DiagnosticGroup MISSING_CONST_PROPERTY =
       DiagnosticGroups.registerDeprecatedGroup("jsdocMissingConst");
@@ -522,8 +527,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup JSDOC_MISSING_TYPE =
       DiagnosticGroups.registerGroup(
           "jsdocMissingType", RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
-
-
 
   public static final DiagnosticGroup TYPE_IMPORT_CODE_REFERENCES =
       DiagnosticGroups.registerGroup(
@@ -539,6 +542,16 @@ public class DiagnosticGroups {
   static final DiagnosticGroup USE_OF_GOOG_PROVIDE =
       DiagnosticGroups.registerGroup("useOfGoogProvide", ClosureCheckModule.USE_OF_GOOG_PROVIDE);
 
+  /**
+   * This is intended to be used to suppress warnings in code that cannot for some reason be updated
+   * to use `let` and `const` instead of `var`. It should not be enabled directly, instead enable
+   * "lintChecks".
+   */
+  public static final DiagnosticGroup LINT_VAR_DECLARATIONS =
+      DiagnosticGroups.registerGroup(
+          "lintVarDeclarations", // undocumented
+          CheckVar.VAR);
+
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup LINT_CHECKS =
@@ -546,6 +559,7 @@ public class DiagnosticGroups {
           "lintChecks", // undocumented
           CheckJSDocStyle.LINT_DIAGNOSTICS,
           USE_OF_GOOG_PROVIDE,
+          LINT_VAR_DECLARATIONS,
           new DiagnosticGroup(
               CheckClosureImports.LET_CLOSURE_IMPORT,
               CheckConstPrivateProperties.MISSING_CONST_PROPERTY,
@@ -585,7 +599,6 @@ public class DiagnosticGroups {
               CheckUnusedLabels.UNUSED_LABEL,
               CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
               CheckUselessBlocks.USELESS_BLOCK,
-              CheckVar.VAR,
               ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
