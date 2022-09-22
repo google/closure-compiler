@@ -259,8 +259,17 @@ public final class TemplateTypeMap {
         : templateValues.get(index);
   }
 
-  public @Nullable TemplateType getTemplateTypeKeyByName(String keyName) {
-    for (TemplateType key : templateKeys) {
+  /**
+   * Returns the final template key matching this name in the ordered list of template keys
+   *
+   * <p>Caution: there may be multiple template keys with the same name. Before using this method,
+   * consider whether you really want reference name string equality over TemplateType identity-
+   * based equality.
+   */
+  public @Nullable TemplateType getLastTemplateTypeKeyByName(String keyName) {
+    int size = this.templateKeys.size();
+    for (int i = size - 1; i >= 0; i--) {
+      TemplateType key = this.templateKeys.get(i);
       if (key.getReferenceName().equals(keyName)) {
         return key;
       }

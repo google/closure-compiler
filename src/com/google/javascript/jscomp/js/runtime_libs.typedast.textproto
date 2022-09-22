@@ -94577,7 +94577,7 @@ typed_asts {
                                 string_value_pointer: 18
                                 relative_column: 1
                                 boolean_properties: 8796093022208
-                                type: 89
+                                type: 0
                               }
                               relative_column: 8
                             }
@@ -94610,13 +94610,13 @@ typed_asts {
                                     kind: IDENTIFIER
                                     string_value_pointer: 18
                                     relative_column: 14
-                                    type: 89
+                                    type: 0
                                   }
                                   child {
                                     kind: IDENTIFIER
                                     string_value_pointer: 18
                                     relative_column: 7
-                                    type: 89
+                                    type: 0
                                   }
                                   child {
                                     kind: IDENTIFIER

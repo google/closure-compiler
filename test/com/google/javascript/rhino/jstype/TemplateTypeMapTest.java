@@ -40,6 +40,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.TemplateTypeMapSubject.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -239,6 +240,18 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
 
     // Then
     assertThat(result).isSameInstanceAs(existing);
+  }
+
+  @Test
+  public void testGetLastTemplateTypeKeyByName_returnsLastKeyIfDuplicates() {
+    TemplateType key1 = key("A");
+    TemplateType key2 = key("A");
+
+    TemplateTypeMap map = createMap(ImmutableList.of(key1, key2), ImmutableList.of(NUMBER_TYPE));
+
+    TemplateType result = map.getLastTemplateTypeKeyByName("A");
+
+    assertType(result).isSameInstanceAs(key2);
   }
 
   private TemplateTypeMap createMap(

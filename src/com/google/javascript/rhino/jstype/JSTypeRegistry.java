@@ -1468,7 +1468,9 @@ public final class JSTypeRegistry {
       thisType = scope.getTypeOfThis().toObjectType();
     }
     if (thisType != null) {
-      type = thisType.getTemplateTypeMap().getTemplateTypeKeyByName(jsTypeName);
+      // get the 'last' template type key with this name because if a superclass template key
+      // shares the same name as a subclass key, the subclass key is guaranteed to be last.
+      type = thisType.getTemplateTypeMap().getLastTemplateTypeKeyByName(jsTypeName);
       if (type != null) {
         checkState(type.isTemplateType(), "expected:%s", type);
         return type;

@@ -4382,7 +4382,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassTemplateType4() {
+  public void testClassTemplateType4_instanceProperty() {
     // Verify that template types used for instance properties are recognized.
     testSame(
         "/** @const */ var ns = {};"
@@ -4397,6 +4397,34 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             + ""
             + "/** @type {ns.C<string>} */ var x = new ns.C();\n"
             + "var result = x.foo;\n");
+    assertThat(findNameType("result", globalScope).toString()).isEqualTo("string");
+  }
+
+  @Test
+  public void testClassTemplateType4_instancePropertyWithInheritance() {
+    // Verify that template types used for instance properties are recognized
+    // when shadowing a template type on the superclass with the same name.
+    testSame(
+        lines(
+            "/**",
+            " * @template T",
+            " */",
+            "class Parent {}",
+            "",
+            "/**",
+            " * @template T",
+            " * @extends {Parent<number>}",
+            " */",
+            "class Child extends Parent {",
+            "  constructor() {",
+            "    super();",
+            "    /** @type {T} */",
+            "    this.foo;",
+            "  }",
+            "};",
+            "",
+            "/** @type {!Child<string>} */ var x = new Child();",
+            "var result = x.foo;"));
     assertThat(findNameType("result", globalScope).toString()).isEqualTo("string");
   }
 
