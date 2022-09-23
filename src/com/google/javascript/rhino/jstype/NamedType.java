@@ -333,7 +333,7 @@ public final class NamedType extends ProxyObjectType {
         // when `ImportedType` is not defined in the files it can see.
         setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
         if (validator != null) {
-          validator.apply(getReferencedType());
+          var unused = validator.apply(getReferencedType());
         }
       } else {
         warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
@@ -362,7 +362,7 @@ public final class NamedType extends ProxyObjectType {
       type = type.restrictByNotNullOrUndefined();
     }
     if (validator != null) {
-      validator.apply(type);
+      var unused = validator.apply(type);
     }
     setReferencedType(type);
     checkEnumElementCycle(reporter);
@@ -406,7 +406,7 @@ public final class NamedType extends ProxyObjectType {
     } else {
       setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
       if (validator != null) {
-        validator.apply(getReferencedType());
+        var unused = validator.apply(getReferencedType());
       }
     }
   }
