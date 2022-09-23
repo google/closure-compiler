@@ -1464,10 +1464,7 @@ class RemoveUnusedCode implements CompilerPass {
       String propertyName = removable.getPropertyName();
 
       if (pinnedPropertyNames.contains(propertyName)
-          || codingConvention.isExported(
-              propertyName,
-              /** local */
-              false)) {
+          || codingConvention.isExported(propertyName, /* local= */ false)) {
         // Referenced or exported, so not removable.
         removable.applyContinuations();
       } else if (isIndependentlyRemovable(removable)) {
@@ -1665,7 +1662,7 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
       return canonicalUnremovableVarInfo;
-    } else if (codingConvention.isExported(var.getName(), /* local */ !isGlobal)) {
+    } else if (codingConvention.isExported(var.getName(), /* local= */ !isGlobal)) {
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
       return canonicalUnremovableVarInfo;
@@ -1989,11 +1986,11 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     Assign buildVariableAssign(Node assignNode, VarInfo varInfo) {
-      return new Assign(this, assignNode, Kind.VARIABLE, /* propertyNode */ null, varInfo);
+      return new Assign(this, assignNode, Kind.VARIABLE, /* propertyNode= */ null, varInfo);
     }
 
     ClassSetupCall buildClassSetupCall(Node callNode) {
-      return buildClassSetupCall(callNode, /* classDefiningCall */ false);
+      return buildClassSetupCall(callNode, /* classDefiningCall= */ false);
     }
 
     ClassSetupCall buildClassSetupCall(Node callNode, boolean classDefiningCall) {

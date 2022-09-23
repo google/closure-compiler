@@ -206,7 +206,7 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
         JSError.make(
             node,
             OVERRIDE_WITHOUT_ALL_TYPES,
-            new JSDocInfoPrinter(/* useOriginalName */ false, /* printDesc */ true)
+            new JSDocInfoPrinter(/* useOriginalName= */ false, /* printDesc= */ true)
                 .print(completeJSDocInfo)));
   }
 

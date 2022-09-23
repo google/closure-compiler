@@ -1195,23 +1195,23 @@ class GlobalNamespace
   enum Inlinability {
     INLINE_COMPLETELY(
         /* shouldInlineUsages = */ true,
-        /* shouldRemoveDeclaration */ true,
+        /* shouldRemoveDeclaration= */ true,
         /* canCollapse = */ true),
     INLINE_BUT_KEEP_DECLARATION_ENUM(
         /* shouldInlineUsages = */ true,
-        /* shouldRemoveDeclaration */ false,
+        /* shouldRemoveDeclaration= */ false,
         /* canCollapse = */ true),
     INLINE_BUT_KEEP_DECLARATION_INTERFACE(
         /* shouldInlineUsages = */ true,
-        /* shouldRemoveDeclaration */ false,
+        /* shouldRemoveDeclaration= */ false,
         /* canCollapse = */ true),
     INLINE_BUT_KEEP_DECLARATION_CLASS(
         /* shouldInlineUsages = */ true,
-        /* shouldRemoveDeclaration */ false,
+        /* shouldRemoveDeclaration= */ false,
         /* canCollapse = */ true),
     DO_NOT_INLINE(
         /* shouldInlineUsages = */ false,
-        /* shouldRemoveDeclaration */ false,
+        /* shouldRemoveDeclaration= */ false,
         /* canCollapse = */ false);
 
     private final boolean shouldInlineUsages;

@@ -106,7 +106,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                           new CheckProvidesSorted(CheckProvidesSorted.Mode.COLLECT_AND_REPORT),
                           new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_AND_REPORT),
                           new CheckSideEffects(
-                              compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
+                              compiler, /* report= */ true, /* protectSideEffectFreeCode= */ false),
                           new CheckTypeImportCodeReferences(compiler),
                           new CheckUnusedLabels(compiler),
                           new CheckUnusedPrivateProperties(compiler),

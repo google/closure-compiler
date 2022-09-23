@@ -97,7 +97,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
     // And it is assigned to a literal value; hence could be used in static eval and safe to move:
     Node assignmentRhs = clinitAssignment.getSecondChild();
-    if (!NodeUtil.isLiteralValue(assignmentRhs, true /* includeFunctions */)
+    if (!NodeUtil.isLiteralValue(assignmentRhs, /* includeFunctions= */ true)
         || (assignmentRhs.isFunction() && !hoistableFunctions.contains(assignmentRhs))) {
       return;
     }
@@ -132,7 +132,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
       declarationInClass.addChildToFront(clinitAssignedValue);
       compiler.reportChangeToEnclosingScope(topLevelDeclaration);
     } else if (!declarationAssignedValue.equals(clinitAssignedValue)) {
-      checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
+      checkState(NodeUtil.isLiteralValue(declarationAssignedValue, /* includeFunctions= */ false));
       // Replace the assignment in declaration with the value from clinit
       declarationAssignedValue.replaceWith(clinitAssignedValue);
       compiler.reportChangeToEnclosingScope(topLevelDeclaration);
@@ -150,7 +150,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
         && (!node.getFirstChild().hasChildren()
             || (node.getFirstFirstChild() != null
                 && NodeUtil.isLiteralValue(
-                    node.getFirstFirstChild(), false /* includeFunctions */)));
+                    node.getFirstFirstChild(), /* includeFunctions= */ false)));
   }
 
   private static boolean isClinitFieldAssignment(Node node) {

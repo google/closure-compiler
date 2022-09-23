@@ -67,8 +67,13 @@ class FunctionToBlockMutator {
   Node mutate(String fnName, Node fnNode, Node callNode,
       String resultName, boolean needsDefaultResult, boolean isCallInLoop) {
     return mutateInternal(
-        fnName, fnNode, callNode, resultName, needsDefaultResult, isCallInLoop,
-        /* renameLocals */ true);
+        fnName,
+        fnNode,
+        callNode,
+        resultName,
+        needsDefaultResult,
+        isCallInLoop,
+        /* renameLocals= */ true);
   }
 
   /**
@@ -99,7 +104,7 @@ class FunctionToBlockMutator {
         resultName,
         needsDefaultResult,
         isCallInLoop,
-        /* renameLocals */ false);
+        /* renameLocals= */ false);
   }
 
   /**

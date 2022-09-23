@@ -279,7 +279,8 @@ final class PolymerClassRewriter {
 
     Node declarationCode = generateDeclarationCode(exprRoot, cls, constructorDoc, traversal);
     String basePath = cls.target.getQualifiedName() + ".prototype.";
-    appendBehaviorPropertiesToBlock(cls, propsAndBehaviorBlock, basePath, /*isExternsBlock*/ false);
+    appendBehaviorPropertiesToBlock(
+        cls, propsAndBehaviorBlock, basePath, /* isExternsBlock= */ false);
     appendPropertiesToBlock(
         cls.props, propsAndBehaviorBlock, basePath, /* isExternsBlock= */ false);
     appendBehaviorMembersToBlock(cls, propsAndBehaviorBlock);
@@ -390,7 +391,7 @@ final class PolymerClassRewriter {
     Node block = IR.block();
 
     appendBehaviorPropertiesToBlock(
-        cls, block, cls.target.getQualifiedName() + ".prototype.", /*isExternsBlock*/ false);
+        cls, block, cls.target.getQualifiedName() + ".prototype.", /* isExternsBlock= */ false);
     // For each Polymer property we found in the "properties" configuration object, append a
     // property declaration to the prototype (e.g. "/** @type {string} */ MyElement.prototype.foo").
     appendPropertiesToBlock(
@@ -1063,7 +1064,7 @@ final class PolymerClassRewriter {
     String interfaceBasePath = interfaceName + ".prototype.";
 
     if (polymerExportPolicy == PolymerExportPolicy.EXPORT_ALL) {
-      appendBehaviorPropertiesToBlock(cls, block, interfaceBasePath, /*isExternsBlock*/ true);
+      appendBehaviorPropertiesToBlock(cls, block, interfaceBasePath, /* isExternsBlock= */ true);
       appendPropertiesToBlock(cls.props, block, interfaceBasePath, /* isExternsBlock= */ true);
       // Methods from behaviors were not already added to our element definition, so we need to
       // export those in addition to methods defined directly on the element. Note it's possible
@@ -1089,7 +1090,7 @@ final class PolymerClassRewriter {
 
     } else if (polymerVersion == 1) {
       // For Polymer 1, all declared properties are non-renameable
-      appendBehaviorPropertiesToBlock(cls, block, interfaceBasePath, /*isExternsBlock*/ true);
+      appendBehaviorPropertiesToBlock(cls, block, interfaceBasePath, /* isExternsBlock= */ true);
       appendPropertiesToBlock(cls.props, block, interfaceBasePath, /* isExternsBlock= */ true);
     } else {
       // For Polymer 2, only read-only properties and reflectToAttribute properties are

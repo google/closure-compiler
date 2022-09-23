@@ -722,7 +722,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           return;
         }
         if (lvalue.isName()
-            && compiler.getCodingConvention().isExported(lvalue.getString(), /* local */ false)) {
+            && compiler.getCodingConvention().isExported(lvalue.getString(), /* local= */ false)) {
           return;
         }
         Name aliasingName = namespace.getSlot(lvalue.getQualifiedName());

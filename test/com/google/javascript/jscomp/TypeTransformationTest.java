@@ -1090,7 +1090,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationInstanceObjectToRecord2() {
     // TODO(bradfordcsmith): Define Array.prototype.length using externs instead.
     getNativeArrayType()
-        .defineDeclaredProperty("length", getNativeNumberType(), /* propertyNode */ null);
+        .defineDeclaredProperty("length", getNativeNumberType(), /* propertyNode= */ null);
     testTTL(record("length", getNativeNumberType()), "record(type(ARR, N))");
   }
 

@@ -2356,20 +2356,17 @@ public class CodeGenerator {
     // expression can't contain an in operator.  Pass this context flag down
     // until we reach expressions which no longer have the limitation.
     IN_FOR_INIT_CLAUSE(
-        /** inForInitClause */
-        true,
+        /* inForInitClause= */ true,
         /** at start of arrow fn */
         false),
     // Handle object literals at the start of a non-block arrow function body.
     // This is only important when the first token after the "=>" is "{".
     START_OF_ARROW_FN_BODY(
-        /** inForInitClause */
-        false,
+        /* inForInitClause= */ false,
         /** at start of arrow fn */
         true),
     START_OF_ARROW_FN_IN_FOR_INIT(
-        /** inForInitClause */
-        true,
+        /* inForInitClause= */ true,
         /** atArrowFunctionBody */
         true),
     OTHER; // nothing special to watch out for.

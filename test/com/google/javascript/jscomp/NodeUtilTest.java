@@ -482,11 +482,11 @@ public final class NodeUtilTest {
     }
 
     private boolean isLiteralValueExcludingFunctions(String code) {
-      return NodeUtil.isLiteralValue(parseExpr(code), /* includeFunctions */ false);
+      return NodeUtil.isLiteralValue(parseExpr(code), /* includeFunctions= */ false);
     }
 
     private boolean isLiteralValue(String code) {
-      return NodeUtil.isLiteralValue(parseExpr(code), /* includeFunctions */ true);
+      return NodeUtil.isLiteralValue(parseExpr(code), /* includeFunctions= */ true);
     }
 
     private void assertLiteralAndImmutable(Node n) {

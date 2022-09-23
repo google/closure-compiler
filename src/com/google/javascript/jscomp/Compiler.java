@@ -628,7 +628,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       List<SourceFile> externs, List<SourceFile> sources, CompilerOptions options) {
     JSChunk module = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     for (SourceFile source : sources) {
-      module.add(new CompilerInput(source, /* isExtern */ false));
+      module.add(new CompilerInput(source, /* isExtern= */ false));
     }
 
     List<JSChunk> modules = new ArrayList<>(1);
@@ -646,7 +646,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.externs.clear();
     for (SourceFile file : externs) {
-      this.externs.add(new CompilerInput(file, /* isExtern */ true));
+      this.externs.add(new CompilerInput(file, /* isExtern= */ true));
     }
 
     // Generate the module graph, and report any errors in the module specification as errors.

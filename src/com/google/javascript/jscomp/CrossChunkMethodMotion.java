@@ -84,7 +84,11 @@ public class CrossChunkMethodMotion implements CompilerPass {
     this.moduleGraph = compiler.getModuleGraph();
     this.analyzer =
         new AnalyzePrototypeProperties(
-            compiler, moduleGraph, canModifyExterns, false /* anchorUnusedVars */, noStubFunctions);
+            compiler,
+            moduleGraph,
+            canModifyExterns,
+            /* anchorUnusedVars= */ false,
+            noStubFunctions);
     this.noStubFunctions = noStubFunctions;
     this.astFactory = compiler.createAstFactory();
   }

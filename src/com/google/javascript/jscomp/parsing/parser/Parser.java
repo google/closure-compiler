@@ -204,7 +204,7 @@ public class Parser {
     private final boolean warnTrailingCommas;
 
     public Config() {
-      this(Mode.ES8_OR_GREATER, /* isStrictMode */ false);
+      this(Mode.ES8_OR_GREATER, /* isStrictMode= */ false);
     }
 
     public Config(Mode mode, boolean isStrictMode) {

@@ -61,7 +61,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
                 .buildOrThrow(),
             generatePseudoNames,
             previousMappings,
-            null /* xidHashFunction */);
+            /* xidHashFunction= */ null);
     return lastPass;
   }
 

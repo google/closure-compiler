@@ -516,7 +516,10 @@ public final class DepsGeneratorTest {
     SourceFile src1 = SourceFile.fromCode("src1.js",
         "goog.provide('a');\n");
 
-    doErrorMessagesRun(ImmutableList.of(dep1), ImmutableList.of(src1), true /* fatal */,
+    doErrorMessagesRun(
+        ImmutableList.of(dep1),
+        ImmutableList.of(src1),
+        /* fatal= */ true,
         "Namespace \"a\" is already provided in other file dep1.js");
   }
 
@@ -536,8 +539,10 @@ public final class DepsGeneratorTest {
     // doErrorMessagesRun uses closure_path //javascript/closure and therefore
     // fails to recognize and de-dupe the stub Closure Library at
     // //path/to/closure.
-    doErrorMessagesRun(ImmutableList.of(fauxClosureDeps),
-        ImmutableList.of(fauxClosureSrc, userSrc), true /* fatal */,
+    doErrorMessagesRun(
+        ImmutableList.of(fauxClosureDeps),
+        ImmutableList.of(fauxClosureSrc, userSrc),
+        /* fatal= */ true,
         "Namespace \"a\" is already provided in other file dep1.js");
   }
 
@@ -582,7 +587,10 @@ public final class DepsGeneratorTest {
         SourceFile.fromCode(
             "src1.js", LINE_JOINER.join("goog.provide('b');", "goog.provide('b');\n"));
 
-    doErrorMessagesRun(ImmutableList.of(dep1), ImmutableList.of(src1), false /* fatal */,
+    doErrorMessagesRun(
+        ImmutableList.of(dep1),
+        ImmutableList.of(src1),
+        /* fatal= */ false,
         "Multiple calls to goog.provide(\"b\")");
   }
 
@@ -594,7 +602,10 @@ public final class DepsGeneratorTest {
         SourceFile.fromCode(
             "src1.js", LINE_JOINER.join("goog.provide('b');", "goog.require('b');", ""));
 
-    doErrorMessagesRun(ImmutableList.of(dep1), ImmutableList.of(src1), false /* fatal */,
+    doErrorMessagesRun(
+        ImmutableList.of(dep1),
+        ImmutableList.of(src1),
+        /* fatal= */ false,
         "Namespace \"b\" is both required and provided in the same file.");
   }
 
@@ -608,7 +619,7 @@ public final class DepsGeneratorTest {
     doErrorMessagesRun(
         ImmutableList.of(dep1),
         ImmutableList.of(src1),
-        true /* fatal */,
+        /* fatal= */ true,
         "Namespace \"b\" is required but never provided.\n"
             + "You need to pass a library that has it in srcs or exports to your target's deps.");
   }
@@ -617,7 +628,10 @@ public final class DepsGeneratorTest {
   public void testNoDepsInDepsFile() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js", "");
 
-    doErrorMessagesRun(ImmutableList.of(dep1), ImmutableList.<SourceFile>of(), false /* fatal */,
+    doErrorMessagesRun(
+        ImmutableList.of(dep1),
+        ImmutableList.<SourceFile>of(),
+        /* fatal= */ false,
         "No dependencies found in file");
   }
 
@@ -628,7 +642,7 @@ public final class DepsGeneratorTest {
     doErrorMessagesRun(
         ImmutableList.of(),
         ImmutableList.of(src1),
-        true /* fatal */,
+        /* fatal= */ true,
         "Could not find file \"./missing.js\".");
   }
 

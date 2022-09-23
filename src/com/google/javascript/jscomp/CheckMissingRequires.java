@@ -119,7 +119,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     templateParamNames.addAll(info.getTemplateTypeNames());
     templateParamNames.addAll(info.getTypeTransformations().keySet());
     if (info.hasType()) {
-      visitJsDocExpr(t, currentModule, info.getType(), /* isStrongReference */ false);
+      visitJsDocExpr(t, currentModule, info.getType(), /* isStrongReference= */ false);
     }
     for (String param : info.getParameterNames()) {
       if (info.hasParameterType(param)) {

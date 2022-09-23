@@ -688,7 +688,7 @@ class InlineVariables implements CompilerPass {
         return NO_INLINE_SELF_OR_ALIASES_EXPERT;
       }
 
-      if (compiler.getCodingConvention().isExported(v.getName(), /* local */ v.isLocal())) {
+      if (compiler.getCodingConvention().isExported(v.getName(), /* local= */ v.isLocal())) {
         // If the variable is exported, it might be assigned a new value by code we cannot see,
         // so aliases to it are creating snapshots of its state.
         // We cannot inline this variable or its aliases.

@@ -199,7 +199,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   }
 
   private ThisAndArgumentsContext contextForScript(Node scriptNode) {
-    return new ThisAndArgumentsContext(scriptNode, false /* isConstructor */);
+    return new ThisAndArgumentsContext(scriptNode, /* isConstructor= */ false);
   }
 
   /**

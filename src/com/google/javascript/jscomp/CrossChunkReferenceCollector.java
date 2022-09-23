@@ -113,7 +113,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         if (v != null) {
           // Only global, non-exported names can be moved
           if (v.isGlobal()
-              && !compiler.getCodingConvention().isExported(v.getName(), /* local */ false)) {
+              && !compiler.getCodingConvention().isExported(v.getName(), /* local= */ false)) {
             if (varsByName.containsKey(varName)) {
               checkState(Objects.equals(varsByName.get(varName), v));
             } else {

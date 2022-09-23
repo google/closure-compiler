@@ -452,7 +452,7 @@ public final class SuggestedFix {
               ""));
       replacements.put(
           n.getSourceFileName(),
-          CodeReplacement.create(n.getSourceOffset() + n.getLength() - 1, 1 /* length */, ""));
+          CodeReplacement.create(n.getSourceOffset() + n.getLength() - 1, /* length= */ 1, ""));
       return this;
     }
 

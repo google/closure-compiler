@@ -292,7 +292,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     private boolean hasSafeArguments(NodeTraversal t, Node callOrNewNode) {
       Node child = callOrNewNode.getSecondChild();
       while (child != null) {
-        if (!NodeUtil.isLiteralValue(child, false /* includeFunctions */)
+        if (!NodeUtil.isLiteralValue(child, /* includeFunctions= */ false)
             && !isParameter(t, child)) {
           return false;
         }

@@ -679,7 +679,7 @@ public final class ConformanceRules {
             return false;
           }
           if (NodeUtil.isLhsOfAssign(n)
-              && (NodeUtil.isLiteralValue(n.getNext(), false /* includeFunctions */)
+              && (NodeUtil.isLiteralValue(n.getNext(), /* includeFunctions= */ false)
                   || NodeUtil.isSomeCompileTimeConstStringValue(n.getNext()))) {
             return false;
           }

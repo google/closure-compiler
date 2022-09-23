@@ -59,7 +59,7 @@ class FunctionArgumentInjector {
    * @return The root node or its replacement.
    */
   Node inject(AbstractCompiler compiler, Node node, Node parent, Map<String, Node> replacements) {
-    return inject(compiler, node, parent, replacements, /* replaceThis */ true);
+    return inject(compiler, node, parent, replacements, /* replaceThis= */ true);
   }
 
   private Node inject(

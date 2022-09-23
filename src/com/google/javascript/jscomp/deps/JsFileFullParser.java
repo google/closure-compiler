@@ -182,8 +182,8 @@ public class JsFileFullParser {
             Config.LanguageMode.ES_NEXT,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
             Config.RunMode.STOP_AFTER_ERROR,
-            /* extraAnnotationNames */ ImmutableSet.<String>of(),
-            /* parseInlineSourceMaps */ true,
+            /* extraAnnotationNames= */ ImmutableSet.<String>of(),
+            /* parseInlineSourceMaps= */ true,
             Config.StrictMode.SLOPPY);
     FileInfo info = new FileInfo();
     ParserRunner.ParseResult parsed = ParserRunner.parse(source, code, config, errorReporter);

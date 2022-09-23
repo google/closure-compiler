@@ -2874,7 +2874,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             "@suppress {x,y} Some description.",
             " * @suppress {z}", // no description
             "*/");
-    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
     assertThat(info.getSuppressionsAndTheirDescription())
         .containsEntry(ImmutableSet.of("x", "y"), "Some description.");
@@ -2889,7 +2889,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             " * Spans across lines.",
             " * @suppress {z}", // no description
             "*/");
-    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
     assertThat(info.getSuppressionsAndTheirDescription())
         .containsEntry(ImmutableSet.of("x", "y"), "Some description. Spans across lines.");
@@ -2906,7 +2906,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             " * @override",
             " * @suppress {z}", // no description
             "*/");
-    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getAuthors()).contains("XYZ");
     assertThat(info.isOverride()).isTrue();
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
@@ -2921,7 +2921,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testSuppressWithDescription_repeatedWarnings1() {
     String jsDocComment =
         lines("@suppress {x} Some description.", " * @suppress {x} Another description.", "*/");
-    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
     assertThat(info.getSuppressionsAndTheirDescription()).hasSize(1);
     assertThat(info.getSuppressionsAndTheirDescription())
@@ -2933,7 +2933,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testSuppressWithDescription_repeatedWarnings2() {
     String jsDocComment =
         lines("@suppress {x} Some description.", " * @suppress {x, y} Another description.", "*/");
-    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
     assertThat(info.getSuppressionsAndTheirDescription()).hasSize(2);
     assertThat(info.getSuppressionsAndTheirDescription())
@@ -5185,7 +5185,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     String comment = "* @desc This is a comment */";
     JSDocInfo info = parse(comment);
     assertThat(info.getOriginalCommentString()).isNull();
-    info = parse(comment, true /* parseDocumentation */);
+    info = parse(comment, /* parseDocumentation= */ true);
     assertThat(info.getOriginalCommentString()).isEqualTo(comment);
   }
 

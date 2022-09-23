@@ -1070,7 +1070,7 @@ public final class SymbolTable {
           // table into an invalid state).
           Symbol existingSymbol = isAnySymbolDeclared(name, paramNode, sym.docScope);
           if (existingSymbol == null) {
-            declareSymbol(name, type, type == null, sym.docScope, paramNode, null /* info */);
+            declareSymbol(name, type, type == null, sym.docScope, paramNode, /* info= */ null);
           }
         } else {
           param.defineReferenceAt(paramNode);
@@ -2068,7 +2068,7 @@ public final class SymbolTable {
                 JSType rootType = t.getScopeRoot().getJSType();
                 FunctionType fnType = rootType == null ? null : rootType.toMaybeFunctionType();
                 JSType type = fnType == null ? null : fnType.getTypeOfThis();
-                symbol = addSymbol("this", type, false/* inferred= */ , scope, scopeRoot);
+                symbol = addSymbol("this", type, /* inferred= */ false, scope, scopeRoot);
               }
             }
           }

@@ -109,7 +109,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private boolean isCrossModuleName(String name) {
     return assumeCrossModuleNames
         || crossModuleNames.contains(name)
-        || compiler.getCodingConvention().isExported(name, /* local */ false);
+        || compiler.getCodingConvention().isExported(name, /* local= */ false);
   }
 
   private boolean isExternVar(String varname, NodeTraversal t) {

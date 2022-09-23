@@ -325,7 +325,7 @@ public final class Matchers {
    * prototype of a class.
    */
   public static Matcher prototypeVariableDeclaration() {
-    return matcherForPrototypeDeclaration(false /* requireFunctionType */);
+    return matcherForPrototypeDeclaration(/* requireFunctionType= */ false);
   }
 
   /**
@@ -333,7 +333,7 @@ public final class Matchers {
    * prototype of a class.
    */
   public static Matcher prototypeMethodDeclaration() {
-    return matcherForPrototypeDeclaration(true /* requireFunctionType */);
+    return matcherForPrototypeDeclaration(/* requireFunctionType= */ true);
   }
 
   /**

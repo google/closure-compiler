@@ -1561,7 +1561,7 @@ class IRFactory {
             SourcePosition tempSourcePos =
                 new SourcePosition(
                     null,
-                    Integer.MAX_VALUE /* offset */,
+                    /* offset= */ Integer.MAX_VALUE,
                     arg.location.end.line,
                     Integer.MAX_VALUE /*col */);
             zones.add(tempSourcePos);

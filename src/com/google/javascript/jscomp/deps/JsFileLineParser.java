@@ -295,7 +295,7 @@ public abstract class JsFileLineParser {
   String parseJsString(String jsStringLiteral) throws ParseException {
     valueMatcher.reset(jsStringLiteral);
     if (!valueMatcher.matches()) {
-      throw new ParseException("Syntax error in JS String literal", true /* fatal */);
+      throw new ParseException("Syntax error in JS String literal", /* fatal= */ true);
     }
     return valueMatcher.group(1) != null ? valueMatcher.group(1) : valueMatcher.group(2);
   }
@@ -312,7 +312,7 @@ public abstract class JsFileLineParser {
     int indexStart = input.indexOf('[');
     int indexEnd = input.lastIndexOf(']');
     if ((indexStart == -1) || (indexEnd == -1)) {
-      throw new ParseException("Syntax error when parsing JS array", true /* fatal */);
+      throw new ParseException("Syntax error when parsing JS array", /* fatal= */ true);
     }
     String innerValues = input.substring(indexStart + 1, indexEnd);
 
@@ -321,7 +321,7 @@ public abstract class JsFileLineParser {
       for (;;) {
         // Parse the current string literal.
         if (!valueMatcher.lookingAt()) {
-          throw new ParseException("Syntax error in JS String literal", true /* fatal */);
+          throw new ParseException("Syntax error in JS String literal", /* fatal= */ true);
         }
         // Add it to the results.
         results.add(valueMatcher.group(1) != null ?
@@ -331,7 +331,7 @@ public abstract class JsFileLineParser {
         }
         // Ensure there is a comma after the value.
         if (innerValues.charAt(valueMatcher.end()) != ',') {
-          throw new ParseException("Missing comma in string array", true /* fatal */);
+          throw new ParseException("Missing comma in string array", /* fatal= */ true);
         }
         // Move to the next value.
         valueMatcher.region(valueMatcher.end() + 1, valueMatcher.regionEnd());
@@ -381,7 +381,7 @@ public abstract class JsFileLineParser {
 
   private static void check(boolean condition, String message) throws ParseException {
     if (!condition) {
-      throw new ParseException(message, true /* fatal */);
+      throw new ParseException(message, /* fatal= */ true);
     }
   }
 }

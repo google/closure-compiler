@@ -71,7 +71,7 @@ public final class TranspileResult {
   }
 
   // sourcemaps must escape :, and cannot escape space as +, so we need a custom escaper.
-  private static final Escaper ESCAPER = new PercentEscaper("-_.*", false /* plusForSpace */);
+  private static final Escaper ESCAPER = new PercentEscaper("-_.*", /* plusForSpace= */ false);
 
   public TranspileResult embedSourcemap() {
     if (sourceMap.isEmpty()) {
