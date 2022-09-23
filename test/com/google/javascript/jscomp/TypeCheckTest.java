@@ -47,6 +47,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26464,12 +26465,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
-  private void testClosureTypes(String js, String description) {
+  private void testClosureTypes(String js, @Nullable String description) {
     testClosureTypesMultipleWarnings(
         js, description == null ? null : ImmutableList.of(description));
   }
 
-  private void testClosureTypesMultipleWarnings(String js, List<String> descriptions) {
+  private void testClosureTypesMultipleWarnings(String js, @Nullable List<String> descriptions) {
     compiler.initOptions(compiler.getOptions());
     Node jsRoot = IR.root(compiler.parseTestCode(js));
     Node externs =

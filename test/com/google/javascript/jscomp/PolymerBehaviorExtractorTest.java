@@ -581,7 +581,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
    * Tests that the behaviorArray resolves to exactly one behavior, using the provided
    * ModuleMetadata for behavior extraction.
    */
-  private void assertSingleBehaviorExtractionSucceeds(ModuleMetadata metadata) {
+  private void assertSingleBehaviorExtractionSucceeds(@Nullable ModuleMetadata metadata) {
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, metadata);
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(defs).hasSize(1);

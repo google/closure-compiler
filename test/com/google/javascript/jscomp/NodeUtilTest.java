@@ -4830,7 +4830,7 @@ public final class NodeUtilTest {
     return funcNode == NodeUtil.getRValueOfLValue(nameNode);
   }
 
-  private static void testFunctionName(String js, String expected) {
+  private static void testFunctionName(String js, @Nullable String expected) {
     assertThat(NodeUtil.getNearestFunctionName(parseFirst(FUNCTION, js))).isEqualTo(expected);
   }
 

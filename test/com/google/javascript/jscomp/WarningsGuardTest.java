@@ -33,6 +33,7 @@ import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -479,7 +480,7 @@ public final class WarningsGuardTest {
     return null;
   }
 
-  private static JSError makeError(String sourcePath) {
+  private static JSError makeError(@Nullable String sourcePath) {
     Node n = new Node(Token.EMPTY);
     n.setSourceFileForTesting(sourcePath);
     return JSError.make(n, BAR_WARNING);
@@ -491,7 +492,7 @@ public final class WarningsGuardTest {
     return JSError.make(n, type);
   }
 
-  private static JSError makeError(String sourcePath, CheckLevel level) {
+  private static JSError makeError(@Nullable String sourcePath, CheckLevel level) {
     Node n = new Node(Token.EMPTY);
     n.setSourceFileForTesting(sourcePath);
     return JSError.make(n, DiagnosticType.make("FOO", level, "Foo description"));

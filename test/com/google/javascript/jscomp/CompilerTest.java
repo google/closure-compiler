@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -952,7 +953,7 @@ public final class CompilerTest {
     }
   }
 
-  static Result test(String js, String expected, DiagnosticType error) {
+  static Result test(String js, String expected, @Nullable DiagnosticType error) {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
@@ -1080,7 +1081,7 @@ public final class CompilerTest {
     }
   }
 
-  private boolean hasOutput(String showWarningsOnlyFor, String path, CheckLevel level) {
+  private boolean hasOutput(@Nullable String showWarningsOnlyFor, String path, CheckLevel level) {
     TestErrorManager errorManager = new TestErrorManager();
     Compiler compiler = new Compiler(errorManager);
     CompilerOptions options = createNewFlagBasedOptions();

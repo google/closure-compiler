@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFor
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -276,12 +277,12 @@ public final class LightweightMessageFormatterTest {
     return new LightweightMessageFormatter(source(string, originalSource));
   }
 
-  private SourceExcerptProvider source(final String source, final String originalSource) {
+  private SourceExcerptProvider source(final String source, final @Nullable String originalSource) {
     return source(source, originalSource, -1);
   }
 
   private SourceExcerptProvider source(
-      final String source, final String originalSource, final int endLineNumber) {
+      final String source, final @Nullable String originalSource, final int endLineNumber) {
     return new SourceExcerptProvider() {
       @Override
       public String getSourceLine(String sourceName, int lineNumber) {
@@ -315,7 +316,7 @@ public final class LightweightMessageFormatterTest {
     };
   }
 
-  private String format(Region region) {
+  private String format(@Nullable Region region) {
     return new LineNumberingFormatter().formatRegion(region);
   }
 

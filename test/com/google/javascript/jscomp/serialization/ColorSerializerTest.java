@@ -659,7 +659,7 @@ public class ColorSerializerTest {
     }
 
     static TestColor create(
-        Color color, TypeProto expectedTypeProto, Integer nullableExpectedTypePointer) {
+        Color color, @Nullable TypeProto expectedTypeProto, Integer nullableExpectedTypePointer) {
       return new AutoValue_ColorSerializerTest_TestColor(
           color, expectedTypeProto, nullableExpectedTypePointer);
     }

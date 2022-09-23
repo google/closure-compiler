@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +47,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
 
   private boolean enablePropertyFlattening = false;
 
-  private void addLibrary(String name, String from, String to, String library) {
+  private void addLibrary(String name, String from, String to, @Nullable String library) {
     polyfillTable.add(String.format("%s %s %s %s", name, from, to, nullToEmpty(library)));
     polyfillsToInject.add(name);
   }

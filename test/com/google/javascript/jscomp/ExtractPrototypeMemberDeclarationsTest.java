@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -362,7 +363,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     return generateExtractedDeclarations(num, null);
   }
 
-  private String generateExtractedDeclarations(int num, Integer fileIndex) {
+  private String generateExtractedDeclarations(int num, @Nullable Integer fileIndex) {
     StringBuilder builder = new StringBuilder();
 
     String alias = TMP;

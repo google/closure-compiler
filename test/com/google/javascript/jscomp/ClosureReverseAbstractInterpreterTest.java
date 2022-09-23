@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -98,8 +99,8 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
         getNativeCheckedUnknownType());
   }
 
-  private void testClosureFunction(String function, JSType type,
-      JSType trueType, JSType falseType) {
+  private void testClosureFunction(
+      String function, @Nullable JSType type, JSType trueType, @Nullable JSType falseType) {
     // function(a) where a : type
     Node n = compiler.parseTestCode("var a; " + function + "(a)");
     Node call = n.getLastChild().getLastChild();

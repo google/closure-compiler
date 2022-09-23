@@ -933,7 +933,7 @@ public final class JSChunkGraphTest {
     assertDeepestCommonDepOneWay(expected, m2, m1, true);
   }
 
-  private void assertDeepestCommonDep(JSChunk expected, JSChunk m1, JSChunk m2) {
+  private void assertDeepestCommonDep(@Nullable JSChunk expected, JSChunk m1, JSChunk m2) {
     assertDeepestCommonDepOneWay(expected, m1, m2, false);
     assertDeepestCommonDepOneWay(expected, m2, m1, false);
   }

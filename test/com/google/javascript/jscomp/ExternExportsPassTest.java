@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.function.Consumer;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -1723,14 +1724,15 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   /**
-   * Compiles the passed in JavaScript with the passed in externs and returns
-   * the new externs exported by the this pass.
+   * Compiles the passed in JavaScript with the passed in externs and returns the new externs
+   * exported by the this pass.
    *
    * @param js the source to be compiled
    * @param externs the externs the {@code js} source needs
    * @param consumer consumer for the externs generated from {@code js}
    */
-  private void compileAndExportExterns(String js, String externs, final Consumer<String> consumer) {
+  private void compileAndExportExterns(
+      String js, String externs, final @Nullable Consumer<String> consumer) {
     js = lines(
         "/** @const */ var goog = {};",
         "goog.exportSymbol = function(a, b) {};",

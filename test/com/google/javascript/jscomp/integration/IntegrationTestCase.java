@@ -240,7 +240,10 @@ abstract class IntegrationTestCase {
 
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(
-      CompilerOptions options, String[] original, String[] compiled, DiagnosticGroup warnings) {
+      CompilerOptions options,
+      String[] original,
+      String @Nullable [] compiled,
+      DiagnosticGroup warnings) {
     Compiler compiler = compile(options, original);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
 
@@ -270,11 +273,9 @@ abstract class IntegrationTestCase {
     testParseError(options, original, null);
   }
 
-  /**
-   * Asserts that there is at least one parse error.
-   */
-  protected void testParseError(CompilerOptions options,
-      String original, String compiled) {
+  /** Asserts that there is at least one parse error. */
+  protected void testParseError(
+      CompilerOptions options, String original, @Nullable String compiled) {
     Compiler compiler = compile(options, original);
     for (JSError error : compiler.getErrors()) {
       if (!DiagnosticGroups.PARSING.matches(error)) {

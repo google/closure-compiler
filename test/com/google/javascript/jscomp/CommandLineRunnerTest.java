@@ -3094,7 +3094,7 @@ public final class CommandLineRunnerTest {
    * into {@code compiled}. If {@code warning} is non-null, we will also check if the given warning
    * type was emitted.
    */
-  private void test(String[] original, String[] compiled, DiagnosticType warning) {
+  private void test(String[] original, String[] compiled, @Nullable DiagnosticType warning) {
     exitCodes.clear();
     Compiler compiler = compile(original);
 
@@ -3253,7 +3253,7 @@ public final class CommandLineRunnerTest {
     compileArgs(expectedOutput, null);
   }
 
-  private void compileArgs(String expectedOutput, DiagnosticType expectedError) {
+  private void compileArgs(String expectedOutput, @Nullable DiagnosticType expectedError) {
     String[] argStrings = args.toArray(new String[] {});
 
     CommandLineRunner runner =

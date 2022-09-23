@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -273,7 +274,8 @@ public final class FunctionToBlockMutatorTest {
     helperMutate(code, expectedResult, fnName, "result");
   }
 
-  public void helperMutate(String code, String expectedResult, String fnName, String resultName) {
+  public void helperMutate(
+      String code, String expectedResult, String fnName, @Nullable String resultName) {
     final Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     final FunctionToBlockMutator mutator = new FunctionToBlockMutator(

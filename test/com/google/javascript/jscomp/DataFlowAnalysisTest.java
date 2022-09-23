@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -953,14 +954,14 @@ public final class DataFlowAnalysisTest {
     assertThat(e).hasMessageThat().startsWith("Dataflow analysis appears to diverge around: ");
   }
 
-  static void verifyInHas(GraphNode<Instruction, Branch> node, Variable var,
-      Integer constant) {
+  static void verifyInHas(
+      GraphNode<Instruction, Branch> node, Variable var, @Nullable Integer constant) {
     LinearFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
     veritfyLatticeElementHas(fState.getIn(), var, constant);
   }
 
-  static void verifyOutHas(GraphNode<Instruction, Branch> node, Variable var,
-      Integer constant) {
+  static void verifyOutHas(
+      GraphNode<Instruction, Branch> node, Variable var, @Nullable Integer constant) {
     LinearFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
     veritfyLatticeElementHas(fState.getOut(), var, constant);
   }

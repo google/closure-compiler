@@ -637,17 +637,20 @@ public final class VarCheckTest extends CompilerTestCase {
     testDependentModules("var x = 10; function a() {y++;} a();", "var y = 11;", null);
   }
 
-  private void testDependentModules(String code1, String code2, DiagnosticType error) {
+  private void testDependentModules(String code1, String code2, @Nullable DiagnosticType error) {
     testDependentModules(code1, code2, error, null);
   }
 
   private void testDependentModules(
-      String code1, String code2, DiagnosticType error, DiagnosticType warning) {
+      String code1, String code2, DiagnosticType error, @Nullable DiagnosticType warning) {
     testTwoModules(code1, code2, true, error, warning);
   }
 
   private void testIndependentModules(
-      String code1, String code2, DiagnosticType error, DiagnosticType warning) {
+      String code1,
+      String code2,
+      @Nullable DiagnosticType error,
+      @Nullable DiagnosticType warning) {
     testTwoModules(code1, code2, false, error, warning);
   }
 

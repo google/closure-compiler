@@ -2200,7 +2200,7 @@ public abstract class CompilerTestCase {
   protected static final class Expected implements TestPart {
     final List<SourceFile> expected;
 
-    Expected(List<SourceFile> files) {
+    Expected(@Nullable List<SourceFile> files) {
       this.expected = files;
     }
   }
@@ -2245,7 +2245,9 @@ public abstract class CompilerTestCase {
     final NamedPredicate<String> messagePredicate;
 
     Diagnostic(
-        CheckLevel level, DiagnosticType diagnostic, NamedPredicate<String> messagePredicate) {
+        CheckLevel level,
+        DiagnosticType diagnostic,
+        @Nullable NamedPredicate<String> messagePredicate) {
       this.level = level;
       this.diagnostic = diagnostic;
       this.messagePredicate = messagePredicate;

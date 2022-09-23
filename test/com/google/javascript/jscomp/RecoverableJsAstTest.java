@@ -29,6 +29,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -128,7 +129,10 @@ public class RecoverableJsAstTest {
     checkCompile(realAst, ast, expected, ImmutableList.<String>of());
   }
 
-  private void checkCompile(SourceAst realAst, RecoverableJsAst ast, String expected,
+  private void checkCompile(
+      SourceAst realAst,
+      RecoverableJsAst ast,
+      @Nullable String expected,
       ImmutableList<String> expectedErrors) {
     Compiler compiler = new Compiler();
 

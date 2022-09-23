@@ -46,7 +46,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private boolean isolatePolyfills = false;
   private boolean injectPolyfills = true;
 
-  private void addLibrary(String name, String from, String to, String library) {
+  private void addLibrary(String name, String from, String to, @Nullable String library) {
     if (library != null) {
       injectableLibraries.put(
           library,

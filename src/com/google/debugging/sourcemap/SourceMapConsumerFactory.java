@@ -16,9 +16,9 @@
 
 package com.google.debugging.sourcemap;
 
-/**
- * Detect and parse the provided source map.
- */
+import org.jspecify.nullness.Nullable;
+
+/** Detect and parse the provided source map. */
 public final class SourceMapConsumerFactory {
 
   /** not constructible */
@@ -37,7 +37,7 @@ public final class SourceMapConsumerFactory {
    * @param supplier A supplier for any referenced maps.
    * @return The parsed source map.
    */
-  public static SourceMapping parse(String contents, SourceMapSupplier supplier)
+  public static SourceMapping parse(String contents, @Nullable SourceMapSupplier supplier)
       throws SourceMapParseException {
     // Version 1, starts with a magic string
     if (contents.startsWith("/** Begin line maps. **/")) {

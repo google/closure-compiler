@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -3033,7 +3034,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertPureCallsMarked(source, expected, null);
   }
 
-  void assertPureCallsMarked(String source, final List<String> expected, final Postcondition post) {
+  void assertPureCallsMarked(
+      String source, final List<String> expected, final @Nullable Postcondition post) {
     testSame(
         srcs(source),
         postcondition(

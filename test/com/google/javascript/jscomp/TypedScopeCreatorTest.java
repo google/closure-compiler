@@ -60,6 +60,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -7881,7 +7882,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertAttachedGoogModuleId("SCOPED_CAST", null);
   }
 
-  private void assertAttachedGoogModuleId(String label, String expectedId) {
+  private void assertAttachedGoogModuleId(String label, @Nullable String expectedId) {
     JSType type = this.getLabeledStatement(label).statementNode.getOnlyChild().getJSType();
 
     final String actualId;
