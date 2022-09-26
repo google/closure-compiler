@@ -1423,6 +1423,93 @@ public class Node {
     }
   }
 
+  private static String createJsonPair(String name, String value) {
+    return "\"" + name + "\":\"" + value + "\"";
+  }
+
+  private static String createJsonPairRawValue(String name, String value) {
+    return "\"" + name + "\":" + value;
+  }
+
+  private void toJson(Appendable sb) throws IOException {
+    sb.append('{');
+    sb.append(createJsonPair("token", token.toString()));
+    if (this instanceof StringNode) {
+      sb.append(',');
+      sb.append(createJsonPair("string", getString()));
+    } else if (token == Token.FUNCTION) {
+      sb.append(',');
+      // In the case of JsDoc trees, the first child is often not a string
+      // which causes exceptions to be thrown when calling toString or
+      // toStringTree.
+      if (first == null || first.token != Token.NAME) {
+        sb.append(createJsonPair("functionName", "<invalid>"));
+      } else {
+        sb.append(createJsonPair("functionName", first.getString()));
+      }
+    } else if (token == Token.NUMBER) {
+      sb.append(',');
+      sb.append(createJsonPair("number", String.valueOf(getDouble())));
+    }
+    int lineno = getLineno();
+    if (lineno != -1) {
+      sb.append(',');
+      sb.append("\"sourceLocation\":{");
+      sb.append(createJsonPairRawValue("line", String.valueOf(lineno)));
+      sb.append(',');
+      sb.append(createJsonPairRawValue("col", String.valueOf(getCharno())));
+      if (length != 0) {
+        sb.append(',');
+        sb.append(createJsonPairRawValue("length", String.valueOf(length)));
+      }
+      sb.append("}");
+    }
+
+    if (this.originalName != null) {
+      sb.append(",");
+      sb.append(createJsonPair("original_name", this.originalName));
+    }
+
+    byte[] keys = getSortedPropTypes();
+    if (keys.length != 0) {
+      sb.append(",");
+      sb.append("\"props\":{");
+      for (int i = 0; i < keys.length; i++) {
+        Prop type = PROP_VALUES[keys[i]];
+        PropListItem x = lookupProperty(type);
+        sb.append(
+            createJsonPair(
+                Ascii.toLowerCase(String.valueOf(type)),
+                x.toString().replace("\n", "\\n").replace("\"", "\\\"")));
+        if (i + 1 < keys.length) {
+          sb.append(',');
+        }
+      }
+      sb.append("}");
+    }
+
+    if (jstypeOrColor != null) {
+      String typeString = jstypeOrColor.toString();
+      if (typeString != null) {
+        sb.append(',');
+        sb.append(createJsonPair("typeString", typeString.replace("\"", "\\\"")));
+      }
+    }
+
+    if (this.first != null) {
+      sb.append(',');
+      sb.append("\"children\":[");
+      for (Node child = this.first; child != null; child = child.next) {
+        child.toJson(sb);
+        if (child.next != null) {
+          sb.append(',');
+        }
+      }
+      sb.append("]");
+    }
+    sb.append('}');
+  }
+
   @CheckReturnValue
   public final String toStringTree() {
     return toStringTreeImpl();
@@ -1451,6 +1538,14 @@ public class Node {
     for (Node cursor = n.first; cursor != null; cursor = cursor.next) {
       toStringTreeHelper(cursor, level + 1, sb);
     }
+  }
+
+  public final void appendJsonTree(Appendable appendable) throws IOException {
+    toJsonTreeHelper(this, appendable);
+  }
+
+  private static void toJsonTreeHelper(Node n, Appendable sb) throws IOException {
+    n.toJson(sb);
   }
 
   private transient Token token; // Type of the token of the node; NAME for example

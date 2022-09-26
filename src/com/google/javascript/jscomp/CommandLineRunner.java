@@ -181,6 +181,13 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean printTree = false;
 
     @Option(
+        name = "--print_tree_json",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Prints out the parse tree as json and exits")
+    private boolean printTreeJson = false;
+
+    @Option(
         name = "--print_ast",
         hidden = true,
         handler = BooleanOptionHandler.class,
@@ -1742,6 +1749,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       config
           .setPrintVersion(flags.version)
           .setPrintTree(flags.printTree)
+          .setPrintTreeJson(flags.printTreeJson)
           .setPrintAst(flags.printAst)
           .setJscompDevMode(flags.jscompDevMode)
           .setLoggingLevel(flags.loggingLevel)

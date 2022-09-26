@@ -401,18 +401,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (config.jsOutputFile.length() > 0) {
       if (config.skipNormalOutputs) {
         throw new FlagUsageException(
-            "skip_normal_outputs and js_output_file" + " cannot be used together.");
+            "skip_normal_outputs and js_output_file cannot be used together.");
       }
     }
 
     if (config.skipNormalOutputs && config.printAst) {
-      throw new FlagUsageException(
-          "skip_normal_outputs and print_ast cannot" + " be used together.");
+      throw new FlagUsageException("skip_normal_outputs and print_ast cannot be used together.");
     }
 
     if (config.skipNormalOutputs && config.printTree) {
+      throw new FlagUsageException("skip_normal_outputs and print_tree cannot be used together.");
+    }
+
+    if (config.skipNormalOutputs && config.printTreeJson) {
       throw new FlagUsageException(
-          "skip_normal_outputs and print_tree cannot" + " be used together.");
+          "skip_normal_outputs and print_tree_json_path cannot be used together.");
     }
 
     if (config.createSourceMap.length() > 0) {
@@ -477,7 +480,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           new JsonErrorReportGenerator(getErrorPrintStream(), compiler);
       compiler.setErrorManager(new SortingErrorManager(ImmutableSet.of(errorGenerator)));
     }
-    if (config.printTree) {
+    if (config.printTree || config.printTreeJson) {
       options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_ALL_COMMENTS);
     }
   }
@@ -1624,6 +1627,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
+    if (config.printTreeJson) {
+      if (compiler.getRoot() == null) {
+        compiler.report(JSError.make(NO_TREE_GENERATED_ERROR));
+        return 1;
+      } else {
+        Appendable jsOutput = createDefaultOutput();
+        compiler.getRoot().appendJsonTree(jsOutput);
+        closeAppendable(jsOutput);
+        return 0;
+      }
+    }
+
     if (config.skipNormalOutputs) {
       // Output the manifest and bundle files if requested.
       outputManifest();
@@ -2444,11 +2459,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     private boolean printTree = false;
+    private boolean printTreeJson = false;
 
     /** Prints out the parse tree and exits */
     @CanIgnoreReturnValue
     CommandLineConfig setPrintTree(boolean printTree) {
       this.printTree = printTree;
+      return this;
+    }
+
+    /** Prints out the parse tree and exits */
+    @CanIgnoreReturnValue
+    CommandLineConfig setPrintTreeJson(boolean printTreeJson) {
+      this.printTreeJson = printTreeJson;
       return this;
     }
 
