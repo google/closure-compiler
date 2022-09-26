@@ -1105,9 +1105,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           } else {
             suffix =
                 "\n"
-                    + boldPrefix
+                    + BOLD_PREFIX
                     + "Available Error Groups: "
-                    + normalPrefix
+                    + NORMAL_PREFIX
                     + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES;
           }
         }
@@ -1125,9 +1125,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       ps.flush();
     }
 
-    private final String boldPrefix = "\033[1m";
-    private final String normalPrefix = "\033[0m";
-    private final String markdownCharsToEscape = "[-*\\`\\[\\]{}\\(\\)#+\\.!<>]";
+    private static final String BOLD_PREFIX = "\033[1m";
+    private static final String NORMAL_PREFIX = "\033[0m";
+    private static final String MARKDOWN_CHARS_TO_ESCAPE = "[-*\\`\\[\\]{}\\(\\)#+\\.!<>]";
 
     private void printCategoryUsage(
         String categoryName,
@@ -1168,16 +1168,16 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
               String optionDescription =
                   rawOptionUsage
                       .substring(delimiterIndex + 3)
-                      .replaceAll(markdownCharsToEscape, "\\\\$0")
+                      .replaceAll(MARKDOWN_CHARS_TO_ESCAPE, "\\\\$0")
                       .trim();
               outputStream.write(optionDescription + "\n");
             } else {
-              outputStream.write(rawOptionUsage.replaceAll(markdownCharsToEscape, "\\\\$0"));
+              outputStream.write(rawOptionUsage.replaceAll(MARKDOWN_CHARS_TO_ESCAPE, "\\\\$0"));
             }
             outputStream.flush();
           }
         } else {
-          outputStream.write(boldPrefix + categoryName + ":\n" + normalPrefix);
+          outputStream.write(BOLD_PREFIX + categoryName + ":\n" + NORMAL_PREFIX);
           parser.printUsage(
               outputStream,
               null,
@@ -1200,7 +1200,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     private int maxLineLength = 80;
-    private final Pattern whitespacePattern = Pattern.compile("\\s");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
 
     private void printStringLineWrapped(String input, OutputStreamWriter outputStream)
         throws IOException {
@@ -1211,7 +1211,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
       int endIndex = maxLineLength;
       String subString = input.substring(0, maxLineLength);
-      Matcher whitespaceMatcher = whitespacePattern.matcher(subString);
+      Matcher whitespaceMatcher = WHITESPACE_PATTERN.matcher(subString);
       boolean foundMatch = false;
       while (whitespaceMatcher.find()) {
         endIndex = whitespaceMatcher.start();

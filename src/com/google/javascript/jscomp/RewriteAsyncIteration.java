@@ -77,9 +77,9 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   private final AbstractCompiler compiler;
 
   private final ArrayDeque<LexicalContext> contextStack;
-  private final String thisVarName = "$jscomp$asyncIter$this";
-  private final String argumentsVarName = "$jscomp$asyncIter$arguments";
-  private final String superPropGetterPrefix = "$jscomp$asyncIter$super$get$";
+  private static final String THIS_VAR_NAME = "$jscomp$asyncIter$this";
+  private static final String ARGUMENTS_VAR_NAME = "$jscomp$asyncIter$arguments";
+  private static final String SUPER_PROP_GETTER_PREFIX = "$jscomp$asyncIter$super$get$";
   private final AstFactory astFactory;
   private final StaticScope namespace;
 
@@ -598,7 +598,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(thisVarName, type(n)).srcref(n));
+    n.replaceWith(astFactory.createName(THIS_VAR_NAME, type(n)).srcref(n));
     ctx.thisSuperArgsContext.thisNodeToAdd = astFactory.createThis(type(n));
     compiler.reportChangeToChangeScope(ctx.function);
   }
@@ -609,7 +609,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(argumentsVarName, type(n)).srcref(n));
+    n.replaceWith(astFactory.createName(ARGUMENTS_VAR_NAME, type(n)).srcref(n));
     ctx.thisSuperArgsContext.usedArguments = true;
     compiler.reportChangeToChangeScope(ctx.function);
   }
@@ -629,7 +629,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     checkNotNull(ctx.thisSuperArgsContext);
 
     String propertyName = parent.getString();
-    String propertyReplacementNameText = superPropGetterPrefix + propertyName;
+    String propertyReplacementNameText = SUPER_PROP_GETTER_PREFIX + propertyName;
 
     // super.x   =>   $super$get$x()
     Node getPropReplacement =
@@ -643,7 +643,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       ctx.thisSuperArgsContext.thisNodeToAdd =
           astFactory.createThisForEs6ClassMember(ctx.contextRoot.getParent());
       astFactory
-          .createName(thisVarName, type(ctx.thisSuperArgsContext.thisNodeToAdd))
+          .createName(THIS_VAR_NAME, type(ctx.thisSuperArgsContext.thisNodeToAdd))
           .srcref(parent)
           .insertAfter(parent);
     }
@@ -693,7 +693,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       // }
       prefixBlock.addChildToBack(
           astFactory
-              .createSingleConstNameDeclaration(thisVarName, thisSuperArgsCtx.thisNodeToAdd)
+              .createSingleConstNameDeclaration(THIS_VAR_NAME, thisSuperArgsCtx.thisNodeToAdd)
               .srcrefTree(block));
     }
     if (thisSuperArgsCtx.usedArguments) {
@@ -704,7 +704,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       prefixBlock.addChildToBack(
           astFactory
               .createSingleConstNameDeclaration(
-                  argumentsVarName, astFactory.createArgumentsReference())
+                  ARGUMENTS_VAR_NAME, astFactory.createArgumentsReference())
               .srcrefTree(block));
     }
     for (Node replacedMethodReference : thisSuperArgsCtx.usedSuperProperties) {
@@ -738,7 +738,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
                 superReference, replacedMethodName, type(replacedMethodReference)));
     compiler.reportChangeToChangeScope(arrowFunction);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
-    String superReplacementName = superPropGetterPrefix + replacedMethodName;
+    String superReplacementName = SUPER_PROP_GETTER_PREFIX + replacedMethodName;
     return astFactory.createSingleConstNameDeclaration(superReplacementName, arrowFunction);
   }
 }

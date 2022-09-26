@@ -35,7 +35,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   private boolean invert = false;
   // removeConst = true; removes const-ness of a name (e.g. If the variable name is CONST)
   private boolean removeConst = false;
-  private final String localNamePrefix = "unique_";
+  private static final String LOCAL_NAME_PREFIX = "unique_";
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -48,8 +48,15 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
           if (useDefaultRenamer) {
             renamer = new MakeDeclaredNamesUnique();
           } else {
-            renamer = new MakeDeclaredNamesUnique(new InlineRenamer(compiler.getCodingConvention(),
-                compiler.getUniqueNameIdSupplier(), localNamePrefix, removeConst, true, null));
+            renamer =
+                new MakeDeclaredNamesUnique(
+                    new InlineRenamer(
+                        compiler.getCodingConvention(),
+                        compiler.getUniqueNameIdSupplier(),
+                        LOCAL_NAME_PREFIX,
+                        removeConst,
+                        true,
+                        null));
           }
           NodeTraversal.traverseRoots(compiler, renamer, externs, root);
         }

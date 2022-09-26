@@ -40,7 +40,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   private boolean runDisambiguateProperties;
   private boolean rename;
 
-  private final ImmutableList<String> defaultFunctionsToInspect =
+  private static final ImmutableList<String> DEFAULT_FUNCTIONS_TO_INSPECT =
       ImmutableList.of(
           "Error(?)",
           "goog.debug.Trace.startTracer(*)",
@@ -92,7 +92,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     enableTypeCheck();
     enableNormalize();
     enableParseTypeInfo();
-    functionsToInspect = defaultFunctionsToInspect;
+    functionsToInspect = DEFAULT_FUNCTIONS_TO_INSPECT;
     runDisambiguateProperties = false;
     rename = false;
   }

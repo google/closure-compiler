@@ -45,7 +45,7 @@ public final class FunctionInjectorTest {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
   private boolean assumeStrictThis = false;
-  private final boolean assumeMinimumCapture = false;
+  private static final boolean ASSUME_MINIMUM_CAPTURE = false;
   private boolean allowDecomposition;
 
   @Before
@@ -1854,7 +1854,7 @@ public final class FunctionInjectorTest {
         new FunctionInjector.Builder(compiler)
             .allowDecomposition(allowDecomposition)
             .assumeStrictThis(assumeStrictThis)
-            .assumeMinimumCapture(assumeMinimumCapture)
+            .assumeMinimumCapture(ASSUME_MINIMUM_CAPTURE)
             .functionArgumentInjector(functionArgumentInjector)
             .build();
     final Node tree = parse(compiler, code);
@@ -1916,7 +1916,7 @@ public final class FunctionInjectorTest {
         new FunctionInjector.Builder(compiler)
             .allowDecomposition(allowDecomposition)
             .assumeStrictThis(assumeStrictThis)
-            .assumeMinimumCapture(assumeMinimumCapture)
+            .assumeMinimumCapture(ASSUME_MINIMUM_CAPTURE)
             .functionArgumentInjector(functionArgumentInjector)
             .build();
 
@@ -2004,7 +2004,7 @@ public final class FunctionInjectorTest {
         new FunctionInjector.Builder(compiler)
             .allowDecomposition(allowDecomposition)
             .assumeStrictThis(assumeStrictThis)
-            .assumeMinimumCapture(assumeMinimumCapture)
+            .assumeMinimumCapture(ASSUME_MINIMUM_CAPTURE)
             .build();
     final Node tree = parse(compiler, code);
 
