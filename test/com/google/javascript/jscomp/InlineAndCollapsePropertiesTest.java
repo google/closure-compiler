@@ -42,6 +42,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           "/** @constructor */ function String() {};",
           "var arguments");
 
+  private boolean assumeStaticInheritanceIsNotUsed = true;
+
   public InlineAndCollapsePropertiesTest() {
     super(EXTERNS);
   }
@@ -53,6 +55,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
         .setHaveModulesBeenRewritten(false)
         .setModuleResolutionMode(ResolutionMode.BROWSER)
+        .setAssumeStaticInheritanceIsNotUsed(this.assumeStaticInheritanceIsNotUsed)
         .build();
   }
 
@@ -2731,6 +2734,29 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "class Bar {}",
             "var Baz$quadruple = function(n) { return 2 * Bar$double(n); }",
             "class Baz extends Bar {}"));
+  }
+
+  @Test
+  public void testClassStaticMemberAccessedWithSuperAndThis() {
+    assumeStaticInheritanceIsNotUsed = false;
+    testSame(
+            lines(
+                    "class Bar {", //
+                    "  static get name() {",
+                    "    return 'Bar';",
+                    "  }",
+                    "  static get classname() {",
+                    "    return `${this.name} class`;",
+                    "  }",
+                    "}",
+                    "class Baz extends Bar {",
+                    "  static get name() {",
+                    "    return 'Baz';",
+                    "  }",
+                    "  static get classname() {",
+                    "    return `${super.classname} - is a subclass`;",
+                    "  }",
+                    "}"));
   }
 
   @Test

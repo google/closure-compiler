@@ -1064,6 +1064,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             .putAll(
                 "Miscellaneous",
                 ImmutableList.of(
+                    "assume_static_inheritance_is_not_used",
                     "browser_featureset_year",
                     "charset",
                     "checks_only",
@@ -1073,7 +1074,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                     "json_streams",
                     "third_party",
                     "use_types_for_optimization",
-                    "assume_static_inheritance_required",
                     "version"))
             .build();
 
