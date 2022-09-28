@@ -2505,7 +2505,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   private void assertReturnTypeEquals(JSType expectedReturnType,
       JSType function) {
-    assertThat(function instanceof FunctionType).isTrue();
+    assertThat(function).isInstanceOf(FunctionType.class);
     assertTypeEquals(expectedReturnType,
         ((FunctionType) function).getReturnType());
   }
