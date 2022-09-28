@@ -376,7 +376,7 @@ public final class CompileTask
           try {
             this.outputWrapper = Files.asCharSource(this.outputWrapperFile, UTF_8).read();
           } catch (Exception e) {
-            throw new BuildException("Invalid output_wrapper_file specified.");
+            throw new BuildException("Invalid output_wrapper_file specified.", e);
           }
         }
 
