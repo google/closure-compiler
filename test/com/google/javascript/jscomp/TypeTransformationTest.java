@@ -38,7 +38,9 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
 
   private ImmutableMap<String, JSType> typeVars;
   private ImmutableMap<String, String> nameVars;
-  private static JSType recordTypeTest, nestedRecordTypeTest, asynchRecord;
+  private static JSType recordTypeTest;
+  private static JSType nestedRecordTypeTest;
+  private static JSType asynchRecord;
 
   static final String EXTRA_TYPE_DEFS =
       lines(
