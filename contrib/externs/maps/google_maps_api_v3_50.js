@@ -2605,7 +2605,7 @@ google.maps.ElevationResult.prototype.elevation;
 
 /**
  * The location of this elevation result.
- * @type {google.maps.LatLng}
+ * @type {?google.maps.LatLng}
  */
 google.maps.ElevationResult.prototype.location;
 
@@ -2908,8 +2908,8 @@ google.maps.Geocoder = function() {};
 /**
  * Geocode a request.
  * @param {!google.maps.GeocoderRequest} request
- * @param {?(function(?Array<!google.maps.GeocoderResult>,
- *     !google.maps.GeocoderStatus): void)=} callback
+ * @param {(undefined|null|(function((null|!Array<!google.maps.GeocoderResult>),
+ *     !google.maps.GeocoderStatus): void))=} callback
  * @return {!Promise<!google.maps.GeocoderResponse>}
  */
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
@@ -7025,7 +7025,7 @@ google.maps.Projection.prototype.fromPointToLatLng = function(
 
 /**
  * A rectangle overlay.
- * @param {google.maps.RectangleOptions=} opts
+ * @param {?google.maps.RectangleOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
