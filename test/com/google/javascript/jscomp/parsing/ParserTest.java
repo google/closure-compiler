@@ -6379,6 +6379,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInvalidAwaitInsideNestedFunction() {
+    parse("async function f() { async function f2() { return await 5; } }");
+    parseError("async function f() { function f2() { return await 5; } }", UNEXPECTED_AWAIT);
+  }
+
+  @Test
   public void testAsyncFunction() {
     String asyncFunctionExpressionSource = "f = async function() {};";
     String asyncFunctionDeclarationSource = "async function f() {}";

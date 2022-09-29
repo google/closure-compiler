@@ -413,6 +413,12 @@ class IRFactory {
         }
         if (parent.isAsyncFunction()) {
           return;
+        } else if (parent.isFunction()) {
+          // The await is in a non-async function.
+          // e.g. `function f() { return await 5; }`
+          // nested function e.g. `async function f() { function f2() { return await 5; } }`
+          errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+          return;
         }
       }
       errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
