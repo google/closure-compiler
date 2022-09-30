@@ -2960,7 +2960,39 @@ RTCDataChannel.prototype.label;
 /**
  * @const {boolean}
  */
+RTCDataChannel.prototype.ordered;
+
+/**
+ * @const {?number}
+ */
+RTCDataChannel.prototype.maxPacketLifeTime;
+
+/**
+ * @const {?number}
+ */
+RTCDataChannel.prototype.maxRetransmits;
+
+/**
+ * Note, this was removed from the standard in favor of `maxPacketLifeTime` and
+ * `maxRetransmits`.
+ * @const {boolean}
+ */
 RTCDataChannel.prototype.reliable;
+
+/**
+ * @const {string}
+ */
+RTCDataChannel.prototype.protocol;
+
+/**
+ * @const {boolean}
+ */
+RTCDataChannel.prototype.negotiated;
+
+/**
+ * @const {?number}
+ */
+RTCDataChannel.prototype.id;
 
 /**
  * An enumerated string type (RTCDataChannelState) with values:
@@ -2971,8 +3003,7 @@ RTCDataChannel.prototype.reliable;
 RTCDataChannel.prototype.readyState;
 
 /**
- * @type {number}
- * Read only.
+ * @const {number}
  */
 RTCDataChannel.prototype.bufferedAmount;
 
@@ -2987,9 +3018,14 @@ RTCDataChannel.prototype.bufferedAmountLowThreshold;
 RTCDataChannel.prototype.onopen;
 
 /**
- * @type {?function(!Event)}
+ * @type {?function(!RTCErrorEvent)}
  */
 RTCDataChannel.prototype.onerror;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCDataChannel.prototype.onclosing;
 
 /**
  * @type {?function(!Event)}
@@ -3422,7 +3458,8 @@ RTCError.prototype.sentAlert;
 
 /**
  * @see https://www.w3.org/TR/webrtc/#rtcerrorevent-interface
- * @interface
+ * @constructor
+ * @extends {Event}
  */
 function RTCErrorEvent() {}
 
