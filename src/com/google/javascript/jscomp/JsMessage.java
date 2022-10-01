@@ -116,12 +116,12 @@ public abstract class JsMessage {
 
   public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToOriginalCodeMap()
-        .getOrDefault(placeholderReference.getJsPlaceholderName(), "-");
+        .getOrDefault(placeholderReference.getStoredPlaceholderName(), "-");
   }
 
   public String getPlaceholderExample(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToExampleMap()
-        .getOrDefault(placeholderReference.getJsPlaceholderName(), "-");
+        .getOrDefault(placeholderReference.getStoredPlaceholderName(), "-");
   }
 
   /**
@@ -313,7 +313,7 @@ public abstract class JsMessage {
           isLowerCamelCaseWithNumericSuffixes(name),
           "invalid JS placeholder name format: '%s'",
           name);
-      return new AutoValue_JsMessage_PlaceholderReference(name);
+      return new AutoValue_JsMessage_PlaceholderReference(name, /* canonicalFormat= */ false);
     }
 
     public static PlaceholderReference createForCanonicalName(String name) {
@@ -321,12 +321,12 @@ public abstract class JsMessage {
           isCanonicalPlaceholderNameFormat(name),
           "not a canonical placeholder name format: '%s'",
           name);
-      return new AutoValue_JsMessage_PlaceholderReference(
-          toLowerCamelCaseWithNumericSuffixes(name));
+      return new AutoValue_JsMessage_PlaceholderReference(name, /* canonicalFormat= */ true);
     }
 
-    @Override
-    public abstract String getJsPlaceholderName();
+    public abstract String getStoredPlaceholderName();
+
+    public abstract boolean isCanonicalFormat();
 
     @Override
     public boolean isPlaceholder() {
@@ -334,8 +334,19 @@ public abstract class JsMessage {
     }
 
     @Override
+    public String getJsPlaceholderName() {
+      final String storedPlaceholderName = getStoredPlaceholderName();
+      return isCanonicalFormat()
+          ? toLowerCamelCaseWithNumericSuffixes(storedPlaceholderName)
+          : storedPlaceholderName;
+    }
+
+    @Override
     public String getCanonicalPlaceholderName() {
-      return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, getJsPlaceholderName());
+      final String storedPlaceholderName = getStoredPlaceholderName();
+      return isCanonicalFormat()
+          ? storedPlaceholderName
+          : CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, storedPlaceholderName);
     }
 
     @Override
