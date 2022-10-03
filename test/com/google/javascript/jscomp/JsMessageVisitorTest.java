@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORM
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -67,11 +68,13 @@ public final class JsMessageVisitorTest {
   private @Nullable CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
+  private List<JsMessageDefinition> messageDefinitions;
   private boolean renameMessages = false;
 
   @Before
   public void setUp() throws Exception {
     messages = new ArrayList<>();
+    messageDefinitions = new ArrayList<>();
     compilerOptions = null;
     renameMessages = false;
   }
@@ -349,7 +352,7 @@ public final class JsMessageVisitorTest {
     JSError malformedTreeError = compiler.getErrors().get(0);
     assertError(malformedTreeError).hasType(MESSAGE_TREE_MALFORMED);
     assertThat(malformedTreeError.getDescription())
-        .isEqualTo("Message parse tree malformed. " + "STRING or ADD node expected; found: POS");
+        .isEqualTo("Message parse tree malformed. literal string or concatenation expected");
   }
 
   @Test
@@ -715,7 +718,7 @@ public final class JsMessageVisitorTest {
     JSError error = errors.get(0);
     assertThat(error.getType()).isEqualTo(MESSAGE_TREE_MALFORMED);
     assertThat(error.getDescription())
-        .isEqualTo("Message parse tree malformed. Duplicate placeholder " + "name: foo");
+        .isEqualTo("Message parse tree malformed. duplicate string key: foo");
   }
 
   @Test
@@ -776,7 +779,8 @@ public final class JsMessageVisitorTest {
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
     assertThat(error.getDescription())
         .isEqualTo(
-            "Message parse tree malformed. Placeholder name not in lowerCamelCase: SLIDE_NUMBER");
+            "Message parse tree malformed. Unrecognized message placeholder referenced:"
+                + " slideNumber");
   }
 
   @Test
@@ -911,14 +915,229 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
-  public void testGetMsgWithHtml() {
-    extractMessagesSafely("/** @desc Hello */ var MSG_HELLO = goog.getMsg('a', {}, {html: true})");
+  public void testGetMsgWithOptions() {
+    extractMessagesSafely(
+        lines(
+            "/** @desc Hello */",
+            "var MSG_HELLO =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        {",
+            "          'name': getName(),",
+            "        },",
+            "        {",
+            "          html: false,",
+            "          unescapeHtmlEntities: true,",
+            "          example: {",
+            "            'name': 'George',",
+            "          },",
+            "          original_code: {",
+            "            'name': 'getName()',",
+            "          },",
+            "        })"));
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
+    // MSG_HELLO =
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    // * @desc Hello
     assertThat(msg.getDesc()).isEqualTo("Hello");
+
+    JsMessageDefinition msgDefinition = messageDefinitions.get(0);
+
+    // goog.getMsg(...)
+    final Node callNode = msgDefinition.getMessageNode();
+    assertNode(callNode).isCall().hasFirstChildThat().matchesQualifiedName("goog.getMsg");
+
+    assertNode(msgDefinition.getTemplateTextNode()).isString("Hello, {$name}");
+
+    // `{ 'name': getName() }`
+    final Node placeholderValuesNode = msgDefinition.getPlaceholderValuesNode();
+    assertNode(placeholderValuesNode).isObjectLit();
+    assertThat(callNode.getChildAtIndex(2)).isSameInstanceAs(placeholderValuesNode);
+
+    // placeholder name 'name' maps to the `getName()` call in the values map
+    final ImmutableMap<String, Node> placeholderValueMap = msgDefinition.getPlaceholderValueMap();
+    assertThat(placeholderValueMap.keySet()).containsExactly("name");
+    final Node nameValueNode = placeholderValueMap.get("name");
+    assertNode(nameValueNode).isCall().hasOneChildThat().isName("getName");
+    assertThat(nameValueNode.getGrandparent()).isSameInstanceAs(placeholderValuesNode);
+
+    // `html: false`
+    assertThat(msgDefinition.shouldEscapeLessThan()).isFalse();
+    // `unescapeHtmlEntities: true`
+    assertThat(msgDefinition.shouldUnescapeHtmlEntities()).isTrue();
+
+    // `example: { 'name': 'George' }`
+    assertThat(msg.getPlaceholderNameToExampleMap()).containsExactly("name", "George");
+    // `original_code: {'name': 'getName()' }`
+    assertThat(msg.getPlaceholderNameToOriginalCodeMap()).containsExactly("name", "getName()");
+  }
+
+  @Test
+  public void testGoogGetMsgWithNoArgs() {
+    extractMessages(
+        lines(
+            "/** @desc something */",
+            "const MSG_X = goog.getMsg();", // no arguments
+            ""));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. Message string literal expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithBadValuesArg() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        getName());", // should be an object literal
+            ""));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. object literal expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithBadValuesKey() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        {",
+            "          [name]: getName()", // a computed key is not allowed
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. string key expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithBadOptionsArg() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        options);", // options bag must be an object literal
+            ""));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. object literal expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithComputedKeyInOptions() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        {",
+            "          [options]: true", // option names cannot be computed keys
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. string key expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithUnknownOption() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        {",
+            "          unknownOption: true", // not a valid option name
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. Unknown option: unknownOption");
+  }
+
+  @Test
+  public void testGoogGetMsgWithInvalidBooleanOption() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        {",
+            "          html: 'true'", // boolean option value must be a boolean literal
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. html: Literal true or false expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithOriginalCodeForInvalidExample() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        {",
+            "          example: 'name: something'", // not an object literal
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. object literal expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithInvalidOriginalCodeValue() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        {",
+            "          original_code: {",
+            "            'name': getName()", // value is not a string
+            "          }",
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. literal string or concatenation expected");
+  }
+
+  @Test
+  public void testGoogGetMsgWithOriginalCodeForUnknownPlaceholder() {
+    extractMessages(
+        lines(
+            "/** @desc something */", //
+            "const MSG_X =",
+            "    goog.getMsg(",
+            "        'Hello, {$name}',",
+            "        { 'name': getName() },",
+            "        {",
+            "          original_code: {",
+            "            'unknownPlaceholder': 'something'", // not a valid placeholder name
+            "          }",
+            "        });"));
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. Unknown placeholder: unknownPlaceholder");
   }
 
   @Test
@@ -975,6 +1194,7 @@ public final class JsMessageVisitorTest {
     @Override
     protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
       messages.add(message);
+      messageDefinitions.add(definition);
     }
   }
 

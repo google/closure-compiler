@@ -21,10 +21,15 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Hash;
 import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
+import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
+import com.google.javascript.jscomp.JsMessage.StringPart;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
@@ -32,9 +37,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.jspecify.nullness.Nullable;
 
@@ -234,7 +240,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         return;
     }
 
-    String messageKey =
+    String messageKeyFromLhs =
         originalMessageKey != null ? originalMessageKey : possiblyObfuscatedMessageKey;
 
     // If we've reached this point, then messageKey is the name of a variable or a property that is
@@ -245,12 +251,12 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // Is this a message name?
     boolean msgNodeIsACall = msgNode != null && msgNode.isCall();
 
-    if (!isMessageName(messageKey)) {
+    if (!isMessageName(messageKeyFromLhs)) {
       return;
     }
 
     if (msgNode == null) {
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_VALUE, messageKey));
+      compiler.report(JSError.make(node, MESSAGE_HAS_NO_VALUE, messageKeyFromLhs));
       return;
     }
 
@@ -269,85 +275,95 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       return;
     }
 
-    // Gather information from the JS code into this object instead of directly into the message
-    // builder. This allows us to refer to this information more easily as needed.
-    final MessageDataFromJsCode messageData = new MessageDataFromJsCode();
     OriginalMapping mapping =
         compiler.getSourceMapping(traversal.getSourceName(), node.getLineno(), node.getCharno());
+    final String sourceName;
     if (mapping != null) {
-      messageData.sourceName = mapping.getOriginalFile() + ":" + mapping.getLineNumber();
+      sourceName = mapping.getOriginalFile() + ":" + mapping.getLineNumber();
     } else {
-      messageData.sourceName = traversal.getSourceName() + ":" + node.getLineno();
+      sourceName = traversal.getSourceName() + ":" + node.getLineno();
     }
 
+    final String description;
+    final String meaning;
+    final String alternateMessageId;
     if (jsDocInfo != null) {
-      messageData.description = jsDocInfo.getDescription();
-      messageData.meaning = jsDocInfo.getMeaning();
-      messageData.alternateMessageId = jsDocInfo.getAlternateMessageId();
+      description = jsDocInfo.getDescription();
+      meaning = jsDocInfo.getMeaning();
+      alternateMessageId = jsDocInfo.getAlternateMessageId();
+    } else {
+      description = null;
+      meaning = null;
+      alternateMessageId = null;
     }
 
-    final JsMessage.Builder builder = new JsMessage.Builder();
+    final CallNodeMsgData callNodeMsgData;
     try {
-      // This method is responsible for setting messageData.messageText and
-      // messageData.messageParts, which are needed below.
-      // TODO(bradfordcsmith): Using the builder in this method makes the code harder to understand
-      //     and maintain.
-      extractFromCallNode(builder, msgNode, messageData);
+      callNodeMsgData = extractCallNodeMsgData(msgNode);
     } catch (MalformedException ex) {
       compiler.report(JSError.make(ex.getNode(), MESSAGE_TREE_MALFORMED, ex.getMessage()));
       return;
     }
+    final String messageText = callNodeMsgData.getMessageText();
+    final ImmutableList<Part> messageParts = callNodeMsgData.getMessageParts();
 
     // non-null for `MSG_EXTERNAL_12345`
-    final String externalMessageId = getExternalMessageId(messageKey);
+    final String externalMessageId = getExternalMessageId(messageKeyFromLhs);
 
+    final boolean isAnonymous;
+    final boolean isExternal;
+    final String messageId;
+    final String messageKeyFinal;
     if (externalMessageId != null) {
       // MSG_EXTERNAL_12345 = ...
-      messageData.isAnonymous = false;
-      messageData.isExternal = true;
-      messageData.messageId = externalMessageId;
-      messageData.key = messageKey;
+      isAnonymous = false;
+      isExternal = true;
+      messageId = externalMessageId;
+      messageKeyFinal = messageKeyFromLhs;
     } else {
-      messageData.isExternal = false;
+      isExternal = false;
       // We will need to generate the message ID from a combination of the message text and
       // its "meaning". If the code explicitly specifies a "meaning" string we'll use that,
       // otherwise we'll use the message key as the meaning
-      String meaningForIdGeneration = messageData.meaning;
-      if (isUnnamedMessageName(messageKey)) {
+      String meaningForIdGeneration = meaning;
+      if (isUnnamedMessageName(messageKeyFromLhs)) {
         // MSG_UNNAMED_XXXX = goog.getMsg(....);
         // JS code that is automatically generated uses this, since it is harder for it to create
         // message variable names that are guaranteed to be unique.
-        messageData.isAnonymous = true;
-        messageData.key = generateKeyFromMessageText(messageData.messageText);
+        isAnonymous = true;
+        messageKeyFinal = generateKeyFromMessageText(messageText);
         if (meaningForIdGeneration == null) {
-          meaningForIdGeneration = messageData.key;
+          meaningForIdGeneration = messageKeyFinal;
         }
       } else {
-        messageData.isAnonymous = false;
-        messageData.key = messageKey;
+        isAnonymous = false;
+        messageKeyFinal = messageKeyFromLhs;
         if (meaningForIdGeneration == null) {
           // Transpilation of goog.scope() may have added a prefix onto the variable name,
           // which we need to strip off when we treat it as a "meaning" for ID generation purposes.
           // Otherwise, the message ID would change if a goog.scope() call were added or removed.
-          meaningForIdGeneration = removeScopedAliasesPrefix(messageKey);
+          meaningForIdGeneration = removeScopedAliasesPrefix(messageKeyFromLhs);
         }
       }
-      messageData.messageId =
+      messageId =
           idGenerator == null
               ? meaningForIdGeneration
-              : idGenerator.generateId(meaningForIdGeneration, messageData.messageParts);
+              : idGenerator.generateId(meaningForIdGeneration, messageParts);
     }
 
     JsMessage extractedMessage =
-        builder
-            .setIsAnonymous(messageData.isAnonymous)
-            .setIsExternalMsg(messageData.isExternal)
-            .setKey(messageData.key)
-            .setSourceName(messageData.sourceName)
-            .setDesc(messageData.description)
-            .setMeaning(messageData.meaning)
-            .setAlternateId(messageData.alternateMessageId)
-            .setId(messageData.messageId)
+        new JsMessage.Builder()
+            .appendParts(messageParts)
+            .setPlaceholderNameToExampleMap(callNodeMsgData.getPlaceholderExampleMap())
+            .setPlaceholderNameToOriginalCodeMap(callNodeMsgData.getPlaceholderOriginalCodeMap())
+            .setIsAnonymous(isAnonymous)
+            .setIsExternalMsg(isExternal)
+            .setKey(messageKeyFinal)
+            .setSourceName(sourceName)
+            .setDesc(description)
+            .setMeaning(meaning)
+            .setAlternateId(alternateMessageId)
+            .setId(messageId)
             .build();
 
     // If asked to check named internal messages.
@@ -366,12 +382,45 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     }
 
     // Messages must have descriptions.
-    String desc = extractedMessage.getDesc();
+    final String desc = extractedMessage.getDesc();
     if ((desc == null || desc.trim().isEmpty()) && !extractedMessage.isExternal()) {
       compiler.report(JSError.make(node, MESSAGE_HAS_NO_DESCRIPTION, extractedMessage.getKey()));
     }
 
-    JsMessageDefinition msgDefinition = new JsMessageDefinition(msgNode);
+    // NOTE: All of the methods defined below should return data that has already been computed.
+    // Most importantly, none of them should throw a MalformedException.
+    final JsMessageDefinition msgDefinition =
+        new JsMessageDefinition() {
+          @Override
+          public Node getMessageNode() {
+            return msgNode;
+          }
+
+          @Override
+          public Node getTemplateTextNode() {
+            return callNodeMsgData.getTemplateTextNode();
+          }
+
+          @Override
+          public @Nullable Node getPlaceholderValuesNode() {
+            return callNodeMsgData.getPlaceholderValuesNode();
+          }
+
+          @Override
+          public ImmutableMap<String, Node> getPlaceholderValueMap() {
+            return callNodeMsgData.getPlaceholderValueMap();
+          }
+
+          @Override
+          public boolean shouldEscapeLessThan() {
+            return callNodeMsgData.shouldEscapeLessThan();
+          }
+
+          @Override
+          public boolean shouldUnescapeHtmlEntities() {
+            return callNodeMsgData.shouldUnescapeHtmlEntities();
+          }
+        };
     processJsMessage(extractedMessage, msgDefinition);
   }
 
@@ -520,29 +569,12 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /**
-   * A place in which to gather information from JS code in preparation for building a message from
-   * it.
-   */
-  private static class MessageDataFromJsCode {
-    boolean isAnonymous;
-    boolean isExternal;
-    @Nullable String key;
-    @Nullable String sourceName;
-    @Nullable String description;
-    @Nullable String meaning;
-    @Nullable String alternateMessageId;
-    @Nullable List<Part> messageParts;
-    @Nullable String messageText;
-    @Nullable String messageId;
-  }
-
-  /**
    * Returns the string value associated with a node representing a JS string or several JS strings
    * added together (e.g. {@code 'str'} or {@code 's' + 't' + 'r'}).
    *
    * @param node the node from where we extract the string
    * @return String representation of the node
-   * @throws MalformedException if the parsed message is invalid
+   * @throws MalformedException if the node is not a string literal or concatenation of them
    */
   private static String extractStringFromStringExprNode(Node node) throws MalformedException {
     switch (node.getToken()) {
@@ -564,59 +596,17 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         }
         return sb.toString();
       default:
-        throw new MalformedException(
-            "STRING or ADD node expected; found: " + node.getToken(), node);
+        throw new MalformedException("literal string or concatenation expected", node);
     }
   }
 
-  /**
-   * Initializes a message builder from a CALL node.
-   *
-   * <p>The tree should look something like:
-   *
-   * <pre>
-   * call
-   *  |-- getprop
-   *  |   |-- name 'goog'
-   *  |   +-- string 'getMsg'
-   *  |
-   *  |-- string 'Hi {$userName}! Welcome to {$product}.'
-   *  +-- objlit
-   *  |   |-- string_key 'userName'
-   *  |   |   +-- name 'someUserName'
-   *  |   +-- string_key 'product'
-   *  |       +-- call
-   *  |           +-- name 'getProductName'
-   *  +-- objlit // optional options bag
-   *      |-- string_key 'example'
-   *      |   + objlit
-   *      |     |-- string_key 'userName'
-   *      |     |   +-- 'Jonathan Tuttle'
-   *      |     |-- string_key 'product'
-   *      |     |   +-- 'Google Anonymizer'
-   *      +-- string_key 'original_code'
-   *            |-- string_key 'userName'
-   *            |   +-- 'user.getName()'
-   *            +-- string_key 'product'
-   *                +-- string_key 'product.getName()'
-   * </pre>
-   *
-   * @param builder the message builder
-   * @param node the call node from where we extract the message
-   * @param messageData set the messageText and messageParts fields of this object
-   * @throws MalformedException if the parsed message is invalid
-   */
-  private void extractFromCallNode(
-      JsMessage.Builder builder, Node node, MessageDataFromJsCode messageData)
-      throws MalformedException {
-    // Check the function being called
-    if (!node.isCall()) {
-      throw new MalformedException(
-          "Message must be initialized using " + MSG_FUNCTION_NAME + " function.", node);
-    }
-
+  private CallNodeMsgData extractCallNodeMsgData(Node node) throws MalformedException {
+    checkState(node.isCall());
     Node fnNameNode = node.getFirstChild();
-    if (!fnNameNode.matchesQualifiedName(MSG_FUNCTION_NAME)) {
+    if (fnNameNode.matchesQualifiedName(MSG_FUNCTION_NAME)) {
+      // Extract data from a call to `goog.getMsg(...)`
+      return extractGoogGetMsgData(node);
+    } else {
       throw new MalformedException(
           "Message initialized using unrecognized function. "
               + "Please use "
@@ -624,171 +614,422 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
               + "() instead.",
           fnNameNode);
     }
-
-    // Get the message string
-    Node stringLiteralNode = fnNameNode.getNext();
-    if (stringLiteralNode == null) {
-      throw new MalformedException("Message string literal expected", stringLiteralNode);
-    }
-    // Parse the message string and append parts to the builder
-    parseMessageTextNode(builder, stringLiteralNode, messageData);
-
-    Node valuesObjLit = stringLiteralNode.getNext();
-    Set<String> phNames = new LinkedHashSet<>();
-    if (valuesObjLit != null) {
-      // Register the placeholder names
-      if (!valuesObjLit.isObjectLit()) {
-        throw new MalformedException("OBJLIT node expected", valuesObjLit);
-      }
-      for (Node aNode = valuesObjLit.getFirstChild(); aNode != null; aNode = aNode.getNext()) {
-        if (!aNode.isStringKey()) {
-          throw new MalformedException("STRING_KEY node expected as OBJLIT key", aNode);
-        }
-        String phName = aNode.getString();
-        if (!JsMessage.isLowerCamelCaseWithNumericSuffixes(phName)) {
-          throw new MalformedException("Placeholder name not in lowerCamelCase: " + phName, aNode);
-        }
-
-        if (phNames.contains(phName)) {
-          throw new MalformedException("Duplicate placeholder name: " + phName, aNode);
-        }
-
-        phNames.add(phName);
-      }
-    }
-
-    // Now we have all the placeholder names that were referenced in the message string.
-    // Verify that other references to placeholder names match one of these.
-    Set<String> usedPlaceholders = builder.getPlaceholders();
-
-    final Node optionsBagArgument = valuesObjLit == null ? null : valuesObjLit.getNext();
-
-    if (optionsBagArgument != null) {
-      extractPlaceholderInfoFromOptionsBagArgument(optionsBagArgument, usedPlaceholders, builder);
-    }
-
-    // Check that all placeholders from the message text have appropriate objlit
-    // values
-    for (String phName : usedPlaceholders) {
-      if (!phNames.contains(phName)) {
-        throw new MalformedException(
-            "Unrecognized message placeholder referenced: " + phName, node);
-      }
-    }
-
-    // Check that objLiteral have only names that are present in the
-    // message text
-    for (String phName : phNames) {
-      if (!usedPlaceholders.contains(phName)) {
-        throw new MalformedException("Unused message placeholder: " + phName, node);
-      }
-    }
-  }
-
-  private void extractPlaceholderInfoFromOptionsBagArgument(
-      Node optionsBagArgument, Set<String> knownPlaceholders, JsMessage.Builder builder)
-      throws MalformedException {
-    if (!optionsBagArgument.isObjectLit()) {
-      throw new MalformedException("object literal expected", optionsBagArgument);
-    }
-
-    for (Node stringKey = optionsBagArgument.getFirstChild();
-        stringKey != null;
-        stringKey = stringKey.getNext()) {
-      if (!stringKey.isStringKey()) {
-        throw new MalformedException("string key expected", stringKey);
-      }
-      if (stringKey.getString().equals("original_code")) {
-        extractOriginalCodeMapFromObjectLiteral(
-            stringKey.getOnlyChild(), knownPlaceholders, builder);
-      } else if (stringKey.getString().equals("example")) {
-        extractExampleMapFromObjectLiteral(stringKey.getOnlyChild(), knownPlaceholders, builder);
-      } // TODO(bradfordcsmith): Consider reporting an error for an unexpected option
-    }
-  }
-
-  private void extractOriginalCodeMapFromObjectLiteral(
-      Node objectLiteral, Set<String> knownPlaceholderNames, JsMessage.Builder builder)
-      throws MalformedException {
-    if (!objectLiteral.isObjectLit()) {
-      throw new MalformedException("object literal expected", objectLiteral);
-    }
-    final Map<String, String> stringToStringMap =
-        extractPlaceholderNameToStringMapFromObjectLiteral(objectLiteral, knownPlaceholderNames);
-    builder.setPlaceholderNameToOriginalCodeMap(stringToStringMap);
-  }
-
-  private void extractExampleMapFromObjectLiteral(
-      Node objectLiteral, Set<String> knownPlaceholderNames, JsMessage.Builder builder)
-      throws MalformedException {
-    if (!objectLiteral.isObjectLit()) {
-      throw new MalformedException("object literal expected", objectLiteral);
-    }
-    final Map<String, String> stringToStringMap =
-        extractPlaceholderNameToStringMapFromObjectLiteral(objectLiteral, knownPlaceholderNames);
-    builder.setPlaceholderNameToExampleMap(stringToStringMap);
-  }
-
-  private Map<String, String> extractPlaceholderNameToStringMapFromObjectLiteral(
-      Node objectLiteral, Set<String> knownPlaceholderNames) throws MalformedException {
-    LinkedHashMap<String, String> map = new LinkedHashMap<>();
-    for (Node stringKey = objectLiteral.getFirstChild();
-        stringKey != null;
-        stringKey = stringKey.getNext()) {
-      if (!stringKey.isStringKey()) {
-        throw new MalformedException("string key expected", stringKey);
-      }
-      Node valueNode = stringKey.getOnlyChild();
-      if (!valueNode.isStringLit()) {
-        throw new MalformedException("string literal expected", valueNode);
-      }
-      String placeholderName = stringKey.getString();
-      String value = valueNode.getString();
-      if (!knownPlaceholderNames.contains(placeholderName)) {
-        throw new MalformedException("unexpected placeholder name", stringKey);
-      }
-      if (map.containsKey(placeholderName)) {
-        throw new MalformedException("duplicate string key", stringKey);
-      }
-      map.put(placeholderName, value);
-    }
-    return map;
   }
 
   /**
-   * Appends the message parts in a JS message value extracted from the given text node.
+   * Extract data from a call to {@code goog.getMsg(...)}.
    *
-   * @param builder the JS message builder to append parts to
-   * @param node the node with string literal that contains the message text
-   * @param messageData set the messageText and messageParts fields of this object
-   * @throws MalformedException if {@code value} contains a reference to an unregistered placeholder
+   * <p>Here's an example with all possible arguments and options present.
+   *
+   * <pre><code>
+   *   const MSG_HELLO =
+   *       goog.getMsg(
+   *           'Hello, {$name}', // message template string
+   *           { name: getName() }, // placeholder replacement values
+   *           { // options bag
+   *             html: false,
+   *             unescapeHtmlEntities: true,
+   *             example: { name: 'George' },
+   *             original_code: { name: 'getName()' },
+   *           });
+   * </code></pre>
+   *
+   * @throws MalformedException if the code does not match the expected format.
    */
-  private static void parseMessageTextNode(
-      JsMessage.Builder builder, Node node, MessageDataFromJsCode messageData)
-      throws MalformedException {
-    String value = extractStringFromStringExprNode(node);
-    messageData.messageText = value;
+  private CallNodeMsgData extractGoogGetMsgData(Node callNode) throws MalformedException {
+    // first child of the call is the `goog.getMsg` name
+    // second is the message string value
+    final Node msgTextNode = callNode.getSecondChild();
+    if (msgTextNode == null) {
+      throw new MalformedException("Message string literal expected", callNode);
+    }
+    // third is the optional object literal mapping placeholder names to value expressions
+    final Node valuesObjLit = msgTextNode.getNext();
+    // fourth is the optional options-bag argument
+    final Node optionsBagArgument = valuesObjLit == null ? null : valuesObjLit.getNext();
 
+    // Extract and parse the message text
+    // The message string can be a string literal or a concatenation of string literals.
+    // We want the whole thing as a single string here.
+    String msgTextString = extractStringFromStringExprNode(msgTextNode);
+    final GoogGetMsgParsedText googGetMsgParsedText;
     try {
-      parseMessageTextIntoPartsForBuilder(builder, value);
-      messageData.messageParts = builder.getParts();
+      googGetMsgParsedText = extractGoogGetMsgParsedText(msgTextString);
     } catch (PlaceholderFormatException e) {
-      throw new MalformedException(e.getMessage(), node);
+      throw new MalformedException(e.getMessage(), msgTextNode);
+    }
+
+    // Extract the placeholder values object
+    // NOTE: The extract method returns an effectively "empty" value for `null`
+    final ObjectLiteralMap placeholderObjectLiteralMap = extractObjectLiteralMap(valuesObjLit);
+
+    // Confirm that we can find a value map entry for every placeholder name referenced in the text.
+    final ImmutableSet<String> placeholderNamesFromText =
+        googGetMsgParsedText.getPlaceholderNames();
+    placeholderObjectLiteralMap.checkForRequiredKeys(
+        placeholderNamesFromText,
+        placeholderName ->
+            new MalformedException(
+                "Unrecognized message placeholder referenced: " + placeholderName, msgTextNode));
+
+    // Confirm that every placeholder name for which we have a value is actually referenced in the
+    // text.
+    placeholderObjectLiteralMap.checkForUnexpectedKeys(
+        placeholderNamesFromText,
+        placeholderName -> "Unused message placeholder: " + placeholderName);
+
+    // Get a map from placeholder name to Node value
+    final ImmutableMap<String, Node> placeholderValuesMap =
+        placeholderObjectLiteralMap.extractValueMap();
+
+    // Extract the Options bag data
+    // NOTE: the extract method returns an "empty" value for `null`
+    final JsMessageOptions jsMessageOptions = extractJsMessageOptions(optionsBagArgument);
+
+    // Confirm that any example or orignal_code placeholder information we have refers only to
+    // placeholder names that appear in the message text.
+    jsMessageOptions.checkForUnknownPlaceholders(placeholderNamesFromText);
+
+    // NOTE: All of the methods defined below should do little to no computation.
+    // In particular, all checking for MalformedException cases must be done above,
+    // so these methods can be called without needing to catch exceptions.
+    return new CallNodeMsgData() {
+      @Override
+      public Node getTemplateTextNode() {
+        return msgTextNode;
+      }
+
+      @Override
+      public String getMessageText() {
+        return googGetMsgParsedText.getText();
+      }
+
+      @Override
+      public ImmutableList<Part> getMessageParts() {
+        return googGetMsgParsedText.getParts();
+      }
+
+      @Override
+      public Node getPlaceholderValuesNode() {
+        return valuesObjLit;
+      }
+
+      @Override
+      public ImmutableMap<String, Node> getPlaceholderValueMap() {
+        return placeholderValuesMap;
+      }
+
+      @Override
+      public ImmutableMap<String, String> getPlaceholderExampleMap() {
+        return jsMessageOptions.getPlaceholderExampleMap();
+      }
+
+      @Override
+      public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
+        return jsMessageOptions.getPlaceholderOriginalCodeMap();
+      }
+
+      @Override
+      public boolean shouldEscapeLessThan() {
+        return jsMessageOptions.isEscapeLessThan();
+      }
+
+      @Override
+      public boolean shouldUnescapeHtmlEntities() {
+        return jsMessageOptions.isUnescapeHtmlEntities();
+      }
+    };
+  }
+
+  private interface CallNodeMsgData {
+    Node getTemplateTextNode();
+
+    String getMessageText();
+
+    ImmutableList<Part> getMessageParts();
+
+    Node getPlaceholderValuesNode();
+
+    ImmutableMap<String, Node> getPlaceholderValueMap();
+
+    ImmutableMap<String, String> getPlaceholderExampleMap();
+
+    ImmutableMap<String, String> getPlaceholderOriginalCodeMap();
+
+    boolean shouldEscapeLessThan();
+
+    boolean shouldUnescapeHtmlEntities();
+  }
+
+  private interface JsMessageOptions {
+    // Replace `'<'` with `'&lt;'` in the message.
+    boolean isEscapeLessThan();
+    // Replace these escaped entities with their literal characters in the message
+    // (Overrides escapeLessThan)
+    // '&lt;' -> '<'
+    // '&gt;' -> '>'
+    // '&apos;' -> "'"
+    // '&quot;' -> '"'
+    // '&amp;' -> '&'
+    boolean isUnescapeHtmlEntities();
+
+    ImmutableMap<String, String> getPlaceholderExampleMap();
+
+    ImmutableMap<String, String> getPlaceholderOriginalCodeMap();
+
+    void checkForUnknownPlaceholders(Set<String> knownPlaceholders) throws MalformedException;
+  }
+
+  private static final ImmutableSet<String> MESSAGE_OPTION_NAMES =
+      ImmutableSet.of("html", "unescapeHtmlEntities", "example", "original_code");
+
+  private JsMessageOptions extractJsMessageOptions(@Nullable Node optionsBag)
+      throws MalformedException {
+    ObjectLiteralMap objectLiteralMap = extractObjectLiteralMap(optionsBag);
+    objectLiteralMap.checkForUnexpectedKeys(
+        MESSAGE_OPTION_NAMES, optionName -> "Unknown option: " + optionName);
+
+    final boolean isEscapeLessThan = objectLiteralMap.getBooleanValueOrFalse("html");
+    final boolean isUnescapeHtmlEntities =
+        objectLiteralMap.getBooleanValueOrFalse("unescapeHtmlEntities");
+
+    final Node exampleValueNode = objectLiteralMap.getValueNode("example");
+    final ObjectLiteralMap exampleObjectLiteralMap = extractObjectLiteralMap(exampleValueNode);
+    final ImmutableMap<String, String> placeholderExamplesMap =
+        exampleObjectLiteralMap.extractStringToStringMap();
+
+    final Node originalCodeValueNode = objectLiteralMap.getValueNode("original_code");
+    final ObjectLiteralMap originalCodeObjectLiteralMap =
+        extractObjectLiteralMap(originalCodeValueNode);
+    final ImmutableMap<String, String> placeholderOriginalCodeMap =
+        originalCodeObjectLiteralMap.extractStringToStringMap();
+
+    // NOTE: The getX() methods below should all do little to no computation.
+    // In particular, all checking for MalformedExceptions must be done before creating this object.
+    return new JsMessageOptions() {
+      @Override
+      public boolean isEscapeLessThan() {
+        return isEscapeLessThan;
+      }
+
+      @Override
+      public boolean isUnescapeHtmlEntities() {
+        return isUnescapeHtmlEntities;
+      }
+
+      @Override
+      public ImmutableMap<String, String> getPlaceholderExampleMap() {
+        return placeholderExamplesMap;
+      }
+
+      @Override
+      public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
+        return placeholderOriginalCodeMap;
+      }
+
+      @Override
+      public void checkForUnknownPlaceholders(Set<String> knownPlaceholders)
+          throws MalformedException {
+        exampleObjectLiteralMap.checkForUnexpectedKeys(
+            knownPlaceholders, unknownName -> "Unknown placeholder: " + unknownName);
+        originalCodeObjectLiteralMap.checkForUnexpectedKeys(
+            knownPlaceholders, unknownName -> "Unknown placeholder: " + unknownName);
+      }
+    };
+  }
+
+  private static boolean extractBooleanStringKeyValue(@Nullable Node stringKeyNode)
+      throws MalformedException {
+    if (stringKeyNode == null) {
+      return false;
+    } else {
+      final Node valueNode = stringKeyNode.getOnlyChild();
+      if (valueNode.isTrue()) {
+        return true;
+      } else if (valueNode.isFalse()) {
+        return false;
+      } else {
+        throw new MalformedException(
+            stringKeyNode.getString() + ": Literal true or false expected", valueNode);
+      }
     }
   }
 
-  public static void parseMessageTextIntoPartsForBuilder(JsMessage.Builder builder, String msgText)
+  /**
+   * Represents the contents of a object literal Node in the AST.
+   *
+   * <p>The object literal may not have any computed keys or methods.
+   *
+   * <p>Use {@link #extractObjectLiteralMap(Node)} to get an instance.
+   */
+  public interface ObjectLiteralMap {
+    boolean getBooleanValueOrFalse(String key) throws MalformedException;
+
+    /**
+     * Returns a map from object property names the Node values they have in the AST, building the
+     * map first, if necessary.
+     */
+    ImmutableMap<String, Node> extractValueMap();
+
+    /**
+     * Returns a map from object property names to string values, building it first, if necessary.
+     *
+     * @throws MalformedException if any of the values are not actually simple string literals or
+     *     concatenations of string literals.
+     */
+    ImmutableMap<String, String> extractStringToStringMap() throws MalformedException;
+
+    /**
+     * Get the value node for a key.
+     *
+     * <p>This method avoids the work of extracting the full value map.
+     */
+    @Nullable Node getValueNode(String key);
+
+    /**
+     * Throws a {@link MalformedException} if the object literal has keys not in the expected set.
+     */
+    void checkForUnexpectedKeys(
+        Set<String> expectedKeys, Function<String, String> createErrorMessage)
+        throws MalformedException;
+
+    /**
+     * Throws a {@link MalformedException} if the object literal does not have one all the keys in
+     * the required set.
+     */
+    void checkForRequiredKeys(
+        Set<String> requiredKeys, Function<String, MalformedException> createException)
+        throws MalformedException;
+  }
+
+  private static class ObjectLiteralMapImpl implements ObjectLiteralMap {
+    private final Map<String, Node> stringToStringKeyMap;
+    // The result of extractValueMap(). It will be populated if requested.
+    private ImmutableMap<String, Node> valueMap = null;
+    // The result of extractStringMap(). It will be populated if requested.
+    private ImmutableMap<String, String> stringMap = null;
+
+    private ObjectLiteralMapImpl(Map<String, Node> stringToStringKeyMap) {
+      this.stringToStringKeyMap = stringToStringKeyMap;
+    }
+
+    @Override
+    public @Nullable Node getValueNode(String key) {
+      final Node stringKeyNode = stringToStringKeyMap.get(key);
+      return stringKeyNode == null ? null : stringKeyNode.getOnlyChild();
+    }
+
+    @Override
+    public boolean getBooleanValueOrFalse(String key) throws MalformedException {
+      final Node stringKeyNode = stringToStringKeyMap.get(key);
+      return extractBooleanStringKeyValue(stringKeyNode);
+    }
+
+    @Override
+    public ImmutableMap<String, Node> extractValueMap() {
+      if (valueMap == null) {
+        ImmutableMap.Builder<String, Node> builder = ImmutableMap.builder();
+        for (Entry<String, Node> entry : stringToStringKeyMap.entrySet()) {
+          builder.put(entry.getKey(), entry.getValue().getOnlyChild());
+        }
+        valueMap = builder.buildOrThrow();
+      }
+      return valueMap;
+    }
+
+    @Override
+    public ImmutableMap<String, String> extractStringToStringMap() throws MalformedException {
+      if (stringMap == null) {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        for (Entry<String, Node> entry : stringToStringKeyMap.entrySet()) {
+          builder.put(
+              entry.getKey(), extractStringFromStringExprNode(entry.getValue().getOnlyChild()));
+        }
+        stringMap = builder.buildOrThrow();
+      }
+      return stringMap;
+    }
+
+    @Override
+    public void checkForUnexpectedKeys(
+        Set<String> expectedKeys, Function<String, String> createErrorMessage)
+        throws MalformedException {
+      for (String key : stringToStringKeyMap.keySet()) {
+        if (!expectedKeys.contains(key)) {
+          throw new MalformedException(
+              createErrorMessage.apply(key), stringToStringKeyMap.get(key));
+        }
+      }
+    }
+
+    @Override
+    public void checkForRequiredKeys(
+        Set<String> requiredKeys, Function<String, MalformedException> createException)
+        throws MalformedException {
+      for (String requiredKey : requiredKeys) {
+        if (!stringToStringKeyMap.containsKey(requiredKey)) {
+          throw createException.apply(requiredKey);
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns an object to represent an object literal Node from the AST.
+   *
+   * <p>The object literal's members must all be `STRING_KEY` nodes.
+   *
+   * <p>No duplicate string keys are allowed.
+   *
+   * <p>A `null` argument is treated as if it were an empty object literal.
+   *
+   * @throws MalformedException If the Node does not meet the above requirements.
+   */
+  public static ObjectLiteralMap extractObjectLiteralMap(@Nullable Node objLit)
+      throws MalformedException {
+    if (objLit == null) {
+      return new ObjectLiteralMapImpl(ImmutableMap.of());
+    }
+    if (!objLit.isObjectLit()) {
+      throw new MalformedException("object literal expected", objLit);
+    }
+    final LinkedHashMap<String, Node> stringToStringKeyMap = new LinkedHashMap<>();
+    for (Node stringKey = objLit.getFirstChild();
+        stringKey != null;
+        stringKey = stringKey.getNext()) {
+      if (!stringKey.isStringKey()) {
+        throw new MalformedException("string key expected", stringKey);
+      }
+      final String key = stringKey.getString();
+      if (stringToStringKeyMap.containsKey(key)) {
+        throw new MalformedException("duplicate string key: " + key, stringKey);
+      }
+      stringToStringKeyMap.put(stringKey.getString(), stringKey);
+    }
+    return new ObjectLiteralMapImpl(stringToStringKeyMap);
+  }
+
+  public static ImmutableList<Part> parseJsMessageTextIntoParts(String originalMsgText)
       throws PlaceholderFormatException {
+    GoogGetMsgParsedText googGetMsgParsedText = extractGoogGetMsgParsedText(originalMsgText);
+    return googGetMsgParsedText.getParts();
+  }
+
+  private static GoogGetMsgParsedText extractGoogGetMsgParsedText(final String originalMsgText)
+      throws PlaceholderFormatException {
+    String msgText = originalMsgText;
+    ImmutableList.Builder<Part> partsBuilder = ImmutableList.builder();
+    ImmutableSet.Builder<String> placeholderNamesBuilder = ImmutableSet.builder();
     while (true) {
       int phBegin = msgText.indexOf(JsMessage.PH_JS_PREFIX);
       if (phBegin < 0) {
         // Just a string literal
-        builder.appendStringPart(msgText);
-        return;
+        partsBuilder.add(StringPart.create(msgText));
+        break;
       } else {
         if (phBegin > 0) {
           // A string literal followed by a placeholder
-          builder.appendStringPart(msgText.substring(0, phBegin));
+          partsBuilder.add(StringPart.create(msgText.substring(0, phBegin)));
         }
 
         // A placeholder. Find where it ends
@@ -801,17 +1042,46 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         if (!JsMessage.isLowerCamelCaseWithNumericSuffixes(phName)) {
           throw new PlaceholderFormatException("Placeholder name not in lowerCamelCase: " + phName);
         }
-        builder.appendJsPlaceholderReference(phName);
+        placeholderNamesBuilder.add(phName);
+        partsBuilder.add(PlaceholderReference.createForJsName(phName));
         int nextPos = phEnd + JsMessage.PH_JS_SUFFIX.length();
         if (nextPos < msgText.length()) {
           // Iterate on the rest of the message value
           msgText = msgText.substring(nextPos);
         } else {
           // The message is parsed
-          return;
+          break;
         }
       }
     }
+    final ImmutableSet<String> placeholderNames = placeholderNamesBuilder.build();
+    final ImmutableList<Part> parts = partsBuilder.build();
+    // NOTE: The methods defined below should do little to no computation, and definitely should
+    // not throw exceptions.
+    return new GoogGetMsgParsedText() {
+      @Override
+      public String getText() {
+        return originalMsgText;
+      }
+
+      @Override
+      public ImmutableSet<String> getPlaceholderNames() {
+        return placeholderNames;
+      }
+
+      @Override
+      public ImmutableList<Part> getParts() {
+        return parts;
+      }
+    };
+  }
+
+  private interface GoogGetMsgParsedText {
+    String getText();
+
+    ImmutableSet<String> getPlaceholderNames();
+
+    ImmutableList<Part> getParts();
   }
 
   /** Visit a call to goog.getMsgWithFallback. */

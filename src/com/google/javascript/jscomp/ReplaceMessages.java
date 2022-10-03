@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -33,9 +34,7 @@ import com.google.javascript.jscomp.JsMessageVisitor.MalformedException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -102,23 +101,19 @@ public final class ReplaceMessages {
 
     @Override
     protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
-      try {
-        // This is the currently preferred form.
-        // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
-        protectGetMsgCall(definition.getMessageNode(), message);
-      } catch (MalformedException e) {
-        compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
-      }
+      // This is the currently preferred form.
+      // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
+      protectGetMsgCall(message, definition);
     }
 
-    private void protectGetMsgCall(Node callNode, JsMessage message) throws MalformedException {
+    private void protectGetMsgCall(JsMessage message, JsMessageDefinition definition) {
+      final Node callNode = definition.getMessageNode();
       checkArgument(callNode.isCall(), callNode);
       // `goog.getMsg('message string', {<substitutions>}, {<options>})`
       final Node googGetMsg = callNode.getFirstChild();
-      final Node originalMessageString = checkNotNull(googGetMsg.getNext());
-      final Node placeholdersNode = originalMessageString.getNext();
-      final Node optionsNode = placeholdersNode == null ? null : placeholdersNode.getNext();
-      final MsgOptions msgOptions = getOptions(optionsNode);
+      final Node originalMessageString = definition.getTemplateTextNode();
+      final Node placeholdersNode = definition.getPlaceholderValuesNode();
+      final MsgOptions msgOptions = getMsgOptionsFromDefinition(definition);
 
       // Construct
       // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
@@ -186,6 +181,13 @@ public final class ReplaceMessages {
       callNode.replaceWith(newCallNode);
       compiler.reportChangeToEnclosingScope(newCallNode);
     }
+  }
+
+  private MsgOptions getMsgOptionsFromDefinition(JsMessageDefinition definition) {
+    final MsgOptions msgOptions = new MsgOptions();
+    msgOptions.escapeLessThan = definition.shouldEscapeLessThan();
+    msgOptions.unescapeHtmlEntities = definition.shouldUnescapeHtmlEntities();
+    return msgOptions;
   }
 
   private Node createMsgPropertiesNode(JsMessage message, MsgOptions msgOptions) {
@@ -289,11 +291,9 @@ public final class ReplaceMessages {
           }
           msgToUse = originalMsg;
         }
-        final MsgOptions msgOptions = new MsgOptions();
-        msgOptions.escapeLessThan = protectedJsMessage.escapeLessThan;
-        msgOptions.unescapeHtmlEntities = protectedJsMessage.unescapeHtmlEntities;
+        final MsgOptions msgOptions = protectedJsMessage.getMsgOptions();
         final Map<String, Node> placeholderMap =
-            createPlaceholderNodeMap(protectedJsMessage.substitutionsNode);
+            extractPlaceholderValuesMapOrThrow(protectedJsMessage.substitutionsNode);
         final Node finalMsgConstructionExpression =
             constructStringExprNode(msgToUse, placeholderMap, msgOptions, nodeToReplace);
         finalMsgConstructionExpression.srcrefTreeIfMissing(nodeToReplace);
@@ -319,6 +319,14 @@ public final class ReplaceMessages {
       valueNodeToUse.detach();
       protectedMsgFallback.callNode.replaceWith(valueNodeToUse);
       compiler.reportChangeToEnclosingScope(valueNodeToUse);
+    }
+  }
+
+  static ImmutableMap<String, Node> extractPlaceholderValuesMapOrThrow(Node valuesObjLit) {
+    try {
+      return JsMessageVisitor.extractObjectLiteralMap(valuesObjLit).extractValueMap();
+    } catch (MalformedException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -466,7 +474,7 @@ public final class ReplaceMessages {
       Node newValue;
       Node msgNode = definition.getMessageNode();
       try {
-        newValue = replaceCallNode(replacement, msgNode);
+        newValue = replaceCallNode(replacement, definition);
       } catch (MalformedException e) {
         compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
         newValue = msgNode;
@@ -494,44 +502,21 @@ public final class ReplaceMessages {
      *   'Hi ' + someUserName + '! Welcome to ' + 'getProductName()' + '.'
      * </pre>
      *
-     * @param message  a message
-     * @param callNode  the message's original CALL value node
      * @return a STRING node, or an ADD node that does string concatenation, if
      *   the message has one or more placeholders
      *
      * @throws MalformedException if the passed node's subtree structure is
      *   not as expected
      */
-    private Node replaceCallNode(JsMessage message, Node callNode) throws MalformedException {
-      checkNode(callNode, Token.CALL);
-      // `goog.getMsg`
-      Node getPropNode = callNode.getFirstChild();
-      checkNode(getPropNode, Token.GETPROP);
-      Node stringExprNode = getPropNode.getNext();
-      // optional `{ key1: value, key2: value2 }` replacements
-      Node objLitNode = stringExprNode.getNext();
+    private Node replaceCallNode(JsMessage message, JsMessageDefinition definition)
+        throws MalformedException {
       // optional replacement options, e.g. `{ html: true }`
-      MsgOptions options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
+      MsgOptions options = getMsgOptionsFromDefinition(definition);
 
-      Map<String, Node> placeholderMap = createPlaceholderNodeMap(objLitNode);
       // Build the replacement tree.
-      return constructStringExprNode(message, placeholderMap, options, callNode);
+      return constructStringExprNode(
+          message, definition.getPlaceholderValueMap(), options, definition.getMessageNode());
     }
-  }
-
-  private Map<String, Node> createPlaceholderNodeMap(Node objLitNode) {
-    Map<String, Node> placeholderMap = new HashMap<>();
-    if (objLitNode != null) {
-      for (Node key = objLitNode.getFirstChild(); key != null; key = key.getNext()) {
-        checkState(key.isStringKey(), key);
-        String name = key.getString();
-        boolean isKeyAlreadySeen = placeholderMap.put(name, key.getOnlyChild()) != null;
-        // JsMessageVisitor should have already reported an error for the message and skipped
-        // it if there is a duplicate placeholder name, so this code will never see such a case.
-        checkState(!isKeyAlreadySeen, "duplicate placeholder name: %s", key);
-      }
-    }
-    return placeholderMap;
   }
 
   /**
@@ -630,47 +615,6 @@ public final class ReplaceMessages {
               .replace("&amp;", "&");
     }
     return astFactory.createString(s);
-  }
-
-  private static MsgOptions getOptions(@Nullable Node optionsNode) throws MalformedException {
-    MsgOptions options = new MsgOptions();
-    if (optionsNode == null) {
-      return options;
-    }
-    // JsMessageVisitor reports an error and skips any message where the options argument
-    // is not an object literal.
-    checkState(optionsNode.isObjectLit(), "OBJLIT node expected: %s", optionsNode);
-    for (Node aNode = optionsNode.getFirstChild(); aNode != null; aNode = aNode.getNext()) {
-      // JsMessageVisitor reports errors and skips any messages with non-string-key options.
-      checkState(aNode.isStringKey(), "Expected a string key: %s", aNode);
-      String optName = aNode.getString();
-      Node value = aNode.getFirstChild();
-      switch (optName) {
-        case "html":
-          options.escapeLessThan = value.isTrue();
-          if (!value.isTrue() && !value.isFalse()) {
-            throw new MalformedException("html: Literal true or false expected", value);
-          }
-          break;
-        case "unescapeHtmlEntities":
-          options.unescapeHtmlEntities = value.isTrue();
-          if (!value.isTrue() && !value.isFalse()) {
-            throw new MalformedException(
-                "unescapeHtmlEntities: Literal true or false expected", value);
-          }
-          break;
-        case "example":
-        case "original_code":
-          // JsMessageVisitor checks the validity of these two options and reports any errors, so
-          // we don't need to do it here. They aren't needed during message replacement anyway.
-          break;
-
-        default:
-          // JsMessageVisitor doesn't complain about unexpected option names, so we'll do that here.
-          throw new MalformedException("Unexpected option", aNode);
-      }
-    }
-    return options;
   }
 
   /** Options for escaping characters in translated messages. */
@@ -795,7 +739,7 @@ public final class ReplaceMessages {
             break;
           case "msg_text":
             try {
-              JsMessageVisitor.parseMessageTextIntoPartsForBuilder(jsMessageBuilder, value);
+              jsMessageBuilder.appendParts(JsMessageVisitor.parseJsMessageTextIntoParts(value));
             } catch (PlaceholderFormatException unused) {
               // Somehow we stored the protected message text incorrectly, which should never
               // happen.
@@ -840,6 +784,13 @@ public final class ReplaceMessages {
           substitutionsNode,
           escapeLessThanOption,
           unescapeHtmlEntitiesOption);
+    }
+
+    MsgOptions getMsgOptions() {
+      final MsgOptions msgOptions = new MsgOptions();
+      msgOptions.escapeLessThan = escapeLessThan;
+      msgOptions.unescapeHtmlEntities = unescapeHtmlEntities;
+      return msgOptions;
     }
   }
 

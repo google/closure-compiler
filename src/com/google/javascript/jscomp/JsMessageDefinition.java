@@ -16,23 +16,66 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /** Container class that holds information about the JS code a JsMessage was built from. */
-public final class JsMessageDefinition {
-
-  private final Node messageNode;
+public interface JsMessageDefinition {
 
   /**
-   * Constructs JS message definition.
+   * The RHS node of the message assignment statement.
    *
-   * @param messageNode The `goog.getMsg()` call node.
+   * <p>e.g. The <code>goog.getMsg()</code> call in:
+   *
+   * <pre><code>
+   *   const MSG_HELLO =
+   *       goog.getMsg(
+   *           'Hello, {$name}.',
+   *           { 'name', getName() },
+   *           { unescapeHtmlEntities: true });
+   * </code></pre>
    */
-  JsMessageDefinition(Node messageNode) {
-    this.messageNode = messageNode;
-  }
+  Node getMessageNode();
 
-  public Node getMessageNode() {
-    return messageNode;
-  }
+  /**
+   * The Node representing the message text template.
+   *
+   * <p>This node may be a literal string or a concatenation of literal strings.
+   *
+   * <p>For a {@code goog.getMsg()} call this is the second argument.
+   */
+  Node getTemplateTextNode();
+
+  /**
+   * The object literal {@link Node} that maps placeholder names to expressions providing their
+   * values.
+   *
+   * <p>This value will be {@code null} if the message definition didn't specify placeholder values.
+   */
+  @Nullable Node getPlaceholderValuesNode();
+
+  /**
+   * A map from placehlolder name to the Node assigned to it in the values map argument of
+   * `goog.getMsg()`.
+   *
+   * <p>This will be an empty map if there was no object or it was an empty object literal.
+   */
+  ImmutableMap<String, Node> getPlaceholderValueMap();
+
+  /**
+   * The value of the 'html' options key in the options bag argument.
+   *
+   * <p>This value will be <code>false</code> if there was no options bag argument, or if it didn't
+   * contain an 'html' property.
+   */
+  boolean shouldEscapeLessThan();
+
+  /**
+   * The value of the 'unescapeHtmlEntities' options key in the options bag argument.
+   *
+   * <p>This value will be <code>false</code> if there was no options bag argument, or if it didn't
+   * contain an 'unescapeHtmlEntities' property.
+   */
+  boolean shouldUnescapeHtmlEntities();
 }

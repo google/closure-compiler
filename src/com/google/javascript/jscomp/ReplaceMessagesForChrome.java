@@ -16,16 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
 
 /**
  * Replaces user-visible messages with appropriate calls to chrome.i18n.getMessage. The first
@@ -39,9 +39,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
   private final AstFactory astFactory;
 
   ReplaceMessagesForChrome(AbstractCompiler compiler, JsMessage.IdGenerator idGenerator) {
-
     super(compiler, idGenerator);
-
     this.astFactory = compiler.createAstFactory();
   }
 
@@ -53,36 +51,27 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
 
   @Override
   protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
-    try {
-      Node msgNode = definition.getMessageNode();
-      Node newValue = getNewValueNode(msgNode, message);
-      newValue.srcrefTreeIfMissing(msgNode);
-
-      msgNode.replaceWith(newValue);
-      compiler.reportChangeToEnclosingScope(newValue);
-    } catch (MalformedException e) {
-      compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
-    }
+    Node newValue = getNewValueNode(message, definition);
+    definition.getMessageNode().replaceWith(newValue);
+    compiler.reportChangeToEnclosingScope(newValue);
   }
 
-  private Node getNewValueNode(Node origNode, JsMessage message) throws MalformedException {
+  private Node getNewValueNode(JsMessage message, JsMessageDefinition definition) {
     Node newValueNode = getChromeI18nGetMessageNode(message.getId());
 
-    boolean isHtml = isHtml(origNode);
+    boolean isHtml = definition.shouldEscapeLessThan();
     if (!message.jsPlaceholderNames().isEmpty() || isHtml) {
-      Node placeholderValues = origNode.getChildAtIndex(2);
-      checkNode(placeholderValues, Token.OBJECTLIT);
-
       // Output the placeholders, sorted alphabetically by placeholder name,
       // regardless of what order they appear in the original message.
       List<String> placeholderNames = Ordering.natural().sortedCopy(message.jsPlaceholderNames());
 
       Node placeholderValueArray = astFactory.createArraylit();
+      ImmutableMap<String, Node> placeholderValueMap = definition.getPlaceholderValueMap();
       for (String name : placeholderNames) {
-        Node value = getPlaceholderValue(placeholderValues, name);
-        if (value == null) {
-          throw new MalformedException("No value was provided for placeholder " + name, origNode);
-        }
+        // JsMessageVisitor ensures that every placeholder name appearing in the message string
+        // has a corresponding value node. It will report an error and avoid passing any messages
+        // violating this invariant to processMessage().
+        Node value = checkNotNull(placeholderValueMap.get(name)).cloneTree();
         placeholderValueArray.addChildToBack(value);
       }
       if (isHtml) {
@@ -122,31 +111,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       }
     }
 
-    newValueNode.srcrefTreeIfMissing(origNode);
+    newValueNode.srcrefTreeIfMissing(definition.getMessageNode());
     return newValueNode;
-  }
-
-  private boolean isHtml(Node node) throws MalformedException {
-    if (node.getChildCount() > 3) {
-      Node options = node.getChildAtIndex(3);
-      checkNode(options, Token.OBJECTLIT);
-      for (Node opt = options.getFirstChild(); opt != null; opt = opt.getNext()) {
-        checkNode(opt, Token.STRING_KEY);
-        if (opt.getString().equals("html")) {
-          return opt.getFirstChild().isTrue();
-        }
-      }
-    }
-    return false;
-  }
-
-  private static @Nullable Node getPlaceholderValue(
-      Node placeholderValues, String placeholderName) {
-    for (Node key = placeholderValues.getFirstChild(); key != null; key = key.getNext()) {
-      if (key.getString().equals(placeholderName)) {
-        return key.getFirstChild().cloneTree();
-      }
-    }
-    return null;
   }
 }

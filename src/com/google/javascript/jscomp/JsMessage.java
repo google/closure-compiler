@@ -410,6 +410,24 @@ public abstract class JsMessage {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder appendPart(Part part) {
+      checkNotNull(part);
+      parts.add(part);
+      if (part.isPlaceholder()) {
+        jsPlaceholderNames.add(part.getJsPlaceholderName());
+      }
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder appendParts(List<Part> parts) {
+      for (Part part : parts) {
+        appendPart(part);
+      }
+      return this;
+    }
+
     /**
      * Appends a placeholder reference to the message.
      *
@@ -443,11 +461,6 @@ public abstract class JsMessage {
       checkNotNull(part, "String part of the message could not be null");
       parts.add(StringPart.create(part));
       return this;
-    }
-
-    /** Returns the message registered placeholders */
-    public Set<String> getPlaceholders() {
-      return jsPlaceholderNames;
     }
 
     @CanIgnoreReturnValue

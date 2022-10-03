@@ -22,9 +22,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * @author anatol@google.com (Anatol Pomazau)
- */
 @RunWith(JUnit4.class)
 public final class JsMessageTest {
 
