@@ -452,7 +452,7 @@ public final class PerformanceTracker {
       // This is here to workaround GWT http://b/30943295
       ((FilterOutputStream) output).flush();
     } catch (IOException e) {
-      throw new RuntimeException("Unreachable.");
+      throw new RuntimeException("Unreachable.", e);
     }
   }
 

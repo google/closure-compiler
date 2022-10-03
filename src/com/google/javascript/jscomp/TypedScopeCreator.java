@@ -2124,8 +2124,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         boolean isGlobalVar = declarationNode.isName() && scopeToDeclareIn.isGlobal();
         boolean shouldDeclareOnGlobalThis =
-            isGlobalVar && (parent.isVar() || parent.isFunction())
-                || this.forGoogProvidedName && !variableName.contains(".");
+            (isGlobalVar && (parent.isVar() || parent.isFunction()))
+                || (this.forGoogProvidedName && !variableName.contains("."));
 
         // TODO(sdh): Remove this special case.  It is required to reproduce the original
         // non-block-scoped behavior, which is depended on in several places including

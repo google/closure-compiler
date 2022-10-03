@@ -1424,7 +1424,7 @@ public final class ConformanceRules {
       try {
         customClass = Class.forName(className);
       } catch (ClassNotFoundException e) {
-        throw new InvalidRequirementSpec("JavaClass not found.");
+        throw new InvalidRequirementSpec("JavaClass not found.", e);
       }
       if (RULE_TYPE.isSupertypeOf(TypeToken.of(customClass))) {
         @SuppressWarnings("unchecked") // Assignable to Rule;

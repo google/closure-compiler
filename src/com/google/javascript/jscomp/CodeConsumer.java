@@ -307,7 +307,7 @@ public abstract class CodeConsumer {
     } else if (Character.isLetter(first) && isWordChar(prev)) {
       // Make sure there is a space after e.g. instanceof , typeof
       append(" ");
-    } else if (prev == '-' && first == '>' || prev == '<' && first == '!') {
+    } else if ((prev == '-' && first == '>') || (prev == '<' && first == '!')) {
       // Make sure that we don't emit "<!--" or "-->"
       append(" ");
     }

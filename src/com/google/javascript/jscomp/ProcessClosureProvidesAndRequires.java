@@ -546,7 +546,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
               || (!builder.explicit
                   && (NodeUtil.isExprAssign(node)
                       || NodeUtil.isNameDeclaration(node)
-                      || node.isExprResult() && node.getFirstChild().isQualifiedName())),
+                      || (node.isExprResult() && node.getFirstChild().isQualifiedName()))),
           node);
       this.namespace = builder.namespace;
       this.firstNode = builder.node;
