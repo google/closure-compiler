@@ -503,8 +503,8 @@ public class ConvertToTypedInterface implements CompilerPass {
         }
         // These are created by goog.scope processing, but clash with each other
         // and should not be depended on.
-        if (decl.getRhs() != null && decl.getRhs().isClass()
-            || decl.getJsDoc() != null && decl.getJsDoc().containsTypeDefinition()) {
+        if ((decl.getRhs() != null && decl.getRhs().isClass())
+            || (decl.getJsDoc() != null && decl.getJsDoc().containsTypeDefinition())) {
           maybeReport(compiler, decl.getLhs(), GOOG_SCOPE_HIDDEN_TYPE);
         }
         return true;
