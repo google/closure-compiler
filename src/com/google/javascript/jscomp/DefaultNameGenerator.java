@@ -87,11 +87,11 @@ public final class DefaultNameGenerator implements NameGenerator {
   // end up balancing the huffman tree and result is bad compression.
   /** Generate short name with this first character */
   static final char[] FIRST_CHAR =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
   /** These appear after the first character */
   static final char[] NONFIRST_CHAR =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$"
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
         .toCharArray();
 
   /**
