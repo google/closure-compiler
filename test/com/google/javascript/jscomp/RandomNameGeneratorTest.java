@@ -50,7 +50,7 @@ public final class RandomNameGeneratorTest {
           .fail();
     } catch (IllegalArgumentException ex) {
       // The error messages should contain meaningful information.
-      assertThat(ex).hasMessageThat().contains("W, X, Y, Z, $");
+      assertThat(ex).hasMessageThat().contains("W, X, Y, Z");
     }
 
     try {

@@ -50,7 +50,7 @@ public final class DefaultNameGeneratorTest {
           .fail();
     } catch (IllegalArgumentException ex) {
       // The error messages should contain meaningful information.
-      assertThat(ex).hasMessageThat().contains("W, X, Y, Z, $]");
+      assertThat(ex).hasMessageThat().contains("W, X, Y, Z]");
     }
 
     try {
@@ -72,22 +72,21 @@ public final class DefaultNameGeneratorTest {
     assertThat(result[25]).isEqualTo("z");
     assertThat(result[26]).isEqualTo("A");
     assertThat(result[51]).isEqualTo("Z");
-    assertThat(result[52]).isEqualTo("$");
-    assertThat(result[53]).isEqualTo("aa");
+    assertThat(result[52]).isEqualTo("aa");
     // ba is reserved
-    assertThat(result[54]).isEqualTo("ca");
-    assertThat(result[104]).isEqualTo("$a");
+    assertThat(result[53]).isEqualTo("ca");
+    assertThat(result[103]).isEqualTo("ab");
 
     ng = new DefaultNameGenerator(RESERVED_NAMES, "x", null);
     result = generate(ng, "x", 132);
 
-    // Expected: x, xa, ..., x$, xaa, ..., x$$
+    // Expected: x, xa, ..., x9, xaa, ..., x99
     assertThat(result[0]).isEqualTo("x");
     assertThat(result[1]).isEqualTo("xa");
-    assertThat(result[64]).isEqualTo("x$");
-    assertThat(result[65]).isEqualTo("xaa");
+    assertThat(result[63]).isEqualTo("x9");
+    assertThat(result[64]).isEqualTo("xaa");
     // xba is reserved
-    assertThat(result[66]).isEqualTo("xca");
+    assertThat(result[65]).isEqualTo("xca");
   }
 
   @Test
@@ -129,8 +128,7 @@ public final class DefaultNameGeneratorTest {
     assertThat(result[25]).isEqualTo("z");
     assertThat(result[26]).isEqualTo("A");
     assertThat(result[51]).isEqualTo("Z");
-    assertThat(result[52]).isEqualTo("$");
-    assertThat(result[53]).isEqualTo("aa");
+    assertThat(result[52]).isEqualTo("aa");
 
     ng.favors("b");
     ng.reset(RESERVED_NAMES, "", null);
@@ -158,8 +156,7 @@ public final class DefaultNameGeneratorTest {
     assertThat(result[25]).isEqualTo("z");
     assertThat(result[26]).isEqualTo("A");
     assertThat(result[51]).isEqualTo("Z");
-    assertThat(result[52]).isEqualTo("$");
-    assertThat(result[53]).isEqualTo("aa");
+    assertThat(result[52]).isEqualTo("aa");
 
     ng.favors("function");
     ng.favors("function");
@@ -186,8 +183,8 @@ public final class DefaultNameGeneratorTest {
     assertThat(result[10]).isEqualTo("e");
 
     // This used to start with 'aa' but now n is prioritized over it.
-    assertThat(result[53]).isEqualTo("nn");
-    assertThat(result[54]).isEqualTo("cn");
+    assertThat(result[52]).isEqualTo("nn");
+    assertThat(result[53]).isEqualTo("cn");
   }
 
   @Test

@@ -468,7 +468,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "function a() {return 1;}", //
             "function aa() {",
             "  var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,",
-            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;",
+            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,ba,ca,da;",
             "  a();",
             "} aa();"));
     prefix = DEFAULT_PREFIX;
@@ -482,11 +482,11 @@ public final class RenameVarsTest extends CompilerTestCase {
     test(
         lines(
             "(function(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,",
-            "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,$){});",
+            "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z){});",
             "var a4,a3,a2,a1,b4,b3,b2,b1,ab,ac,ad,fg;function foo(){};"),
         lines(
             "(function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,",
-            "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$){});",
+            "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z){});",
             "var aa,ba,ca,da,ea,fa,ga,ha,ia,ja,ka,la;function ma(){};"));
   }
 
@@ -724,7 +724,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "function a() {return 1;}",
             "function aa() {",
             "  var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,",
-            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;",
+            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,ba,ca,da;",
             "  a();",
             "} aa();"));
 
@@ -745,7 +745,7 @@ public final class RenameVarsTest extends CompilerTestCase {
             "function ab() {return 1;}",
             "function aa() {",
             "  var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,",
-            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;",
+            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,ba,ca,da;",
             "  a();",
             "} aa();"));
   }
