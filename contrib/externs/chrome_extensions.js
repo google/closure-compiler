@@ -6257,12 +6257,14 @@ chrome.sockets.tcp.setNoDelay = function(socketId, noDelay, callback) {};
  * @param {number} socketId
  * @param {string} peerAddress
  * @param {number} peerPort
- * @param {function(number)} callback
+ * @param {string|function(number)=} opt_dnsQueryTypeOrCallback
+ * @param {function(number)=} opt_callback
  * @see https://developer.chrome.com/apps/sockets_tcp#method-connect
  * @return {undefined}
  */
 chrome.sockets.tcp.connect = function(
-    socketId, peerAddress, peerPort, callback) {};
+    socketId, peerAddress, peerPort, opt_dnsQueryTypeOrCallback,
+    opt_callback) {};
 
 
 /**
