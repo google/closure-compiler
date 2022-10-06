@@ -37,14 +37,15 @@ import java.util.List;
  * respectively.
  */
 class CreateSyntheticBlocks extends AbstractPostOrderCallback implements CompilerPass {
-  static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.error(
-      "JSC_UNMATCHED_START_MARKER", "Unmatched {0}");
+  static final DiagnosticType UNMATCHED_START_MARKER =
+      DiagnosticType.error("JSC_UNMATCHED_START_MARKER", "Unmatched {0}");
 
-  static final DiagnosticType UNMATCHED_END_MARKER = DiagnosticType.error(
-      "JSC_UNMATCHED_END_MARKER", "Unmatched {1} - {0} not in the same block");
+  static final DiagnosticType UNMATCHED_END_MARKER =
+      DiagnosticType.error("JSC_UNMATCHED_END_MARKER", "Unmatched {1} - {0} not in the same block");
 
-  static final DiagnosticType INVALID_MARKER_USAGE = DiagnosticType.error(
-      "JSC_INVALID_MARKER_USAGE", "Marker {0} can only be used in a simple call expression");
+  static final DiagnosticType INVALID_MARKER_USAGE =
+      DiagnosticType.error(
+          "JSC_INVALID_MARKER_USAGE", "Marker {0} can only be used in a simple call expression");
 
   private final AbstractCompiler compiler;
 
@@ -54,9 +55,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
   /** Name of the end marker. */
   private final String endMarkerName;
 
-  /**
-   * Markers can be nested.
-   */
+  /** Markers can be nested. */
   private final Deque<Node> markerStack = new ArrayDeque<>();
 
   private final List<Marker> validMarkers = new ArrayList<>();
@@ -64,14 +63,15 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
   private static class Marker {
     final Node startMarker;
     final Node endMarker;
+
     public Marker(Node startMarker, Node endMarker) {
       this.startMarker = startMarker;
       this.endMarker = endMarker;
     }
   }
 
-  public CreateSyntheticBlocks(AbstractCompiler compiler,
-      String startMarkerName, String endMarkerName) {
+  public CreateSyntheticBlocks(
+      AbstractCompiler compiler, String startMarkerName, String endMarkerName) {
     this.compiler = compiler;
     this.startMarkerName = startMarkerName;
     this.endMarkerName = endMarkerName;
@@ -94,20 +94,20 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
   }
 
   /**
-   * Rewrite the function declaration from: function x() {} FUNCTION NAME x PARAM_LIST BLOCK to: var
-   * x = function() {}; VAR NAME x FUNCTION NAME (w/ empty string) PARAM_LIST BLOCK
+   * Rewrites the function declaration from: function x() {} FUNCTION NAME x PARAM_LIST BLOCK to:
+   * var x = function() {}; VAR NAME x FUNCTION NAME (w/ empty string) PARAM_LIST BLOCK
    */
   private void rewriteFunctionDeclaration(Node n) {
-    // Prepare a spot for the function.
+    // Prepare a variable for the function.
     Node oldNameNode = n.getFirstChild();
     Node fnNameNode = oldNameNode.cloneNode();
     Node var = IR.var(fnNameNode).srcref(n);
 
-    // Prepare the function
+    // Prepare the function.
     oldNameNode.setString("");
     compiler.reportChangeToEnclosingScope(oldNameNode);
 
-    // Move the function to the front of the parent
+    // Move the function to the front of the parent.
     Node parent = n.getParent();
     n.detach();
     parent.addChildToFront(var);
@@ -120,7 +120,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     Node next = null;
     for (Node current = block.getFirstChild(); current != null; current = next) {
-      // Get the next node now, because the current node will moving and that will change its next
+      // Get the next node now, because the current node will move and that will change its next
       // sibling.
       next = current.getNext();
       if (NodeUtil.isFunctionDeclaration(current)) {
@@ -133,7 +133,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
    * @param marker The marker to add synthetic blocks for.
    */
   private void addBlocks(Marker marker) {
-    // Add block around the template section so that
+    // Add a block around the template section so that
     //   START
     //   BODY
     //   END
@@ -151,31 +151,29 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     Node innerBlock = IR.block().srcref(marker.startMarker);
     innerBlock.setIsSyntheticBlock(true);
-    // Move everything after the start Node up to the end Node into the inner block.
+    // Move everything after the start node up to the end node into the inner block.
     moveSiblingExclusive(innerBlock, marker.startMarker, marker.endMarker);
 
     // Add the start node.
     outerBlock.addChildToBack(outerBlock.getNext().detach());
-    // Add the inner block
+    // Add the inner block.
     outerBlock.addChildToBack(innerBlock);
-    // and finally the end node.
+    // And finally the end node.
     outerBlock.addChildToBack(outerBlock.getNext().detach());
 
     // NOTE: Moving the code into a block made sense prior to ES2015 when declarations were never
     // block scoped.  But with ES2015+ function, class, let and const are all block scoped.
     // Here we are only rewriting functions because this is the behavior that "normalize" previously
-    // had and we aren't currently (July 2020) trying to improve this code's behavior.  This
+    // had and we aren't currently (July 2020) trying to improve this code's behavior. This
     // maintains the status quo and allows the normalization of function to be removed.
-    //
     rewriteFunctionDeclarationsInBlock(innerBlock);
 
     compiler.reportChangeToEnclosingScope(outerBlock);
   }
 
   /**
-   * Move the Nodes between start and end from the source block to the
-   * destination block. If start is null, move the first child of the block.
-   * If end is null, move the last child of the block.
+   * Move the nodes between start and end from the source block to the destination block. If start
+   * is null, move the first child of the block. If end is null, move the last child of the block.
    */
   private void moveSiblingExclusive(Node dest, Node start, Node end) {
     checkNotNull(start);
@@ -226,7 +224,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
       return;
     }
 
-    // This is a valid marker set add it to the list of markers to process.
+    // This is a valid marker, add it to the list of markers to process.
     validMarkers.add(new Marker(startMarkerNode, endMarkerNode));
   }
 }
