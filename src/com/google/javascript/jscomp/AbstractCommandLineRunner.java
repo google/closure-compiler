@@ -2818,8 +2818,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     /**
      * Controls how detailed the compilation summary is. Values: 0 (never print summary), 1 (print
-     * summary only if there are errors or warnings), 2 (print summary if type checking is on, see
-     * --check_types), 3 (always print summary). The default level is 1
+     * summary only if there are errors or warnings), 2 (print summary if type checking is on), 3
+     * (always print summary). The default level is 1
      */
     @CanIgnoreReturnValue
     public CommandLineConfig setSummaryDetailLevel(int summaryDetailLevel) {

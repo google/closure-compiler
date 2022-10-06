@@ -621,7 +621,7 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Use @nosideeffects annotations, function bodies and name graph to determine if calls have side
-   * effects. Requires --check_types.
+   * effects.
    */
   public boolean computeFunctionSideEffects;
 
@@ -1746,8 +1746,8 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Controls how detailed the compilation summary is. Values: 0 (never print summary), 1 (print
-   * summary only if there are errors or warnings), 2 (print summary if type checking is on, see
-   * --check_types), 3 (always print summary). The default level is 1
+   * summary only if there are errors or warnings), 2 (print summary if type checking is on), 3
+   * (always print summary). The default level is 1
    */
   public void setSummaryDetailLevel(int summaryDetailLevel) {
     this.summaryDetailLevel = summaryDetailLevel;
