@@ -32,6 +32,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableGatherExternProperties();
     enableNormalize();
   }
 

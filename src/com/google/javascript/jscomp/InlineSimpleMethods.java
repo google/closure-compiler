@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -57,7 +58,7 @@ import org.jspecify.nullness.Nullable;
 class InlineSimpleMethods implements CompilerPass {
 
   /** List of methods defined in externs */
-  final Set<String> externMethods = new HashSet<>();
+  final ImmutableSet<String> externProperties;
 
   /** List of property names that may not be methods */
   final Set<String> nonMethodProperties = new HashSet<>();
@@ -77,17 +78,15 @@ class InlineSimpleMethods implements CompilerPass {
   InlineSimpleMethods(AbstractCompiler compiler) {
     this.compiler = compiler;
     astAnalyzer = compiler.getAstAnalyzer();
+    externProperties = compiler.getExternProperties();
   }
 
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized(), compiler.getLifeCycleStage());
-    checkState(externMethods.isEmpty());
     checkState(methodDefinitions.isEmpty());
     checkState(externs != null);
 
-    // TODO(johnlenz): use Compiler#getExternProperties instead.
-    NodeTraversal.traverse(compiler, externs, new GetExternMethods());
     NodeTraversal.traverseRoots(compiler, new GatherSignatures(), externs, root);
     NodeTraversal.traverseRoots(compiler, new InlineTrivialAccessors(), externs, root);
   }
@@ -100,7 +99,7 @@ class InlineSimpleMethods implements CompilerPass {
 
     @Override
     void visit(NodeTraversal t, Node callNode, Node parent, String callName) {
-      if (externMethods.contains(callName) || nonMethodProperties.contains(callName)) {
+      if (externProperties.contains(callName) || nonMethodProperties.contains(callName)) {
         return;
       }
 
@@ -289,44 +288,11 @@ class InlineSimpleMethods implements CompilerPass {
   }
 
   private void addSignature(String name, Node function) {
-    if (externMethods.contains(name)) {
+    if (externProperties.contains(name)) {
       return;
     }
 
     methodDefinitions.put(name, function);
-  }
-
-  /** Gathers methods from the externs file. */
-  private class GetExternMethods extends AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getToken()) {
-        case GETPROP:
-        case GETELEM:
-          {
-            String name = getPropName(n);
-            if (name == null) {
-              return;
-            }
-
-            externMethods.add(name);
-          }
-          break;
-
-        case CLASS_MEMBERS:
-        case OBJECTLIT:
-          {
-            for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-              String name = key.getString();
-              externMethods.add(name);
-            }
-          }
-          break;
-        default:
-          break;
-      }
-    }
   }
 
   /** Gather signatures from the source to be compiled. */
@@ -335,6 +301,7 @@ class InlineSimpleMethods implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+          // TODO(b/251573710): Handle ES2015+ language features that can reference properties
         case GETPROP:
         case GETELEM:
           String name = getPropName(n);
