@@ -149,7 +149,7 @@ google.maps.Circle = function(circleOrCircleOptions) {};
 
 /**
  * Gets the <code>LatLngBounds</code> of this Circle.
- * @return {google.maps.LatLngBounds}
+ * @return {?google.maps.LatLngBounds}
  */
 google.maps.Circle.prototype.getBounds = function() {};
 
@@ -3609,11 +3609,11 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
  * @param {(?google.maps.InfoWindowOpenOptions|?google.maps.Map|?google.maps.StreetViewPanorama)=}
  *     options Either an InfoWindowOpenOptions object (recommended) or the
  *     map|panorama on which to render this InfoWindow.
- * @param {?google.maps.MVCObject=} anchor The anchor to which this InfoWindow
- *     will be positioned. If the anchor is non-null, the InfoWindow will be
- *     positioned at the top-center of the anchor. The InfoWindow will be
- *     rendered on the same map or panorama as the anchor <strong>(when
- *     available)</strong>.
+ * @param {(?google.maps.MVCObject|?google.maps.marker.AdvancedMarkerView)=}
+ *     anchor The anchor to which this InfoWindow will be positioned. If the
+ *     anchor is non-null, the InfoWindow will be positioned at the top-center
+ *     of the anchor. The InfoWindow will be rendered on the same map or
+ *     panorama as the anchor <strong>(when available)</strong>.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.open = function(options, anchor) {};
@@ -3657,7 +3657,7 @@ google.maps.InfoWindowOpenOptions = function() {};
  * non-null, the InfoWindow will be positioned at the top-center of the anchor.
  * The InfoWindow will be rendered on the same map or panorama as the anchor
  * <strong>(when available)</strong>.
- * @type {?google.maps.MVCObject|undefined}
+ * @type {?google.maps.MVCObject|?google.maps.marker.AdvancedMarkerView|undefined}
  */
 google.maps.InfoWindowOpenOptions.prototype.anchor;
 
@@ -4969,6 +4969,12 @@ google.maps.MapCapabilities = function() {};
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {boolean|undefined}
  */
+google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {boolean|undefined}
+ */
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
 
 /**
@@ -4993,13 +4999,13 @@ google.maps.MapMouseEvent.prototype.domEvent;
 
 /**
  * The latitude/longitude that was below the cursor when the event occurred.
- * @type {google.maps.LatLng}
+ * @type {null|!google.maps.LatLng}
  */
 google.maps.MapMouseEvent.prototype.latLng;
 
 /**
  * Prevents this event from propagating further.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.MapMouseEvent.prototype.stop = function() {};
 
@@ -6224,8 +6230,8 @@ google.maps.MaxZoomService = function() {};
  * this request is asynchronous, you must pass a <code>callback</code> function
  * which will be executed upon completion of the request, being passed a
  * <code>MaxZoomResult</code>.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
- * @param {(function(!google.maps.MaxZoomResult): void)=} callback
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latlng
+ * @param {(undefined|(function(!google.maps.MaxZoomResult): void))=} callback
  * @return {!Promise<!google.maps.MaxZoomResult>}
  */
 google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(
@@ -7033,7 +7039,7 @@ google.maps.Rectangle = function(opts) {};
 
 /**
  * Returns the bounds of this rectangle.
- * @return {google.maps.LatLngBounds}
+ * @return {?google.maps.LatLngBounds}
  */
 google.maps.Rectangle.prototype.getBounds = function() {};
 
@@ -7063,7 +7069,7 @@ google.maps.Rectangle.prototype.getVisible = function() {};
 
 /**
  * Sets the bounds of this rectangle.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
+ * @param {?google.maps.LatLngBounds|?google.maps.LatLngBoundsLiteral} bounds
  * @return {undefined}
  */
 google.maps.Rectangle.prototype.setBounds = function(bounds) {};
@@ -11076,8 +11082,8 @@ google.maps.localContext.LocalContextMapView = function(options) {};
 google.maps.localContext.LocalContextMapView.prototype.directionsOptions;
 
 /**
- * The DOM Element backing the view.
- * @type {?Element|undefined}
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!Element}
  */
 google.maps.localContext.LocalContextMapView.prototype.element;
 
@@ -11169,8 +11175,8 @@ google.maps.localContext.LocalContextMapViewOptions = function() {};
 google.maps.localContext.LocalContextMapViewOptions.prototype.directionsOptions;
 
 /**
- * The DOM Element backing the view.
- * @type {?Element|undefined}
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!Element}
  */
 google.maps.localContext.LocalContextMapViewOptions.prototype.element;
 
@@ -11442,6 +11448,278 @@ google.maps.localContext.PlaceDetailsViewSetupOptions.prototype.position;
  * @typedef {{type:string, weight:(number|undefined)}}
  */
 google.maps.localContext.PlaceTypePreference;
+
+/**
+ * @const
+ */
+google.maps.marker = {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Creates an <code>AdvancedMarkerView</code> with the options specified. If a
+ * map is specified, the <code>AdvancedMarkerView</code> is added to the map
+ * upon construction. Note that the position must be set for the
+ * <code>AdvancedMarkerView</code> to display.
+ * @param {!google.maps.marker.AdvancedMarkerViewOptions=} options
+ * @implements {google.maps.marker.AdvancedMarkerViewOptions}
+ * @constructor
+ */
+google.maps.marker.AdvancedMarkerView = function(options) {};
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.collisionBehavior}.
+ * @type {?google.maps.CollisionBehavior|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.collisionBehavior;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.content}.
+ * @type {?Element|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.content;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.draggable}.
+ * @type {?boolean|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.draggable;
+
+/**
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!Element}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.element;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.map}.
+ * @type {?google.maps.Map|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.map;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.position}.
+ * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|?google.maps.LatLngAltitude|?google.maps.LatLngAltitudeLiteral|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.position;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.title}.
+ * @type {?string|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.title;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.zIndex}.
+ * @type {?number|undefined}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.zIndex;
+
+/**
+ * Adds the given listener function to the given event name.
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.marker.AdvancedMarkerView.prototype.addListener = function(
+    eventName, handler) {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Options for constructing an {@link google.maps.marker.AdvancedMarkerView}.
+ * @record
+ */
+google.maps.marker.AdvancedMarkerViewOptions = function() {};
+
+/**
+ * An enumeration specifying how an <code>AdvancedMarkerView</code> should
+ * behave when it collides with another <code>AdvancedMarkerView</code> or with
+ * the basemap labels on a vector map. <p><strong>Note</strong>:
+ * <code>AdvancedMarkerView</code> to <code>AdvancedMarkerView</code> collision
+ * works on both raster and vector maps, however,
+ * <code>AdvancedMarkerView</code> to base map&#39;s label collision only works
+ * on vector maps.
+ * @type {?google.maps.CollisionBehavior|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.collisionBehavior;
+
+/**
+ * The DOM Element backing the visual of an <code>AdvancedMarkerView</code>.
+ * <p><strong>Note</strong>: <code>AdvancedMarkerView</code> does not clone the
+ * passed-in DOM element. Once the DOM element is passed to an
+ * <code>AdvancedMarkerView</code>, passing the same DOM element to another
+ * <code>AdvancedMarkerView</code> will move the DOM element and cause the
+ * previous <code>AdvancedMarkerView</code> to look empty.
+ * @default {@link google.maps.marker.PinView.element}
+ * @type {?Element|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.content;
+
+/**
+ * If <code>true</code>, the <code>AdvancedMarkerView</code> can be dragged.
+ * <p><strong>Note</strong>: <code>AdvancedMarkerView</code> with altitude is
+ * not draggable.
+ * @default <code>false</code>
+ * @type {?boolean|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.draggable;
+
+/**
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!Element}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.element;
+
+/**
+ * Map on which to display the <code>AdvancedMarkerView</code>. The map is
+ * required to display the <code>AdvancedMarkerView</code> and can be provided
+ * by setting {@link google.maps.marker.AdvancedMarkerView.map} if not provided
+ * at the construction.
+ * @type {?google.maps.Map|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.map;
+
+/**
+ * Sets the <code>AdvancedMarkerView</code>&#39;s position. An
+ * <code>AdvancedMarkerView</code> may be constructed without a position, but
+ * will not be displayed until its position is provided - for example, by a
+ * user&#39;s actions or choices. An <code>AdvancedMarkerView</code>&#39;s
+ * position can be provided by setting {@link
+ * google.maps.marker.AdvancedMarkerView.position} if not provided at the
+ * construction. <p><strong>Note</strong>: <code>AdvancedMarkerView</code> with
+ * altitude is only supported on vector maps.
+ * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|?google.maps.LatLngAltitude|?google.maps.LatLngAltitudeLiteral|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.position;
+
+/**
+ * Rollover text. If provided, an accessibility text (e.g. for use with screen
+ * readers) will be added to the <code>AdvancedMarkerView</code> with the
+ * provided value.
+ * @type {?string|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.title;
+
+/**
+ * All <code>AdvancedMarkerView</code>s are displayed on the map in order of
+ * their zIndex, with higher values displaying in front of
+ * <code>AdvancedMarkerView</code>s with lower values. By default,
+ * <code>AdvancedMarkerView</code>s are displayed according to their vertical
+ * position on screen, with lower <code>AdvancedMarkerView</code>s appearing in
+ * front of <code>AdvancedMarkerView</code>s farther up the screen. Note that
+ * <code>zIndex</code> is also used to help determine relative priority
+ * between {@link
+ * google.maps.CollisionBehavior.OPTIONAL_AND_HIDES_LOWER_PRIORITY} Advanced
+ * Markers. A higher <code>zIndex</code> value indicates higher priority.
+ * @type {?number|undefined}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.zIndex;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A <code>PinView</code> represents a DOM element that consists of a shape and
+ * a glyph. The shape has the same balloon style as seen in the default {@link
+ * google.maps.marker.AdvancedMarkerView}. The glyph is an optional DOM element
+ * displayed in the balloon shape. A <code>PinView</code> may have a different
+ * aspect ratio depending on its {@link google.maps.marker.PinView.scale}.
+ * @implements {google.maps.marker.PinViewOptions}
+ * @constructor
+ */
+google.maps.marker.PinView = function() {};
+
+/**
+ * See {@link google.maps.marker.PinViewOptions.background}.
+ * @type {?string|undefined}
+ */
+google.maps.marker.PinView.prototype.background;
+
+/**
+ * See {@link google.maps.marker.PinViewOptions.borderColor}.
+ * @type {?string|undefined}
+ */
+google.maps.marker.PinView.prototype.borderColor;
+
+/**
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!Element}
+ */
+google.maps.marker.PinView.prototype.element;
+
+/**
+ * See {@link google.maps.marker.PinViewOptions.glyph}.
+ * @type {?string|?Element|?URL|undefined}
+ */
+google.maps.marker.PinView.prototype.glyph;
+
+/**
+ * See {@link google.maps.marker.PinViewOptions.glyphColor}.
+ * @type {?string|undefined}
+ */
+google.maps.marker.PinView.prototype.glyphColor;
+
+/**
+ * See {@link google.maps.marker.PinViewOptions.scale}.
+ * @type {?number|undefined}
+ */
+google.maps.marker.PinView.prototype.scale;
+
+/**
+ * Adds the given listener function to the given event name.
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.marker.PinView.prototype.addListener = function(
+    eventName, handler) {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Options for creating a {@link google.maps.marker.PinView}.
+ * @record
+ */
+google.maps.marker.PinViewOptions = function() {};
+
+/**
+ * The background color of the pin shape. Supports any CSS <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value">color
+ * value</a>.
+ * @type {?string|undefined}
+ */
+google.maps.marker.PinViewOptions.prototype.background;
+
+/**
+ * The border color of the pin shape. Supports any CSS <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value">color
+ * value</a>.
+ * @type {?string|undefined}
+ */
+google.maps.marker.PinViewOptions.prototype.borderColor;
+
+/**
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!Element}
+ */
+google.maps.marker.PinViewOptions.prototype.element;
+
+/**
+ * The DOM element displayed in the pin.
+ * @type {?string|?Element|?URL|undefined}
+ */
+google.maps.marker.PinViewOptions.prototype.glyph;
+
+/**
+ * The color of the glyph. Supports any CSS <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value">color
+ * value</a>.
+ * @type {?string|undefined}
+ */
+google.maps.marker.PinViewOptions.prototype.glyphColor;
+
+/**
+ * The scale of the pin.
+ * @default <code>1</code>
+ * @type {?number|undefined}
+ */
+google.maps.marker.PinViewOptions.prototype.scale;
 
 /**
  * @const
