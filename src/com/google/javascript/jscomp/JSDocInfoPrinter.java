@@ -452,73 +452,87 @@ public final class JSDocInfoPrinter {
       sb.append(typeNode.getOriginalName());
       return;
     }
-    if (typeNode.getToken() == Token.BANG) {
-      sb.append("!");
-      appendTypeNode(sb, typeNode.getFirstChild());
-    } else if (typeNode.getToken() == Token.EQUALS) {
-      appendTypeNode(sb, typeNode.getFirstChild());
-      sb.append("=");
-    } else if (typeNode.getToken() == Token.PIPE) {
-      sb.append("(");
-      Node lastChild = typeNode.getLastChild();
-      for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
-        appendTypeNode(sb, child);
-        if (child != lastChild) {
-          sb.append("|");
-        }
-      }
-      sb.append(")");
-    } else if (typeNode.getToken() == Token.ITER_REST) {
-      sb.append("...");
-      if (typeNode.hasChildren() && !typeNode.getFirstChild().isEmpty()) {
+    switch (typeNode.getToken()) {
+      case BANG:
+        sb.append("!");
         appendTypeNode(sb, typeNode.getFirstChild());
-      }
-    } else if (typeNode.getToken() == Token.STAR) {
-      sb.append("*");
-    } else if (typeNode.getToken() == Token.QMARK) {
-      sb.append("?");
-      if (typeNode.hasChildren()) {
+        break;
+      case EQUALS:
         appendTypeNode(sb, typeNode.getFirstChild());
-      }
-    } else if (typeNode.isFunction()) {
-      appendFunctionNode(sb, typeNode);
-    } else if (typeNode.getToken() == Token.LC) {
-      sb.append("{");
-      Node lb = typeNode.getFirstChild();
-      Node lastColon = lb.getLastChild();
-      for (Node colon = lb.getFirstChild(); colon != null; colon = colon.getNext()) {
-        if (colon.hasChildren()) {
-          sb.append(colon.getFirstChild().getString()).append(":");
-          appendTypeNode(sb, colon.getLastChild());
-        } else {
-          sb.append(colon.getString());
+        sb.append("=");
+        break;
+      case PIPE:
+        sb.append("(");
+        Node lastChild = typeNode.getLastChild();
+        for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
+          appendTypeNode(sb, child);
+          if (child != lastChild) {
+            sb.append("|");
+          }
         }
-        if (colon != lastColon) {
-          sb.append(",");
+        sb.append(")");
+        break;
+      case ITER_REST:
+        sb.append("...");
+        if (typeNode.hasChildren() && !typeNode.getFirstChild().isEmpty()) {
+          appendTypeNode(sb, typeNode.getFirstChild());
         }
-      }
-      sb.append("}");
-    } else if (typeNode.isVoid()) {
-      sb.append("void");
-    } else if (typeNode.isTypeOf()) {
-      sb.append("typeof ");
-      appendTypeNode(sb, typeNode.getFirstChild());
-    } else {
-      if (typeNode.hasChildren()) {
-        sb.append(typeNode.getString())
-            .append("<");
-        Node child = typeNode.getFirstChild();
-        Node last = child.getLastChild();
-        for (Node type = child.getFirstChild(); type != null; type = type.getNext()) {
+        break;
+      case STAR:
+        sb.append("*");
+        break;
+      case QMARK:
+        sb.append("?");
+        if (typeNode.hasChildren()) {
+          appendTypeNode(sb, typeNode.getFirstChild());
+        }
+        break;
+      case FUNCTION:
+        appendFunctionNode(sb, typeNode);
+        break;
+      case LC:
+        sb.append("{");
+        Node lb = typeNode.getFirstChild();
+        Node lastColon = lb.getLastChild();
+        for (Node colon = lb.getFirstChild(); colon != null; colon = colon.getNext()) {
+          if (colon.hasChildren()) {
+            sb.append(colon.getFirstChild().getString()).append(":");
+            appendTypeNode(sb, colon.getLastChild());
+          } else {
+            sb.append(colon.getString());
+          }
+          if (colon != lastColon) {
+            sb.append(",");
+          }
+        }
+        sb.append("}");
+        break;
+      case VOID:
+        sb.append("void");
+        break;
+      case TYPEOF:
+        sb.append("typeof ");
+        appendTypeNode(sb, typeNode.getFirstChild());
+        break;
+      case BLOCK:
+        sb.append("<");
+        Node last = typeNode.getLastChild();
+        for (Node type = typeNode.getFirstChild(); type != null; type = type.getNext()) {
           appendTypeNode(sb, type);
           if (type != last) {
             sb.append(",");
           }
         }
         sb.append(">");
-      } else {
+        break;
+      case STRINGLIT:
         sb.append(typeNode.getString());
-      }
+        if (typeNode.hasChildren()) {
+          appendTypeNode(sb, typeNode.getOnlyChild());
+        }
+        break;
+      default:
+        throw new IllegalStateException("Unexpected typeNode: " + typeNode);
     }
   }
 
