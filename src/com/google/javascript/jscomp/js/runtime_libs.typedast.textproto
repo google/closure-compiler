@@ -34211,7 +34211,7 @@ typed_asts {
                 kind: IDENTIFIER
                 string_value_pointer: 18
                 relative_column: 1
-                type: 3
+                type: 0
               }
               relative_column: 8
             }
@@ -34258,7 +34258,7 @@ typed_asts {
                 kind: IDENTIFIER
                 string_value_pointer: 18
                 relative_column: 1
-                type: 3
+                type: 0
               }
               relative_column: 8
             }
@@ -34305,7 +34305,7 @@ typed_asts {
                 kind: IDENTIFIER
                 string_value_pointer: 18
                 relative_column: 1
-                type: 3
+                type: 0
               }
               relative_column: 8
             }
@@ -34352,7 +34352,7 @@ typed_asts {
                 kind: IDENTIFIER
                 string_value_pointer: 18
                 relative_column: 1
-                type: 3
+                type: 0
               }
               relative_column: 8
             }

@@ -1738,7 +1738,7 @@ Number.parseInt = function(string, radix) {};
 Number.parseFloat = function(string) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN
@@ -1746,7 +1746,7 @@ Number.parseFloat = function(string) {};
 Number.isNaN = function(value) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isFinite
@@ -1754,7 +1754,7 @@ Number.isNaN = function(value) {};
 Number.isFinite = function(value) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
@@ -1762,7 +1762,7 @@ Number.isFinite = function(value) {};
 Number.isInteger = function(value) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger
