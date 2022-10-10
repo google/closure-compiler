@@ -407,6 +407,10 @@ public class DiagnosticGroups {
           "unrecognizedTypeError", // undocumented
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
 
+  // identical to UNRECOGNIZED_TYPE_ERROR, but allowed in @suppress tags
+  static final DiagnosticGroup DANGEROUS_UNRECOGNIZED_TYPE_ERROR =
+      DiagnosticGroups.registerGroup("dangerousUnrecognizedTypeError", UNRECOGNIZED_TYPE_ERROR);
+
   public static final DiagnosticGroup MISSING_REQUIRE =
       DiagnosticGroups.registerGroup(
           "missingRequire",
