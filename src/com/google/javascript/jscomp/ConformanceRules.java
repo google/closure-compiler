@@ -2278,18 +2278,37 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      if (!calledProperty.get().equals(SET_ATTRIBUTE)) {
+      if (calledProperty.get().equals(SET_ATTRIBUTE)) {
+        // If the setAttribute function is called with less than two arguments it's either a false
+        // positive or uncompilable code.
+        if (node.getChildCount() < 3) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        return SecuritySensitiveAttributes.checkConformanceForAttributeName(
+            traversal, node.getSecondChild());
+      }
+
+      if (calledProperty.get().equals(SET_ATTRIBUTE_NS)) {
+        // If the setAttributeNS function is called with less than three arguments it's either a
+        // false positive or uncompilable code.
+        if (node.getChildCount() < 4) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        if (node.getSecondChild().isNull()) {
+          // A null namespace makes this equivalent to a regular setAttribute call.
+          return SecuritySensitiveAttributes.checkConformanceForAttributeName(
+              traversal, node.getChildAtIndex(2));
+        }
+
+        // We haven't defined a security contract on setAttributeNS yet, so flag it as risky.
         return ConformanceResult.VIOLATION;
       }
 
-      // If the function is called with less than two arguments it's either a false positive or
-      // uncompilable code.
-      if (node.getChildCount() < 3) {
-        return ConformanceResult.CONFORMANCE;
-      }
-
-      return SecuritySensitiveAttributes.checkConformanceForAttributeName(
-          traversal, node.getSecondChild());
+      // We haven't defined a security contract on setAttributeNode and setAttributeNodeNS yet, so
+      // flag them as risky.
+      return ConformanceResult.VIOLATION;
     }
 
     private Optional<String> getBannedPropertyName(Node node) {
