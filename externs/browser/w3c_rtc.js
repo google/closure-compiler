@@ -1680,23 +1680,36 @@ MediaDevices.prototype.getUserMedia =
 var RTCSdpType;
 
 /**
- * @param {!Object=} descriptionInitDict The RTCSessionDescriptionInit
- * dictionary.  This optional argument may have type
- * {type:RTCSdpType, sdp:string}, but neither of these keys are required to be
- * present, and other keys are ignored, so the closest Closure type is Object.
+ * @record
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcsessiondescriptioninit
+ */
+function RTCSessionDescriptionInit() {}
+
+/**
+ * @type {RTCSdpType|undefined}
+ */
+RTCSessionDescriptionInit.prototype.type;
+
+/**
+ * @type {string|undefined}
+ */
+RTCSessionDescriptionInit.prototype.sdp;
+
+/**
+ * @param {!RTCSessionDescriptionInit=} descriptionInitDict
  * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcsessiondescription-class
  */
 function RTCSessionDescription(descriptionInitDict) {}
 
 /**
- * @type {?RTCSdpType}
+ * @type {RTCSdpType}
  * @see https://www.w3.org/TR/webrtc/#dom-rtcsessiondescription-type
  */
 RTCSessionDescription.prototype.type;
 
 /**
- * @type {?string}
+ * @type {string}
  * @see https://www.w3.org/TR/webrtc/#dom-rtcsessiondescription-sdp
  */
 RTCSessionDescription.prototype.sdp;
