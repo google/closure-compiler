@@ -95,6 +95,9 @@ MediaTrackCapabilities.prototype.frameRate;
 /** @type {!Array<string>} */
 MediaTrackCapabilities.prototype.facingMode;
 
+/** @type {!Array<string>} */
+MediaTrackCapabilities.prototype.resizeMode;
+
 /** @type {number} */
 MediaTrackCapabilities.prototype.volume;
 
@@ -177,6 +180,9 @@ MediaTrackSettings.prototype.frameRate;
 /** @type {string} */
 MediaTrackSettings.prototype.facingMode;
 
+/** @type {string} */
+MediaTrackSettings.prototype.resizeMode;
+
 /** @type {number} */
 MediaTrackSettings.prototype.volume;
 
@@ -188,6 +194,12 @@ MediaTrackSettings.prototype.sampleSize;
 
 /** @type {boolean} */
 MediaTrackSettings.prototype.echoCancellation;
+
+/** @type {boolean} */
+MediaTrackSettings.prototype.autoGainControl;
+
+/** @type {boolean} */
+MediaTrackSettings.prototype.noiseSuppression;
 
 /** @type {number} */
 MediaTrackSettings.prototype.latency;
@@ -261,6 +273,9 @@ MediaTrackSupportedConstraints.prototype.frameRate;
 
 /** @type {boolean|undefined} */
 MediaTrackSupportedConstraints.prototype.facingMode;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.resizeMode;
 
 /** @type {boolean|undefined} */
 MediaTrackSupportedConstraints.prototype.volume;
@@ -1206,6 +1221,11 @@ MediaTrackConstraintSet.prototype.latency;
 MediaTrackConstraintSet.prototype.noiseSuppression;
 
 /**
+ * @type {ConstrainDOMString|undefined}
+ */
+MediaTrackConstraintSet.prototype.resizeMode;
+
+/**
  * @type {ConstrainLong|undefined}
  */
 MediaTrackConstraintSet.prototype.sampleRate;
@@ -1649,26 +1669,23 @@ MediaDevices.prototype.enumerateDevices = function() {};
  * @param {!MediaStreamConstraints} constraints
  * @return {!Promise<!MediaStream>}
  */
-MediaDevices.prototype.getUserMedia =
-    function(constraints) {}
+MediaDevices.prototype.getUserMedia = function(constraints) {}
 
-    /**
-     * @see https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia
-     * @param {!MediaStreamConstraints=} constraints
-     * @return {!Promise<!MediaStream>}
-     */
-    MediaDevices.prototype.getDisplayMedia =
-        function(constraints) {}
+/**
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia
+ * @param {!MediaStreamConstraints=} constraints
+ * @return {!Promise<!MediaStream>}
+ */
+MediaDevices.prototype.getDisplayMedia = function(constraints) {}
 
-        /**
-         * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
-         * @return {!MediaTrackSupportedConstraints}
-         */
-        MediaDevices.prototype.getSupportedConstraints =
-            function() {}
+/**
+ * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
+ * @return {!MediaTrackSupportedConstraints}
+ */
+MediaDevices.prototype.getSupportedConstraints = function() {}
 
-            /** @const {!MediaDevices} */
-            Navigator.prototype.mediaDevices;
+/** @const {!MediaDevices} */
+Navigator.prototype.mediaDevices;
 
 /**
  * @typedef {string}
