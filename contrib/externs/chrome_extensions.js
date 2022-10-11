@@ -12181,3 +12181,16 @@ chrome.instanceID.onTokenRefresh = {};
  * @see https://developer.chrome.com/extensions/instanceID#event-onTokenRefresh
  */
 chrome.instanceID.onTokenRefresh.addListener = function(callback) {};
+
+/**
+ * @see https://developer.chrome.com/docs/extensions/reference/dom/
+ * @const
+ */
+chrome.dom = {};
+
+/**
+ * @param {!HTMLElement} element
+ * @return {!ShadowRoot | null}
+ * @see https://developer.chrome.com/docs/extensions/reference/dom/#method-openOrClosedShadowRoot
+ */
+chrome.dom.openOrClosedShadowRoot = function(element) {};
