@@ -1418,6 +1418,25 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testExposeTemplateLiteralFreeCall() {
+    helperExposeExpression(
+        "foo`${x()}${y()}`",
+        exprMatchesStr("y()"),
+        lines(
+            "var temp_const$jscomp$1 = foo;",
+            "var temp_const$jscomp$0 = x();",
+            "temp_const$jscomp$1`${temp_const$jscomp$0}${y()}`;"));
+  }
+
+  @Test
+  public void testCanExposeTaggedTemplateLiteralInterpolation() {
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "x`${y()}`", exprMatchesStr("y()"));
+    // TODO(b/251958225): Implement decomposition for this case.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "x.foo`${y()}`", exprMatchesStr("y()"));
+  }
+
+  @Test
   public void testExposeExpression18() {
     helperExposeExpression(
         lines("const {a, b, c} = condition ?", "  y() :", "  {a: 0, b: 0, c: 1};"),

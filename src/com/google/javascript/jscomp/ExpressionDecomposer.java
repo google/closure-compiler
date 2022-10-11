@@ -1002,6 +1002,13 @@ class ExpressionDecomposer {
         return DecompositionType.UNDECOMPOSABLE;
       }
 
+      if (parent.isTaggedTemplateLit() && !parent.getBooleanProp(Node.FREE_CALL)) {
+        // We're looking at something like: something.method`${subExpression()}`
+        // You can't use the `.call(something, ...)` trick for a tagged template literal.
+        // TODO(b/251958225): Implement decomposition of this case.
+        return DecompositionType.UNDECOMPOSABLE;
+      }
+
       if (parent == expressionRoot) {
         // Done. The walk back to the root of the expression is complete, and
         // nothing was encountered that blocks the call from being moved.
