@@ -2184,6 +2184,8 @@ public final class DefaultPassConfig extends PassConfig {
                       .setChunkOutputType(options.getChunkOutputType())
                       .setHaveModulesBeenRewritten(options.getProcessCommonJSModules())
                       .setModuleResolutionMode(options.getModuleResolutionMode())
+                      .setAssumeStaticInheritanceIsNotUsed(
+                          options.getAssumeStaticInheritanceIsNotUsed())
                       .build())
           .build();
 

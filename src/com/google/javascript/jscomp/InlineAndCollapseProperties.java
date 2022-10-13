@@ -95,6 +95,7 @@ class InlineAndCollapseProperties implements CompilerPass {
   private final ChunkOutputType chunkOutputType;
   private final boolean haveModulesBeenRewritten;
   private final ResolutionMode moduleResolutionMode;
+  private final boolean staticInheritanceUsed;
 
   /**
    * Used by `AggressiveInlineAliasesTest` to enable execution of the aggressive inlining logic
@@ -129,6 +130,7 @@ class InlineAndCollapseProperties implements CompilerPass {
     this.moduleResolutionMode = builder.moduleResolutionMode;
     this.testAggressiveInliningOnly = builder.testAggressiveInliningOnly;
     this.optionalGlobalNamespaceTester = builder.optionalGlobalNamespaceTester;
+    this.staticInheritanceUsed = builder.staticInheritanceUsed;
   }
 
   static final class Builder {
@@ -139,6 +141,7 @@ class InlineAndCollapseProperties implements CompilerPass {
     private ResolutionMode moduleResolutionMode;
     private boolean testAggressiveInliningOnly = false;
     private Optional<Consumer<GlobalNamespace>> optionalGlobalNamespaceTester = Optional.empty();
+    private boolean staticInheritanceUsed = false;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -173,6 +176,12 @@ class InlineAndCollapseProperties implements CompilerPass {
     public Builder testAggressiveInliningOnly(Consumer<GlobalNamespace> globalNamespaceTester) {
       this.testAggressiveInliningOnly = true;
       this.optionalGlobalNamespaceTester = Optional.of(globalNamespaceTester);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setAssumeStaticInheritanceIsNotUsed(boolean assumeStaticInheritanceIsNotUsed) {
+      this.staticInheritanceUsed = !assumeStaticInheritanceIsNotUsed;
       return this;
     }
 
@@ -271,7 +280,9 @@ class InlineAndCollapseProperties implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      new StaticSuperPropReplacer(compiler).replaceAll(root);
+      if (!staticInheritanceUsed) {
+        new StaticSuperPropReplacer(compiler).replaceAll(root);
+      }
 
       NodeTraversal.traverse(compiler, root, new RewriteSimpleDestructuringAliases());
 
