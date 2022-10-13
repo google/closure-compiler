@@ -1133,12 +1133,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private static void maybeCreateDirsForPath(String pathPrefix) {
     if (!Strings.isNullOrEmpty(pathPrefix)) {
-      String dirName =
-          pathPrefix.charAt(pathPrefix.length() - 1) == File.separatorChar
-              ? pathPrefix.substring(0, pathPrefix.length() - 1)
-              : new File(pathPrefix).getParent();
-      if (dirName != null) {
-        new File(dirName).mkdirs();
+      File parent = new File(pathPrefix).getParentFile();
+      if (parent != null) {
+        parent.mkdirs();
       }
     }
   }
@@ -1774,7 +1771,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       Iterable<JSChunk> modules, B options) throws IOException {
     parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
     if (!isOutputInJson()) {
-      maybeCreateDirsForPath(config.moduleOutputPathPrefix);
+      // make sure the method generates all dirs up to the latest /
+      maybeCreateDirsForPath(config.moduleOutputPathPrefix + "dummy");
     }
 
     // If the source map path is in fact a pattern for each
