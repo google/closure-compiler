@@ -2223,7 +2223,7 @@ google.maps.DirectionsStep.prototype.lat_lngs;
  * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
  * polyline</a> representation of the step. This polyline is an approximate
  * (smoothed) path of the step.
- * @type {!Array<!google.maps.DirectionsStep>|undefined}
+ * @type {!google.maps.DirectionsPolyline|undefined}
  * @deprecated Please use {@link google.maps.DirectionsStep.encoded_lat_lngs}.
  */
 google.maps.DirectionsStep.prototype.polyline;
@@ -2252,7 +2252,7 @@ google.maps.DirectionsWaypoint = function() {};
 /**
  * Waypoint location. Can be an address string, a <code>LatLng</code>, or a
  * <code>Place</code>. Optional.
- * @type {string|!google.maps.LatLng|!google.maps.Place|undefined}
+ * @type {string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.Place|undefined}
  */
 google.maps.DirectionsWaypoint.prototype.location;
 
@@ -2319,21 +2319,21 @@ google.maps.DistanceMatrixRequest = function() {};
 /**
  * If <code>true</code>, instructs the Distance Matrix service to avoid ferries
  * where possible. Optional.
- * @type {boolean|undefined}
+ * @type {undefined|boolean}
  */
 google.maps.DistanceMatrixRequest.prototype.avoidFerries;
 
 /**
  * If <code>true</code>, instructs the Distance Matrix service to avoid highways
  * where possible. Optional.
- * @type {boolean|undefined}
+ * @type {undefined|boolean}
  */
 google.maps.DistanceMatrixRequest.prototype.avoidHighways;
 
 /**
  * If <code>true</code>, instructs the Distance Matrix service to avoid toll
  * roads where possible. Optional.
- * @type {boolean|undefined}
+ * @type {undefined|boolean}
  */
 google.maps.DistanceMatrixRequest.prototype.avoidTolls;
 
@@ -2348,7 +2348,7 @@ google.maps.DistanceMatrixRequest.prototype.destinations;
 /**
  * Settings that apply only to requests where <code>travelMode</code> is
  * <code>DRIVING</code>. This object will have no effect for other travel modes.
- * @type {!google.maps.DrivingOptions|undefined}
+ * @type {undefined|!google.maps.DrivingOptions}
  */
 google.maps.DistanceMatrixRequest.prototype.drivingOptions;
 
@@ -2358,7 +2358,7 @@ google.maps.DistanceMatrixRequest.prototype.drivingOptions;
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
  * supported languages</a>.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.DistanceMatrixRequest.prototype.language;
 
@@ -2379,14 +2379,14 @@ google.maps.DistanceMatrixRequest.prototype.origins;
  * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
  * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
  * United Kingdom of Great Britain and Northern Ireland&quot;).
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.DistanceMatrixRequest.prototype.region;
 
 /**
  * Settings that apply only to requests where <code>travelMode</code> is
  * TRANSIT. This object will have no effect for other travel modes.
- * @type {!google.maps.TransitOptions|undefined}
+ * @type {undefined|!google.maps.TransitOptions}
  */
 google.maps.DistanceMatrixRequest.prototype.transitOptions;
 
@@ -2399,7 +2399,7 @@ google.maps.DistanceMatrixRequest.prototype.travelMode;
 /**
  * Preferred unit system to use when displaying distance. Optional; defaults to
  * metric.
- * @type {!google.maps.UnitSystem|undefined}
+ * @type {undefined|google.maps.UnitSystem}
  */
 google.maps.DistanceMatrixRequest.prototype.unitSystem;
 
@@ -2605,7 +2605,7 @@ google.maps.ElevationResult.prototype.elevation;
 
 /**
  * The location of this elevation result.
- * @type {?google.maps.LatLng}
+ * @type {null|!google.maps.LatLng}
  */
 google.maps.ElevationResult.prototype.location;
 
@@ -2700,7 +2700,6 @@ google.maps.ErrorEvent.prototype.error;
 google.maps.Feature = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * <code>FeatureType</code> of this <code>Feature</code>.
  * @type {!google.maps.FeatureType}
  */
@@ -2716,14 +2715,12 @@ google.maps.Feature.prototype.featureType;
 google.maps.FeatureLayer = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The <code>FeatureType</code> associated with this <code>FeatureLayer</code>.
  * @type {!google.maps.FeatureType}
  */
 google.maps.FeatureLayer.prototype.featureType;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Whether this <code>FeatureLayer</code> is available, meaning whether
  * Data-driven styling is available for this map (there is a map ID using vector
  * tiles with this <code>FeatureLayer</code> enabled in the Google Cloud Console
@@ -2734,7 +2731,6 @@ google.maps.FeatureLayer.prototype.featureType;
 google.maps.FeatureLayer.prototype.isAvailable;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The style of <code>Feature</code>s in the <code>FeatureLayer</code>. The
  * style is applied when style is set. If your style function updates, you must
  * set the style property again. A <code>FeatureStyleFunction</code> must return
@@ -2749,7 +2745,6 @@ google.maps.FeatureLayer.prototype.isAvailable;
 google.maps.FeatureLayer.prototype.style;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Adds the given listener function to the given event name. Returns an
  * identifier for this listener that can be used with {@link
  * google.maps.event.removeListener}.
@@ -2769,7 +2764,6 @@ google.maps.FeatureLayer.prototype.addListener = function(
 google.maps.FeatureMouseEvent = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The <code>Feature</code>s at this mouse event.
  * @type {!Array<!google.maps.Feature>}
  */
@@ -2790,7 +2784,6 @@ google.maps.FeatureStyleFunction;
 google.maps.FeatureStyleFunctionOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * <code>Feature</code> passed into the <code>FeatureStyleFunction</code> for
  * styling.
  * @type {!google.maps.Feature}
@@ -2806,7 +2799,6 @@ google.maps.FeatureStyleFunctionOptions.prototype.feature;
 google.maps.FeatureStyleOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Hex RGB string (like &quot;#00FF00&quot; for green). Only applies to polygon
  * geometries.
  * @type {string|undefined}
@@ -2814,21 +2806,18 @@ google.maps.FeatureStyleOptions = function() {};
 google.maps.FeatureStyleOptions.prototype.fillColor;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The fill opacity between 0.0 and 1.0. Only applies to polygon geometries.
  * @type {number|undefined}
  */
 google.maps.FeatureStyleOptions.prototype.fillOpacity;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Hex RGB string (like &quot;#00FF00&quot; for green).
  * @type {string|undefined}
  */
 google.maps.FeatureStyleOptions.prototype.strokeColor;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The stroke opacity between 0.0 and 1.0. Only applies to line and polygon
  * geometries.
  * @type {number|undefined}
@@ -2836,7 +2825,6 @@ google.maps.FeatureStyleOptions.prototype.strokeColor;
 google.maps.FeatureStyleOptions.prototype.strokeOpacity;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The stroke width in pixels. Only applies to line and polygon geometries.
  * @type {number|undefined}
  */
@@ -4158,11 +4146,18 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
  * the globe.</li> <li>Altitude is measured in meters. Positive values denote
  * heights above ground level, and negative values denote heights underneath the
  * ground surface.</li> </ul>
+ * @param {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral}
+ *     value The initializing value.
+ * @param {boolean=} noClampNoWrap Whether to preserve the initialization
+ *     values, even if they may not necessarily be valid latitude values in the
+ *     range of [-90, 90] or valid longitude values in the range of [-180, 180].
+ *     The default is <code>false</code> which enables latitude clamping and
+ *     longitude wrapping.
  * @implements {google.maps.LatLngAltitudeLiteral}
  * @implements {google.maps.LatLngLiteral}
  * @constructor
  */
-google.maps.LatLngAltitude = function() {};
+google.maps.LatLngAltitude = function(value, noClampNoWrap) {};
 
 /**
  * Returns the altitude.
@@ -4424,7 +4419,7 @@ google.maps.LocationElevationRequest = function() {};
 
 /**
  * The discrete locations for which to retrieve elevations.
- * @type {?Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|undefined}
+ * @type {undefined|null|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  */
 google.maps.LocationElevationRequest.prototype.locations;
 
@@ -4966,13 +4961,11 @@ google.maps.MapCanvasProjection.prototype.getWorldWidth = function() {};
 google.maps.MapCapabilities = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {boolean|undefined}
  */
 google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {boolean|undefined}
  */
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
@@ -6431,7 +6424,7 @@ google.maps.PathElevationRequest = function() {};
 
 /**
  * The path along which to collect elevation values.
- * @type {?Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|undefined}
+ * @type {undefined|null|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  */
 google.maps.PathElevationRequest.prototype.path;
 
@@ -6519,14 +6512,12 @@ google.maps.Place.prototype.query;
 google.maps.PlaceFeature = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The display name.
  * @type {string}
  */
 google.maps.PlaceFeature.prototype.displayName;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The {@link google.maps.places.PlaceResult.place_id}.
  * @type {string}
  */
@@ -11621,10 +11612,11 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.zIndex;
  * google.maps.marker.AdvancedMarkerView}. The glyph is an optional DOM element
  * displayed in the balloon shape. A <code>PinView</code> may have a different
  * aspect ratio depending on its {@link google.maps.marker.PinView.scale}.
+ * @param {!google.maps.marker.PinViewOptions=} options
  * @implements {google.maps.marker.PinViewOptions}
  * @constructor
  */
-google.maps.marker.PinView = function() {};
+google.maps.marker.PinView = function(options) {};
 
 /**
  * See {@link google.maps.marker.PinViewOptions.background}.
