@@ -279,7 +279,14 @@ public class ConvertToTypedInterface implements CompilerPass {
           if (n.hasParent()) {
             Node children = n.removeChildren();
             parent.addChildrenAfter(children, n);
-            NodeUtil.removeChild(parent, n);
+            // We don't need the special valid-AST-preserving behavior of `NodeUtil.removeChild()`
+            // here. We always want to remove exactly and only `n`, so we use `n.detach()`.
+            //
+            // Also, the shouldTraverse() method intentionally puts the AST in an invalid state
+            // by moving children to parents where they are not valid temporarily.
+            // `NodeUtil.removeChild()` would throw an exception here if it noticed the invalid AST
+            // state.
+            n.detach();
             t.reportCodeChange();
           }
           break;

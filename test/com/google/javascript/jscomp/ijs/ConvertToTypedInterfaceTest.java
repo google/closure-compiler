@@ -1420,6 +1420,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test("while (i++ < 10) { var /** number */ field = i; }", "/** @type {number} */ var field;");
 
     test(
+        "label: while (i++ < 10) { var /** number */ field = i; }",
+        "/** @type {number} */ var field;");
+
+    test(
         "do { var /** number */ field = i; } while (i++ < 10);",
         "/** @type {number} */ var field;");
 
