@@ -19,6 +19,6 @@
     "jsdom": "^16.3.0"
   },
   "scripts": {
-    "compile": "java -jar bazel-bin/compiler_unshaded_deploy.jar"
+    "compile": "java -jar bazel-bin/compiler_uberjar_deploy.jar"
   }
 }
