@@ -3247,10 +3247,30 @@ RTCPeerConnection.prototype.setRemoteDescription = function(
 RTCPeerConnection.prototype.localDescription;
 
 /**
+ * @const {?RTCSessionDescription}
+ */
+RTCPeerConnection.prototype.currentLocalDescription;
+
+/**
+ * @const {?RTCSessionDescription}
+ */
+RTCPeerConnection.prototype.pendingLocalDescription;
+
+/**
  * @type {?RTCSessionDescription}
  * Read only.
  */
 RTCPeerConnection.prototype.remoteDescription;
+
+/**
+ * @const {?RTCSessionDescription}
+ */
+RTCPeerConnection.prototype.currentRemoteDescription;
+
+/**
+ * @const {?RTCSessionDescription}
+ */
+RTCPeerConnection.prototype.pendingRemoteDescription;
 
 /**
  * @type {RTCSignalingState}
@@ -3292,6 +3312,16 @@ RTCPeerConnection.prototype.iceConnectionState;
  * Read only.
  */
 RTCPeerConnection.prototype.connectionState;
+
+/**
+ * @const {boolean|undefined}
+ */
+RTCPeerConnection.prototype.canTrickleIceCandidates;
+
+/**
+ * @return {undefined}
+ */
+RTCPeerConnection.prototype.restartIce = function() {};
 
 /**
  * @return {!Array<!MediaStream>}
