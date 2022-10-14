@@ -213,29 +213,55 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   private Stage stage = Stage.BUILDING;
 
+  /**
+   * Tracks information about a weakly ordered import, such as goog.requireType or
+   * goog.forwardDeclare
+   *
+   * <p>TypedScopeCreator traverses through all files once in AST order, so when visiting a
+   * goog.requireType() call, the required module may not have its scope populated yet. Thus we
+   * create a 'WeakModuleImport' object and revisit the import after TypedScopeCreator has traversed
+   * all files.
+   */
   private class WeakModuleImport {
-    private final Node moduleLocalNode;
-    private final ScopedName scopedImport;
-    private final TypedScope localModuleScope;
+    private final Node moduleLocalNode; // the NAME or IMPORT_STAR representing the assignee
+    private final ScopedName scopedImport; // the name (possibly qualified) & scope being imported
+    private final TypedScope localModuleScope; // the scope containing the import
 
     WeakModuleImport(Node moduleLocalNode, ScopedName scopedImport, TypedScope localModuleScope) {
+      checkState(moduleLocalNode.isName() || moduleLocalNode.isImportStar(), moduleLocalNode);
       this.moduleLocalNode = moduleLocalNode;
       this.scopedImport = scopedImport;
       this.localModuleScope = localModuleScope;
     }
 
     void resolve() {
+      // resolvedScope may be null if this is importing a nonexistent module
       TypedScope resolvedScope = memoized.get(scopedImport.getScopeRoot());
-
-      // RequiredVar may be null if this is a bad import statement.
       TypedVar requiredVar =
           resolvedScope != null ? resolvedScope.getSlot(scopedImport.getName()) : null;
+      Module importedModule = moduleMap.getClosureModule(scopedImport.getName());
+
+      final JSType type;
+      final boolean isInferred;
+      if (requiredVar != null) {
+        type = requiredVar.getType();
+        isInferred = requiredVar.isTypeInferred();
+      } else if (importedModule != null
+          && importedModule.metadata().moduleType().equals(ModuleType.GOOG_PROVIDE)) {
+        // A goog.provided name might not exist as an entry in the global scope, but still
+        // be resolvable via properties. This is always true for "provideAlreadyProvided" names.
+        type = getTypeThroughNamespace(resolvedScope, scopedImport.getName());
+        isInferred = false;
+      } else {
+        type = unknownType;
+        isInferred = true;
+      }
       localModuleScope.declare(
           moduleLocalNode.getString(),
           moduleLocalNode,
-          requiredVar != null ? requiredVar.getType() : unknownType,
+          type,
           compiler.getInput(NodeUtil.getInputId(moduleLocalNode)),
-          requiredVar == null || requiredVar.isTypeInferred());
+          isInferred);
       if (requiredVar != null && requiredVar.getNameNode().getTypedefTypeProp() != null) {
         // Propagate the 'typedef type' from the module export to this variable. Otherwise
         // NamedTypes pointing to the imported name fail to resolve.
@@ -243,6 +269,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         moduleLocalNode.setTypedefTypeProp(typedefType);
         typeRegistry.declareType(localModuleScope, moduleLocalNode.getString(), typedefType);
       }
+    }
+  }
+
+  private static JSType getTypeThroughNamespace(TypedScope globalScope, String moduleId) {
+    int split = moduleId.lastIndexOf('.');
+    if (split >= 0) {
+      String parentName = moduleId.substring(0, split);
+      String prop = moduleId.substring(split + 1);
+      return getTypeThroughNamespace(globalScope, parentName)
+          .assertObjectType()
+          .getPropertyType(prop);
+    } else {
+      return globalScope.getSlot(moduleId).getType();
     }
   }
 

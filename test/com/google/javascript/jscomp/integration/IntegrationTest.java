@@ -561,6 +561,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     // found   : (typeof cycle.a.Widget.Item)
     // required: None
     test(options, new String[] {base, code}, DiagnosticGroups.CHECK_TYPES);
+    assertThat(lastCompiler.getErrors().get(0).getDescription())
+        .contains("found   : (typeof cycle.a.Widget.Item)");
   }
 
   @Test
@@ -609,9 +611,61 @@ public final class IntegrationTest extends IntegrationTestCase {
     // JSC_TYPE_MISMATCH. actual parameter 1 of fn does not match formal parameter
     // found   : (typeof cycle.a.Widget.Item)
     // required: None
-    // test(options, new String[] {base, code1, code2}, DiagnosticGroups.CHECK_TYPES);
 
     test(options, new String[] {base, code1, code2, code3}, DiagnosticGroups.CHECK_TYPES);
+    assertThat(lastCompiler.getErrors().get(0).getDescription())
+        .contains("found   : (typeof cycle.a.Widget.Item)");
+  }
+
+  @Test
+  public void testCheckProvideAlias_requireTypedInModule() {
+    CompilerOptions options = createCompilerOptions();
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setChecksOnly(true);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setClosurePass(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("externs", lines("var arguments;", "arguments.callee;")));
+
+    String base = TestExternsBuilder.getClosureExternsAsSource();
+    String code1 =
+        lines(
+            "goog.module('usage');",
+            "const Item = goog.requireType('a.Widget.Item');",
+            "",
+            "/** @param {!Item} a */ function fn(a) {}",
+            "fn(null);",
+            "");
+    String code2 =
+        lines(
+            "goog.provide('cycle.a.Widget');",
+            "goog.provide('cycle.a.Widget.Item');",
+            "",
+            "cycle.a.Widget = class {};",
+            "cycle.a.Widget.Item = class {};",
+            "",
+            "");
+    String code3 =
+        lines(
+            "goog.provide('a.Widget');",
+            "/** @provideAlreadyProvided */",
+            "goog.provide('a.Widget.Item');",
+            "",
+            "/** @const */",
+            "a.Widget = cycle.a.Widget;",
+            "");
+
+    // Expect:
+    // JSC_TYPE_MISMATCH. actual parameter 1 of fn does not match formal parameter
+    // found   : null
+    // required: cycle.a.Widget.Item
+    test(options, new String[] {base, code1, code2, code3}, DiagnosticGroups.CHECK_TYPES);
+    assertThat(lastCompiler.getErrors().get(0).getDescription())
+        .contains("required: cycle.a.Widget.Item");
   }
 
   @Test
