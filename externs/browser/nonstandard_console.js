@@ -62,5 +62,24 @@ Console.prototype.profileEnd = function(title) {};
  */
 Console.prototype.timeStamp = function(value) {};
 
+/**
+ * @record
+ */
+function ConsoleTask() {};
+
+/**
+ * @param {function(): T} fn
+ * @return {T}
+ * @template T
+ */
+ConsoleTask.prototype.run = function(fn) {};
+
+/**
+ * https://developer.chrome.com/docs/devtools/console/api/#createtask
+ * @param {string} name
+ * @return {!ConsoleTask}
+ */
+Console.prototype.createTask = function(name) {};
+
 /** @type {MemoryInfo} */
 Console.prototype.memory;
