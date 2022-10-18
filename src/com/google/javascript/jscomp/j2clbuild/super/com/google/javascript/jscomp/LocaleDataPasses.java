@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
-// ** GWT compatible no-op replacement for {@code LocaleDataPasses} */
+/** GWT compatible no-op replacement for {@code LocaleDataPasses} */
 final class LocaleDataPasses {
 
   private LocaleDataPasses() {}
