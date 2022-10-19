@@ -62,5 +62,14 @@ Console.prototype.profileEnd = function(title) {};
  */
 Console.prototype.timeStamp = function(value) {};
 
+/**
+ * https://developer.chrome.com/docs/devtools/console/api/#createtask
+ * TODO(b/254469581): Type return value which has a "run" property. Currently
+ * causes renaming issues.
+ * @param {string} name
+ * @return {?}
+ */
+Console.prototype.createTask = function(name) {};
+
 /** @type {MemoryInfo} */
 Console.prototype.memory;
