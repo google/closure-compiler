@@ -2205,7 +2205,9 @@ public final class ConformanceRules {
             "sandbox",
             "cite",
             "poster",
-            "icon");
+            "icon",
+            "codebase",
+            "data");
 
     /**
      * Given a {@code NodeTraversal} and {@code Node}, check if the attribute violates conformance.
