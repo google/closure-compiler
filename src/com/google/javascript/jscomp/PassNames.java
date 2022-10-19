@@ -88,7 +88,6 @@ public final class PassNames {
   public static final String RESOLVE_TYPES = "resolveTypes";
   public static final String REWRITE_FUNCTION_EXPRESSIONS = "rewriteFunctionExpressions";
   public static final String RENAME_PROPERTIES = "renameProperties";
-  public static final String RUNTIME_TYPE_CHECK = "runtimeTypeCheck";
   public static final String STRIP_SIDE_EFFECT_PROTECTION = "stripSideEffectProtection";
   public static final String WIZ_PASS = "wizPass";
   public static final String PARENTHESIZE_FUNCTIONS_IN_CHUNKS = "parenthesizeFunctionsInChunks";

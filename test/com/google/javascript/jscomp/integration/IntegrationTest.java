@@ -3920,38 +3920,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
-  private void addMinimalExternsForRuntimeTypeCheck() {
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(
-        SourceFile.fromCode(
-            "other_externs.js",
-            lines(
-                "Array.prototype.join;",
-                "Function.prototype.name;",
-                "Object.prototype.toString;",
-                "var RegExp;",
-                "RegExp.prototype.exec;",
-                "Window.prototype.frames",
-                "Window.prototype.length",
-                "")));
-    externs = externsList.build();
-  }
-
-  @Test
-  public void testRuntimeTypeCheckInjection() {
-    CompilerOptions options = createCompilerOptions();
-    addMinimalExternsForRuntimeTypeCheck();
-    options.checkTypes = true;
-    options.enableRuntimeTypeCheck("callMe");
-
-    // Verify that no warning/errors or exceptions occure but otherwise ignore the output.
-    test(
-        options,
-        new String[] {"function callMe(a) {}; /** @type {string} */ var x = y; "},
-        (String[]) null);
-  }
-
   /** Creates a CompilerOptions object with google coding conventions. */
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
