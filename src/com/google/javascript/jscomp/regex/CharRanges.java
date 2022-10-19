@@ -84,7 +84,8 @@ final class CharRanges {
     // Count the number of runs.
     int nRuns = 1;
     for (int i = 1; i < nMembers; ++i) {
-      int current = members[i], last = members[i - 1];
+      int current = members[i];
+      int last = members[i - 1];
       if (current == last) { continue; }
       if (current != last + 1) { ++nRuns; }
     }
@@ -93,7 +94,8 @@ final class CharRanges {
     ranges[0] = members[0];
     int k = 0;
     for (int i = 1; k + 2 < ranges.length; ++i) {
-      int current = members[i], last = members[i - 1];
+      int current = members[i];
+      int last = members[i - 1];
       if (current == last) { continue; }
       if (current != last + 1) {
         ranges[++k] = last + 1;  // add 1 to make end exclusive
@@ -150,9 +152,11 @@ final class CharRanges {
 
   public CharRanges union(CharRanges other) {
     // Index of the input ranges
-    int[] q = this.ranges, r = other.ranges;
+    int[] q = this.ranges;
+    int[] r = other.ranges;
     // Lengths of the inputs
-    int m = q.length, n = r.length;
+    int m = q.length;
+    int n = r.length;
 
     if (m == 0) { return other; }
     if (n == 0) { return this; }
@@ -162,7 +166,9 @@ final class CharRanges {
     int[] out = new int[m + n];
 
     // Indexes into the various arrays
-    int i = 0, j = 0, k = 0;
+    int i = 0;
+    int j = 0;
+    int k = 0;
     // Since there are three arrays, and indices into them the following
     // should never occur in this function:
     // (1) q[j] or q[k]                         -- q is indexed by i
@@ -173,8 +179,10 @@ final class CharRanges {
     // This loop exits because we always increment at least one of i,j.
     while (i < m && j < n) {
       // Range starts and ends.
-      int a0 = q[i], a1 = q[i + 1],
-          b0 = r[j], b1 = r[j + 1];
+      int a0 = q[i];
+      int a1 = q[i + 1];
+      int b0 = r[j];
+      int b1 = r[j + 1];
       if (a1 < b0) {  // [a0, a1) ends before [b0, b1) starts
         out[k++] = a0;
         out[k++] = a1;
@@ -233,11 +241,14 @@ final class CharRanges {
   }
 
   public CharRanges intersection(CharRanges other) {
-    int[] aRanges = ranges, bRanges = other.ranges;
-    int aLen = aRanges.length, bLen = bRanges.length;
+    int[] aRanges = ranges;
+    int[] bRanges = other.ranges;
+    int aLen = aRanges.length;
+    int bLen = bRanges.length;
     if (aLen == 0) { return this; }
     if (bLen == 0) { return other; }
-    int aIdx = 0, bIdx = 0;
+    int aIdx = 0;
+    int bIdx = 0;
     int[] intersection = new int[min(aLen, bLen)];
     int intersectionIdx = 0;
     int pos = min(aRanges[0], bRanges[0]);
@@ -281,13 +292,16 @@ final class CharRanges {
     int[] minuend = this.ranges;
     int[] subtrahend = subtrahendRanges.ranges;
 
-    int mn = minuend.length, sn = subtrahend.length;
+    int mn = minuend.length;
+    int sn = subtrahend.length;
     if (mn == 0 || sn == 0) { return this; }
 
     int[] difference = new int[minuend.length];
 
     // Indices into minuend.ranges, subtrahend.ranges, and difference.
-    int mIdx = 0, sIdx = 0, dIdx = 0;
+    int mIdx = 0;
+    int sIdx = 0;
+    int dIdx = 0;
 
     int pos = minuend[0];
     while (mIdx < mn) {
@@ -331,8 +345,10 @@ final class CharRanges {
     int[] superRanges = this.ranges;
     int[] subRanges = sub.ranges;
 
-    int superIdx = 0, subIdx = 0;
-    int superLen = superRanges.length, subLen = subRanges.length;
+    int superIdx = 0;
+    int subIdx = 0;
+    int superLen = superRanges.length;
+    int subLen = subRanges.length;
     while (subIdx < subLen) {
       if (superIdx == superLen) {
         return false;
