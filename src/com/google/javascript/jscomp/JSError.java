@@ -18,8 +18,11 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Strings.emptyToNull;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
+import java.util.Objects;
 import org.jspecify.nullness.Nullable;
 
 /** Compile error description. */
@@ -59,14 +62,7 @@ public abstract class JSError implements Serializable {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(DiagnosticType type, String... arguments) {
-    return new AutoValue_JSError(
-        type,
-        type.format(arguments),
-        DEFAULT_SOURCENAME,
-        DEFAULT_LINENO,
-        DEFAULT_CHARNO,
-        DEFAULT_NODE,
-        type.level);
+    return builder(type, arguments).build();
   }
 
   /**
@@ -80,8 +76,7 @@ public abstract class JSError implements Serializable {
    */
   public static JSError make(
       String sourceName, int lineno, int charno, DiagnosticType type, String... arguments) {
-    return new AutoValue_JSError(
-        type, type.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, type.level);
+    return builder(type, arguments).setSourceLocation(sourceName, lineno, charno).build();
   }
 
   /**
@@ -100,8 +95,10 @@ public abstract class JSError implements Serializable {
       CheckLevel level,
       DiagnosticType type,
       String... arguments) {
-    return new AutoValue_JSError(
-        type, type.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, level);
+    return builder(type, arguments)
+        .setLevel(level)
+        .setSourceLocation(sourceName, lineno, charno)
+        .build();
   }
 
   /**
@@ -112,26 +109,92 @@ public abstract class JSError implements Serializable {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(Node n, DiagnosticType type, String... arguments) {
-    return new AutoValue_JSError(
-        type,
-        type.format(arguments),
-        n.getSourceFileName(),
-        n.getLineno(),
-        n.getCharno(),
-        n,
-        type.level);
+    return builder(type, arguments).setNode(n).build();
   }
 
   /** Creates a JSError from a file and Node position. */
   public static JSError make(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
-    return new AutoValue_JSError(
-        type,
-        type.format(arguments),
-        n.getSourceFileName(),
-        n.getLineno(),
-        n.getCharno(),
-        n,
-        level);
+    return builder(type, arguments).setLevel(level).setNode(n).build();
+  }
+
+  static final class Builder {
+    private final DiagnosticType type;
+    private final String[] args;
+
+    private CheckLevel level;
+    private Node n = DEFAULT_NODE;
+    private String sourceName = DEFAULT_SOURCENAME;
+    private int lineno = DEFAULT_LINENO;
+    private int charno = DEFAULT_CHARNO;
+
+    private Builder(DiagnosticType type, String... args) {
+      this.type = type;
+      this.args = args;
+      this.level = type.level; // may be overwritten later
+    }
+
+    /**
+     * Sets the location where this error occurred.
+     *
+     * <p>Incompatible with {@link #setSourceLocation(String, int, int)}
+     */
+    @CanIgnoreReturnValue
+    Builder setNode(Node n) {
+      Preconditions.checkState(
+          Objects.equals(DEFAULT_SOURCENAME, this.sourceName),
+          "Cannot provide a Node when there's already a source name");
+      this.n = n;
+      this.sourceName = n.getSourceFileName();
+      this.lineno = n.getLineno();
+      this.charno = n.getCharno();
+      return this;
+    }
+
+    /**
+     * Sets the default level, before any WarningGuards, of this JSError. Overwrites the default
+     * level of the DiagnosticType.
+     *
+     * <p>This method is rarely useful: prefer whenever possible to rely on the default level of the
+     * DiagnosticType.
+     */
+    @CanIgnoreReturnValue
+    Builder setLevel(CheckLevel level) {
+      this.level = Preconditions.checkNotNull(level);
+      return this;
+    }
+
+    /**
+     * Sets the location where this error occurred
+     *
+     * <p>Incompatible with {@link #setNode(Node)}
+     *
+     * @param sourceName The source file name
+     * @param lineno Line number with source file, or -1 if unknown
+     * @param charno Column number within line, or -1 for whole line.
+     */
+    @CanIgnoreReturnValue
+    Builder setSourceLocation(String sourceName, int lineno, int charno) {
+      Preconditions.checkState(
+          this.n == DEFAULT_NODE, "Cannot provide a source location when there is already a Node");
+      this.sourceName = sourceName;
+      this.lineno = lineno;
+      this.charno = charno;
+      return this;
+    }
+
+    JSError build() {
+      return new AutoValue_JSError(type, type.format(args), sourceName, lineno, charno, n, level);
+    }
+  }
+
+  /**
+   * Creates a new builder.
+   *
+   * @param type the associated DiagnosticType
+   * @param arguments formatting arguments used to format the DiagnosticType's description
+   */
+  static Builder builder(DiagnosticType type, String... arguments) {
+    return new Builder(type, arguments);
   }
 
   /** @return the default rendering of an error as text. */
