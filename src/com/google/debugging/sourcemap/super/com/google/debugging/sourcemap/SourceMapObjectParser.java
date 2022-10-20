@@ -79,7 +79,7 @@ public class SourceMapObjectParser {
     } else if (section.url != null) {
       return SourceMapSection.forURL(section.url, line, column);
     } else if (section.map != null) {
-      return SourceMapSection.forMap(String.valueOf(section.map), line, column);
+      return SourceMapSection.forMap(section.map, line, column);
     }
 
     throw new SourceMapParseException(
