@@ -80,28 +80,6 @@ public abstract class JSError implements Serializable {
   }
 
   /**
-   * Creates a JSError at a given source location
-   *
-   * @param sourceName The source file name
-   * @param lineno Line number with source file, or -1 if unknown
-   * @param charno Column number within line, or -1 for whole line.
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  public static JSError make(
-      String sourceName,
-      int lineno,
-      int charno,
-      CheckLevel level,
-      DiagnosticType type,
-      String... arguments) {
-    return builder(type, arguments)
-        .setLevel(level)
-        .setSourceLocation(sourceName, lineno, charno)
-        .build();
-  }
-
-  /**
    * Creates a JSError from a file and Node position.
    *
    * @param n Determines the line and char position and source file name
@@ -110,11 +88,6 @@ public abstract class JSError implements Serializable {
    */
   public static JSError make(Node n, DiagnosticType type, String... arguments) {
     return builder(type, arguments).setNode(n).build();
-  }
-
-  /** Creates a JSError from a file and Node position. */
-  public static JSError make(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
-    return builder(type, arguments).setLevel(level).setNode(n).build();
   }
 
   static final class Builder {

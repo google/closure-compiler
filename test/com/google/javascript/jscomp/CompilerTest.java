@@ -1090,7 +1090,8 @@ public final class CompilerTest {
     }
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
 
-    compiler.report(JSError.make(path, 1, 1, level, TEST_ERROR));
+    compiler.report(
+        JSError.builder(TEST_ERROR).setSourceLocation(path, 1, 1).setLevel(level).build());
 
     return errorManager.output;
   }

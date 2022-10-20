@@ -87,7 +87,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           "duplicate message variable name found for {0}, " + "initial definition {1}:{2}");
 
   static final DiagnosticType MESSAGE_NODE_IS_ORPHANED =
-      DiagnosticType.warning(
+      DiagnosticType.error(
           "JSC_MSG_ORPHANED_NODE",
           MSG_FUNCTION_NAME + "() function could be used only with MSG_* property or variable");
 
@@ -170,7 +170,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     NodeTraversal.traverse(compiler, root, this);
 
     for (Node msgNode : googMsgNodes) {
-      compiler.report(JSError.make(msgNode, CheckLevel.ERROR, MESSAGE_NODE_IS_ORPHANED));
+      compiler.report(JSError.make(msgNode, MESSAGE_NODE_IS_ORPHANED));
     }
   }
 

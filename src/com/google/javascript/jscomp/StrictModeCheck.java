@@ -256,6 +256,7 @@ class StrictModeCheck extends AbstractPostOrderCallback implements CompilerPass 
   }
 
   private void report(Node n, DiagnosticType diagnostic, String... args) {
-    this.compiler.report(JSError.make(n, this.defaultLevel, diagnostic, args));
+    this.compiler.report(
+        JSError.builder(diagnostic, args).setLevel(this.defaultLevel).setNode(n).build());
   }
 }

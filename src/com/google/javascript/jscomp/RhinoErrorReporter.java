@@ -223,9 +223,17 @@ class RhinoErrorReporter {
     // Try to see if the message is one of the rhino errors we want to
     // expose as DiagnosticType by matching it with the regex key.
     DiagnosticType type = mapError(message);
-    return (type != null)
-        ? JSError.make(sourceName, line, lineOffset, type, message)
-        : JSError.make(sourceName, line, lineOffset, defaultLevel, PARSE_ERROR, message);
+    JSError.Builder builder =
+        JSError.builder(type != null ? type : PARSE_ERROR, message)
+            .setSourceLocation(sourceName, line, lineOffset);
+
+    // If a specific DiagnosticType is present, its default level overrides the defaultLevel
+    // passed to this method.
+    if (type == null) {
+      builder.setLevel(defaultLevel);
+    }
+
+    return builder.build();
   }
 
   private static class OldRhinoErrorReporter extends RhinoErrorReporter

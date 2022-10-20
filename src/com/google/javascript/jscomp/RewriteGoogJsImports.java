@@ -346,9 +346,7 @@ public class RewriteGoogJsImports implements CompilerPass {
         } else if (script.getSourceFileName().endsWith("/goog.js")) {
           // Ban the name goog.js as input except for Closure's goog.js file. This simplifies a lot
           // of logic if the only file that is allowed to be named goog.js is Closure's.
-          compiler.report(
-              JSError.make(
-                  script.getSourceFileName(), -1, -1, CheckLevel.ERROR, CANNOT_NAME_FILE_GOOG));
+          compiler.report(JSError.make(script.getSourceFileName(), -1, -1, CANNOT_NAME_FILE_GOOG));
         }
       }
 
