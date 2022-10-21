@@ -4848,7 +4848,7 @@ google.maps.Map.prototype.setOptions = function(options) {};
  * the default <code>StreetViewPanorama</code>, allowing the map to bind to an
  * external panorama outside of the map. Setting the panorama to
  * <code>null</code> binds the default embedded panorama back to the map.
- * @param {google.maps.StreetViewPanorama} panorama The panorama to bind to the
+ * @param {?google.maps.StreetViewPanorama} panorama The panorama to bind to the
  *     map.
  * @return {undefined}
  */
