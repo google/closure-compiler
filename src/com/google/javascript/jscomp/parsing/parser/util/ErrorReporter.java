@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.parsing.parser.util;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 
 /**
  * A conduit for reporting errors and warnings to the user.

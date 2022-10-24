@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.parsing.parser.util.format;
+package com.google.javascript.jscomp.base.format;
 
-public class MissingFormatWidthException extends RuntimeException {
+public class IllegalFormatWidthException extends RuntimeException {
 
-  public MissingFormatWidthException(String msg) {
-    super(msg);
+  public IllegalFormatWidthException(int width) {
+    super("Width:" + width);
   }
 
 }

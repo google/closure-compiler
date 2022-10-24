@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 import java.io.PrintStream;
 
 /**

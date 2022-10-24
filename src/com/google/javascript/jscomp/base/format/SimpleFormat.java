@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.parsing.parser.util.format;
+package com.google.javascript.jscomp.base.format;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import com.google.common.base.Ascii;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Arrays;
 import java.util.Date;
 import org.jspecify.nullness.Nullable;
@@ -930,6 +931,7 @@ public final class SimpleFormat {
       return (i < length) ? format.charAt(i) : -1;
     }
 
+    @CanIgnoreReturnValue
     private char advance() {
       if (i >= length) {
         throw unknownFormatConversionException();

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.parsing.parser.util.format;
+package com.google.javascript.jscomp.base.format;
 
-public class IllegalFormatPrecisionException extends RuntimeException {
+public class MissingFormatWidthException extends RuntimeException {
 
-  public IllegalFormatPrecisionException(int precision) {
-      super("Precision: " + precision);
+  public MissingFormatWidthException(String msg) {
+    super(msg);
   }
 
 }

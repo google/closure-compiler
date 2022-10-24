@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser.util;
 
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 
 /**
  * A range of positions in a source string.

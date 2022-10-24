@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Strings;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 
 /**
  * Verbose message formatter. This formatter generates very loud and long

@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 
 /**
  * Checks for combinations of options that are incompatible, i.e. will produce incorrect code.
