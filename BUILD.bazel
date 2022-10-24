@@ -19,9 +19,6 @@ load("//:bazel/typedast.bzl", "typedast")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
-# Produce an unshaded export jar based on :compiler_lib
-load("@rules_jvm_external//:defs.bzl", "java_export")
-
 package(licenses = ["notice"])
 
 filegroup(
@@ -84,15 +81,16 @@ java_binary(
     runtime_deps = [":compiler_lib"],
 )
 
+# Produce an unshaded export jar based on :compiler_lib
+load("@rules_jvm_external//:defs.bzl", "java_export")
 version = "$(COMPILER_VERSION)" or "1.0-SNAPSHOT"
-
 java_export(
     name = "compiler_unshaded",
     maven_coordinates = "com.google.javascript:closure-compiler-unshaded:{0}".format(version),
-    pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl",
     runtime_deps = [
         "//:compiler_lib",
     ],
+    pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl"
 )
 
 java_binary(
@@ -116,6 +114,7 @@ java_library(
     name = "compiler_lib",
     resources = [
         "src/com/google/javascript/jscomp/js/polyfills.txt",
+        "src/com/google/javascript/jscomp/js/runtime_type_check.js",
         ":runtime_lib_typedast_srcs",
         ":runtime_libs_typedast",
     ],
@@ -133,6 +132,7 @@ filegroup(
     srcs = glob(
         ["src/com/google/javascript/jscomp/js/**/*.js"],
         exclude = [
+            "src/com/google/javascript/jscomp/js/runtime_type_check.js",  # TODO(b/192503189) Add this when we can fix the compile errors.
             "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
         ],
     ),
@@ -185,9 +185,9 @@ oss_java_library(
             "@com_google_errorprone_error_prone_annotations",
             "@com_google_guava_failureaccess//jar",
             "@com_google_guava_guava//jar",
+            "@maven//:com_google_protobuf_protobuf_java",
             "@com_google_re2j_re2j",
             "@google_bazel_common//third_party/java/auto:value",
-            "@maven//:com_google_protobuf_protobuf_java",
             "@org_apache_ant_ant",
             "@org_jspecify_jspecify",
         ],
@@ -250,6 +250,7 @@ gen_java_tests(
         "@com_google_guava_guava//jar",
         "@com_google_guava_guava_testlib//jar",
         "@com_google_jimfs_jimfs",
+        "@maven//:com_google_protobuf_protobuf_java",
         "@com_google_re2j_re2j",
         "@com_google_truth_extensions_truth_liteproto_extension",
         "@com_google_truth_extensions_truth_proto_extension",
@@ -258,7 +259,6 @@ gen_java_tests(
         "@google_bazel_common//third_party/java/mockito",
         "@google_bazel_common//third_party/java/truth",
         "@io_github_java_diff_utils_java_diff_utils",
-        "@maven//:com_google_protobuf_protobuf_java",
         "@org_jspecify_jspecify",
     ],
 )

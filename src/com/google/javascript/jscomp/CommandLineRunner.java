@@ -812,7 +812,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Force injection of named runtime libraries. "
                 + "The format is <name> where <name> is the name of a runtime library. "
-                + "Possible libraries include: base, es6_runtime")
+                + "Possible libraries include: base, es6_runtime, runtime_type_check")
     private List<String> forceInjectLibraries = new ArrayList<>();
 
     @Option(
