@@ -77,6 +77,7 @@ public class JsFileFullParser {
     public final Set<String> deltemplates = new TreeSet<>();
     // Use a LinkedHashSet as import order matters!
     public final Set<String> importedModules = new LinkedHashSet<>();
+    public final Set<String> dynamicRequires = new LinkedHashSet<>();
     public final List<String> modName = new ArrayList<>();
     public final List<String> mods = new ArrayList<>();
 
@@ -98,8 +99,8 @@ public class JsFileFullParser {
     /** Annotation name, e.g. "@fileoverview" or "@externs". */
     final String name;
     /**
-     * Annotation value: either the bare identifier immediately after the
-     * annotation, or else string in braces.
+     * Annotation value: either the bare identifier immediately after the annotation, or else string
+     * in braces.
      */
     final String value;
 
@@ -211,8 +212,7 @@ public class JsFileFullParser {
       return info; // Avoid potential crashes due to assumptions of the code below being violated.
     }
     ModuleMetadata module =
-        Iterables.getOnlyElement(
-            compiler.getModuleMetadataMap().getModulesByPath().values());
+        Iterables.getOnlyElement(compiler.getModuleMetadataMap().getModulesByPath().values());
     if (module.isEs6Module()) {
       info.loadFlags.put("module", "es6");
     } else if (module.isGoogModule()) {
@@ -250,6 +250,7 @@ public class JsFileFullParser {
     if (module.usesClosure()) {
       info.provides.addAll(module.googNamespaces());
       info.requires.addAll(module.stronglyRequiredGoogNamespaces());
+      info.dynamicRequires.addAll(module.dynamicallyRequiredGoogNamespaces());
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
     }

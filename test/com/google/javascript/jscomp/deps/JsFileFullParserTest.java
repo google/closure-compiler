@@ -82,11 +82,13 @@ public final class JsFileFullParserTest {
         parse(
             "goog.provide('providedSymbol');",
             "goog.require('stronglyRequiredSymbol');",
-            "goog.requireType('weaklyRequiredSymbol');");
+            "goog.requireType('weaklyRequiredSymbol');",
+            "async function test() {await goog.requireDynamic('dynamicallyRequiredSymbol');}");
 
     assertThat(info.provides).containsExactly("providedSymbol");
     assertThat(info.requires).containsExactly("stronglyRequiredSymbol");
     assertThat(info.typeRequires).containsExactly("weaklyRequiredSymbol");
+    assertThat(info.dynamicRequires).containsExactly("dynamicallyRequiredSymbol");
   }
 
   @Test

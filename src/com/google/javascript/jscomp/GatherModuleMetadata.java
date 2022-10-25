@@ -69,6 +69,10 @@ public final class GatherModuleMetadata implements CompilerPass {
       DiagnosticType.error(
           "JSC_INVALID_REQUIRE_TYPE", "Argument to goog.requireType must be a string.");
 
+  static final DiagnosticType INVALID_REQUIRE_DYNAMIC =
+      DiagnosticType.error(
+          "JSC_INVALID_REQUIRE_DYNAMIC", "Argument to goog.requireDynamic must be a string.");
+
   static final DiagnosticType INVALID_SET_TEST_ONLY =
       DiagnosticType.error(
           "JSC_INVALID_SET_TEST_ONLY",
@@ -81,6 +85,7 @@ public final class GatherModuleMetadata implements CompilerPass {
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
   private static final Node GOOG_REQUIRE_TYPE = IR.getprop(IR.name("goog"), "requireType");
+  private static final Node GOOG_REQUIRE_DYNAMIC = IR.getprop(IR.name("goog"), "requireDynamic");
   private static final Node GOOG_SET_TEST_ONLY = IR.getprop(IR.name("goog"), "setTestOnly");
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
       IR.getprop(GOOG_MODULE.cloneTree(), "declareLegacyNamespace");
@@ -428,6 +433,15 @@ public final class GatherModuleMetadata implements CompilerPass {
           currentModule.metadataBuilder.isTestOnly(true);
         } else {
           t.report(n, INVALID_SET_TEST_ONLY);
+        }
+      } else if (getprop.matchesQualifiedName(GOOG_REQUIRE_DYNAMIC)) {
+        if (n.hasTwoChildren() && n.getLastChild().isStringLit()) {
+          currentModule
+              .metadataBuilder
+              .dynamicallyRequiredGoogNamespacesBuilder()
+              .add(n.getLastChild().getString());
+        } else {
+          t.report(n, INVALID_REQUIRE_DYNAMIC);
         }
       }
     }

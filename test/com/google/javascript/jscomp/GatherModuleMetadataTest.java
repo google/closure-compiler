@@ -574,6 +574,23 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequireDynamic() {
+    testSame("async function test() {await goog.requireDynamic('my.Type');}");
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.dynamicallyRequiredGoogNamespaces()).containsExactly("my.Type");
+  }
+
+  @Test
+  public void testRequireDynamicWithIllegalArg() {
+    testError(
+        "async function test() {await goog.requireDynamic('my.Type','extra.Type');}",
+        GatherModuleMetadata.INVALID_REQUIRE_DYNAMIC);
+    testError(
+        "async function test() {await goog.requireDynamic(42);}",
+        GatherModuleMetadata.INVALID_REQUIRE_DYNAMIC);
+  }
+
+  @Test
   public void testRequiredClosureNamespaces() {
     testSame("goog.require('my.Type');");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
