@@ -2726,6 +2726,25 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
+    testWarning(
+        "goog.forwardDeclare('Foo'); /** @type {Foo} */ var f = makeFoo(); f.foo();",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved.");
+
+    test(
+        srcs(
+            lines(
+                "goog.forwardDeclare('Foo');",
+                "goog.forwardDeclare('Bar');",
+                "/** @param {?Foo|Bar} foobar */",
+                "function f(foobar) {",
+                "  return foobar.m();",
+                "}")),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage(
+                // TODO(lharker): instead of 'Foo' could we print something like 'Foo|Bar'?
+                "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved."));
+
     testNoWarning(
         lines(
             "/**",
@@ -2760,6 +2779,41 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "goog.forwardDeclare('Foo'); /** @return {!Foo} */ var f;", //
             "f();"),
         CheckConformance.CONFORMANCE_VIOLATION);
+
+    test(
+        srcs(
+            lines(
+                "goog.forwardDeclare('Foo');",
+                "goog.forwardDeclare('Bar');",
+                "/**",
+                " * @param {?Foo} foo",
+                " * @param {?Bar} bar",
+                " */",
+                "function f(foo, bar) {",
+                "  return foo || bar;",
+                "}")),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage(
+                "Violation: StrictBanUnresolvedType Message\n"
+                    + "Reference to type 'Foo' never resolved."),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage(
+                "Violation: StrictBanUnresolvedType Message\n"
+                    + "Reference to type 'Bar' never resolved."),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage(
+                "Violation: StrictBanUnresolvedType Message\n"
+                    + "Reference to type 'Foo' never resolved."),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage(
+                // TODO(lharker): instead of 'NoResolvedType', could we print something like
+                // 'Foo|Bar' ? We'd need to modify anything calling JSType.filterNoResolvedType.
+                "Violation: StrictBanUnresolvedType Message\n"
+                    + "Reference to type 'NoResolvedType' never resolved."),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage(
+                "Violation: StrictBanUnresolvedType Message\n"
+                    + "Reference to type 'Bar' never resolved."));
   }
 
   @Test

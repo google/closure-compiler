@@ -1168,12 +1168,15 @@ public abstract class JSType {
   }
 
   /**
-   * When computing infima, we may get a situation like
-   * inf(Type1, Type2)
-   * where both types are unresolved, so they're technically
-   * subtypes of one another.
+   * When computing infima, we may get a situation like inf(Type1, Type2) where both types are
+   * unresolved, so they're technically subtypes of one another.
    *
-   * If this happens, filter them down to NoResolvedType.
+   * <p>If this happens, filter them down to NoResolvedType.
+   *
+   * <p>TODO(lharker): this filtering sometimes leads to conformance errors with unhelpful error
+   * messages: "Unfulfilled forward declaration 'NoResolvedType'". Is there something else we could
+   * do to preserve both type names, e.g. a NoResolvedType with the string name "Type1|Type2"?
+   * Related issue: b/112425334.
    */
   static JSType filterNoResolvedType(JSType type) {
     if (type.isNoResolvedType()) {

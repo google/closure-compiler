@@ -1712,7 +1712,7 @@ public final class ConformanceRules {
       if (n.isGetProp()) {
         Node target = n.getFirstChild();
         JSType type = target.getJSType();
-        JSType nonConformingPart = getNonConformingPart(type);
+        String nonConformingPart = getNonConformingPart(type);
         if (nonConformingPart != null && !isTypeImmediatelyTightened(n)) {
           return new ConformanceResult(
               ConformanceLevel.VIOLATION,
@@ -1722,7 +1722,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static @Nullable JSType getNonConformingPart(JSType type) {
+    private static @Nullable String getNonConformingPart(JSType type) {
       if (type == null) {
         return null;
       }
@@ -1730,13 +1730,20 @@ public final class ConformanceRules {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
         for (JSType part : type.getUnionMembers()) {
-          JSType nonConformingPart = getNonConformingPart(part);
+          String nonConformingPart = getNonConformingPart(part);
           if (nonConformingPart != null) {
             return nonConformingPart;
           }
         }
       } else if (type.isNoResolvedType()) {
-        return type;
+        ObjectType noResolvedType = type.toObjectType();
+        // Whenever possible, return the 'reference name' of the NoResolvedType (i.e. the exact
+        // forward declared name). Some NoResolvedTypes do not have reference names because they
+        // were created as the product of an operation on NoResolvedTypes, e.g. consider
+        // 'noResolvedTypeA.getGreatestSubtype(noResolvedTypeB)'
+        return noResolvedType.getReferenceName() != null
+            ? noResolvedType.getReferenceName()
+            : "NoResolvedType";
       }
       return null;
     }
@@ -1751,7 +1758,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      JSType nonConformingPart = BanUnresolvedType.getNonConformingPart(n.getJSType());
+      String nonConformingPart = BanUnresolvedType.getNonConformingPart(n.getJSType());
       if (nonConformingPart != null && !isTypeImmediatelyTightened(n)) {
         return new ConformanceResult(
             ConformanceLevel.VIOLATION,
