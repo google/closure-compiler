@@ -284,7 +284,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "/** @preserve\n"
             + " * this is a test.\n"
             + " */\n"
-            + "var foo=a + 'this is a really long line that will force the"
+            + "console.log(a + 'this is a really long line that will force the"
             + " mapping to span multiple lines 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
@@ -310,16 +310,15 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
-            + "' + c + d + e;",
+            + "' + c + d + e);",
         TestJsonBuilder.create()
             .setVersion(3)
             .setFile("testcode")
             .setLineCount(6)
             .setMappings(
-                "A;;;;aAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE,"
-                    + "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;")
+                "A;;;;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ,CAAgB,mxCAAhB;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
             .setSources(getEncodedFileName())
-            .setNames("foo", "a", "c", "d", "e")
+            .setNames("console", "log", "a", "c", "d", "e")
             .build());
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
@@ -329,7 +328,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "/** @preserve\n"
             + " * this is a test.\n"
             + " */\n"
-            + "var foo=a + 'this is a really long line that will force the"
+            + "console.log(a + 'this is a really long line that will force the"
             + " mapping to span multiple lines 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
@@ -355,14 +354,15 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
             + " 123456789 123456789 123456789 123456789 123456789"
-            + "' + c + d + e;",
+            + "' + c + d + e);",
         TestJsonBuilder.create()
             .setVersion(3)
             .setFile("testcode")
             .setLineCount(6)
-            .setMappings("A;;;;iBAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;")
+            .setMappings(
+                "A;;;;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
             .setSources(getEncodedFileName())
-            .setNames("foo", "a", "c", "d", "e")
+            .setNames("console", "log", "a", "c", "d", "e")
             .build());
   }
 

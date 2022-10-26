@@ -38,6 +38,7 @@ import com.google.common.collect.Streams;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -82,6 +83,7 @@ import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -1322,11 +1324,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (!chunkNameRegexList.isEmpty()) {
       final Iterable<JSChunk> chunks = checkNotNull(getModules());
       final List<String> unmatchedChunkNames = new ArrayList<>();
+      // As we are emitting all chunks at once in dependency order, we can be smarter about
+      // deciding which licenses to emit where in the source.
+      ChunkGraphAwareLicenseTracker lt = new ChunkGraphAwareLicenseTracker(this);
       for (JSChunk jsChunk : chunks) {
         final String chunkName = jsChunk.getName();
+        lt.setCurrentChunkContext(jsChunk);
         for (String regex : chunkNameRegexList) {
           if (chunkName.matches(regex)) {
-            String source = "// module '" + chunkName + "'\n" + toSource(jsChunk);
+            String source = "// module '" + chunkName + "'\n" + toSource(lt, jsChunk);
             builder.append(source);
             break;
           }
@@ -2331,19 +2337,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           Tracer tracer = newTracer("toSource");
           try {
             CodeBuilder cb = new CodeBuilder();
+            // We are emitting all the sources at once, so use the SingleBinaryLicenseTracker
+            // to de-dupe seen licenses across all inputs.
+            SingleBinaryLicenseTracker lt = new SingleBinaryLicenseTracker(this);
             if (jsRoot != null) {
               int i = 0;
               if (options.shouldPrintExterns()) {
                 for (Node scriptNode = externsRoot.getFirstChild();
                     scriptNode != null;
                     scriptNode = scriptNode.getNext()) {
-                  toSource(cb, i++, scriptNode);
+                  toSource(cb, lt, i++, scriptNode);
                 }
               }
               for (Node scriptNode = jsRoot.getFirstChild();
                   scriptNode != null;
                   scriptNode = scriptNode.getNext()) {
-                toSource(cb, i++, scriptNode);
+                toSource(cb, lt, i++, scriptNode);
               }
             }
             return cb.toString();
@@ -2353,8 +2362,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         });
   }
 
-  /** Converts the parse tree for a module back to JS code. */
+  /**
+   * Converts the parse tree for a module back to JS code.
+   *
+   * <p>Consider using toSource(JSChunk, LicenseTracker) for better license handling. This call will
+   * emit all license text attached to all direct inputs to the module, which can be very
+   * inefficient.
+   */
   public String toSource(final JSChunk module) {
+    return toSource(
+        // Backwards-compatible implementation of license tracking.
+        new ScriptNodeLicensesOnlyTracker(this), module);
+  }
+
+  /**
+   * Converts the parse tree for a module back to JS code, using the given License Tracker to
+   * determine which licenses should be emitted before the source code.
+   *
+   * @param licenseTracker The license tracker implementation to use. {@link
+   *     ChunkGraphAwareLicenseTracker} is a suitable implementation when this method is being
+   *     called on each module in the chunk graph in dependency order.
+   */
+  public String toSource(final LicenseTracker licenseTracker, final JSChunk module) {
     return runInCompilerThread(
         () -> {
           ImmutableList<CompilerInput> inputs = module.getInputs();
@@ -2368,7 +2397,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             if (scriptNode == null) {
               throw new IllegalArgumentException("Bad module: " + module.getName());
             }
-            toSource(cb, i, scriptNode);
+            toSource(cb, licenseTracker, i, scriptNode);
           }
           return cb.toString();
         });
@@ -2379,8 +2408,30 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * comment to the start of the text indicating which input the output derived from. If there were
    * any preserve annotations within the root's source, they will also be printed in a block comment
    * at the beginning of the output.
+   *
+   * @deprecated use toSource(CodeBuilder, LicenseTracker, int, Node) instead for better license
+   *     tracking.
    */
+  @Deprecated
   public void toSource(final CodeBuilder cb, final int inputSeqNum, final Node root) {
+    toSource(cb, new ScriptNodeLicensesOnlyTracker(this), inputSeqNum, root);
+  }
+
+  /**
+   * Writes out JS code from a root node. If printing input delimiters, this method will attach a
+   * comment to the start of the text indicating which input the output derived from. If there were
+   * any preserve annotations within the root's source, they will also be printed in a block comment
+   * at the beginning of the output.
+   *
+   * <p>The LicenseTracker provided determines which licenses attached to the nodes visited should
+   * be included in the output. When building a single JS bundle, consider using the {@link
+   * SingleBinaryLicenseTracker} implementation.
+   */
+  public void toSource(
+      final CodeBuilder cb,
+      final LicenseTracker licenseTracker,
+      final int inputSeqNum,
+      final Node root) {
     runInCompilerThread(
         () -> {
           if (options.printInputDelimiter) {
@@ -2404,34 +2455,50 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
             cb.append(delimiter).append("\n");
           }
-          if (root.getJSDocInfo() != null) {
-            String license = root.getJSDocInfo().getLicense();
-            if (license != null && cb.addLicense(license)) {
-              cb.append("/*\n").append(license).append("*/\n");
-            }
+
+          CodePrinter.SourceAndMappings sourceAndMappings =
+              toSourceAndMappings(root, inputSeqNum == 0, licenseTracker);
+          String code = sourceAndMappings.source;
+
+          // Check whether there is any license information that should be emitted.
+          for (String license : licenseTracker.emitLicenses()) {
+            cb.append("/*\n").append(license).append("*/\n");
+          }
+
+          // Check whether there's any actual code to emit.
+          // This is deliberately done after the license tracker is given an opportunity to emit
+          // licenses, as some trackers might want to emit license info from this Node's tree
+          // regardless of whether it emits visible code. One example of this would be the case
+          // where inlining has moved the contents from this file to another file, but the license
+          // tracker can't be sure if the license for this code will ever be emitted.
+          if (code.isEmpty()) {
+            // Nothing to do.
+            return null;
           }
 
           // If there is a valid source map, then indicate to it that the current
           // root node's mappings are offset by the given string builder buffer.
+          // This offset is a result of licenses being added to the output buffer.
           if (options.shouldGatherSourceMapInfo()) {
             sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
           }
 
-          // if LanguageMode is strict, only print 'use strict'
-          // for the first input file
-          String code = toSource(root, sourceMap, inputSeqNum == 0);
-          if (!code.isEmpty()) {
-            cb.append(code);
+          cb.append(code);
 
-            // In order to avoid parse ambiguity when files are concatenated
-            // together, all files should end in a semi-colon. Do a quick
-            // heuristic check if there's an obvious semi-colon already there.
-            int length = code.length();
-            char lastChar = code.charAt(length - 1);
-            char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
-            boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
-            if (!hasSemiColon) {
-              cb.append(";");
+          // In order to avoid parse ambiguity when files are concatenated
+          // together, all files should end in a semi-colon. Do a quick
+          // heuristic check if there's an obvious semi-colon already there.
+          int length = code.length();
+          char lastChar = code.charAt(length - 1);
+          char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
+          boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
+          if (!hasSemiColon) {
+            cb.append(";");
+          }
+
+          if (options.shouldGatherSourceMapInfo()) {
+            for (SourceMap.Mapping mapping : sourceAndMappings.mappings) {
+              sourceMap.addMapping(mapping);
             }
           }
           return null;
@@ -2442,45 +2509,273 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public String toSource(Node n) {
     initCompilerOptionsIfTesting();
-    return toSource(n, null, true);
+    StringBuilder sb = new StringBuilder();
+    // We don't know whether this node is part of a single JS binary, or part of a module, or
+    // something else. Use the legacy license tracking implementation to match existing expectations
+    // about what licenses are included in the resulting JS.
+    ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(this);
+    String code = toSourceAndMappings(n, false, lt).source;
+    for (String license : lt.emitLicenses()) {
+      sb.append("/*\n").append(license).append("*/\n");
+    }
+    sb.append(code);
+    return sb.toString();
+  }
+
+  /**
+   * A license tracker implementation that maintains two sets of licenses: the "currently seen set"
+   * which will be emitted on the next call to emitLicenses, and the "globally seen set" which
+   * includes every license ever seen. Licenses in the global set are never added to the currently
+   * seen set. On every call to emitLicenses, the currently seen set is added to the globally seen
+   * set, and the currently seen set is cleared. There is no way to clear the globally seen set.
+   */
+  private abstract static class SeenSetLicenseTracker implements LicenseTracker {
+    private final AbstractCompiler compiler;
+    private final Set<String> globallyUniqueLicenses = new HashSet<>();
+    private final Set<String> currentlySeenLicenses = new HashSet<>();
+    private String lastSeenFile = "";
+
+    public SeenSetLicenseTracker(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    protected boolean shouldUseLicenseInfo(Node node) {
+      return !node.isRoot() && !node.isScript();
+    }
+
+    @Override
+    public void trackLicensesForNode(Node node) {
+      if (!shouldUseLicenseInfo(node)) {
+        return;
+      }
+      String file = node.getSourceFileName();
+      if (file == null) {
+        return;
+      }
+      if (file.equals(lastSeenFile)) {
+        // Skip files we just saw.
+        return;
+      } else {
+        lastSeenFile = file;
+      }
+      String license = getLicenseForFile(compiler, file);
+      if (license == null) {
+        return;
+      }
+      if (globallyUniqueLicenses.contains(license)) {
+        return;
+      }
+      currentlySeenLicenses.add(license);
+    }
+
+    @Override
+    public ImmutableSet<String> emitLicenses() {
+      ImmutableSet<String> rv = ImmutableSet.copyOf(currentlySeenLicenses);
+      globallyUniqueLicenses.addAll(currentlySeenLicenses);
+      currentlySeenLicenses.clear();
+      return rv;
+    }
+  }
+
+  /**
+   * A license tracker implementation that emits all licenses attached to script nodes, regardless
+   * of if the content of that script is used anywhere in the compilation.
+   *
+   * <p>This license tracker encapsulates the logic that the compiler used before the concept of
+   * license tracking was implemented, and should only used in places where a better implementation
+   * cannot be used. See {@link SingleBinaryLicenseTracker} and {@link
+   * ChunkGraphAwareLicenseTracker} for smarter implementations of a license tracker for the
+   * single-binary and multiple-chunk emit use-cases.
+   */
+  public static class ScriptNodeLicensesOnlyTracker extends SeenSetLicenseTracker {
+
+    public ScriptNodeLicensesOnlyTracker(AbstractCompiler compiler) {
+      super(compiler);
+    }
+
+    @Override
+    protected boolean shouldUseLicenseInfo(Node node) {
+      // Only use license information that is found on the script or root nodes of the tree.
+      return node.isRoot() || node.isScript();
+    }
+  }
+
+  /**
+   * A license tracker implementation that only retains licenses for which there are useful nodes in
+   * a binary. This will ignore licenses attached to script or root nodes when there are no other
+   * nodes from that script in use in the binary (likely removed due to compiler optimizations).
+   */
+  public static final class SingleBinaryLicenseTracker extends SeenSetLicenseTracker {
+
+    SingleBinaryLicenseTracker(AbstractCompiler compiler) {
+      super(compiler);
+    }
+
+    @Override
+    protected boolean shouldUseLicenseInfo(Node node) {
+      // Ignore the licensing information attached to root or script nodes, and only carry license
+      // info for nodes that emit visible JS.
+      return !node.isRoot() && !node.isScript();
+    }
+  }
+
+  /**
+   * An implementation of a license tracker to be used when licenses can be de-duped among Chunks
+   * (because licenses might be loaded by a chunk's transitive dependencies. This tracker has a
+   * specific lifecycle to function correctly:
+   *
+   * <ul>
+   *   <li>all chunks must be processed in dependency-order
+   *   <li>setCurrentChunkContext must be called before any nodes in a Chunk are processed
+   *   <li>emitLicenses can either be called once per chunk, or once per input file in the chunk.
+   *       Each call to emitLicenses will push all newly-seen licenses into tracker-internal
+   *       storage, and those licenses won't be emitted again until setCurrentChunkContext resets
+   *       this internal state.
+   * </ul>
+   */
+  public static class ChunkGraphAwareLicenseTracker implements LicenseTracker {
+
+    private final AbstractCompiler compiler;
+    private final Map<JSChunk, Set<String>> licensesFromChunks = new HashMap<>();
+
+    private boolean haveInitializedCurrentChunkLicenses = false;
+    private final Set<String> currentChunkLicencesInTDeps = new HashSet<>();
+
+    private String lastSeenFile = "";
+    private final Set<String> licensesNewInCurrentFile = new HashSet<>();
+
+    // Not a final set as this is re-initialized in setCurrentChunkContext, and then stored into
+    // the licensesFromChunks map.
+    private Set<String> licensesNewInCurrentChunk = new HashSet<>();
+    private LogFile log = LogFile.createNoOp();
+    private JSChunk currentChunk;
+
+    public ChunkGraphAwareLicenseTracker(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    public void setLogFile(LogFile file) {
+      this.log = file;
+    }
+
+    public void setCurrentChunkContext(JSChunk chunk) {
+      log.log("Initializing licenses from deps for chunk %s", chunk);
+      this.currentChunk = chunk;
+      this.currentChunkLicencesInTDeps.clear();
+      this.licensesNewInCurrentFile.clear();
+      haveInitializedCurrentChunkLicenses = false;
+      if (this.licensesFromChunks.containsKey(chunk)) {
+        throw new IllegalStateException("Visiting a chunk more than once is not allowed.");
+      }
+      this.licensesNewInCurrentChunk = new HashSet<>();
+      this.licensesFromChunks.put(chunk, this.licensesNewInCurrentChunk);
+    }
+
+    @Override
+    public void trackLicensesForNode(Node node) {
+      if (node.isRoot() || node.isScript()) {
+        // Neither of these node kinds on their own emit code, so skip their analysis.
+        return;
+      }
+      String sourceFile = node.getSourceFileName();
+      if (sourceFile == null) {
+        return;
+      }
+      if (lastSeenFile.equals(sourceFile)) {
+        // We just saw this file during the previous call to trackLicensesForNode
+        return;
+      } else {
+        // Record the file whose license info we are going to analyze so that if we see this file
+        // again in consecutive calls to trackLicensesForNode we can skip redundant analysis.
+        lastSeenFile = sourceFile;
+      }
+      // Lazily initialize the set of licenses provided by the chunk's transitive dependencies
+      if (!haveInitializedCurrentChunkLicenses) {
+        for (JSChunk depChunk : currentChunk.getAllDependencies()) {
+          log.log("Chunk %s depends on chunk %s", currentChunk, depChunk);
+          if (!this.licensesFromChunks.containsKey(depChunk)) {
+            throw new IllegalStateException(
+                "Module aware license analysis error - analysis out of order.");
+          }
+          this.currentChunkLicencesInTDeps.addAll(this.licensesFromChunks.get(depChunk));
+        }
+        haveInitializedCurrentChunkLicenses = true;
+      }
+      String license = getLicenseForFile(compiler, node.getSourceFileName());
+      if (license == null) {
+        return;
+      }
+      if (this.currentChunkLicencesInTDeps.contains(license)) {
+        // This node's license is covered by one of its transitive dependencies - no need to
+        // duplicate it.
+        return;
+      }
+      if (this.licensesNewInCurrentChunk.contains(license)) {
+        // This license is new as of this chunk, but another file has already seen it.
+        return;
+      }
+      boolean newlyAddedLicense = this.licensesNewInCurrentFile.add(license);
+      if (!newlyAddedLicense) {
+        log.log(
+            "Chunk %s already depends on license\n"
+                + "==================\n"
+                + "%s\n"
+                + "==================\n\n",
+            currentChunk, license);
+      } else {
+        log.log(
+            "Chunk %s has new license:\n==================\n%s\n==================\n\n",
+            currentChunk, license);
+      }
+    }
+
+    @Override
+    public ImmutableSet<String> emitLicenses() {
+      ImmutableSet<String> licensesNewInFile = ImmutableSet.copyOf(licensesNewInCurrentFile);
+      this.licensesNewInCurrentChunk.addAll(licensesNewInFile);
+      licensesNewInCurrentFile.clear();
+      return licensesNewInFile;
+    }
   }
 
   /** Generates JavaScript source code for an AST. */
-  private String toSource(Node n, @Nullable SourceMap sourceMap, boolean firstOutput) {
+  private CodePrinter.SourceAndMappings toSourceAndMappings(
+      Node n, boolean firstOutput, LicenseTracker licenseTracker) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setCompilerOptions(options);
-    builder.setSourceMap(sourceMap);
     builder.setTagAsTypeSummary(options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
-    return builder.build();
+    builder.setLicenseTracker(licenseTracker);
+    return builder.buildWithSourceMappings();
   }
 
-  /** Converts the parse tree for each input back to JS code. */
-  public String[] toSourceArray() {
-    return runInCompilerThread(
-        () -> {
-          Tracer tracer = newTracer("toSourceArray");
-          try {
-            int numInputs = moduleGraph.getInputCount();
-            String[] sources = new String[numInputs];
-            CodeBuilder cb = new CodeBuilder();
-            int i = 0;
-            for (CompilerInput input : moduleGraph.getAllInputs()) {
-              Node scriptNode = input.getAstRoot(Compiler.this);
-              cb.reset();
-              toSource(cb, i, scriptNode);
-              sources[i] = cb.toString();
-              i++;
-            }
-            return sources;
-          } finally {
-            stopTracer(tracer, "toSourceArray");
-          }
-        });
+  public static @Nullable String getLicenseForFile(
+      AbstractCompiler compiler, @Nullable String fileName) {
+    if (fileName == null) {
+      return null;
+    }
+    Node licenseRoot = compiler.getScriptNode(fileName);
+    if (licenseRoot == null) {
+      return null;
+    }
+    JSDocInfo docInfo = licenseRoot.getJSDocInfo();
+    if (docInfo == null) {
+      return null;
+    }
+    return docInfo.getLicense();
   }
 
-  /** Converts the parse tree for each input in a module back to JS code. */
-  public String[] toSourceArray(final JSChunk module) {
+  /**
+   * Converts the parse tree for each input in a module back to JS code, using the given License
+   * Tracker implementation to decide which licenses should be emitted before each input file.
+   *
+   * @param licenseTracker The license tracker implementation to use. {@link
+   *     ChunkGraphAwareLicenseTracker} is a suitable implementation when this method is being
+   *     called on each module in the chunk graph in dependency order - see its javadoc on how to
+   *     use it correctly.
+   * @param module the chunk being converted to source.
+   */
+  public String[] toSourceArray(LicenseTracker licenseTracker, final JSChunk module) {
     return runInCompilerThread(
         () -> {
           ImmutableList<CompilerInput> inputs = module.getInputs();
@@ -2498,7 +2793,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             }
 
             cb.reset();
-            toSource(cb, i, scriptNode);
+            toSource(cb, licenseTracker, i, scriptNode);
             sources[i] = cb.toString();
           }
           return sources;
@@ -2513,7 +2808,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final StringBuilder sb = new StringBuilder();
     private int lineCount = 0;
     private int colCount = 0;
-    private final Set<String> uniqueLicenses = new HashSet<>();
 
     /** Removes all text, but leaves the line count unchanged. */
     void reset() {
@@ -2568,11 +2862,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     boolean endsWith(String suffix) {
       return (sb.length() > suffix.length())
           && suffix.equals(sb.substring(sb.length() - suffix.length()));
-    }
-
-    /** Adds a license and returns whether it is unique (has yet to be encountered). */
-    boolean addLicense(String license) {
-      return uniqueLicenses.add(license);
     }
   }
 

@@ -2096,11 +2096,7 @@ public final class FunctionInjectorTest {
   }
 
   private static String toSource(Node n) {
-    return new CodePrinter.Builder(n)
-        .setPrettyPrint(false)
-        .setLineBreak(false)
-        .setSourceMap(null)
-        .build();
+    return new CodePrinter.Builder(n).setPrettyPrint(false).setLineBreak(false).build();
   }
 
 }

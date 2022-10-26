@@ -42,6 +42,10 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
+import com.google.javascript.jscomp.Compiler.ChunkGraphAwareLicenseTracker;
+import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
+import com.google.javascript.jscomp.Compiler.SingleBinaryLicenseTracker;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
@@ -1036,7 +1040,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
-  void writeModuleOutput(String fileName, Appendable out, JSChunk m) throws IOException {
+  void writeModuleOutput(String fileName, Appendable out, LicenseTracker lt, JSChunk m)
+      throws IOException {
     if (parsedModuleWrappers == null) {
       parsedModuleWrappers =
           parseModuleWrappers(
@@ -1050,6 +1055,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     writeOutput(
         out,
         compiler,
+        lt,
         m,
         parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
         "%s",
@@ -1067,6 +1073,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   void writeOutput(
       Appendable out,
       Compiler compiler,
+      LicenseTracker licenseTracker,
       @Nullable JSChunk module,
       String wrapper,
       String codePlaceholder,
@@ -1079,7 +1086,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
     checkState(compiler.getOptions().outputJs == OutputJs.NORMAL);
 
-    String code = module == null ? compiler.toSource() : compiler.toSource(module);
+    String code = module == null ? compiler.toSource() : compiler.toSource(licenseTracker, module);
     writeOutput(out, compiler, code, wrapper, codePlaceholder, escaper, filename);
   }
 
@@ -1654,7 +1661,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           outputSourceMap(options, config.jsOutputFile);
         }
       } else {
-        DiagnosticType error = outputModuleBinaryAndSourceMaps(compiler.getModules(), options);
+        DiagnosticType error = outputModuleBinaryAndSourceMaps(compiler.getModuleGraph(), options);
         if (error != null) {
           compiler.report(JSError.make(error));
           return 1;
@@ -1719,6 +1726,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       writeOutput(
           jsOutput,
           compiler,
+          // So long as the JSChunk arg is null the compiler will write all sources to jsOutput
+          // Use single-binary license tracking to dedupe licenses among all the inputs
+          new SingleBinaryLicenseTracker(compiler),
           (JSChunk) null,
           config.outputWrapper,
           marker,
@@ -1736,6 +1746,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     writeOutput(
         jsOutput,
         compiler,
+        // So long as the JSChunk arg is null the compiler will write all sources to jsOutput
+        // Use single-binary license tracking to dedupe licenses among all the inputs
+        new SingleBinaryLicenseTracker(compiler),
         (JSChunk) null,
         config.outputWrapper,
         outputMarker,
@@ -1768,7 +1781,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   @GwtIncompatible("Unnecessary")
   private @Nullable DiagnosticType outputModuleBinaryAndSourceMaps(
-      Iterable<JSChunk> modules, B options) throws IOException {
+      JSChunkGraph moduleGraph, B options) throws IOException {
+    Iterable<JSChunk> modules = moduleGraph.getAllChunks();
     parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
     if (!isOutputInJson()) {
       // make sure the method generates all dirs up to the latest /
@@ -1790,6 +1804,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return INVALID_MODULE_SOURCEMAP_PATTERN;
     }
 
+    ChunkGraphAwareLicenseTracker mlicenseTracker = new ChunkGraphAwareLicenseTracker(compiler);
     for (JSChunk m : modules) {
       if (m.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
         // Skip the weak module, which is always empty.
@@ -1808,7 +1823,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           if (options.shouldGatherSourceMapInfo()) {
             compiler.resetAndIntitializeSourceMap();
           }
-          writeModuleOutput(moduleFilename, writer, m);
+          mlicenseTracker.setCurrentChunkContext(m);
+          writeModuleOutput(moduleFilename, writer, mlicenseTracker, m);
           if (options.shouldGatherSourceMapInfo()) {
             compiler.getSourceMap().appendTo(mapFileOut, moduleFilename);
           }
@@ -1834,7 +1850,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     String filename = getModuleOutputFileName(module);
     StringBuilder output = new StringBuilder();
-    writeModuleOutput(filename, output, module);
+    writeModuleOutput(filename, output, new ScriptNodeLicensesOnlyTracker(compiler), module);
 
     JsonFileSpec jsonFile = new JsonFileSpec(output.toString(), filename);
 

@@ -39,6 +39,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
+import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
@@ -1726,9 +1727,10 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 4;"});
 
     StringBuilder builder = new StringBuilder();
+    ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
     JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
     String filename = lastCommandLineRunner.getModuleOutputFileName(module);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, module);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, module);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
@@ -1739,9 +1741,10 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 4;"});
 
     StringBuilder builder = new StringBuilder();
+    ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
     JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
     String filename = lastCommandLineRunner.getModuleOutputFileName(module);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, module);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, module);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
   }
 

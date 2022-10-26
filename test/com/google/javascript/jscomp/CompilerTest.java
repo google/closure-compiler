@@ -39,6 +39,7 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
+import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.serialization.AstNode;
@@ -576,8 +577,8 @@ public final class CompilerTest {
   @Test
   public void testImportantCommentOutput() {
     test(
-        "/*! Your favorite license goes here */ var x;",
-        "/*\n Your favorite license goes here */\n",
+        "/*! Your favorite license goes here */ console.log(0);",
+        "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -602,8 +603,8 @@ public final class CompilerTest {
     test(
         "/** @fileoverview This is my favorite file! */\n"
             + "/*! Your favorite license goes here */\n"
-            + "var x;",
-        "/*\n Your favorite license goes here */\n",
+            + "console.log(0);",
+        "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -615,8 +616,8 @@ public final class CompilerTest {
         "/*! Another license */\n"
             + "/** @fileoverview This is my favorite file! */\n"
             + "/*! Your favorite license goes here */\n"
-            + "var x;",
-        "/*\n Another license  Your favorite license goes here */\n",
+            + "console.log(0);",
+        "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -627,8 +628,9 @@ public final class CompilerTest {
     test(
         "/*! Your favorite license goes here\n"
             + " * @fileoverview This is my favorite file! */\n"
-            + "var x;",
-        "/*\n Your favorite license goes here\n" + " @fileoverview This is my favorite file! */\n",
+            + "console.log(0);",
+        "/*\n Your favorite license goes here\n"
+            + " @fileoverview This is my favorite file! */\nconsole.log(0);",
         null);
   }
 
@@ -636,8 +638,8 @@ public final class CompilerTest {
   @Test
   public void testCombinedImportantCommentAuthorDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here\n" + " * @author Robert */\n" + "var x;",
-        "/*\n Your favorite license goes here\n @author Robert */\n",
+        "/*! Your favorite license goes here\n" + " * @author Robert */\n" + "console.log(0);",
+        "/*\n Your favorite license goes here\n @author Robert */\nconsole.log(0);",
         null);
   }
 
@@ -645,24 +647,28 @@ public final class CompilerTest {
   @Test
   public void testMultipleImportantCommentDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here */\n" + "/*! Another license */\n" + "var x;",
-        "/*\n Your favorite license goes here  Another license */\n",
+        "/*! Your favorite license goes here */\n" + "/*! Another license */\n" + "console.log(0);",
+        "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
         null);
   }
 
   @Test
   public void testImportantCommentLicenseDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here */\n" + "/** @license Another license */\n" + "var x;",
-        "/*\n Another license  Your favorite license goes here */\n",
+        "/*! Your favorite license goes here */\n"
+            + "/** @license Another license */\n"
+            + "console.log(0);",
+        "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
   @Test
   public void testLicenseImportantCommentDirectiveOutput() {
     test(
-        "/** @license Your favorite license goes here */\n" + "/*! Another license */\n" + "var x;",
-        "/*\n Your favorite license goes here  Another license */\n",
+        "/** @license Your favorite license goes here */\n"
+            + "/*! Another license */\n"
+            + "console.log(0);",
+        "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
         null);
   }
 
@@ -671,23 +677,32 @@ public final class CompilerTest {
   @Test
   public void testImportantCommentInTree() {
     test(
-        "var a = function() {\n +" + "/*! Your favorite license goes here */\n" + " 1;};\n",
-        "/*\n Your favorite license goes here */\n",
+        "var a = function() {\n +"
+            + "/*! Your favorite license goes here */\n"
+            + " 1;};\nconsole.log(0);",
+        "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
   @Test
   public void testMultipleUniqueImportantComments() {
-    String js1 = "/*! One license here */\n" + "var x;";
-    String js2 = "/*! Another license here */\n" + "var y;";
-    String expected = "/*\n One license here */\n" + "/*\n Another license here */\n";
+    String js1 = "/*! One license here */\n" + "console.log(0);";
+    String js2 = "/*! Another license here */\n" + "console.log(1);";
+    String expected =
+        "/*\n One license here */\nconsole.log(0);"
+            + "/*\n Another license here */\nconsole.log(1);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
-    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+    Result result =
+        compiler.compile(
+            ImmutableList.of(
+                SourceFile.fromCode("externs", new TestExternsBuilder().addConsole().build())),
+            inputs,
+            options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo(expected);
@@ -695,16 +710,21 @@ public final class CompilerTest {
 
   @Test
   public void testMultipleIdenticalImportantComments() {
-    String js1 = "/*! Identical license here */\n" + "var x;";
-    String js2 = "/*! Identical license here */\n" + "var y;";
-    String expected = "/*\n Identical license here */\n";
+    String js1 = "/*! Identical license here */\n" + "console.log(0);";
+    String js2 = "/*! Identical license here */\n" + "console.log(1);";
+    String expected = "/*\n Identical license here */\nconsole.log(0);console.log(1);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
-    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+    Result result =
+        compiler.compile(
+            ImmutableList.of(
+                SourceFile.fromCode("externs", new TestExternsBuilder().addConsole().build())),
+            inputs,
+            options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo(expected);
@@ -714,8 +734,8 @@ public final class CompilerTest {
   @Test
   public void testLicenseDirectiveOutput() {
     test(
-        "/** @license Your favorite license goes here */ var x;",
-        "/*\n Your favorite license goes here */\n",
+        "/** @license Your favorite license goes here */ console.log(0);",
+        "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -730,7 +750,15 @@ public final class CompilerTest {
                     + "/** \n"
                     + "  * @fileoverview This is my favorite file! */\n"
                     + "var x;")));
-    assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
+    assertThat(
+            new Compiler()
+                .compile(
+                    ImmutableList.of(
+                        SourceFile.fromCode(
+                            "externs", new TestExternsBuilder().addConsole().build())),
+                    input,
+                    new CompilerOptions())
+                .success)
         .isTrue();
   }
 
@@ -740,8 +768,8 @@ public final class CompilerTest {
     test(
         "/** @fileoverview This is my favorite file! */\n"
             + "/** @license Your favorite license goes here */\n"
-            + "var x;",
-        "/*\n Your favorite license goes here */\n",
+            + "console.log(0);",
+        "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -753,8 +781,8 @@ public final class CompilerTest {
         "/** @license Another license */\n"
             + "/** @fileoverview This is my favorite file! */\n"
             + "/** @license Your favorite license goes here */\n"
-            + "var x;",
-        "/*\n Your favorite license goes here  Another license */\n",
+            + "console.log(0);",
+        "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
         null);
   }
 
@@ -765,8 +793,9 @@ public final class CompilerTest {
     test(
         "/** @license Your favorite license goes here\n"
             + " * @fileoverview This is my favorite file! */\n"
-            + "var x;",
-        "/*\n Your favorite license goes here\n" + " @fileoverview This is my favorite file! */\n",
+            + "console.log(0);",
+        "/*\n Your favorite license goes here\n"
+            + " @fileoverview This is my favorite file! */\nconsole.log(0);",
         null);
   }
 
@@ -774,8 +803,10 @@ public final class CompilerTest {
   @Test
   public void testCombinedLicenseAuthorDirectiveOutput() {
     test(
-        "/** @license Your favorite license goes here\n" + " * @author Robert */\n" + "var x;",
-        "/*\n Your favorite license goes here\n @author Robert */\n",
+        "/** @license Your favorite license goes here\n"
+            + " * @author Robert */\n"
+            + "console.log(0);",
+        "/*\n Your favorite license goes here\n @author Robert */\nconsole.log(0);",
         null);
   }
 
@@ -786,8 +817,8 @@ public final class CompilerTest {
         lines(
             "/** @license Your favorite license goes here */",
             "/** @license Another license */",
-            "var x;"),
-        "/*\n Another license  Your favorite license goes here */\n",
+            "console.log(0);"),
+        "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -798,8 +829,8 @@ public final class CompilerTest {
         lines(
             "/** @license Your favorite license goes here ",
             "  * @license Another license */",
-            "var x;"),
-        "/*\n Your favorite license goes here \n @license Another license */\n",
+            "console.log(0);"),
+        "/*\n Your favorite license goes here \n @license Another license */\nconsole.log(0);",
         null);
   }
 
@@ -808,23 +839,33 @@ public final class CompilerTest {
   @Test
   public void testLicenseInTree() {
     test(
-        lines("var a = function() {", "+ /** @license Your favorite license goes here */", " 1;};"),
-        "/*\n Your favorite license goes here */\n",
+        lines(
+            "var a = function() {",
+            "/** @license Your favorite license goes here */",
+            " console.log(0);};a();"),
+        "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
   @Test
   public void testMultipleUniqueLicenses() {
-    String js1 = "/** @license One license here */\n" + "var x;";
-    String js2 = "/** @license Another license here */\n" + "var y;";
-    String expected = "/*\n One license here */\n" + "/*\n Another license here */\n";
+    String js1 = "/** @license One license here */\n" + "console.log(0);";
+    String js2 = "/** @license Another license here */\n" + "console.log(1);";
+    String expected =
+        "/*\n One license here */\nconsole.log(0);"
+            + "/*\n Another license here */\nconsole.log(1);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
-    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+    Result result =
+        compiler.compile(
+            ImmutableList.of(
+                SourceFile.fromCode("externs", new TestExternsBuilder().addConsole().build())),
+            inputs,
+            options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo(expected);
@@ -832,13 +873,14 @@ public final class CompilerTest {
 
   @Test
   public void testMultipleIdenticalLicenses() {
-    String js1 = "/** @license Identical license here */\n" + "var x;";
-    String js2 = "/** @license Identical license here */\n" + "var y;";
+    String js1 = "/** @license Identical license here */\n" + "console.log(0);";
+    String js2 = "/** @license Identical license here */\n" + "console.log(1);";
     String js3 =
         "/** @license Identical license here */\n"
-            + "var z;\n"
+            + "console.log(2);\n"
             + "/** @license Identical license here */";
-    String expected = "/*\n Identical license here */\n";
+    String expected =
+        "/*\n Identical license here */\nconsole.log(0);console.log(1);console.log(2);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -847,7 +889,12 @@ public final class CompilerTest {
             SourceFile.fromCode("testcode1", js1),
             SourceFile.fromCode("testcode2", js2),
             SourceFile.fromCode("bundled", js3));
-    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+    Result result =
+        compiler.compile(
+            ImmutableList.of(
+                SourceFile.fromCode("externs", new TestExternsBuilder().addConsole().build())),
+            inputs,
+            options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo(expected);
@@ -855,16 +902,21 @@ public final class CompilerTest {
 
   @Test
   public void testIdenticalLicenseAndImportantComment() {
-    String js1 = "/** @license Identical license here */\n" + "var x;";
-    String js2 = "/*! Identical license here */\n" + "var y;";
-    String expected = "/*\n Identical license here */\n";
+    String js1 = "/** @license Identical license here */\n" + "console.log(0);";
+    String js2 = "/*! Identical license here */\n" + "console.log(1);";
+    String expected = "/*\n Identical license here */\nconsole.log(0);console.log(1);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
-    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+    Result result =
+        compiler.compile(
+            ImmutableList.of(
+                SourceFile.fromCode("externs", new TestExternsBuilder().addConsole().build())),
+            inputs,
+            options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo(expected);
@@ -956,7 +1008,10 @@ public final class CompilerTest {
   static Result test(String js, String expected, @Nullable DiagnosticType error) {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
+    ImmutableList<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("testcode", js),
+            SourceFile.fromCode("stdexterns", new TestExternsBuilder().addConsole().build()));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     if (error == null) {
@@ -979,7 +1034,8 @@ public final class CompilerTest {
     String js = "if(a);";
     Node n = compiler.parseTestCode(js);
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
-    compiler.toSource(cb, 0, n);
+    ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(compiler);
+    compiler.toSource(cb, lt, 0, n);
     assertThat(cb.toString()).isEqualTo(js);
   }
 
@@ -2545,7 +2601,8 @@ public final class CompilerTest {
       byteArrayOutputStream.close();
 
       // NOTE: The AST is not expected to be used after serialization to the save file.
-      assertThat(compiler.toSource(m1)).isEqualTo("goog.provide(\"a.b\");");
+      assertThat(compiler.toSource(new ScriptNodeLicensesOnlyTracker(compiler), m1))
+          .isEqualTo("goog.provide(\"a.b\");");
 
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
@@ -2559,12 +2616,13 @@ public final class CompilerTest {
     assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(3);
 
     JSChunk weakModule = compiler.getModuleGraph().getChunkByName("$weak$");
+    ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(compiler);
     assertThat(weakModule).isNotNull();
 
-    assertThat(compiler.toSource(m1)).isEqualTo("var a={};a.b={};");
+    assertThat(compiler.toSource(lt, m1)).isEqualTo("var a={};a.b={};");
 
-    assertThat(compiler.toSource(m2)).isEqualTo("var d={};");
-    assertThat(compiler.toSource(weakModule)).isEmpty();
+    assertThat(compiler.toSource(lt, m2)).isEqualTo("var d={};");
+    assertThat(compiler.toSource(lt, weakModule)).isEmpty();
   }
 
   @Test

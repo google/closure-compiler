@@ -204,6 +204,7 @@ public class CodeGenerator {
     if (printComments) {
       printLeadingCommentsInOrder(node);
     }
+    cc.trackLicenses(node);
 
     Token type = node.getToken();
     String opstr = NodeUtil.opToStr(type);

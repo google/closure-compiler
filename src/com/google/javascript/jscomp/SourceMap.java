@@ -151,6 +151,27 @@ public final class SourceMap {
     this.generator = generator;
   }
 
+  /**
+   * Maintains a mapping from a given node to the position in the source code at which its generated
+   * form was placed. The positions are typically relative to the source file the node is located
+   * in, but might be adjusted if that source is being concatenated to other sources.
+   */
+  public static class Mapping {
+    Node node;
+    FilePosition start;
+    FilePosition end;
+
+    @Override
+    public String toString() {
+      // This toString() representation is used for debugging purposes only.
+      return "Mapping: start " + start + ", end " + end + ", node " + node;
+    }
+  }
+
+  public void addMapping(Mapping mapping) {
+    addMapping(mapping.node, mapping.start, mapping.end);
+  }
+
   public void addMapping(
       Node node, FilePosition outputStartPosition, FilePosition outputEndPosition) {
     // If the node does not have an associated source file or

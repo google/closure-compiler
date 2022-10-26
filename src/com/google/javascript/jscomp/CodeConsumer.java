@@ -55,8 +55,14 @@ public abstract class CodeConsumer {
   }
 
   /**
-   * Provides a means of interrupting the CodeGenerator. Derived classes should
-   * return false to stop further processing.
+   * Indicates to the CodeConsumer that this Node might carry licensing information, and allows the
+   * code consumer to manage licenses as it sees fit.
+   */
+  void trackLicenses(Node node) {}
+
+  /**
+   * Provides a means of interrupting the CodeGenerator. Derived classes should return false to stop
+   * further processing.
    */
   boolean continueProcessing() {
     return true;

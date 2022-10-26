@@ -3003,8 +3003,19 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testIssue701() {
     // Check ASCII art in license comments.
     String ascii =
-        "/**\n" + " * @preserve\n" + "   This\n" + "     is\n" + "       ASCII    ART\n" + "*/";
-    String result = "/*\n\n" + "   This\n" + "     is\n" + "       ASCII    ART\n" + "*/\n";
+        "/**\n"
+            + " * @preserve\n"
+            + "   This\n"
+            + "     is\n"
+            + "       ASCII    ART\n"
+            + "*/console.log(\"hello world\");";
+    String result =
+        "/*\n\n"
+            + "   This\n"
+            + "     is\n"
+            + "       ASCII    ART\n"
+            + "*/\n"
+            + "console.log(\"hello world\");\n";
     testSame(createCompilerOptions(), ascii);
     assertThat(lastCompiler.toSource()).isEqualTo(result);
   }

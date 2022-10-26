@@ -23,7 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.SourceMap.Format;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -3825,7 +3824,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         new CodePrinter.Builder(parse(input))
             .setCompilerOptions(codePrinterOptions)
             .setPrettyPrint(false)
-            .setSourceMap(Format.DEFAULT.getInstance())
             .build();
 
     // Then
