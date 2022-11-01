@@ -245,6 +245,7 @@ public final class CompilerTest {
     SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
     assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
     assertThat(sourceMap.getOriginalSourcesContent()).isNull();
+    assertThat(sourceMap.getOriginalNames()).isEmpty();
   }
 
   private static final String SOURCE_MAP_TEST_CONTENT =
@@ -276,6 +277,7 @@ public final class CompilerTest {
     SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
     assertThat(sourceMap.getOriginalSources()).containsExactly("../test/foo.ts");
     assertThat(sourceMap.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
+    assertThat(sourceMap.getOriginalNames()).isEmpty();
   }
 
   @Test
@@ -297,6 +299,8 @@ public final class CompilerTest {
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
       assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+      assertThat(sourceMap.getOriginalSourcesContent()).isNull();
+      assertThat(sourceMap.getOriginalNames()).isEmpty();
     }
   }
 
@@ -322,6 +326,8 @@ public final class CompilerTest {
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
       assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+      assertThat(sourceMap.getOriginalSourcesContent()).isNull();
+      assertThat(sourceMap.getOriginalNames()).isEmpty();
     }
   }
 
@@ -398,6 +404,7 @@ public final class CompilerTest {
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
     assertThat(consumer.getOriginalSources()).containsExactly("input.js", "input.ts");
     assertThat(consumer.getOriginalSourcesContent()).isNull();
+    assertThat(consumer.getOriginalNames()).containsExactly("testSymbolName");
   }
 
   @Test
@@ -422,6 +429,7 @@ public final class CompilerTest {
     consumer.parse(out.toString());
     assertThat(consumer.getOriginalSources()).containsExactly("temp/test/foo.ts");
     assertThat(consumer.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
+    assertThat(consumer.getOriginalNames()).containsExactly("X", "input", "y", "console", "log");
   }
 
   @Test

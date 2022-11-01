@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
 
@@ -178,6 +179,10 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
   public @Nullable Collection<String> getOriginalSourcesContent() {
     return sourcesContent == null ? null : Arrays.asList(sourcesContent);
+  }
+
+  public List<String> getOriginalNames() {
+    return Arrays.asList(names);
   }
 
   @Override
