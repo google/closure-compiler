@@ -490,15 +490,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(externExports);
     }
 
-    if (options.runtimeTypeCheck) {
-      // RuntimeTypeCheck depends on the AST being normalized. We immediately mark the AST
-      // unnormalized as subsequent passes may produce unnormalized code.
-      // TODO(b/197349249): always run normalize here.
-      checks.maybeAdd(normalize);
-      checks.maybeAdd(runtimeTypeCheck);
-      checks.maybeAdd(markUnnormalized);
-    }
-
     if (!options.checksOnly) {
       checks.maybeAdd(removeWeakSources);
     }
@@ -2068,16 +2059,6 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.CHECK_CONST_PARAMS)
           .setInternalFactory(ConstParamCheck::new)
-          .build();
-
-  /** Inserts run-time type assertions for debugging. */
-  private final PassFactory runtimeTypeCheck =
-      PassFactory.builder()
-          .setName(PassNames.RUNTIME_TYPE_CHECK)
-          .setInternalFactory(
-              (compiler) -> new RuntimeTypeCheck(compiler, options.runtimeTypeCheckLogFunction))
-          // TODO(bradfordcsmith): Drop support for this pass.
-          // It's never been updated to handle ES2016+ code, because it isn't worth the effort.
           .build();
 
   /** Generates unique ids. */

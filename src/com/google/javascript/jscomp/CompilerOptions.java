@@ -702,14 +702,6 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  /** Inserts run-time type assertions for debugging. */
-  boolean runtimeTypeCheck;
-
-  /**
-   * A JS function to be used for logging run-time type assertion failures. It will be passed the
-   * warning as a string and the faulty expression as arguments.
-   */
-  @Nullable String runtimeTypeCheckLogFunction;
 
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
@@ -1365,8 +1357,7 @@ public class CompilerOptions implements Serializable {
     nameGenerator = new DefaultNameGenerator();
 
     // Alterations
-    runtimeTypeCheck = false;
-    runtimeTypeCheckLogFunction = null;
+
     syntheticBlockStartMarker = null;
     syntheticBlockEndMarker = null;
     locale = null;
@@ -1655,20 +1646,6 @@ public class CompilerOptions implements Serializable {
 
   public boolean shouldColorizeErrorOutput() {
     return colorizeErrorOutput;
-  }
-
-  /**
-   * Enable run-time type checking, which adds JS type assertions for debugging.
-   *
-   * @param logFunction A JS function to be used for logging run-time type assertion failures.
-   */
-  public void enableRuntimeTypeCheck(String logFunction) {
-    this.runtimeTypeCheck = true;
-    this.runtimeTypeCheckLogFunction = logFunction;
-  }
-
-  public void disableRuntimeTypeCheck() {
-    this.runtimeTypeCheck = false;
   }
 
   public void setChecksOnly(boolean checksOnly) {
@@ -2294,13 +2271,6 @@ public class CompilerOptions implements Serializable {
     this.exportTestFunctions = exportTestFunctions;
   }
 
-  public void setRuntimeTypeCheck(boolean runtimeTypeCheck) {
-    this.runtimeTypeCheck = runtimeTypeCheck;
-  }
-
-  public void setRuntimeTypeCheckLogFunction(String runtimeTypeCheckLogFunction) {
-    this.runtimeTypeCheckLogFunction = runtimeTypeCheckLogFunction;
-  }
 
   public void setSyntheticBlockStartMarker(String syntheticBlockStartMarker) {
     this.syntheticBlockStartMarker = syntheticBlockStartMarker;
@@ -2947,8 +2917,6 @@ public class CompilerOptions implements Serializable {
         .add("reserveRawExports", reserveRawExports)
         .add("rewriteFunctionExpressions", rewriteFunctionExpressions)
         .add("rewritePolyfills", rewritePolyfills)
-        .add("runtimeTypeCheckLogFunction", runtimeTypeCheckLogFunction)
-        .add("runtimeTypeCheck", runtimeTypeCheck)
         .add("rewriteModulesBeforeTypechecking", rewriteModulesBeforeTypechecking)
         .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
         .add("smartNameRemoval", smartNameRemoval)
