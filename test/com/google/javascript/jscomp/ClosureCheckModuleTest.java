@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosureCheckModule.AWAIT_GOOG_REQUIRE_CALLS;
 import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 import static com.google.javascript.jscomp.ClosureCheckModule.DUPLICATE_NAME_SHORT_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_AT_MODULE_SCOPE;
@@ -24,6 +25,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_IN_NON
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_MISPLACED;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
+import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_REQUIRE_DYNAMIC_MISSING_AWAIT;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_ARGUMENT;
@@ -597,6 +599,45 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "",
             "/** @type {foo.A} */ var a;"),
         REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "async function test() {",
+            "",
+            "   var A = await goog.requireDynamic('foo.A');",
+            "",
+            "   /** @type {foo.A} */ var a; ",
+            "",
+            "}"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "async function test() {",
+            "",
+            "   var A = await goog.require('foo.A');",
+            "",
+            "   /** @type {foo.A} */ var a; ",
+            "",
+            "}"),
+        AWAIT_GOOG_REQUIRE_CALLS);
+
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "async function test() {",
+            "",
+            "   var A = goog.requireDynamic('foo.A');",
+            "",
+            "   /** @type {foo.A} */ var a; ",
+            "",
+            "}"),
+        GOOG_REQUIRE_DYNAMIC_MISSING_AWAIT);
 
     testSame(
         lines(

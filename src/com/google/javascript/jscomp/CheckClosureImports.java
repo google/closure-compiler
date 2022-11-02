@@ -114,6 +114,28 @@ final class CheckClosureImports implements CompilerPass {
       String callName() {
         return "goog.requireType";
       }
+    },
+
+    REQUIRE_DYNAMIC {
+      @Override
+      boolean allowDestructuring() {
+        return true;
+      }
+
+      @Override
+      boolean aliasMustBeConstant() {
+        return true;
+      }
+
+      @Override
+      boolean mustBeOrdered() {
+        return false;
+      }
+
+      @Override
+      String callName() {
+        return "goog.requireDynamic";
+      }
     };
 
     /**
@@ -188,6 +210,7 @@ final class CheckClosureImports implements CompilerPass {
   private static final Node GOOG_MODULE_GET = IR.getprop(IR.name("goog"), "module", "get");
   private static final Node GOOG_FORWARD_DECLARE = IR.getprop(IR.name("goog"), "forwardDeclare");
   private static final Node GOOG_REQUIRE_TYPE = IR.getprop(IR.name("goog"), "requireType");
+  private static final Node GOOG_REQUIRE_DYNAMIC = IR.getprop(IR.name("goog"), "requireDynamic");
 
   private final AbstractCompiler compiler;
   private final Checker checker;
@@ -257,6 +280,8 @@ final class CheckClosureImports implements CompilerPass {
         return ClosureImport.FORWARD_DECLARE;
       } else if (callNode.getFirstChild().matchesQualifiedName(GOOG_REQUIRE_TYPE)) {
         return ClosureImport.REQUIRE_TYPE;
+      } else if (callNode.getFirstChild().matchesQualifiedName(GOOG_REQUIRE_DYNAMIC)) {
+        return ClosureImport.REQUIRE_DYNAMIC;
       }
       return null;
     }
@@ -420,7 +445,8 @@ final class CheckClosureImports implements CompilerPass {
       boolean validAssignment = isModule || parent.isExprResult();
       boolean isAliased = NodeUtil.isNameDeclaration(parent.getParent());
 
-      if (!atTopLevelScope || !validAssignment) {
+      // goog.requireDynamic() can be in non-top scope.
+      if ((!atTopLevelScope || !validAssignment) && importType != ClosureImport.REQUIRE_DYNAMIC) {
         t.report(call, INVALID_CLOSURE_CALL_SCOPE_ERROR);
         return;
       }

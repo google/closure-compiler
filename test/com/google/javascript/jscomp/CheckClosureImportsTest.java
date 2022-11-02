@@ -163,6 +163,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     // Not an error for goog.forwardDeclare in scripts.
     testError("goog.require('dne');", MISSING_MODULE_OR_PROVIDE);
     testError("goog.requireType('dne');", MISSING_MODULE_OR_PROVIDE);
+    testError("goog.requireDynamic('dne');", MISSING_MODULE_OR_PROVIDE);
     testError("() => goog.module.get('dne');", MISSING_MODULE_OR_PROVIDE);
   }
 

@@ -1160,6 +1160,39 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogImport_await() {
+    test(
+        srcs(
+            "goog.module('a.b.c');",
+            lines("async function test() {", " var d = await goog.requireDynamic('a.b.c');", "}")),
+        expected(
+            "/** @const */ var module$exports$a$b$c = {}",
+            lines(
+                "async function test() {",
+                " var d = ((await goog.importHandler_('sG5M4c')),module$exports$a$b$c);",
+                "}")));
+  }
+
+  @Test
+  public void testGoogImport_await_destructuring() {
+    test(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines(
+                "async function test() {",
+                " var {Foo} = await goog.requireDynamic('a.b.c');",
+                "}")),
+        expected(
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}"),
+            lines(
+                "async function test() {",
+                " var {Foo} = ((await goog.importHandler_('sG5M4c')),module$exports$a$b$c);",
+                "}")));
+  }
+
+  @Test
   public void testGoogModuleGet1() {
     test(
         srcs("goog.module('a');", lines("function f() {", "  var x = goog.module.get('a');", "}")),

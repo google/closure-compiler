@@ -49,7 +49,7 @@ final class ModuleImportResolver {
 
   private static final String GOOG = "goog";
   private static final ImmutableSet<String> GOOG_DEPENDENCY_CALLS =
-      ImmutableSet.of("require", "requireType", "forwardDeclare");
+      ImmutableSet.of("require", "requireType", "forwardDeclare", "requireDynamic");
   private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
 
   ModuleImportResolver(
@@ -60,8 +60,8 @@ final class ModuleImportResolver {
   }
 
   /**
-   * Returns whether this is a CALL node for goog.require(Type), goog.forwardDeclare, or
-   * goog.module.get.
+   * Returns whether this is a CALL node for goog.require, goog.requireType, goog.requireDynamic,
+   * goog.forwardDeclare, or goog.module.get.
    *
    * <p>This method does not verify that the call is actually in a valid location. For example, this
    * method does not verify that goog.require calls are at the top-level. That is left to the

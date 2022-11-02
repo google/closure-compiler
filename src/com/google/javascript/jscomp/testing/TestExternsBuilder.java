@@ -50,6 +50,7 @@ public class TestExternsBuilder {
           "goog.require = function(ns) {};",
           "/** @return {?} */",
           "goog.requireType = function(ns) {};",
+          "goog.requireDynamic = function(ns) {};",
           "goog.loadModule = function(ns) {};",
           "/** @return {?} */",
           "goog.forwardDeclare = function(ns) {};",

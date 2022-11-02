@@ -87,6 +87,16 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
           "JSC_INVALID_DESTRUCTURING_REQUIRE",
           "Destructuring goog.require must be a simple object pattern.");
 
+  static final DiagnosticType AWAIT_GOOG_REQUIRE_CALLS =
+      DiagnosticType.error(
+          "JSC_AWAIT_GOOG_REQUIRE_CALLS",
+          "goog.require(Type) and goog.forwardDeclare can not be in an 'await' expression.");
+
+  static final DiagnosticType GOOG_REQUIRE_DYNAMIC_MISSING_AWAIT =
+      DiagnosticType.error(
+          "JSC_GOOG_REQUIRE_DYNAMIC_MISSING_AWAIT",
+          "goog.requireDynamic must be proceeded by 'await' in an assignment expression.");
+
   static final DiagnosticType LET_GOOG_REQUIRE =
       DiagnosticType.disabled(
           "JSC_LET_GOOG_REQUIRE",
@@ -167,6 +177,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
   private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
+  private static final QualifiedName GOOG_REQUIRE_DYNAMIC = QualifiedName.of("goog.requireDynamic");
   private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
   private static final QualifiedName GOOG_FORWARD_DECLARE = QualifiedName.of("goog.forwardDeclare");
   private static final QualifiedName GOOG_MODULE_DECLARE_LEGACY_NAMESPACE =
@@ -251,6 +262,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
           }
         } else if (GOOG_REQUIRE.matches(callee)
             || GOOG_REQUIRE_TYPE.matches(callee)
+            || GOOG_REQUIRE_DYNAMIC.matches(callee)
             || GOOG_FORWARD_DECLARE.matches(callee)) {
           checkRequireCall(t, n, parent);
         } else if (GOOG_MODULE_GET.matches(callee) && t.inModuleHoistScope()) {
@@ -456,7 +468,22 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
         return;
       case NAME:
       case DESTRUCTURING_LHS:
+        if (GOOG_REQUIRE_DYNAMIC.matches(callNode.getFirstChild())) {
+          t.report(parent, GOOG_REQUIRE_DYNAMIC_MISSING_AWAIT);
+          return;
+        }
         checkShortGoogRequireCall(t, callNode, parent.getParent());
+        return;
+      case AWAIT:
+        if (!GOOG_REQUIRE_DYNAMIC.matches(callNode.getFirstChild())) {
+          t.report(parent, AWAIT_GOOG_REQUIRE_CALLS);
+          return;
+        }
+        Token grandParentToken = parent.getParent().getToken();
+        if (grandParentToken.equals(Token.DESTRUCTURING_LHS)
+            || grandParentToken.equals(Token.NAME)) {
+          checkShortGoogRequireCall(t, callNode, parent.getGrandparent());
+        }
         return;
       default:
         break;

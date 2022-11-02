@@ -22,6 +22,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_DYNAMIC;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 
@@ -153,6 +154,7 @@ final class ClosureRewriteModule implements CompilerPass {
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
   private static final Node GOOG_REQUIRETYPE = IR.getprop(IR.name("goog"), "requireType");
+  private static final Node GOOG_REQUIREDYNAMIC = IR.getprop(IR.name("goog"), "requireDynamic");
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -370,6 +372,8 @@ final class ClosureRewriteModule implements CompilerPass {
             recordGoogRequire(t, n, /* mustBeOrdered= */ true);
           } else if (method.matchesQualifiedName(GOOG_REQUIRETYPE)) {
             recordGoogRequireType(t, n);
+          } else if (method.matchesQualifiedName(GOOG_REQUIREDYNAMIC)) {
+            recordGoogRequireDynamic(t, n);
           } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             recordGoogForwardDeclare(t, n);
           } else if (method.matchesQualifiedName(GOOG_MODULE_GET)) {
@@ -687,6 +691,7 @@ final class ClosureRewriteModule implements CompilerPass {
   private final Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
   private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
   private final ArrayList<Node> googModuleGetCalls = new ArrayList<>();
+  private final ArrayList<Node> googRequireDynamicCalls = new ArrayList<>();
 
   private final TypedScope globalTypedScope;
 
@@ -768,6 +773,7 @@ final class ClosureRewriteModule implements CompilerPass {
     NodeTraversal.traverseRoots(compiler, new ScriptUpdater(scriptDescriptions), externs, root);
     declareSyntheticExterns();
     this.googModuleGetCalls.forEach(this::updateGoogModuleGetCall);
+    this.googRequireDynamicCalls.forEach(this::updateGoogRequireDynamicCall);
   }
 
   /**
@@ -939,6 +945,22 @@ final class ClosureRewriteModule implements CompilerPass {
 
     // For purposes of import collection, goog.forwardDeclare is the same as goog.require.
     recordGoogRequire(t, call, mustBeOrdered);
+  }
+
+  private void recordGoogRequireDynamic(NodeTraversal t, Node call) {
+    Node namespaceIdNode = call.getLastChild();
+    if (!namespaceIdNode.isStringLit()) {
+      t.report(namespaceIdNode, INVALID_REQUIRE_DYNAMIC);
+      return;
+    }
+
+    String namespaceId = namespaceIdNode.getString();
+
+    if (!rewriteState.containsModule(namespaceId)) {
+      unrecognizedRequires.add(
+          new UnrecognizedRequire(call, namespaceId, /* mustBeOrdered= */ false));
+    }
+    this.googRequireDynamicCalls.add(call);
   }
 
   private void recordGoogModuleGet(NodeTraversal t, Node call) {
@@ -1192,6 +1214,42 @@ final class ClosureRewriteModule implements CompilerPass {
     // For import rewriting purposes and when taking into account previous moduleAlias versus
     // namespaceId import categorization, goog.forwardDeclare is much the same as goog.require.
     updateGoogRequire(t, call);
+  }
+
+  // Rewrite
+  //   "await goog.requireDynamic('a.b.c')" to
+  //   "((await goog.importHandler_('tJJovc')),module$exports$a$b$c)"
+  private void updateGoogRequireDynamicCall(Node call) {
+    Node namespaceIdNode = call.getSecondChild();
+    String namespaceId = namespaceIdNode.getString();
+    String exportedNamespace = rewriteState.getExportedNamespaceOrScript(namespaceId);
+    if (exportedNamespace == null) {
+      return;
+    }
+    compiler.reportChangeToEnclosingScope(call);
+    Node exportedNamespaceNameNode =
+        this.astFactory.createQName(this.globalTypedScope, exportedNamespace).srcrefTree(call);
+    exportedNamespaceNameNode.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
+    exportedNamespaceNameNode.setOriginalName(namespaceId);
+    Xid.HashFunction hashFunction = this.compiler.getOptions().xidHashFunction;
+    Xid xid = hashFunction == null ? new Xid() : new Xid(hashFunction);
+    Node argNode = this.astFactory.createString(xid.get(namespaceId));
+
+    Node calleeNode = this.astFactory.createQNameWithUnknownType("goog.importHandler_");
+    Node importHandlerNode = this.astFactory.createCallWithUnknownType(calleeNode, argNode);
+
+    if (call.getParent().isAwait()) {
+      Node awaitNode =
+          this.astFactory
+              .createAwait(type(exportedNamespaceNameNode), importHandlerNode)
+              .srcrefTreeIfMissing(call);
+      Node commaExpression =
+          this.astFactory
+              .createComma(awaitNode, exportedNamespaceNameNode)
+              .srcrefTreeIfMissing(call);
+      call.getParent().replaceWith(commaExpression);
+      compiler.reportChangeToEnclosingScope(commaExpression);
+    }
   }
 
   private void updateGoogModuleGetCall(Node call) {
