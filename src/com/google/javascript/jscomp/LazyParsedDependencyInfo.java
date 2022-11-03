@@ -44,6 +44,18 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
   }
 
   @Override
+  public boolean isEs6Module() {
+    // Instead of doing a full parse to look this up, just ask the delegate, which at least has this much info
+    return delegate.isEs6Module();
+  }
+
+  @Override
+  public boolean isGoogModule() {
+    // Instead of doing a full parse to look this up, just ask the delegate, which at least has this much info
+    return delegate.isGoogModule();
+  }
+
+  @Override
   public ImmutableMap<String, String> getLoadFlags() {
     if (loadFlags == null) {
       Map<String, String> loadFlagsBuilder = new TreeMap<>();

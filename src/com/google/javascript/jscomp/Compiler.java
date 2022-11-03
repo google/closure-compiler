@@ -2232,7 +2232,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Only process files that are detected as ES6 modules
       if (!options.getDependencyOptions().shouldPrune()
           || !JsFileRegexParser.isSupported()
-          || "es6".equals(input.getLoadFlags().get("module"))) {
+          || input.isEs6Module()) {
         filteredInputs.add(input);
       }
     }

@@ -140,6 +140,13 @@ public interface DependencyInfo {
   /** Whether the symbol is provided by a module */
   boolean isModule();
 
+  default boolean isEs6Module() {
+    return "es6".equals(getLoadFlags().get("module"));
+  }
+  default boolean isGoogModule() {
+    return "goog".equals(getLoadFlags().get("module"));
+  }
+
   /** Whether the file '@externs' annotation. */
   boolean getHasExternsAnnotation();
 
@@ -152,7 +159,7 @@ public interface DependencyInfo {
    */
   abstract class Base implements DependencyInfo {
     @Override public boolean isModule() {
-      return "goog".equals(getLoadFlags().get("module"));
+      return isGoogModule();
     }
 
     @Override

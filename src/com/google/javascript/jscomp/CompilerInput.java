@@ -572,6 +572,16 @@ public class CompilerInput extends DependencyInfo.Base {
   }
 
   @Override
+  public boolean isEs6Module() {
+    return getDependencyInfo().isEs6Module();
+  }
+
+  @Override
+  public boolean isGoogModule() {
+    return getDependencyInfo().isGoogModule();
+  }
+
+  @Override
   public ImmutableMap<String, String> getLoadFlags() {
     return getDependencyInfo().getLoadFlags();
   }
