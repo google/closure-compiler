@@ -5555,7 +5555,8 @@ google.maps.MapTypeRegistry = function() {};
  * Sets the registry to associate the passed string identifier with the passed
  * MapType.
  * @param {string} id Identifier of the MapType to add to the registry.
- * @param {google.maps.MapType|*} mapType MapType object to add to the registry.
+ * @param {!google.maps.MapType|*} mapType MapType object to add to the
+ *     registry.
  * @return {undefined}
  * @override
  */
@@ -5614,7 +5615,7 @@ google.maps.MapsEventListener = function() {};
 /**
  * Removes the listener. <p>Calling <code>listener.remove()</code> is equivalent
  * to <code>google.maps.event.removeListener(listener)</code>.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.MapsEventListener.prototype.remove = function() {};
 
@@ -8990,6 +8991,109 @@ google.maps.ZoomControlOptions = function() {};
 google.maps.ZoomControlOptions.prototype.position;
 
 /**
+ * Namespace for all public event functions
+ * @constructor
+ */
+google.maps.event = function() {};
+
+/**
+ * Adds the given listener function to the given event name for the given object
+ * instance. Returns an identifier for this listener that can be used with
+ * removeListener().
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.event.addListener = function(instance, eventName, handler) {};
+
+/**
+ * Like addListener, but the handler removes itself after handling the first
+ * event.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.event.addListenerOnce = function(instance, eventName, handler) {};
+
+/**
+ * Removes all listeners for all events for the given instance.
+ * @param {!Object} instance
+ * @return {void}
+ */
+google.maps.event.clearInstanceListeners = function(instance) {};
+
+/**
+ * Removes all listeners for the given event for the given instance.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @return {void}
+ */
+google.maps.event.clearListeners = function(instance, eventName) {};
+
+/**
+ * Returns if there are listeners for the given event on the given instance. Can
+ * be used to to save the computation of expensive event details.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @return {boolean}
+ */
+google.maps.event.hasListeners = function(instance, eventName) {};
+
+/**
+ * Removes the given listener, which should have been returned by addListener
+ * above. Equivalent to calling <code>listener.remove()</code>.
+ * @param {!google.maps.MapsEventListener} listener
+ * @return {void}
+ */
+google.maps.event.removeListener = function(listener) {};
+
+/**
+ * Triggers the given event. All arguments after eventName are passed as
+ * arguments to the listeners.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {...?} eventArgs
+ * @return {void}
+ */
+google.maps.event.trigger = function(instance, eventName, eventArgs) {};
+
+/**
+ * Cross browser event handler registration. This listener is removed by calling
+ * removeListener(handle) for the handle that is returned by this function.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {(undefined|boolean)=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
+ *     use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListener = function(
+    instance, eventName, handler, capture) {};
+
+/**
+ * Wrapper around addDomListener that removes the listener after the first
+ * event.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {(undefined|boolean)=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
+ *     deprecated, use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListenerOnce = function(
+    instance, eventName, handler, capture) {};
+
+/**
  * @const
  */
 google.maps.drawing = {};
@@ -9208,108 +9312,6 @@ google.maps.drawing.OverlayType = {
    */
   RECTANGLE: 'rectangle',
 };
-
-/**
- * @const
- */
-google.maps.event = {};
-
-/**
- * Adds the given listener function to the given event name for the given object
- * instance. Returns an identifier for this listener that can be used with
- * removeListener().
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.event.addListener = function(instance, eventName, handler) {};
-
-/**
- * Like addListener, but the handler removes itself after handling the first
- * event.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.event.addListenerOnce = function(instance, eventName, handler) {};
-
-/**
- * Removes all listeners for all events for the given instance.
- * @param {!Object} instance
- * @return {undefined}
- */
-google.maps.event.clearInstanceListeners = function(instance) {};
-
-/**
- * Removes all listeners for the given event for the given instance.
- * @param {!Object} instance
- * @param {string} eventName
- * @return {undefined}
- */
-google.maps.event.clearListeners = function(instance, eventName) {};
-
-/**
- * Returns if there are listeners for the given event on the given instance. Can
- * be used to to save the computation of expensive event details.
- * @param {!Object} instance
- * @param {string} eventName
- * @return {boolean}
- */
-google.maps.event.hasListeners = function(instance, eventName) {};
-
-/**
- * Removes the given listener, which should have been returned by addListener
- * above. Equivalent to calling <code>listener.remove()</code>.
- * @param {!google.maps.MapsEventListener} listener
- * @return {undefined}
- */
-google.maps.event.removeListener = function(listener) {};
-
-/**
- * Triggers the given event. All arguments after eventName are passed as
- * arguments to the listeners.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {...*} eventArgs
- * @return {undefined}
- */
-google.maps.event.trigger = function(instance, eventName, eventArgs) {};
-
-/**
- * Cross browser event handler registration. This listener is removed by calling
- * removeListener(handle) for the handle that is returned by this function.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
- *     use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListener = function(
-    instance, eventName, handler, capture) {};
-
-/**
- * Wrapper around addDomListener that removes the listener after the first
- * event.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
- *     deprecated, use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListenerOnce = function(
-    instance, eventName, handler, capture) {};
 
 /**
  * @const
