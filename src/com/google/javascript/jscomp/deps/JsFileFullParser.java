@@ -250,7 +250,7 @@ public class JsFileFullParser {
     if (module.usesClosure()) {
       info.provides.addAll(module.googNamespaces());
       info.requires.addAll(module.stronglyRequiredGoogNamespaces());
-      info.dynamicRequires.addAll(module.dynamicallyRequiredGoogNamespaces());
+      info.dynamicRequires.addAll(module.dynamicallyRequiredGoogNamespaces().elementSet());
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
     }

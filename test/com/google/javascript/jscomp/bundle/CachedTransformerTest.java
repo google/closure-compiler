@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.bundle;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +66,6 @@ public final class CachedTransformerTest {
 
     assertThat(cached.transform(FOO)).isSameInstanceAs(BAR);
     assertThat(cached.transform(FOO)).isSameInstanceAs(BAR);
-    verify(delegate, times(1)).apply(FOO);
+    verify(delegate).apply(FOO);
   }
 }

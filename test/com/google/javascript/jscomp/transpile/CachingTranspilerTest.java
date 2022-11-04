@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.transpile;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -77,7 +76,7 @@ public final class CachingTranspilerTest {
     when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
     assertThat(transpiler.transpile(FOO_JS, "bar")).isSameInstanceAs(RESULT1);
     assertThat(transpiler.transpile(FOO_JS, "bar")).isSameInstanceAs(RESULT1);
-    verify(delegate, times(1)).transpile(FOO_JS, "bar");
+    verify(delegate).transpile(FOO_JS, "bar");
   }
 
   @Test
@@ -101,6 +100,6 @@ public final class CachingTranspilerTest {
     when(delegate.runtime()).thenReturn("xyzzy");
     assertThat(transpiler.runtime()).isSameInstanceAs("xyzzy");
     assertThat(transpiler.runtime()).isSameInstanceAs("xyzzy");
-    verify(delegate, times(1)).runtime();
+    verify(delegate).runtime();
   }
 }
