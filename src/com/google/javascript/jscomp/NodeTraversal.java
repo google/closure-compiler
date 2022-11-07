@@ -940,7 +940,7 @@ public class NodeTraversal {
     }
 
     /**
-     * Intentiionally inlined call to traverseChildren.
+     * Intentionally inlined call to traverseChildren.
      *
      * <p>Calling traverseChildren here would double the maximum stack depth seen during
      * compilation. That can cause stack overflows on some very deep ASTs (e.g. b/188616350).
