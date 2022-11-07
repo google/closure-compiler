@@ -39,24 +39,12 @@ final class ModulesTestUtils {
     test.test(CompilerTestCase.srcs(inputs), CompilerTestCase.expected(expecteds));
   }
 
-  static void testSameModules(CompilerTestCase test, String input) {
-    testModules(test, "testcode.js", input, input);
-  }
-
   static void testModulesError(
       CompilerTestCase test, String input, DiagnosticType error) {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
     test.testError(CompilerTestCase.srcs(inputs), CompilerTestCase.error(error));
-  }
-
-  static void testModulesWarning(
-      CompilerTestCase test, String input, DiagnosticType warning) {
-    ImmutableList<SourceFile> inputs =
-        ImmutableList.of(
-            SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
-    test.testWarning(CompilerTestCase.srcs(inputs), CompilerTestCase.warning(warning));
   }
 
   private ModulesTestUtils() {}
