@@ -17,11 +17,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +30,12 @@ import org.junit.runners.JUnit4;
 public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   // Sample first script for use when testing non-first scripts
   private static final String SCRIPT1 = "var x;";
+
+  // The pass generates variable names consisting of filepath based uniqueIDs e.g. {@code
+  // $jscomp$templatelit$12345}. Use generic name `TAGGED_TEMPLATE_TMP_VAR` in test sources for
+  // readability.
+  private static final ImmutableMap<String, String> REPLACEMENT_PREFIXES =
+      ImmutableMap.of("TAGGED_TEMPLATE_TMP_VAR", "$jscomp$templatelit$");
 
   private static final String RUNTIME_STUBS =
       lines(
@@ -435,50 +439,20 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   /** Runs the tagged template literal test with externs. */
   private void taggedTemplateLiteralTestRunner(Externs externs, Sources inputs, Expected outputs) {
-    Expected exp = replaceVarNamesInExpectedFiles(inputs, outputs);
+    ImmutableList<SourceFile> modifiedOutputFiles =
+        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+            (FlatSources) inputs, outputs, REPLACEMENT_PREFIXES);
+    Expected exp = expected(modifiedOutputFiles);
     test(externs, inputs, exp);
   }
 
   /** Runs the tagged template literal test. */
   private void taggedTemplateLiteralTestRunner(Sources inputs, Expected outputs) {
-    Expected exp = replaceVarNamesInExpectedFiles(inputs, outputs);
+    ImmutableList<SourceFile> modifiedOutputFiles =
+        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+            (FlatSources) inputs, outputs, REPLACEMENT_PREFIXES);
+    Expected exp = expected(modifiedOutputFiles);
     test(inputs, exp);
-  }
-
-  /**
-   * Helper to replace the generic name `TAGGED_TEMPLATE_TMP_VAR` in each of the expected test
-   * output files with the calculated uniqueID hashString based on the corresponding test's input
-   * file.
-   *
-   * <p>The vars created during tagged template literal transpilation have have a filePath based
-   * uniqueID in them. This uniqueID is obfucated by using a generic name `TAGGED_TEMPLATE_TMP_VAR`
-   * in the test sources. This function replaces that generic name by the runtime-computed uniqueID
-   * before test execution.
-   */
-  private static Expected replaceVarNamesInExpectedFiles(Sources inputs, Expected outputs) {
-    int inLength = ((FlatSources) inputs).sources.size();
-    int outLength = outputs.expected.size();
-    Preconditions.checkArgument(inLength == outLength);
-
-    List<SourceFile> updatedOutputs = new ArrayList<>();
-    for (int i = 0; i < inLength; i++) {
-      SourceFile inputScript = ((FlatSources) inputs).sources.get(i);
-      SourceFile outputScript = outputs.expected.get(i);
-
-      int fileHashCode = inputScript.getName().hashCode();
-      String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
-      String expectedCode = "";
-      String expectedCodeFileName = outputScript.getName();
-      try {
-        expectedCode = outputScript.getCode();
-      } catch (IOException e) {
-        new RuntimeException("Read error: " + expectedCodeFileName);
-      }
-      expectedCode =
-          expectedCode.replace("TAGGED_TEMPLATE_TMP_VAR", "$jscomp$templatelit$" + fileHashString);
-      updatedOutputs.add(SourceFile.fromCode(expectedCodeFileName, expectedCode));
-    }
-    return expected(updatedOutputs);
   }
 
   @Test
