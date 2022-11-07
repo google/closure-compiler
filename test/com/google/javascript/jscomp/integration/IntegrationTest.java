@@ -3332,6 +3332,59 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testRenamePrefixNamespaceAndBlockScopedFunctions_esnextin_es5out() {
+    String code = "if (true) { function f() {} } if (true) { function f() {} }";
+
+    CompilerOptions options = createCompilerOptions();
+    options.setRenamePrefixNamespace("_");
+
+    // In the ES6 spec: function declarations are always block-scoped.
+    // In the ES5 spec, this changes between browsers & strict / sloppy mode.
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(options, code, "if (true) { _.f = function() {}; } if (true) { _.f$0 = function() {}; }");
+  }
+
+  @Test
+  public void testRenamePrefixNamespaceAndBlockScopedFunctions_esnextin_es2015out() {
+    String code = "if (true) { function f() {} } if (true) { function f() {} }";
+
+    CompilerOptions options = createCompilerOptions();
+    options.setRenamePrefixNamespace("_");
+
+    // In the ES6 spec: function declarations are always block-scoped.
+    // In the ES5 spec, this changes between browsers & strict / sloppy mode.
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    test(options, code, "if (true) { function f() {} } if (true) { function f() {} }");
+  }
+
+  @Test
+  public void testRenamePrefixNamespaceAndBlockScopedFunctions_es5in_es5out() {
+    String code = "if (true) { function f() {} } if (true) { function f() {} }";
+
+    CompilerOptions options = createCompilerOptions();
+    options.setRenamePrefixNamespace("_");
+
+    // In the ES6 spec: function declarations are always block-scoped.
+    // In the ES5 spec, this changes between browsers & strict / sloppy mode.
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    compile(options, code);
+
+    assertThat(lastCompiler.getErrors())
+        .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "This language feature is only supported for ECMASCRIPT_2015 mode or better:"
+                + " block-scoped function declaration.",
+            "This language feature is only supported for ECMASCRIPT_2015 mode or better:"
+                + " block-scoped function declaration.");
+  }
+
+  @Test
   public void testRenamePrefixNamespaceProtectSideEffects() {
     String code = "var x = null; try { +x.FOO; } catch (e) {}";
 

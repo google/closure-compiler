@@ -189,29 +189,36 @@ final class RescopeGlobalSymbols implements CompilerPass {
       extends AbstractShallowStatementCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isFunctionDeclaration(n)
-          // Since class declarations are block-scoped, only handle them if in the global scope.
-          || (NodeUtil.isClassDeclaration(n) && t.inGlobalScope())) {
-        Node nameNode = NodeUtil.getNameNode(n);
-        String name = nameNode.getString();
-        // Remove the class or function name. Anonymous classes have an EMPTY node, while anonymous
-        // functions have a NAME node with an empty string.
-        if (n.isClass()) {
-          nameNode.replaceWith(IR.empty().srcref(nameNode));
-        } else {
-          nameNode.setString("");
-          compiler.reportChangeToEnclosingScope(nameNode);
-        }
-        Node prev = n.getPrevious();
-        n.detach();
-        Node var = NodeUtil.newVarNode(name, n);
-        if (prev == null) {
-          parent.addChildToFront(var);
-        } else {
-          var.insertAfter(prev);
-        }
-        compiler.reportChangeToEnclosingScope(parent);
+      // Ignore block scopes within the global scope, as class and function declarations are
+      // block-scoped.
+      // Note that we should never find block-scoped function declarations if outputting ES5
+      // code. Es6RewriteBlockScopedFunctionDeclaration will have rewritten them.
+      if (!t.inGlobalScope()) {
+        return;
       }
+      // Ignore everything that's not a function or class declaration.
+      if (!NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isClassDeclaration(n)) {
+        return;
+      }
+      Node nameNode = NodeUtil.getNameNode(n);
+      String name = nameNode.getString();
+      // Remove the class or function name. Anonymous classes have an EMPTY node, while anonymous
+      // functions have a NAME node with an empty string.
+      if (n.isClass()) {
+        nameNode.replaceWith(IR.empty().srcref(nameNode));
+      } else {
+        nameNode.setString("");
+        compiler.reportChangeToEnclosingScope(nameNode);
+      }
+      Node prev = n.getPrevious();
+      n.detach();
+      Node var = NodeUtil.newVarNode(name, n);
+      if (prev == null) {
+        parent.addChildToFront(var);
+      } else {
+        var.insertAfter(prev);
+      }
+      compiler.reportChangeToEnclosingScope(parent);
     }
   }
 

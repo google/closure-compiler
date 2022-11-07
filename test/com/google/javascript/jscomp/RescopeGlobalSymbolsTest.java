@@ -720,7 +720,8 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   @Test
   public void testFunctionStatements() {
     test("function test(){}", "_.test=function (){}");
-    test("if(1)function test(){}", "if(1)_.test=function (){}");
+    // Ignore block-scoped function declarations.
+    testSame("if(1) function test(){}");
     test("async function test() {}", "_.test = async function() {}");
     test("function *test() {}", "_.test = function *() {}");
   }
@@ -729,7 +730,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   public void testFunctionStatements_allSameModule() {
     assumeCrossModuleNames = false;
     test("function f() {}", "var f = function() {}");
-    test("if (true) { function f() {} }", "if (true) { var f = function() {}; }");
+    testSame("if (true) { function f() {} }");
   }
 
   @Test
