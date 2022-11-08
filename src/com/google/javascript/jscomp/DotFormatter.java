@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.util.Comparator.comparing;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -140,21 +142,16 @@ public final class DotFormatter {
       builder.append(";\n");
     }
 
+    // Sort the list of edges so the output is deterministic
     List<GraphvizEdge> edges = graph.getGraphvizEdges();
+    edges.sort(comparing(GraphvizEdge::getNode1Id).thenComparing(GraphvizEdge::getNode2Id));
 
-    String[] edgeNames = new String[edges.size()];
-
-    for (int i = 0; i < edgeNames.length; i++) {
-      GraphvizEdge edge = edges.get(i);
-      edgeNames[i] = edge.getNode1Id() + edgeSymbol + edge.getNode2Id();
-    }
-
-    // Again, we sort the edges as well.
-    Arrays.sort(edgeNames);
-
-    for (String edgeName : edgeNames) {
+    for (GraphvizEdge edge : edges) {
       builder.append(INDENT);
-      builder.append(edgeName);
+      builder.append(edge.getNode1Id());
+      builder.append(edgeSymbol);
+      builder.append(edge.getNode2Id());
+      builder.append(" [label=\"" + edge.getLabel() + "\" color=\"" + edge.getColor() + "\"]");
       builder.append(";\n");
     }
 
