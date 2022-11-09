@@ -1541,11 +1541,15 @@ Array.of = function(var_args) {};
 Array.from = function(arrayLike, opt_mapFn, opt_this) {};
 
 
-/** @return {!IteratorIterable<number>} */
+/**
+ * @override
+ * @return {!IteratorIterable<number>}
+ */
 Array.prototype.keys;
 
 
 /**
+ * @override
  * @return {!IteratorIterable<T>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values
@@ -1554,12 +1558,14 @@ Array.prototype.values;
 
 
 /**
+ * @override
  * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
  */
 Array.prototype.entries;
 
 
 /**
+ * @override
  * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
@@ -1571,6 +1577,7 @@ Array.prototype.find = function(predicateFn, opt_this) {};
 
 
 /**
+ * @override
  * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
  * @param {S=} opt_this
  * @return {number}
@@ -1607,6 +1614,7 @@ Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
  * NOTE: this is an ES2022 extern.
+ * @override
  * @param {number} index
  * @return {T}
  * @this {!IArrayLike<T>|string}
@@ -1618,6 +1626,7 @@ Array.prototype.at = function(index) {};
 
 /**
  * NOTE: this is an ES2016 (ES7) extern.
+ * @override
  * @param {T} searchElement
  * @param {number=} opt_fromIndex
  * @return {boolean}
@@ -1645,6 +1654,7 @@ Array.prototype.includes = function(searchElement, opt_fromIndex) {};
  * The polyfill for this method provided by closure-compiler does behave as
  * defined in the specification, though.
  *
+ * @override
  * @param {function(this: THIS, T, number, !IArrayLike<T>): !Array<S>}
  *     callback
  * @param {THIS=} thisArg
@@ -1656,6 +1666,7 @@ Array.prototype.includes = function(searchElement, opt_fromIndex) {};
 Array.prototype.flatMap = function(callback, thisArg) {};
 
 /**
+ * @override
  * @param {number=} depth
  * @return {!Array<S>}
  * @this {!IArrayLike<T>}
@@ -1663,6 +1674,105 @@ Array.prototype.flatMap = function(callback, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
  */
 Array.prototype.flat = function(depth) {};
+
+/** @return {!IteratorIterable<number>} */
+ReadonlyArray.prototype.keys;
+
+
+/**
+ * @return {!IteratorIterable<T>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values
+ */
+ReadonlyArray.prototype.values;
+
+
+/**
+ * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
+ */
+ReadonlyArray.prototype.entries;
+
+
+/**
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {T|undefined}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.find
+ */
+ReadonlyArray.prototype.find = function(predicateFn, opt_this) {};
+
+
+/**
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
+ */
+ReadonlyArray.prototype.findIndex = function(predicateFn, opt_this) {};
+
+
+/**
+ * NOTE: this is an ES2022 extern.
+ * @param {number} index
+ * @return {T}
+ * @this {!IArrayLike<T>|string}
+ * @template T
+ * @nosideeffects
+ * @see https://tc39.github.io/ecma262/#sec-array.prototype.at
+ */
+ReadonlyArray.prototype.at = function(index) {};
+
+/**
+ * NOTE: this is an ES2016 (ES7) extern.
+ * @param {T} searchElement
+ * @param {number=} opt_fromIndex
+ * @return {boolean}
+ * @this {!IArrayLike<T>|string}
+ * @template T
+ * @nosideeffects
+ * @see https://tc39.github.io/ecma262/#sec-array.prototype.includes
+ */
+ReadonlyArray.prototype.includes = function(searchElement, opt_fromIndex) {};
+
+/**
+ * Generates an array by passing every element of this array to a callback that
+ * returns an array of zero or more elements to be added to the result.
+ *
+ * NOTE: The specified behavior of the method is that the callback can return
+ * either an Array, which will be flattened into the result, or a non-array,
+ * which will simply be included.
+ *
+ * However, while defining that in the type information here is possible it's
+ * very hard to understand both for humans and automated tools other than
+ * closure-compiler that process these files. Also, we think it's best to
+ * encourage writing callbacks that just always return an Array for the sake
+ * of readability.
+ *
+ * The polyfill for this method provided by closure-compiler does behave as
+ * defined in the specification, though.
+ *
+ * @param {function(this: THIS, T, number, !IArrayLike<T>): !Array<S>}
+ *     callback
+ * @param {THIS=} thisArg
+ * @return {!Array<S>}
+ * @this {!IArrayLike<T>}
+ * @template T, THIS, S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap
+ */
+ReadonlyArray.prototype.flatMap = function(callback, thisArg) {};
+
+/**
+ * @param {number=} depth
+ * @return {!Array<S>}
+ * @this {!IArrayLike<T>}
+ * @template T, S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
+ */
+ReadonlyArray.prototype.flat = function(depth) {};
 
 /**
  * @param {!Iterable<*>} errors
