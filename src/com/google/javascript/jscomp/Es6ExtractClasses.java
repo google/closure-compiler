@@ -33,10 +33,22 @@ import java.util.Deque;
 /**
  * Extracts ES6 classes defined in function calls to local constants.
  *
- * <p>Example: Before: <code>foo(class { constructor() {} });</code> After: <code>
+ * <p>Example: Before:
+ *
+ * <pre>
+ * <code>
+ *   foo(class { constructor() {} });
+ * </code>
+ * </pre>
+ *
+ * After:
+ *
+ * <pre>
+ * <code>
  *   const $jscomp$classdecl$var0 = class { constructor() {} };
  *   foo($jscomp$classdecl$var0);
  * </code>
+ * </pre>
  *
  * <p>This must be done before {@link Es6RewriteClass}, because that pass only handles classes that
  * are declarations or simple assignments.

@@ -258,6 +258,20 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void testCannotExtract() {
     testError("let x; while(x = class A{}) {use(x);}", CANNOT_CONVERT);
+    // We can not extract class when it's assigned as default value to a parameter
+    testError("function foo(x = class A {}) {} use(foo());", CANNOT_CONVERT);
+    // But we can extract when the class is defined somewhere inside the default value to the
+    // parameter
+    test(
+        "function foo(x = () => {return class A {}; }) {} use(foo());",
+        lines(
+            "function foo(", //
+            "  x = () => {",
+            "    const testcode$classdecl$var0 = class {}; ",
+            "    return testcode$classdecl$var0;",
+            "  })",
+            " {}",
+            "use(foo());"));
 
     testError(
         lines(

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypedScopeCreator.DYNAMIC_EXTENDS_WITHOUT_JSDOC;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -539,6 +540,14 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  JSCompiler_temp$jscomp$0 = foo = testcode$classdecl$var0;",
             "}",
             "var C = new JSCompiler_temp$jscomp$0;"));
+  }
+
+  @Test
+  public void testClassExpressionInDefaultParamValue_cannotConvert() {
+    // {@code Es6RewriteClass} pass can not transpile classes assigned to param as default value
+    // unless the default param is rewritten with {@code RewriteDefaultParametersConverterPass}
+    // first.
+    testError("function bar(foo = class { }) {};", CANNOT_CONVERT);
   }
 
   @Test
