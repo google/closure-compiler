@@ -816,6 +816,9 @@ public class CompilerOptions implements Serializable {
   /** Hash function to use for xid generation. */
   Xid.HashFunction xidHashFunction;
 
+  /** Hash function to use for generating chunk ID. */
+  Xid.HashFunction chunkIdHashFunction;
+
   /**
    * A previous map of ids (serialized to a string by a previous compile). This will be used as a
    * hint during the ReplaceIdGenerators pass, which will attempt to reuse the same ids.
@@ -1544,6 +1547,11 @@ public class CompilerOptions implements Serializable {
   /** Sets the hash function to use for Xid */
   public void setXidHashFunction(Xid.HashFunction xidHashFunction) {
     this.xidHashFunction = xidHashFunction;
+  }
+
+  /** Sets the hash function to use for chunk ID generation */
+  public void setChunkIdHashFunction(Xid.HashFunction chunkIdHashFunction) {
+    this.chunkIdHashFunction = chunkIdHashFunction;
   }
 
   private Reach inlineFunctionsLevel;

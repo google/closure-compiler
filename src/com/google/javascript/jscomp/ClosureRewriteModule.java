@@ -1231,7 +1231,7 @@ final class ClosureRewriteModule implements CompilerPass {
         this.astFactory.createQName(this.globalTypedScope, exportedNamespace).srcrefTree(call);
     exportedNamespaceNameNode.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
     exportedNamespaceNameNode.setOriginalName(namespaceId);
-    Xid.HashFunction hashFunction = this.compiler.getOptions().xidHashFunction;
+    Xid.HashFunction hashFunction = this.compiler.getOptions().chunkIdHashFunction;
     Xid xid = hashFunction == null ? new Xid() : new Xid(hashFunction);
     Node argNode = this.astFactory.createString(xid.get(namespaceId));
 
