@@ -151,7 +151,12 @@ public final class DotFormatter {
       builder.append(edge.getNode1Id());
       builder.append(edgeSymbol);
       builder.append(edge.getNode2Id());
-      builder.append(" [label=\"" + edge.getLabel() + "\" color=\"" + edge.getColor() + "\"]");
+      builder
+          .append(" [label=\"")
+          .append(edge.getLabel())
+          .append("\" color=\"")
+          .append(edge.getColor())
+          .append("\"]");
       builder.append(";\n");
     }
 
