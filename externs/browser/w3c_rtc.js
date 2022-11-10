@@ -2470,6 +2470,12 @@ RTCOutboundRtpStreamStats.prototype.keyFramesEncoded;
 RTCOutboundRtpStreamStats.prototype.qpSum;
 
 /**
+ * https://w3c.github.io/webrtc-provisional-stats/#dom-rtcoutboundrtpstreamstats-contenttype
+ * @const {string|undefined}
+ */
+RTCOutboundRtpStreamStats.prototype.contentType;
+
+/**
  * Firefox specific value.
  * @const {number|undefined}
  */
