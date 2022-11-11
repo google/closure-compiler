@@ -65,6 +65,8 @@ public class CompilerInput extends DependencyInfo.Base {
   private final List<String> extraProvides = new ArrayList<>();
   private final List<Require> orderedRequires = new ArrayList<>();
   private final List<String> dynamicRequires = new ArrayList<>();
+  // Modules imported by goog.requireDynamic()
+  private final List<String> requireDynamicImports = new ArrayList<>();
   private boolean hasFullParseDependencyInfo = false;
   private ModuleType jsModuleType = ModuleType.NONE;
 
@@ -268,6 +270,26 @@ public class CompilerInput extends DependencyInfo.Base {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Returns the types that this input dynamically imports by goog.requireDynamic() in the order
+   * seen in the file. The returned types were loaded dynamically so while they are part of the
+   * dependency graph, they do not need sorted before this input.
+   */
+  public ImmutableList<String> getRequireDynamicImports() {
+    return ImmutableList.copyOf(requireDynamicImports);
+  }
+
+  /**
+   * Registers a type that this input depends on in the order seen in the file. The type was loaded
+   * by goog.requireDynamic() so while it is part of the dependency graph, it does not need sorted
+   * before this input.
+   */
+  public void addRequireDynamicImports(String require) {
+    if (!requireDynamicImports.contains(require)) {
+      requireDynamicImports.add(require);
+    }
   }
 
   public void setHasFullParseDependencyInfo(boolean hasFullParseDependencyInfo) {

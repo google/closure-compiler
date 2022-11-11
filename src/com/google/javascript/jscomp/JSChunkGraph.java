@@ -546,6 +546,15 @@ public final class JSChunkGraph implements Serializable {
       }
     }
 
+    // For goog.requireDynamic() imported files.
+    for (CompilerInput input : originalInputs) {
+      for (String require : input.getRequireDynamicImports()) {
+        if (inputsByProvide.containsKey(require)) {
+          entryPointInputs.addAll(inputsByProvide.get(require));
+        }
+      }
+    }
+
     // The order of inputs, sorted independently of chunks.
     ImmutableList<CompilerInput> absoluteOrder =
         sorter.getStrongDependenciesOf(originalInputs, dependencyOptions.shouldSort());

@@ -388,6 +388,27 @@ public final class JSChunkGraphTest {
   }
 
   @Test
+  public void testManageDependenciesStrictForGoogRequireDynamic() throws Exception {
+    JSChunk chunkA = new JSChunk("chunk");
+    graph = new JSChunkGraph(new JSChunk[] {chunkA});
+    List<CompilerInput> inputs = new ArrayList<>();
+    CompilerInput compilerInputA1 = new CompilerInput(code("a1", provides("a1"), requires()));
+    compilerInputA1.addRequireDynamicImports("a2");
+    chunkA.add(compilerInputA1);
+    chunkA.add(code("a2", provides("a2"), requires()));
+    inputs.addAll(chunkA.getInputs());
+    for (CompilerInput input : inputs) {
+      input.setCompiler(compiler);
+    }
+    DependencyOptions depOptions =
+        DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
+    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+
+    assertInputs(chunkA, "a1", "a2");
+    assertThat(sourceNames(results)).containsExactly("a1", "a2");
+  }
+
+  @Test
   public void testManageDependenciesStrictWithEntryPointWithDuplicates() throws Exception {
     final JSChunk a = new JSChunk("a");
     JSChunkGraph graph = new JSChunkGraph(new JSChunk[] {a});

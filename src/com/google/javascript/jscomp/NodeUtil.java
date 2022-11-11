@@ -93,6 +93,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
 
+  private static final QualifiedName GOOG_REQUIRE_DYNAMIC = QualifiedName.of("goog.requireDynamic");
+
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
@@ -5497,6 +5499,14 @@ public final class NodeUtil {
     if (call.isCall()) {
       Node target = call.getFirstChild();
       return GOOG_REQUIRE_TYPE.matches(target);
+    }
+    return false;
+  }
+
+  static boolean isGoogRequireDynamicCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_REQUIRE_DYNAMIC.matches(target);
     }
     return false;
   }

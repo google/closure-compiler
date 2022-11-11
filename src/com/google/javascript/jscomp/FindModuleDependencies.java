@@ -37,6 +37,7 @@ import org.jspecify.nullness.Nullable;
  *   <li>goog.require calls
  *   <li>ES6 import statements
  *   <li>CommonJS require statements
+ *   <li>goog.requireDynamic calls
  * </ul>
  *
  * <p>The order of dependency references is preserved so that a deterministic depth-first ordering
@@ -154,6 +155,11 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
           return;
         }
       }
+    }
+
+    // goog.requireDynamic()
+    if (NodeUtil.isGoogRequireDynamicCall(n)) {
+      t.getInput().addRequireDynamicImports(n.getLastChild().getString());
     }
 
     if (supportsEs6Modules && n.isExport()) {
