@@ -25551,11 +25551,12 @@ typed_asts {
             type: 316
           }
           jsdoc {
+            kind: JSDOC_THIS
             kind: JSDOC_THROWS
           }
           type: 316
         }
-        relative_line: 9
+        relative_line: 10
         relative_column: -20
       }
       child {
@@ -25616,11 +25617,12 @@ typed_asts {
             type: 317
           }
           jsdoc {
+            kind: JSDOC_THIS
             kind: JSDOC_THROWS
           }
           type: 317
         }
-        relative_line: 10
+        relative_line: 11
         relative_column: -58
       }
       child {
@@ -39196,7 +39198,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 8
         }
-        relative_line: -5698
+        relative_line: -5700
         relative_column: -45
       }
       child {
@@ -40542,7 +40544,7 @@ typed_asts {
             type: 606
           }
           string_value_pointer: 359
-          relative_line: 3004
+          relative_line: 3006
           relative_column: 5
           original_name_pointer: 359
           boolean_properties: 536870912
@@ -40572,7 +40574,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 320
           }
-          relative_line: 3044
+          relative_line: 3046
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -40581,7 +40583,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 320
         }
-        relative_line: -3004
+        relative_line: -3006
         relative_column: -5
       }
       child {
@@ -40605,7 +40607,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 350
           }
-          relative_line: 3275
+          relative_line: 3277
           relative_column: 5
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40614,7 +40616,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 350
         }
-        relative_line: -3044
+        relative_line: -3046
         relative_column: -10
       }
       child {
@@ -40638,7 +40640,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 365
           }
-          relative_line: 3382
+          relative_line: 3384
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -40647,7 +40649,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 365
         }
-        relative_line: -3275
+        relative_line: -3277
         relative_column: -5
       }
       child {
@@ -40671,7 +40673,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 368
           }
-          relative_line: 3390
+          relative_line: 3392
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40680,7 +40682,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 368
         }
-        relative_line: -3382
+        relative_line: -3384
         relative_column: -10
       }
       child {
@@ -40704,7 +40706,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 373
           }
-          relative_line: 3415
+          relative_line: 3417
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40713,7 +40715,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 373
         }
-        relative_line: -3390
+        relative_line: -3392
         relative_column: -10
       }
       child {
@@ -40737,7 +40739,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 376
           }
-          relative_line: 3433
+          relative_line: 3435
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40746,7 +40748,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 376
         }
-        relative_line: -3415
+        relative_line: -3417
         relative_column: -10
       }
       child {
@@ -40759,13 +40761,13 @@ typed_asts {
             type: 606
           }
           string_value_pointer: 336
-          relative_line: 3450
+          relative_line: 3452
           relative_column: 5
           original_name_pointer: 336
           boolean_properties: 536870912
           type: 0
         }
-        relative_line: -3433
+        relative_line: -3435
         relative_column: -10
       }
       child {
@@ -40789,7 +40791,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 380
           }
-          relative_line: 3459
+          relative_line: 3461
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40798,7 +40800,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 380
         }
-        relative_line: -3450
+        relative_line: -3452
         relative_column: -5
       }
       child {
@@ -40822,7 +40824,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 410
           }
-          relative_line: 3733
+          relative_line: 3735
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40831,7 +40833,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 410
         }
-        relative_line: -3459
+        relative_line: -3461
         relative_column: -10
       }
       child {
@@ -40855,7 +40857,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 417
           }
-          relative_line: 3769
+          relative_line: 3771
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40864,7 +40866,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 417
         }
-        relative_line: -3733
+        relative_line: -3735
         relative_column: -10
       }
       child {
@@ -40888,7 +40890,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 422
           }
-          relative_line: 3805
+          relative_line: 3807
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40897,7 +40899,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 422
         }
-        relative_line: -3769
+        relative_line: -3771
         relative_column: -10
       }
       child {
@@ -40910,13 +40912,13 @@ typed_asts {
             type: 606
           }
           string_value_pointer: 337
-          relative_line: 3834
+          relative_line: 3836
           relative_column: 5
           original_name_pointer: 337
           boolean_properties: 536870912
           type: 0
         }
-        relative_line: -3805
+        relative_line: -3807
         relative_column: -10
       }
       child {
@@ -40940,7 +40942,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 427
           }
-          relative_line: 3850
+          relative_line: 3852
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40949,7 +40951,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 427
         }
-        relative_line: -3834
+        relative_line: -3836
         relative_column: -5
       }
       child {
@@ -40973,7 +40975,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 432
           }
-          relative_line: 3886
+          relative_line: 3888
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -40982,7 +40984,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 432
         }
-        relative_line: -3850
+        relative_line: -3852
         relative_column: -10
       }
       child {
@@ -41006,7 +41008,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 437
           }
-          relative_line: 3922
+          relative_line: 3924
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41015,7 +41017,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 437
         }
-        relative_line: -3886
+        relative_line: -3888
         relative_column: -10
       }
       child {
@@ -41039,7 +41041,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 442
           }
-          relative_line: 3958
+          relative_line: 3960
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41048,7 +41050,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 442
         }
-        relative_line: -3922
+        relative_line: -3924
         relative_column: -10
       }
       child {
@@ -41072,7 +41074,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 447
           }
-          relative_line: 3994
+          relative_line: 3996
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41081,7 +41083,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 447
         }
-        relative_line: -3958
+        relative_line: -3960
         relative_column: -10
       }
       child {
@@ -41105,7 +41107,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 452
           }
-          relative_line: 4030
+          relative_line: 4032
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41114,7 +41116,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 452
         }
-        relative_line: -3994
+        relative_line: -3996
         relative_column: -10
       }
       child {
@@ -41138,7 +41140,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 457
           }
-          relative_line: 4066
+          relative_line: 4068
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41147,7 +41149,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 457
         }
-        relative_line: -4030
+        relative_line: -4032
         relative_column: -10
       }
       child {
@@ -41171,7 +41173,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 462
           }
-          relative_line: 4102
+          relative_line: 4104
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41180,7 +41182,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 462
         }
-        relative_line: -4066
+        relative_line: -4068
         relative_column: -10
       }
       child {
@@ -41204,7 +41206,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 467
           }
-          relative_line: 4133
+          relative_line: 4135
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41213,7 +41215,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 467
         }
-        relative_line: -4102
+        relative_line: -4104
         relative_column: -10
       }
       child {
@@ -41226,13 +41228,13 @@ typed_asts {
             type: 606
           }
           string_value_pointer: 381
-          relative_line: 4308
+          relative_line: 4310
           relative_column: 5
           original_name_pointer: 381
           boolean_properties: 536870912
           type: 0
         }
-        relative_line: -4133
+        relative_line: -4135
         relative_column: -10
       }
       child {
@@ -41256,7 +41258,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 491
           }
-          relative_line: 4320
+          relative_line: 4322
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -41265,7 +41267,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 491
         }
-        relative_line: -4308
+        relative_line: -4310
         relative_column: -5
       }
       child {
@@ -41289,7 +41291,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 495
           }
-          relative_line: 4354
+          relative_line: 4356
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41298,7 +41300,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 495
         }
-        relative_line: -4320
+        relative_line: -4322
         relative_column: -10
       }
       child {
@@ -41322,7 +41324,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 532
           }
-          relative_line: 4788
+          relative_line: 4790
           relative_column: 5
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41331,7 +41333,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 532
         }
-        relative_line: -4354
+        relative_line: -4356
         relative_column: -10
       }
       child {
@@ -41355,7 +41357,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 549
           }
-          relative_line: 4952
+          relative_line: 4954
           relative_column: 5
           jsdoc {
             kind: JSDOC_CONST
@@ -41364,7 +41366,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 549
         }
-        relative_line: -4788
+        relative_line: -4790
         relative_column: -5
       }
       child {
@@ -41388,7 +41390,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 565
           }
-          relative_line: 5074
+          relative_line: 5076
           relative_column: 5
           jsdoc {
             kind: JSDOC_CONST
@@ -41397,7 +41399,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 565
         }
-        relative_line: -4952
+        relative_line: -4954
         relative_column: -5
       }
       child {
@@ -41421,7 +41423,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 581
           }
-          relative_line: 5197
+          relative_line: 5199
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -41430,7 +41432,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 581
         }
-        relative_line: -5074
+        relative_line: -5076
         relative_column: -5
       }
       child {
@@ -41454,7 +41456,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 585
           }
-          relative_line: 5210
+          relative_line: 5212
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -41463,7 +41465,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 585
         }
-        relative_line: -5197
+        relative_line: -5199
         relative_column: -10
       }
       child {
@@ -41487,7 +41489,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 588
           }
-          relative_line: 5226
+          relative_line: 5228
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -41496,7 +41498,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 588
         }
-        relative_line: -5210
+        relative_line: -5212
         relative_column: -10
       }
       child {
@@ -41520,7 +41522,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 591
           }
-          relative_line: 5236
+          relative_line: 5238
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -41529,7 +41531,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 591
         }
-        relative_line: -5226
+        relative_line: -5228
         relative_column: -10
       }
       child {
@@ -41553,7 +41555,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 597
           }
-          relative_line: 5265
+          relative_line: 5267
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41562,7 +41564,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 597
         }
-        relative_line: -5236
+        relative_line: -5238
         relative_column: -10
       }
       child {
@@ -41586,7 +41588,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 601
           }
-          relative_line: 5281
+          relative_line: 5283
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41595,7 +41597,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 601
         }
-        relative_line: -5265
+        relative_line: -5267
         relative_column: -10
       }
       child {
@@ -41608,13 +41610,13 @@ typed_asts {
             type: 606
           }
           string_value_pointer: 401
-          relative_line: 5301
+          relative_line: 5303
           relative_column: 5
           original_name_pointer: 401
           boolean_properties: 536870912
           type: 606
         }
-        relative_line: -5281
+        relative_line: -5283
         relative_column: -10
       }
       child {
@@ -41638,7 +41640,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 608
           }
-          relative_line: 5334
+          relative_line: 5336
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41647,7 +41649,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 608
         }
-        relative_line: -5301
+        relative_line: -5303
         relative_column: -5
       }
       child {
@@ -41671,7 +41673,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 621
           }
-          relative_line: 5413
+          relative_line: 5415
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41680,7 +41682,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 621
         }
-        relative_line: -5334
+        relative_line: -5336
         relative_column: -10
       }
       child {
@@ -41704,7 +41706,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 629
           }
-          relative_line: 5455
+          relative_line: 5457
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41713,7 +41715,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 629
         }
-        relative_line: -5413
+        relative_line: -5415
         relative_column: -10
       }
       child {
@@ -41737,7 +41739,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 640
           }
-          relative_line: 5529
+          relative_line: 5531
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41746,7 +41748,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 640
         }
-        relative_line: -5455
+        relative_line: -5457
         relative_column: -10
       }
       child {
@@ -41770,7 +41772,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 647
           }
-          relative_line: 5586
+          relative_line: 5588
           relative_column: 10
           jsdoc {
             kind: JSDOC_INTERFACE
@@ -41779,7 +41781,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 647
         }
-        relative_line: -5529
+        relative_line: -5531
         relative_column: -10
       }
       child {
@@ -41803,7 +41805,7 @@ typed_asts {
             boolean_properties: 536870912
             type: 650
           }
-          relative_line: 5688
+          relative_line: 5690
           relative_column: 10
           jsdoc {
             kind: JSDOC_CONSTRUCTOR
@@ -41812,7 +41814,7 @@ typed_asts {
           boolean_properties: 536870912
           type: 650
         }
-        relative_line: -5586
+        relative_line: -5588
         relative_column: -10
       }
       relative_line: 1
