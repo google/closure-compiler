@@ -3314,6 +3314,10 @@ public class Node {
     return this.token == Token.INSTANCEOF;
   }
 
+  public final boolean isInterface() {
+    return this.token == Token.INTERFACE;
+  }
+
   public final boolean isInterfaceMembers() {
     return this.token == Token.INTERFACE_MEMBERS;
   }
