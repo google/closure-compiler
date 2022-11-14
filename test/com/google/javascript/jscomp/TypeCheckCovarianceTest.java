@@ -1101,4 +1101,17 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "}")
         .run();
   }
+
+  @Test
+  public void testReadonlyArrayCovariant() {
+    newTest()
+        .addSource(
+            "function f(/** !ReadonlyArray<(number|string)>*/ x) {};",
+            "function g(/** !ReadonlyArray<number> */ arr) {",
+            "    f(arr);",
+            "}",
+            "export {};")
+        .includeDefaultExterns()
+        .run();
+  }
 }

@@ -200,6 +200,10 @@ abstract class CompilerTypeTestCase {
     return getNativeObjectType(JSTypeNative.ARRAY_TYPE);
   }
 
+  protected ObjectType getNativeReadonlyArrayType() {
+    return getNativeObjectType(JSTypeNative.READONLY_ARRAY_TYPE);
+  }
+
   protected ObjectType getNativeStringObjectType() {
     return getNativeObjectType(JSTypeNative.STRING_OBJECT_TYPE);
   }

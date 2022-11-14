@@ -36,6 +36,7 @@ public final class StandardColors {
   // These IDs are randomly chosen.
   public static final ColorId ARGUMENTS_ID = ColorId.fromUnsigned(0x1939a66d);
   public static final ColorId ARRAY_ID = ColorId.fromUnsigned(0x79d4a603);
+  public static final ColorId READONLY_ARRAY_ID = ColorId.fromUnsigned(0x5627ffb0);
   public static final ColorId GENERATOR_ID = ColorId.fromUnsigned(0x9bb1303f);
   public static final ColorId I_TEMPLATE_ARRAY_ID = ColorId.fromUnsigned(0x46ab3f0e);
   public static final ColorId ITERATOR_ID = ColorId.fromUnsigned(0x417ed2ab);
@@ -172,6 +173,7 @@ public final class StandardColors {
       ImmutableSet.<ColorId>builder()
           .addAll(PRIMITIVE_BOX_IDS)
           .add(ARRAY_ID)
+          .add(READONLY_ARRAY_ID)
           .add(ARGUMENTS_ID)
           .add(ASYNC_ITERATOR_ITERABLE_ID)
           .add(GENERATOR_ID)

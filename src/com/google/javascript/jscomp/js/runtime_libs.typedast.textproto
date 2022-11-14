@@ -421,7 +421,7 @@ typed_asts {
     type {
       object {
         is_invalidating: true
-        uuid: "\341\262\270\206\346\340\334s"
+        uuid: "\000\000\000\000V\'\377\260"
       }
     }
     type {

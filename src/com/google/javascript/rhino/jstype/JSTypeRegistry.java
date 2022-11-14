@@ -142,10 +142,11 @@ public final class JSTypeRegistry {
   /** The template variable corresponding to the TYPE in {@code Promise<TYPE>} */
   private TemplateType promiseTemplateKey;
 
-  /**
-   * The template variable in {@code Array<T>}
-   */
+  /** The template variable in {@code Array<T>}. */
   private TemplateType arrayElementTemplateKey;
+
+  /** The template variable in {@code ReadonlyArray<T>}. */
+  private TemplateType readonlyArrayElementTemplateKey;
 
   @Deprecated
   public static final String OBJECT_ELEMENT_TEMPLATE = I_OBJECT_ELEMENT_TEMPLATE;
@@ -250,6 +251,16 @@ public final class JSTypeRegistry {
     return sentinelObjectLiteral;
   }
 
+  /** Returns the template variable for the element type of Arrays. */
+  public TemplateType getArrayElementKey() {
+    return arrayElementTemplateKey;
+  }
+
+  /** Returns the template variable for the element type of ReadonlyArrays. */
+  public TemplateType getReadonlyArrayElementKey() {
+    return readonlyArrayElementTemplateKey;
+  }
+
   /**
    * @return The template variable corresponding to the property value type for
    * Javascript Objects and Arrays.
@@ -351,6 +362,7 @@ public final class JSTypeRegistry {
     // These should match the template type name in externs files.
     TemplateType iArrayLikeTemplate = new TemplateType(this, "VALUE2");
     arrayElementTemplateKey = new TemplateType(this, "T");
+    readonlyArrayElementTemplateKey = new TemplateType(this, "T");
     iteratorValueTemplate = new TemplateType(this, "VALUE");
     // TODO(b/142881197): start using these unused iterator (and related type) template params
     // https://github.com/google/closure-compiler/issues/3489
@@ -507,6 +519,17 @@ public final class JSTypeRegistry {
     ObjectType iArrayLikeType = iArrayLikeFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE, iArrayLikeType);
 
+    // ReadonlyArray
+    FunctionType readonlyArrayFunctionType =
+        nativeRecord("ReadonlyArray", readonlyArrayElementTemplateKey);
+    registerNativeType(JSTypeNative.READONLY_ARRAY_FUNCTION_TYPE, readonlyArrayFunctionType);
+        readonlyArrayFunctionType.setExtendedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(iArrayLikeType, readonlyArrayElementTemplateKey),
+            createTemplatizedType(iterableType, readonlyArrayElementTemplateKey)));
+    ObjectType readonlyArrayType = readonlyArrayFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.READONLY_ARRAY_TYPE, readonlyArrayType);
+
     // Array
     FunctionType arrayFunctionType =
         nativeConstructorBuilder("Array")
@@ -517,8 +540,7 @@ public final class JSTypeRegistry {
     arrayFunctionType.getPrototype(); // Force initialization
     arrayFunctionType.setImplementedInterfaces(
         ImmutableList.of(
-            createTemplatizedType(iArrayLikeType, arrayElementTemplateKey),
-            createTemplatizedType(iterableType, arrayElementTemplateKey)));
+            createTemplatizedType(readonlyArrayType, arrayElementTemplateKey)));
     registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, arrayFunctionType);
 
     ObjectType arrayType = arrayFunctionType.getInstanceType();
@@ -809,6 +831,7 @@ public final class JSTypeRegistry {
   private void initializeRegistry() {
     registerGlobalType(getNativeType(JSTypeNative.ARGUMENTS_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ARRAY_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.READONLY_ARRAY_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE));
