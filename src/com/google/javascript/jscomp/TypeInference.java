@@ -905,11 +905,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       case FOR_OF:
         {
           // for/of. The type of `item` is the type parameter of the Iterable type.
-          JSType objType = getJSType(obj).autobox();
-
-          TemplateType templateType = registry.getIterableTemplate();
-          // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
-          newType = objType.getTemplateTypeMap().getResolvedTemplateType(templateType);
+          newType =
+              JsIterables.maybeBoxIterableOrAsyncIterable(getJSType(obj), registry)
+                  .orElse(unknownType);
           break;
         }
       case FOR_AWAIT_OF:

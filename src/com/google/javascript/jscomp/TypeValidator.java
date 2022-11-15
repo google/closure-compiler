@@ -43,8 +43,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
+import com.google.javascript.jscomp.JsIterables.MaybeBoxedType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -298,8 +297,7 @@ class TypeValidator implements Serializable {
    * @return The unwrapped variants of the iterable(s), or empty if not iterable.
    */
   Optional<JSType> expectAutoboxesToIterableOrAsyncIterable(Node n, JSType type, String msg) {
-    MaybeBoxedIterableOrAsyncIterable maybeBoxed =
-        JsIterables.maybeBoxIterableOrAsyncIterable(type, typeRegistry);
+    MaybeBoxedType maybeBoxed = JsIterables.maybeBoxIterableOrAsyncIterable(type, typeRegistry);
 
     if (maybeBoxed.isMatch()) {
       return Optional.of(maybeBoxed.getTemplatedType());
@@ -703,9 +701,11 @@ class TypeValidator implements Serializable {
     if (!argType.isSubtypeOf(paramType)) {
       mismatch(
           n,
-          SimpleFormat.format(
-              "actual parameter %d of %s does not match formal parameter",
-              ordinal, typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
+          "actual parameter "
+              + ordinal
+              + " of "
+              + typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())
+              + " does not match formal parameter",
           argType,
           paramType);
     }
