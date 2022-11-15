@@ -100,13 +100,20 @@ public final class ReplaceMessages {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
-      // This is the currently preferred form.
-      // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
-      protectGetMsgCall(message, definition);
+    protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
+      // TODO(b/239105066): implement this
+      throw new UnsupportedOperationException("ReplaceMessages implementation needed");
     }
 
-    private void protectGetMsgCall(JsMessage message, JsMessageDefinition definition) {
+    @Override
+    protected void processJsMessageDefinition(JsMessageDefinition definition) {
+      // This is the currently preferred form.
+      // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
+      protectGetMsgCall(definition);
+    }
+
+    private void protectGetMsgCall(JsMessageDefinition definition) {
+      final JsMessage message = definition.getMessage();
       final Node callNode = definition.getMessageNode();
       checkArgument(callNode.isCall(), callNode);
       // `goog.getMsg('message string', {<substitutions>}, {<options>})`
@@ -453,9 +460,17 @@ public final class ReplaceMessages {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
+    protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
+      // TODO(b/239105066): Implement this.
+      throw new UnsupportedOperationException(
+          "ReplaceMessages cannot handle declareIcuTemplate() yet.");
+    }
+
+    @Override
+    protected void processJsMessageDefinition(JsMessageDefinition definition) {
+      final JsMessage message = definition.getMessage();
+      final Node callNode = definition.getMessageNode();
       // Get the replacement.
-      Node callNode = definition.getMessageNode();
       JsMessage replacement = lookupMessage(callNode, bundle, message);
       if (replacement == null) {
         if (strictReplacement) {

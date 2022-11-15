@@ -20,8 +20,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 import org.jspecify.nullness.Nullable;
 
-/** Container class that holds information about the JS code a JsMessage was built from. */
+/**
+ * Container class that holds a {@link JsMessage} and information about the {@code goog.getMsg()}
+ * call it was built from.
+ */
 public interface JsMessageDefinition {
+
+  /** The JsMessage object built from the `goog.getMsg()` call. */
+  JsMessage getMessage();
 
   /**
    * The RHS node of the message assignment statement.
@@ -43,7 +49,7 @@ public interface JsMessageDefinition {
    *
    * <p>This node may be a literal string or a concatenation of literal strings.
    *
-   * <p>For a {@code goog.getMsg()} call this is the second argument.
+   * <p>For a {@code goog.getMsg()} call this is the first argument.
    */
   Node getTemplateTextNode();
 

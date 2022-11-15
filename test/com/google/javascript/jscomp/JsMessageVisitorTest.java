@@ -1192,9 +1192,14 @@ public final class JsMessageVisitorTest {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
-      messages.add(message);
+    protected void processJsMessageDefinition(JsMessageDefinition definition) {
+      messages.add(definition.getMessage());
       messageDefinitions.add(definition);
+    }
+
+    @Override
+    protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
+      messages.add(definition.getMessage());
     }
   }
 
@@ -1205,7 +1210,12 @@ public final class JsMessageVisitorTest {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
+    protected void processJsMessageDefinition(JsMessageDefinition definition) {
+      // no-op
+    }
+
+    @Override
+    protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
       // no-op
     }
   }

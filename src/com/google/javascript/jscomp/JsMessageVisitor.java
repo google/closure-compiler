@@ -45,8 +45,12 @@ import java.util.regex.Pattern;
 import org.jspecify.nullness.Nullable;
 
 /**
- * Traverses across parsed tree and finds I18N messages. Then it passes it to {@link
- * JsMessageVisitor#processJsMessage(JsMessage, JsMessageDefinition)}.
+ * Locates JS code that is intended to declare localizable messages.
+ *
+ * <p>It passes each found message to either {@link
+ * JsMessageVisitor#processJsMessageDefinition(JsMessageDefinition)} for {@code goog.getMsg()} calls
+ * or {@link JsMessageVisitor#processIcuTemplateDefinition(IcuTemplateDefinition)} for {@code
+ * goog.i18n.messages.declareIcuTemplate()} calls.
  */
 @GwtIncompatible("JsMessage, java.util.regex")
 public abstract class JsMessageVisitor extends AbstractPostOrderCallback implements CompilerPass {
@@ -389,8 +393,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     // NOTE: All of the methods defined below should return data that has already been computed.
     // Most importantly, none of them should throw a MalformedException.
-    final JsMessageDefinition msgDefinition =
+    processJsMessageDefinition(
         new JsMessageDefinition() {
+          @Override
+          public JsMessage getMessage() {
+            return extractedMessage;
+          }
+
           @Override
           public Node getMessageNode() {
             return msgNode;
@@ -420,8 +429,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           public boolean shouldUnescapeHtmlEntities() {
             return callNodeMsgData.shouldUnescapeHtmlEntities();
           }
-        };
-    processJsMessage(extractedMessage, msgDefinition);
+        });
   }
 
   /**
@@ -1115,19 +1123,20 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /**
-   * Processes found JS message. Several examples of "standard" processing routines are:
+   * Processes a found JS message that was defined with {@code goog.getMsg()}.
+   *
+   * <p>Several examples of "standard" processing routines are:
    *
    * <ol>
    *   <li>extract all JS messages
    *   <li>replace JS messages with localized versions for some specific language
    *   <li>check that messages have correct syntax and present in localization bundle
    * </ol>
-   *
-   * @param message the found message
-   * @param definition the definition of the object and usually contains all additional message
-   *     information like message node/parent's node
    */
-  protected abstract void processJsMessage(JsMessage message, JsMessageDefinition definition);
+  protected abstract void processJsMessageDefinition(JsMessageDefinition definition);
+
+  /** Processes a found call to {@code goog.i18n.messages.declareIcuTemplate()} */
+  protected abstract void processIcuTemplateDefinition(IcuTemplateDefinition definition);
 
   /**
    * Processes the goog.getMsgWithFallback primitive. goog.getMsgWithFallback(MSG_1, MSG_2);

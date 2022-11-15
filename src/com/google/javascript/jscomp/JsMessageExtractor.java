@@ -70,9 +70,18 @@ public final class JsMessageExtractor {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
-      if (extractExternalMessages || !message.isExternal()) {
-        messages.add(message);
+    protected void processJsMessageDefinition(JsMessageDefinition definition) {
+      processJsMessage(definition.getMessage());
+    }
+
+    @Override
+    protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
+      processJsMessage(definition.getMessage());
+    }
+
+    private void processJsMessage(JsMessage jsMessage) {
+      if (extractExternalMessages || !jsMessage.isExternal()) {
+        messages.add(jsMessage);
       }
     }
 

@@ -36,6 +36,11 @@ import java.util.List;
 @GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {
 
+  static final DiagnosticType DECLARE_ICU_TEMPLATE_NOT_SUPPORTED =
+      DiagnosticType.error(
+          "JSC_DECLARE_ICU_TEMPLATE",
+          "goog.i18n.messages.declareIcuTemplate() is not supported for Chrome i18n.");
+
   private final AstFactory astFactory;
 
   ReplaceMessagesForChrome(AbstractCompiler compiler, JsMessage.IdGenerator idGenerator) {
@@ -50,8 +55,14 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
   }
 
   @Override
-  protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
-    Node newValue = getNewValueNode(message, definition);
+  protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
+    // TODO(bradfordcsmith): Add support for this.
+    compiler.report(JSError.make(definition.getMessageNode(), DECLARE_ICU_TEMPLATE_NOT_SUPPORTED));
+  }
+
+  @Override
+  protected void processJsMessageDefinition(JsMessageDefinition definition) {
+    Node newValue = getNewValueNode(definition.getMessage(), definition);
     definition.getMessageNode().replaceWith(newValue);
     compiler.reportChangeToEnclosingScope(newValue);
   }
