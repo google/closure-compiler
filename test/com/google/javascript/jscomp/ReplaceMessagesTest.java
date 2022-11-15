@@ -295,6 +295,131 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceIcuTemplateMessageWithBundleAndJsPlaceholders() {
+    // Message in the bundle has a placeholder and is NOT in ICU selector format.
+    //
+    // (i.e. it does not start with "{WORD,").
+    //
+    // Here we want to make sure that messages created with declareIcuTemplate()
+    // get treated as ICU messages even without that distinguishing feature.
+    registerMessage(
+        getTestMessageBuilder("MSG_SHOW_EMAIL")
+            .appendStringPart("Retpoŝtadreso: ")
+            .appendCanonicalPlaceholderReference("EMAIL")
+            .build());
+
+    multiPhaseTest(
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    declareIcuTemplate(",
+            "        'Email: {EMAIL}',",
+            "        {",
+            "          description: 'Labeled email address',",
+            // The example text is dropped, since it is only used for XMB extraction.
+            // However, it does cause the JsMessage read from the JS code to have a placeholder
+            // in it.
+            "          example: {",
+            "            'EMAIL': 'me@foo.com'",
+            "           }",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_SHOW_EMAIL\",",
+            "          \"msg_text\": \"Email: {EMAIL}\",",
+            "          \"isIcuTemplate\": \"\"",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL = 'Retpoŝtadreso: {EMAIL}';"));
+  }
+
+  @Test
+  public void testReplaceIcuTemplateMessageWithoutJsPlaceholders() {
+    // Message in the bundle has a placeholder and is NOT in ICU selector format.
+    //
+    // (i.e. it does not start with "{WORD,").
+    //
+    // Here we want to make sure that messages created with declareIcuTemplate()
+    // get treated as ICU messages even without that distinguishing feature.
+    registerMessage(
+        getTestMessageBuilder("MSG_SHOW_EMAIL")
+            .appendStringPart("Retpoŝtadreso: ")
+            .appendCanonicalPlaceholderReference("EMAIL")
+            .build());
+
+    multiPhaseTest(
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            // Note that no placeholder information is specified here, so the JsMessage as it is
+            // read from the JS code will have no placeholders.
+            // In this test case we've put a placeholder in the bundle above, but if the bundle
+            // were created based on this code, it would not have a placeholder.
+            // This situation could occur with an externally-produced message bundle.
+            "const MSG_SHOW_EMAIL = declareIcuTemplate(",
+            "    'Email: {EMAIL}', { description: 'Labeled email address' });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_SHOW_EMAIL\",",
+            "          \"msg_text\": \"Email: {EMAIL}\",",
+            "          \"isIcuTemplate\": \"\"",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL = 'Retpoŝtadreso: {EMAIL}';"));
+  }
+
+  @Test
+  public void testMissingIcuTemplateMessage() {
+    // We don't registerMessage() here, so there are no messages in the bundle used by this test.
+
+    multiPhaseTest(
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    declareIcuTemplate(",
+            "        'Email: {EMAIL}',",
+            "        {",
+            "          description: 'Labeled email address',",
+            // The example text is dropped, since it is only used for XMB extraction.
+            // However, it does cause the JsMessage read from the JS code to have a placeholder
+            // in it.
+            // One purpose of this test is to make sure the message template is properly put back
+            // together.
+            "          example: {",
+            "            'EMAIL': 'me@foo.com'",
+            "           }",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_SHOW_EMAIL\",",
+            "          \"msg_text\": \"Email: {EMAIL}\",",
+            "          \"isIcuTemplate\": \"\"",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL = 'Email: {EMAIL}';"));
+  }
+
+  @Test
   public void testReplaceExternalIcuSelectorMessageWithPlaceholders() {
     // Message in the bundle is in ICU selector format with has placeholders with explicit
     // placeholders.

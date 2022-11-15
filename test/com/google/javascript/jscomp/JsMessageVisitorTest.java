@@ -27,11 +27,15 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.javascript.jscomp.JsMessage.Part;
+import com.google.javascript.jscomp.JsMessageVisitor.ExtractedIcuTemplateParts;
+import com.google.javascript.jscomp.JsMessageVisitor.IcuMessageTemplateString;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.nullness.Nullable;
@@ -69,14 +73,142 @@ public final class JsMessageVisitorTest {
   private Compiler compiler;
   private List<JsMessage> messages;
   private List<JsMessageDefinition> messageDefinitions;
+  private List<IcuTemplateDefinition> icuTemplateDefinitions;
   private boolean renameMessages = false;
 
   @Before
   public void setUp() throws Exception {
     messages = new ArrayList<>();
     messageDefinitions = new ArrayList<>();
+    icuTemplateDefinitions = new ArrayList<>();
     compilerOptions = null;
     renameMessages = false;
+  }
+
+  @Test
+  public void testIcuTemplateParsing() {
+    final IcuMessageTemplateString icuMessageTemplateString =
+        new IcuMessageTemplateString(
+            lines(
+                "{NUM_PEOPLE, plural, offset:1 ",
+                // Some placeholders are ignored, because there's no additional information
+                // for them (original code or example text). There's no need to generate
+                // placeholder parts for those.
+                "=0 {I see {START_BOLD}no one at all{END_BOLD} in {INTERPOLATION_2}.}",
+                "=1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}",
+                "=2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}",
+                "other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}",
+                "}"));
+    final ExtractedIcuTemplateParts extractedParts =
+        icuMessageTemplateString.extractParts(
+            ImmutableSet.of("INTERPOLATION_1", "INTERPOLATION_2", "MISSING"));
+
+    // The non-existent placeholder name "MISSING" should be missing from this list.
+    // JsMessageVisitor will notice the name is missing from the resulting set of
+    // seen placeholders and report an error, though we won't do that in this test.
+    assertThat(extractedParts.extractedPlaceholderNames)
+        .containsExactly("INTERPOLATION_1", "INTERPOLATION_2");
+    final ImmutableList<Part> parts = extractedParts.extractedParts;
+
+    assertThat(parts.get(0).getString())
+        .isEqualTo(
+            "{NUM_PEOPLE, plural, offset:1 \n=0 {I see {START_BOLD}no one at all{END_BOLD} in ");
+    assertThat(parts.get(1).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_2");
+    assertThat(parts.get(2).getString()).isEqualTo(".}\n=1 {I see ");
+    assertThat(parts.get(3).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_1");
+    assertThat(parts.get(4).getString()).isEqualTo(" in ");
+    assertThat(parts.get(5).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_2");
+    assertThat(parts.get(6).getString()).isEqualTo(".}\n=2 {I see ");
+    assertThat(parts.get(7).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_1");
+    assertThat(parts.get(8).getString()).isEqualTo(" and one other person in ");
+    assertThat(parts.get(9).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_2");
+    assertThat(parts.get(10).getString()).isEqualTo(".}\nother {I see ");
+    assertThat(parts.get(11).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_1");
+    assertThat(parts.get(12).getString()).isEqualTo(" and # other people in ");
+    assertThat(parts.get(13).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_2");
+    assertThat(parts.get(14).getString()).isEqualTo(".}\n}");
+  }
+
+  @Test
+  public void testIcuTemplate() {
+    extractMessagesSafely(
+        lines(
+            "const MSG_ICU_EXAMPLE = declareIcuTemplate(",
+            "    `{NUM_PEOPLE, plural, offset:1 ",
+            "        =0 {I see no one at all in {INTERPOLATION_2}.}",
+            "        =1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}",
+            "        =2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}",
+            "        other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}",
+            "    }`,",
+            "    {",
+            "      description: 'ICU example message',",
+            "      original_code: {",
+            "        'INTERPOLATION_1': '{{getPerson()}}',",
+            "        'INTERPOLATION_2': '{{getPlaceName()}}',",
+            "      },",
+            "      example: {",
+            "        'INTERPOLATION_1': 'Jane Doe',",
+            "        'INTERPOLATION_2': 'Paris, France',",
+            "      }",
+            "    });",
+            ""));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(icuTemplateDefinitions).hasSize(1);
+    IcuTemplateDefinition definition = icuTemplateDefinitions.get(0);
+
+    final Node messageNode = definition.getMessageNode();
+    assertNode(messageNode).isCall().hasFirstChildThat().isName("declareIcuTemplate");
+
+    final Node templateTextNode = definition.getTemplateTextNode();
+    assertNode(templateTextNode).hasToken(Token.TEMPLATELIT);
+
+    JsMessage msg = definition.getMessage();
+    assertThat(msg.getKey()).isEqualTo("MSG_ICU_EXAMPLE");
+    assertThat(msg.getDesc()).isEqualTo("ICU example message");
+    assertThat(msg.asIcuMessageString())
+        .isEqualTo(
+            lines(
+                "{NUM_PEOPLE, plural, offset:1 ",
+                "        =0 {I see no one at all in {INTERPOLATION_2}.}",
+                "        =1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}",
+                "        =2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}",
+                "        other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}",
+                "    }"));
+    // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
+    assertThat(msg.getSourceName()).isEqualTo("testcode:1");
+  }
+
+  @Test
+  public void testIcuTemplatePlaceholderTypo() {
+    extractMessages(
+        lines(
+            "const MSG_ICU_EXAMPLE = declareIcuTemplate(",
+            "    `{NUM_PEOPLE, plural, offset:1 ",
+            "        =0 {I see no one at all in {INTERPOLATION_2}.}",
+            "        =1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}",
+            "        =2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}",
+            "        other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}",
+            "    }`,",
+            "    {",
+            "      description: 'ICU example message',",
+            "      example: {",
+            "        'INTERPOLATION_1': 'Jane Doe',",
+            // This placeholder name doesn't match any placeholders in the message, so it should
+            // be reported as an error
+            "        'INTERPOLATION_TYPO_2': 'Paris, France',",
+            "      }",
+            "    });",
+            ""));
+    final ImmutableList<JSError> actualErrors = compiler.getErrors();
+    assertThat(actualErrors)
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(MESSAGE_TREE_MALFORMED);
+    assertThat(actualErrors)
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly("Message parse tree malformed. Unknown placeholder: INTERPOLATION_TYPO_2");
+    assertThat(compiler.getWarnings()).isEmpty();
+    // The malformed message is skipped.
+    assertThat(messages).isEmpty();
   }
 
   @Test
@@ -330,6 +462,20 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testOrphanedIcuTemplate() {
+    extractMessages(
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');", //
+            "",
+            "declareIcuTemplate('a')"));
+    assertThat(messages).isEmpty();
+
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(JsMessageVisitor.MESSAGE_NODE_IS_ORPHANED);
+  }
+
+  @Test
   public void testMessageWithoutDescription() {
     extractMessagesSafely("var MSG_HELLO = goog.getMsg('a')");
 
@@ -450,12 +596,38 @@ public final class JsMessageVisitorTest {
   @Test
   public void testClosureFormatParametizedFunction() {
     extractMessagesSafely(
-        "/** @desc help text */"
-            + "var MSG_SILLY = goog.getMsg('{$adjective} ' + 'message', "
-            + "{'adjective': 'silly'});");
+        lines(
+            "/** @desc help text */",
+            "var MSG_SILLY = goog.getMsg('{$adjective} ' + 'message', ",
+            "{'adjective': 'silly'});"));
 
-    assertThat(messages).hasSize(1);
-    JsMessage msg = messages.get(0);
+    assertThat(messageDefinitions).hasSize(1);
+    final JsMessageDefinition jsMessageDefinition = messageDefinitions.get(0);
+
+    // `goog.getMsg(...)`
+    final Node messageNode = jsMessageDefinition.getMessageNode();
+    assertNode(messageNode).isCall().hasFirstChildThat().matchesQualifiedName("goog.getMsg");
+
+    // `'{$adjective} ' + 'message'`
+    final Node templateTextNode = jsMessageDefinition.getTemplateTextNode();
+    assertNode(templateTextNode).hasToken(Token.ADD).hasFirstChildThat().isString("{$adjective} ");
+
+    // `{'adjective': ...}`
+    final Node placeholderValuesNode = jsMessageDefinition.getPlaceholderValuesNode();
+    assertNode(placeholderValuesNode)
+        .isObjectLit()
+        .hasFirstChildThat()
+        .hasToken(Token.STRING_KEY)
+        .hasStringThat()
+        .isEqualTo("adjective");
+
+    // Map containing "adjective" -> string node containing "silly"
+    final ImmutableMap<String, Node> placeholderValueMap =
+        jsMessageDefinition.getPlaceholderValueMap();
+    assertThat(placeholderValueMap).hasSize(1);
+    assertNode(placeholderValueMap.get("adjective")).isString("silly");
+
+    JsMessage msg = jsMessageDefinition.getMessage();
     assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
     assertThat(msg.getDesc()).isEqualTo("help text");
     assertThat(msg.asJsMessageString()).isEqualTo("{$adjective} message");
@@ -502,6 +674,21 @@ public final class JsMessageVisitorTest {
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
     assertThat(msg.getDesc()).isNull();
+    assertThat(msg.getKey()).isEqualTo("MSG_16LJMYKCXT84X");
+    assertThat(msg.getId()).isEqualTo("MSG_16LJMYKCXT84X");
+  }
+
+  @Test
+  public void testUnnamedIcuTemplate() {
+    // Unlike `goog.getMsg()` we do require a description for anonymous ICU templates.
+    // Requiring the description is less complicated, and there doesn't seem to be any reaon
+    // not to require them.
+    extractMessagesSafely(
+        "var MSG_UNNAMED = declareIcuTemplate('Hullo', {description: 'description'});");
+
+    assertThat(icuTemplateDefinitions).hasSize(1);
+    JsMessage msg = icuTemplateDefinitions.get(0).getMessage();
+    assertThat(msg.getDesc()).isEqualTo("description");
     assertThat(msg.getKey()).isEqualTo("MSG_16LJMYKCXT84X");
     assertThat(msg.getId()).isEqualTo("MSG_16LJMYKCXT84X");
   }
@@ -577,9 +764,15 @@ public final class JsMessageVisitorTest {
   public void testMsgVarWithIncorrectRightSide() {
     extractMessages("var MSG_SILLY = 0;");
 
-    assertThat(compiler.getWarnings())
+    final ImmutableList<JSError> warnings = compiler.getWarnings();
+    assertThat(warnings)
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertThat(warnings)
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
-        .containsExactly("message not initialized using goog.getMsg");
+        .containsExactly(
+            "Message must be initialized using a call to goog.getMsg or"
+                + " goog.i18n.messages.declareIcuTemplate");
   }
 
   @Test
@@ -587,9 +780,15 @@ public final class JsMessageVisitorTest {
     extractMessages("DP_DatePicker.MSG_DATE_SELECTION = {};");
 
     assertThat(messages).isEmpty();
-    assertThat(compiler.getWarnings())
+    final ImmutableList<JSError> warnings = compiler.getWarnings();
+    assertThat(warnings)
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(MESSAGE_NOT_INITIALIZED_CORRECTLY);
+    assertThat(warnings)
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
-        .containsExactly("message not initialized using goog.getMsg");
+        .containsExactly(
+            "Message must be initialized using a call to goog.getMsg or"
+                + " goog.i18n.messages.declareIcuTemplate");
   }
 
   @Test
@@ -600,8 +799,8 @@ public final class JsMessageVisitorTest {
     assertThat(compiler.getErrors())
         .comparingElementsUsing(DESCRIPTION_EQUALITY)
         .containsExactly(
-            "Message parse tree malformed. Message initialized using unrecognized function. "
-                + "Please use goog.getMsg() instead.");
+            "Message parse tree malformed. Message must be initialized using a call to goog.getMsg"
+                + " or declareIcuTemplate (from goog.i18n.messages).");
   }
 
   @Test
@@ -1199,6 +1398,7 @@ public final class JsMessageVisitorTest {
 
     @Override
     protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
+      icuTemplateDefinitions.add(definition);
       messages.add(definition.getMessage());
     }
   }

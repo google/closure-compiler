@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
@@ -82,6 +81,18 @@ public final class ReplaceMessages {
     return new MsgProtectionPass();
   }
 
+  interface MsgProtectionData {
+    JsMessage getMessage();
+
+    Node getMessageNode();
+
+    Node getTemplateTextNode();
+
+    @Nullable Node getPlaceholderValuesNode();
+
+    MsgOptions getMessageOptions();
+  }
+
   class MsgProtectionPass extends JsMessageVisitor {
 
     public MsgProtectionPass() {
@@ -101,26 +112,79 @@ public final class ReplaceMessages {
 
     @Override
     protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
-      // TODO(b/239105066): implement this
-      throw new UnsupportedOperationException("ReplaceMessages implementation needed");
+      performMessageProtection(
+          new MsgProtectionData() {
+            @Override
+            public JsMessage getMessage() {
+              return definition.getMessage();
+            }
+
+            @Override
+            public Node getMessageNode() {
+              return definition.getMessageNode();
+            }
+
+            @Override
+            public Node getTemplateTextNode() {
+              return definition.getTemplateTextNode();
+            }
+
+            @Override
+            public @Nullable Node getPlaceholderValuesNode() {
+              // There are no compile-time placeholder replacements for ICU templates
+              return null;
+            }
+
+            @Override
+            public MsgOptions getMessageOptions() {
+              return ICU_MSG_OPTIONS;
+            }
+          });
     }
 
     @Override
     protected void processJsMessageDefinition(JsMessageDefinition definition) {
       // This is the currently preferred form.
       // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
-      protectGetMsgCall(definition);
+      performMessageProtection(
+          new MsgProtectionData() {
+            @Override
+            public JsMessage getMessage() {
+              return definition.getMessage();
+            }
+
+            @Override
+            public Node getMessageNode() {
+              return definition.getMessageNode();
+            }
+
+            @Override
+            public Node getTemplateTextNode() {
+              return definition.getTemplateTextNode();
+            }
+
+            @Override
+            public @Nullable Node getPlaceholderValuesNode() {
+              return definition.getPlaceholderValuesNode();
+            }
+
+            @Override
+            public MsgOptions getMessageOptions() {
+              return getMsgOptionsFromDefinition(definition);
+            }
+          });
     }
 
-    private void protectGetMsgCall(JsMessageDefinition definition) {
-      final JsMessage message = definition.getMessage();
-      final Node callNode = definition.getMessageNode();
-      checkArgument(callNode.isCall(), callNode);
+    private void performMessageProtection(MsgProtectionData msgProtectionData) {
+      final JsMessage message = msgProtectionData.getMessage();
+      final Node callNode = msgProtectionData.getMessageNode();
+      final Node originalMessageString = msgProtectionData.getTemplateTextNode();
+      final Node placeholdersNode = msgProtectionData.getPlaceholderValuesNode();
+      final MsgOptions msgOptions = msgProtectionData.getMessageOptions();
+
+      checkState(callNode.isCall(), callNode);
       // `goog.getMsg('message string', {<substitutions>}, {<options>})`
       final Node googGetMsg = callNode.getFirstChild();
-      final Node originalMessageString = definition.getTemplateTextNode();
-      final Node placeholdersNode = definition.getPlaceholderValuesNode();
-      final MsgOptions msgOptions = getMsgOptionsFromDefinition(definition);
 
       // Construct
       // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
@@ -191,10 +255,22 @@ public final class ReplaceMessages {
   }
 
   private MsgOptions getMsgOptionsFromDefinition(JsMessageDefinition definition) {
-    final MsgOptions msgOptions = new MsgOptions();
-    msgOptions.escapeLessThan = definition.shouldEscapeLessThan();
-    msgOptions.unescapeHtmlEntities = definition.shouldUnescapeHtmlEntities();
-    return msgOptions;
+    return new MsgOptions() {
+      @Override
+      public boolean isIcuTemplate() {
+        return false;
+      }
+
+      @Override
+      public boolean escapeLessThan() {
+        return definition.shouldEscapeLessThan();
+      }
+
+      @Override
+      public boolean unescapeHtmlEntities() {
+        return definition.shouldUnescapeHtmlEntities();
+      }
+    };
   }
 
   private Node createMsgPropertiesNode(JsMessage message, MsgOptions msgOptions) {
@@ -208,12 +284,18 @@ public final class ReplaceMessages {
     if (meaning != null) {
       msgPropsBuilder.addString("meaning", meaning);
     }
-    msgPropsBuilder.addString("msg_text", message.asJsMessageString());
-    if (msgOptions.escapeLessThan) {
+    if (msgOptions.isIcuTemplate()) {
+      msgPropsBuilder.addString("msg_text", message.asIcuMessageString());
+      // Just being present is what records this option as true
+      msgPropsBuilder.addString("isIcuTemplate", "");
+    } else {
+      msgPropsBuilder.addString("msg_text", message.asJsMessageString());
+    }
+    if (msgOptions.escapeLessThan()) {
       // Just being present is what records this option as true
       msgPropsBuilder.addString("escapeLessThan", "");
     }
-    if (msgOptions.unescapeHtmlEntities) {
+    if (msgOptions.unescapeHtmlEntities()) {
       // Just being present is what records this option as true
       msgPropsBuilder.addString("unescapeHtmlEntities", "");
     }
@@ -331,7 +413,7 @@ public final class ReplaceMessages {
 
   static ImmutableMap<String, Node> extractPlaceholderValuesMapOrThrow(Node valuesObjLit) {
     try {
-      return JsMessageVisitor.extractObjectLiteralMap(valuesObjLit).extractValueMap();
+      return JsMessageVisitor.extractObjectLiteralMap(valuesObjLit).extractAsValueMap();
     } catch (MalformedException e) {
       throw new IllegalStateException(e);
     }
@@ -438,6 +520,16 @@ public final class ReplaceMessages {
     return new FullReplacementPass();
   }
 
+  interface FullReplacementMsgData {
+    JsMessage getMessage();
+
+    Node getMessageNode();
+
+    MsgOptions getMessageOptions();
+
+    ImmutableMap<String, Node> getPlaceholderValueMap();
+  }
+
   class FullReplacementPass extends JsMessageVisitor {
 
     public FullReplacementPass() {
@@ -461,21 +553,69 @@ public final class ReplaceMessages {
 
     @Override
     protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
-      // TODO(b/239105066): Implement this.
-      throw new UnsupportedOperationException(
-          "ReplaceMessages cannot handle declareIcuTemplate() yet.");
+      processFullReplacement(
+          new FullReplacementMsgData() {
+            @Override
+            public JsMessage getMessage() {
+              return definition.getMessage();
+            }
+
+            @Override
+            public Node getMessageNode() {
+              return definition.getMessageNode();
+            }
+
+            @Override
+            public MsgOptions getMessageOptions() {
+              return ICU_MSG_OPTIONS;
+            }
+
+            @Override
+            public ImmutableMap<String, Node> getPlaceholderValueMap() {
+              // There are no compile-time placeholder replacements for an ICU template message.
+              return ImmutableMap.of();
+            }
+          });
     }
 
     @Override
     protected void processJsMessageDefinition(JsMessageDefinition definition) {
-      final JsMessage message = definition.getMessage();
-      final Node callNode = definition.getMessageNode();
+      processFullReplacement(
+          new FullReplacementMsgData() {
+            @Override
+            public JsMessage getMessage() {
+              return definition.getMessage();
+            }
+
+            @Override
+            public Node getMessageNode() {
+              return definition.getMessageNode();
+            }
+
+            @Override
+            public MsgOptions getMessageOptions() {
+              return getMsgOptionsFromDefinition(definition);
+            }
+
+            @Override
+            public ImmutableMap<String, Node> getPlaceholderValueMap() {
+              return definition.getPlaceholderValueMap();
+            }
+          });
+    }
+
+    private void processFullReplacement(FullReplacementMsgData fullReplacementMsgData) {
+      final JsMessage message = fullReplacementMsgData.getMessage();
+      final Node msgNode = fullReplacementMsgData.getMessageNode();
+      final MsgOptions options = fullReplacementMsgData.getMessageOptions();
+      final ImmutableMap<String, Node> placeholderValueMap =
+          fullReplacementMsgData.getPlaceholderValueMap();
+
       // Get the replacement.
-      JsMessage replacement = lookupMessage(callNode, bundle, message);
+      JsMessage replacement = lookupMessage(msgNode, bundle, message);
       if (replacement == null) {
         if (strictReplacement) {
-          compiler.report(
-              JSError.make(callNode, BUNDLE_DOES_NOT_HAVE_THE_MESSAGE, message.getId()));
+          compiler.report(JSError.make(msgNode, BUNDLE_DOES_NOT_HAVE_THE_MESSAGE, message.getId()));
           // Fallback to the default message
           return;
         } else {
@@ -487,9 +627,9 @@ public final class ReplaceMessages {
 
       // Replace the message.
       Node newValue;
-      Node msgNode = definition.getMessageNode();
       try {
-        newValue = replaceCallNode(replacement, definition);
+        // Build the replacement tree.
+        newValue = constructStringExprNode(replacement, placeholderValueMap, options, msgNode);
       } catch (MalformedException e) {
         compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
         newValue = msgNode;
@@ -500,37 +640,6 @@ public final class ReplaceMessages {
         msgNode.replaceWith(newValue);
         compiler.reportChangeToEnclosingScope(newValue);
       }
-    }
-
-    /**
-     * Replaces a CALL node with an inlined message value.
-     *
-     * <p>For input that that looks like this
-     * <pre>
-     *   goog.getMsg(
-     *       'Hi {$userName}! Welcome to {$product}.',
-     *       { 'userName': 'someUserName', 'product': getProductName() })
-     * <pre>
-     *
-     * <p>We'd return:
-     * <pre>
-     *   'Hi ' + someUserName + '! Welcome to ' + 'getProductName()' + '.'
-     * </pre>
-     *
-     * @return a STRING node, or an ADD node that does string concatenation, if
-     *   the message has one or more placeholders
-     *
-     * @throws MalformedException if the passed node's subtree structure is
-     *   not as expected
-     */
-    private Node replaceCallNode(JsMessage message, JsMessageDefinition definition)
-        throws MalformedException {
-      // optional replacement options, e.g. `{ html: true }`
-      MsgOptions options = getMsgOptionsFromDefinition(definition);
-
-      // Build the replacement tree.
-      return constructStringExprNode(
-          message, definition.getPlaceholderValueMap(), options, definition.getMessageNode());
     }
   }
 
@@ -549,7 +658,13 @@ public final class ReplaceMessages {
     if (placeholderMap.isEmpty()) {
       // The compiler does not expect to do any placeholder substitution, because the message
       // definition in the JS code doesn't have any placeholders.
-      if (msgToUse.jsPlaceholderNames().isEmpty()) {
+      if (options.isIcuTemplate()) {
+        // This message was declared as an ICU template. Its placeholders, if any, will not be
+        // replaced during compilation, but rather at runtime by a special localization method.
+        // We just need to put the string back together again, if it was broken up to include
+        // placeholders.
+        return createNodeForMsgString(options, msgToUse.asIcuMessageString());
+      } else if (msgToUse.jsPlaceholderNames().isEmpty()) {
         // The translated message read from the bundle also has no placeholders.
         // It doesn't really matter which asXMessageString() call we make, since they return
         // the same thing when there are no placeholders.
@@ -585,7 +700,7 @@ public final class ReplaceMessages {
     // TODO(bradfordcsmith): There's a test case with an "&amp;" escape broken across 2 string
     // parts. It fails if we stop doing this merging in advance, but I suspect there's no real
     // life case where this merging is really necessary. I think it's a left-over from when the
-    // bundle-reading code would automatically convert ICS message placeholders into string parts
+    // bundle-reading code would automatically convert ICU message placeholders into string parts
     // without actually merging them with the neighboring string parts.
     List<Part> msgParts = mergeStringParts(msgToUse.getParts());
     if (msgParts.isEmpty()) {
@@ -613,11 +728,11 @@ public final class ReplaceMessages {
   }
 
   private Node createNodeForMsgString(MsgOptions options, String s) {
-    if (options.escapeLessThan) {
+    if (options.escapeLessThan()) {
       // Note that "&" is not replaced because the translation can contain HTML entities.
       s = s.replace("<", "&lt;");
     }
-    if (options.unescapeHtmlEntities) {
+    if (options.unescapeHtmlEntities()) {
       // Unescape entities that need to be escaped when embedding HTML or XML in data/attributes
       // of an HTML/XML document. See https://www.w3.org/TR/xml/#sec-predefined-ent.
       // Note that "&amp;" must be the last to avoid "creating" new entities.
@@ -633,18 +748,48 @@ public final class ReplaceMessages {
   }
 
   /** Options for escaping characters in translated messages. */
-  private static class MsgOptions {
-    // Replace `'<'` with `'&lt;'` in the message.
-    private boolean escapeLessThan = false;
-    // Replace these escaped entities with their literal characters in the message
-    // (Overrides escapeLessThan)
-    // '&lt;' -> '<'
-    // '&gt;' -> '>'
-    // '&apos;' -> "'"
-    // '&quot;' -> '"'
-    // '&amp;' -> '&'
-    private boolean unescapeHtmlEntities = false;
+  interface MsgOptions {
+
+    /** True if the message is defined using the ICU template declaration method. */
+    boolean isIcuTemplate();
+
+    /** Replace `'<'` with `'&lt;'` in the message. */
+    boolean escapeLessThan();
+
+    /**
+     * Replace these escaped entities with their literal characters in the message (Overrides
+     * escapeLessThan)
+     *
+     * <pre>
+     * '&lt;' -> '<'
+     * '&gt;' -> '>'
+     * '&apos;' -> "'"
+     * '&quot;' -> '"'
+     * '&amp;' -> '&'
+     * </pre>
+     */
+    boolean unescapeHtmlEntities();
   }
+
+  private static final MsgOptions ICU_MSG_OPTIONS =
+      new MsgOptions() {
+        @Override
+        public boolean isIcuTemplate() {
+          return true;
+        }
+
+        @Override
+        public boolean escapeLessThan() {
+          // The compiler doesn't do escaping for ICU messages.
+          return false;
+        }
+
+        @Override
+        public boolean unescapeHtmlEntities() {
+          // The compiler doesn't do unescaping for ICU messages.
+          return false;
+        }
+      };
 
   /** Merges consecutive string parts in the list of message parts. */
   private static List<Part> mergeStringParts(List<Part> parts) {
@@ -691,6 +836,8 @@ public final class ReplaceMessages {
     private final Node definitionNode;
     // e.g. `{ name: x.getName(), age: x.getAgeString() }`
     private final @Nullable Node substitutionsNode;
+    // The message was defined in JS code using the ICU template method.
+    private final boolean isIcuTemplate;
     // Replace `'<'` with `'&lt;'` in the message.
     private final boolean escapeLessThan;
     // Replace these escaped entities with their literal characters in the message
@@ -706,11 +853,13 @@ public final class ReplaceMessages {
         JsMessage jsMessage,
         Node definitionNode,
         @Nullable Node substitutionsNode,
+        boolean isIcuTemplate,
         boolean escapeLessThan,
         boolean unescapeHtmlEntities) {
       this.jsMessage = jsMessage;
       this.definitionNode = definitionNode;
       this.substitutionsNode = substitutionsNode;
+      this.isIcuTemplate = isIcuTemplate;
       this.escapeLessThan = escapeLessThan;
       this.unescapeHtmlEntities = unescapeHtmlEntities;
     }
@@ -728,6 +877,7 @@ public final class ReplaceMessages {
       final Node substitutionsNode = propertiesNode.getNext();
       boolean escapeLessThanOption = false;
       boolean unescapeHtmlEntitiesOption = false;
+      boolean isIcuTemplate = false;
       JsMessage.Builder jsMessageBuilder = new JsMessage.Builder();
       checkState(propertiesNode.isObjectLit(), propertiesNode);
       String msgKey = null;
@@ -754,6 +904,9 @@ public final class ReplaceMessages {
             break;
           case "msg_text":
             try {
+              // NOTE: If the text is for an ICU template, then it will not contain any
+              // placeholders ("{$placeholderName}"), so it will be treated as a single string
+              // part.
               jsMessageBuilder.appendParts(JsMessageVisitor.parseJsMessageTextIntoParts(value));
             } catch (PlaceholderFormatException unused) {
               // Somehow we stored the protected message text incorrectly, which should never
@@ -761,6 +914,9 @@ public final class ReplaceMessages {
               throw new IllegalStateException(
                   valueNode.getLocation() + ": Placeholder incorrectly formatted: >" + value + "<");
             }
+            break;
+          case "isIcuTemplate":
+            isIcuTemplate = true;
             break;
           case "escapeLessThan":
             // Just being present enables this option
@@ -797,15 +953,28 @@ public final class ReplaceMessages {
           jsMessageBuilder.build(),
           node,
           substitutionsNode,
+          isIcuTemplate,
           escapeLessThanOption,
           unescapeHtmlEntitiesOption);
     }
 
     MsgOptions getMsgOptions() {
-      final MsgOptions msgOptions = new MsgOptions();
-      msgOptions.escapeLessThan = escapeLessThan;
-      msgOptions.unescapeHtmlEntities = unescapeHtmlEntities;
-      return msgOptions;
+      return new MsgOptions() {
+        @Override
+        public boolean isIcuTemplate() {
+          return isIcuTemplate;
+        }
+
+        @Override
+        public boolean escapeLessThan() {
+          return escapeLessThan;
+        }
+
+        @Override
+        public boolean unescapeHtmlEntities() {
+          return unescapeHtmlEntities;
+        }
+      };
     }
   }
 

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jspecify.nullness.Nullable;
 
@@ -56,6 +58,9 @@ import org.jspecify.nullness.Nullable;
 public abstract class JsMessageVisitor extends AbstractPostOrderCallback implements CompilerPass {
 
   private static final String MSG_FUNCTION_NAME = "goog.getMsg";
+  private static final String ICU_MSG_FUNCTION_NAME = "declareIcuTemplate";
+  private static final String ICU_MSG_FUNCTION_QNAME =
+      "goog.i18n.messages." + ICU_MSG_FUNCTION_NAME;
   private static final String MSG_FALLBACK_FUNCTION_NAME = "goog.getMsgWithFallback";
 
   /**
@@ -93,12 +98,15 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   static final DiagnosticType MESSAGE_NODE_IS_ORPHANED =
       DiagnosticType.error(
           "JSC_MSG_ORPHANED_NODE",
-          MSG_FUNCTION_NAME + "() function could be used only with MSG_* property or variable");
+          "{0}() function may be used only with MSG_* property or variable");
 
   public static final DiagnosticType MESSAGE_NOT_INITIALIZED_CORRECTLY =
       DiagnosticType.warning(
           "JSC_MSG_NOT_INITIALIZED_CORRECTLY",
-          "message not initialized using " + MSG_FUNCTION_NAME);
+          "Message must be initialized using a call to "
+              + MSG_FUNCTION_NAME
+              + " or "
+              + ICU_MSG_FUNCTION_QNAME);
 
   public static final DiagnosticType BAD_FALLBACK_SYNTAX =
       DiagnosticType.error(
@@ -145,7 +153,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private final Map<Var, JsMessage> unnamedMessages = new LinkedHashMap<>();
 
   /**
-   * List of found goog.getMsg call nodes.
+   * Set of found goog.getMsg call nodes.
    *
    * <p>When we visit goog.getMsg() node we add it, and later when we visit its parent we remove it.
    * All nodes that are left at the end of traversing are orphaned nodes. It means have no
@@ -174,7 +182,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     NodeTraversal.traverse(compiler, root, this);
 
     for (Node msgNode : googMsgNodes) {
-      compiler.report(JSError.make(msgNode, MESSAGE_NODE_IS_ORPHANED));
+      compiler.report(
+          JSError.make(
+              msgNode, MESSAGE_NODE_IS_ORPHANED, msgNode.getFirstChild().getQualifiedName()));
     }
   }
 
@@ -273,8 +283,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     if (msgNodeIsACall) {
       googMsgNodes.remove(msgNode);
     } else {
-      // TODO(bradfordcsmith): Make this an error if an `@desc` annotation is present to indicate
-      // that the code author really expects translation to happen.
       compiler.report(JSError.make(node, MESSAGE_NOT_INITIALIZED_CORRECTLY));
       return;
     }
@@ -288,28 +296,80 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       sourceName = traversal.getSourceName() + ":" + node.getLineno();
     }
 
-    final String description;
-    final String meaning;
-    final String alternateMessageId;
-    if (jsDocInfo != null) {
-      description = jsDocInfo.getDescription();
-      meaning = jsDocInfo.getMeaning();
-      alternateMessageId = jsDocInfo.getAlternateMessageId();
-    } else {
-      description = null;
-      meaning = null;
-      alternateMessageId = null;
-    }
-
-    final CallNodeMsgData callNodeMsgData;
+    checkState(msgNode.isCall());
+    final Node fnNameNode = msgNode.getFirstChild();
     try {
-      callNodeMsgData = extractCallNodeMsgData(msgNode);
+      if (isDeclareIcuTemplateCallee(fnNameNode)) {
+        final IcuTemplateDefinition icuTemplateDefinition =
+            extractIcuTemplateDefinition(msgNode, jsDocInfo, messageKeyFromLhs, sourceName);
+        final JsMessage extractedMessage = icuTemplateDefinition.getMessage();
+        trackMessage(traversal, possiblyObfuscatedMessageKey, msgNode, extractedMessage);
+        reportErrorIfEmptyMessage(node, extractedMessage);
+        processIcuTemplateDefinition(icuTemplateDefinition);
+      } else if (fnNameNode.matchesQualifiedName(MSG_FUNCTION_NAME)) {
+        final JsMessageDefinition jsMessageDefinition =
+            extractJsMessageDefinition(msgNode, jsDocInfo, messageKeyFromLhs, sourceName);
+        final JsMessage extractedMessage = jsMessageDefinition.getMessage();
+        trackMessage(traversal, possiblyObfuscatedMessageKey, msgNode, extractedMessage);
+        reportErrorIfEmptyMessage(node, extractedMessage);
+
+        // goog.getMsg() calls are required to have `@desc` unless they are external.
+        final String desc = extractedMessage.getDesc();
+        if ((desc == null || desc.trim().isEmpty()) && !extractedMessage.isExternal()) {
+          compiler.report(
+              JSError.make(node, MESSAGE_HAS_NO_DESCRIPTION, extractedMessage.getKey()));
+        }
+
+        processJsMessageDefinition(jsMessageDefinition);
+      } else {
+        compiler.report(
+            JSError.make(
+                msgNode,
+                MESSAGE_TREE_MALFORMED,
+                "Message must be initialized using a call to "
+                    + MSG_FUNCTION_NAME
+                    + " or "
+                    + ICU_MSG_FUNCTION_NAME
+                    + " (from goog.i18n.messages)."));
+      }
     } catch (MalformedException ex) {
       compiler.report(JSError.make(ex.getNode(), MESSAGE_TREE_MALFORMED, ex.getMessage()));
-      return;
     }
-    final String messageText = callNodeMsgData.getMessageText();
-    final ImmutableList<Part> messageParts = callNodeMsgData.getMessageParts();
+  }
+
+  private boolean isDeclareIcuTemplateCallee(Node calleeNode) {
+    // NOTE: We're requiring that the imported ICU template function name match its original name.
+    // This is an intentional limitation, since it should be less confusing to users as well as
+    // to this program.
+    // TODO(bradfordcsmith): Make this check more robust, possibly building on ModuleMetadata or
+    // ProcessClosurePrimitives.
+    final String qualifiedName = calleeNode.getQualifiedName();
+    return qualifiedName != null && qualifiedName.endsWith(ICU_MSG_FUNCTION_NAME);
+  }
+
+  interface InputForBuildJsMsg {
+    String getMessageKeyFromLhs();
+
+    String getSourceName();
+
+    String getMessageText();
+
+    ImmutableList<Part> getMessageParts();
+
+    Map<String, String> getPlaceholderExampleMap();
+
+    Map<String, String> getPlaceholderOriginalCodeMap();
+
+    String getDescription();
+
+    String getMeaning();
+
+    String getAlternateMessageId();
+  }
+
+  private JsMessage buildJsMessage(InputForBuildJsMsg input) {
+    final ImmutableList<Part> messageParts = input.getMessageParts();
+    final String messageKeyFromLhs = input.getMessageKeyFromLhs();
 
     // non-null for `MSG_EXTERNAL_12345`
     final String externalMessageId = getExternalMessageId(messageKeyFromLhs);
@@ -329,13 +389,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       // We will need to generate the message ID from a combination of the message text and
       // its "meaning". If the code explicitly specifies a "meaning" string we'll use that,
       // otherwise we'll use the message key as the meaning
-      String meaningForIdGeneration = meaning;
+      String meaningForIdGeneration = input.getMeaning();
       if (isUnnamedMessageName(messageKeyFromLhs)) {
         // MSG_UNNAMED_XXXX = goog.getMsg(....);
         // JS code that is automatically generated uses this, since it is harder for it to create
         // message variable names that are guaranteed to be unique.
         isAnonymous = true;
-        messageKeyFinal = generateKeyFromMessageText(messageText);
+        messageKeyFinal = generateKeyFromMessageText(input.getMessageText());
         if (meaningForIdGeneration == null) {
           meaningForIdGeneration = messageKeyFinal;
         }
@@ -355,21 +415,31 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
               : idGenerator.generateId(meaningForIdGeneration, messageParts);
     }
 
-    JsMessage extractedMessage =
-        new JsMessage.Builder()
-            .appendParts(messageParts)
-            .setPlaceholderNameToExampleMap(callNodeMsgData.getPlaceholderExampleMap())
-            .setPlaceholderNameToOriginalCodeMap(callNodeMsgData.getPlaceholderOriginalCodeMap())
-            .setIsAnonymous(isAnonymous)
-            .setIsExternalMsg(isExternal)
-            .setKey(messageKeyFinal)
-            .setSourceName(sourceName)
-            .setDesc(description)
-            .setMeaning(meaning)
-            .setAlternateId(alternateMessageId)
-            .setId(messageId)
-            .build();
+    return new JsMessage.Builder()
+        .appendParts(messageParts)
+        .setPlaceholderNameToExampleMap(input.getPlaceholderExampleMap())
+        .setPlaceholderNameToOriginalCodeMap(input.getPlaceholderOriginalCodeMap())
+        .setIsAnonymous(isAnonymous)
+        .setIsExternalMsg(isExternal)
+        .setKey(messageKeyFinal)
+        .setSourceName(input.getSourceName())
+        .setDesc(input.getDescription())
+        // NOTE: JsMessageXmbWriter does NOT just take this value and write it to the XMB
+        // file as the message meaning. It has its own code that defaults a null value to
+        // the value of the key field, then prefixes that with a project ID, if any.
+        // The intention of that seems to have been to make sure the meaning value in the XMB
+        // file matches what was actually used by the ID generator above.
+        .setMeaning(input.getMeaning())
+        .setAlternateId(input.getAlternateMessageId())
+        .setId(messageId)
+        .build();
+  }
 
+  private void trackMessage(
+      NodeTraversal traversal,
+      String possiblyObfuscatedMessageKey,
+      Node msgNode,
+      JsMessage extractedMessage) {
     // If asked to check named internal messages.
     if (!extractedMessage.isAnonymous() && !extractedMessage.isExternal()) {
       checkIfMessageDuplicated(extractedMessage.getKey(), msgNode);
@@ -379,57 +449,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     } else {
       trackNormalMessage(extractedMessage, extractedMessage.getKey(), msgNode);
     }
+  }
 
+  private void reportErrorIfEmptyMessage(Node node, JsMessage extractedMessage) {
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
       compiler.report(JSError.make(node, MESSAGE_HAS_NO_TEXT, extractedMessage.getKey()));
     }
-
-    // Messages must have descriptions.
-    final String desc = extractedMessage.getDesc();
-    if ((desc == null || desc.trim().isEmpty()) && !extractedMessage.isExternal()) {
-      compiler.report(JSError.make(node, MESSAGE_HAS_NO_DESCRIPTION, extractedMessage.getKey()));
-    }
-
-    // NOTE: All of the methods defined below should return data that has already been computed.
-    // Most importantly, none of them should throw a MalformedException.
-    processJsMessageDefinition(
-        new JsMessageDefinition() {
-          @Override
-          public JsMessage getMessage() {
-            return extractedMessage;
-          }
-
-          @Override
-          public Node getMessageNode() {
-            return msgNode;
-          }
-
-          @Override
-          public Node getTemplateTextNode() {
-            return callNodeMsgData.getTemplateTextNode();
-          }
-
-          @Override
-          public @Nullable Node getPlaceholderValuesNode() {
-            return callNodeMsgData.getPlaceholderValuesNode();
-          }
-
-          @Override
-          public ImmutableMap<String, Node> getPlaceholderValueMap() {
-            return callNodeMsgData.getPlaceholderValueMap();
-          }
-
-          @Override
-          public boolean shouldEscapeLessThan() {
-            return callNodeMsgData.shouldEscapeLessThan();
-          }
-
-          @Override
-          public boolean shouldUnescapeHtmlEntities() {
-            return callNodeMsgData.shouldUnescapeHtmlEntities();
-          }
-        });
   }
 
   /**
@@ -466,9 +492,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     }
 
     // goog.getMsg()
-    if (call.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
+    final Node callee = call.getFirstChild();
+    if (callee.matchesQualifiedName(MSG_FUNCTION_NAME) || isDeclareIcuTemplateCallee(callee)) {
       googMsgNodes.add(call);
-    } else if (call.getFirstChild().matchesQualifiedName(MSG_FALLBACK_FUNCTION_NAME)) {
+    } else if (callee.matchesQualifiedName(MSG_FALLBACK_FUNCTION_NAME)) {
       visitFallbackFunctionCall(traversal, call);
     }
   }
@@ -608,22 +635,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     }
   }
 
-  private CallNodeMsgData extractCallNodeMsgData(Node node) throws MalformedException {
-    checkState(node.isCall());
-    Node fnNameNode = node.getFirstChild();
-    if (fnNameNode.matchesQualifiedName(MSG_FUNCTION_NAME)) {
-      // Extract data from a call to `goog.getMsg(...)`
-      return extractGoogGetMsgData(node);
-    } else {
-      throw new MalformedException(
-          "Message initialized using unrecognized function. "
-              + "Please use "
-              + MSG_FUNCTION_NAME
-              + "() instead.",
-          fnNameNode);
-    }
-  }
-
   /**
    * Extract data from a call to {@code goog.getMsg(...)}.
    *
@@ -644,17 +655,43 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *
    * @throws MalformedException if the code does not match the expected format.
    */
-  private CallNodeMsgData extractGoogGetMsgData(Node callNode) throws MalformedException {
+  private JsMessageDefinition extractJsMessageDefinition(
+      Node msgNode, JSDocInfo jsDocInfo, String messageKeyFromLhs, String sourceName)
+      throws MalformedException {
+    // Extract data from a call to `goog.getMsg(...)`
+    // TODO(bradfordcsmith): Add these three fields to the options bag argument for goog.getMsg().
+    // Specifying them there instead of in annotations will make them available to the uncompiled
+    // `goog.getMsg()` call during runtime, which could enable runtime lookup of translated messages
+    // in uncompiled code.
+    final @Nullable String description;
+    final @Nullable String meaning;
+    final @Nullable String alternateMessageId;
+    if (jsDocInfo == null) {
+      description = null;
+      meaning = null;
+      alternateMessageId = null;
+    } else {
+      description = jsDocInfo.getDescription();
+      meaning = jsDocInfo.getMeaning();
+      alternateMessageId = jsDocInfo.getAlternateMessageId();
+    }
+
     // first child of the call is the `goog.getMsg` name
     // second is the message string value
-    final Node msgTextNode = callNode.getSecondChild();
+    final Node msgTextNode = msgNode.getSecondChild();
     if (msgTextNode == null) {
-      throw new MalformedException("Message string literal expected", callNode);
+      throw new MalformedException("Message string literal expected", msgNode);
     }
     // third is the optional object literal mapping placeholder names to value expressions
     final Node valuesObjLit = msgTextNode.getNext();
     // fourth is the optional options-bag argument
     final Node optionsBagArgument = valuesObjLit == null ? null : valuesObjLit.getNext();
+
+    final Node unexpectedArgument =
+        optionsBagArgument == null ? null : optionsBagArgument.getNext();
+    if (unexpectedArgument != null) {
+      throw new MalformedException("too many arguments", unexpectedArgument);
+    }
 
     // Extract and parse the message text
     // The message string can be a string literal or a concatenation of string literals.
@@ -688,7 +725,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     // Get a map from placeholder name to Node value
     final ImmutableMap<String, Node> placeholderValuesMap =
-        placeholderObjectLiteralMap.extractValueMap();
+        placeholderObjectLiteralMap.extractAsValueMap();
 
     // Extract the Options bag data
     // NOTE: the extract method returns an "empty" value for `null`
@@ -698,43 +735,79 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // placeholder names that appear in the message text.
     jsMessageOptions.checkForUnknownPlaceholders(placeholderNamesFromText);
 
-    // NOTE: All of the methods defined below should do little to no computation.
-    // In particular, all checking for MalformedException cases must be done above,
-    // so these methods can be called without needing to catch exceptions.
-    return new CallNodeMsgData() {
+    final JsMessage jsExtractedMessage =
+        buildJsMessage(
+            new InputForBuildJsMsg() {
+              @Override
+              public String getMessageKeyFromLhs() {
+                return messageKeyFromLhs;
+              }
+
+              @Override
+              public String getSourceName() {
+                return sourceName;
+              }
+
+              @Override
+              public String getMessageText() {
+                return googGetMsgParsedText.getText();
+              }
+
+              @Override
+              public ImmutableList<Part> getMessageParts() {
+                return googGetMsgParsedText.getParts();
+              }
+
+              @Override
+              public ImmutableMap<String, String> getPlaceholderExampleMap() {
+                return jsMessageOptions.getPlaceholderExampleMap();
+              }
+
+              @Override
+              public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
+                return jsMessageOptions.getPlaceholderOriginalCodeMap();
+              }
+
+              @Override
+              public String getDescription() {
+                return description;
+              }
+
+              @Override
+              public String getMeaning() {
+                return meaning;
+              }
+
+              @Override
+              public String getAlternateMessageId() {
+                return alternateMessageId;
+              }
+            });
+
+    return new JsMessageDefinition() {
+      @Override
+      public JsMessage getMessage() {
+        return jsExtractedMessage;
+      }
+
+      @Override
+      public Node getMessageNode() {
+        return msgNode;
+      }
+
       @Override
       public Node getTemplateTextNode() {
         return msgTextNode;
       }
 
       @Override
-      public String getMessageText() {
-        return googGetMsgParsedText.getText();
-      }
-
-      @Override
-      public ImmutableList<Part> getMessageParts() {
-        return googGetMsgParsedText.getParts();
-      }
-
-      @Override
-      public Node getPlaceholderValuesNode() {
+      public @Nullable Node getPlaceholderValuesNode() {
         return valuesObjLit;
       }
 
       @Override
       public ImmutableMap<String, Node> getPlaceholderValueMap() {
         return placeholderValuesMap;
-      }
-
-      @Override
-      public ImmutableMap<String, String> getPlaceholderExampleMap() {
-        return jsMessageOptions.getPlaceholderExampleMap();
-      }
-
-      @Override
-      public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
-        return jsMessageOptions.getPlaceholderOriginalCodeMap();
       }
 
       @Override
@@ -749,24 +822,212 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     };
   }
 
-  private interface CallNodeMsgData {
-    Node getTemplateTextNode();
+  /**
+   * Extract message data from a `declareIcuTemplate()` call.
+   *
+   * <p>Example:
+   *
+   * <pre><code>
+   *   const MSG_ICU_EXAMPLE =
+   *       declareIcuTemplate(
+   *           `{NUM_PEOPLE, plural, offset:1
+   *           =0 {I see {BEGIN_BOLD}no one at all{END_BOLD} in {INTERPOLATION_2}.}
+   *           =1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}
+   *           =2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}
+   *           other {I see {INTERPOLATION_1} and some other people in {INTERPOLATION_2}.}
+   *       }`,
+   *       {
+   *         description: 'required message description here',
+   *         meaning: 'optional meaning here',
+   *         alternate_message_id: 'optional alternate message ID here',
+   *         // optional
+   *         original_code: {
+   *           'INTERPOLATION_1': '{{getPerson()}}',
+   *           'INTERPOLATION_2': '{{getPlaceName()}}',
+   *         },
+   *         // optional
+   *         example: {
+   *           'INTERPOLATION_1': 'Jane Doe',
+   *           'INTERPOLATION_2': 'Paris, France',
+   *         }
+   *       });
+   * </code></pre>
+   */
+  private IcuTemplateDefinition extractIcuTemplateDefinition(
+      Node msgNode, JSDocInfo jsDocInfo, String messageKeyFromLhs, String sourceName)
+      throws MalformedException {
+    if (jsDocInfo != null) {
+      // For declareIcuTemplateData() it is not valid to use the @desc, @meaning, and
+      // @alternateMessageId annotations.
+      // Instead, that information should go into the options bag parameter.
+      if (jsDocInfo.getAlternateMessageId() != null) {
+        throw new MalformedException(
+            "Use the 'alternate_message_id' option, not the '@alternateMessageId' annotation",
+            msgNode);
+      }
+      if (jsDocInfo.getDescription() != null) {
+        throw new MalformedException(
+            "Use the 'description' option, not the '@desc' annotation", msgNode);
+      }
+      if (jsDocInfo.getMeaning() != null) {
+        throw new MalformedException(
+            "Use the 'meaning' option, not the '@meaning' annotation", msgNode);
+      }
+    }
 
-    String getMessageText();
+    // The first argument is the message string
+    final Node stringLiteralExpression = msgNode.getSecondChild();
+    if (stringLiteralExpression == null) {
+      throw new MalformedException("message string argument expected", msgNode);
+    }
+    final IcuMessageTemplateString icuMessageTemplateString =
+        extractIcuMessageTemplateString(stringLiteralExpression);
 
-    ImmutableList<Part> getMessageParts();
+    // The second argument is the options bag
+    final Node optionsBagNode = stringLiteralExpression.getNext();
+    if (optionsBagNode == null) {
+      throw new MalformedException("options argument expected", msgNode);
+    }
+    final IcuTemplateOptions icuTemplateOptions = extractIcuTemplateOptions(optionsBagNode);
 
-    Node getPlaceholderValuesNode();
+    // Parsing of the template string into parts depends on which placeholders are mentioned
+    // in the options. Placeholders that do not have example or original_code text  will not be
+    // extracted from the template as separate parts.
+    final ExtractedIcuTemplateParts extractedIcuTemplateParts =
+        icuMessageTemplateString.extractParts(icuTemplateOptions.getPlaceholderNames());
+    icuTemplateOptions.checkForUnknownPlaceholders(
+        extractedIcuTemplateParts.extractedPlaceholderNames);
 
-    ImmutableMap<String, Node> getPlaceholderValueMap();
+    // There shouldn't be another argument
+    final Node unexpectedArgument = optionsBagNode.getNext();
+    if (unexpectedArgument != null) {
+      throw new MalformedException("too many arguments", unexpectedArgument);
+    }
 
-    ImmutableMap<String, String> getPlaceholderExampleMap();
+    final JsMessage extractedMessage =
+        buildJsMessage(
+            new InputForBuildJsMsg() {
+              @Override
+              public String getMessageKeyFromLhs() {
+                return messageKeyFromLhs;
+              }
 
-    ImmutableMap<String, String> getPlaceholderOriginalCodeMap();
+              @Override
+              public String getSourceName() {
+                return sourceName;
+              }
 
-    boolean shouldEscapeLessThan();
+              @Override
+              public String getMessageText() {
+                return icuMessageTemplateString.template;
+              }
 
-    boolean shouldUnescapeHtmlEntities();
+              @Override
+              public ImmutableList<Part> getMessageParts() {
+                return extractedIcuTemplateParts.extractedParts;
+              }
+
+              @Override
+              public ImmutableMap<String, String> getPlaceholderExampleMap() {
+                return icuTemplateOptions.getPlaceholderExampleMap();
+              }
+
+              @Override
+              public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
+                return icuTemplateOptions.getPlaceholderOriginalCodeMap();
+              }
+
+              @Override
+              public String getDescription() {
+                return icuTemplateOptions.getDescription();
+              }
+
+              @Override
+              public String getMeaning() {
+                return icuTemplateOptions.getMeaning();
+              }
+
+              @Override
+              public String getAlternateMessageId() {
+                return icuTemplateOptions.getAlternateMessageId();
+              }
+            });
+
+    return new IcuTemplateDefinition() {
+      @Override
+      public JsMessage getMessage() {
+        return extractedMessage;
+      }
+
+      @Override
+      public Node getMessageNode() {
+        return msgNode;
+      }
+
+      @Override
+      public Node getTemplateTextNode() {
+        return stringLiteralExpression;
+      }
+    };
+  }
+
+  private static final Pattern ICU_PLACEHOLDER_RE = Pattern.compile("\\{([A-Z_0-9]+)\\}");
+
+  @VisibleForTesting
+  static final class IcuMessageTemplateString {
+    private final String template;
+
+    IcuMessageTemplateString(String template) {
+      this.template = template;
+    }
+
+    /**
+     * Split the template string into plain string parts and placeholders.
+     *
+     * <p>Although this method will recognize all ICU placeholders in the string ("{NAME}"), it will
+     * only extract as separate parts those that are named in {@code placholderNamesToExtract}.
+     * Those are the ones for which we will need to create placeholder elements, so we can attach
+     * example text or original code snippets to them when we put the message into an XMB file.
+     */
+    ExtractedIcuTemplateParts extractParts(Set<String> placholderNamesToExtract) {
+      ImmutableSet.Builder<String> extractedPlaceholderNames = ImmutableSet.builder();
+      ImmutableList.Builder<Part> partsBuilder = ImmutableList.builder();
+      final Matcher matcher = ICU_PLACEHOLDER_RE.matcher(template);
+      int remainingTemplateStartIndex = 0;
+      while (matcher.find()) {
+        String placeholderName = matcher.group(1);
+        if (placholderNamesToExtract.contains(placeholderName)) {
+          extractedPlaceholderNames.add(placeholderName);
+          String nonPlaceholderPrefix =
+              template.substring(remainingTemplateStartIndex, matcher.start());
+          remainingTemplateStartIndex = matcher.end();
+          partsBuilder.add(StringPart.create(nonPlaceholderPrefix));
+          partsBuilder.add(PlaceholderReference.createForCanonicalName(placeholderName));
+        } // else we have no need to create a separate part for this placeholder.
+      }
+      if (remainingTemplateStartIndex < template.length()) {
+        final String remainingTemplate = template.substring(remainingTemplateStartIndex);
+        partsBuilder.add(StringPart.create(remainingTemplate));
+      }
+      return new ExtractedIcuTemplateParts(extractedPlaceholderNames.build(), partsBuilder.build());
+    }
+  }
+
+  static class ExtractedIcuTemplateParts {
+    final ImmutableSet<String> extractedPlaceholderNames;
+    final ImmutableList<Part> extractedParts;
+
+    ExtractedIcuTemplateParts(
+        ImmutableSet<String> extractedPlaceholderNames, ImmutableList<Part> extractedParts) {
+      this.extractedPlaceholderNames = extractedPlaceholderNames;
+      this.extractedParts = extractedParts;
+    }
+  }
+
+  private IcuMessageTemplateString extractIcuMessageTemplateString(Node stringExpression)
+      throws MalformedException {
+    final String templateString = extractStringFromStringExprNode(stringExpression);
+    return new IcuMessageTemplateString(templateString);
   }
 
   private interface JsMessageOptions {
@@ -804,13 +1065,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     final Node exampleValueNode = objectLiteralMap.getValueNode("example");
     final ObjectLiteralMap exampleObjectLiteralMap = extractObjectLiteralMap(exampleValueNode);
     final ImmutableMap<String, String> placeholderExamplesMap =
-        exampleObjectLiteralMap.extractStringToStringMap();
+        exampleObjectLiteralMap.extractAsStringToStringMap();
 
     final Node originalCodeValueNode = objectLiteralMap.getValueNode("original_code");
     final ObjectLiteralMap originalCodeObjectLiteralMap =
         extractObjectLiteralMap(originalCodeValueNode);
     final ImmutableMap<String, String> placeholderOriginalCodeMap =
-        originalCodeObjectLiteralMap.extractStringToStringMap();
+        originalCodeObjectLiteralMap.extractAsStringToStringMap();
 
     // NOTE: The getX() methods below should all do little to no computation.
     // In particular, all checking for MalformedExceptions must be done before creating this object.
@@ -833,6 +1094,141 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       @Override
       public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
         return placeholderOriginalCodeMap;
+      }
+
+      @Override
+      public void checkForUnknownPlaceholders(Set<String> knownPlaceholders)
+          throws MalformedException {
+        exampleObjectLiteralMap.checkForUnexpectedKeys(
+            knownPlaceholders, unknownName -> "Unknown placeholder: " + unknownName);
+        originalCodeObjectLiteralMap.checkForUnexpectedKeys(
+            knownPlaceholders, unknownName -> "Unknown placeholder: " + unknownName);
+      }
+    };
+  }
+
+  private interface IcuTemplateOptions {
+    String getDescription();
+
+    @Nullable String getMeaning();
+
+    @Nullable String getAlternateMessageId();
+
+    ImmutableMap<String, String> getPlaceholderExampleMap();
+
+    ImmutableMap<String, String> getPlaceholderOriginalCodeMap();
+
+    void checkForUnknownPlaceholders(Set<String> knownPlaceholders) throws MalformedException;
+
+    /** All the placeholder names mentioned in the options. */
+    ImmutableSet<String> getPlaceholderNames();
+  }
+
+  /**
+   * Property names that are expected to appear in the options bag argument of declareIcuTemplate().
+   */
+  private static final ImmutableSet<String> ICU_TEMPLATE_OPTION_NAMES =
+      ImmutableSet.of("description", "meaning", "alternate_message_id", "example", "original_code");
+
+  /**
+   * Extract the options from the second argument to a `declareIcuTemplate()` call
+   *
+   * <p>Example:
+   *
+   * <pre><code>
+   *   {
+   *     description: 'required message description here',
+   *     meaning: 'optional meaning here',
+   *     alternate_message_id: 'optional alternate message ID here',
+   *     // optional
+   *     original_code: {
+   *       'INTERPOLATION_1': '{{getPerson()}}',
+   *       'INTERPOLATION_2': '{{getPlaceName()}}',
+   *     },
+   *     // optional
+   *     example: {
+   *       'INTERPOLATION_1': 'Jane Doe',
+   *       'INTERPOLATION_2': 'Paris, France',
+   *     }
+   *   }
+   * </code></pre>
+   */
+  private IcuTemplateOptions extractIcuTemplateOptions(Node optionsBag) throws MalformedException {
+    ObjectLiteralMap objectLiteralMap = extractObjectLiteralMap(optionsBag);
+    objectLiteralMap.checkForUnexpectedKeys(
+        ICU_TEMPLATE_OPTION_NAMES, optionName -> "Unknown option: " + optionName);
+
+    // required description string
+    final @Nullable Node descriptionNode = objectLiteralMap.getValueNode("description");
+    if (descriptionNode == null) {
+      throw new MalformedException("'description' option field is missing", optionsBag);
+    }
+    final String description = extractStringFromStringExprNode(descriptionNode);
+
+    // optional meaning string
+    final @Nullable Node meaningNode = objectLiteralMap.getValueNode("meaning");
+    final @Nullable String meaning =
+        meaningNode == null ? null : extractStringFromStringExprNode(meaningNode);
+
+    // optional alternate message ID
+    final @Nullable Node alternateMessageIdNode =
+        objectLiteralMap.getValueNode("alternate_message_id");
+    final @Nullable String alternateMessageId =
+        alternateMessageIdNode == null
+            ? null
+            : extractStringFromStringExprNode(alternateMessageIdNode);
+
+    // optional map of placeholder names to example string values
+    final Node exampleValueNode = objectLiteralMap.getValueNode("example");
+    final ObjectLiteralMap exampleObjectLiteralMap = extractObjectLiteralMap(exampleValueNode);
+    final ImmutableMap<String, String> placeholderExamplesMap =
+        exampleObjectLiteralMap.extractAsStringToStringMap();
+
+    // optional map of placeholder names to original_code string values
+    final Node originalCodeValueNode = objectLiteralMap.getValueNode("original_code");
+    final ObjectLiteralMap originalCodeObjectLiteralMap =
+        extractObjectLiteralMap(originalCodeValueNode);
+    final ImmutableMap<String, String> placeholderOriginalCodeMap =
+        originalCodeObjectLiteralMap.extractAsStringToStringMap();
+
+    // All the placeholder names mentioned in the 2 optional maps.
+    final ImmutableSet<String> placeholderNames =
+        ImmutableSet.<String>builder()
+            .addAll(placeholderExamplesMap.keySet())
+            .addAll(placeholderOriginalCodeMap.keySet())
+            .build();
+
+    // NOTE: The getX() methods below should all do little to no computation.
+    // In particular, all checking for MalformedExceptions must be done before creating this object.
+    return new IcuTemplateOptions() {
+      @Override
+      public String getDescription() {
+        return description;
+      }
+
+      @Override
+      public @Nullable String getMeaning() {
+        return meaning;
+      }
+
+      @Override
+      public @Nullable String getAlternateMessageId() {
+        return alternateMessageId;
+      }
+
+      @Override
+      public ImmutableMap<String, String> getPlaceholderExampleMap() {
+        return placeholderExamplesMap;
+      }
+
+      @Override
+      public ImmutableMap<String, String> getPlaceholderOriginalCodeMap() {
+        return placeholderOriginalCodeMap;
+      }
+
+      @Override
+      public ImmutableSet<String> getPlaceholderNames() {
+        return placeholderNames;
       }
 
       @Override
@@ -877,7 +1273,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
      * Returns a map from object property names the Node values they have in the AST, building the
      * map first, if necessary.
      */
-    ImmutableMap<String, Node> extractValueMap();
+    ImmutableMap<String, Node> extractAsValueMap();
 
     /**
      * Returns a map from object property names to string values, building it first, if necessary.
@@ -885,7 +1281,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
      * @throws MalformedException if any of the values are not actually simple string literals or
      *     concatenations of string literals.
      */
-    ImmutableMap<String, String> extractStringToStringMap() throws MalformedException;
+    ImmutableMap<String, String> extractAsStringToStringMap() throws MalformedException;
 
     /**
      * Get the value node for a key.
@@ -934,7 +1330,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     }
 
     @Override
-    public ImmutableMap<String, Node> extractValueMap() {
+    public ImmutableMap<String, Node> extractAsValueMap() {
       if (valueMap == null) {
         ImmutableMap.Builder<String, Node> builder = ImmutableMap.builder();
         for (Entry<String, Node> entry : stringToStringKeyMap.entrySet()) {
@@ -946,7 +1342,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     }
 
     @Override
-    public ImmutableMap<String, String> extractStringToStringMap() throws MalformedException {
+    public ImmutableMap<String, String> extractAsStringToStringMap() throws MalformedException {
       if (stringMap == null) {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         for (Entry<String, Node> entry : stringToStringKeyMap.entrySet()) {
