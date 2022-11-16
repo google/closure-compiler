@@ -4332,12 +4332,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "})(['']);")
         .includeDefaultExterns()
-        .addDiagnostic(
-            DiagnosticType.error(
-                "JSC_TYPE_MISMATCH",
-                "actual parameter 1 of f does not match formal parameter\n"
-                    + "found   : (number|string)\n"
-                    + "required: null at [testcode] line 4 : 6"))
         .run();
   }
 
@@ -8481,9 +8475,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
-  /**
-   * @see #testOr4()
-   */
+  /** @see #testOr4() */
   @Test
   public void testOr5() {
     newTest()
@@ -19593,6 +19585,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
+
   @Test
   public void testIArrayLikeStructuralMatch1() {
     newTest()
@@ -20027,6 +20020,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
+
   @Test
   public void testOptimizePropertyMap1() {
     // For non object-literal types such as Function, the behavior doesn't change.
@@ -20247,6 +20241,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic("Property b never defined on Foo")
         .run();
   }
+
 
   @Test
   public void testDuplicateVariableDefinition1() {
@@ -21549,6 +21544,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 "required: string"))
         .run();
   }
+
 
   @Test
   public void testPropertyReferenceOnShadowingParameter() {
