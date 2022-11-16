@@ -1169,7 +1169,8 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$a$b$c = {}",
             lines(
                 "async function test() {",
-                " var d = ((await goog.importHandler_('sG5M4c')),module$exports$a$b$c);",
+                " await goog.importHandler_('sG5M4c');",
+                " var d = module$exports$a$b$c;",
                 "}")));
   }
 
@@ -1188,7 +1189,8 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "/** @const */ module$exports$a$b$c.Foo = class {}"),
             lines(
                 "async function test() {",
-                " var {Foo} = ((await goog.importHandler_('sG5M4c')),module$exports$a$b$c);",
+                " await goog.importHandler_('sG5M4c');",
+                " var {Foo} = module$exports$a$b$c;",
                 "}")));
   }
 
