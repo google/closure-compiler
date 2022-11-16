@@ -1600,6 +1600,23 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testForOf_forbidsAsyncIterable() {
+    newTest()
+        .addSource(
+            "/** @param {!AsyncIterable<string>} asyncIterable */",
+            "function f(asyncIterable) {",
+            "  for (var elem of asyncIterable) {}",
+            "}")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            lines(
+                "Can only iterate over a (non-null) Iterable type",
+                "found   : AsyncIterable<string>",
+                "required: Iterable"))
+        .run();
+  }
+
+  @Test
   public void testForOf_iterableTypeIsNotFirstTemplateType() {
     newTest()
         .addSource(
@@ -1659,7 +1676,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testForOf_unionType3() {
+  public void testForOf_unionType_stringAndArray() {
     newTest()
         .includeDefaultExterns()
         .addSource(
@@ -1668,9 +1685,35 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @param {string|!Array<number>} param */",
             "function f(param) {",
             "  for (let x of param) {",
-            "    takesNull(x);", // TODO(lharker): this should cause a type error
+            "    takesNull(x);",
             "  }",
             "}")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesNull does not match formal parameter",
+                "found   : (number|string)",
+                "required: null"))
+        .run();
+  }
+
+  @Test
+  public void testForOf_unionType_readonlyArrayAndArray() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource(
+            "function takesNull(/** null */ n) {}",
+            "",
+            "/** @param {!ReadonlyArray<number>|!Array<string>} param */",
+            "function f(param) {",
+            "  for (let x of param) {",
+            "    takesNull(x);",
+            "  }",
+            "}")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesNull does not match formal parameter",
+                "found   : (number|string)",
+                "required: null"))
         .run();
   }
 
