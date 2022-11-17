@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -256,12 +255,11 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCannotExtract() {
-    testError("let x; while(x = class A{}) {use(x);}", CANNOT_CONVERT);
-    // We can not extract class when it's assigned as default value to a parameter
-    testError("function foo(x = class A {}) {} use(foo());", CANNOT_CONVERT);
-    // But we can extract when the class is defined somewhere inside the default value to the
-    // parameter
+  public void testNormalisedArrowFunction() {
+    test(
+        "(() => { return class A {};})();",
+        "(() => { const testcode$classdecl$var0 = class {}; return testcode$classdecl$var0;})()");
+
     test(
         "function foo(x = () => {return class A {}; }) {} use(foo());",
         lines(
@@ -272,13 +270,47 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "  })",
             " {}",
             "use(foo());"));
+  }
 
-    testError(
+  // Tests that class that is a default parameter value are converted into normalized arrow
+  // functions and successfully extracted
+  @Test
+  public void testClassAsDefaultParamValue() {
+    test(
+        lines("function foo(x = class A {}) {} ", "use(foo());"),
+        lines(
+            "function foo(x = ",
+            "  (() => { const testcode$classdecl$var0 = class {}; ",
+            "           return testcode$classdecl$var0;",
+            "         }",
+            "  )()) {}",
+            "use(foo());"));
+  }
+
+  @Test
+  public void testCannotExtract() {
+    test(
+        "let x; while(x = class A{}) {use(x);}",
+        lines(
+            "let x;",
+            "while(x = (() => { const testcode$classdecl$var0 = class {}; return"
+                + " testcode$classdecl$var0;})()) ",
+            "{use(x);}"));
+
+    test(
         lines(
             "/** @type {number} */ var x = 0;",
             "function f(x, y) {}",
-            "while(f(x = 2, class Foo { [x=3]() {} })){}"),
-        CANNOT_CONVERT);
+            "while(f(x = 2, class Foo { bar() {} })){}"),
+        lines(
+            "var x = 0;",
+            "function f(x, y) {}",
+            "while(",
+            "  f(x = 2, ",
+            "    (() => { const testcode$classdecl$var0 = class { bar() {} };",
+            "          return testcode$classdecl$var0;",
+            "         })()",
+            ")){}"));
   }
 
   @Test

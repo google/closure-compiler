@@ -18,9 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.javascript.jscomp.AstFactory.type;
-import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -161,12 +162,39 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     }
 
     if (expressionDecomposer.canExposeExpression(classNode) == DecompositionType.UNDECOMPOSABLE) {
-      compiler.report(
-          JSError.make(classNode, CANNOT_CONVERT, "class expression that cannot be extracted"));
-      return false;
+      // When class is undecomposable, we can make it decomposable (and therefore extractable) by
+      // wrapping it inside an IIFE. This is not needed for already movable/decomposable classes.
+      wrapClassDefInsideIIFE(classNode, parent);
     }
 
     return true;
+  }
+
+  /**
+   * Wraps any class definition into an IIFE.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * function foo(x = class A {}) {}
+   *
+   * }</pre>
+   *
+   * turns into:
+   *
+   * <pre>{@code
+   * function foo(x = (() => { return class A {};})()) {}
+   *
+   * }</pre>
+   */
+  private void wrapClassDefInsideIIFE(Node n, Node parent) {
+    Preconditions.checkState(n.isClass());
+    Node returnBlock = astFactory.createBlock(astFactory.createReturn(n.detach())).srcref(n);
+    Node arrowFn = IR.arrowFunction(IR.name(""), IR.paramList(), returnBlock).srcref(n);
+    arrowFn.setColor(StandardColors.UNKNOWN);
+    Node iife = astFactory.createCallWithUnknownType(arrowFn).srcrefTreeIfMissing(n);
+    parent.addChildToBack(iife);
+    compiler.reportChangeToEnclosingScope(iife);
   }
 
   private void extractClass(NodeTraversal t, Node classNode) {
