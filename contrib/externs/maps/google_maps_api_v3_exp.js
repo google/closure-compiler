@@ -3104,7 +3104,7 @@ google.maps.GeocoderRequest.prototype.placeId;
 google.maps.GeocoderRequest.prototype.region;
 
 /**
- * An Geocoder response returned by the {@link google.maps.Geocoder} containing
+ * A Geocoder response returned by the {@link google.maps.Geocoder} containing
  * the list of {@link google.maps.GeocoderResult}s.
  * @record
  */
@@ -6405,7 +6405,7 @@ google.maps.PanoProviderOptions = function() {};
 
 /**
  * If set, the renderer will use technologies (like webgl) that only work when
- * cors headers are appropiately set on the provided images. It is the
+ * cors headers are appropriately set on the provided images. It is the
  * developer&#39;s task to serve the images correctly in combination with this
  * flag, which might otherwise lead to SecurityErrors.
  * @type {boolean|undefined}
@@ -12483,6 +12483,12 @@ google.maps.places.Place.prototype.icon;
 google.maps.places.Place.prototype.iconBackgroundColor;
 
 /**
+ * The unique place id.
+ * @type {string}
+ */
+google.maps.places.Place.prototype.id;
+
+/**
  * The Place’s phone number in international format. International format
  * includes the country code, and is prefixed with the plus (+) sign.
  * @type {?string|undefined}
@@ -12535,6 +12541,18 @@ google.maps.places.Place.prototype.priceLevel;
  * @type {?number|undefined}
  */
 google.maps.places.Place.prototype.rating;
+
+/**
+ * The requested language for this place.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.requestedLanguage;
+
+/**
+ * The requested region for this place.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.requestedRegion;
 
 /**
  * A list of reviews for this Place.
@@ -12633,27 +12651,6 @@ google.maps.places.Place.prototype.getNextOpeningTime = function(date) {};
  * @return {!Promise<boolean|undefined>}
  */
 google.maps.places.Place.prototype.isOpen = function(date) {};
-
-/**
- * The unique place id.
- * @const
- * @type {string}
- */
-google.maps.places.Place.id;
-
-/**
- * The requested language for this place.
- * @const
- * @type {?string|undefined}
- */
-google.maps.places.Place.requestedLanguage;
-
-/**
- * The requested region for this place.
- * @const
- * @type {?string|undefined}
- */
-google.maps.places.Place.requestedRegion;
 
 /**
  * Defines information about an aspect of the place that users have reviewed.
@@ -13614,7 +13611,7 @@ google.maps.places.QueryAutocompletePrediction.prototype.place_id;
 google.maps.places.QueryAutocompletePrediction.prototype.terms;
 
 /**
- * An QueryAutocompletion request to be sent to the
+ * A QueryAutocompletion request to be sent to the
  * <code>QueryAutocompleteService</code>.
  * @record
  */
