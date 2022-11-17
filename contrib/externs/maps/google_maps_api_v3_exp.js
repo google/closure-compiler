@@ -1847,7 +1847,6 @@ google.maps.DirectionsRequest.prototype.destination;
 google.maps.DirectionsRequest.prototype.drivingOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * A language identifier for the language in which results should be returned,
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
@@ -2353,7 +2352,6 @@ google.maps.DistanceMatrixRequest.prototype.destinations;
 google.maps.DistanceMatrixRequest.prototype.drivingOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * A language identifier for the language in which results should be returned,
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
@@ -3063,7 +3061,6 @@ google.maps.GeocoderRequest.prototype.bounds;
 google.maps.GeocoderRequest.prototype.componentRestrictions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * A language identifier for the language in which results should be returned,
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
@@ -4640,7 +4637,9 @@ google.maps.Map.prototype.overlayMapTypes;
  * To change the viewport while the map is hidden, set the map to
  * <code>visibility: hidden</code>, thereby ensuring the map div has an actual
  * size. For vector maps, this method sets the map&#39;s tilt and heading to
- * their default zero values.
+ * their default zero values. Calling this method may cause a smooth animation
+ * as the map pans and zooms to fit the bounds. Whether or not this method
+ * animates depends on an internal heuristic.
  * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral} bounds
  *     Bounds to show.
  * @param {(number|!google.maps.Padding)=} padding Padding in pixels. The bounds
@@ -11721,6 +11720,49 @@ google.maps.marker.PinViewOptions.prototype.scale;
 google.maps.places = {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.AddressComponent = function() {};
+
+/**
+ * The full text of the address component.
+ * @type {?string}
+ */
+google.maps.places.AddressComponent.prototype.longText;
+
+/**
+ * The abbreviated, short text of the given address component.
+ * @type {?string}
+ */
+google.maps.places.AddressComponent.prototype.shortText;
+
+/**
+ * An array of strings denoting the type of this address component. A list of
+ * valid types can be found <a
+ * href="https://developers.google.com/maps/documentation/javascript/geocoding#GeocodingAddressTypes">here</a>.
+ * @type {!Array<string>}
+ */
+google.maps.places.AddressComponent.prototype.types;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.Attribution = function() {};
+
+/**
+ * Attribution text to be displayed for this Place result.
+ * @type {?string}
+ */
+google.maps.places.Attribution.prototype.provider;
+
+/**
+ * @type {?string}
+ */
+google.maps.places.Attribution.prototype.providerURI;
+
+/**
  * A widget that provides Place predictions based on a user&#39;s text input. It
  * attaches to an input element of type <code>text</code>, and listens for text
  * entry in that field. The list of predictions is presented as a drop-down
@@ -12123,6 +12165,28 @@ google.maps.places.ComponentRestrictions = function() {};
 google.maps.places.ComponentRestrictions.prototype.country;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Options for fetching Place fields.
+ * @record
+ */
+google.maps.places.FetchFieldsRequest = function() {};
+
+/**
+ * List of fields to be fetched.
+ * @type {!Array<string>}
+ */
+google.maps.places.FetchFieldsRequest.prototype.fields;
+
+/**
+ * Unique reference used to bundle the details request with an autocomplete
+ * session. If you are using the PlaceAutocompleteView widget, sessionToken does
+ * not need to be explicitly passed in. The widget manages autocomplete sessions
+ * automatically.
+ * @type {?google.maps.places.AutocompleteSessionToken|undefined}
+ */
+google.maps.places.FetchFieldsRequest.prototype.sessionToken;
+
+/**
  * A find place from text search request to be sent to {@link
  * google.maps.places.PlacesService.findPlaceFromPhoneNumber}.
  * @record
@@ -12216,6 +12280,122 @@ google.maps.places.LocationBias;
 google.maps.places.LocationRestriction;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.OpeningHours = function() {};
+
+/**
+ * Opening periods covering each day of the week, starting from Sunday, in
+ * chronological order. Does not include days where the Place is not open.
+ * @type {!Array<!google.maps.places.OpeningHoursPeriod>}
+ */
+google.maps.places.OpeningHours.prototype.periods;
+
+/**
+ * An array of seven strings representing the formatted opening hours for each
+ * day of the week. The Places Service will format and localize the opening
+ * hours appropriately for the current language. The ordering of the elements in
+ * this array depends on the language. Some languages start the week on Monday,
+ * while others start on Sunday.
+ * @type {!Array<string>}
+ */
+google.maps.places.OpeningHours.prototype.weekdayDescriptions;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.OpeningHoursPeriod = function() {};
+
+/**
+ * The closing time for the Place.
+ * @type {?google.maps.places.OpeningHoursPoint}
+ */
+google.maps.places.OpeningHoursPeriod.prototype.close;
+
+/**
+ * The opening time for the Place.
+ * @type {!google.maps.places.OpeningHoursPoint}
+ */
+google.maps.places.OpeningHoursPeriod.prototype.open;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.OpeningHoursPoint = function() {};
+
+/**
+ * The day of the week, as a number in the range [0, 6], starting on Sunday. For
+ * example, 2 means Tuesday.
+ * @type {number}
+ */
+google.maps.places.OpeningHoursPoint.prototype.day;
+
+/**
+ * The hour of the OpeningHoursPoint.time as a number, in the range [0, 23].
+ * This will be reported in the Place’s time zone.
+ * @type {number}
+ */
+google.maps.places.OpeningHoursPoint.prototype.hour;
+
+/**
+ * The minute of the OpeningHoursPoint.time as a number, in the range [0, 59].
+ * This will be reported in the Place’s time zone.
+ * @type {number}
+ */
+google.maps.places.OpeningHoursPoint.prototype.minute;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.Photo = function() {};
+
+/**
+ * Attribution text to be displayed for this photo.
+ * @type {!Array<!google.maps.places.PhotoAttribution>}
+ */
+google.maps.places.Photo.prototype.attributions;
+
+/**
+ * The height of the photo in pixels.
+ * @type {number}
+ */
+google.maps.places.Photo.prototype.heightPx;
+
+/**
+ * The width of the photo in pixels.
+ * @type {number}
+ */
+google.maps.places.Photo.prototype.widthPx;
+
+/**
+ * Returns the image URL corresponding to the specified options.
+ * @param {!google.maps.places.PhotoOptions=} options
+ * @return {string}
+ */
+google.maps.places.Photo.prototype.getURI = function(options) {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.PhotoAttribution = function() {};
+
+/**
+ * Attribution text to be displayed for this Photo result.
+ * @type {string}
+ */
+google.maps.places.PhotoAttribution.prototype.author;
+
+/**
+ * @type {?string}
+ */
+google.maps.places.PhotoAttribution.prototype.authorURI;
+
+/**
  * Defines photo-requesting options.
  * @record
  */
@@ -12232,6 +12412,248 @@ google.maps.places.PhotoOptions.prototype.maxHeight;
  * @type {?number|undefined}
  */
 google.maps.places.PhotoOptions.prototype.maxWidth;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @param {!google.maps.places.PlaceOptions} options
+ * @constructor
+ */
+google.maps.places.Place = function(options) {};
+
+/**
+ * The collection of address components for this Place’s location. Empty object
+ * if there is no known address data. <code>undefined</code> if the address data
+ * has not been called for from the server.
+ * @type {!Array<!google.maps.places.AddressComponent>|undefined}
+ */
+google.maps.places.Place.prototype.addressComponents;
+
+/**
+ * The representation of the Place’s address in the <a
+ * href="http://microformats.org/wiki/adr">adr microformat</a>.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.adrFormatAddress;
+
+/**
+ * Attribution text to be displayed for this Place result.
+ * @type {!Array<!google.maps.places.Attribution>|undefined}
+ */
+google.maps.places.Place.prototype.attributions;
+
+/**
+ * The location&#39;s operational status. <code>null</code> if there is no known
+ * status. <code>undefined</code> if the status data has not been loaded from
+ * the server.
+ * @type {?google.maps.places.BusinessStatus|undefined}
+ */
+google.maps.places.Place.prototype.businessStatus;
+
+/**
+ * The location&#39;s display name. <code>null</code> if there is no name.
+ * <code>undefined</code> if the name data has not been loaded from the server.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.displayName;
+
+/**
+ * The locations’s full address.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.formattedAddress;
+
+/**
+ * URL of the official Google page for this place. This is the Google-owned page
+ * that contains the best available information about the Place.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.googleMapsURI;
+
+/**
+ * URL to an image resource that can be used to represent this location&#39;s
+ * category.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.icon;
+
+/**
+ * The default HEX color code for the place&#39;s category.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.iconBackgroundColor;
+
+/**
+ * The Place’s phone number in international format. International format
+ * includes the country code, and is prefixed with the plus (+) sign.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.internationalPhoneNumber;
+
+/**
+ * The Place’s position.
+ * @type {?google.maps.LatLng|undefined}
+ */
+google.maps.places.Place.prototype.location;
+
+/**
+ * The Place’s phone number, formatted according to the <a
+ * href="http://en.wikipedia.org/wiki/Local_conventions_for_writing_telephone_numbers">number&#39;s
+ * regional convention</a>.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.nationalPhoneNumber;
+
+/**
+ * @type {?google.maps.places.OpeningHours|undefined}
+ */
+google.maps.places.Place.prototype.openingHours;
+
+/**
+ * Photos of this Place. The collection will contain up to ten {@link
+ * google.maps.places.Photo} objects.
+ * @type {!Array<!google.maps.places.Photo>|undefined}
+ */
+google.maps.places.Place.prototype.photos;
+
+/**
+ * @type {?google.maps.places.PlusCode|undefined}
+ */
+google.maps.places.Place.prototype.plusCode;
+
+/**
+ * The price level of the Place, on a scale of 0 to 4. Price levels are
+ * interpreted as follows: <ul style="list-style-type: none;">
+ * <li><code>0</code>: Free <li><code>1</code>: Inexpensive <li><code>2</code>:
+ * Moderate <li><code>3</code>: Expensive <li><code>4</code>: Very Expensive
+ * </ul>
+ * @type {?number|undefined}
+ */
+google.maps.places.Place.prototype.priceLevel;
+
+/**
+ * A rating, between 1.0 to 5.0, based on user reviews of this Place.
+ * @type {?number|undefined}
+ */
+google.maps.places.Place.prototype.rating;
+
+/**
+ * A list of reviews for this Place.
+ * @type {!Array<!google.maps.places.Review>|undefined}
+ */
+google.maps.places.Place.prototype.reviews;
+
+/**
+ * URI to the svg image mask resource that can be used to represent a place’s
+ * category.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.svgIconMaskURI;
+
+/**
+ * An array of <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/supported_types">types
+ * for this Place</a> (for example, <code>[&quot;political&quot;,
+ * &quot;locality&quot;]</code> or <code>[&quot;restaurant&quot;,
+ * &quot;establishment&quot;]</code>).
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.Place.prototype.types;
+
+/**
+ * The number of user ratings which contributed to this Place’s {@link
+ * google.maps.places.Place.rating}.
+ * @type {?number|undefined}
+ */
+google.maps.places.Place.prototype.userRatingsCount;
+
+/**
+ * The offset from UTC of the Place’s current timezone, in minutes. For example,
+ * Austrialian Eastern Standard Time (GMT+10) in daylight savings is 11 hours
+ * ahead of UTC, so the <code>utc_offset_minutes</code> will be
+ * <code>660</code>. For timezones behind UTC, the offset is negative. For
+ * example, the <code>utc_offset_minutes</code> is <code>-60</code> for Cape
+ * Verde.
+ * @type {?number|undefined}
+ */
+google.maps.places.Place.prototype.utcOffsetMinutes;
+
+/**
+ * The preferred viewport when displaying this Place on a map.
+ * @type {?google.maps.LatLngBounds|undefined}
+ */
+google.maps.places.Place.prototype.viewport;
+
+/**
+ * The authoritative website for this Place, such as a business&#39; homepage.
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.prototype.websiteURI;
+
+/**
+ * Searches for a place based on the given phone number. Returns an array due to
+ * rare cases where multiple places may share a phone number.
+ * @param {!google.maps.places.FindPlaceFromPhoneNumberRequest} request The
+ *     request containing the phone number and requested fields.
+ * @return {!Promise<{places:!Array<!google.maps.places.Place>}>}
+ */
+google.maps.places.Place.findPlaceFromPhoneNumber = function(request) {};
+
+/**
+ * Searches for a place based on the given text query. Returns an array due to
+ * cases where the query is mildly ambiguous, and more than one place gets
+ * returned. This method is <em>not</em> intended for searches where multiple
+ * results are expected.
+ * @param {!google.maps.places.FindPlaceFromQueryRequest} request The request
+ *     containing the text query and requested fields.
+ * @return {!Promise<{places:!Array<!google.maps.places.Place>}>}
+ */
+google.maps.places.Place.findPlaceFromQuery = function(request) {};
+
+/**
+ * @param {!google.maps.places.FetchFieldsRequest} options
+ * @return {!Promise<{place:!google.maps.places.Place}>}
+ */
+google.maps.places.Place.prototype.fetchFields = function(options) {};
+
+/**
+ * Calculates the timestamp (as milliseconds since the epoch, suitable for use
+ * with <code>new Date()</code>) representing the next OpeningHoursTime. Returns
+ * undefined if the data is insufficient to calculate the result, or this place
+ * is not operational.
+ * @param {!Date=} date
+ * @return {!Promise<!Date|undefined>}
+ */
+google.maps.places.Place.prototype.getNextOpeningTime = function(date) {};
+
+/**
+ * Check if the place is open at the given datetime. Resolves with
+ * <code>undefined</code> if the known data for the location is insufficient to
+ * calculate this, e.g. if the opening hours are unregistered.
+ * @param {!Date=} date Defaults to now.
+ * @return {!Promise<boolean|undefined>}
+ */
+google.maps.places.Place.prototype.isOpen = function(date) {};
+
+/**
+ * The unique place id.
+ * @const
+ * @type {string}
+ */
+google.maps.places.Place.id;
+
+/**
+ * The requested language for this place.
+ * @const
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.requestedLanguage;
+
+/**
+ * The requested region for this place.
+ * @const
+ * @type {?string|undefined}
+ */
+google.maps.places.Place.requestedRegion;
 
 /**
  * Defines information about an aspect of the place that users have reviewed.
@@ -12451,6 +12873,40 @@ google.maps.places.PlaceOpeningHoursTime.prototype.nextDate;
  * @type {string}
  */
 google.maps.places.PlaceOpeningHoursTime.prototype.time;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Options for constructing a Place.
+ * @record
+ */
+google.maps.places.PlaceOptions = function() {};
+
+/**
+ * The unique place id.
+ * @type {string}
+ */
+google.maps.places.PlaceOptions.prototype.id;
+
+/**
+ * A language identifier for the language in which details should be returned.
+ * See the <a href="https://developers.google.com/maps/faq#languagesupport">list
+ * of supported languages</a>.
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceOptions.prototype.requestedLanguage;
+
+/**
+ * A region code of the user&#39;s region. This can affect which photos may be
+ * returned, and possibly other things. The region code accepts a <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceOptions.prototype.requestedRegion;
 
 /**
  * Represents a photo element of a Place.
@@ -13062,6 +13518,27 @@ google.maps.places.PlacesServiceStatus = {
 };
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.PlusCode = function() {};
+
+/**
+ * A plus code with a 1/8000th of a degree by 1/8000th of a degree area where
+ * the first four characters (the area code) are dropped and replaced with a
+ * locality description. For example, &quot;9G8F+5W Zurich, Switzerland&quot;.
+ * @type {?string}
+ */
+google.maps.places.PlusCode.prototype.compoundCode;
+
+/**
+ * A plus code with a 1/8000th of a degree by 1/8000th of a degree area. For
+ * example, &quot;8FVC9G8F+5W&quot;.
+ * @type {?string}
+ */
+google.maps.places.PlusCode.prototype.globalCode;
+
+/**
  * Represents a prediction substring.
  * @record
  */
@@ -13195,6 +13672,65 @@ google.maps.places.RankBy = {
    */
   PROMINENCE: 1,
 };
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @constructor
+ */
+google.maps.places.Review = function() {};
+
+/**
+ * The name of the reviewer.
+ * @type {?string}
+ */
+google.maps.places.Review.prototype.author;
+
+/**
+ * A URL to the reviwer&#39;s profile image.
+ * @type {?string}
+ */
+google.maps.places.Review.prototype.authorPhotoURI;
+
+/**
+ * A URL to the reviewer&#39;s profile.
+ * @type {?string}
+ */
+google.maps.places.Review.prototype.authorURI;
+
+/**
+ * @type {?Date}
+ */
+google.maps.places.Review.prototype.publishTime;
+
+/**
+ * The rating of this review, a number between 1.0 and 5.0 (inclusive).
+ * @type {?number}
+ */
+google.maps.places.Review.prototype.rating;
+
+/**
+ * A string of formatted recent time, expressing the review time relative to the
+ * current time in a form appropriate for the language and country. For example
+ * `&quot;a month ago&quot;&#39;.
+ * @type {?string}
+ */
+google.maps.places.Review.prototype.relativePublishTimeDescription;
+
+/**
+ * The text of a review.
+ * @type {?string}
+ */
+google.maps.places.Review.prototype.text;
+
+/**
+ * An IETF language code indicating the language in which this review is
+ * written. Note that this code includes only the main language tag without any
+ * secondary tag indicating country or region. For example, all the English
+ * reviews are tagged as <code>'en'</code> rather than &#39;en-AU&#39; or
+ * &#39;en-UK&#39;.
+ * @type {?string}
+ */
+google.maps.places.Review.prototype.textLanguageCode;
 
 /**
  * A widget that provides query predictions based on a user&#39;s text input. It
