@@ -12498,9 +12498,7 @@ google.maps.places.FetchFieldsRequest.prototype.fields;
 
 /**
  * Unique reference used to bundle the details request with an autocomplete
- * session. If you are using the PlaceAutocompleteView widget, sessionToken does
- * not need to be explicitly passed in. The widget manages autocomplete sessions
- * automatically.
+ * session.
  * @type {?google.maps.places.AutocompleteSessionToken|undefined}
  */
 google.maps.places.FetchFieldsRequest.prototype.sessionToken;
