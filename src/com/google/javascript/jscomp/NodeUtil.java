@@ -5457,7 +5457,7 @@ public final class NodeUtil {
     return wrappedSize[0];
   }
 
-  public static int countAstSize(Node n) {
+  static int countAstSize(Node n) {
     int count = 1;
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       count += countAstSize(c);
