@@ -1724,6 +1724,153 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedStringRegexMissingValues() {
+    allowSourcelessWarnings();
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    testError(
+        "anything;",
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        "Invalid requirement. Reason: missing value\n"
+            + "Requirement spec:\n"
+            + "error_message: \"Empty string not allowed\"\n"
+            + "type: BANNED_STRING_REGEX\n");
+  }
+
+  @Test
+  public void testBannedStringRegexEmpty() {
+    allowSourcelessWarnings();
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  value: ' '\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    testError(
+        "anything;",
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        "Invalid requirement. Reason: empty strings or whitespace are not allowed\n"
+            + "Requirement spec:\n"
+            + "error_message: \"Empty string not allowed\"\n"
+            + "type: BANNED_STRING_REGEX\n"
+            + "value: \" \"\n");
+  }
+
+  @Test
+  public void testBannedStringRegexMultipleValuesWithEmpty() {
+    allowSourcelessWarnings();
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  value: 'things'\n"
+            + "  value: ' '\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    testError(
+        "anything;",
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        "Invalid requirement. Reason: empty strings or whitespace are not allowed\n"
+            + "Requirement spec:\n"
+            + "error_message: \"Empty string not allowed\"\n"
+            + "type: BANNED_STRING_REGEX\n"
+            + "value: \"things\"\n"
+            + "value: \" \"\n");
+  }
+
+  @Test
+  public void testBannedStringRegex1() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  value: '.*some-attr.*'\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    String declarations = "let dom = '<div>sample dom template content</div>';";
+
+    testNoWarning(declarations);
+
+    testWarning(
+        declarations + "let moredom = '<p some-attr=\"testval\">reflected!</p>';",
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testBannedStringRegex2() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  value: '.*things.*'\n"
+            + "  value: 'stuff.*'\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    String code =
+        "/** @constructor */\n"
+            + "function Base() {}; Base.prototype.m;\n"
+            + "/** @constructor @extends {Base} */\n"
+            + "function Sub() {}\n";
+    String stuff = "var b = 'stuff and what not';\n";
+    String things = "var s = 'special things';\n";
+
+    testNoWarning(code);
+
+    testWarning(code + stuff, CheckConformance.CONFORMANCE_VIOLATION);
+
+    testWarning(code + things, CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testBannedStringRegexExactMatch() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  value: 'stuff'\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    String code =
+        "/** @constructor */\n"
+            + "function Base() {}; Base.prototype.m;\n"
+            + "/** @constructor @extends {Base} */\n"
+            + "function Sub() {}\n";
+    String noMatch = "var b = ' stuff ';\n";
+    String shouldMatch = "var s = 'stuff';\n";
+
+    testNoWarning(code + noMatch);
+
+    testWarning(code + shouldMatch, CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testBannedStringTemplateLiteral1() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_STRING_REGEX\n"
+            + "  value: '.*good'\n"
+            + "  error_message: 'Empty string not allowed'\n"
+            + "}";
+
+    String code =
+        "/** @constructor */\n"
+            + "function Base() {}; Base.prototype.m;\n"
+            + "/** @constructor @extends {Base} */\n"
+            + "function Sub() {}\n";
+    String noMatch = "var b = `cheesy goodness`;\n";
+    String shouldMatch = "var b = `cheesy good`;\n";
+
+    testNoWarning(code + noMatch);
+
+    testWarning(code + shouldMatch, CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void testRestrictedCall1() {
     configuration =
         "requirement: {\n"

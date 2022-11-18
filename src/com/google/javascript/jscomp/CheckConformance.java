@@ -298,6 +298,8 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           return new ConformanceRules.RestrictedMethodCall(compiler, requirement);
         case RESTRICTED_PROPERTY_WRITE:
           return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
+        case BANNED_STRING_REGEX:
+          return new ConformanceRules.BannedStringRegex(compiler, requirement);
       }
       throw new AssertionError();
     } catch (InvalidRequirementSpec e) {

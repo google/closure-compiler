@@ -889,6 +889,52 @@ public final class ConformanceRules {
     }
   }
 
+  /** Banned string rule */
+  static final class BannedStringRegex extends AbstractRule {
+    private final Pattern stringPattern;
+
+    public BannedStringRegex(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+
+      if (requirement.getValueCount() == 0) {
+        throw new InvalidRequirementSpec("missing value");
+      }
+
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      for (String value : requirement.getValueList()) {
+        if (value.trim().isEmpty()) {
+          throw new InvalidRequirementSpec("empty strings or whitespace are not allowed");
+        }
+        builder.add(value);
+      }
+
+      ImmutableList<String> values = builder.build();
+      if (values.isEmpty()) {
+        throw new InvalidRequirementSpec("missing value");
+      }
+      Pattern stringRegex = buildPattern(values);
+      this.stringPattern = stringRegex;
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
+      if (node == null) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      if (node.isStringLit()) {
+        if (this.stringPattern.matcher(node.getString()).matches()) {
+          return ConformanceResult.VIOLATION;
+        }
+      } else if (node.isTemplateLitString()) {
+        if (this.stringPattern.matcher(node.getCookedString()).matches()) {
+          return ConformanceResult.VIOLATION;
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
   private static class ConformanceUtil {
 
     static boolean isCallTarget(Node n) {

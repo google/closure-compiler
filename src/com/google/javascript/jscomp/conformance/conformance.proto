@@ -172,6 +172,12 @@ message Requirement {
     // A restricted write to an instance property.
     // Example: "Element.prototype.innerHTML:!TrustedHTML|string"
     RESTRICTED_PROPERTY_WRITE = 13;
+
+    // A banned string literal or template literal using regular expressions.
+    // This runs against any string literal or template literal node and matches
+    // based on the passed in regular expression value.
+    // example: value: ".*oo.*" in "foobar" would match.
+    BANNED_STRING_REGEX = 17;
   }
 
   enum TypeMatchingStrategy {
