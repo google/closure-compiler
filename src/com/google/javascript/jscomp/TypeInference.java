@@ -66,6 +66,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1921,7 +1922,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     return scope;
   }
 
-  /** @param n A non-constructor function invocation, i.e. CALL or TAGGED_TEMPLATELIT */
+  /**
+   * @param n A non-constructor function invocation, i.e. CALL or TAGGED_TEMPLATELIT
+   */
   private FlowScope setCallNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
     // Resolve goog.{require,requireType,forwardDeclare,module.get} calls separately, as they are
     // not normal functions.
@@ -2416,10 +2419,25 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       // TODO(b/77474174): Type well known symbol accesses.
     } else {
       JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
-      TemplateTypeMap typeMap = type.getTemplateTypeMap();
-      if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
-        inferredType = typeMap.getResolvedTemplateType(registry.getObjectElementKey());
+
+      // If this is a union type, then we must extract type arguments from each option.
+      UnionType.Builder argumentTypes = UnionType.builder(registry);
+      Collection<JSType> alternates =
+          type.isUnionType() ? type.toMaybeUnionType().getAlternates() : ImmutableList.of(type);
+      for (JSType option : alternates) {
+        TemplateTypeMap typeMap = option.getTemplateTypeMap();
+        if (!typeMap.hasTemplateType(registry.getObjectElementKey())) {
+          // This isn't an array or object, drop out.
+          argumentTypes = null;
+          break;
+        }
+
+        // Extract the element type and add all options to our set of alternates.
+        argumentTypes.addAlternate(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
       }
+
+      // Unwrap the union if possible, and fail if we had no alternates.
+      inferredType = (argumentTypes == null) ? null : argumentTypes.build();
     }
     n.setJSType(inferredType != null ? inferredType : unknownType);
   }

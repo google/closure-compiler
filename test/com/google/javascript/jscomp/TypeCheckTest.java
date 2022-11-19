@@ -4341,6 +4341,64 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
+  @Test
+  public void testUnionIndexAccessStringElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string>|!Array<string>} */ const a = [];"
+                + "/** @const {!null} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : string\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testUnionIndexAccessOverlappingElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string|undefined>|!Array<string>} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : (string|undefined)\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testUnionIndexAccessDisjointElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string|number>|!Array<boolean>} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : (boolean|number|string)\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testUnionIndexAccessIncompatibleBecomesUnknown() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string>|number} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .run();
+  }
+
   // TODO(nicksantos): change this to something that makes sense.
   @Test
   @Ignore
