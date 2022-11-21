@@ -29,12 +29,29 @@
  */
 function AbortSignal() {}
 
-/** @type {boolean} */
+/** @const {boolean} */
 AbortSignal.prototype.aborted;
 
 /** @type {?function(!Event)} */
 AbortSignal.prototype.onabort;
 
+/** @const {?} */
+AbortSignal.prototype.reason;
+
+/** @return {void} */
+AbortSignal.prototype.throwIfAborted = function() {};
+
+/**
+ * @param {?=} reason
+ * @return {AbortSignal}
+ */
+AbortSignal.abort = function (reason) {};
+
+/**
+ * @param {number} time
+ * @return {AbortSignal}
+ */
+AbortSignal.timeout = function(time) {};
 
 
 /**
@@ -46,5 +63,8 @@ function AbortController() {}
 /** @const {!AbortSignal} */
 AbortController.prototype.signal;
 
-/** @return {void} */
-AbortController.prototype.abort = function() {};
+/**
+ * @param {?=} reason
+ * @return {void}
+ */
+AbortController.prototype.abort = function(reason) {};
