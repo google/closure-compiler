@@ -758,7 +758,7 @@ ReadonlyArray.prototype.forEach = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {T} obj
+ * @param {?} obj
  * @param {number=} opt_fromIndex
  * @return {number}
  * @this {IArrayLike<T>|string}
@@ -770,7 +770,7 @@ ReadonlyArray.prototype.indexOf = function(obj, opt_fromIndex) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {T} obj
+ * @param {?} obj
  * @param {number=} opt_fromIndex
  * @return {number}
  * @this {IArrayLike<T>|string}

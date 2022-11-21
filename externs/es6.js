@@ -1728,7 +1728,7 @@ ReadonlyArray.prototype.at = function(index) {};
 
 /**
  * NOTE: this is an ES2016 (ES7) extern.
- * @param {T} searchElement
+ * @param {?} searchElement
  * @param {number=} opt_fromIndex
  * @return {boolean}
  * @this {!IArrayLike<T>|string}
