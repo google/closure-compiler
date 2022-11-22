@@ -4064,6 +4064,19 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testIsGoogModuleGetCall() {
+      Node root = parse("const Foo = goog.module.get('a.b.c.Foo');");
+      Node call = root.getFirstChild().getFirstChild().getFirstChild();
+
+      assertThat(NodeUtil.isGoogModuleGetCall(call)).isTrue();
+
+      root = parse("const Foo = goog.require('a.b.c.Foo');");
+      call = root.getFirstChild().getFirstChild().getFirstChild();
+
+      assertThat(NodeUtil.isGoogModuleGetCall(call)).isFalse();
+    }
+
+    @Test
     public void testIsBundledGoogModule() {
       Node googLoadModule =
           parse("goog.loadModule(function(exports) { goog.module('a.b'); return exports; });");

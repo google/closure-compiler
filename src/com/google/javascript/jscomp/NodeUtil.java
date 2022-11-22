@@ -89,6 +89,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
 
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
+
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
@@ -5485,6 +5487,15 @@ public final class NodeUtil {
       return GOOG_MODULE.matches(target);
     }
     return false;
+  }
+
+  static boolean isGoogModuleGetCall(Node callNode) {
+    if (!callNode.isCall()) {
+      return false;
+    }
+    return GOOG_MODULE_GET.matches(callNode.getFirstChild())
+        && callNode.hasTwoChildren()
+        && callNode.getSecondChild().isStringLit();
   }
 
   static boolean isGoogRequireCall(Node call) {
