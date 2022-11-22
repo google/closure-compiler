@@ -654,6 +654,12 @@ final class SubtypeChecker {
       case "Iterable":
         return unwrapped.registry.getIterableTemplate();
 
+      case "IteratorIterable":
+        return unwrapped.registry.getIteratorIterableTemplateKey();
+
+      case "IIterableResult":
+        return unwrapped.registry.getIIterableResultTemplateKey();
+
       case "AsyncIterable":
         return unwrapped.registry.getAsyncIterableTemplate();
 

@@ -106,6 +106,30 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testIteratorIterableCovariant() {
+    newTest()
+        .addSource(
+            "function f(/** !IteratorIterable<(string|number)>*/ x){};",
+            "function g(/** !IteratorIterable<number> */ arr) {",
+            "    f(arr);",
+            "}")
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIIterableResultCovariant() {
+    newTest()
+        .addSource(
+            "function f(/** !IIterableResult<(string|number)>*/ x){};",
+            "function g(/** !IIterableResult<number> */ arr) {",
+            "    f(arr);",
+            "}")
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
   public void testGeneratorCovariant() {
     newTest()
         .addSource(
