@@ -143,6 +143,7 @@ public interface DependencyInfo {
   default boolean isEs6Module() {
     return "es6".equals(getLoadFlags().get("module"));
   }
+
   /** Whether the symbol is provided by a goog module */
   default boolean isGoogModule() {
     return "goog".equals(getLoadFlags().get("module"));
