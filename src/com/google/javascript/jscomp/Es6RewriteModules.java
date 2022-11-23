@@ -531,7 +531,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       t.reportCodeChange();
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)
         || export.hasTwoChildren()
-        || export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
+        || export.getFirstChild().isExportSpecs()) {
       //   export * from 'moduleIdentifier';
       //   export {x, y as z} from 'moduleIdentifier';
       //   export {Foo};

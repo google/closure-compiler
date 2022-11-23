@@ -1885,7 +1885,7 @@ public class CodeGenerator {
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {
     Node parent = n.getParent();
-    return parent != null && parent.getToken() == Token.EXPONENT && parent.getFirstChild() == n;
+    return parent != null && parent.isExponent() && parent.getFirstChild() == n;
   }
 
   void addList(Node firstInList) {
@@ -2441,7 +2441,7 @@ public class CodeGenerator {
         break;
       case EXPORT:
         if (n.getParent().getToken() != Token.NAMESPACE_ELEMENTS
-            && n.getFirstChild().getToken() != Token.DECLARE) {
+            && !n.getFirstChild().isDeclare()) {
           processEnd(n.getFirstChild(), context);
         }
         break;

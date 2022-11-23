@@ -714,7 +714,7 @@ public final class AstValidator implements CompilerPass {
     } else {
       validateProperties(n);
       validateChildCountIn(n, 1, 2);
-      if (n.getFirstChild().getToken() == Token.EXPORT_SPECS) {
+      if (n.getFirstChild().isExportSpecs()) {
         validateExportSpecifiers(n.getFirstChild());
       } else {
         validateStatement(n.getFirstChild(), isAmbient);

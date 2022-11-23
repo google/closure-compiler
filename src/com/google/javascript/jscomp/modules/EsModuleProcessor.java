@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -852,7 +851,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
       visitExportDefault(t, export);
     } else if (export.hasTwoChildren()) {
       visitExportFrom(t, export);
-    } else if (export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
+    } else if (export.getFirstChild().isExportSpecs()) {
       visitExportSpecs(t, export);
     } else {
       Node declaration = export.getFirstChild();

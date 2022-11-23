@@ -4311,7 +4311,7 @@ public final class NodeUtil {
               parent.getFirstChild() == propAccess
                   ? parent.getSecondChild()
                   : parent.getFirstChild();
-          return isUndefined(other) || (parent.getToken() == Token.EQ && other.isNull());
+          return isUndefined(other) || (parent.isEQ() && other.isNull());
         }
       default:
         return false;
@@ -6024,7 +6024,7 @@ public final class NodeUtil {
    * to be read.
    */
   public static int estimateNumLines(Node scriptNode) {
-    checkArgument(scriptNode.getToken() == Token.SCRIPT);
+    checkArgument(scriptNode.isScript());
     Node current = scriptNode;
     while (current.hasChildren()) {
       current = current.getLastChild();

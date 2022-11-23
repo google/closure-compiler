@@ -750,7 +750,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
 
           Tri result = Tri.UNKNOWN;
-          if (n.getToken() == Token.EQ || n.isNE()) {
+          if (n.isEQ() || n.isNE()) {
             result = leftTypeRestricted.testForEquality(rightTypeRestricted);
             if (n.isNE()) {
               result = result.not();
@@ -758,7 +758,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           } else {
             // SHEQ or SHNE
             if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
-              result = n.getToken() == Token.SHEQ ? Tri.FALSE : Tri.TRUE;
+              result = n.isSHEQ() ? Tri.FALSE : Tri.TRUE;
             }
           }
 

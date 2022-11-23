@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 
@@ -54,10 +53,7 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
 
   /** Reports an error if the node is a reference equality check of the specified type. */
   private void checkReferenceEquality(Node n, String typeName, String fileName) {
-    if (n.getToken() == Token.SHEQ
-        || n.getToken() == Token.EQ
-        || n.getToken() == Token.SHNE
-        || n.isNE()) {
+    if (n.isSHEQ() || n.isEQ() || n.isSHNE() || n.isNE()) {
       JSType firstJsType = n.getFirstChild().getJSType();
       JSType lastJsType = n.getLastChild().getJSType();
       boolean hasType = isType(firstJsType, fileName) || isType(lastJsType, fileName);

@@ -538,7 +538,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       } else if (export.hasTwoChildren()) {
         visitExportFrom(t, export, parent);
       } else {
-        if (export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
+        if (export.getFirstChild().isExportSpecs()) {
           visitExportSpecs(t, export);
         } else {
           visitExportDeclaration(t, export);
