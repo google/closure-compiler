@@ -41,7 +41,7 @@ import java.util.Set;
  * A JavaScript chunk has a unique name, consists of a list of compiler inputs, and can depend on
  * other chunks.
  */
-public final class JSChunk extends DependencyInfo.Base implements Serializable {
+public final class JSChunk implements Serializable, DependencyInfo {
   // The name of the artificial chunk containing all strong sources when there is no chunk spec.
   // If there is a chunk spec, strong sources go in their respective chunks, and this chunk does
   // not exist.
@@ -59,7 +59,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   private final String name;
 
   /** Source code inputs */
-  // non-final for deserilaization
+  // non-final for deserialization
   // CompilerInputs must be explicitly added to the JSChunk again after deserialization
   // A map keyed by the {@code CompilerInput.getName()} to speed up getByName and removeByName.
   private transient Map<String, CompilerInput> inputs = new LinkedHashMap<>();
@@ -128,15 +128,6 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
 
   @Override
   public ImmutableMap<String, String> getLoadFlags() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean isModule() {
-    // NOTE: The meaning of "module" has changed over time.  A "JsChunk" is
-    // a collection of inputs that are loaded together. A "module" file,
-    // is a CommonJs module, ES6 module, goog.module or other file whose
-    // top level symbols are not in global scope.
     throw new UnsupportedOperationException();
   }
 

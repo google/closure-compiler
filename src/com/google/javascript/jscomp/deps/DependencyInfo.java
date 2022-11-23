@@ -129,7 +129,9 @@ public interface DependencyInfo {
   /** Gets the symbols required by this file. */
   ImmutableList<Require> getRequires();
 
-  ImmutableList<String> getRequiredSymbols();
+  default ImmutableList<String> getRequiredSymbols() {
+    return Require.asSymbolList(getRequires());
+  }
 
   /** Gets the symbols type-required by this file (i.e. for typechecking only). */
   ImmutableList<String> getTypeRequires();
@@ -137,12 +139,11 @@ public interface DependencyInfo {
   /** Gets the loading information for this file. */
   ImmutableMap<String, String> getLoadFlags();
 
-  /** Whether the symbol is provided by a module */
-  boolean isModule();
-
+  /** Whether the symbol is provided by an ES6 module */
   default boolean isEs6Module() {
     return "es6".equals(getLoadFlags().get("module"));
   }
+  /** Whether the symbol is provided by a goog module */
   default boolean isGoogModule() {
     return "goog".equals(getLoadFlags().get("module"));
   }
@@ -152,21 +153,6 @@ public interface DependencyInfo {
 
   /** Whether the file has the '@nocompile' annotation. */
   boolean getHasNoCompileAnnotation();
-
-  /**
-   * Abstract base implementation that defines derived accessors such
-   * as {@link #isModule}.
-   */
-  abstract class Base implements DependencyInfo {
-    @Override public boolean isModule() {
-      return isGoogModule();
-    }
-
-    @Override
-    public ImmutableList<String> getRequiredSymbols() {
-      return Require.asSymbolList(getRequires());
-    }
-  }
 
   /** Utility methods. */
   class Util {

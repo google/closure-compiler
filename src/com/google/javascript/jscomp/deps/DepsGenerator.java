@@ -277,7 +277,6 @@ public class DepsGenerator {
         } else if (provider == depInfo) {
           reportSameFile(namespace, depInfo);
         } else {
-          depInfo.isModule();
           boolean providerIsEs6Module = provider.isEs6Module();
 
           switch (require.getType()) {
