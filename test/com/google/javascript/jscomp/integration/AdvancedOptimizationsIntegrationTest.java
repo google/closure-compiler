@@ -139,20 +139,34 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}",
             "foo();"),
         lines(
-            "", //
             "(async function() {",
-            "  for (const $$jscomp$forAwait$tempIterator0$$ =",
-            "           $jscomp.makeAsyncIterator(asyncIterator);;) {",
-            "    const $$jscomp$forAwait$tempResult0$$ =",
-            "        await $$jscomp$forAwait$tempIterator0$$.next();",
-            "    if ($$jscomp$forAwait$tempResult0$$.done) {",
-            "      break;",
+            "  var $$jscomp$forAwait$retFn0$$;",
+            "  try {",
+            "    for (var $$jscomp$forAwait$tempIterator0$$ ="
+                + " $jscomp.makeAsyncIterator(asyncIterator);;) {",
+            "      var $$jscomp$forAwait$tempResult0$$ = await"
+                + " $$jscomp$forAwait$tempIterator0$$.next();",
+            "      if ($$jscomp$forAwait$tempResult0$$.done) {",
+            "        break;",
+            "      }",
+            "      const [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;",
+            "      console.log($key$$, $value$jscomp$2$$);",
+            "}",
+            "  } catch ($$jscomp$forAwait$catchErrParam0$$) {",
+            "    var $$jscomp$forAwait$errResult0$$ ="
+                + " {$error$:$$jscomp$forAwait$catchErrParam0$$};",
+            "  } finally {",
+            "    try {",
+            "      $$jscomp$forAwait$tempResult0$$ && !$$jscomp$forAwait$tempResult0$$.done &&"
+                + " ($$jscomp$forAwait$retFn0$$ = $$jscomp$forAwait$tempIterator0$$.return) &&"
+                + " await $$jscomp$forAwait$retFn0$$.$call$($$jscomp$forAwait$tempIterator0$$);",
+            "    } finally {",
+            "      if ($$jscomp$forAwait$errResult0$$) {",
+            "        throw $$jscomp$forAwait$errResult0$$.$error$;",
+            "      }",
             "    }",
-            "    const [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;",
-            "    console.log($key$$, $value$jscomp$2$$);",
-            "  }",
-            "})();",
-            ""));
+            "   }",
+            "})();"));
   }
 
   @Test

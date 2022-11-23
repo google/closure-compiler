@@ -213,6 +213,64 @@ final class AstFactory {
   }
 
   /**
+   * Returns a new LABEL node.
+   *
+   * <p>Breaks have no type information, so this is functionally the same as calling {@code
+   * IR.label()}. It exists so that a pass can be consistent about always using {@code AstFactory}
+   * to create new nodes.
+   */
+  Node createLabel(Node label, Node stmt) {
+    return IR.label(label, stmt);
+  }
+
+  /**
+   * Returns a new CATCH node.
+   *
+   * <p>CATCH have no type information, so this is functionally the same as calling {@code
+   * IR.catchNode()}. It exists so that a pass can be consistent about always using {@code
+   * AstFactory} to create new nodes.
+   */
+  Node createCatch(Node error, Node block) {
+    return IR.catchNode(error, block);
+  }
+
+  /**
+   * Returns a new TRY-FINALLY node.
+   *
+   * <p>TRY-FINALLY have no type information, so this is functionally the same as calling {@code
+   * IR.tryFinally()}. It exists so that a pass can be consistent about always using {@code
+   * AstFactory} to create new nodes.
+   */
+  Node createTryFinally(Node tryBlock, Node finallyBlock) {
+    return IR.tryFinally(tryBlock, finallyBlock);
+  }
+
+  /**
+   * Returns a new TRY-CATCH-FINALLY node.
+   *
+   * <p>TRY-CATCH-FINALLY have no type information, so this is functionally the same as calling
+   * {@code IR.tryCatchFinally()}. It exists so that a pass can be consistent about always using
+   * {@code AstFactory} to create new nodes.
+   */
+  Node createTryCatchFinally(Node tryBlock, Node catchNode, Node finallyBlock) {
+    checkState(tryBlock.isBlock());
+    checkState(catchNode.isCatch());
+    checkState(finallyBlock.isBlock());
+    return IR.tryCatchFinally(tryBlock, catchNode, finallyBlock);
+  }
+
+  /**
+   * Returns a new THROW node.
+   *
+   * <p>THROW have no type information, so this is functionally the same as calling {@code
+   * IR.throwNode()}. It exists so that a pass can be consistent about always using {@code
+   * AstFactory} to create new nodes.
+   */
+  Node createThrow(Node expr) {
+    return IR.throwNode(expr);
+  }
+
+  /**
    * Returns a new {@code return} statement.
    *
    * <p>Return statements have no type information, so this is functionally the same as calling

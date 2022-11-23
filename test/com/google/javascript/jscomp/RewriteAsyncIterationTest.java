@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,6 +85,55 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testForAwaitWithThrow() {
+    test(
+        lines(
+            "async function test() {",
+            "    for await (const i of source()) {",
+            "      if (i === 2) {",
+            "        throw new Error('');",
+            "      }",
+            "    }",
+            "}"),
+        lines(
+            "", //
+            "async function test() {",
+            "  var $jscomp$forAwait$errResult0;",
+            "  var $jscomp$forAwait$tempResult0;",
+            "  var $jscomp$forAwait$retFn0;",
+            "  try {",
+            "    for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(source());;)"
+                + " {",
+            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "      if ($jscomp$forAwait$tempResult0.done) {",
+            "        break;",
+            "      }",
+            "      const i = $jscomp$forAwait$tempResult0.value;",
+            "      {",
+            "        if (i === 2) {",
+            "          throw new Error(\"\");",
+            "        }",
+            "      }",
+            "    }",
+            "  } catch ($jscomp$forAwait$catchErrParam0) {",
+            "      $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            "  } finally {",
+            "    try {",
+            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "         await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "      }",
+            "    }",
+            "    finally {",
+            "      if ($jscomp$forAwait$errResult0) {",
+            "        throw $jscomp$forAwait$errResult0.error;",
+            "      }",
+            "  }",
+            "}",
+            "}"));
+  }
+
+  @Test
   public void testBug173319540() {
     test(
         srcs(
@@ -101,16 +151,31 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
                 "", //
                 "let key, value;",
                 "window.onload = async function() {",
-                "  for (const $jscomp$forAwait$tempIterator0 =",
-                "      $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);;) {",
-                "        const $jscomp$forAwait$tempResult0 =",
-                "            await $jscomp$forAwait$tempIterator0.next();",
-                "    if ($jscomp$forAwait$tempResult0.done) {",
-                "      break;",
+                "  var $jscomp$forAwait$errResult0;",
+                "  var $jscomp$forAwait$tempResult0;",
+                "  var $jscomp$forAwait$retFn0;",
+                "  try {",
+                "    for (var $jscomp$forAwait$tempIterator0 ="
+                    + " $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);;) {",
+                "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+                "      if ($jscomp$forAwait$tempResult0.done) {",
+                "        break;",
+                "      }",
+                "      [key, value] = $jscomp$forAwait$tempResult0.value;",
+                "      { alert(key, value);}",
                 "    }",
-                "    [key, value] = $jscomp$forAwait$tempResult0.value;",
-                "    {",
-                "      alert(key, value);",
+                "  } catch ($jscomp$forAwait$catchErrParam0) {",
+                "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+                "  } finally {",
+                "    try {",
+                "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ",
+                "        ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+                "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+                "      }",
+                "    } finally {",
+                "      if ($jscomp$forAwait$errResult0) {",
+                "        throw $jscomp$forAwait$errResult0.error;",
+                "      }",
                 "    }",
                 "  }",
                 "};",
@@ -130,16 +195,33 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             lines(
                 "", //
                 "window.onload = async function() {",
-                "  for (const $jscomp$forAwait$tempIterator0 =",
-                "      $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);;) {",
-                "        const $jscomp$forAwait$tempResult0 =",
-                "            await $jscomp$forAwait$tempIterator0.next();",
-                "    if ($jscomp$forAwait$tempResult0.done) {",
-                "      break;",
+                "  var $jscomp$forAwait$errResult0;",
+                "  var $jscomp$forAwait$tempResult0;",
+                "  var $jscomp$forAwait$retFn0;",
+                "  try {",
+                "    for (var $jscomp$forAwait$tempIterator0 ="
+                    + " $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);;) {",
+                "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+                "      if ($jscomp$forAwait$tempResult0.done) {",
+                "        break;",
+                "      }",
+                "      const [key, value] = $jscomp$forAwait$tempResult0.value;",
+                "      {",
+                "        alert(key, value);",
+                "      }",
                 "    }",
-                "    const [key, value] = $jscomp$forAwait$tempResult0.value;",
-                "    {",
-                "      alert(key, value);",
+                "  } catch ($jscomp$forAwait$catchErrParam0) {",
+                "    $jscomp$forAwait$errResult0 = { error:$jscomp$forAwait$catchErrParam0 };",
+                "  } finally {",
+                "    try {",
+                "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&",
+                "        ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+                "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+                "      }",
+                "    } finally {",
+                "      if ($jscomp$forAwait$errResult0) {",
+                "        throw $jscomp$forAwait$errResult0.error;",
+                "      }",
                 "    }",
                 "  }",
                 "};",
@@ -525,29 +607,54 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines(
             "let a;",
             "async function abc() {",
-            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
-            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "    if ($jscomp$forAwait$tempResult0.done) {",
-            "      break;",
-            "    }",
-            "    a = $jscomp$forAwait$tempResult0.value;",
-            "    {",
-            "      bar();",
-            "    }",
-            "  }",
+            "  var $jscomp$forAwait$errResult0;",
+            "  var $jscomp$forAwait$tempResult0;",
+            "  var $jscomp$forAwait$retFn0;",
+            "  try {",
+            "    for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "      if ($jscomp$forAwait$tempResult0.done) {",
+            "        break;",
+            "      }",
+            "      a = $jscomp$forAwait$tempResult0.value;",
+            "      {",
+            "        bar();",
+            "      }",
+            "     }",
+            "  } catch ($jscomp$forAwait$catchErrParam0) {",
+            "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            "  } finally {",
+            "    try {",
+            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "      }",
+            "    } finally {",
+            "      if ($jscomp$forAwait$errResult0) {",
+            "        throw $jscomp$forAwait$errResult0.error;",
+            "      }",
+            "     }",
+            "   }",
             "}",
-            "function foo() {}"));
+            "function foo() {",
+            "}"));
 
     Node forNode =
         findFunctionDefinition(getLastCompiler(), "abc")
             .getRootNode()
             .getLastChild() // block
-            .getFirstChild(); // for
+            .getLastChild() // try
+            .getFirstFirstChild(); // for
+    assertNode(forNode).hasToken(Token.FOR);
     Node tempIterator0 = forNode.getFirstFirstChild();
+    // Find $jscomp.makeAsyncIterator(foo())
     Node makeAsyncIteratorCall = tempIterator0.getFirstChild();
     Node block = forNode.getLastChild();
+    assertNode(block).isBlock();
+    // Find $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
     Node tempResult0 = block.getFirstFirstChild();
-    Node await = tempResult0.getFirstChild();
+    assertNode(tempResult0).isAssign();
+    Node await = tempResult0.getFirstChild().getNext();
     Node nextCall = await.getFirstChild();
     Node done =
         block
@@ -575,14 +682,32 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines("async function abc() { for await (var a of foo()) { bar(); } }"),
         lines(
             "async function abc() {",
-            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
-            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "    if ($jscomp$forAwait$tempResult0.done) {",
-            "      break;",
+            " var $jscomp$forAwait$errResult0;",
+            " var $jscomp$forAwait$tempResult0;",
+            " var $jscomp$forAwait$retFn0;",
+            " try {",
+            "   for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "     if ($jscomp$forAwait$tempResult0.done) {",
+            "       break;",
+            "     }",
+            "     var a = $jscomp$forAwait$tempResult0.value;",
+            "     {",
+            "       bar();",
+            "     }",
             "    }",
-            "    var a = $jscomp$forAwait$tempResult0.value;",
-            "    {",
-            "      bar();",
+            " } catch ($jscomp$forAwait$catchErrParam0) {",
+            "   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            " } finally {",
+            "   try {",
+            "     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "     }",
+            "   } finally {",
+            "     if ($jscomp$forAwait$errResult0) {",
+            "       throw $jscomp$forAwait$errResult0.error;",
+            "     }",
             "    }",
             "  }",
             "}"));
@@ -591,14 +716,32 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines("async function abc() { for await (let a of foo()) { bar(); } }"),
         lines(
             "async function abc() {",
-            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
-            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "    if ($jscomp$forAwait$tempResult0.done) {",
-            "      break;",
+            " var $jscomp$forAwait$errResult0;",
+            " var $jscomp$forAwait$tempResult0;",
+            " var $jscomp$forAwait$retFn0;",
+            " try {",
+            "   for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "     if ($jscomp$forAwait$tempResult0.done) {",
+            "       break;",
+            "     }",
+            "     let a = $jscomp$forAwait$tempResult0.value;",
+            "     {",
+            "       bar();",
+            "     }",
             "    }",
-            "    let a = $jscomp$forAwait$tempResult0.value;",
-            "    {",
-            "      bar();",
+            " } catch ($jscomp$forAwait$catchErrParam0) {",
+            "   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            " } finally {",
+            "   try {",
+            "     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "     }",
+            "   } finally {",
+            "     if ($jscomp$forAwait$errResult0) {",
+            "       throw $jscomp$forAwait$errResult0.error;",
+            "     }",
             "    }",
             "  }",
             "}"));
@@ -607,14 +750,32 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines("async function abc() { for await (const a of foo()) { bar(); } }"),
         lines(
             "async function abc() {",
-            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
-            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "    if ($jscomp$forAwait$tempResult0.done) {",
-            "      break;",
+            " var $jscomp$forAwait$errResult0;",
+            " var $jscomp$forAwait$tempResult0;",
+            " var $jscomp$forAwait$retFn0;",
+            " try {",
+            "   for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "     if ($jscomp$forAwait$tempResult0.done) {",
+            "       break;",
+            "     }",
+            "     const a = $jscomp$forAwait$tempResult0.value;",
+            "     {",
+            "       bar();",
+            "     }",
             "    }",
-            "    const a = $jscomp$forAwait$tempResult0.value;",
-            "    {",
-            "      bar();",
+            " } catch ($jscomp$forAwait$catchErrParam0) {",
+            "   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            " } finally {",
+            "   try {",
+            "     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "     }",
+            "   } finally {",
+            "     if ($jscomp$forAwait$errResult0) {",
+            "       throw $jscomp$forAwait$errResult0.error;",
+            "     }",
             "    }",
             "  }",
             "}"));
@@ -625,18 +786,36 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     test(
         lines("async () => { for await (let a of foo()) { bar(); } }"),
         lines(
-            "async () => {",
-            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
-            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "    if ($jscomp$forAwait$tempResult0.done) {",
-            "      break;",
+            "async() => {",
+            "  var $jscomp$forAwait$errResult0;",
+            "  var $jscomp$forAwait$tempResult0;",
+            "  var $jscomp$forAwait$retFn0;",
+            "  try {",
+            "    for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "      if ($jscomp$forAwait$tempResult0.done) {",
+            "        break;",
+            "      }",
+            "      let a = $jscomp$forAwait$tempResult0.value;",
+            "      {",
+            "        bar();",
+            "      }",
             "    }",
-            "    let a = $jscomp$forAwait$tempResult0.value;",
-            "    {",
-            "      bar();",
+            "  } catch ($jscomp$forAwait$catchErrParam0) {",
+            "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            "  } finally {",
+            "    try {",
+            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "      }",
+            "    } finally {",
+            "      if ($jscomp$forAwait$errResult0) {",
+            "        throw $jscomp$forAwait$errResult0.error;",
+            "      }",
             "    }",
             "  }",
-            "}"));
+            "};"));
   }
 
   @Test
@@ -650,19 +829,38 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "async () => {",
-            "  label:",
-            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
-            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "    if ($jscomp$forAwait$tempResult0.done) {",
-            "      break;",
+            "async() => {",
+            "  var $jscomp$forAwait$errResult0;",
+            "  var $jscomp$forAwait$tempResult0;",
+            "  var $jscomp$forAwait$retFn0;",
+            "  try {",
+            // rewriting does not lose the label with the for await of statement
+            "    label: for (var $jscomp$forAwait$tempIterator0 ="
+                + " $jscomp.makeAsyncIterator(foo());;) {",
+            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "      if ($jscomp$forAwait$tempResult0.done) {",
+            "        break;",
+            "      }",
+            "      let a = $jscomp$forAwait$tempResult0.value;",
+            "      {",
+            "        bar();",
+            "      }",
             "    }",
-            "    let a = $jscomp$forAwait$tempResult0.value;",
-            "    {",
-            "      bar();",
+            "  } catch ($jscomp$forAwait$catchErrParam0) {",
+            "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            "  } finally {",
+            "    try {",
+            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
+            "      }",
+            "    } finally {",
+            "      if ($jscomp$forAwait$errResult0) {",
+            "        throw $jscomp$forAwait$errResult0.error;",
+            "      }",
             "    }",
             "  }",
-            "}"));
+            "};"));
   }
 
   @Test
@@ -677,20 +875,41 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines(
             "function foo() {",
             "  return new $jscomp.AsyncGeneratorWrapper(function*() {",
-            "    for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(bar());;) {",
-            "      const $jscomp$forAwait$tempResult0 =",
-            "          yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,",
-            "              $jscomp$forAwait$tempIterator0.next());",
-            "      if ($jscomp$forAwait$tempResult0.done) {",
-            "        break;",
+            "    var $jscomp$forAwait$errResult0;",
+            "    var $jscomp$forAwait$tempResult0;",
+            "    var $jscomp$forAwait$retFn0;",
+            "    try {",
+            "      for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(bar());;) {",
+            "        $jscomp$forAwait$tempResult0 = yield new"
+                + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,"
+                + " $jscomp$forAwait$tempIterator0.next());",
+            "        if ($jscomp$forAwait$tempResult0.done) {",
+            "          break;",
+            "        }",
+            "        let val = $jscomp$forAwait$tempResult0.value;",
+            "        {",
+            "          yield new"
+                + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR,"
+                + " val);",
+            "        }",
             "      }",
-            "      let val = $jscomp$forAwait$tempResult0.value;",
-            "      {",
-            "        yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR,val)",
+            "    } catch ($jscomp$forAwait$catchErrParam0) {",
+            "      $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
+            "    } finally {",
+            "      try {",
+            "        if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
+                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
+            "          yield new"
+                + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,"
+                + " $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0));",
+            "        }",
+            "      } finally {",
+            "        if ($jscomp$forAwait$errResult0) {",
+            "          throw $jscomp$forAwait$errResult0.error;",
+            "        }",
             "      }",
-            "    }}());",
+            "    }",
+            "  }());",
             "}"));
   }
 }

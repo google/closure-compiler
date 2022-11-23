@@ -70,8 +70,13 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   private static final String ACTION_ENUM_YIELD_STAR =
       "$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR";
 
+  // Variables with these names get created when rewriting for-await-of loops
   private static final String FOR_AWAIT_ITERATOR_TEMP_NAME = "$jscomp$forAwait$tempIterator";
   private static final String FOR_AWAIT_RESULT_TEMP_NAME = "$jscomp$forAwait$tempResult";
+  private static final String FOR_AWAIT_ERROR_RESULT_TEMP_NAME = "$jscomp$forAwait$errResult";
+  private static final String FOR_AWAIT_CATCH_PARAM_TEMP_NAME = "$jscomp$forAwait$catchErrParam";
+  private static final String FOR_AWAIT_RETURN_FN_TEMP_NAME = "$jscomp$forAwait$retFn";
+
   private int nextForAwaitId = 0;
 
   private final AbstractCompiler compiler;
@@ -452,43 +457,74 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   }
 
   /**
+   * Rewrites for await of loop.
+   *
+   * <pre>{@code
    * for await (lhs of rhs) { block(); }
+   * }</pre>
    *
    * <p>...becomes...
    *
    * <pre>{@code
-   * for (const tmpIterator = makeAsyncIterator(rhs);;) {
-   *    const tmpRes = await tmpIterator.next();
-   *    if (tmpRes.done) {
-   *      break;
-   *    }
-   *    lhs = $tmpRes.value;
-   *    {
-   *      block(); // Wrapped in a block in case block re-declares lhs variable.
-   *    }
+   * var errorRes, retFn, tmpRes;
+   * try {
+   *   for (var tmpIterator = makeAsyncIterator(rhs);;) {
+   *      tmpRes = await tmpIterator.next();
+   *      if (tmpRes.done) {
+   *        break;
+   *      }
+   *      lhs = $tmpRes.value;
+   *      {
+   *        block(); // Wrapped in a block in case block re-declares lhs variable.
+   *      }
+   *   }
+   * } catch(e) {
+   *   errorRes = { error: e };
+   * } finally {
+   *   try {
+   *     if (tmpRes && !tmpRes.done && (retFn = _tmpIterator.return)) await retFn.call(tmpIterator);
+   *   }
+   *   finally { if (errorRes) throw errorRes.error; }
    * }
+   *
    * }</pre>
    */
   private void replaceForAwaitOf(LexicalContext ctx, Node forAwaitOf) {
     int forAwaitId = nextForAwaitId++;
     String iteratorTempName = FOR_AWAIT_ITERATOR_TEMP_NAME + forAwaitId;
     String resultTempName = FOR_AWAIT_RESULT_TEMP_NAME + forAwaitId;
+    String errorResultTempName = FOR_AWAIT_ERROR_RESULT_TEMP_NAME + forAwaitId;
+    String catchErrorParamTempName = FOR_AWAIT_CATCH_PARAM_TEMP_NAME + forAwaitId;
+    String returnFuncTempName = FOR_AWAIT_RETURN_FN_TEMP_NAME + forAwaitId;
 
     checkState(forAwaitOf.hasParent(), "Cannot replace parentless for-await-of");
+
+    final Node forAwaitOfParent = forAwaitOf.getParent();
+    final Node replacementPoint;
+    if (forAwaitOfParent.isLabel()) {
+      // If the forAwaitOf is a label's statement child, then the label must move with the for upon
+      // rewriting.
+      checkState(forAwaitOf.isSecondChildOf(forAwaitOfParent), forAwaitOfParent);
+      replacementPoint = forAwaitOfParent;
+    } else {
+      replacementPoint = forAwaitOf;
+    }
 
     Node lhs = forAwaitOf.removeFirstChild();
     Node rhs = forAwaitOf.removeFirstChild();
     Node originalBody = forAwaitOf.removeFirstChild();
 
+    // Generate `var tmpIterator = makeAsyncIterator(rhs);`
     Node initializer =
         astFactory
-            .createSingleConstNameDeclaration(
+            .createSingleVarNameDeclaration(
                 iteratorTempName, astFactory.createJSCompMakeAsyncIteratorCall(rhs, this.namespace))
             .srcrefTreeIfMissing(rhs);
 
     // IIterableResult<VALUE> - it's a structural type so optimizations treat it as Object
     AstFactory.Type iterableResultType = type(StandardColors.TOP_OBJECT);
 
+    // Create code `if (tmpRes.done) {break;}`
     Node breakIfDone =
         astFactory.createIf(
             astFactory.createGetProp(
@@ -502,6 +538,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     final AstFactory.Type resultType;
     if (lhs.isValidAssignmentTarget()) {
       // In case of "for await (x of _)" just assign into the lhs.
+      // Generate `lhs = $tmpRes.value;`
       resultType = type(lhs);
       lhsAssignment =
           astFactory.exprResult(
@@ -521,7 +558,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
             astFactory.createGetProp(
                 astFactory.createName(resultTempName, iterableResultType), "value", resultType));
       } else {
-        // `for await (let [x, y] of _)`
+        // Generate `for await (let [x, y] of _)`
         // Add a child to the DESTRUCTURING_LHS node to create `[x, y] = res.value`
         checkState(declarationTarget.isDestructuringLhs(), declarationTarget);
         Node destructuringPattern = declarationTarget.getOnlyChild();
@@ -536,11 +573,28 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     }
     lhsAssignment.srcrefTreeIfMissing(lhs);
 
-    // const tmpRes = await tmpIterator.next()
+    // Generate `var errorRes;`
+    Node errorResDecl =
+        astFactory
+            .createSingleVarNameDeclaration(errorResultTempName)
+            .srcrefTreeIfMissing(forAwaitOf);
+
+    // Generate `var tmpRes;`
+    Node tempResultDecl =
+        astFactory.createSingleVarNameDeclaration(resultTempName).srcrefTreeIfMissing(forAwaitOf);
+
+    // Generate `var returnFunc;`
+    Node returnFuncDecl =
+        astFactory
+            .createSingleVarNameDeclaration(returnFuncTempName)
+            .srcrefTreeIfMissing(forAwaitOf);
+
+    // Generate `tmpRes = await tmpIterator.next()`
     Node resultDeclaration =
-        astFactory.createSingleConstNameDeclaration(
-            resultTempName,
-            constructAwaitNextResult(ctx, iteratorTempName, resultType, iterableResultType));
+        astFactory.exprResult(
+            astFactory.createAssign(
+                resultTempName,
+                constructAwaitNextResult(ctx, iteratorTempName, resultType, iterableResultType)));
 
     Node newForLoop =
         astFactory.createFor(
@@ -549,9 +603,166 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
             astFactory.createEmpty(),
             astFactory.createBlock(
                 resultDeclaration, breakIfDone, lhsAssignment, ensureBlock(originalBody)));
-    forAwaitOf.replaceWith(newForLoop);
-    newForLoop.srcrefTreeIfMissing(forAwaitOf);
-    compiler.reportChangeToEnclosingScope(newForLoop);
+
+    if (replacementPoint.isLabel()) {
+      newForLoop = astFactory.createLabel(replacementPoint.getFirstChild().cloneNode(), newForLoop);
+    }
+
+    // Generates code `try { .. newForLoop .. }`
+    Node tryNode = createOuterTry(newForLoop);
+
+    // Generate code `catch(e) { errorRes = { error: e }; }`
+    Node catchNode = createOuterCatch(catchErrorParamTempName, errorResultTempName);
+
+    // Generate the finally code block.
+    Node finallyNode =
+        createOuterFinally(
+            ctx,
+            iterableResultType,
+            resultType,
+            resultTempName,
+            returnFuncTempName,
+            iteratorTempName,
+            errorResultTempName);
+
+    Node tryCatchFinally = astFactory.createTryCatchFinally(tryNode, catchNode, finallyNode);
+    replacementPoint.replaceWith(tryCatchFinally);
+    tryCatchFinally.srcrefTreeIfMissing(replacementPoint);
+    errorResDecl.insertBefore(tryCatchFinally);
+    tempResultDecl.insertBefore(tryCatchFinally);
+    returnFuncDecl.insertBefore(tryCatchFinally);
+
+    compiler.reportChangeToEnclosingScope(tryCatchFinally);
+  }
+
+  // Generates code `try { .. newForLoop .. }`
+  private Node createOuterTry(Node newForLoop) {
+    Node tryNode = astFactory.createBlock();
+    tryNode.addChildToBack(newForLoop);
+    return tryNode;
+  }
+
+  // Generates code `catch(e) { errorRes = { error: e }; }`
+  private Node createOuterCatch(String catchErrorParamTempName, String errorResultTempName) {
+    // Generate `errorRes = { error: e };`
+    Node catchBodyStmt =
+        astFactory.exprResult(
+            astFactory.createAssign(
+                errorResultTempName,
+                astFactory.createObjectLit(
+                    astFactory.createStringKey(
+                        "error", astFactory.createNameWithUnknownType(catchErrorParamTempName)))));
+    // Generate `{ errorRes = { error: e }; }`
+    Node wrapperCatchBlockNode = astFactory.createBlock();
+    wrapperCatchBlockNode.addChildToBack(catchBodyStmt);
+
+    // Generate `catch(e) { errorRes = { error: e }; }`
+    Node catchNode =
+        astFactory.createCatch(
+            astFactory.createNameWithUnknownType(catchErrorParamTempName), wrapperCatchBlockNode);
+    return catchNode;
+  }
+
+  /**
+   * Generates the outer finally code of the rewriting.
+   *
+   * <pre>{@code
+   * finally {
+   *   try {
+   *     if (tmpRes && !tmpRes.done && (retFn = _tmpIterator.return)) await retFn.call(tmpIterator);
+   *   }
+   *   finally { if (errorRes) throw errorRes.error; }
+   * }
+   * }</pre>
+   */
+  private Node createOuterFinally(
+      LexicalContext ctx,
+      AstFactory.Type iterableResultType,
+      AstFactory.Type resultType,
+      String resultTempName,
+      String returnFuncTempName,
+      String iteratorTempName,
+      String errorResultTempName) {
+    Node finallyNode = astFactory.createBlock();
+
+    // Generate `tmpRes`
+    Node tmpResNameNode = astFactory.createNameWithUnknownType(resultTempName);
+    Node tmpResDoneGetProp =
+        astFactory.createGetProp(
+            astFactory.createName(resultTempName, iterableResultType),
+            "done",
+            type(StandardColors.BOOLEAN));
+
+    // Generate `tmpRes && !tmpRes.done`
+    Node and = astFactory.createAnd(tmpResNameNode, astFactory.createNot(tmpResDoneGetProp));
+
+    // Generate `(retFn = _tmpIterator.return)`
+    Node assign =
+        astFactory.createAssign(
+            astFactory.createNameWithUnknownType(returnFuncTempName),
+            astFactory.createGetProp(
+                astFactory.createName(iteratorTempName, resultType),
+                "return",
+                type(StandardColors.UNKNOWN)));
+
+    // Generate `(tmpRes && !tmpRes.done && (retFn = _tmpIterator.return))`
+    Node ifCond = astFactory.createAnd(and, assign);
+    Node awaitOrYieldStmt = null;
+    if (ctx.function.isAsyncGeneratorFunction()) {
+      // We are in an AsyncGenerator and must instead yield an "await" ActionRecord
+      awaitOrYieldStmt =
+          astFactory.exprResult(
+              astFactory.createYield(
+                  iterableResultType,
+                  astFactory.createNewNode(
+                      astFactory.createQName(this.namespace, ACTION_RECORD_NAME),
+                      astFactory.createQName(this.namespace, ACTION_ENUM_AWAIT),
+                      astFactory.createCall(
+                          astFactory.createGetPropWithUnknownType(
+                              astFactory.createName(
+                                  returnFuncTempName, type(StandardColors.UNKNOWN)),
+                              "call"),
+                          type(StandardColors.UNKNOWN),
+                          astFactory.createName(iteratorTempName, resultType)))));
+    } else {
+      //  Generate `await retFn.call(tmpIterator);`
+      awaitOrYieldStmt =
+          astFactory.exprResult(
+              astFactory.createAwait(
+                  iterableResultType,
+                  astFactory.createCall(
+                      astFactory.createGetPropWithUnknownType(
+                          astFactory.createName(returnFuncTempName, type(StandardColors.UNKNOWN)),
+                          "call"),
+                      type(StandardColors.PROMISE_ID),
+                      astFactory.createName(iteratorTempName, resultType))));
+    }
+
+    Node ifBody = astFactory.createBlock();
+    ifBody.addChildToBack(awaitOrYieldStmt);
+
+    Node ifBlock = astFactory.createIf(ifCond, ifBody);
+
+    Node innerTryBlock = astFactory.createBlock();
+    innerTryBlock.addChildToBack(ifBlock);
+
+    //  `finally { if (errorRes) throw errorRes.error; }`
+    Node innerFinallyBlock = astFactory.createBlock();
+
+    // if (errorRes) throw errorRes.error;
+    Node secondIfBody = astFactory.createBlock();
+    Node throwStmt =
+        astFactory.createThrow(
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createNameWithUnknownType(errorResultTempName), "error"));
+    secondIfBody.addChildToBack(throwStmt);
+    Node secondIfCond = astFactory.createNameWithUnknownType(errorResultTempName);
+    Node secondIfBlock = astFactory.createIf(secondIfCond, secondIfBody);
+    innerFinallyBlock.addChildToBack(secondIfBlock);
+
+    Node finallyBody = astFactory.createTryFinally(innerTryBlock, innerFinallyBlock);
+    finallyNode.addChildToBack(finallyBody);
+    return finallyNode;
   }
 
   private Node ensureBlock(Node possiblyBlock) {
