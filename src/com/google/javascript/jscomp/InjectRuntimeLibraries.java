@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -23,45 +24,23 @@ import com.google.javascript.rhino.Node;
  *
  * <p>TODO(b/120486392): merge this pass with {@link InjectTranspilationRuntimeLibraries}.
  */
-class InjectRuntimeLibraries implements CompilerPass {
+final class InjectRuntimeLibraries implements CompilerPass {
   private final AbstractCompiler compiler;
-  private final Stage stage;
+  private final ImmutableSet<String> forceInjectedLibraries;
 
-  private enum Stage {
-    CHECKS,
-    OPTIMIZATIONS
-  }
-
-  private InjectRuntimeLibraries(AbstractCompiler compiler, Stage stage) {
+  InjectRuntimeLibraries(AbstractCompiler compiler, ImmutableSet<String> forceInjectedLibraries) {
     this.compiler = compiler;
-    this.stage = stage;
+    this.forceInjectedLibraries = forceInjectedLibraries;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    // TODO(bradfordcsmith): Passes should not read the compiler options object.
-    CompilerOptions options = compiler.getOptions();
-    switch (this.stage) {
-      case CHECKS:
-        return;
-      case OPTIMIZATIONS:
-        injectOptimizationsLibraries(options);
-        return;
-    }
-    throw new AssertionError();
+    injectLibraries();
   }
 
-  private void injectOptimizationsLibraries(CompilerOptions options) {
-    for (String forced : options.forceLibraryInjection) {
+  private void injectLibraries() {
+    for (String forced : this.forceInjectedLibraries) {
       compiler.ensureLibraryInjected(forced, true);
     }
-  }
-
-  public static InjectRuntimeLibraries forChecks(AbstractCompiler compiler) {
-    return new InjectRuntimeLibraries(compiler, Stage.CHECKS);
-  }
-
-  public static InjectRuntimeLibraries forOptimizations(AbstractCompiler compiler) {
-    return new InjectRuntimeLibraries(compiler, Stage.OPTIMIZATIONS);
   }
 }

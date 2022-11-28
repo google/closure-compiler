@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
@@ -166,8 +167,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    passes.maybeAdd(injectRuntimeLibrariesForChecks);
-    passes.maybeAdd(injectRuntimeLibrariesForOptimizations);
+    passes.maybeAdd(injectRuntimeLibraries);
 
     passes.assertAllOneTimePasses();
     assertValidOrderForChecks(passes);
@@ -224,7 +224,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(closureGoogScopeAliases);
       addModuleRewritingPasses(checks, options);
       checks.maybeAdd(closurePrimitives);
-      checks.maybeAdd(injectRuntimeLibrariesForChecks);
       checks.maybeAdd(clearTypedScopeCreatorPass);
       checks.maybeAdd(clearTopTypedScopePass);
       checks.maybeAdd(generateExports);
@@ -374,7 +373,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Passes running before this point should expect to see language features up to ES_2017.
     checks.maybeAdd(createEmptyPass(PassNames.BEFORE_PRE_TYPECHECK_TRANSPILATION));
 
-    checks.maybeAdd(injectRuntimeLibrariesForChecks);
     checks.maybeAdd(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     if (options.checkTypes || options.inferTypes) {
@@ -558,7 +556,7 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addRewritePolyfillPass(passes);
     }
 
-    passes.maybeAdd(injectRuntimeLibrariesForOptimizations);
+    passes.maybeAdd(injectRuntimeLibraries);
 
     if (options.closurePass) {
       passes.maybeAdd(closureProvidesRequires);
@@ -1522,16 +1520,13 @@ public final class DefaultPassConfig extends PassConfig {
               })
           .build();
 
-  private final PassFactory injectRuntimeLibrariesForChecks =
+  private final PassFactory injectRuntimeLibraries =
       PassFactory.builder()
           .setName("InjectRuntimeLibraries")
-          .setInternalFactory(InjectRuntimeLibraries::forChecks)
-          .build();
-
-  private final PassFactory injectRuntimeLibrariesForOptimizations =
-      PassFactory.builder()
-          .setName("InjectRuntimeLibraries")
-          .setInternalFactory(InjectRuntimeLibraries::forOptimizations)
+          .setInternalFactory(
+              (compiler) ->
+                  new InjectRuntimeLibraries(
+                      compiler, ImmutableSet.copyOf(compiler.getOptions().forceLibraryInjection)))
           .build();
 
   private final PassFactory markUntranspilableFeaturesAsRemoved =
