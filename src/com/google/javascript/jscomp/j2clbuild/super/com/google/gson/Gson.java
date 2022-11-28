@@ -32,7 +32,7 @@ public final class Gson {
     throw new UnsupportedOperationException();
   }
 
-  public String toJson(Object x, Type typeOfSrc, JsonWriter writer) {
+  public void toJson(Object x, Type typeOfSrc, JsonWriter writer) {
     throw new UnsupportedOperationException();
   }
 }
