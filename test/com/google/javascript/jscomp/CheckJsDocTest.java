@@ -1057,9 +1057,20 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("/** @suppress {duplicate} @type {Foo} */ ns.something.foo;");
     testSame("/** @suppress {with} */ with (o) { x; }");
 
-    testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", MISPLACED_SUPPRESS);
+    // Suppressions are not allowed:
+    //  * on arbitrary sub-expressions within a statement
+    //  * on control-flow structures like loops, if, switch, or on blocks
     testWarning("const {/** @suppress {duplicate} */ Foo} = foo();", MISPLACED_SUPPRESS);
     testWarning("foo(/** @suppress {duplicate} */ ns.x = 7);", MISPLACED_SUPPRESS);
+    testWarning("/** @suppress {duplicate} */ switch (0) { default: ; }", MISPLACED_SUPPRESS);
+    testWarning("/** @suppress {duplicate} */ do {} while (true);", MISPLACED_SUPPRESS);
+    testWarning("/** @suppress {duplicate} */ while (true) {}", MISPLACED_SUPPRESS);
+    testWarning("/** @suppress {duplicate} */ for (; true; ) {}", MISPLACED_SUPPRESS);
+    testWarning("/** @suppress {duplicate} */ { (0); }", MISPLACED_SUPPRESS);
+    testWarning("/** @suppress {duplicate} */ if (true) {}", MISPLACED_SUPPRESS);
+
+    testSame("/** @suppress {uselessCode} */ goog.require('unused.Class');");
+    testSame("/** @suppress {checkTypes} */ foo(0);");
 
     testSame("/** @suppress {visibility} */ a.x_ = 0;");
     testSame("/** @suppress {visibility} */ a.x_ += 0;");

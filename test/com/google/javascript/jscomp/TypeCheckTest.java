@@ -23304,6 +23304,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testSuppressCheckTypesOnStatements() {
+    newTest()
+        .addSource(
+            "/** @param {string} s */",
+            "function takesString(s) {}",
+            "",
+            "takesString(0);", // verify this is an error
+            "/** @suppress {checkTypes} */",
+            "takesString(null);",
+            "/** @suppress {checkTypes} */",
+            "(0, takesString(undefined));")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesString does not match formal parameter",
+                "found   : number",
+                "required: string"))
+        .run();
+  }
+
+  @Test
   @Ignore("b/221480261")
   public void testSymbolIteratorMethod() {
     newTest()

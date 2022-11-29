@@ -380,9 +380,7 @@ public final class WarningsGuardTest {
         "var goog = {}; "
         + "goog.f = function() { /** @suppress {deprecated} */ (a); }");
 
-    // We only care about @suppress annotations at the function and
-    // script level.
-    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isNull();
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
   @Test
@@ -396,6 +394,19 @@ public final class WarningsGuardTest {
         compiler.parseTestCode("/** @fileoverview @suppress {deprecated} */\n console.log(a);");
 
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
+  }
+
+  @Test
+  public void testSuppressGuard7() {
+    Map<String, DiagnosticGroup> map = new HashMap<>();
+    map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
+    Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
+    Node code = compiler.parseTestCode("console.log(/** @suppress {deprecated} */ (a));");
+
+    // We don't care about @suppress annotations within nested expressions
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isNull();
   }
 
   @Test

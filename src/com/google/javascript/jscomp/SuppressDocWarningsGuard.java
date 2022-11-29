@@ -115,9 +115,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
           || current.isComputedProp()
           || current.isMemberFieldDef()
           || current.isComputedFieldDef()
-          || ((NodeUtil.isAssignmentOp(current) || current.isGetProp())
-              && current.hasParent()
-              && current.getParent().isExprResult())) {
+          || (current.hasParent() && current.getParent().isExprResult())) {
         info = NodeUtil.getBestJSDocInfo(current);
       }
 
