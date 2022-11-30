@@ -657,10 +657,8 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     wrapperCatchBlockNode.addChildToBack(catchBodyStmt);
 
     // Generate `catch(e) { errorRes = { error: e }; }`
-    Node catchNode =
-        astFactory.createCatch(
-            astFactory.createNameWithUnknownType(catchErrorParamTempName), wrapperCatchBlockNode);
-    return catchNode;
+    return astFactory.createCatch(
+        astFactory.createNameWithUnknownType(catchErrorParamTempName), wrapperCatchBlockNode);
   }
 
   /**
