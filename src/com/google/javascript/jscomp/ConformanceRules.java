@@ -19,8 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -54,6 +56,7 @@ import com.google.javascript.rhino.jstype.Property;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -2247,7 +2250,8 @@ public final class ConformanceRules {
      * change using a global presubmit "at head" and update any affected allowlists. See
      * go/jscompiler-global-presubmit and go/tsjs-conformance-team-docs.
      */
-    public static final ImmutableSet<String> BANNED_ATTRS =
+    @VisibleForTesting
+    public static final ImmutableSet<String> ALL_BANNED_ATTRS =
         ImmutableSet.of(
             "href",
             "rel",
@@ -2262,6 +2266,25 @@ public final class ConformanceRules {
             "codebase",
             "data");
 
+    private final ImmutableSet<String> bannedAtrrs;
+
+    public SecuritySensitiveAttributes() {
+      this.bannedAtrrs = ALL_BANNED_ATTRS;
+    }
+
+    public SecuritySensitiveAttributes(Collection<String> bannedAtrrs) {
+      this.bannedAtrrs =
+          bannedAtrrs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toImmutableSet());
+    }
+
+    /**
+     * Checks if a attribute name is on the security banlist. Callers should make sure the attribute
+     * name is lower-cased, as attribute names are case-insensitve in HTML.
+     */
+    public boolean contains(String attributeName) {
+      return bannedAtrrs.contains(attributeName);
+    }
+
     /**
      * Given a {@code NodeTraversal} and {@code Node}, check if the attribute violates conformance.
      *
@@ -2269,7 +2292,7 @@ public final class ConformanceRules {
      * if the attribute is on a list of banned attributes, or if it begins with the letters "on".
      * Otherwise, it is a conforming attribute.
      */
-    public static ConformanceResult checkConformanceForAttributeName(
+    public ConformanceResult checkConformanceForAttributeName(
         NodeTraversal traversal, Node attrName) {
       String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
       if (literalName == null) {
@@ -2281,14 +2304,29 @@ public final class ConformanceRules {
 
       literalName = literalName.toLowerCase(Locale.ROOT);
 
-      if (BANNED_ATTRS.contains(literalName)
+      if (bannedAtrrs.contains(literalName)
           || ConformanceUtil.isEventHandlerAttrName(literalName)) {
         return ConformanceResult.VIOLATION;
       }
       return ConformanceResult.CONFORMANCE;
     }
 
-    private SecuritySensitiveAttributes() {}
+    /**
+     * Given a {@code NodeTraversal} and {@code Node}, check if the attribute violates conformance.
+     *
+     * <p>A violation is returned only if the attribute name can be statically determined and is on
+     * the list of banned attributes.
+     */
+    public ConformanceResult checkConformanceForAttributeNameWithHighConfidence(
+        NodeTraversal traversal, Node attrName) {
+      String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
+      if (literalName == null) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      return contains(literalName.toLowerCase(Locale.ROOT))
+          ? ConformanceResult.VIOLATION
+          : ConformanceResult.CONFORMANCE;
+    }
   }
 
   /**
@@ -2300,13 +2338,185 @@ public final class ConformanceRules {
    * treated as {@code element.setAttribute(prop, value)} when {@code element} has the type {@code
    * Element}.
    */
-  public static final class BanSetAttribute extends AbstractRule {
+  public static final class BanElementSetAttribute extends AbstractRule {
+    private static final String ELEMENT_TYPE_NAME = "Element";
     private static final String SET_ATTRIBUTE = "setAttribute";
     private static final String SET_ATTRIBUTE_NS = "setAttributeNS";
     private static final String SET_ATTRIBUTE_NODE = "setAttributeNode";
     private static final String SET_ATTRIBUTE_NODE_NS = "setAttributeNodeNS";
     private static final ImmutableSet<String> BANNED_PROPERTIES =
         ImmutableSet.of(SET_ATTRIBUTE, SET_ATTRIBUTE_NS, SET_ATTRIBUTE_NODE, SET_ATTRIBUTE_NODE_NS);
+
+    private final SecuritySensitiveAttributes securitySensitiveAttributes;
+    private final ConformanceResult defaultDecisionForUncertainCases;
+
+    /**
+     * Create a custom checker to ban {@code Element#setAttribute} based on conformance a
+     * requirement spec.
+     *
+     * @throws InvalidRequirementSpec If the requirement is malformed.
+     */
+    public BanElementSetAttribute(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      securitySensitiveAttributes = new SecuritySensitiveAttributes(requirement.getValueList());
+      defaultDecisionForUncertainCases =
+          requirement.getReportLooseTypeViolations()
+              ? ConformanceResult.VIOLATION
+              : ConformanceResult.CONFORMANCE;
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
+      if (node.isCall()) {
+        return checkConformanceOnPropertyCall(traversal, node);
+      } else if (node.isGetElem() && NodeUtil.isLValue(node)) {
+        return checkConformanceOnGetElement(node);
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private ConformanceResult checkConformanceOnPropertyCall(
+        NodeTraversal traversal, Node callNode) {
+      Optional<String> calledProperty = getBannedPropertyName(callNode);
+      if (!calledProperty.isPresent()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      if (calledProperty.get().equals(SET_ATTRIBUTE)) {
+        // If the setAttribute function is called with less than two arguments it's either a false
+        // positive or uncompilable code.
+        if (callNode.getChildCount() < 3) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        if (requirement.getReportLooseTypeViolations()) {
+          return securitySensitiveAttributes.checkConformanceForAttributeName(
+              traversal, callNode.getSecondChild());
+        } else {
+          return securitySensitiveAttributes.checkConformanceForAttributeNameWithHighConfidence(
+              traversal, callNode.getSecondChild());
+        }
+      }
+
+      if (calledProperty.get().equals(SET_ATTRIBUTE_NS)) {
+        // If the setAttributeNS function is called with less than three arguments it's either a
+        // false positive or uncompilable code.
+        if (callNode.getChildCount() < 4) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        if (callNode.getSecondChild().isNull()) {
+          // A null namespace makes this equivalent to a regular setAttribute call.
+          if (requirement.getReportLooseTypeViolations()) {
+            return securitySensitiveAttributes.checkConformanceForAttributeName(
+                traversal, callNode.getChildAtIndex(2));
+          } else {
+            return securitySensitiveAttributes.checkConformanceForAttributeNameWithHighConfidence(
+                traversal, callNode.getChildAtIndex(2));
+          }
+        }
+      }
+
+      // We haven't defined a security contract on setAttributeNode and setAttributeNodeNS yet, so
+      // flag them as risky if report_loose_type_violations is set.
+      return defaultDecisionForUncertainCases;
+    }
+
+    private Optional<String> getBannedPropertyName(Node callNode) {
+      Node target = callNode.getFirstChild();
+      if (!target.isGetProp()) {
+        return Optional.absent();
+      }
+      String propertyName = target.getString();
+      if (!BANNED_PROPERTIES.contains(propertyName)) {
+        return Optional.absent();
+      }
+      JSType type = target.getFirstChild().getJSType();
+      if (type == null) {
+        return Optional.absent();
+      }
+      JSType elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
+      if (elementType != null && type.isSubtypeOf(elementType)) {
+        return Optional.of(propertyName);
+      }
+      return Optional.absent();
+    }
+
+    private ConformanceResult checkConformanceOnGetElement(Node getElementNode) {
+      Node key = getElementNode.getSecondChild();
+      if (key.isStringLit()) {
+        String keyName = key.getString().toLowerCase(Locale.ROOT);
+        if (!securitySensitiveAttributes.contains(keyName)
+            && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
+          return ConformanceResult.CONFORMANCE;
+        } else if (hasElementType(getElementNode)) {
+          return ConformanceResult.VIOLATION;
+        }
+      } else if (requirement.getReportLooseTypeViolations()
+          && hasElementType(getElementNode)) { // key is not a string literal.
+        JSType keyType = key.getJSType();
+        if (keyType == null || ConformanceUtil.isXid(keyType)) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        // We have seen code using other types of keys (e.g., numbers) for element access. Only
+        // report violations if the key is explicitly typed as string or the union of string and
+        // other types.
+        if (keyType.isString()) {
+          return ConformanceResult.VIOLATION;
+        }
+        if (keyType.isUnionType()) {
+          for (JSType alternate : keyType.toMaybeUnionType().getAlternates()) {
+            if (alternate.isString()) {
+              return ConformanceResult.VIOLATION;
+            }
+          }
+        }
+      }
+
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean hasElementType(Node getElementNode) {
+      JSType objType = getElementNode.getFirstChild().getJSType();
+      JSType elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
+
+      // Do not further check the node if there's no type information available.
+      if (objType == null || elementType == null) {
+        return false;
+      }
+      // If the type of the object is not known to be a subtype of Element, the code is not
+      // equivalent to setAttribute. Without this check, we will get overwhelmed by false
+      // positives.
+      if (objType.isUnknownType() || objType.isEmptyType() || !objType.isSubtypeOf(elementType)) {
+        return false;
+      }
+
+      return true;
+    }
+  }
+
+  /**
+   * Ban {@code Element#setAttribute} with attribute names specified in {@code value} or any dynamic
+   * string.
+   *
+   * <p>Using the element access syntax to set properties of {@code Element} is considered to be
+   * equivalent to calling {@code Element#setAttribute}. E.g., {@code element[prop] = value} is
+   * treated as {@code element.setAttribute(prop, value)} when {@code element} has the type {@code
+   * Element}.
+   */
+  // TODO(user): Delete this class once `BanElementSetAttribute` is released.
+  public static final class BanSetAttribute extends AbstractRule {
+    private static final String ELEMENT_TYPE_NAME = "Element";
+    private static final String SET_ATTRIBUTE = "setAttribute";
+    private static final String SET_ATTRIBUTE_NS = "setAttributeNS";
+    private static final String SET_ATTRIBUTE_NODE = "setAttributeNode";
+    private static final String SET_ATTRIBUTE_NODE_NS = "setAttributeNodeNS";
+    private static final ImmutableSet<String> BANNED_PROPERTIES =
+        ImmutableSet.of(SET_ATTRIBUTE, SET_ATTRIBUTE_NS, SET_ATTRIBUTE_NODE, SET_ATTRIBUTE_NODE_NS);
+    private static final SecuritySensitiveAttributes BANNED_ATTRS =
+        new SecuritySensitiveAttributes();
 
     /**
      * Create a custom checker to ban {@code Element#setAttribute} based on conformance a
@@ -2340,8 +2550,7 @@ public final class ConformanceRules {
           return ConformanceResult.CONFORMANCE;
         }
 
-        return SecuritySensitiveAttributes.checkConformanceForAttributeName(
-            traversal, node.getSecondChild());
+        return BANNED_ATTRS.checkConformanceForAttributeName(traversal, node.getSecondChild());
       }
 
       if (calledProperty.get().equals(SET_ATTRIBUTE_NS)) {
@@ -2353,8 +2562,7 @@ public final class ConformanceRules {
 
         if (node.getSecondChild().isNull()) {
           // A null namespace makes this equivalent to a regular setAttribute call.
-          return SecuritySensitiveAttributes.checkConformanceForAttributeName(
-              traversal, node.getChildAtIndex(2));
+          return BANNED_ATTRS.checkConformanceForAttributeName(traversal, node.getChildAtIndex(2));
         }
 
         // We haven't defined a security contract on setAttributeNS yet, so flag it as risky.
@@ -2379,7 +2587,7 @@ public final class ConformanceRules {
       if (type == null) {
         return Optional.absent();
       }
-      JSType elementType = compiler.getTypeRegistry().getGlobalType("Element");
+      JSType elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
       if (elementType != null && type.isSubtypeOf(elementType)) {
         return Optional.of(propertyName);
       }
@@ -2390,8 +2598,7 @@ public final class ConformanceRules {
       Node key = node.getSecondChild();
       if (key.isStringLit()) {
         String keyName = key.getString().toLowerCase(Locale.ROOT);
-        if (!SecuritySensitiveAttributes.BANNED_ATTRS.contains(keyName)
-            && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
+        if (!BANNED_ATTRS.contains(keyName) && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
           return ConformanceResult.CONFORMANCE;
         } else if (hasElementType(node)) {
           return ConformanceResult.VIOLATION;
@@ -2423,14 +2630,14 @@ public final class ConformanceRules {
 
     private boolean hasElementType(Node node) {
       JSType objType = node.getFirstChild().getJSType();
-      JSType elementType = compiler.getTypeRegistry().getGlobalType("Element");
+      JSType elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
 
       // Do not further check the node if there's no type information available.
       if (objType == null || elementType == null) {
         return false;
       }
       // If the type of the object is not known to be a subtype of Element, the code is not
-      // evquivlanet to setAttribute. Without this check, we will get overwhelmed by false
+      // equivalent to setAttribute. Without this check, we will get overwhelmed by false
       // positives.
       if (objType.isUnknownType() || objType.isEmptyType() || !objType.isSubtypeOf(elementType)) {
         return false;
@@ -2458,6 +2665,8 @@ public final class ConformanceRules {
       }
     }
 
+    private static final SecuritySensitiveAttributes BANNED_ATTRS =
+        new SecuritySensitiveAttributes();
     private final ImmutableList<AttributeSettingRestriction> restrictions;
 
     /**
@@ -2509,8 +2718,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      return SecuritySensitiveAttributes.checkConformanceForAttributeName(
-          traversal, node.getSecondChild());
+      return BANNED_ATTRS.checkConformanceForAttributeName(traversal, node.getSecondChild());
     }
 
     private Optional<String> getBannedPropertyName(Node node) {
