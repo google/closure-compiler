@@ -2409,20 +2409,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * any preserve annotations within the root's source, they will also be printed in a block comment
    * at the beginning of the output.
    *
-   * @deprecated use toSource(CodeBuilder, LicenseTracker, int, Node) instead for better license
-   *     tracking.
-   */
-  @Deprecated
-  public void toSource(final CodeBuilder cb, final int inputSeqNum, final Node root) {
-    toSource(cb, new ScriptNodeLicensesOnlyTracker(this), inputSeqNum, root);
-  }
-
-  /**
-   * Writes out JS code from a root node. If printing input delimiters, this method will attach a
-   * comment to the start of the text indicating which input the output derived from. If there were
-   * any preserve annotations within the root's source, they will also be printed in a block comment
-   * at the beginning of the output.
-   *
    * <p>The LicenseTracker provided determines which licenses attached to the nodes visited should
    * be included in the output. When building a single JS bundle, consider using the {@link
    * SingleBinaryLicenseTracker} implementation.
