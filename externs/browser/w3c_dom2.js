@@ -1710,6 +1710,13 @@ HTMLAnchorElement.prototype.blur = function() {};
 HTMLAnchorElement.prototype.focus = function() {};
 
 /**
+ * @type {string}
+ * @implicitCast
+ * @see https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#api-overview
+ */
+HTMLAnchorElement.prototype.attributionsrc;
+
+/**
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-17701901
@@ -1794,6 +1801,13 @@ HTMLImageElement.prototype.vspace;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-13839076
  */
 HTMLImageElement.prototype.width;
+
+/**
+ * @type {string}
+ * @implicitCast
+ * @see https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#api-overview
+ */
+HTMLImageElement.prototype.attributionsrc;
 
 /**
  * @constructor
@@ -2156,6 +2170,13 @@ HTMLScriptElement.prototype.text;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-30534818
  */
 HTMLScriptElement.prototype.type;
+
+/**
+ * @type {string}
+ * @implicitCast
+ * @see https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#api-overview
+ */
+HTMLScriptElement.prototype.attributionsrc;
 
 /**
  * @constructor
