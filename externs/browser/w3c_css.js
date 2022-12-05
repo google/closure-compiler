@@ -319,6 +319,23 @@ CSSStyleRule.prototype.style;
 /**
  * @constructor
  * @extends {CSSRule}
+ * @see https://www.w3.org/TR/css-conditional-3/#the-csssupportsrule-interface
+ */
+function CSSSupportsRule() {}
+
+/**
+ * @type {string}
+ */
+CSSSupportsRule.prototype.conditionText;
+
+/**
+ * @type {!CSSRuleList}
+ */
+CSSSupportsRule.prototype.cssRules;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSMediaRule
  */
 function CSSMediaRule() {}
