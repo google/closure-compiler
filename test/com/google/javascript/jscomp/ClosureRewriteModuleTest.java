@@ -44,7 +44,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   private boolean preserveClosurePrimitives = false;
 
   public ClosureRewriteModuleTest() {
-    super(new TestExternsBuilder().addClosureExterns().addConsole().build());
+    super(new TestExternsBuilder().addClosureExterns().addPromise().addConsole().build());
   }
 
   @Override
@@ -1191,6 +1191,50 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "async function test() {",
                 " await goog.importHandler_('sG5M4c');",
                 " var {Foo} = module$exports$a$b$c;",
+                "}")));
+  }
+
+  @Test
+  public void testGoogRequireDynamic_then_destructuringPattern() {
+    test(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines(
+                "async function test() {", //
+                "  goog.requireDynamic('a.b.c').then(({Foo}) => {console.log(Foo);});",
+                "}")),
+        expected(
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}"),
+            lines(
+                "async function test() {", //
+                "  goog.importHandler_('sG5M4c').then(() => { ",
+                "     const {Foo} = module$exports$a$b$c;",
+                "     console.log(Foo);",
+                "  });",
+                "}")));
+  }
+
+  @Test
+  public void testGoogRequireDynamic_then_name() {
+    test(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines(
+                "async function test() {", //
+                "  goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});",
+                "}")),
+        expected(
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}"),
+            lines(
+                "async function test() {", //
+                "  goog.importHandler_('sG5M4c').then(() => { ",
+                "     const foo = module$exports$a$b$c;",
+                "     console.log(foo.Foo);",
+                "  });",
                 "}")));
   }
 

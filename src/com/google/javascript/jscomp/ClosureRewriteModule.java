@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -1213,20 +1215,122 @@ final class ClosureRewriteModule implements CompilerPass {
     updateGoogRequire(t, call);
   }
 
-  // Rewrite
-  //   `const {Foo} = await goog.requireDynamic('a.b.c')`
-  //    to
-  //   `await goog.importHandler_('tJJovc');
-  //    const {Foo} = module$exports$a$b$c;`
-  // Note that we currently only transpile when RHS is await and LHS is declaration with
-  // destructuring pattern or name.
-  // TODO(b/259315429): Transpile `goog.requireDynamic().then()`.
   private void updateGoogRequireDynamicCall(Node call) {
+    final Node parent = call.getParent();
+    checkState(
+        parent.isAwait() || (parent.isGetProp() && parent.getString().equals("then")),
+        "goog.requireDynamic() in only allowed in await/then expression");
+
+    if (parent.isAwait()) {
+      updateGoogRequireDynamicCallInAwait(call);
+    } else {
+      updateGoogRequireDynamicCallInThen(call);
+    }
+  }
+
+  // Rewrite
+  //   goog.requireDynamic('a.b.c').then( ({Foo}) => { new Foo().render(); });
+  //    to
+  //   goog.importHandler_('h4sh').then(() => {
+  //        const {Foo} = module$exports$a$b$c;
+  //        new Foo().render();
+  //   });
+  // Note that rewriting works for both destructuring pattern and name, i.e., `{Foo}` or `foo`.
+  private void updateGoogRequireDynamicCallInThen(Node call) {
     Node namespaceIdNode = call.getSecondChild();
     String namespaceId = namespaceIdNode.getString();
     String exportedNamespace = rewriteState.getExportedNamespaceOrScript(namespaceId);
     checkState(
         exportedNamespace != null, "Exported namespace for goog.requireDynamic() canot be null");
+
+    // `goog.requireDynamic('a.b.c').then()`
+    final Node getProp = call.getParent();
+    final Node thenCallNode = getProp.getParent();
+    checkState(thenCallNode != null && thenCallNode.isCall(), "must be a 'then' call expression");
+
+    // Create a string literal containing the ID of the chunk containing the module we want
+    Node argNode =
+        this.astFactory.createString(namespaceIdToXid(namespaceId)).srcref(namespaceIdNode);
+
+    // `goog.requireDynamic('a.b.c')` -> `goog.requireDynamic('chunkId')`
+    namespaceIdNode.replaceWith(argNode);
+
+    // `goog.requireDynamic` -> `goog.importHandler_`
+    Node calleeNode = call.getFirstChild();
+    checkState(calleeNode.matchesQualifiedName(GOOG_REQUIREDYNAMIC_NAME), calleeNode);
+    calleeNode.setString(IMPORT_HANDLER_NAME);
+
+    // `module$exports$a$b$c`
+    Node exportedNamespaceNameNode =
+        this.astFactory.createName(this.globalTypedScope, exportedNamespace).srcrefTree(call);
+    exportedNamespaceNameNode.setOriginalName(namespaceId);
+
+    // Get `{Foo}` from `goog.requireDynamic().then(   ({Foo}) => {  }   )`;
+    Node functionNode = thenCallNode.getSecondChild();
+    checkState(functionNode != null && functionNode.isFunction(), "must be a function in `then`");
+
+    // Get param list of the callback function
+    Node paramListNode = functionNode.getSecondChild();
+    checkState(paramListNode.getChildCount() == 1, "function must have only one parameter");
+
+    // Get the callback function body
+    Node functionBody = paramListNode.getNext();
+
+    // Get parameter, object pattern or name
+    Node objectPatternOrNameNode = paramListNode.getOnlyChild();
+    checkState(
+        objectPatternOrNameNode.isObjectPattern() || objectPatternOrNameNode.isName(),
+        "parameter of callback function must be object pattern or name");
+    objectPatternOrNameNode.detach();
+
+    // `({Foo}) => {}` -> `() => {}`
+    paramListNode.removeChildren();
+
+    // Dynamic require is not allowed for JS that is too old to have `const` (< ES6),
+    // We don't expect to ever see `--language_in=ES5` in combination with dynamic require.
+    final LanguageMode languageIn = compiler.getOptions().getLanguageIn();
+    checkState(
+        languageIn.toFeatureSet().contains(Feature.CONST_DECLARATIONS),
+        "'%s' does not contain '%s'",
+        languageIn,
+        Feature.CONST_DECLARATIONS);
+
+    Node enclosingScript = NodeUtil.getEnclosingScript(call);
+    NodeUtil.addFeatureToScript(enclosingScript, Feature.CONST_DECLARATIONS, compiler);
+
+    // Create `const {Foo} = module$exports$a$b$c;`
+    // Or `const foo = module$exports$a$b$c;'
+    Node declarationNode;
+    if (objectPatternOrNameNode.isObjectPattern()) {
+      declarationNode =
+          this.astFactory
+              .createSingleConstObjectPatternDeclaration(
+                  objectPatternOrNameNode, exportedNamespaceNameNode)
+              .srcrefTreeIfMissing(call);
+    } else {
+      declarationNode =
+          this.astFactory
+              .createSingleConstNameDeclaration(
+                  objectPatternOrNameNode.getString(), exportedNamespaceNameNode)
+              .srcrefTreeIfMissing(call);
+    }
+    functionBody.addChildToFront(declarationNode);
+
+    compiler.reportChangeToEnclosingScope(call);
+    compiler.reportChangeToEnclosingScope(declarationNode);
+  }
+
+  // Rewrite
+  //   const {Foo} = await goog.requireDynamic('a.b.c')`
+  //    to
+  //   await goog.importHandler_('tJJovc');
+  //   const {Foo} = module$exports$a$b$c;
+  private void updateGoogRequireDynamicCallInAwait(Node call) {
+    Node namespaceIdNode = call.getSecondChild();
+    String namespaceId = namespaceIdNode.getString();
+    String exportedNamespace = rewriteState.getExportedNamespaceOrScript(namespaceId);
+    checkState(
+        exportedNamespace != null, "Exported namespace for goog.requireDynamic() cannot be null");
 
     // `await goog.requireDynamic('a.b.c')`
     final Node existingAwait = call.getParent();
@@ -1254,9 +1358,8 @@ final class ClosureRewriteModule implements CompilerPass {
     exportedNamespaceNameNode.setOriginalName(namespaceId);
 
     // Create a string literal containing the ID of the chunk containing the module we want
-    Xid.HashFunction hashFunction = this.compiler.getOptions().chunkIdHashFunction;
-    Xid xid = hashFunction == null ? new Xid() : new Xid(hashFunction);
-    Node argNode = this.astFactory.createString(xid.get(namespaceId)).srcref(namespaceIdNode);
+    Node argNode =
+        this.astFactory.createString(namespaceIdToXid(namespaceId)).srcref(namespaceIdNode);
 
     // `goog.requireDynamic('a.b.c')` -> `goog.requireDynamic('chunkId')`
     namespaceIdNode.replaceWith(argNode);
@@ -1274,6 +1377,12 @@ final class ClosureRewriteModule implements CompilerPass {
     final Node awaitStatement = astFactory.exprResult(existingAwait).srcref(existingAwait);
     awaitStatement.insertBefore(declarationStatement);
     compiler.reportChangeToEnclosingScope(call);
+  }
+
+  private String namespaceIdToXid(String namespaceId) {
+    Xid.HashFunction hashFunction = this.compiler.getOptions().chunkIdHashFunction;
+    Xid xid = hashFunction == null ? new Xid() : new Xid(hashFunction);
+    return xid.get(namespaceId);
   }
 
   private void updateGoogModuleGetCall(Node call) {

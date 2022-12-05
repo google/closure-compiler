@@ -106,6 +106,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   // For convenience
   private final ObjectType unknownType;
   private final JSType numberAdditionSupertype;
+  private static final String GOOG_REQUIREDYNAMIC_NAME = "goog.requireDynamic";
 
   TypeInference(
       AbstractCompiler compiler,
@@ -1926,12 +1927,19 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
    * @param n A non-constructor function invocation, i.e. CALL or TAGGED_TEMPLATELIT
    */
   private FlowScope setCallNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
-    // Resolve goog.{require,requireType,forwardDeclare,module.get} calls separately, as they are
-    // not normal functions.
+    // Resolve goog.{require,requireType,requireDynamic,forwardDeclare,module.get} calls separately,
+    // as they are not normal functions.
     if (n.isCall()
-        && !n.getParent().isExprResult() // Don't bother typing calls if the result is unused.
+        && NodeUtil.isExpressionResultUsed(n) // Don't bother typing calls if the result is unused.
         && ModuleImportResolver.isGoogModuleDependencyCall(n)) {
-      n.setJSType(getGoogModuleDependencyCallResultType(n));
+      Node calleeNode = n.getFirstChild();
+      if (calleeNode.matchesQualifiedName(GOOG_REQUIREDYNAMIC_NAME)) {
+        // Result of `goog.requireDynamic('module.name')` is `IThenable<MODULE_TYPE>`
+        // IThenable is a supertype of Promise.
+        n.setJSType(Promises.wrapInIThenable(registry, getGoogModuleDependencyCallResultType(n)));
+      } else {
+        n.setJSType(getGoogModuleDependencyCallResultType(n));
+      }
       return scopeAfterChildren;
     }
 

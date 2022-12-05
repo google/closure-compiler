@@ -503,6 +503,16 @@ final class AstFactory {
   }
 
   /**
+   * Creates a new `const` declaration statement for an object pattern.
+   *
+   * <p>e.g. `const {Foo} = value;`
+   */
+  Node createSingleConstObjectPatternDeclaration(Node objectPattern, Node value) {
+    checkState(objectPattern.isObjectPattern(), "not an object pattern: %s", objectPattern);
+    return IR.constNode(objectPattern, value);
+  }
+
+  /**
    * Creates a reference to "arguments" with the type specified in externs, or unknown if the
    * externs for it weren't included.
    */
@@ -699,7 +709,9 @@ final class AstFactory {
     return result;
   }
 
-  /** @deprecated Use {@link #createGetProp(Node, String, Type)} instead. */
+  /**
+   * @deprecated Use {@link #createGetProp(Node, String, Type)} instead.
+   */
   @Deprecated
   Node createGetPropWithoutColor(Node receiver, String propertyName) {
     assertNotAddingColors();
@@ -961,8 +973,8 @@ final class AstFactory {
       case JSTYPE:
         JSType classJSType = classType.getJSType(registry);
         FunctionType constructorType = checkNotNull(classJSType.toMaybeFunctionType());
-      ObjectType instanceType = checkNotNull(constructorType.getInstanceType());
-      result.setJSType(instanceType);
+        ObjectType instanceType = checkNotNull(constructorType.getInstanceType());
+        result.setJSType(instanceType);
         break;
       case COLOR:
         result.setColor(getInstanceOfColor(classType.getColor(colorRegistry)));
@@ -1084,16 +1096,16 @@ final class AstFactory {
     Node result = IR.arrowFunction(IR.name(""), IR.paramList(), expression);
     switch (this.typeMode) {
       case JSTYPE:
-      // It feels like we should be adding type-of-this here, but it should remain unknown,
-      // because you're allowed to supply any kind of value of `this` when calling an arrow
-      // function. It will just be ignored in favor of the `this` in the scope where the
-      // arrow was defined.
-      FunctionType functionType =
-          FunctionType.builder(registry)
-              .withReturnType(expression.getJSTypeRequired())
-              .withParameters()
-              .buildAndResolve();
-      result.setJSType(functionType);
+        // It feels like we should be adding type-of-this here, but it should remain unknown,
+        // because you're allowed to supply any kind of value of `this` when calling an arrow
+        // function. It will just be ignored in favor of the `this` in the scope where the
+        // arrow was defined.
+        FunctionType functionType =
+            FunctionType.builder(registry)
+                .withReturnType(expression.getJSTypeRequired())
+                .withParameters()
+                .buildAndResolve();
+        result.setJSType(functionType);
         break;
       case COLOR:
         result.setColor(StandardColors.TOP_OBJECT);
@@ -1155,11 +1167,11 @@ final class AstFactory {
     Node result = IR.arraylit(elements);
     switch (this.typeMode) {
       case JSTYPE:
-      result.setJSType(
-          registry.createTemplatizedType(
-              registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
-              // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
-              getNativeType(JSTypeNative.UNKNOWN_TYPE)));
+        result.setJSType(
+            registry.createTemplatizedType(
+                registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+                // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
+                getNativeType(JSTypeNative.UNKNOWN_TYPE)));
         break;
       case COLOR:
         result.setColor(colorRegistry.get(StandardColors.ARRAY_ID));

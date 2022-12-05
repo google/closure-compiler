@@ -4069,6 +4069,18 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testRequireDynamic() {
+    withModules(
+        ImmutableList.of(
+            "goog.module('foo'); exports.barFunc = function Bar() { return 'bar'; };",
+            "const f = goog.requireDynamic('foo');",
+            "const e = goog.require('foo');"));
+
+    assertType(getType("f")).toStringIsEqualTo("IThenable<{barFunc: function(): ?}>");
+    assertType(getType("e")).toStringIsEqualTo("{barFunc: function(): ?}");
+  }
+
+  @Test
   public void testDynamicImportAfterModuleRewriting() {
     withModules(
         ImmutableList.of(
