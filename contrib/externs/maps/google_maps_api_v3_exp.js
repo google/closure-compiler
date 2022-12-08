@@ -11303,6 +11303,40 @@ google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .authTokenFetcher;
 
 /**
+ * Customization function that is applied to the destination marker. <p> Use
+ * this function to specify custom styling (such as marker icon) and
+ * interactivity (such as click handling). This function is invoked once when
+ * the marker is created, before it is added to the map view. (On this
+ * invocation, the <code>isNew</code> parameter in the function parameters
+ * object is set to <code>true</code>.) Additionally, this function is invoked
+ * when the location provider receives data from Fleet Engine, regardless of
+ * whether the data corresponding to this marker have changed. <p> See {@link
+ * google.maps.journeySharing.TripMarkerCustomizationFunctionParams} for a list
+ * of supplied parameters and their uses.
+ * @type {?(function(!google.maps.journeySharing.TripMarkerCustomizationFunctionParams):
+ *     void)|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .destinationMarkerCustomization;
+
+/**
+ * Customization function that is applied to the origin marker. <p> Use this
+ * function to specify custom styling (such as marker icon) and interactivity
+ * (such as click handling). This function is invoked once when the marker is
+ * created, before it is added to the map view. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the location
+ * provider receives data from Fleet Engine, regardless of whether the data
+ * corresponding to this marker have changed. <p> See {@link
+ * google.maps.journeySharing.TripMarkerCustomizationFunctionParams} for a list
+ * of supplied parameters and their uses.
+ * @type {?(function(!google.maps.journeySharing.TripMarkerCustomizationFunctionParams):
+ *     void)|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .originMarkerCustomization;
+
+/**
  * Minimum time between fetching location updates in milliseconds. If it takes
  * longer than <code>pollingIntervalMillis</code> to fetch a location update,
  * the next location update is not started until the current one finishes.
@@ -11332,6 +11366,40 @@ google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
  */
 google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .tripId;
+
+/**
+ * Customization function that is applied to the vehicle marker. <p> Use this
+ * function to specify custom styling (such as marker icon) and interactivity
+ * (such as click handling). This function is invoked once when the marker is
+ * created, before it is added to the map view. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the location
+ * provider receives data from Fleet Engine, regardless of whether the data
+ * corresponding to this marker have changed. <p> See {@link
+ * google.maps.journeySharing.TripMarkerCustomizationFunctionParams} for a list
+ * of supplied parameters and their uses.
+ * @type {?(function(!google.maps.journeySharing.TripMarkerCustomizationFunctionParams):
+ *     void)|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .vehicleMarkerCustomization;
+
+/**
+ * Customization function that is applied to a waypoint marker. <p> Use this
+ * function to specify custom styling (such as marker icon) and interactivity
+ * (such as click handling). This function is invoked once when the marker is
+ * created, before it is added to the map view. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the location
+ * provider receives data from Fleet Engine, regardless of whether the data
+ * corresponding to this marker have changed. <p> See {@link
+ * google.maps.journeySharing.TripMarkerCustomizationFunctionParams} for a list
+ * of supplied parameters and their uses.
+ * @type {?(function(!google.maps.journeySharing.TripWaypointMarkerCustomizationFunctionParams):
+ *     void)|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .waypointMarkerCustomization;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -12323,6 +12391,52 @@ google.maps.journeySharing.Trip.prototype.type;
  * @type {?string}
  */
 google.maps.journeySharing.Trip.prototype.vehicleId;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Parameters specific to marker customization functions that apply options to
+ * markers representing trip vehicle, origin and destination locations. Used
+ * by {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.vehicleMarkerCustomization}, {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.originMarkerCustomization},
+ * and {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.destinationMarkerCustomization}.
+ * @extends {google.maps.journeySharing.MarkerCustomizationFunctionParams}
+ * @record
+ */
+google.maps.journeySharing.TripMarkerCustomizationFunctionParams =
+    function() {};
+
+/**
+ * The trip associated with this marker. <p> For information about the vehicle
+ * servicing this trip, use {@link
+ * google.maps.journeySharing.Trip.latestVehicleLocationUpdate} and {@link
+ * google.maps.journeySharing.Trip.remainingWaypoints}.
+ * @type {!google.maps.journeySharing.Trip}
+ */
+google.maps.journeySharing.TripMarkerCustomizationFunctionParams.prototype.trip;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Parameters specific to marker customization functions that apply options to
+ * markers representing trip waypoint locations. Used by {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.waypointMarkerCustomization}.
+ * @extends {google.maps.journeySharing.TripMarkerCustomizationFunctionParams}
+ * @record
+ */
+google.maps.journeySharing.TripWaypointMarkerCustomizationFunctionParams =
+    function() {};
+
+/**
+ * The 0-based waypoint index associated with this marker. Use this index
+ * on {@link google.maps.journeySharing.Trip.remainingWaypoints} to retrieve
+ * information about the waypoint.
+ * @type {number}
+ */
+google.maps.journeySharing.TripWaypointMarkerCustomizationFunctionParams
+    .prototype.waypointIndex;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -13968,6 +14082,48 @@ google.maps.places.Place.prototype.formattedAddress;
 google.maps.places.Place.prototype.googleMapsURI;
 
 /**
+ * Whether a place has curbside pickup. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown. Returns &#39;undefined&#39; if this field has not yet been
+ * requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.hasCurbsidePickup;
+
+/**
+ * Whether a place has delivery. Returns &#39;true&#39; or &#39;false&#39; if
+ * the value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.hasDelivery;
+
+/**
+ * Whether a place has dine in. Returns &#39;true&#39; or &#39;false&#39; if the
+ * value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.hasDineIn;
+
+/**
+ * Whether a place has takeout. Returns &#39;true&#39; or &#39;false&#39; if the
+ * value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.hasTakeout;
+
+/**
+ * Whether a place has a wheelchair accessible entrance. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown. Returns &#39;undefined&#39; if this field has not yet been
+ * requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.hasWheelchairAccessibleEntrance;
+
+/**
  * URL to an image resource that can be used to represent this location&#39;s
  * category.
  * @type {?string|undefined}
@@ -13992,6 +14148,14 @@ google.maps.places.Place.prototype.id;
  * @type {?string|undefined}
  */
 google.maps.places.Place.prototype.internationalPhoneNumber;
+
+/**
+ * Whether a place is reservable. Returns &#39;true&#39; or &#39;false&#39; if
+ * the value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.isReservable;
 
 /**
  * The Place’s position.
@@ -14057,6 +14221,63 @@ google.maps.places.Place.prototype.requestedRegion;
  * @type {!Array<!google.maps.places.Review>|undefined}
  */
 google.maps.places.Place.prototype.reviews;
+
+/**
+ * Whether a place serves beer. Returns &#39;true&#39; or &#39;false&#39; if the
+ * value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesBeer;
+
+/**
+ * Whether a place serves breakfast. Returns &#39;true&#39; or &#39;false&#39;
+ * if the value is known. Returns &#39;null&#39; if the value is unknown.
+ * Returns &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesBreakfast;
+
+/**
+ * Whether a place serves brunch. Returns &#39;true&#39; or &#39;false&#39; if
+ * the value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesBrunch;
+
+/**
+ * Whether a place serves dinner. Returns &#39;true&#39; or &#39;false&#39; if
+ * the value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesDinner;
+
+/**
+ * Whether a place serves lunch. Returns &#39;true&#39; or &#39;false&#39; if
+ * the value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesLunch;
+
+/**
+ * Whether a place serves vegetarian food. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown. Returns &#39;undefined&#39; if this field has not yet been
+ * requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesVegetarianFood;
+
+/**
+ * Whether a place serves wine. Returns &#39;true&#39; or &#39;false&#39; if the
+ * value is known. Returns &#39;null&#39; if the value is unknown. Returns
+ * &#39;undefined&#39; if this field has not yet been requested.
+ * @type {?boolean|undefined}
+ */
+google.maps.places.Place.prototype.servesWine;
 
 /**
  * URI to the svg image mask resource that can be used to represent a place’s
