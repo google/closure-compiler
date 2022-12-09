@@ -16,6 +16,7 @@
 
 package com.google.gson.stream;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 
 /**
@@ -29,18 +30,22 @@ public abstract class JsonWriter {
    * Begins encoding a new array. Each call to this method must be paired with a call to {@link
    * #endArray}.
    */
+  @CanIgnoreReturnValue
   public abstract JsonWriter beginArray() throws IOException;
 
   /** Ends encoding the current array. */
+  @CanIgnoreReturnValue
   public abstract JsonWriter endArray() throws IOException;
 
   /**
    * Begins encoding a new object. Each call to this method must be paired with a call to {@link
    * #endObject}.
    */
+  @CanIgnoreReturnValue
   public abstract JsonWriter beginObject() throws IOException;
 
   /** Ends encoding the current object. */
+  @CanIgnoreReturnValue
   public abstract JsonWriter endObject() throws IOException;
 
   /**
@@ -48,14 +53,17 @@ public abstract class JsonWriter {
    *
    * @param name the name of the forthcoming value. May not be null.
    */
+  @CanIgnoreReturnValue
   public abstract JsonWriter name(String name) throws IOException;
 
   /** Encodes a number. */
+  @CanIgnoreReturnValue
   public abstract JsonWriter value(Number n) throws IOException;
 
   /**
    * Encodes a string, escaping it according to RFC 4627 as well as for HTML ({@code <} and {@code
    * >} for example).
    */
+  @CanIgnoreReturnValue
   public abstract JsonWriter value(String s) throws IOException;
 }
