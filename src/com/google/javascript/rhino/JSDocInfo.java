@@ -345,7 +345,8 @@ public class JSDocInfo implements Serializable {
     PROVIDE_GOOG,
     PROVIDE_ALREADY_PROVIDED,
 
-    WIZ_CALLBACK;
+    WIZ_CALLBACK,
+    LOG_TYPE_IN_COMPILER;
 
     final String name;
     final long mask;
@@ -1500,6 +1501,11 @@ public class JSDocInfo implements Serializable {
     return (modifies.size() > 1 || (modifies.size() == 1 && !modifies.contains("this")));
   }
 
+  /** Returns whether we should log the type of values passed to this function. */
+  public boolean getLogTypeInCompiler() {
+    return checkBit(Bit.LOG_TYPE_IN_COMPILER);
+  }
+
   protected Object getPropertyValueByIndex(int index) {
     if (propertyValues == null) {
       throw new IllegalArgumentException("no property value");
@@ -2604,6 +2610,16 @@ public class JSDocInfo implements Serializable {
     /** Records that this method is to be exposed as a mixinFunction. */
     public boolean recordMixinFunction() {
       return populateBit(Bit.MIXIN_FUNCTION, true);
+    }
+
+    /** Returns whether we should log the type of values passed to this function. */
+    public boolean logTypeInCompiler() {
+      return checkBit(Bit.LOG_TYPE_IN_COMPILER);
+    }
+
+    /** Records that the types of values passed to this method should be logged in the compiler. */
+    public boolean recordLogTypeInCompiler() {
+      return populateBit(Bit.LOG_TYPE_IN_COMPILER, true);
     }
 
     // TODO(sdh): this is a new method - consider removing it in favor of recordType?

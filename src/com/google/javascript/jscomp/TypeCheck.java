@@ -44,6 +44,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.base.Tri;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -391,6 +392,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private int unknownCount = 0;
   private boolean inExterns;
 
+  /** Logs types for @logTypeInCompiler. */
+  private @Nullable DebugTypeLogger debugTypeLogger = null;
+
   private static final class SuggestionPair {
     private final String suggestion;
     final int distance;
@@ -452,10 +456,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     checkState(externsAndJs != null);
     checkState(externsRoot == null || externsAndJs.hasChild(externsRoot));
 
-    if (externsRoot != null) {
-      check(externsRoot, true);
+    try (DebugTypeLogger debugTypeLogger = new DebugTypeLogger()) {
+      this.debugTypeLogger = debugTypeLogger;
+
+      if (externsRoot != null) {
+        check(externsRoot, true);
+      }
+      check(jsRoot, false);
     }
-    check(jsRoot, false);
   }
 
   /**
@@ -511,6 +519,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // Start logging types if we're in debug mode and this node was annotated.
+    this.debugTypeLogger.maybeStartLoggingAt(n);
+
     if (n.isScript()) {
       if (NodeUtil.isFromTypeSummary(n)) {
         // Errors in type summary files are suppressed, so no use traversing them.
@@ -1069,11 +1080,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Don't count externs since the user's code may not even use that part.
     typeable = typeable && !inExterns;
 
+    // Record typing logs and metrics.
     if (typeable) {
+      this.debugTypeLogger.maybeLogTypeOfNode(n);
       doPercentTypedAccounting(n);
     }
 
     checkJsdocInfoContainsObjectWithBadKey(n);
+
+    // If this is the node which started logging types, stop logging.
+    this.debugTypeLogger.stopLoggingIfThisIsWhereWeStarted(n);
   }
 
   private void visitUnaryPlus(Node n) {
@@ -1737,10 +1753,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // if it ran on more things. Consider a precondition on the arguments.
 
     boolean declaredOverride = declaresOverride(info);
-    @Nullable
-    ObjectType supertypeWithProperty =
+    @Nullable ObjectType supertypeWithProperty =
         stream(receiverType.getImplicitPrototypeChain())
-            // We want to report the supertype that actually had the overidden declaration.
+            // We want to report the supertype that actually had the overridden declaration.
             .filter((type) -> type.hasOwnProperty(propertyName))
             // We only care about the lowest match in the chain because it must be the most
             // specific.
@@ -1819,8 +1834,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
+   * Returns the type expected when using the key.
+   *
    * @param key A OBJECTLIT key node.
-   * @return The type expected when using the key.
    */
   static @Nullable JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
     if (valueType != null) {
@@ -2397,7 +2413,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Check whether there's any property conflict for for a particular super interface
+   * Check whether there's any property conflict for a particular super interface
    *
    * @param n The node being visited
    * @param functionName The function name being checked
@@ -3431,5 +3447,71 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private static boolean declaresOverride(@Nullable JSDocInfo jsdoc) {
     return (jsdoc != null) && jsdoc.isOverride();
+  }
+
+  /** Logs types for @logTypeInCompiler. */
+  private final class DebugTypeLogger implements AutoCloseable {
+    /** Output log file for @logTypeInCompiler. */
+    private final @Nullable LogFile typeLogFile;
+
+    /** The node where we started logging, if we're logging. */
+    private @Nullable Node parentNode;
+
+    // Suppress MustBeClosedChecker because `.close` is called by our `close` method.
+    @SuppressWarnings("MustBeClosedChecker")
+    DebugTypeLogger() {
+      this.typeLogFile =
+          compiler.isDebugLoggingEnabled()
+              ? compiler.createOrReopenLog(this.getClass(), "types_logged_in_compiler.log")
+              : null;
+    }
+
+    void maybeStartLoggingAt(Node n) {
+      // We don't log outside debug mode.
+      if (!compiler.isDebugLoggingEnabled()) {
+        return;
+      }
+
+      // We're already logging.
+      if (this.parentNode != null) {
+        return;
+      }
+
+      // We only start logging on @logTypeInCompiler.
+      JSDocInfo info = n.getJSDocInfo();
+      if (info == null || !info.getLogTypeInCompiler()) {
+        return;
+      }
+
+      // Otherwise start logging here.
+      this.parentNode = n;
+    }
+
+    void stopLoggingIfThisIsWhereWeStarted(Node n) {
+      if (n == this.parentNode) {
+        this.parentNode = null;
+      }
+    }
+
+    @Override
+    public void close() {
+      if (typeLogFile != null) {
+        typeLogFile.close();
+      }
+    }
+
+    void maybeLogTypeOfNode(Node n) {
+      // If we have no parent, we're not logging.
+      if (this.parentNode == null) {
+        return;
+      }
+
+      if (n.getJSType() == null) {
+        return;
+      }
+
+      this.typeLogFile.log(
+          n.toString(/* printSource= */ true, /* printAnnotations= */ true, /* printType= */ true));
+    }
   }
 }

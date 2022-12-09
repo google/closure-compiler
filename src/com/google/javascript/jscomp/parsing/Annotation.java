@@ -50,6 +50,7 @@ enum Annotation {
   JSX_FRAGMENT,
   LENDS,
   LICENSE, // same as preserve
+  LOG_TYPE_IN_COMPILER,
   MEANING,
   MIXIN_CLASS,
   MIXIN_FUNCTION,
@@ -133,6 +134,7 @@ enum Annotation {
           .put("record", Annotation.RECORD)
           .put("lends", Annotation.LENDS)
           .put("license", Annotation.LICENSE)
+          .put("logTypeInCompiler", Annotation.LOG_TYPE_IN_COMPILER)
           .put("meaning", Annotation.MEANING)
           .put("mixinClass", Annotation.MIXIN_CLASS)
           .put("mixinFunction", Annotation.MIXIN_FUNCTION)

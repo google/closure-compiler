@@ -136,8 +136,7 @@ public final class JsDocInfoParser {
     this.licenseText = x;
   }
 
-  @Nullable
-  String getLicenseText() {
+  @Nullable String getLicenseText() {
     return this.licenseText;
   }
 
@@ -715,7 +714,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-
         case PROVIDE_GOOG:
           if (!jsdocBuilder.recordProvideGoog()) {
             addParserWarning(Msg.JSDOC_PROVIDE_GOOG);
@@ -1021,6 +1019,9 @@ public final class JsDocInfoParser {
         case IDGENERATOR:
           token = parseIdGeneratorTag(next());
           return token;
+        case LOG_TYPE_IN_COMPILER:
+          var unused = jsdocBuilder.recordLogTypeInCompiler();
+          return eatUntilEOLIfNotAnnotation();
         case JSX:
         case JSX_FRAGMENT:
         case SOY_MODULE:
@@ -1208,6 +1209,7 @@ public final class JsDocInfoParser {
                   addTypeWarning(Msg.JSDOC_INCOMPAT_TYPE, lineno, charno);
                 }
                 break;
+
               default:
                 break;
             }
@@ -1616,8 +1618,7 @@ public final class JsDocInfoParser {
    *
    * @param n A node. May be null.
    */
-  @Nullable
-  JSTypeExpression createJSTypeExpression(Node n) {
+  @Nullable JSTypeExpression createJSTypeExpression(Node n) {
     return n == null ? null : new JSTypeExpression(n, getSourceName());
   }
 
