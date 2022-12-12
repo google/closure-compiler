@@ -5706,6 +5706,55 @@ chrome.mediaGalleries.onScanProgress;
 
 /**
  * @const
+ * @see https://developer.chrome.com/docs/extensions/reference/offscreen/
+ */
+chrome.offscreen = {};
+
+/**
+ * @typedef {{
+ *   justification: string,
+ *   reasons: !Array<!chrome.offscreen.Reason>,
+ *   url: string,
+ * }}
+ * @see https://developer.chrome.com/docs/extensions/reference/offscreen/#type-CreateParameters
+ */
+chrome.offscreen.CreateParameters;
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/docs/extensions/reference/offscreen/#type-Reason
+ */
+chrome.offscreen.Reason = {
+  TESTING: '',
+  AUDIO_PLAYBACK: '',
+  IFRAME_SCRIPTING: '',
+  DOM_SCRAPING: '',
+  BLOBS: '',
+  DOM_PARSER: '',
+  USER_MEDIA: '',
+  DISPLAY_MEDIA: '',
+  WEB_RTC: '',
+  CLIPBOARD: '',
+};
+
+/**
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/docs/extensions/reference/offscreen/#method-closeDocument
+ */
+chrome.offscreen.closeDocument = function(opt_callback) {};
+
+/**
+ * @param {!chrome.offscreen.CreateParameters} parameters The parameters
+ *     describing the offscreen document to create.
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/docs/extensions/reference/offscreen/#method-createDocument
+ */
+chrome.offscreen.createDocument = function(parameters, opt_callback) {};
+
+/**
+ * @const
  * @see https://developer.chrome.com/extensions/pageCapture.html
  */
 chrome.pageCapture = {};
