@@ -235,6 +235,10 @@ gen_java_tests(
             "**/j2clbuild/**/*.java",
         ],
     ),
+    javacopts = [
+        "-source 11",
+        "-target 11",
+    ],
     prefix_path = "test/",
     deps = [
         ":compiler_lib",

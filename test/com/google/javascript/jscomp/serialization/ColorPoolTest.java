@@ -331,7 +331,7 @@ public class ColorPoolTest {
 
   @Test
   public void deserializesUnionReferencingOtherUnion() {
-    TypePool typePool =
+    var typePool =
         TypePool.newBuilder()
             // U0 := (number, string)
             .addType(
