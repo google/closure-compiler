@@ -34,6 +34,9 @@ message LazyAst {
   bytes script = 1;
   // 1-based index into TypedAst::source_file_pool
   uint32 source_file = 2;
+  // The URL for a source map associated with this source file (i.e. the URL
+  // specified in "//# sourceMappingURL=" comments).
+  string source_mapping_url = 3;
 }
 
 // Keep this in sync with the TypedAst proto.
@@ -61,6 +64,9 @@ message NonLazyAst {
   AstNode script = 1;
   // 1-based index into TypedAst::source_file_pool
   uint32 source_file = 2;
+  // The URL for a source map associated with this source file (i.e. the URL
+  // specified in "//# sourceMappingURL=" comments).
+  string source_mapping_url = 3;
 }
 
 message StringPoolProto {

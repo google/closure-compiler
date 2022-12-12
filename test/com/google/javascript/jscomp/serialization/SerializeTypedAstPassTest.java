@@ -424,6 +424,27 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .containsAtLeast(result.findInStringPool("method"), result.findInStringPool("arg"));
   }
 
+  @Test
+  public void serializesSourceMappingURL() throws InvalidProtocolBufferException {
+    String sourceMapTestCode =
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());");
+
+    String code = sourceMapTestCode + "\n//# sourceMappingURL=relativedir/foo.js.map";
+
+    SerializationResult result = compile(code);
+
+    LazyAst lazyAst = result.ast.getCodeAstList().get(0);
+    String sourceMappingURL = lazyAst.getSourceMappingUrl();
+
+    assertThat(sourceMappingURL).isEqualTo("relativedir/foo.js.map");
+  }
+
   private AstNode compileToAstNode(String source) {
     return compile(source).sourceNodes.get(0);
   }

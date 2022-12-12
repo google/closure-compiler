@@ -3252,6 +3252,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  @Override
+  public @Nullable SourceMapInput getInputSourceMap(String sourceFileName) {
+    return inputSourceMaps.getOrDefault(sourceFileName, null);
+  }
+
   /**
    * Adds file name to content mappings for all sources found in a source map. This is used to
    * populate sourcesContent array in the output source map even for sources embedded in the input
