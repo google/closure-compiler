@@ -2653,7 +2653,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCustomBanUnknownProp_GetPropInDestructuringDoesntCauseSpuriousWarning() {
+  public void testCustomBanUnknownProp_getPropInDestructuringDoesntCauseSpuriousWarning() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
     test(
@@ -3515,6 +3515,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         externs(externs),
         srcs("(new HTMLScriptElement).setAttributeNS(null, 'data-random', 'xxx')"));
 
+    testNoWarning(externs(externs), srcs("(new HTMLScriptElement)['innerHTML'] = 'xxx';"));
+
     testNoWarning(
         externs(externs), srcs("var attr = 'unknown'; (new HTMLScriptElement)[attr] =  'xxx';"));
 
@@ -3558,6 +3560,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "  java_class:"
                 + " 'com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute'\n",
             "  error_message: 'BanSetAttribute Message'\n",
+            "  report_loose_type_violations: true\n",
             "}");
 
     String externs =
@@ -3611,9 +3614,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testWarning(
         externs(externs),
+        srcs("(new HTMLScriptElement)['src'] = 'xxx';"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
         srcs("(new HTMLScriptElement)['href'] = 'xxx';"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new HTMLScriptElement)['innerHTML'] = 'xxx';"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testNoWarning(
+        externs(externs), srcs("const attr = 'unknown'; (new HTMLScriptElement)[attr] =  'xxx';"));
 
     testWarning(
         externs(externs),

@@ -2347,6 +2347,7 @@ public final class ConformanceRules {
     private static final ImmutableSet<String> BANNED_PROPERTIES =
         ImmutableSet.of(SET_ATTRIBUTE, SET_ATTRIBUTE_NS, SET_ATTRIBUTE_NODE, SET_ATTRIBUTE_NODE_NS);
 
+    private final JSType elementType;
     private final SecuritySensitiveAttributes securitySensitiveAttributes;
     private final ConformanceResult defaultDecisionForUncertainCases;
 
@@ -2364,6 +2365,7 @@ public final class ConformanceRules {
           requirement.getReportLooseTypeViolations()
               ? ConformanceResult.VIOLATION
               : ConformanceResult.CONFORMANCE;
+      elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
     }
 
     @Override
@@ -2371,7 +2373,7 @@ public final class ConformanceRules {
       if (node.isCall()) {
         return checkConformanceOnPropertyCall(traversal, node);
       } else if (node.isGetElem() && NodeUtil.isLValue(node)) {
-        return checkConformanceOnGetElement(node);
+        return checkConformanceOnGetElement(traversal, node);
       }
       return ConformanceResult.CONFORMANCE;
     }
@@ -2436,37 +2438,50 @@ public final class ConformanceRules {
       if (type == null) {
         return Optional.absent();
       }
-      JSType elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
       if (elementType != null && type.isSubtypeOf(elementType)) {
         return Optional.of(propertyName);
       }
       return Optional.absent();
     }
 
-    private ConformanceResult checkConformanceOnGetElement(Node getElementNode) {
+    /**
+     * Checks if there is any security implication in a GetElem node.
+     *
+     * <p>Returns {@code true} if the checked {@link Node} is setting a security sensitive property
+     * on an {@code Element} object through the bracket syntax.
+     */
+    private ConformanceResult checkConformanceOnGetElement(
+        NodeTraversal traversal, Node getElementNode) {
       Node key = getElementNode.getSecondChild();
-      if (key.isStringLit()) {
-        String keyName = key.getString().toLowerCase(Locale.ROOT);
-        if (!securitySensitiveAttributes.contains(keyName)
-            && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
-          return ConformanceResult.CONFORMANCE;
-        } else if (hasElementType(getElementNode)) {
-          return ConformanceResult.VIOLATION;
+      String keyName = ConformanceUtil.inferStringValue(traversal.getScope(), key);
+      if (keyName != null) {
+        if (securitySensitiveAttributes.contains(keyName.toLowerCase(Locale.ROOT))
+            || (requirement.getReportLooseTypeViolations()
+                // innerHTML and outerHTML are not attributes but properties. For simplicity we
+                // check them here instead of having another rule.
+                && (keyName.equals("innerHTML") || keyName.equals("outerHTML")))) {
+          if (hasElementType(getElementNode)) {
+            return ConformanceResult.VIOLATION;
+          }
         }
-      } else if (requirement.getReportLooseTypeViolations()
-          && hasElementType(getElementNode)) { // key is not a string literal.
-        JSType keyType = key.getJSType();
-        if (keyType == null || ConformanceUtil.isXid(keyType)) {
-          return ConformanceResult.CONFORMANCE;
-        }
+        return ConformanceResult.CONFORMANCE;
+      }
 
-        // We have seen code using other types of keys (e.g., numbers) for element access. Only
-        // report violations if the key is explicitly typed as string or the union of string and
-        // other types.
+      if (!requirement.getReportLooseTypeViolations()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      // We have seen code using other types of keys (e.g., numbers) for element access. Only
+      // report violations if the key is explicitly typed as string or the union of string and
+      // other types.
+      JSType keyType = key.getJSType();
+      if (keyType == null || ConformanceUtil.isXid(keyType)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      if (hasElementType(getElementNode)) {
         if (keyType.isString()) {
           return ConformanceResult.VIOLATION;
-        }
-        if (keyType.isUnionType()) {
+        } else if (keyType.isUnionType()) {
           for (JSType alternate : keyType.toMaybeUnionType().getAlternates()) {
             if (alternate.isString()) {
               return ConformanceResult.VIOLATION;
@@ -2480,7 +2495,6 @@ public final class ConformanceRules {
 
     private boolean hasElementType(Node getElementNode) {
       JSType objType = getElementNode.getFirstChild().getJSType();
-      JSType elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
 
       // Do not further check the node if there's no type information available.
       if (objType == null || elementType == null) {
