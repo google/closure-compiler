@@ -148,8 +148,8 @@ public class TimelineTest {
     timeline.add(ateBerries);
     timeline.add(ateGrapes);
 
-    assertThat(timeline.getSince("Monday")).containsExactly(ateBerries).inOrder();
-    assertThat(timeline.getSince("Monday")).containsExactly(ateGrapes).inOrder();
+    assertThat(timeline.getSince("Monday")).containsExactly(ateBerries);
+    assertThat(timeline.getSince("Monday")).containsExactly(ateGrapes);
   }
 
   @Test
