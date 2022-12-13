@@ -23,6 +23,7 @@ import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -632,7 +633,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         TypedAstDeserializer.deserializeFullAst(
             deserializingCompiler,
             SourceFile.fromCode("syntheticExterns", "", StaticSourceFile.SourceKind.EXTERN),
-            ImmutableList.<SourceFile>builder().addAll(externFiles).addAll(codeFiles).build(),
+            ImmutableSet.<SourceFile>builder().addAll(externFiles).addAll(codeFiles).build(),
             serializedStream,
             includeTypes);
 

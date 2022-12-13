@@ -3161,9 +3161,15 @@ public final class CompilerTest {
     // When
     compiler.initWithTypedAstFilesystem(
         ImmutableList.of(), ImmutableList.of(file1), new CompilerOptions(), typedAstListStream);
+
+    assertThrows(
+        Exception.class,
+        () -> {
+          var unused = compiler.getTypedAstDeserializer(file2);
+        });
+
     compiler.parse();
 
-    // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
     assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
   }
@@ -3288,6 +3294,157 @@ public final class CompilerTest {
     assertThat(lazyExterns.getStaticSourceFile()).isSameInstanceAs(compiler.SYNTHETIC_EXTERNS_FILE);
     assertThat(lazyExterns.getFirstChild().isConst()).isTrue();
     assertThat(lazyExterns.getSecondChild().isVar()).isTrue();
+  }
+
+  @Test
+  public void testTypedAstFilesystem_doesNotParseWeakFileTypedAstContents() {
+    // Given
+    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
+    SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
+    Compiler compiler = new Compiler();
+
+    TypedAst typedAst =
+        TypedAst.newBuilder()
+            .setStringPool(StringPool.empty().toProto())
+            .setSourceFilePool(
+                SourceFilePool.newBuilder()
+                    .addSourceFile(weakFile.getProto())
+                    .addSourceFile(strongFile.getProto()))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(1)
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(
+                                AstNode.newBuilder()
+                                    .setKind(NodeKind.EXPRESSION_STATEMENT)
+                                    .addChild(
+                                        AstNode.newBuilder()
+                                            .setKind(NodeKind.NUMBER_LITERAL)
+                                            .setDoubleValue(0)))
+                            .build()
+                            .toByteString()))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(2)
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(
+                                AstNode.newBuilder()
+                                    .setKind(NodeKind.EXPRESSION_STATEMENT)
+                                    .addChild(
+                                        AstNode.newBuilder()
+                                            .setKind(NodeKind.NUMBER_LITERAL)
+                                            .setDoubleValue(1)))
+                            .build()
+                            .toByteString()))
+            .build();
+
+    InputStream typedAstListStream =
+        new ByteArrayInputStream(
+            TypedAst.List.newBuilder().addTypedAsts(typedAst).build().toByteArray());
+
+    // When
+    compiler.initWithTypedAstFilesystem(
+        ImmutableList.of(),
+        ImmutableList.of(weakFile, strongFile),
+        new CompilerOptions(),
+        typedAstListStream);
+    compiler.parse();
+    Node weakScript =
+        compiler
+            .getModuleGraph()
+            .getChunkByName(JSChunk.WEAK_CHUNK_NAME)
+            .getInputs()
+            .get(0)
+            .getAstRoot(compiler);
+    Node strongScript =
+        compiler
+            .getModuleGraph()
+            .getChunkByName(JSChunk.STRONG_CHUNK_NAME)
+            .getInputs()
+            .get(0)
+            .getAstRoot(compiler);
+
+    // Then
+    assertNode(weakScript).hasNoChildren();
+    assertNode(strongScript).hasOneChild();
+    assertNode(strongScript.getFirstChild()).hasToken(Token.EXPR_RESULT);
+    assertNode(strongScript.getFirstFirstChild()).isNumber(1);
+  }
+
+  @Test
+  public void testTypedAstFilesystemWithModules_doesNotParseWeakFileTypedAstContents() {
+    // Given
+    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
+    SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
+    Compiler compiler = new Compiler();
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongChunk = new JSChunk("a");
+    weakChunk.add(weakFile);
+    weakChunk.addDependency(strongChunk);
+    strongChunk.add(strongFile);
+
+    TypedAst typedAst =
+        TypedAst.newBuilder()
+            .setStringPool(StringPool.empty().toProto())
+            .setSourceFilePool(
+                SourceFilePool.newBuilder()
+                    .addSourceFile(weakFile.getProto())
+                    .addSourceFile(strongFile.getProto()))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(1)
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(
+                                AstNode.newBuilder()
+                                    .setKind(NodeKind.EXPRESSION_STATEMENT)
+                                    .addChild(
+                                        AstNode.newBuilder()
+                                            .setKind(NodeKind.NUMBER_LITERAL)
+                                            .setDoubleValue(0)))
+                            .build()
+                            .toByteString()))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(2)
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(
+                                AstNode.newBuilder()
+                                    .setKind(NodeKind.EXPRESSION_STATEMENT)
+                                    .addChild(
+                                        AstNode.newBuilder()
+                                            .setKind(NodeKind.NUMBER_LITERAL)
+                                            .setDoubleValue(1)))
+                            .build()
+                            .toByteString()))
+            .build();
+
+    InputStream typedAstListStream =
+        new ByteArrayInputStream(
+            TypedAst.List.newBuilder().addTypedAsts(typedAst).build().toByteArray());
+
+    // When
+    compiler.initModulesWithTypedAstFilesystem(
+        ImmutableList.of(),
+        ImmutableList.of(strongChunk, weakChunk),
+        new CompilerOptions(),
+        typedAstListStream);
+    compiler.parse();
+    Node weakScript = weakChunk.getInputs().get(0).getAstRoot(compiler);
+    Node strongScript = strongChunk.getInputs().get(0).getAstRoot(compiler);
+
+    // Then
+    assertNode(weakScript).hasNoChildren();
+    assertNode(strongScript).hasOneChild();
+    assertNode(strongScript.getFirstChild()).hasToken(Token.EXPR_RESULT);
+    assertNode(strongScript.getFirstFirstChild()).isNumber(1);
   }
 
   @Test

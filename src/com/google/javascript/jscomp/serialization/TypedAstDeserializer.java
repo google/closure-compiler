@@ -30,6 +30,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.CodedInputStream;
@@ -39,6 +40,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
@@ -51,15 +54,17 @@ public final class TypedAstDeserializer {
   private final SourceFile syntheticExterns;
   private final Optional<ColorPool.Builder> colorPoolBuilder;
 
+  private final Optional<ImmutableSet<SourceFile>> requiredInputFiles;
   private final LinkedHashMap<String, SourceFile> filePoolBuilder = new LinkedHashMap<>();
-  private final LinkedHashMap<SourceFile, Supplier<Node>> typedAstFilesystem =
-      new LinkedHashMap<>();
+  private final ConcurrentMap<SourceFile, Supplier<Node>> typedAstFilesystem =
+      new ConcurrentHashMap<>();
   private final ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
   private final ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers = new ArrayList<>();
 
   private TypedAstDeserializer(
       SourceFile syntheticExterns,
       Optional<ColorPool.Builder> existingColorPool,
+      Optional<ImmutableSet<SourceFile>> requiredInputFiles,
       Mode mode,
       boolean includeTypeInformation) {
     this.syntheticExterns = syntheticExterns;
@@ -69,6 +74,7 @@ public final class TypedAstDeserializer {
     } else {
       this.colorPoolBuilder = Optional.absent();
     }
+    this.requiredInputFiles = requiredInputFiles;
   }
 
   private enum Mode {
@@ -79,24 +85,25 @@ public final class TypedAstDeserializer {
   /**
    * Transforms a given TypedAst.List stream into a compiler AST
    *
-   * @param existingSourceFiles TypedAst nodes referencing a named SourceFile in this list will use
-   *     the SourceFile object rather than creating a new SourceFile instance. AST references to
-   *     SourceFiles not in this list will always create new SourceFile instances.
+   * @param requiredInputFiles All SourceFiles that should go into the typedAstFilesystem. If a
+   *     TypedAst contains a file not in this set, that file will not be added to the
+   *     typedAstFilesystem to avoid wasting memory.
    * @param includeTypeInformation whether to deserialize the "Typed" half of a "TypedAst". If false
    *     ignores the TypePool, any TypePointers on AstNodes, and does not create a ColorRegistry
    */
   public static DeserializedAst deserializeFullAst(
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
-      ImmutableList<SourceFile> existingSourceFiles,
+      ImmutableSet<SourceFile> requiredInputFiles,
       InputStream typedAstsStream,
       boolean includeTypeInformation) {
     ImmutableMap<String, SourceFile> sourceFilesByName =
-        existingSourceFiles.stream()
+        requiredInputFiles.stream()
             .collect(toImmutableMap(SourceFile::getName, Function.identity()));
     return deserialize(
         compiler,
         syntheticExterns,
+        Optional.of(requiredInputFiles),
         sourceFilesByName,
         Optional.absent(),
         typedAstsStream,
@@ -119,6 +126,9 @@ public final class TypedAstDeserializer {
     return deserialize(
         compiler,
         syntheticExterns,
+        // we don't a priori know the SourceFiles corresponding to the runtime libraries like we
+        // do for normal CompilerInputs
+        Optional.absent(),
         ImmutableMap.of(),
         colorPool,
         typedAstsStream,
@@ -129,6 +139,7 @@ public final class TypedAstDeserializer {
   private static DeserializedAst deserialize(
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
+      Optional<ImmutableSet<SourceFile>> requiredInputFiles,
       ImmutableMap<String, SourceFile> scriptSourceFiles,
       Optional<ColorPool.Builder> colorPool,
       InputStream typedAstStream,
@@ -140,7 +151,8 @@ public final class TypedAstDeserializer {
     List<TypedAst> typedAstProtos = deserializeTypedAsts(typedAstStream);
 
     TypedAstDeserializer deserializer =
-        new TypedAstDeserializer(syntheticExterns, colorPool, mode, includeTypeInformation);
+        new TypedAstDeserializer(
+            syntheticExterns, colorPool, requiredInputFiles, mode, includeTypeInformation);
     deserializer.filePoolBuilder.put(syntheticExterns.getName(), syntheticExterns);
     deserializer.filePoolBuilder.putAll(scriptSourceFiles);
 
@@ -173,25 +185,33 @@ public final class TypedAstDeserializer {
         this.mode.equals(Mode.RUNTIME_LIBRARY_ONLY) || !this.colorPoolBuilder.isPresent()
             ? Optional.absent()
             : Optional.of(colorPoolBuilder.get().build().getRegistry());
-    return DeserializedAst.create(
-        ImmutableMap.copyOf(typedAstFilesystem),
-        registry,
-        externProperties.build());
+    return DeserializedAst.create(typedAstFilesystem, registry, externProperties.build());
   }
 
   private void deserializeSingleTypedAst(TypedAst typedAstProto) {
-    ImmutableList.Builder<SourceFile> fileShardBuilder = ImmutableList.builder();
+    ImmutableList<SourceFile> fileShard = toFileShard(typedAstProto);
+
+    if (this.mode.equals(Mode.FULL_AST)) {
+      boolean containsRequiredInput = false;
+      for (LazyAst lazyAst :
+          Iterables.concat(typedAstProto.getExternAstList(), typedAstProto.getCodeAstList())) {
+        SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
+        if (shouldIncludeFileInResult(file)) {
+          containsRequiredInput = true;
+          break;
+        }
+      }
+      if (!containsRequiredInput) {
+        return;
+      }
+    }
+
+    // TODO(b/248351234): can we avoid some of this work if the shard only contains weak srcs?
+    // one risk: could checks passes synthesize new externProperties even for weak srcs?
     StringPool stringShard = StringPool.fromProto(typedAstProto.getStringPool());
     Optional<ColorPool.ShardView> colorShard =
         colorPoolBuilder.transform(
             (builder) -> builder.addShard(typedAstProto.getTypePool(), stringShard));
-
-    for (SourceFileProto p : typedAstProto.getSourceFilePool().getSourceFileList()) {
-      fileShardBuilder.add(
-          filePoolBuilder.computeIfAbsent(p.getFilename(), (n) -> SourceFile.fromProto(p)));
-    }
-    ImmutableList<SourceFile> fileShard = fileShardBuilder.build();
-
     for (int x : typedAstProto.getExternsSummary().getPropNamePtrList()) {
       externProperties.add(stringShard.get(x));
     }
@@ -202,12 +222,37 @@ public final class TypedAstDeserializer {
     }
   }
 
+  private ImmutableList<SourceFile> toFileShard(TypedAst typedAstProto) {
+    ImmutableList.Builder<SourceFile> fileShardBuilder = ImmutableList.builder();
+    for (SourceFileProto p : typedAstProto.getSourceFilePool().getSourceFileList()) {
+      fileShardBuilder.add(
+          filePoolBuilder.computeIfAbsent(p.getFilename(), (n) -> SourceFile.fromProto(p)));
+    }
+    return fileShardBuilder.build();
+  }
+
+  private boolean shouldIncludeFileInResult(SourceFile file) {
+    return identical(syntheticExterns, file) // Always preserve the synthetic externs
+        || !requiredInputFiles.isPresent()
+        || requiredInputFiles.get().contains(file);
+  }
+
   private void initLazyAstDeserializer(
       LazyAst lazyAst,
       ImmutableList<SourceFile> fileShard,
       Optional<ColorPool.ShardView> colorShard,
       StringPool stringShard) {
     SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
+
+    if (!shouldIncludeFileInResult(file)) {
+      return;
+    }
+
+    if (file.isWeak()) {
+      typedAstFilesystem.computeIfAbsent(file, this::createStubWeakScriptNode);
+      return;
+    }
+
     ScriptNodeDeserializer deserializer =
         new ScriptNodeDeserializer(lazyAst, stringShard, colorShard, fileShard);
 
@@ -216,6 +261,20 @@ public final class TypedAstDeserializer {
     } else {
       typedAstFilesystem.computeIfAbsent(file, (f) -> deserializer::deserializeNew);
     }
+  }
+
+  /**
+   * Adds a stub deserializer for weak files to the typed ast files system.
+   *
+   * <p>Weak files don't actually need to be deserialized. They're only needed for typechecking and
+   * by definition a TypedAST has already been typechecked.
+   */
+  private Supplier<Node> createStubWeakScriptNode(SourceFile file) {
+    return () -> {
+      Node stubScript = IR.script().setStaticSourceFile(file);
+      stubScript.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM);
+      return stubScript;
+    };
   }
 
   @GwtIncompatible("ObjectInputStream")
@@ -238,7 +297,7 @@ public final class TypedAstDeserializer {
      *
      * <p>The supplier creates a new Node whenever called (but the results should be .equals)
      */
-    public abstract ImmutableMap<SourceFile, Supplier<Node>> getFilesystem();
+    public abstract ConcurrentMap<SourceFile, Supplier<Node>> getFilesystem();
 
     /**
      * The built ColorRegistry.
@@ -257,7 +316,7 @@ public final class TypedAstDeserializer {
     public abstract @Nullable ImmutableSet<String> getExternProperties();
 
     private static DeserializedAst create(
-        ImmutableMap<SourceFile, Supplier<Node>> filesystem,
+        ConcurrentMap<SourceFile, Supplier<Node>> filesystem,
         Optional<ColorRegistry> colorRegistry,
         ImmutableSet<String> externProperties) {
       return new AutoValue_TypedAstDeserializer_DeserializedAst(

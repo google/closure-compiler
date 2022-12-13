@@ -111,6 +111,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -514,7 +515,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private @Nullable ImmutableMap<SourceFile, Supplier<Node>> typedAstFilesystem;
+  private @Nullable ConcurrentMap<SourceFile, Supplier<Node>> typedAstFilesystem;
 
   @Override
   @Nullable Supplier<Node> getTypedAstDeserializer(SourceFile file) {
@@ -522,7 +523,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
 
-    Supplier<Node> ast = this.typedAstFilesystem.get(file);
+    Supplier<Node> ast = this.typedAstFilesystem.remove(file);
     checkState(
         ast != null || file.getName().startsWith(SYNTHETIC_FILE_NAME_PREFIX),
         "TypedAST filesystem initialized, but missing requested file: %s",
@@ -541,8 +542,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       CompilerOptions options,
       InputStream typedAstListStream) {
 
-    ImmutableList<SourceFile> files =
-        ImmutableList.<SourceFile>builder().addAll(externs).addAll(sources).build();
+    ImmutableSet<SourceFile> files =
+        ImmutableSet.<SourceFile>builder().addAll(externs).addAll(sources).build();
 
     this.initTypedAstFilesystem(files, typedAstListStream, options);
     this.init(externs, sources, options);
@@ -559,14 +560,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       CompilerOptions options,
       InputStream typedAstListStream) {
 
-    ImmutableList.Builder<SourceFile> filesBuilder = ImmutableList.builder();
+    ImmutableSet.Builder<SourceFile> filesBuilder = ImmutableSet.builder();
     filesBuilder.addAll(externs);
     for (JSChunk chunk : modules) {
       for (CompilerInput input : chunk.getInputs()) {
         filesBuilder.add(input.getSourceFile());
       }
     }
-    ImmutableList<SourceFile> files = filesBuilder.build();
+    ImmutableSet<SourceFile> files = filesBuilder.build();
 
     this.initTypedAstFilesystem(files, typedAstListStream, options);
     this.initModules(externs, modules, options);
@@ -574,7 +575,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @GwtIncompatible
   private void initTypedAstFilesystem(
-      ImmutableList<SourceFile> existingSourceFiles,
+      ImmutableSet<SourceFile> requiredInputFiles,
       InputStream typedAstListStream,
       CompilerOptions options) {
     checkState(this.typedAstFilesystem == null);
@@ -586,11 +587,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     boolean deserializeTypes = options.requiresTypesForOptimization();
     TypedAstDeserializer.DeserializedAst astData =
         TypedAstDeserializer.deserializeFullAst(
-            this,
-            SYNTHETIC_EXTERNS_FILE,
-            existingSourceFiles,
-            typedAstListStream,
-            deserializeTypes);
+            this, SYNTHETIC_EXTERNS_FILE, requiredInputFiles, typedAstListStream, deserializeTypes);
 
     this.typedAstFilesystem = astData.getFilesystem();
     this.externProperties = astData.getExternProperties();
@@ -1953,10 +1950,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
       // Save on memory. Any future calls to "createInputConsideringTypedAstFilesystem" will throw.
       // TODO(lharker): do we actually need the synthetic externs file in stage 2?
-      if (this.typedAstFilesystem != null) {
-        this.typedAstFilesystem =
-            ImmutableMap.of(
-                SYNTHETIC_EXTERNS_FILE, this.typedAstFilesystem.get(SYNTHETIC_EXTERNS_FILE));
+      if (this.typedAstFilesystem != null && !hasErrors()) {
+        // If anything (besides the synthetic externs) is in the typedAstFilesystem, that indicates
+        // it never should have been added in the first place: every CompilerInput should now be
+        // initialized, a process which removes it from the typedAstFilesystem
+        checkState(
+            this.typedAstFilesystem.size() == 1 || this.typedAstFilesystem.isEmpty(),
+            this.typedAstFilesystem.size());
       }
     }
   }
@@ -2226,7 +2226,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return rewriteJson.getPackageJsonMainEntries();
   }
 
-  private List<CompilerInput> parsePotentialModules(Iterable<CompilerInput> inputsToProcess) {
+  private void parsePotentialModules(Iterable<CompilerInput> inputsToProcess) {
     List<CompilerInput> filteredInputs = new ArrayList<>();
     for (CompilerInput input : inputsToProcess) {
       // Only process files that are detected as ES6 modules
@@ -2245,7 +2245,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.getRequires();
       input.setJsModuleType(ModuleType.ES6);
     }
-    return filteredInputs;
   }
 
   /** Transforms AMD to CJS modules */
@@ -4008,7 +4007,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         this.moduleGraph, "Did you forget to call .init or .initModules before restoreState?");
     ImmutableMap.Builder<String, SourceFile> externFilesBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<String, SourceFile> codeFilesBuilder = ImmutableMap.builder();
-    ImmutableList.Builder<SourceFile> allInputFiles = ImmutableList.builder();
+    ImmutableSet.Builder<SourceFile> allInputFiles = ImmutableSet.builder();
     for (CompilerInput input : this.moduleGraph.getAllInputs()) {
       allInputFiles.add(input.getSourceFile());
       codeFilesBuilder.put(input.getInputId().getIdName(), input.getSourceFile());
