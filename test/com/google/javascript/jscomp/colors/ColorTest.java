@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.colors;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.colors.ColorId.fromAscii;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.function.BiFunction;

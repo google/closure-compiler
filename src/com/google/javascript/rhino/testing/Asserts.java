@@ -112,29 +112,4 @@ public class Asserts {
     Assert.assertTrue(b.canCastTo(b));
     Assert.assertTrue(b.canCastTo(a));
   }
-
-  /**
-   * Assert that the given function throws a particular throwable. This method is inspired by a
-   * similar API in JUnit 4.13, but the compiler is currently pinned on 4.12, which doesn't include
-   * it.
-   */
-  @SuppressWarnings("unchecked")
-  public static <T extends Throwable> T assertThrows(
-      Class<T> exceptionClass, ThrowingRunnable runnable) {
-    try {
-      runnable.run();
-    } catch (Throwable expectedException) {
-      assertThat(expectedException).isInstanceOf(exceptionClass);
-      return (T) expectedException; // Unchecked cast. J2CL doesn't support `Class::cast`.
-    }
-
-    assertWithMessage("Did not get expected exception: %s", exceptionClass).fail();
-    throw new AssertionError("Impossible");
-  }
-
-  /** Functional interface for use with {@link #assertThrows}. */
-  @FunctionalInterface
-  public static interface ThrowingRunnable {
-    void run() throws Throwable;
-  }
 }

@@ -495,7 +495,7 @@ options/arguments in your CUI application.</td>
 
   <tr>
     <td>Version</td>
-    <td>4.12</td>
+    <td>4.13</td>
   </tr>
 
   <tr>

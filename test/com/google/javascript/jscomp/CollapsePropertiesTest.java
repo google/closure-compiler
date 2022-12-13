@@ -20,7 +20,7 @@ import static com.google.javascript.jscomp.InlineAndCollapseProperties.NAMESPACE
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
+import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;

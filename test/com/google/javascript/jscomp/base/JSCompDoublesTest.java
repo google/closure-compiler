@@ -26,7 +26,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isNegative;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

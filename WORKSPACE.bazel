@@ -28,10 +28,10 @@ rules_jvm_external_setup()
 http_archive(
     name = "google_bazel_common",
     # output from `sha256sum` on the downloaded zip file
-    sha256 = "b54410b99dd34e17dc02fc6186d478828b0d34be3876769dba338c6ccec2cea9",
-    strip_prefix = "bazel-common-221ecf2922e8ebdf8e002130e9772045cfa2f464",
+    sha256 = "bcb5de5a5b951434828ead94479d3e1ff6501c2c8fc490db6cf3fbf7c188684b",
+    strip_prefix = "bazel-common-aaa4d801588f7744c6f4428e4f133f26b8518f42",
     urls = [
-      "https://github.com/google/bazel-common/archive/221ecf2922e8ebdf8e002130e9772045cfa2f464.zip",
+      "https://github.com/google/bazel-common/archive/aaa4d801588f7744c6f4428e4f133f26b8518f42.zip",
     ],
 )
 
