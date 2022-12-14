@@ -989,7 +989,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * The primary purpose of this method is to run the provided code with a larger than standard
    * stack.
    */
-  <T> T runInCompilerThread(Callable<T> callable) {
+  public <T> T runInCompilerThread(Callable<T> callable) {
     return compilerExecutor.runInCompilerThread(
         callable, options != null && options.getTracerMode().isOn());
   }
