@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.truth.Truth8.assertThat;
 import static java.util.Collections.shuffle;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -129,15 +129,17 @@ public final class JSChunkGraphTest {
     weakModule.addDependency(moduleE);
     // Missing F
 
-    try {
-      new JSChunkGraph(
-          new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
-    }
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                new JSChunkGraph(
+                    new JSChunk[] {
+                      moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule
+                    }));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
   }
 
   @Test
@@ -154,15 +156,18 @@ public final class JSChunkGraphTest {
 
     moduleA.add(SourceFile.fromCode("a", "", SourceKind.WEAK));
 
-    try {
-      new JSChunkGraph(
-          new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains("Found these weak sources in other chunks:\n  a (in chunk moduleA)");
-    }
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                new JSChunkGraph(
+                    new JSChunk[] {
+                      moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule
+                    }));
+
+    assertThat(e)
+        .hasMessageThat()
+        .contains("Found these weak sources in other chunks:\n  a (in chunk moduleA)");
   }
 
   @Test
@@ -179,13 +184,16 @@ public final class JSChunkGraphTest {
 
     weakModule.add(SourceFile.fromCode("a", "", SourceKind.STRONG));
 
-    try {
-      new JSChunkGraph(
-          new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().contains("Found these strong sources in the weak chunk:\n  a");
-    }
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                new JSChunkGraph(
+                    new JSChunk[] {
+                      moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule
+                    }));
+    ;
+    assertThat(e).hasMessageThat().contains("Found these strong sources in the weak chunk:\n  a");
   }
 
   @Test

@@ -20,8 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertChanges;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -936,14 +936,9 @@ public class SuggestedFixTest {
     String fnCall = "f(a, b, c);";
     Compiler compiler = getCompiler(fnCall);
     Node root = compileToScriptRoot(compiler);
-    try {
-      new SuggestedFix.Builder()
-          .deleteArgument(root.getFirstFirstChild(), 3)
-          .build();
-      fail("An exception should have been thrown for an invalid index");
-    } catch (IllegalArgumentException e) {
-      // Success, an exception was thrown for an invalid index.
-    }
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 3).build());
   }
 
   @Test
@@ -951,14 +946,9 @@ public class SuggestedFixTest {
     String fnCall = "f(a);";
     Compiler compiler = getCompiler(fnCall);
     Node root = compileToScriptRoot(compiler);
-    try {
-      new SuggestedFix.Builder()
-          .deleteArgument(root.getFirstFirstChild(), -1)
-          .build();
-      fail("An exception should have been thrown for an invalid index");
-    } catch (IllegalArgumentException e) {
-      // Success, an exception was thrown for an invalid index.
-    }
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), -1).build());
   }
 
   @Test
@@ -966,14 +956,9 @@ public class SuggestedFixTest {
     String fnCall = "f();";
     Compiler compiler = getCompiler(fnCall);
     Node root = compileToScriptRoot(compiler);
-    try {
-      new SuggestedFix.Builder()
-          .deleteArgument(root.getFirstFirstChild(), 0)
-          .build();
-      fail("An exception should have been thrown for an invalid index");
-    } catch (IllegalStateException e) {
-      // Success, an exception was thrown for an invalid index.
-    }
+    assertThrows(
+        IllegalStateException.class,
+        () -> new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 0).build());
   }
 
   @Test

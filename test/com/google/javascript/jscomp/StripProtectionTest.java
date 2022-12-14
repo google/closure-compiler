@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,12 +38,9 @@ public final class StripProtectionTest extends CompilerTestCase {
         expected(""));
 
     // Not allowed in non-J2CL code.
-    try {
-      // TODO(goktug): Switch to assertThrows when open-source upgrades to Junit 4.13 or never.
-      testSame("$J2CL_PRESERVE$(Foo.prototype.prop);");
-      fail();
-    } catch (RuntimeException exception) {
-      assertThat(exception.toString()).contains("Only allowed for J2CL code");
-    }
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class, () -> testSame("$J2CL_PRESERVE$(Foo.prototype.prop);"));
+    assertThat(exception.toString()).contains("Only allowed for J2CL code");
   }
 }

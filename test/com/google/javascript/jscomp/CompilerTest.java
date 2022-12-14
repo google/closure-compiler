@@ -969,30 +969,31 @@ public final class CompilerTest {
   @Test
   public void testBadDefineOverriding1() {
     ImmutableList<String> defines = ImmutableList.of("DEF_STRING=");
-    assertCreateDefinesThrowsException(defines);
+    CompilerOptions options = new CompilerOptions();
+
+    assertThrows(
+        RuntimeException.class,
+        () -> AbstractCommandLineRunner.createDefineReplacements(defines, options));
   }
 
   @Test
   public void testBadDefineOverriding2() {
     ImmutableList<String> defines = ImmutableList.of("=true");
-    assertCreateDefinesThrowsException(defines);
+    CompilerOptions options = new CompilerOptions();
+
+    assertThrows(
+        RuntimeException.class,
+        () -> AbstractCommandLineRunner.createDefineReplacements(defines, options));
   }
 
   @Test
   public void testBadDefineOverriding3() {
     ImmutableList<String> defines = ImmutableList.of("DEF_STRING='''");
-    assertCreateDefinesThrowsException(defines);
-  }
+    CompilerOptions options = new CompilerOptions();
 
-  static void assertCreateDefinesThrowsException(List<String> defines) {
-    try {
-      CompilerOptions options = new CompilerOptions();
-      AbstractCommandLineRunner.createDefineReplacements(defines, options);
-    } catch (RuntimeException e) {
-      return;
-    }
-
-    assertWithMessage(defines + " didn't fail").fail();
+    assertThrows(
+        RuntimeException.class,
+        () -> AbstractCommandLineRunner.createDefineReplacements(defines, options));
   }
 
   static void assertDefineOverrides(Map<String, Node> expected, List<String> defines) {

@@ -18,7 +18,7 @@ package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,10 +41,9 @@ public class ApplySuggestedFixesTest {
   public void testApplyCodeReplacements_overlapsAreErrors() throws Exception {
     ImmutableList<CodeReplacement> replacements =
         ImmutableList.of(CodeReplacement.create(0, 10, ""), CodeReplacement.create(5, 3, ""));
-    try {
-      ApplySuggestedFixes.applyCodeReplacements(replacements, "");
-      fail("Overlaps in Code replacements should be an error.");
-    } catch (IllegalArgumentException expected) {}
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ApplySuggestedFixes.applyCodeReplacements(replacements, ""));
   }
 
   @Test
@@ -182,10 +181,9 @@ public class ApplySuggestedFixesTest {
     Node root = compileToScriptRoot(compiler);
     ImmutableList<SuggestedFix> fixes =
         ImmutableList.of(new SuggestedFix.Builder().delete(root).build());
-    try {
-      ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap);
-      fail("applySuggestedFixesToCode should have failed since file is missing from code map.");
-    } catch (IllegalArgumentException expected) {}
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap));
   }
 
   @Test
