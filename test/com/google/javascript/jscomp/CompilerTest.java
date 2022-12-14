@@ -27,7 +27,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -2726,14 +2725,14 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     Compiler compiler = new Compiler();
 
-    try {
-      compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains("Found these strong sources in the weak chunk:\n  weak_but_actually_strong.js");
-    }
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options));
+    assertThat(e)
+        .hasMessageThat()
+        .contains("Found these strong sources in the weak chunk:\n  weak_but_actually_strong.js");
   }
 
   @Test
@@ -2749,16 +2748,16 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     Compiler compiler = new Compiler();
 
-    try {
-      compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "Found these weak sources in other chunks:\n"
-                  + "  strong_but_actually_weak.js (in chunk m)");
-    }
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options));
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            "Found these weak sources in other chunks:\n"
+                + "  strong_but_actually_weak.js (in chunk m)");
   }
 
   @Test
@@ -2771,14 +2770,14 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     Compiler compiler = new Compiler();
 
-    try {
-      compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options);
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
-    }
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
   }
 
   @Test
