@@ -579,7 +579,7 @@ final class ScriptNodeDeserializer {
         return IR.stringKey(getString(n));
       case QUOTED_STRING_KEY:
         Node quotedStringKey = IR.stringKey(getString(n));
-        quotedStringKey.setQuotedString();
+        quotedStringKey.setQuotedStringKey();
         return quotedStringKey;
       case CASE:
         return new Node(Token.CASE);
@@ -602,14 +602,14 @@ final class ScriptNodeDeserializer {
       case QUOTED_GETTER_DEF:
         Node getterDef = Node.newString(Token.GETTER_DEF, getString(n));
         if (n.getKind().equals(NodeKind.QUOTED_GETTER_DEF)) {
-          getterDef.setQuotedString();
+          getterDef.setQuotedStringKey();
         }
         return getterDef;
       case RENAMABLE_SETTER_DEF:
       case QUOTED_SETTER_DEF:
         Node setterDef = Node.newString(Token.SETTER_DEF, getString(n));
         if (n.getKind().equals(NodeKind.QUOTED_SETTER_DEF)) {
-          setterDef.setQuotedString();
+          setterDef.setQuotedStringKey();
         }
         return setterDef;
 

@@ -450,7 +450,7 @@ public class AmbiguateProperties implements CompilerPass {
         case GETTER_DEF:
         case SETTER_DEF:
         case STRING_KEY:
-          if (key.isQuotedString()) {
+          if (key.isQuotedStringKey()) {
             // If this quoted prop name is statically determinable, ensure we don't rename some
             // other property in a way that could conflict with it
             quotedNames.add(key.getString());
@@ -509,7 +509,7 @@ public class AmbiguateProperties implements CompilerPass {
       for (Node member = NodeUtil.getClassMembers(classNode).getFirstChild();
           member != null;
           member = member.getNext()) {
-        if (member.isQuotedString()) {
+        if (member.isQuotedStringKey()) {
           // ignore get 'foo'() {} and prevent property name collisions
           // Note that only getters/setters are represented as quoted strings, not 'foo'() {}
           // see https://github.com/google/closure-compiler/issues/3071

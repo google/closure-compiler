@@ -1514,7 +1514,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             computedProperty, patternType, getJSType(computedProperty.getFirstChild()));
       } else if (target.hasStringKey()) {
         Node stringKey = target.getStringKey();
-        if (!stringKey.isQuotedString()) {
+        if (!stringKey.isQuotedStringKey()) {
           if (patternType.isDict()) {
             report(stringKey, TypeValidator.ILLEGAL_PROPERTY_ACCESS, "unquoted", "dict");
           }
@@ -1558,7 +1558,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return;
     }
 
-    if (key.isQuotedString()) {
+    if (key.isQuotedStringKey()) {
       // NB: this case will never be triggered for member functions, since we store quoted
       // member functions as computed properties. This case does apply to regular string key
       // properties, getters, and setters.

@@ -823,7 +823,7 @@ class RemoveUnusedCode implements CompilerPass {
     for (Node property = propertyDefinitions.getFirstChild();
         property != null;
         property = property.getNext()) {
-      if (property.isQuotedString()) {
+      if (property.isQuotedStringKey()) {
         // Quoted property name counts as a reference to the property and protects it from removal.
         markPropertyNameAsPinned(property.getString());
         traverseNode(property.getOnlyChild(), scope);
@@ -889,7 +889,7 @@ class RemoveUnusedCode implements CompilerPass {
     for (Node propertyNode = objectLiteral.getFirstChild();
         propertyNode != null;
         propertyNode = propertyNode.getNext()) {
-      if (propertyNode.isComputedProp() || propertyNode.isQuotedString()) {
+      if (propertyNode.isComputedProp() || propertyNode.isQuotedStringKey()) {
         traverseChildren(propertyNode, scope);
       } else {
         Node valueNode = propertyNode.getOnlyChild();
@@ -1157,7 +1157,7 @@ class RemoveUnusedCode implements CompilerPass {
           break;
 
         case STRING_KEY:
-          if (!elem.isQuotedString()) {
+          if (!elem.isQuotedStringKey()) {
             markPropertyNameAsPinned(elem.getString());
           }
           traverseIndirectAssignment(elem, elem.getOnlyChild(), scope);
@@ -1953,7 +1953,7 @@ class RemoveUnusedCode implements CompilerPass {
           propertyNode.isMemberFunctionDef()
               || propertyNode.isMemberFieldDef()
               || NodeUtil.isGetOrSetKey(propertyNode)
-              || (propertyNode.isStringKey() && !propertyNode.isQuotedString()),
+              || (propertyNode.isStringKey() && !propertyNode.isQuotedStringKey()),
           propertyNode);
       this.propertyName = propertyNode.getString();
       return new ClassOrPrototypeNamedProperty(this, propertyNode);

@@ -2165,7 +2165,7 @@ class IRFactory {
 
         Node key = transform(el);
         if (!key.isComputedProp()
-            && !key.isQuotedString()
+            && !key.isQuotedStringKey()
             && !key.isSpread()
             && !currentFileIsExterns) {
           maybeWarnKeywordProperty(key);

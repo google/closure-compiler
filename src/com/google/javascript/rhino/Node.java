@@ -3067,11 +3067,11 @@ public class Node {
     setConstantVarFlag(ConstantVarFlags.INFERRED, value);
   }
 
-  public final boolean isQuotedString() {
+  public final boolean isQuotedStringKey() {
     return (this instanceof StringNode) && this.getBooleanProp(Prop.QUOTED);
   }
 
-  public final void setQuotedString() {
+  public final void setQuotedStringKey() {
     checkState(this instanceof StringNode, this);
     this.putBooleanProp(Prop.QUOTED, true);
   }

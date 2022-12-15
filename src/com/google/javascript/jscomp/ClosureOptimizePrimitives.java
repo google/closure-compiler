@@ -232,7 +232,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       // It isn't valid for a `STRING_KEY` to be marked as parenthesized.
       keyNode.setIsParenthesized(false);
       keyNode.setToken(Token.STRING_KEY);
-      keyNode.setQuotedString();
+      keyNode.setQuotedStringKey();
       objNode.addChildToBack(IR.propdef(keyNode, valueNode));
     } else {
       objNode.addChildToBack(IR.computedProp(keyNode, valueNode).srcref(keyNode));

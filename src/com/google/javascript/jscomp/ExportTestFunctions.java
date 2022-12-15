@@ -108,8 +108,8 @@ public class ExportTestFunctions implements CompilerPass {
       } else if (isTestSuiteArgument(n, t)) {
         for (Node c = n.getFirstChild(); c != null; ) {
           final Node next = c.getNext();
-          if (c.isStringKey() && !c.isQuotedString()) {
-            c.setQuotedString();
+          if (c.isStringKey() && !c.isQuotedStringKey()) {
+            c.setQuotedStringKey();
             compiler.reportChangeToEnclosingScope(c);
           } else if (c.isMemberFunctionDef()) {
             rewriteMemberDefInObjLit(c, n);
@@ -164,7 +164,7 @@ public class ExportTestFunctions implements CompilerPass {
       String name = memberDef.getString();
       Node stringKey = IR.stringKey(name, memberDef.removeFirstChild());
       memberDef.replaceWith(stringKey);
-      stringKey.setQuotedString();
+      stringKey.setQuotedStringKey();
       stringKey.setJSDocInfo(memberDef.getJSDocInfo());
       compiler.reportChangeToEnclosingScope(objLit);
     }

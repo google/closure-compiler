@@ -1032,7 +1032,7 @@ final class AstFactory {
 
   public Node createQuotedStringKey(String key, Node value) {
     Node result = IR.stringKey(key, value);
-    result.setQuotedString();
+    result.setQuotedStringKey();
     return result;
   }
 

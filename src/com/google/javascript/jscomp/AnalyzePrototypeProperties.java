@@ -339,7 +339,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               case GETTER_DEF:
               case SETTER_DEF:
               case MEMBER_FUNCTION_DEF:
-                if (!propNode.isQuotedString()) {
+                if (!propNode.isQuotedStringKey()) {
                   // May be STRING, GET, or SET, but NUMBER isn't interesting.
                   addSymbolUse(propNode.getString(), t.getChunk(), PROPERTY);
                 }
@@ -454,7 +454,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private @Nullable String getPrototypePropertyNameFromRValue(Node rValue) {
       Node lValue = NodeUtil.getBestLValue(rValue);
       if (lValue == null
-          || !((NodeUtil.mayBeObjectLitKey(lValue) && !lValue.isQuotedString())
+          || !((NodeUtil.mayBeObjectLitKey(lValue) && !lValue.isQuotedStringKey())
               || NodeUtil.isExprAssign(lValue.getGrandparent()))) {
         return null;
       }
@@ -541,7 +541,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           Node map = n.getSecondChild();
           if (map.isObjectLit()) {
             for (Node key = map.getFirstChild(); key != null; key = key.getNext()) {
-              if (!key.isQuotedString() && !key.isComputedProp()) {
+              if (!key.isQuotedStringKey() && !key.isComputedProp()) {
                 // We won't consider quoted or computed properties for any kind of modification,
                 // so key may be STRING_KEY, GETTER_DEF, SETTER_DEF, or MEMBER_FUNCTION_DEF
                 String name = key.getString();

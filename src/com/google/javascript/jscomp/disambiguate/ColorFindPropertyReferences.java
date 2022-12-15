@@ -204,7 +204,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
         case MEMBER_FIELD_DEF:
         case GETTER_DEF:
         case SETTER_DEF:
-          if (child.isQuotedString()) {
+          if (child.isQuotedStringKey()) {
             continue; // These won't be renamed due to our assumptions. Ignore them.
           }
 

@@ -701,7 +701,7 @@ final class PolymerClassRewriter {
   /** Returns a node from a property's definition in the Polymer element or behavior */
   private @Nullable Node getPropertyNode(MemberDefinition prop, String basePath) {
     // If a property string is quoted, make sure the added prototype properties are also quoted
-    if (prop.name.isQuotedString()) {
+    if (prop.name.isQuotedStringKey()) {
       return null;
     }
     Node propertyNode =

@@ -205,7 +205,7 @@ public final class ReplaceMessages {
             strKey != null;
             strKey = strKey.getNext()) {
           checkState(strKey.isStringKey(), strKey);
-          strKey.setQuotedString();
+          strKey.setQuotedStringKey();
         }
         newCallNode.addChildToBack(placeholdersNode.detach());
       }

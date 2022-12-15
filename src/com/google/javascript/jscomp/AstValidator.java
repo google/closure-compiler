@@ -2023,7 +2023,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLiteralKeyName(Node n) {
-    if (n.isQuotedString()) {
+    if (n.isQuotedStringKey()) {
       try {
         // Validate that getString doesn't throw
         n.getString();

@@ -267,7 +267,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     if (prop == null) {
       prop = createPropertyDescriptor();
       Node stringKey = astFactory.createStringKey(member.getString(), prop);
-      if (member.isQuotedString()) {
+      if (member.isQuotedStringKey()) {
         stringKey.putBooleanProp(Node.QUOTED_PROP, true);
       }
       obj.addChildToBack(stringKey);
@@ -339,7 +339,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     ClassProperty.Builder builder = ClassProperty.builder();
     String memberName = member.getString();
 
-    if (member.isQuotedString()) {
+    if (member.isQuotedStringKey()) {
       builder.kind(ClassProperty.PropertyKind.QUOTED_PROPERTY);
     } else {
       builder.kind(ClassProperty.PropertyKind.NORMAL_PROPERTY);

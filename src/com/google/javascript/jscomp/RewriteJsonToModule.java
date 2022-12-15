@@ -87,7 +87,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
         break;
 
       case STRING_KEY:
-        if (!n.isQuotedString() || !n.hasOneChild()) {
+        if (!n.isQuotedStringKey() || !n.hasOneChild()) {
           compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         }
         break;

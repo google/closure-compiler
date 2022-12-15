@@ -471,7 +471,7 @@ class OptimizeCalls implements CompilerPass {
         case MEMBER_FUNCTION_DEF:
         case MEMBER_FIELD_DEF:
           // ignore quoted keys.
-          if (!n.isQuotedString()) {
+          if (!n.isQuotedStringKey()) {
             maybeAddPropReference(n.getString(), n);
           }
           break;

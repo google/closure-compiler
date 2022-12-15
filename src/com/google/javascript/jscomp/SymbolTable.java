@@ -1449,7 +1449,7 @@ public final class SymbolTable {
    */
   private boolean isSymbolAQuotedObjectKey(Symbol symbol) {
     Node node = symbol.getDeclarationNode();
-    return node != null && node.isStringKey() && node.isQuotedString();
+    return node != null && node.isStringKey() && node.isQuotedStringKey();
   }
 
   /**

@@ -90,7 +90,7 @@ public final class SourceInformationAnnotator extends NodeTraversal.AbstractPost
       case GETTER_DEF:
       case SETTER_DEF:
       case STRING_KEY:
-        return node.getParent().isObjectLit() && !node.isQuotedString();
+        return node.getParent().isObjectLit() && !node.isQuotedStringKey();
 
       default:
         return false;

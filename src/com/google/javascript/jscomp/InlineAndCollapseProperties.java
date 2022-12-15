@@ -964,7 +964,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         return false;
       }
       for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
-        if (!key.isStringKey() || key.isQuotedString()) {
+        if (!key.isStringKey() || key.isQuotedStringKey()) {
           return false;
         }
         checkState(key.hasOneChild());

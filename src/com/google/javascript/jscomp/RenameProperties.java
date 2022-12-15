@@ -317,7 +317,7 @@ class RenameProperties implements CompilerPass {
           break;
         }
         case MEMBER_FUNCTION_DEF:
-          checkState(!n.isQuotedString());
+          checkState(!n.isQuotedStringKey());
           if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
             externedNames.add(n.getString());
           } else {
@@ -327,7 +327,7 @@ class RenameProperties implements CompilerPass {
         case GETTER_DEF:
         case SETTER_DEF:
         case STRING_KEY:
-          if (n.isQuotedString()) {
+          if (n.isQuotedStringKey()) {
             // Ensure that we never rename some other property in a way
             // that could conflict with this quoted key.
             quotedNames.add(n.getString());

@@ -141,8 +141,8 @@ final class PolymerPassStaticUtils {
       for (Node keyToQuote = keyNode.getFirstFirstChild();
           keyToQuote != null;
           keyToQuote = keyToQuote.getNext()) {
-        if (!keyToQuote.isQuotedString()) {
-          keyToQuote.setQuotedString();
+        if (!keyToQuote.isQuotedStringKey()) {
+          keyToQuote.setQuotedStringKey();
           compiler.reportChangeToEnclosingScope(keyToQuote);
         }
       }

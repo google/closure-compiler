@@ -696,7 +696,7 @@ public class CodeGenerator {
             Node body = fn.getLastChild();
 
             // Add the property name.
-            if (!node.isQuotedString()
+            if (!node.isQuotedStringKey()
                 && TokenStream.isJSIdentifier(name)
                 &&
                 // do not encode literally any non-literal characters that were
@@ -1920,7 +1920,7 @@ public class CodeGenerator {
     String key = n.getString();
     // Object literal property names don't have to be quoted if they are not JavaScript keywords.
     boolean mustBeQuoted =
-        n.isQuotedString()
+        n.isQuotedStringKey()
             || (quoteKeywordProperties && TokenStream.isKeyword(key))
             || !TokenStream.isJSIdentifier(key)
             // do not encode literally any non-literal characters that were Unicode escaped.

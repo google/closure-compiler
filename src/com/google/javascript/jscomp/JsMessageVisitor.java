@@ -231,7 +231,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
       case STRING_KEY:
         // Case: `var t = {MSG_HELLO: 'Message'}`;
-        if (node.isQuotedString() || !node.hasChildren() || parent.isObjectPattern()) {
+        if (node.isQuotedStringKey() || !node.hasChildren() || parent.isObjectPattern()) {
           // Don't require goog.getMsg() for quoted keys
           // Case: `var msgs = { 'MSG_QUOTED': anything };`
           //

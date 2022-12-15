@@ -486,7 +486,7 @@ final class TypedAstSerializer {
       case PARAM_LIST:
         return NodeKind.PARAMETER_LIST;
       case STRING_KEY:
-        return n.isQuotedString() ? NodeKind.QUOTED_STRING_KEY : NodeKind.RENAMABLE_STRING_KEY;
+        return n.isQuotedStringKey() ? NodeKind.QUOTED_STRING_KEY : NodeKind.RENAMABLE_STRING_KEY;
       case CASE:
         return NodeKind.CASE;
       case DEFAULT_CASE:
@@ -504,9 +504,9 @@ final class TypedAstSerializer {
       case DEFAULT_VALUE:
         return NodeKind.DEFAULT_VALUE;
       case GETTER_DEF:
-        return n.isQuotedString() ? NodeKind.QUOTED_GETTER_DEF : NodeKind.RENAMABLE_GETTER_DEF;
+        return n.isQuotedStringKey() ? NodeKind.QUOTED_GETTER_DEF : NodeKind.RENAMABLE_GETTER_DEF;
       case SETTER_DEF:
-        return n.isQuotedString() ? NodeKind.QUOTED_SETTER_DEF : NodeKind.RENAMABLE_SETTER_DEF;
+        return n.isQuotedStringKey() ? NodeKind.QUOTED_SETTER_DEF : NodeKind.RENAMABLE_SETTER_DEF;
 
       case IMPORT_SPECS:
         return NodeKind.IMPORT_SPECS;
@@ -690,7 +690,7 @@ final class TypedAstSerializer {
               case MEMBER_FIELD_DEF: // "name" from class C { name = 0; }
               case GETTER_DEF: // "name" from class C { get name() {} }
               case SETTER_DEF: // "name" from class C { set name(n) {} }
-                if (!n.isQuotedString()) {
+                if (!n.isQuotedStringKey()) {
                   propertyNamesBuilder.add(n.getString());
                 }
                 break;

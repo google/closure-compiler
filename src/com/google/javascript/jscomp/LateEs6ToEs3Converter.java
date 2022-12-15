@@ -213,7 +213,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
                 result);
       } else {
         Node val = propdef.removeFirstChild();
-        boolean isQuotedAccess = propdef.isQuotedString();
+        boolean isQuotedAccess = propdef.isQuotedStringKey();
 
         propdef.setToken(Token.STRINGLIT);
         propdef.setColor(StandardColors.STRING);

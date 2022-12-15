@@ -910,7 +910,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             directAssignments++;
           } else if (rValue.isObjectLit()) {
             for (Node key = rValue.getFirstChild(); key != null; key = key.getNext()) {
-              if ((!key.isStringKey() || key.isQuotedString()) && !key.isMemberFunctionDef()) {
+              if ((!key.isStringKey() || key.isQuotedStringKey()) && !key.isMemberFunctionDef()) {
                 directAssignments++;
                 break;
               }
@@ -1601,7 +1601,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       boolean removedNodes = false;
       while (key != null) {
-        if ((!key.isStringKey() || key.isQuotedString()) && !key.isMemberFunctionDef()) {
+        if ((!key.isStringKey() || key.isQuotedStringKey()) && !key.isMemberFunctionDef()) {
           key = key.getNext();
           continue;
         }
@@ -1970,7 +1970,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           boolean keyIsExport = false;
           while (key != null) {
             if (key.isStringKey()
-                && !key.isQuotedString()
+                && !key.isQuotedStringKey()
                 && NodeUtil.isValidPropertyName(
                     compiler.getOptions().getLanguageIn().toFeatureSet(), key.getString())) {
               if (key.getFirstChild().isQualifiedName()) {

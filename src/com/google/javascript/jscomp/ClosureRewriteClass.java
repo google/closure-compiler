@@ -349,7 +349,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
             GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED));
         return false;
       }
-      if (!key.isStringKey() || key.isQuotedString()) {
+      if (!key.isStringKey() || key.isQuotedStringKey()) {
         reportErrorOnContext(parent);
         return false;
       }

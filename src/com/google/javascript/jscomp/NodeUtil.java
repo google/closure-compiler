@@ -2852,7 +2852,7 @@ public final class NodeUtil {
       return false;
     }
     for (Node key = objectLiteral.getFirstChild(); key != null; key = key.getNext()) {
-      if (!key.isStringKey() || key.isQuotedString()) {
+      if (!key.isStringKey() || key.isQuotedStringKey()) {
         return false;
       }
       if (!key.getFirstChild().isName()) {

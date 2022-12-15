@@ -134,7 +134,7 @@ final class SerializeTypesToPointers {
         case MEMBER_FIELD_DEF: // "name" from class C { name = 0; }
         case GETTER_DEF: // "name" from class C { get name() {} }
         case SETTER_DEF: // "name" from class C { set name(n) {} }
-          if (!n.isQuotedString()) {
+          if (!n.isQuotedStringKey()) {
             propertiesReferencedInAst.add(n.getString());
           }
           break;

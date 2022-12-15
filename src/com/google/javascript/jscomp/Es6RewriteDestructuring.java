@@ -440,7 +440,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
         // const {a: b} = obj;
         Node tempVarNameNode = astFactory.createName(tempVarName, tempVarType);
         Node getprop =
-            child.isQuotedString()
+            child.isQuotedStringKey()
                 ? astFactory.createGetElem(
                     tempVarNameNode, astFactory.createString(child.getString()))
                 : astFactory.createGetProp(tempVarNameNode, child.getString(), tempVarType);
@@ -591,7 +591,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     switch (property.getToken()) {
       case STRING_KEY:
         get =
-            property.isQuotedString()
+            property.isQuotedStringKey()
                 ? astFactory.createGetElem(
                     restTempVarNameNode, astFactory.createString(property.getString()))
                 : astFactory.createGetPropWithUnknownType(
