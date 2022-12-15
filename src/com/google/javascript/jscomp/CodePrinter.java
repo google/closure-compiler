@@ -587,9 +587,6 @@ public final class CodePrinter {
     // probably require explicit modeling of the gzip algorithm.
 
     private final boolean lineBreak;
-    // Sometimes we'd like for the file to end in a line break. That way, if multiple files are
-    // concatentated, the sourcemaps of later files are still valid.
-    private final boolean preferLineBreakAtEndOfFile;
 
     private int lineStartPosition = 0;
     private int preferredBreakPosition = 0;
@@ -605,14 +602,12 @@ public final class CodePrinter {
      */
     private CompactCodePrinter(
         boolean lineBreak,
-        boolean preferLineBreakAtEndOfFile,
         int lineLengthThreshold,
         boolean createSrcMap,
         SourceMap.DetailLevel sourceMapDetailLevel,
         LicenseTracker licenseTracker) {
       super(lineLengthThreshold, createSrcMap, sourceMapDetailLevel, licenseTracker);
       this.lineBreak = lineBreak;
-      this.preferLineBreakAtEndOfFile = preferLineBreakAtEndOfFile;
     }
 
     /**
@@ -679,17 +674,6 @@ public final class CodePrinter {
     @Override
     void notePreferredLineBreak() {
       preferredBreakPosition = code.length();
-    }
-
-    @Override
-    void endFile() {
-      super.endFile();
-      if (!preferLineBreakAtEndOfFile) {
-        return;
-      }
-
-      maybeEndStatement();
-      startNewLine();
     }
   }
 
@@ -887,7 +871,6 @@ public final class CodePrinter {
         outputFormat == Format.COMPACT
             ? new CompactCodePrinter(
                 lineBreak,
-                options.preferLineBreakAtEndOfFile,
                 options.lineLengthThreshold,
                 options.shouldGatherSourceMapInfo(),
                 options.sourceMapDetailLevel,

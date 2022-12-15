@@ -893,9 +893,6 @@ public class CompilerOptions implements Serializable {
   /** Line break the output a bit more aggressively */
   public boolean lineBreak;
 
-  /** Prefer line breaks at end of file */
-  public boolean preferLineBreakAtEndOfFile;
-
   /** Prints a separator comment before each JS script */
   public boolean printInputDelimiter;
 
@@ -1404,7 +1401,6 @@ public class CompilerOptions implements Serializable {
     printInputDelimiter = false;
     prettyPrint = false;
     lineBreak = false;
-    preferLineBreakAtEndOfFile = false;
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.FULL;
@@ -2442,14 +2438,6 @@ public class CompilerOptions implements Serializable {
     this.lineBreak = lineBreak;
   }
 
-  public boolean getPreferLineBreakAtEndOfFile() {
-    return this.preferLineBreakAtEndOfFile;
-  }
-
-  public void setPreferLineBreakAtEndOfFile(boolean lineBreakAtEnd) {
-    this.preferLineBreakAtEndOfFile = lineBreakAtEnd;
-  }
-
   public void setPrintInputDelimiter(boolean printInputDelimiter) {
     this.printInputDelimiter = printInputDelimiter;
   }
@@ -2886,7 +2874,6 @@ public class CompilerOptions implements Serializable {
         .add("pathEscaper", pathEscaper)
         .add("polymerVersion", polymerVersion)
         .add("polymerExportPolicy", polymerExportPolicy)
-        .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
         .add("preferSingleQuotes", preferSingleQuotes)
         .add("preferStableNames", preferStableNames)
         .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())

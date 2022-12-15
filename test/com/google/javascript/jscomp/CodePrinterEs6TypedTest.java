@@ -46,7 +46,6 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
                       @Override
                       void setOptions(CompilerOptions options) {
                         options.setPrettyPrint(true);
-                        options.setPreferLineBreakAtEndOfFile(false);
                         options.setPreferSingleQuotes(true);
                         options.setGentsMode(true);
                       }

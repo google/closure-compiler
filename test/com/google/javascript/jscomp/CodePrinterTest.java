@@ -1054,69 +1054,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testPreferLineBreakAtEndOfFile() {
-    // short final line, no previous break, do nothing
-    assertLineBreakAtEndOfFile(
-        "\"1234567890\";", //
-        "\"1234567890\"",
-        "\"1234567890\";\n");
-
-    // short final line, shift previous break to end
-    assertLineBreakAtEndOfFile(
-        "\"123456789012345678901234567890\";\"1234567890\"",
-        "\"123456789012345678901234567890\";\n\"1234567890\"",
-        "\"123456789012345678901234567890\";\n\"1234567890\";\n");
-    assertLineBreakAtEndOfFile(
-        "var12345678901234567890123456 instanceof Object;",
-        "var12345678901234567890123456 instanceof\nObject",
-        "var12345678901234567890123456 instanceof\nObject;\n");
-
-    // long final line, no previous break, add a break at end
-    assertLineBreakAtEndOfFile(
-        "\"1234567890\";\"12345678901234567890\";",
-        "\"1234567890\";\"12345678901234567890\"",
-        "\"1234567890\";\"12345678901234567890\";\n");
-
-    // long final line, previous break, add a break at end
-    assertLineBreakAtEndOfFile(
-        "\"123456789012345678901234567890\";\"12345678901234567890\";",
-        "\"123456789012345678901234567890\";\n\"12345678901234567890\"",
-        "\"123456789012345678901234567890\";\n\"12345678901234567890\";\n");
-  }
-
-  private void assertLineBreakAtEndOfFile(
-      String js, String expectedWithoutBreakAtEnd, String expectedWithBreakAtEnd) {
-    assertThat(
-            parsePrint(
-                js,
-                newCompilerOptions(
-                    new CompilerOptionBuilder() {
-                      @Override
-                      void setOptions(CompilerOptions options) {
-                        options.setPrettyPrint(false);
-                        options.setLineBreak(false);
-                        options.setLineLengthThreshold(30);
-                        options.setPreferLineBreakAtEndOfFile(false);
-                      }
-                    })))
-        .isEqualTo(expectedWithoutBreakAtEnd);
-    assertThat(
-            parsePrint(
-                js,
-                newCompilerOptions(
-                    new CompilerOptionBuilder() {
-                      @Override
-                      void setOptions(CompilerOptions options) {
-                        options.setPrettyPrint(false);
-                        options.setLineBreak(false);
-                        options.setLineLengthThreshold(30);
-                        options.setPreferLineBreakAtEndOfFile(true);
-                      }
-                    })))
-        .isEqualTo(expectedWithBreakAtEnd);
-  }
-
-  @Test
   public void testPrettyPrinter() {
     // Ensure that the pretty printer inserts line breaks at appropriate
     // places.
@@ -3809,7 +3746,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Given
     // Configure these so that the printer would otherwise attempt to reuse an existing newline.
     CompilerOptions codePrinterOptions = new CompilerOptions();
-    codePrinterOptions.setPreferLineBreakAtEndOfFile(true); // Enable rearranging.
     codePrinterOptions.setLineLengthThreshold(30); // Must be big compared to the last line length.
 
     String input =
@@ -3833,8 +3769,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
                 "`hello", //
                 "world", //
                 "foo", //
-                "bar`;", //
-                ""));
+                "bar`"));
   }
 
   @Test
