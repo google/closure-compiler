@@ -288,6 +288,54 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   }
 
   @Test
+  public void classExtractedInUnnormalizedArrows() {
+    test(
+        lines(
+            "goog.module('some');", //
+            "exports.some = ((c) =>  class extends c{});"),
+        lines(
+            "/** @const */ var module$exports$some = {}; ",
+            "/** @const */ module$exports$some.some = c => {",
+            "  const testcode$classdecl$var0 = class extends c {};",
+            "  return testcode$classdecl$var0;",
+            "};"));
+  }
+
+  @Test
+  public void classExtractedInUnnormalizedArrowsNested() {
+    test(
+        lines(
+            "goog.module('some');", //
+            "exports.some = ((outer) => ((c) =>  class extends c{}));"),
+        lines(
+            "/** @const */ var module$exports$some = {}; ",
+            "/** @const */ module$exports$some.some = outer => {",
+            "  return c => {",
+            "    const testcode$classdecl$var0 = class extends c {};",
+            "    return testcode$classdecl$var0;",
+            "  };",
+            "};"));
+  }
+
+  @Test
+  public void classExtractedInNormalizedArrowNested() {
+    test(
+        lines(
+            "goog.module('some');",
+            "exports.some = ((outer) => {",
+            "  ((c) => { return class extends c{}}",
+            ")});"),
+        lines(
+            "/** @const */ var module$exports$some = {}; ",
+            "/** @const */ module$exports$some.some = outer => {",
+            "c => {",
+            "  const testcode$classdecl$var0 = class extends c {};",
+            "  return testcode$classdecl$var0;",
+            "  };",
+            "};"));
+  }
+
+  @Test
   public void testCannotExtract() {
     test(
         "let x; while(x = class A{}) {use(x);}",
