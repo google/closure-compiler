@@ -35,11 +35,12 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.WireFormat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -114,9 +115,9 @@ public final class TypedAstDeserializer {
   /**
    * Transforms the special runtime library TypedAst
    *
-   * @param colorPoolBuilder a ColorPool.Builder holding the colors on the full AST. We want to
-   *     merge these colors with the runtime library colors to allow injecting runtime libraries
-   *     without re-typechecking them.
+   * @param colorPool a ColorPool.Builder holding the colors on the full AST. We want to merge these
+   *     colors with the runtime library colors to allow injecting runtime libraries without
+   *     re-typechecking them.
    */
   public static DeserializedAst deserializeRuntimeLibraries(
       AbstractCompiler compiler,
@@ -148,7 +149,6 @@ public final class TypedAstDeserializer {
     checkArgument(
         colorPool.isPresent() == (mode.equals(Mode.RUNTIME_LIBRARY_ONLY) && includeTypeInformation),
         "ColorPool.Builder required iff deserializing runtime libraries & including types");
-    List<TypedAst> typedAstProtos = deserializeTypedAsts(typedAstStream);
 
     TypedAstDeserializer deserializer =
         new TypedAstDeserializer(
@@ -162,9 +162,7 @@ public final class TypedAstDeserializer {
       compiler.initRuntimeLibraryTypedAsts(deserializer.colorPoolBuilder);
     }
 
-    for (TypedAst typedAstProto : typedAstProtos) {
-      deserializer.deserializeSingleTypedAst(typedAstProto);
-    }
+    deserializeTypedAsts(typedAstStream, deserializer);
 
     deserializer.typedAstFilesystem.put(
         syntheticExterns,
@@ -188,7 +186,7 @@ public final class TypedAstDeserializer {
     return DeserializedAst.create(typedAstFilesystem, registry, externProperties.build());
   }
 
-  private void deserializeSingleTypedAst(TypedAst typedAstProto) {
+  private void deserializeTypedAst(TypedAst typedAstProto) {
     ImmutableList<SourceFile> fileShard = toFileShard(typedAstProto);
 
     if (this.mode.equals(Mode.FULL_AST)) {
@@ -278,11 +276,33 @@ public final class TypedAstDeserializer {
   }
 
   @GwtIncompatible("ObjectInputStream")
-  private static List<TypedAst> deserializeTypedAsts(InputStream typedAstsStream) {
+  private static void deserializeTypedAsts(
+      InputStream typedAstsStream, TypedAstDeserializer deserializer) {
     try {
       CodedInputStream codedInput = CodedInputStream.newInstance(typedAstsStream);
-      return TypedAst.List.parseFrom(codedInput, ExtensionRegistry.getEmptyRegistry())
-          .getTypedAstsList();
+      // The typedAstsStream is an encoded 'TypedAst.List' message:
+      //  message TypedAst {
+      //    // (other fields)
+      //   message List {
+      //     repeated TypedAst typed_asts = 1;
+      //   }
+      // }
+      // We could use the Java proto API to create a TypedAst.List object from this stream. However,
+      // in some compiler modes the TypedAst.List may contain thousands of TypedAst objects, and
+      // pulling them all into memory at once is unnecessarily expensive. Instead we read a single
+      // TypedAst object at a time from the stream.
+      TypedAst.Builder typedAstBuilder = TypedAst.newBuilder();
+      while (!codedInput.isAtEnd()) {
+        int tag = codedInput.readTag();
+        if (WireFormat.getTagFieldNumber(tag) != TypedAst.List.TYPED_ASTS_FIELD_NUMBER
+            || WireFormat.getTagWireType(tag) != WireFormat.WIRETYPE_LENGTH_DELIMITED) {
+          throw new InvalidProtocolBufferException("Unexpected tag " + tag);
+        }
+        codedInput.readMessage(typedAstBuilder, ExtensionRegistry.getEmptyRegistry());
+        TypedAst typedAst = typedAstBuilder.build();
+        typedAstBuilder.clear();
+        deserializer.deserializeTypedAst(typedAst);
+      }
     } catch (IOException ex) {
       throw new IllegalArgumentException("Cannot read from TypedAST input stream", ex);
     }
