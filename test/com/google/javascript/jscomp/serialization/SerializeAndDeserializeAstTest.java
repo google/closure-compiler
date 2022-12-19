@@ -68,6 +68,8 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   private @Nullable Consumer<TypedAst> consumer = null;
   private boolean includeTypes;
+  private boolean resolveSourceMapAnnotations;
+  private boolean parseInlineSourceMaps;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -82,6 +84,8 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     enableCreateModuleMap();
     enableSourceInformationAnnotator();
     this.includeTypes = true;
+    this.resolveSourceMapAnnotations = true;
+    this.parseInlineSourceMaps = true;
   }
 
   @Test
@@ -401,6 +405,67 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSourceMaps() {
+    String sourceMapTestCode =
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());");
+    String sourceMapPath = "relativedir/foo.js.map";
+    String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMapPath;
+    String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
+
+    Result result = testAndReturnResult(srcs(code), expected(code));
+    assertThat(result.compiler.getInputSourceMap("testcode").getOriginalPath())
+        .isEqualTo(sourceMapPath);
+  }
+
+  @Test
+  public void testSourceMapsWithoutResolvingSourceMapAnnotations() {
+    this.resolveSourceMapAnnotations = false;
+    String sourceMapTestCode =
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());");
+    String sourceMapPath = "relativedir/foo.js.map";
+    String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMapPath;
+    String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
+
+    Result result = testAndReturnResult(srcs(code), expected(code));
+    // Input source map not registered because `resolveSourceMapAnnotations = false`
+    assertThat(result.compiler.getInputSourceMap("testcode")).isNull();
+  }
+
+  @Test
+  public void testSourceMapsWithoutParsingInlineSourceMaps() {
+    this.parseInlineSourceMaps = false;
+    String sourceMapTestCode =
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());");
+    String sourceMapPath = "relativedir/foo.js.map";
+    String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMapPath;
+    String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
+
+    Result result = testAndReturnResult(srcs(code), expected(code));
+    // Input source map is registered when `parseInlineSourceMaps = false`, but we won't try to
+    // parse it as a Base64 encoded source map.
+    assertThat(result.compiler.getInputSourceMap("testcode").getOriginalPath())
+        .isEqualTo(sourceMapPath);
+  }
+
+  @Test
   public void testConvertsNumberTypeToColor() {
     enableTypeCheck();
 
@@ -635,7 +700,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             SourceFile.fromCode("syntheticExterns", "", StaticSourceFile.SourceKind.EXTERN),
             ImmutableSet.<SourceFile>builder().addAll(externFiles).addAll(codeFiles).build(),
             serializedStream,
-            includeTypes);
+            includeTypes,
+            resolveSourceMapAnnotations,
+            parseInlineSourceMaps);
 
     ColorRegistry registry = ast.getColorRegistry().orNull();
     Node newExternsRoot = IR.root();
@@ -667,7 +734,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(IR.root(newExternsRoot, newSourceRoot));
     consumer = null;
-    return new Result(ast, registry, newExternsRoot, newSourceRoot);
+    return new Result(ast, registry, newExternsRoot, newSourceRoot, deserializingCompiler);
   }
 
   private ImmutableList<SourceFile> collectSourceFilesFromScripts(Node root) {
@@ -682,11 +749,18 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     final DeserializedAst ast;
     final ColorRegistry registry;
     final Node sourceRoot;
+    final Compiler compiler;
 
-    Result(DeserializedAst ast, ColorRegistry registry, Node externRoot, Node sourceRoot) {
+    Result(
+        DeserializedAst ast,
+        ColorRegistry registry,
+        Node externRoot,
+        Node sourceRoot,
+        Compiler compiler) {
       this.ast = ast;
       this.registry = registry;
       this.sourceRoot = sourceRoot;
+      this.compiler = compiler;
     }
   }
 

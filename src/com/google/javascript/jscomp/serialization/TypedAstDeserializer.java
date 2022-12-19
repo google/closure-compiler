@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SourceMapInput;
+import com.google.javascript.jscomp.SourceMapResolver;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -89,15 +91,21 @@ public final class TypedAstDeserializer {
    * @param requiredInputFiles All SourceFiles that should go into the typedAstFilesystem. If a
    *     TypedAst contains a file not in this set, that file will not be added to the
    *     typedAstFilesystem to avoid wasting memory.
-   * @param includeTypeInformation whether to deserialize the "Typed" half of a "TypedAst". If false
-   *     ignores the TypePool, any TypePointers on AstNodes, and does not create a ColorRegistry
+   * @param includeTypeInformation Whether to deserialize the "Typed" half of a "TypedAst". If false
+   *     ignores the TypePool, any TypePointers on AstNodes, and does not create a ColorRegistry.
+   * @param resolveSourceMapAnnotations Whether to create and register a SourceMapInput for a given
+   *     `//# sourceMappingURL` (stored in LazyAst) when deserializing.
+   * @param parseInlineSourceMaps Whether a given `//# sourceMappingURL` should be registered as a
+   *     Base64 encoded source map.
    */
   public static DeserializedAst deserializeFullAst(
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
       ImmutableSet<SourceFile> requiredInputFiles,
       InputStream typedAstsStream,
-      boolean includeTypeInformation) {
+      boolean includeTypeInformation,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
     ImmutableMap<String, SourceFile> sourceFilesByName =
         requiredInputFiles.stream()
             .collect(toImmutableMap(SourceFile::getName, Function.identity()));
@@ -109,7 +117,9 @@ public final class TypedAstDeserializer {
         Optional.absent(),
         typedAstsStream,
         Mode.FULL_AST,
-        includeTypeInformation);
+        includeTypeInformation,
+        resolveSourceMapAnnotations,
+        parseInlineSourceMaps);
   }
 
   /**
@@ -123,7 +133,9 @@ public final class TypedAstDeserializer {
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
       Optional<ColorPool.Builder> colorPool,
-      InputStream typedAstsStream) {
+      InputStream typedAstsStream,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
     return deserialize(
         compiler,
         syntheticExterns,
@@ -134,7 +146,9 @@ public final class TypedAstDeserializer {
         colorPool,
         typedAstsStream,
         Mode.RUNTIME_LIBRARY_ONLY,
-        colorPool.isPresent());
+        colorPool.isPresent(),
+        resolveSourceMapAnnotations,
+        parseInlineSourceMaps);
   }
 
   private static DeserializedAst deserialize(
@@ -145,7 +159,9 @@ public final class TypedAstDeserializer {
       Optional<ColorPool.Builder> colorPool,
       InputStream typedAstStream,
       Mode mode,
-      boolean includeTypeInformation) {
+      boolean includeTypeInformation,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
     checkArgument(
         colorPool.isPresent() == (mode.equals(Mode.RUNTIME_LIBRARY_ONLY) && includeTypeInformation),
         "ColorPool.Builder required iff deserializing runtime libraries & including types");
@@ -162,7 +178,8 @@ public final class TypedAstDeserializer {
       compiler.initRuntimeLibraryTypedAsts(deserializer.colorPoolBuilder);
     }
 
-    deserializeTypedAsts(typedAstStream, deserializer);
+    deserializeTypedAsts(
+        typedAstStream, deserializer, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
 
     deserializer.typedAstFilesystem.put(
         syntheticExterns,
@@ -186,7 +203,11 @@ public final class TypedAstDeserializer {
     return DeserializedAst.create(typedAstFilesystem, registry, externProperties.build());
   }
 
-  private void deserializeTypedAst(TypedAst typedAstProto) {
+  private void deserializeTypedAst(
+      TypedAst typedAstProto,
+      AbstractCompiler compiler,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
     ImmutableList<SourceFile> fileShard = toFileShard(typedAstProto);
 
     if (this.mode.equals(Mode.FULL_AST)) {
@@ -216,7 +237,14 @@ public final class TypedAstDeserializer {
 
     for (LazyAst lazyAst :
         Iterables.concat(typedAstProto.getExternAstList(), typedAstProto.getCodeAstList())) {
-      initLazyAstDeserializer(lazyAst, fileShard, colorShard, stringShard);
+      initLazyAstDeserializer(
+          lazyAst,
+          fileShard,
+          colorShard,
+          stringShard,
+          compiler,
+          resolveSourceMapAnnotations,
+          parseInlineSourceMaps);
     }
   }
 
@@ -239,7 +267,10 @@ public final class TypedAstDeserializer {
       LazyAst lazyAst,
       ImmutableList<SourceFile> fileShard,
       Optional<ColorPool.ShardView> colorShard,
-      StringPool stringShard) {
+      StringPool stringShard,
+      AbstractCompiler compiler,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
     SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
 
     if (!shouldIncludeFileInResult(file)) {
@@ -259,6 +290,35 @@ public final class TypedAstDeserializer {
     } else {
       typedAstFilesystem.computeIfAbsent(file, (f) -> deserializer::deserializeNew);
     }
+
+    addInputSourceMap(deserializer, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
+  }
+
+  /**
+   * While deserializing a TypedAST script, if it has a corresponding sourceMappingURL, create a
+   * SourceMapInput and register it.
+   *
+   * @param resolveSourceMapAnnotations Whether to create and register a SourceMapInput for a given
+   *     `//# sourceMappingURL` (stored in LazyAst) when deserializing.
+   * @param parseInlineSourceMaps Whether a given `//# sourceMappingURL` should be registered as a
+   *     Base64 encoded source map.
+   */
+  private static void addInputSourceMap(
+      ScriptNodeDeserializer deserializer,
+      AbstractCompiler compiler,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
+    SourceFile sourceFile = deserializer.getSourceFile();
+    String sourceMappingURL = deserializer.getSourceMappingURL();
+
+    if (sourceMappingURL != null && sourceMappingURL.length() > 0 && resolveSourceMapAnnotations) {
+      boolean parseInline = parseInlineSourceMaps;
+      SourceFile sourceMapSourceFile =
+          SourceMapResolver.extractSourceMap(sourceFile, sourceMappingURL, parseInline);
+      if (sourceMapSourceFile != null) {
+        compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
+      }
+    }
   }
 
   /**
@@ -277,7 +337,11 @@ public final class TypedAstDeserializer {
 
   @GwtIncompatible("ObjectInputStream")
   private static void deserializeTypedAsts(
-      InputStream typedAstsStream, TypedAstDeserializer deserializer) {
+      InputStream typedAstsStream,
+      TypedAstDeserializer deserializer,
+      AbstractCompiler compiler,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
     try {
       CodedInputStream codedInput = CodedInputStream.newInstance(typedAstsStream);
       // The typedAstsStream is an encoded 'TypedAst.List' message:
@@ -301,7 +365,8 @@ public final class TypedAstDeserializer {
         codedInput.readMessage(typedAstBuilder, ExtensionRegistry.getEmptyRegistry());
         TypedAst typedAst = typedAstBuilder.build();
         typedAstBuilder.clear();
-        deserializer.deserializeTypedAst(typedAst);
+        deserializer.deserializeTypedAst(
+            typedAst, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
       }
     } catch (IOException ex) {
       throw new IllegalArgumentException("Cannot read from TypedAST input stream", ex);

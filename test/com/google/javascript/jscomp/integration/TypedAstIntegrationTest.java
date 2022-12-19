@@ -428,6 +428,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     // create two chunks, where chunk 2 depends on chunk 1, and they contain f1 and f2
     CompilerOptions options = new CompilerOptions();
     options.setCrossChunkMethodMotion(true);
+    compiler.initOptions(options);
     JSChunk chunk1 = new JSChunk("chunk1");
     chunk1.add(f1);
     JSChunk chunk2 = new JSChunk("chunk2");
@@ -464,6 +465,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
       throws IOException {
     Compiler compiler = new Compiler();
+    compiler.initOptions(options);
     try (InputStream inputStream = toInputStream(this.shards)) {
       compiler.initWithTypedAstFilesystem(
           ImmutableList.copyOf(this.externFiles),

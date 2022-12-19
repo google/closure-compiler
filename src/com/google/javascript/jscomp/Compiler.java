@@ -587,7 +587,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     boolean deserializeTypes = options.requiresTypesForOptimization();
     TypedAstDeserializer.DeserializedAst astData =
         TypedAstDeserializer.deserializeFullAst(
-            this, SYNTHETIC_EXTERNS_FILE, requiredInputFiles, typedAstListStream, deserializeTypes);
+            this,
+            SYNTHETIC_EXTERNS_FILE,
+            requiredInputFiles,
+            typedAstListStream,
+            deserializeTypes,
+            options.resolveSourceMapAnnotations,
+            options.parseInlineSourceMaps);
 
     this.typedAstFilesystem = astData.getFilesystem();
     this.externProperties = astData.getExternProperties();
@@ -610,7 +616,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             this,
             SYNTHETIC_EXTERNS_FILE,
             colorPoolBuilder,
-            Compiler.class.getResourceAsStream(path));
+            Compiler.class.getResourceAsStream(path),
+            this.getOptions().resolveSourceMapAnnotations,
+            this.getOptions().parseInlineSourceMaps);
 
     // Re-index the runtime libraries by file name rather than SourceFile object
     LinkedHashMap<String, Supplier<Node>> runtimeLibraryTypedAsts = new LinkedHashMap<>();
@@ -4023,7 +4031,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             SYNTHETIC_EXTERNS_FILE,
             allInputFiles.build(),
             inputStream,
-            compilerState.typeCheckingHasRun);
+            compilerState.typeCheckingHasRun,
+            this.getOptions().resolveSourceMapAnnotations,
+            this.getOptions().parseInlineSourceMaps);
 
     restoreFromState(compilerState);
 

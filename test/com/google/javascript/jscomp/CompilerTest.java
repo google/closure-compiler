@@ -3157,10 +3157,12 @@ public final class CompilerTest {
     InputStream typedAstListStream = new ByteArrayInputStream(typedAstList.toByteArray());
 
     Compiler compiler = new Compiler();
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compiler.initOptions(compilerOptions);
 
     // When
     compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file1), new CompilerOptions(), typedAstListStream);
+        ImmutableList.of(), ImmutableList.of(file1), compilerOptions, typedAstListStream);
 
     assertThrows(
         Exception.class,
@@ -3180,10 +3182,11 @@ public final class CompilerTest {
     SourceFile file = SourceFile.fromCode("test.js", "");
     InputStream typedAstListStream = new ByteArrayInputStream(new byte[0]);
     Compiler compiler = new Compiler();
-
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compiler.initOptions(compilerOptions);
     // When
     compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file), new CompilerOptions(), typedAstListStream);
+        ImmutableList.of(), ImmutableList.of(file), compilerOptions, typedAstListStream);
 
     // Then
     Exception e = assertThrows(Exception.class, compiler::parse);
@@ -3228,10 +3231,12 @@ public final class CompilerTest {
                 .toByteArray());
 
     Compiler compiler = new Compiler();
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compiler.initOptions(compilerOptions);
 
     // When
     compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file), new CompilerOptions(), typedAstListStream);
+        ImmutableList.of(), ImmutableList.of(file), compilerOptions, typedAstListStream);
     compiler.parse();
 
     // Then
@@ -3244,6 +3249,8 @@ public final class CompilerTest {
   public void testTypedAstFilesystem_syntheticExternsFile_isCattedAcrossTypedAsts() {
     // Given
     Compiler compiler = new Compiler();
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compiler.initOptions(compilerOptions);
     SourceFile syntheticFile = compiler.SYNTHETIC_EXTERNS_FILE;
 
     TypedAst typedAst0 =
@@ -3284,7 +3291,7 @@ public final class CompilerTest {
 
     // When
     compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(), new CompilerOptions(), typedAstListStream);
+        ImmutableList.of(), ImmutableList.of(), compilerOptions, typedAstListStream);
 
     // Then
     Node insertedExterns = compiler.getExternsRoot().getOnlyChild();
@@ -3302,6 +3309,8 @@ public final class CompilerTest {
     SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
     Compiler compiler = new Compiler();
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compiler.initOptions(compilerOptions);
 
     TypedAst typedAst =
         TypedAst.newBuilder()
@@ -3350,7 +3359,7 @@ public final class CompilerTest {
     compiler.initWithTypedAstFilesystem(
         ImmutableList.of(),
         ImmutableList.of(weakFile, strongFile),
-        new CompilerOptions(),
+        compilerOptions,
         typedAstListStream);
     compiler.parse();
     Node weakScript =
@@ -3381,6 +3390,8 @@ public final class CompilerTest {
     SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
     Compiler compiler = new Compiler();
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compiler.initOptions(compilerOptions);
     JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
     JSChunk strongChunk = new JSChunk("a");
     weakChunk.add(weakFile);
@@ -3434,7 +3445,7 @@ public final class CompilerTest {
     compiler.initModulesWithTypedAstFilesystem(
         ImmutableList.of(),
         ImmutableList.of(strongChunk, weakChunk),
-        new CompilerOptions(),
+        compilerOptions,
         typedAstListStream);
     compiler.parse();
     Node weakScript = weakChunk.getInputs().get(0).getAstRoot(compiler);
