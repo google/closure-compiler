@@ -2911,6 +2911,9 @@ chrome.runtime.Manifest.prototype.oauth2;
 /** @type {!Array<(string|!Object)>} */
 chrome.runtime.Manifest.prototype.permissions;
 
+/** @type {!chrome.runtime.Manifest.ExternallyConnectable|undefined} */
+chrome.runtime.Manifest.prototype.externally_connectable
+
 
 /**
  * App-only manifest field.
@@ -2945,6 +2948,23 @@ chrome.runtime.Manifest.Oauth2.prototype.client_id;
 
 /**@type {!Array<string>} */
 chrome.runtime.Manifest.Oauth2.prototype.scopes;
+
+
+/**
+ * externally_connectable info in the manifest.
+ * @see https://developer.chrome.com/extensions/externally_connectable
+ * @constructor
+ */
+chrome.runtime.Manifest.ExternallyConnectable = function() {};
+
+/** @type {!Array<string>|undefined} */
+chrome.runtime.Manifest.ExternallyConnectable.prototype.ids;
+
+/** @type {!Array<string>|undefined} */
+chrome.runtime.Manifest.ExternallyConnectable.prototype.matches;
+
+/** @type {boolean|undefined} */
+chrome.runtime.Manifest.ExternallyConnectable.prototype.accepts_tls_channel_id;
 
 
 /**
