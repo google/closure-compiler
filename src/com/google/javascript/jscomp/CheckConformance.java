@@ -123,7 +123,11 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     // Don't inspect extern files
-    return !n.isScript() || !t.getInput().getSourceFile().isExtern();
+    return !n.isScript() || isScriptOfInterest(t.getInput().getSourceFile());
+  }
+
+  private boolean isScriptOfInterest(SourceFile sf) {
+    return !sf.isWeak() && !sf.isExtern();
   }
 
   @Override
