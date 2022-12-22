@@ -85,7 +85,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests {@link TypeInference}. */
+/**
+ * Tests {@link TypeInference}.
+ *
+ * <p>These unit tests don't test the full type inference that happens in a normal compilation. This
+ * is because a normal compilation creates many instances of the {@link TypeInference} class. More
+ * precisely, one instance is created for every scope that is a valid root of a control-flow graph
+ * (as defined by {@link NodeUtil#isValidCfgRoot(Node)} such as, for example, functions.
+ *
+ * <p>These unit tests only ever create a single {@link TypeInference} instance. That means: these
+ * unit tests ignore any code nested within a function.
+ *
+ * <p>To write tests that more fully model the typechecking in a full compilation, which visits
+ * every function body, use {@link TypedScopeCreatorTest} or {@link TypeCheckTest}.
+ */
 @RunWith(JUnit4.class)
 public final class TypeInferenceTest {
 
@@ -143,12 +156,22 @@ public final class TypeInferenceTest {
     assuming(name, registry.getNativeType(type));
   }
 
+  /**
+   * Runs an instance of TypeInference over the given code after wrapping it in a function.
+   *
+   * <p>Does not visit any nested functions.
+   */
   private void inFunction(String js) {
     // Parse the body of the function.
     String thisBlock = assumedThisType == null ? "" : "/** @this {" + assumedThisType + "} */";
     parseAndRunTypeInference("(" + thisBlock + " function() {" + js + "});");
   }
 
+  /**
+   * Runs an instance of TypeInference over the given code.
+   *
+   * <p>Does not visit any nested functions.
+   */
   private void inScript(String js) {
     Node script = compiler.parseTestCode(js);
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
@@ -163,6 +186,11 @@ public final class TypeInferenceTest {
     parseAndRunTypeInference(root, root);
   }
 
+  /**
+   * Runs an instance of TypeInference over the given code after wrapping it in a generator.
+   *
+   * <p>Does not visit any nested functions.
+   */
   private void inGenerator(String js) {
     checkState(assumedThisType == null);
     parseAndRunTypeInference("(function *() {" + js + "});");
