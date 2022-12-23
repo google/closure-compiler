@@ -2037,6 +2037,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint("function Foo(x //first\n) {}", "function Foo(x //first\n) {\n}\n");
   }
 
+  @Test
+  public void testClassExtendsLeftHandSideExpression() {
+    assertPrettyPrint(
+        "class A {} class B extends (0, A) {}", "class A {\n}\nclass B extends(0, A) {\n}\n");
+  }
+
   // Same as above, but tests argList instead of Param list
   @Test
   public void testNonJSDocCommentsPrinted_trailing_inlineComments_callArgList() {

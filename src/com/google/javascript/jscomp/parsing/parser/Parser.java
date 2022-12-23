@@ -549,7 +549,7 @@ public class Parser {
     ParseTree superClass = null;
     if (peek(TokenType.EXTENDS)) {
       eat(TokenType.EXTENDS);
-      superClass = parseExpression();
+      superClass = parseLeftHandSideExpression();
     }
 
     eat(TokenType.OPEN_CURLY);

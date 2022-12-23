@@ -588,7 +588,9 @@ public class CodeGenerator {
 
           if (!superClass.isEmpty()) {
             add("extends");
-            add(superClass);
+
+            // Parentheses are required for a comma expression
+            addExpr(superClass, 1, Context.OTHER);
           }
 
           Node interfaces = (Node) node.getProp(Node.IMPLEMENTS);

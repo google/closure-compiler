@@ -5972,6 +5972,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testClassExtendsLeftHandSideExpression() {
+    parse("class A {} class B extends (0, A) {}");
+    parseError("class A {} class B extends 0, A {}", "'{' expected");
+  }
+
+  @Test
   public void testMultipleClassStaticBlocks() {
     // empty
     parse("class C { static { } static { } }");
