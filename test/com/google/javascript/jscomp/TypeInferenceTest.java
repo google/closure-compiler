@@ -3821,6 +3821,22 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testObjectLiteralNoSideEffect() {
+    // Repro for b/260837012.
+    inFunction(
+        lines(
+            "  for (let x = 0; x < 3; x++) {",
+            "    obj = {",
+            "      data: {tipsMetadata: ''},",
+            "      ...{}",
+            "    };",
+            "  }"));
+    assertWithMessage("Type inference must not alter OBJECT_TYPE.")
+        .that(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE).hasOwnProperty("data"))
+        .isFalse();
+  }
+
+  @Test
   public void testArrayDestructuringDeclaration() {
     inFunction(
         lines(

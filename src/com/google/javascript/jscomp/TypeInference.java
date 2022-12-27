@@ -1763,7 +1763,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     JSType type = n.getJSType();
     checkNotNull(type);
 
+    boolean spreadOperatorSeen = false;
     for (Node name = n.getFirstChild(); name != null; name = name.getNext()) {
+      spreadOperatorSeen |= name.isSpread();
       scope = traverseChildren(name, scope);
     }
 
@@ -1796,7 +1798,15 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         if (valueType == null) {
           valueType = unknownType;
         }
-        objectType.defineInferredProperty(memberName, valueType, key);
+
+        // See b/260837012. traverseObjectLiteral() can be invoked multiple times for the same
+        // literal. When a spread operator is encountered, the type of the literal is changed to
+        // OBJECT_TYPE. A second invocation of this code may then erroneously define new properties
+        // on the global OBJECT_TYPE. So, if there are spread operators in the literal, do not add
+        // newly inferred properties to the type.
+        if (!spreadOperatorSeen) {
+          objectType.defineInferredProperty(memberName, valueType, key);
+        }
 
         // Do normal flow inference if this is a direct property assignment.
         if (qObjName != null && key.isStringKey()) {
