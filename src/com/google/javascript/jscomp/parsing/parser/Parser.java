@@ -2352,6 +2352,14 @@ public class Parser {
     }
 
     if (peekAssignmentOperator()) {
+      if (!peek(TokenType.EQUAL)) {
+        // not the vanilla assignment operator `=`, but a special equals operator (`+=`, `-=`,
+        // `**=`, etc)
+        if (!left.isValidNonVanillaAssignmentTarget()) {
+          reportError("invalid assignment target");
+          return new MissingPrimaryExpressionTree(getTreeLocation(getTreeStartLocation()));
+        }
+      }
       left = transformLeftHandSideExpression(left);
       if (!left.isValidAssignmentTarget()) {
         reportError("invalid assignment target");

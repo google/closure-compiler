@@ -216,6 +216,27 @@ public class ParseTree {
     }
   }
 
+  /** Is valid assignment target for non-vanilla assignment operators like `+=`, `-+`, `**=`, etc */
+  public boolean isValidNonVanillaAssignmentTarget() {
+    ParseTree parseTree = this;
+    while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
+      parseTree = parseTree.asParenExpression().expression;
+    }
+    switch (parseTree.type) {
+      case IDENTIFIER_EXPRESSION:
+      case MEMBER_EXPRESSION:
+      case MEMBER_LOOKUP_EXPRESSION:
+      case DEFAULT_PARAMETER:
+        return true;
+      case ARRAY_PATTERN:
+      case OBJECT_PATTERN:
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  /** Is valid assignment target for any assignment operator like `=`, `+=`, `-+`, `**=`, etc */
   public boolean isValidAssignmentTarget() {
     ParseTree parseTree = this;
     while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {

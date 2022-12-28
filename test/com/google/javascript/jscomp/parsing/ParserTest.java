@@ -3098,6 +3098,25 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testLHSOfNonVanillaEqualsOperator() {
+    strictMode = SLOPPY;
+    mode = LanguageMode.ECMASCRIPT_2015;
+
+    // object pattern or array pattern on the lhs of vanilla equals passes
+    parse("for (let [i,j] = [2,0]; j < 2; [i,j]  =  [j, j+1]) {}");
+    parse("for (let [i,j] = [2,0]; j < 2; {i,j}  =  [j, j+1]) {}");
+
+    // error with object pattern or array pattern on the lhs of +=
+    parseError(
+        "for (let [i,j] = [2,0]; j < 2; [i,j]  +=  [j, j+1]) {}", "invalid assignment target");
+    parseError(
+        "for (let [i,j] = [2,0]; j < 2; {i,j}  +=  [j, j+1]) {}", "invalid assignment target");
+
+    parse("let [i,j]  =  [2, 2];");
+    parseError("let [i,j]  +=  [2, 2];", "destructuring must have an initializer");
+  }
+
+  @Test
   public void testArrayDestructuringVarInvalid() {
     // arbitrary LHS assignment target not allowed
     parseError(
