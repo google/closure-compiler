@@ -1802,9 +1802,10 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         // See b/260837012. traverseObjectLiteral() can be invoked multiple times for the same
         // literal. When a spread operator is encountered, the type of the literal is changed to
         // OBJECT_TYPE. A second invocation of this code may then erroneously define new properties
-        // on the global OBJECT_TYPE. So, if there are spread operators in the literal, do not add
-        // newly inferred properties to the type.
-        if (!spreadOperatorSeen) {
+        // on the global OBJECT_TYPE. So, if there are spread operators in the literal and the type
+        // has already been propagated to OBJECT_TYPE, do not add newly inferred properties to the
+        // type.
+        if (!spreadOperatorSeen || !n.getJSType().isNativeObjectType()) {
           objectType.defineInferredProperty(memberName, valueType, key);
         }
 
