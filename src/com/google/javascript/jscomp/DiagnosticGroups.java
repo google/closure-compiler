@@ -143,7 +143,7 @@ public class DiagnosticGroups {
           + "missingReturn, "
           + "missingSourcesWarnings, "
           + "moduleLoad, "
-          + "moduleImports, "
+          + "moduleImport, "
           + "msgDescriptions, "
           + "nonStandardJsDocs, "
           + "partialAlias, "
