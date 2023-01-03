@@ -352,7 +352,7 @@ class ProcessDefines implements CompilerPass {
   private @Nullable Ref selectDefineDeclaration(Name name) {
     for (Ref ref : name.getRefs()) {
       // Make sure we don't select a local set as the declaration.
-      if (!Ref.Type.SET_FROM_GLOBAL.equals(ref.type)) {
+      if (!ref.isSetFromGlobal()) {
         continue;
       }
 
@@ -582,7 +582,7 @@ class ProcessDefines implements CompilerPass {
   private static boolean isGlobalConst(Name name) {
     return name.getTotalSets() == 1
         && name.getDeclaration() != null
-        && name.getDeclaration().type.equals(Ref.Type.SET_FROM_GLOBAL);
+        && name.getDeclaration().isSetFromGlobal();
   }
 
   /**

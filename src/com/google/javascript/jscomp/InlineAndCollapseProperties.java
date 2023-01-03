@@ -370,17 +370,15 @@ class InlineAndCollapseProperties implements CompilerPass {
       List<Ref> refs = new ArrayList<>(name.getRefs());
       for (Ref ref : refs) {
         Scope hoistScope = ref.scope.getClosestHoistScope();
-        if (ref.type == Ref.Type.ALIASING_GET && !mayBeGlobalAlias(ref) && ref.getTwin() == null) {
+        if (ref.isAliasingGet() && !mayBeGlobalAlias(ref) && !ref.isTwin()) {
           // {@code name} meets condition (c). Try to inline it.
           // TODO(johnlenz): consider picking up new aliases at the end
           // of the pass instead of immediately like we do for global
           // inlines.
           inlineAliasIfPossible(name, ref, namespace);
-        } else if (ref.type == Ref.Type.ALIASING_GET
-            && hoistScope.isGlobal()
-            && ref.getTwin() == null) { // ignore aliases in chained assignments
+        } else if (ref.isAliasingGet() && hoistScope.isGlobal() && !ref.isTwin()) {
           inlineGlobalAliasIfPossible(name, ref, namespace);
-        } else if (name.isClass() && ref.type == Ref.Type.SUBCLASSING_GET && name.props != null) {
+        } else if (name.isClass() && ref.isSubclassingGet() && name.props != null) {
           for (Name prop : name.props) {
             rewriteAllSubclassInheritedAccesses(name, ref, prop, namespace);
           }
@@ -494,7 +492,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       Name subclassNameObj = namespace.getOwnSlot(subclassName);
       if (subclassNameObj != null && subclassNameObj.subclassingGetCount() > 0) {
         for (Ref ref : subclassNameObj.getRefs()) {
-          if (ref.type == Ref.Type.SUBCLASSING_GET) {
+          if (ref.isSubclassingGet()) {
             rewriteAllSubclassInheritedAccesses(superclassNameObj, ref, prop, namespace);
           }
         }
@@ -763,7 +761,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           // Rewrite the initialization of the alias, unless this is an unsafe alias inline
           // caused by an @constructor. In that case, we need to leave the initialization around.
           Ref aliasDeclaration = aliasingName.getDeclaration();
-          if (aliasDeclaration.getTwin() != null) {
+          if (aliasDeclaration.isTwin()) {
             // This is in a nested assign.
             // Replace
             //   a.b = aliasing.name = aliased.name
@@ -797,42 +795,39 @@ class InlineAndCollapseProperties implements CompilerPass {
         Name aliasingName, Ref aliasingRef, Set<AstChange> newNodes) {
       List<Ref> refs = new ArrayList<>(aliasingName.getRefs());
       for (Ref ref : refs) {
-        switch (ref.type) {
-          case SET_FROM_GLOBAL:
-            continue;
-          case DIRECT_GET:
-          case ALIASING_GET:
-          case PROTOTYPE_GET:
-          case CALL_GET:
-          case SUBCLASSING_GET:
-            if (ref.getTwin() != null) {
-              // The reference is the left-hand side of a nested assignment. This means we store two
-              // separate 'twin' Refs with the same node of types ALIASING_GET and SET_FROM_GLOBAL.
-              // For example, the read of `c.d` has a twin reference in
-              //   a.b = c.d = e.f;
-              // We handle this case later.
-              checkState(ref.type == Ref.Type.ALIASING_GET, ref);
-              break;
-            }
-            if (ref.getNode().isStringKey()) {
-              // e.g. `y` in `const {y} = x;`
-              DestructuringGlobalNameExtractor.reassignDestructringLvalue(
-                  ref.getNode(), aliasingRef.getNode().cloneTree(), newNodes, ref, compiler);
-            } else {
-              // e.g. `x.y`
-              checkState(ref.getNode().isGetProp() || ref.getNode().isName());
-              Node newNode = aliasingRef.getNode().cloneTree();
-              Node node = ref.getNode();
-              newNode.srcref(node);
-              node.replaceWith(newNode);
-              compiler.reportChangeToEnclosingScope(newNode);
-              newNodes.add(new AstChange(ref.scope, newNode));
-            }
-            aliasingName.removeRef(ref);
-            break;
-          default:
-            throw new IllegalStateException();
+        if (ref.isSetFromGlobal()) {
+          // Handled elsewhere
+          continue;
         }
+
+        checkState(ref.isGet(), ref); // names with local sets should not be rewritten
+
+        // Twin refs that are both gets and sets are handled later, with the other sets.
+        if (ref.isTwin()) {
+          // The reference is the left-hand side of a nested assignment. This means we store two
+          // separate 'twin' Refs with the same node of types ALIASING_GET and SET_FROM_GLOBAL.
+          // For example, the read of `c.d` has a twin reference in
+          //   a.b = c.d = e.f;
+          // We handle this case later.
+          checkState(ref.isAliasingGet(), ref);
+          continue;
+        }
+
+        if (ref.getNode().isStringKey()) {
+          // e.g. `y` in `const {y} = x;`
+          DestructuringGlobalNameExtractor.reassignDestructringLvalue(
+              ref.getNode(), aliasingRef.getNode().cloneTree(), newNodes, ref, compiler);
+        } else {
+          // e.g. `x.y`
+          checkState(ref.getNode().isGetProp() || ref.getNode().isName());
+          Node newNode = aliasingRef.getNode().cloneTree();
+          Node node = ref.getNode();
+          newNode.srcref(node);
+          node.replaceWith(newNode);
+          compiler.reportChangeToEnclosingScope(newNode);
+          newNodes.add(new AstChange(ref.scope, newNode));
+        }
+        aliasingName.removeRef(ref);
       }
     }
 
@@ -1340,18 +1335,17 @@ class InlineAndCollapseProperties implements CompilerPass {
           if (ref == name.getDeclaration()) {
             continue;
           }
-
-          if (ref.type == Ref.Type.DELETE_PROP) {
+          if (ref.isDeleteProp()) {
             if (initialized) {
               warnAboutNamespaceRedefinition(name, ref);
             }
-          } else if (ref.type == Ref.Type.SET_FROM_GLOBAL || ref.type == Ref.Type.SET_FROM_LOCAL) {
+          } else if (ref.isSet()) {
             if (initialized && !isSafeNamespaceReinit(ref)) {
               warnAboutNamespaceRedefinition(name, ref);
             }
 
             initialized = true;
-          } else if (ref.type == Ref.Type.ALIASING_GET) {
+          } else if (ref.isAliasingGet()) {
             warnAboutNamespaceAliasing(name, ref);
             logDecisionForName(name, "escapes");
             escaped.add(name);
@@ -1475,7 +1469,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         // 2) References inside a complex assign. (a = x.y = 0). These are
         //    called TWIN references, because they show up twice in the
         //    reference list. Only collapse the set, not the alias.
-        if (!NodeUtil.mayBeObjectLitKey(r.getNode()) && (r.getTwin() == null || r.isSet())) {
+        if (!NodeUtil.mayBeObjectLitKey(r.getNode()) && (!r.isTwin() || r.isSet())) {
           flattenNameRef(alias, r.getNode(), rParent, originalName);
         } else if (r.getNode().isStringKey() && r.getNode().getParent().isObjectPattern()) {
           Node newNode = IR.name(alias).srcref(r.getNode());
@@ -1521,7 +1515,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
         // References inside a complex assign (a = x.y = 0)
         // have twins. We should only flatten one of the twins.
-        if (r.getTwin() == null || r.isSet()) {
+        if (!r.isTwin() || r.isSet()) {
           flattenNameRefAtDepth(alias, r.getNode(), depth, originalName);
         }
       }
@@ -1643,7 +1637,7 @@ class InlineAndCollapseProperties implements CompilerPass {
      * @param ref An object containing information about the assignment getting updated
      */
     private void updateTwinnedDeclaration(String alias, Name refName, Ref ref) {
-      checkNotNull(ref.getTwin());
+      checkState(ref.isTwin(), ref);
       // Don't handle declarations of an already flat name, just qualified names.
       if (!ref.getNode().isGetProp()) {
         return;
@@ -1760,7 +1754,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       // we are only collapsing for global names.
       Ref ref = n.getDeclaration();
       Node rvalue = ref.getNode().getNext();
-      if (ref.getTwin() != null) {
+      if (ref.isTwin()) {
         updateTwinnedDeclaration(alias, ref.name, ref);
         return;
       }

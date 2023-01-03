@@ -2300,10 +2300,11 @@ class GlobalNamespace
    * A global name reference. Contains references to the relevant parse tree node and its ancestors
    * that may be affected.
    */
-  static class Ref implements StaticRef {
+  static final class Ref implements StaticRef {
 
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
+    // Non-private for testing
     enum Type {
       /**
        * Set in the scope in which a name is declared, either the global scope or a module scope:
@@ -2342,7 +2343,7 @@ class GlobalNamespace
     // Not final because CollapseProperties needs to update the namespace in-place.
     private Node node;
     final Name name;
-    final Type type;
+    private final Type type;
     /**
      * The scope in which the reference is resolved. Note that for ALIASING_GETS like "var x = ns;"
      * this scope may not be the correct hoist scope of the aliasing VAR.
@@ -2391,8 +2392,46 @@ class GlobalNamespace
       return twin;
     }
 
+    boolean isDeleteProp() {
+      return this.type == Type.DELETE_PROP;
+    }
+
+    boolean isSubclassingGet() {
+      return this.type == Type.SUBCLASSING_GET;
+    }
+
+    /**
+     * Whether this is a "twin" ref, i.e. a ref that is both a get and a set.
+     *
+     * <p>Example: `a.b` from `x = a.b = 0;`
+     */
+    boolean isTwin() {
+      return this.twin != null;
+    }
+
+    boolean isGet() {
+      switch (this.type) {
+        case DIRECT_GET:
+        case ALIASING_GET:
+        case SUBCLASSING_GET:
+        case CALL_GET:
+        case PROTOTYPE_GET:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    boolean isAliasingGet() {
+      return this.type == Type.ALIASING_GET;
+    }
+
     boolean isSet() {
       return type == Type.SET_FROM_GLOBAL || type == Type.SET_FROM_LOCAL;
+    }
+
+    boolean isSetFromGlobal() {
+      return this.type == Type.SET_FROM_GLOBAL;
     }
 
     @Override
