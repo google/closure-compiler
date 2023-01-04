@@ -758,8 +758,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         rewriteAliasProps(aliasingName, alias.getNode(), 0, newNodes);
 
         if (aliasInlinability.shouldRemoveDeclaration()) {
-          // Rewrite the initialization of the alias, unless this is an unsafe alias inline
-          // caused by an @constructor. In that case, we need to leave the initialization around.
+          // Rewrite the initialization of the alias.
           Ref aliasDeclaration = aliasingName.getDeclaration();
           if (aliasDeclaration.isTwin()) {
             // This is in a nested assign.
@@ -770,12 +769,17 @@ class InlineAndCollapseProperties implements CompilerPass {
             checkState(aliasParent.isAssign(), aliasParent);
             Node aliasGrandparent = aliasParent.getParent();
             aliasParent.replaceWith(alias.getNode().detach());
-            // remove both of the refs
-            aliasingName.removeTwinRefs(aliasDeclaration);
+            // Remove the ref to 'aliasing.name' entirely
+            aliasingName.removeRef(aliasDeclaration);
+            // Force GlobalNamespace to revisit the new reference to 'aliased.name' and update its
+            // internal state.
             newNodes.add(new AstChange(alias.scope, alias.getNode()));
             compiler.reportChangeToEnclosingScope(aliasGrandparent);
           } else {
-            // just set the original alias to null.
+            // Replace
+            //  aliasing.name = aliased.name
+            // with
+            //  aliasing.name = null;
             alias.getNode().replaceWith(IR.nullNode());
             compiler.reportChangeToEnclosingScope(aliasParent);
           }
@@ -801,18 +805,8 @@ class InlineAndCollapseProperties implements CompilerPass {
         }
 
         checkState(ref.isGet(), ref); // names with local sets should not be rewritten
-
         // Twin refs that are both gets and sets are handled later, with the other sets.
-        if (ref.isTwin()) {
-          // The reference is the left-hand side of a nested assignment. This means we store two
-          // separate 'twin' Refs with the same node of types ALIASING_GET and SET_FROM_GLOBAL.
-          // For example, the read of `c.d` has a twin reference in
-          //   a.b = c.d = e.f;
-          // We handle this case later.
-          checkState(ref.isAliasingGet(), ref);
-          continue;
-        }
-
+        checkState(!ref.isTwin(), ref);
         if (ref.getNode().isStringKey()) {
           // e.g. `y` in `const {y} = x;`
           DestructuringGlobalNameExtractor.reassignDestructringLvalue(
@@ -1332,14 +1326,11 @@ class InlineAndCollapseProperties implements CompilerPass {
         }
         boolean initialized = name.getDeclaration() != null;
         for (Ref ref : name.getRefs()) {
-          if (ref == name.getDeclaration()) {
-            continue;
-          }
           if (ref.isDeleteProp()) {
             if (initialized) {
               warnAboutNamespaceRedefinition(name, ref);
             }
-          } else if (ref.isSet()) {
+          } else if (ref.isSet() && ref != name.getDeclaration()) {
             if (initialized && !isSafeNamespaceReinit(ref)) {
               warnAboutNamespaceRedefinition(name, ref);
             }
@@ -1464,12 +1455,9 @@ class InlineAndCollapseProperties implements CompilerPass {
           continue;
         }
         Node rParent = r.getNode().getParent();
-        // There are two cases when we shouldn't flatten a reference:
-        // 1) Object literal keys, because duplicate keys show up as refs.
-        // 2) References inside a complex assign. (a = x.y = 0). These are
-        //    called TWIN references, because they show up twice in the
-        //    reference list. Only collapse the set, not the alias.
-        if (!NodeUtil.mayBeObjectLitKey(r.getNode()) && (!r.isTwin() || r.isSet())) {
+        // We shouldn't flatten a reference that's an object literal key, because duplicate keys
+        // show up as refs.
+        if (!NodeUtil.mayBeObjectLitKey(r.getNode())) {
           flattenNameRef(alias, r.getNode(), rParent, originalName);
         } else if (r.getNode().isStringKey() && r.getNode().getParent().isObjectPattern()) {
           Node newNode = IR.name(alias).srcref(r.getNode());
@@ -1513,11 +1501,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           continue;
         }
 
-        // References inside a complex assign (a = x.y = 0)
-        // have twins. We should only flatten one of the twins.
-        if (!r.isTwin() || r.isSet()) {
-          flattenNameRefAtDepth(alias, r.getNode(), depth, originalName);
-        }
+        flattenNameRefAtDepth(alias, r.getNode(), depth, originalName);
       }
 
       if (n.props != null) {

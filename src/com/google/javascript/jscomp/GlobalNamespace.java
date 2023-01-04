@@ -24,8 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
@@ -45,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -772,28 +769,11 @@ class GlobalNamespace
 
       if (isNestedAssign(n.getParent())) {
         // This assignment is both a set and a get that creates an alias.
-        Ref.Type refType = Ref.Type.SET_FROM_GLOBAL;
-        addOrConfirmTwinRefs(nameObj, n, refType, scope);
+        Ref.Type refType = Ref.Type.GET_AND_SET_FROM_GLOBAL;
+        addOrConfirmRef(nameObj, n, refType, scope);
       } else {
         addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_GLOBAL, scope);
         nameObj.setDeclaredType(getDeclaredTypeKind(n));
-      }
-    }
-
-    /**
-     * If Refs already exist for the given Node confirm they match what we would create. Otherwise,
-     * create them.
-     */
-    private void addOrConfirmTwinRefs(Name nameObj, Node node, Ref.Type setRefType, Scope scope) {
-      ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
-      if (existingRefs.isEmpty()) {
-        nameObj.addTwinRefs(scope, node, setRefType);
-      } else {
-        checkState(existingRefs.size() == 2, "unexpected existing refs: %s", existingRefs);
-        Ref setRef = existingRefs.get(0);
-        // module and scope are dependent on Node, so not much point in checking them
-        // the type of the getRef is set within the Name class, so no need to check that either.
-        checkState(setRef.type == setRefType, "unexpected existing set Ref type: %s", setRef.type);
       }
     }
 
@@ -851,7 +831,7 @@ class GlobalNamespace
 
       if (isNestedAssign(n.getParent())) {
         // This assignment is both a set and a get that creates an alias.
-        addOrConfirmTwinRefs(nameObj, n, Ref.Type.SET_FROM_LOCAL, scope);
+        addOrConfirmRef(nameObj, n, Ref.Type.GET_AND_SET_FROM_LOCAL, scope);
       } else {
         addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_LOCAL, scope);
       }
@@ -1027,13 +1007,12 @@ class GlobalNamespace
      * Otherwise add a new one.
      */
     private void addOrConfirmRef(Name nameObj, Node node, Ref.Type refType, Scope scope) {
-      ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
-      if (existingRefs.isEmpty()) {
-        nameObj.addSingleRef(scope, node, refType);
+      Ref existingRef = nameObj.getRefForNode(node);
+      if (existingRef == null) {
+        nameObj.addRef(scope, node, refType);
       } else {
-        checkState(existingRefs.size() == 1, "unexpected twin refs: %s", existingRefs);
         // module and scope are dependent on Node, so not much point in checking them
-        Ref.Type existingRefType = existingRefs.get(0).type;
+        Ref.Type existingRefType = existingRef.type;
         checkState(
             existingRefType == refType,
             "existing ref type: %s expected: %s",
@@ -1254,11 +1233,8 @@ class GlobalNamespace
     /** The first global assignment to a name. */
     private @Nullable Ref declaration;
 
-    /** All references to a name. This must contain {@code declaration}. */
-    private final LinkedHashSet<Ref> refs = new LinkedHashSet<>();
-
     /** Keep track of which Nodes are Refs for this Name */
-    private final Map<Node, ImmutableList<Ref>> refsForNodeMap = new LinkedHashMap<>();
+    private final Map<Node, Ref> refsForNodeMap = new LinkedHashMap<>();
 
     private NameType type; // not final to handle forward references to names
     private DeclaredTypeKind declaredType = DeclaredTypeKind.NOT_A_TYPE;
@@ -1393,39 +1369,16 @@ class GlobalNamespace
       throw new UnsupportedOperationException();
     }
 
-    /**
-     * Add a pair of Refs for the same Node.
-     *
-     * <p>This covers cases like `var a = b = 0`. The 'b' node needs a ALIASING_GET reference and a
-     * SET_FROM_GLOBAL or SET_FROM_LOCAL reference.
-     *
-     * @param setType either SET_FROM_LOCAL or SET_FROM_GLOBAL
-     */
-    private void addTwinRefs(Scope scope, Node node, Ref.Type setType) {
-      checkArgument(
-          setType == Ref.Type.SET_FROM_GLOBAL || setType == Ref.Type.SET_FROM_LOCAL, setType);
-      Ref setRef = createNewRef(scope, node, setType);
-      Ref getRef = createNewRef(scope, node, Ref.Type.ALIASING_GET);
-      setRef.twin = getRef;
-      getRef.twin = setRef;
-      refsForNodeMap.put(node, ImmutableList.of(setRef, getRef));
-      refs.add(setRef);
-      updateStateForAddedRef(setRef);
-      refs.add(getRef);
-      updateStateForAddedRef(getRef);
-    }
-
-    private void addSingleRef(Scope scope, Node node, Ref.Type type) {
+    private void addRef(Scope scope, Node node, Ref.Type type) {
       checkNoExistingRefsForNode(node);
       Ref ref = createNewRef(scope, node, type);
-      refs.add(ref);
-      refsForNodeMap.put(node, ImmutableList.of(ref));
+      refsForNodeMap.put(node, ref);
       updateStateForAddedRef(ref);
     }
 
     private void checkNoExistingRefsForNode(Node node) {
-      ImmutableList<Ref> refsForNode = refsForNodeMap.get(node);
-      checkState(refsForNode == null, "Refs already exist for node: %s", refsForNode);
+      Ref refForNode = refsForNodeMap.get(node);
+      checkState(refForNode == null, "Ref already exists for node: %s", refForNode);
     }
 
     private Ref createNewRef(Scope scope, Node node, Ref.Type type) {
@@ -1436,10 +1389,9 @@ class GlobalNamespace
           type);
     }
 
-    Ref addSingleRefForTesting(Ref.Type type) {
-      Ref ref = new Ref(/* scope= */ null, /* node = */ null, this, type);
-      refs.add(ref);
-      // node is Null for testing in this case, so nothing to add to refsForNodeMap
+    Ref addSingleRefForTesting(Node node, Ref.Type type) {
+      Ref ref = new Ref(/* scope= */ null, /* node= */ node, this, type);
+      refsForNodeMap.put(node, ref);
       updateStateForAddedRef(ref);
       return ref;
     }
@@ -1456,7 +1408,7 @@ class GlobalNamespace
     void addAliasingGetClonedFromDeclaration(Node newRefNode) {
       // TODO(bradfordcsmith): It would be good to add checks that the scope is correct.
       Ref declRef = checkNotNull(declaration);
-      addSingleRef(declRef.scope, newRefNode, Ref.Type.ALIASING_GET);
+      addRef(declRef.scope, newRefNode, Ref.Type.ALIASING_GET);
     }
 
     /**
@@ -1468,6 +1420,7 @@ class GlobalNamespace
      */
     private void updateStateForAddedRef(Ref ref) {
       switch (ref.type) {
+        case GET_AND_SET_FROM_GLOBAL:
         case SET_FROM_GLOBAL:
           if (declaration == null) {
             declaration = ref;
@@ -1479,12 +1432,21 @@ class GlobalNamespace
             firstDeclarationJSDocInfo = getDocInfoForDeclaration(ref);
           }
           globalSets++;
+          if (ref.type.equals(Ref.Type.GET_AND_SET_FROM_GLOBAL)) {
+            aliasingGets++;
+            totalGets++;
+          }
           break;
+        case GET_AND_SET_FROM_LOCAL:
         case SET_FROM_LOCAL:
           localSets++;
           JSDocInfo info = ref.getNode() == null ? null : NodeUtil.getBestJSDocInfo(ref.getNode());
           if (info != null && info.isNoCollapse()) {
             localSetsWithNoCollapse++;
+          }
+          if (ref.type.equals(Ref.Type.GET_AND_SET_FROM_LOCAL)) {
+            aliasingGets++;
+            totalGets++;
           }
           break;
         case PROTOTYPE_GET:
@@ -1535,68 +1497,38 @@ class GlobalNamespace
       checkState(oldNode != null, "Ref's node is already null: %s", ref);
       ref.node = newNode;
 
-      // If this ref was a twin, it isn't anymore, and its previous twin is now the only ref to the
-      // original node.
-      Ref twinRef = ref.getTwin();
-      if (twinRef != null) {
-        ref.twin = null;
-        twinRef.twin = null;
-        refsForNodeMap.put(oldNode, ImmutableList.of(twinRef));
-      } else {
-        refsForNodeMap.remove(oldNode); // this ref was the only reference on the node
-      }
+      refsForNodeMap.remove(oldNode);
 
       if (newNode != null) {
-        ImmutableList<Ref> existingRefsForNewNode = refsForNodeMap.get(newNode);
+        Ref existingRefForNewNode = refsForNodeMap.get(newNode);
         checkArgument(
-            existingRefsForNewNode == null, "refs already exist: %s", existingRefsForNewNode);
-        refsForNodeMap.put(newNode, ImmutableList.of(ref));
+            existingRefForNewNode == null, "refs already exist: %s", existingRefForNewNode);
+        refsForNodeMap.put(newNode, ref);
       }
-    }
-
-    /**
-     * Remove a Ref and its twin at the same time.
-     *
-     * <p>If you intend to remove both, it is more efficient and less error prone to use this method
-     * instead of removing them one at a time.
-     *
-     * @param ref A Ref that has a twin.
-     */
-    void removeTwinRefs(Ref ref) {
-      checkArgument(
-          ref.name == this, "removeTwinRefs(%s): node does not belong to this name: %s", ref, this);
-      checkState(refs.contains(ref), "removeRef(%s): unknown ref", ref);
-      Ref twinRef = ref.getTwin();
-      checkArgument(twinRef != null, ref);
-
-      removeTwinRefsFromNodeMap(ref);
-      removeRefAndUpdateState(ref);
-      removeRefAndUpdateState(twinRef);
     }
 
     /**
      * Removes the given Ref, which must belong to this Name.
      *
-     * <p>NOTE: if ref has a twin, they will no longer be twins after this method finishes. Use
-     * removeTwinRefs() to remove a pair of twins at the same time.
+     * <p>NOTE: if this is a twin ref, i.e. both a get and a set of this Name, this removes both the
+     * get and the set.
      */
     void removeRef(Ref ref) {
       checkState(
           ref.name == this, "removeRef(%s): node does not belong to this name: %s", ref, this);
-      checkState(refs.contains(ref), "removeRef(%s): unknown ref", ref);
+      checkState(refsForNodeMap.containsKey(ref.getNode()), "removeRef(%s): unknown ref", ref);
       Node refNode = ref.getNode();
       if (refNode != null) {
-        removeSingleRefFromNodeMap(ref);
+        removeRefFromNodeMap(ref);
       }
       removeRefAndUpdateState(ref);
     }
 
     /** Update counts, declaration, and JSDoc to reflect removal of the given Ref. */
     private void removeRefAndUpdateState(Ref ref) {
-      refs.remove(ref);
       if (ref == declaration) {
         declaration = null;
-        for (Ref maybeNewDecl : refs) {
+        for (Ref maybeNewDecl : refsForNodeMap.values()) {
           if (maybeNewDecl.type == Ref.Type.SET_FROM_GLOBAL) {
             declaration = maybeNewDecl;
             break;
@@ -1609,11 +1541,21 @@ class GlobalNamespace
         case SET_FROM_GLOBAL:
           globalSets--;
           break;
+        case GET_AND_SET_FROM_GLOBAL:
+          aliasingGets--;
+          totalGets--;
+          globalSets--;
+          break;
         case SET_FROM_LOCAL:
+        case GET_AND_SET_FROM_LOCAL:
           localSets--;
           info = ref.getNode() == null ? null : NodeUtil.getBestJSDocInfo(ref.getNode());
           if (info != null && info.isNoCollapse()) {
             localSetsWithNoCollapse--;
+          }
+          if (ref.type.equals(Ref.Type.GET_AND_SET_FROM_LOCAL)) {
+            aliasingGets--;
+            totalGets--;
           }
           break;
         case PROTOTYPE_GET:
@@ -1639,69 +1581,34 @@ class GlobalNamespace
       }
     }
 
-    private void removeSingleRefFromNodeMap(Ref ref) {
+    private void removeRefFromNodeMap(Ref ref) {
       Node refNode = checkNotNull(ref.getNode(), ref);
-      if (ref.getTwin() != null) {
-        removeTwinRefsFromNodeMap(ref);
-        Ref twinRef = ref.getTwin();
-        // break the twin relationship
-        ref.twin = null;
-        twinRef.twin = null;
-        // put twin back alone, since we're not really removing it
-        refsForNodeMap.put(refNode, ImmutableList.of(twinRef));
-      } else {
-        ImmutableList<Ref> refsForNode = refsForNodeMap.get(refNode);
-        checkState(
-            refsForNode.size() == 1 && refsForNode.get(0) == ref,
-            "Unexpected Refs for Node: %s: when removing Ref: %s",
-            refsForNode,
-            ref);
-        refsForNodeMap.remove(refNode);
-      }
-    }
-
-    private void removeTwinRefsFromNodeMap(Ref ref) {
-      Ref twinRef = checkNotNull(ref.getTwin(), ref);
-      Node refNode = checkNotNull(ref.getNode(), ref);
-      ImmutableList<Ref> refsForNode = refsForNodeMap.get(refNode);
-
+      Ref refsForNode = refsForNodeMap.get(refNode);
       checkState(
-          refsForNode.size() == 2,
-          "unexpected Refs for Node: %s, when removing: %s",
+          refsForNode == ref,
+          "Unexpected Refs for Node: %s: when removing Ref: %s",
           refsForNode,
           ref);
-      checkState(
-          refsForNode.contains(ref),
-          "Refs for Node: %s does not contain Ref to remove: %s",
-          refsForNode,
-          ref);
-      checkState(
-          refsForNode.contains(twinRef),
-          "Refs for Node: %s does not contain expected twin: %s",
-          refsForNode,
-          twinRef);
       refsForNodeMap.remove(refNode);
     }
 
     Collection<Ref> getRefs() {
-      return refs == null ? ImmutableList.of() : Collections.unmodifiableCollection(refs);
+      return this.refsForNodeMap.values();
     }
 
     /**
-     * Get the Refs for this name that belong to the given node.
+     * Get the Ref for this name that belongs to the given node.
      *
-     * <p>Returns an empty list if there are no Refs, or a list with only one Ref, or a list with
-     * exactly 2 refs that are twins of each other.
+     * <p>Returns null if there are no Refs.
      */
     @VisibleForTesting
-    ImmutableList<Ref> getRefsForNode(Node node) {
-      ImmutableList<Ref> refsForNode = refsForNodeMap.get(checkNotNull(node));
-      return (refsForNode == null) ? ImmutableList.of() : refsForNode;
+    Ref getRefForNode(Node node) {
+      return refsForNodeMap.get(checkNotNull(node));
     }
 
     Ref getFirstRef() {
-      checkState(!refs.isEmpty(), "no first Ref to get");
-      return Iterables.get(refs, 0);
+      checkState(!refsForNodeMap.isEmpty(), "no first Ref to get");
+      return refsForNodeMap.values().iterator().next();
     }
 
     boolean canEliminate() {
@@ -1721,7 +1628,7 @@ class GlobalNamespace
 
     boolean isSimpleStubDeclaration() {
       if (getRefs().size() == 1) {
-        Ref ref = Iterables.get(refs, 0);
+        Ref ref = getFirstRef();
         if (ref.node.getParent().isExprResult()) {
           return true;
         }
@@ -1770,9 +1677,11 @@ class GlobalNamespace
       for (Ref ref : getRefs()) {
         switch (ref.type) {
           case SET_FROM_GLOBAL:
+          case GET_AND_SET_FROM_GLOBAL:
             // Expect one global set
             continue;
           case SET_FROM_LOCAL:
+          case GET_AND_SET_FROM_LOCAL:
             throw new IllegalStateException();
           case ALIASING_GET:
           case DIRECT_GET:
@@ -2063,7 +1972,7 @@ class GlobalNamespace
       // We could theoretically handle this case in CollapseProperties, but
       // it's probably not worth the effort.
       checkNotNull(declaration);
-      if (declaration.getTwin() != null) {
+      if (declaration.isTwin()) {
         logChildNamesDecision(Inlinability.DO_NOT_INLINE, "twinned declaration");
         return Inlinability.DO_NOT_INLINE;
       }
@@ -2310,10 +2219,18 @@ class GlobalNamespace
        * Set in the scope in which a name is declared, either the global scope or a module scope:
        * `a.b.c = 0;` or `goog.module('mod'); exports.Foo = class {};`
        */
-      SET_FROM_GLOBAL, // TODO(lharker): rename this to explain it includes modules
+      SET_FROM_GLOBAL,
 
       /** Set in a local scope: function f() { a.b.c = 0; } */
       SET_FROM_LOCAL,
+      /**
+       * Combined get and set in the scope in which a name is declared, either the global scope or a
+       * module scope: `const c = a.b.c = 0;` or `goog.module('mod'); exports.Foo = class {};`
+       */
+      GET_AND_SET_FROM_GLOBAL,
+
+      /** Combined get and set in a local scope: function f() { return a.b.c = 0; } */
+      GET_AND_SET_FROM_LOCAL,
 
       /** Get a name's prototype: a.b.c.prototype */
       PROTOTYPE_GET,
@@ -2351,14 +2268,6 @@ class GlobalNamespace
     final Scope scope;
 
     /**
-     * Certain types of references are actually double-refs. For example, var a = b = 0; counts as
-     * both a "set" of b and an "alias" of b.
-     *
-     * <p>We create two Refs for this node, and mark them as twins of each other.
-     */
-    private @Nullable Ref twin = null;
-
-    /**
      * Creates a Ref
      *
      * <p>No parameter checking is done here, because we allow nulls for several fields in Refs
@@ -2387,11 +2296,6 @@ class GlobalNamespace
       return name;
     }
 
-    /** Returns the corresponding read/write Ref of a name in a nested assign, or null otherwise */
-    Ref getTwin() {
-      return twin;
-    }
-
     boolean isDeleteProp() {
       return this.type == Type.DELETE_PROP;
     }
@@ -2406,7 +2310,13 @@ class GlobalNamespace
      * <p>Example: `a.b` from `x = a.b = 0;`
      */
     boolean isTwin() {
-      return this.twin != null;
+      switch (this.type) {
+        case GET_AND_SET_FROM_GLOBAL:
+        case GET_AND_SET_FROM_LOCAL:
+          return true;
+        default:
+          return false;
+      }
     }
 
     boolean isGet() {
@@ -2415,6 +2325,8 @@ class GlobalNamespace
         case ALIASING_GET:
         case SUBCLASSING_GET:
         case CALL_GET:
+        case GET_AND_SET_FROM_GLOBAL:
+        case GET_AND_SET_FROM_LOCAL:
         case PROTOTYPE_GET:
           return true;
         default:
@@ -2423,15 +2335,30 @@ class GlobalNamespace
     }
 
     boolean isAliasingGet() {
-      return this.type == Type.ALIASING_GET;
+      switch (this.type) {
+        case ALIASING_GET:
+        case GET_AND_SET_FROM_GLOBAL:
+        case GET_AND_SET_FROM_LOCAL:
+          return true;
+        default:
+          return false;
+      }
     }
 
     boolean isSet() {
-      return type == Type.SET_FROM_GLOBAL || type == Type.SET_FROM_LOCAL;
+      switch (this.type) {
+        case SET_FROM_GLOBAL:
+        case SET_FROM_LOCAL:
+        case GET_AND_SET_FROM_GLOBAL:
+        case GET_AND_SET_FROM_LOCAL:
+          return true;
+        default:
+          return false;
+      }
     }
 
     boolean isSetFromGlobal() {
-      return this.type == Type.SET_FROM_GLOBAL;
+      return this.type == Type.SET_FROM_GLOBAL || this.type == Type.GET_AND_SET_FROM_GLOBAL;
     }
 
     @Override
@@ -2441,7 +2368,6 @@ class GlobalNamespace
           .add("name", name)
           .add("type", type)
           .add("node", node)
-          .add("isTwin", twin != null)
           .add("scope", scope)
           .toString();
     }

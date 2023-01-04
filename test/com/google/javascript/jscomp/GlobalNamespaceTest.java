@@ -78,8 +78,8 @@ public final class GlobalNamespaceTest {
   public void firstGlobalAssignmentIsConsideredDeclaration() {
     GlobalNamespace namespace = parse("");
     Name n = namespace.createNameForTesting("a");
-    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL);
-    Ref set2 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL);
+    Ref set1 = n.addSingleRefForTesting(IR.name("set1"), Ref.Type.SET_FROM_GLOBAL);
+    Ref set2 = n.addSingleRefForTesting(IR.name("set2"), Ref.Type.SET_FROM_GLOBAL);
 
     assertThat(n.getRefs()).containsExactly(set1, set2).inOrder();
 
@@ -129,7 +129,7 @@ public final class GlobalNamespaceTest {
     Name a = namespace.getSlot("a");
 
     assertThat(a).isNotNull();
-    assertThat(a.getRefs()).hasSize(4);
+    assertThat(a.getRefs()).hasSize(3);
     assertThat(a.getLocalSets()).isEqualTo(0);
     assertThat(a.getGlobalSets()).isEqualTo(2);
   }
@@ -217,8 +217,8 @@ public final class GlobalNamespaceTest {
   public void localAssignmentWillNotBeConsideredADeclaration() {
     GlobalNamespace namespace = parse("");
     Name n = namespace.createNameForTesting("a");
-    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL);
-    Ref localSet = n.addSingleRefForTesting(Ref.Type.SET_FROM_LOCAL);
+    Ref set1 = n.addSingleRefForTesting(IR.name("set1"), Ref.Type.SET_FROM_GLOBAL);
+    Ref localSet = n.addSingleRefForTesting(IR.name("localSet"), Ref.Type.SET_FROM_LOCAL);
 
     assertThat(n.getRefs()).containsExactly(set1, localSet).inOrder();
 
@@ -364,13 +364,13 @@ public final class GlobalNamespaceTest {
     Node oldNode = refA.getNode();
     Node newNode = IR.name("A");
 
-    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(refA);
+    assertThat(nameA.getRefForNode(oldNode)).isEqualTo(refA);
 
     nameA.updateRefNode(refA, newNode);
 
     assertThat(refA.getNode()).isEqualTo(newNode);
-    assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
-    assertThat(nameA.getRefsForNode(newNode)).containsExactly(refA);
+    assertThat(nameA.getRefForNode(oldNode)).isNull();
+    assertThat(nameA.getRefForNode(newNode)).isEqualTo(refA);
   }
 
   @Test
@@ -382,14 +382,14 @@ public final class GlobalNamespaceTest {
 
     Node oldNode = refA.getNode();
 
-    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(refA);
+    assertThat(nameA.getRefForNode(oldNode)).isEqualTo(refA);
 
     nameA.updateRefNode(refA, null);
 
     assertThat(refA.getNode()).isNull();
-    assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
+    assertThat(nameA.getRefForNode(oldNode)).isNull();
     // cannot get refs for null
-    assertThrows(NullPointerException.class, () -> nameA.getRefsForNode(null));
+    assertThrows(NullPointerException.class, () -> nameA.getRefForNode(null));
     // cannot update the node again once it's been set to null
     assertThrows(IllegalArgumentException.class, () -> nameA.updateRefNode(refA, null));
     assertThrows(IllegalStateException.class, () -> nameA.updateRefNode(refA, oldNode));
@@ -423,22 +423,25 @@ public final class GlobalNamespaceTest {
 
     Name nameA = namespace.getOwnSlot("A");
     // first ref is declaration of A
-    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
-    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+    Ref twinRef = Iterables.get(nameA.getRefs(), 1); // second is the GET_AND_SET twin
 
     // confirm that they start as twins
-    assertThat(setTwinRef.getTwin()).isEqualTo(getTwinRef);
-    assertThat(getTwinRef.getTwin()).isEqualTo(setTwinRef);
+    assertThat(twinRef.isTwin()).isTrue();
+    assertThat(twinRef.isSetFromGlobal()).isTrue();
+    assertThat(twinRef.isAliasingGet()).isTrue();
 
-    Node oldNode = getTwinRef.getNode();
-    assertThat(setTwinRef.getNode()).isEqualTo(oldNode);
+    Node oldNode = twinRef.getNode();
 
-    // confirm that they are both associated with oldNode
-    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(setTwinRef, getTwinRef);
+    // confirm that it is associated with oldNode
+    assertThat(nameA.getRefForNode(oldNode)).isEqualTo(twinRef);
+
+    // confirm that nameA correctly tracks its aliasingGets and globalSets
+    assertThat(nameA.getGlobalSets()).isEqualTo(2);
+    assertThat(nameA.getAliasingGets()).isEqualTo(1);
   }
 
   @Test
-  public void updateRefNodeRemovesTwinRelationship() {
+  public void updateRefNodeCanRemoveTwinRefs() {
     GlobalNamespace namespace =
         parse(
             lines(
@@ -447,32 +450,27 @@ public final class GlobalNamespaceTest {
 
     Name nameA = namespace.getOwnSlot("A");
     // first ref is declaration of A
-    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
-    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+    Ref twinRef = Iterables.get(nameA.getRefs(), 1); // second is the GET_AND_SET twin
 
-    Node oldNode = getTwinRef.getNode();
+    Node oldNode = twinRef.getNode();
 
     // move the getTwinRef
     Node newNode = IR.name("A");
-    nameA.updateRefNode(getTwinRef, newNode);
+    nameA.updateRefNode(twinRef, newNode);
 
     // see confirmTwinsAreCreated() for verification of the original twin relationship
 
     // confirm that getTwinRef has been updated
-    assertThat(getTwinRef.getNode()).isEqualTo(newNode);
-    assertThat(nameA.getRefsForNode(newNode)).containsExactly(getTwinRef);
+    assertThat(twinRef.getNode()).isEqualTo(newNode);
+    assertThat(nameA.getRefForNode(newNode)).isEqualTo(twinRef);
+    assertThat(twinRef.isTwin()).isTrue();
 
-    // confirm that the getTwinRef and setTwinRef are no longer twins
-    assertThat(getTwinRef.getTwin()).isNull();
-    assertThat(setTwinRef.getTwin()).isNull();
-
-    // confirm that setTwinRef remains otherwise unchanged
-    assertThat(setTwinRef.getNode()).isEqualTo(oldNode);
-    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(setTwinRef);
+    // confirm that all references to oldNode are removed.
+    assertThat(nameA.getRefForNode(oldNode)).isNull();
   }
 
   @Test
-  public void removeTwinRefsTogether() {
+  public void removeTwinRef() {
     GlobalNamespace namespace =
         parse(
             lines(
@@ -481,46 +479,21 @@ public final class GlobalNamespaceTest {
 
     Name nameA = namespace.getOwnSlot("A");
     // first ref is declaration of A
-    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
-    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
+    Ref twinRef = Iterables.get(nameA.getRefs(), 1); // second is the GET_AND_SET twin
 
     // see confirmTwinsAreCreated() for verification of the original twin relationship
 
-    Node oldNode = getTwinRef.getNode();
-
-    nameA.removeRef(setTwinRef);
-
-    assertThat(nameA.getRefs()).doesNotContain(setTwinRef);
-    assertThat(nameA.getRefs()).contains(getTwinRef); // twin is still there
-    assertThat(getTwinRef.getTwin()).isNull(); // and not a twin anymore
-    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(getTwinRef);
-  }
-
-  @Test
-  public void removeOneRefOfAPairOfTwins() {
-    GlobalNamespace namespace =
-        parse(
-            lines(
-                "let A;", //
-                "const B = A = 3;")); // A will have twin refs here
-
-    Name nameA = namespace.getOwnSlot("A");
-    // first ref is declaration of A
-    Ref setTwinRef = Iterables.get(nameA.getRefs(), 1); // second is the SET twin
-    Ref getTwinRef = Iterables.get(nameA.getRefs(), 2); // third is the GET twin
-
-    // see confirmTwinsAreCreated() for verification of the original twin relationship
-
-    Node oldNode = getTwinRef.getNode();
+    Node oldNode = twinRef.getNode();
 
     // confirm that they are both associated with oldNode
-    assertThat(nameA.getRefsForNode(oldNode)).containsExactly(setTwinRef, getTwinRef);
+    assertThat(nameA.getRefForNode(oldNode)).isEqualTo(twinRef);
 
-    nameA.removeTwinRefs(setTwinRef);
+    nameA.removeRef(twinRef);
 
-    assertThat(nameA.getRefs()).doesNotContain(setTwinRef);
-    assertThat(nameA.getRefs()).doesNotContain(getTwinRef);
-    assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
+    assertThat(nameA.getRefs()).doesNotContain(twinRef);
+    assertThat(nameA.getRefForNode(oldNode)).isNull();
+    assertThat(nameA.getAliasingGets()).isEqualTo(0);
+    assertThat(nameA.getGlobalSets()).isEqualTo(1);
   }
 
   @Test
