@@ -3834,6 +3834,11 @@ public final class TypeInferenceTest {
     assertWithMessage("Type inference must not alter OBJECT_TYPE.")
         .that(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE).hasOwnProperty("data"))
         .isFalse();
+    // Check that the inferred type of 'obj' has a property 'data' associated with it.
+    assertWithMessage("Cannot resolve type of 'obj'").that(getType("obj")).isNotNull();
+    assertWithMessage("Expect property 'data' to be defined on 'obj'")
+        .that(registry.canPropertyBeDefined(getType("obj"), "data"))
+        .isNotEqualTo(JSTypeRegistry.PropDefinitionKind.UNKNOWN);
   }
 
   @Test
