@@ -545,8 +545,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     ImmutableSet<SourceFile> files =
         ImmutableSet.<SourceFile>builder().addAll(externs).addAll(sources).build();
 
-    this.initTypedAstFilesystem(files, typedAstListStream, options);
+    this.initOptions(options);
     this.init(externs, sources, options);
+    this.initTypedAstFilesystem(files, typedAstListStream, options);
   }
 
   /**
@@ -569,8 +570,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     ImmutableSet<SourceFile> files = filesBuilder.build();
 
-    this.initTypedAstFilesystem(files, typedAstListStream, options);
+    this.initOptions(options);
     this.initModules(externs, modules, options);
+    this.initTypedAstFilesystem(files, typedAstListStream, options);
   }
 
   @GwtIncompatible
@@ -579,26 +581,38 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       InputStream typedAstListStream,
       CompilerOptions options) {
     checkState(this.typedAstFilesystem == null);
+    maybeSetTracker();
 
     options.setMergedPrecompiledLibraries(true);
 
     this.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
     // To speed up builds that don't run type-based optimizations, skip type deserialization
     boolean deserializeTypes = options.requiresTypesForOptimization();
+
     TypedAstDeserializer.DeserializedAst astData =
-        TypedAstDeserializer.deserializeFullAst(
-            this,
-            SYNTHETIC_EXTERNS_FILE,
-            requiredInputFiles,
-            typedAstListStream,
-            deserializeTypes,
-            options.resolveSourceMapAnnotations,
-            options.parseInlineSourceMaps);
+        runInCompilerThread(
+            () -> {
+              Tracer tracer = newTracer("deserializeTypedAst");
+              try {
+                return TypedAstDeserializer.deserializeFullAst(
+                    this,
+                    SYNTHETIC_EXTERNS_FILE,
+                    requiredInputFiles,
+                    typedAstListStream,
+                    deserializeTypes,
+                    options.resolveSourceMapAnnotations,
+                    options.parseInlineSourceMaps);
+              } finally {
+                stopTracer(tracer, "deserializeTypedAst");
+              }
+            });
 
     this.typedAstFilesystem = astData.getFilesystem();
     this.externProperties = astData.getExternProperties();
     this.colorRegistry = astData.getColorRegistry().orNull();
     this.setTypeCheckingHasRun(deserializeTypes);
+
+    this.getSynthesizedExternsInput(); // Force lazy creation.
   }
 
   @Override
@@ -789,10 +803,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     jsRoot = IR.root();
     externsRoot = IR.root();
     externAndJsRoot = IR.root(externsRoot, jsRoot);
-
-    if (this.typedAstFilesystem != null) {
-      this.getSynthesizedExternsInput(); // Force lazy creation.
-    }
   }
 
   /** Compiles a single source file and a single externs file. */
@@ -1775,7 +1785,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public void maybeSetTracker() {
-    if (!options.getTracerMode().isOn()) {
+    if (!options.getTracerMode().isOn() || tracker != null) {
       return;
     }
 
