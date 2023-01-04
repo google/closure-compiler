@@ -253,15 +253,26 @@ public class Node {
     return this;
   }
 
-  /** Sets whether this node is inside parentheses. */
+  /** Sets whether this node was inside original source-level parentheses. */
   public final void setIsParenthesized(boolean b) {
     checkState(IR.mayBeExpression(this));
     putBooleanProp(Prop.IS_PARENTHESIZED, b);
   }
 
-  /** Check whether node was inside parentheses. */
+  /** Check whether node was inside original source-level parentheses. */
   public final boolean getIsParenthesized() {
     return getBooleanProp(Prop.IS_PARENTHESIZED);
+  }
+
+  /** Sets whether this node is should be parenthesized in output. */
+  public final void setMarkForParenthesize(boolean value) {
+    checkState(IR.mayBeExpression(this));
+    putBooleanProp(Prop.MARK_FOR_PARENTHESIZE, value);
+  }
+
+  /** Check whether node should be parenthesized in output. */
+  public final boolean getMarkForParenthesize() {
+    return getBooleanProp(Prop.MARK_FOR_PARENTHESIZE);
   }
 
   // TODO(sdh): Get rid of these by using accessor methods instead.
@@ -297,7 +308,6 @@ public class Node {
   public static final Prop MODULE_EXPORT = Prop.MODULE_EXPORT;
   public static final Prop IS_SHORTHAND_PROPERTY = Prop.IS_SHORTHAND_PROPERTY;
   public static final Prop ES6_MODULE = Prop.ES6_MODULE;
-  public static final Prop MARK_FOR_PARENTHESIZE = Prop.MARK_FOR_PARENTHESIZE;
 
   private static final class NumberNode extends Node {
 
@@ -1002,6 +1012,7 @@ public class Node {
       // this method was created to cover the checks previously done there.
       switch (prop) {
         case IS_PARENTHESIZED:
+        case MARK_FOR_PARENTHESIZE:
           if (!IR.mayBeExpression(this)) {
             violationMessageConsumer.accept("non-expression is parenthesized");
           }
