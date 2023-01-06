@@ -41,6 +41,9 @@ public final class TypeTransformationParser {
   private final int templateCharno;
 
   private static final int VAR_ARGS = Integer.MAX_VALUE;
+  // Set the length of every TTL node as the length of "@template" (which is 9).
+  // This is used for error message logging where we underline the error location with ^^^^^^^^^.
+  private static final int TTL_NODE_LENGTH = "@template".length();
 
   /** The classification of the keywords */
   public static enum OperationKind {
@@ -275,16 +278,31 @@ public final class TypeTransformationParser {
       // No need to add a new warning because the validation does it
       return false;
     }
-    fixLineNumbers(expr);
+    fixTTLNodeLineNoCharNoAndLength(expr);
     // Store the result if the AST is valid
     typeTransformationAst = expr;
     return true;
   }
 
-  private void fixLineNumbers(Node expr) {
-    expr.setLinenoCharno(expr.getLineno() + templateLineno, expr.getCharno() + templateCharno);
+  /**
+   * Set the lineno/charno of the TTL node to the lineno/charno of the "@" in the JSDoc's template
+   * annotation. This lineno/charno of the "@" is initialized by JsDocInfoParser when parsing TTLs.
+   *
+   * <p>The TTL AST currently has lineno/charno relative to its position within the JSDoc, and
+   * `fixTTLNodeLineNoCharNoAndLength` changes this to be relative to its position in the source JS
+   * file.
+   *
+   * <p>We are using the lineno/charno of "@" because adjusting the TTL AST node's lineno/charno to
+   * be more accurate is tricky, especially for handling multiline TTL expressions. If we set an
+   * inaccurate lineno/charno, the compiler may crash with an "index out of bounds" error when
+   * logging errors that occur in the TTL expression. Instead, we will use the lineno/charno of "@"
+   * to safely highlight which JSDoc annotation an error occurs in.
+   */
+  private void fixTTLNodeLineNoCharNoAndLength(Node expr) {
+    expr.setLinenoCharno(templateLineno, templateCharno);
+    expr.setLength(TTL_NODE_LENGTH);
     for (Node child = expr.getFirstChild(); child != null; child = child.getNext()) {
-      fixLineNumbers(child);
+      fixTTLNodeLineNoCharNoAndLength(child);
     }
   }
 

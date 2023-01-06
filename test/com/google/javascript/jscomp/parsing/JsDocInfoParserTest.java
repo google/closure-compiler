@@ -3910,14 +3910,31 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testTTLLineNumber() {
+  public void testTTLLineNoCharNo() {
     JSDocInfo info =
         parse(
             LINE_JOINER.join(
-                "Some text on line 1", "More text! This is line 2", "@template T := foo =:*/"));
+                "Some text on line 0", "More text! This is line 1", "@template T := foo =:*/"));
     assertThat(info.getTypeTransformations()).hasSize(1);
     Node n = info.getTypeTransformations().get("T");
-    assertNode(n).hasLineno(3);
+    assertNode(n).hasLineno(2); // lineno of "@" in "@template"
+    assertNode(n).hasCharno(0); // charno of "@" in "@template"
+  }
+
+  @Test
+  public void testMultilineTTLLineNoCharNo() {
+    JSDocInfo info =
+        parse(
+            LINE_JOINER.join(
+                "Some text on line 0",
+                "More text! This is line 1",
+                "@template T :=",
+                "  foo",
+                "=:*/"));
+    assertThat(info.getTypeTransformations()).hasSize(1);
+    Node n = info.getTypeTransformations().get("T");
+    assertNode(n).hasLineno(2); // lineno of "@" in "@template"
+    assertNode(n).hasCharno(0); // charno of "@" in "@template"
   }
 
   @Test
