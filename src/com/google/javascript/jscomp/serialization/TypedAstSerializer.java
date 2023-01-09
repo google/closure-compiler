@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -119,8 +118,7 @@ final class TypedAstSerializer {
     AstNode scriptProto = visit(script);
     this.subtreeSourceFiles.clear();
 
-    SourceMapInput sourceMapInput = compiler.getInputSourceMap(script.getSourceFileName());
-    String sourceMappingURL = sourceMapInput != null ? sourceMapInput.getOriginalPath() : null;
+    String sourceMappingURL = compiler.getInputSourceMappingURL(script.getSourceFileName());
 
     LazyAst.Builder lazyAstBuilder =
         LazyAst.newBuilder().setScript(scriptProto.toByteString()).setSourceFile(sourceFile);

@@ -419,8 +419,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
 
     Result result = testAndReturnResult(srcs(code), expected(code));
-    assertThat(result.compiler.getInputSourceMap("testcode").getOriginalPath())
-        .isEqualTo(sourceMapPath);
+    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isEqualTo(sourceMapPath);
   }
 
   @Test
@@ -440,7 +439,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     Result result = testAndReturnResult(srcs(code), expected(code));
     // Input source map not registered because `resolveSourceMapAnnotations = false`
-    assertThat(result.compiler.getInputSourceMap("testcode")).isNull();
+    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isNull();
   }
 
   @Test
@@ -461,8 +460,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Result result = testAndReturnResult(srcs(code), expected(code));
     // Input source map is registered when `parseInlineSourceMaps = false`, but we won't try to
     // parse it as a Base64 encoded source map.
-    assertThat(result.compiler.getInputSourceMap("testcode").getOriginalPath())
-        .isEqualTo(sourceMapPath);
+    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isEqualTo(sourceMapPath);
   }
 
   @Test

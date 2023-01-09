@@ -519,7 +519,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   public abstract void addInputSourceMap(String name, SourceMapInput sourceMap);
 
-  public abstract SourceMapInput getInputSourceMap(String sourceFileName);
+  public abstract String getInputSourceMappingURL(String sourceFileName);
 
   abstract void addComments(String filename, List<Comment> comments);
 

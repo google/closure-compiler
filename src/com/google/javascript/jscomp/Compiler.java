@@ -3269,9 +3269,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  /**
+   * Returns the <url> from a `//# sourceMappingURL=<url>` comment. This sourceMappingURL is a JS
+   * file's input source map, embedded into the input JS file with a `//# sourceMappingURL=<url>`
+   * comment.
+   *
+   * <p>We do not want TypedAST to support inline source maps (which are input source maps passed by
+   * embedding a `//# sourceMappingURL=<url>` where <url> is a base64-encoded "data url"). If the
+   * sourceMappingURL ends with a ".inline.map", return null.
+   */
   @Override
-  public @Nullable SourceMapInput getInputSourceMap(String sourceFileName) {
-    return inputSourceMaps.getOrDefault(sourceFileName, null);
+  public @Nullable String getInputSourceMappingURL(String sourceFileName) {
+    SourceMapInput sourceMapInput = inputSourceMaps.getOrDefault(sourceFileName, null);
+    String sourceMappingURL = sourceMapInput != null ? sourceMapInput.getOriginalPath() : null;
+    if (sourceMappingURL != null && !sourceMappingURL.endsWith(".inline.map")) {
+      return sourceMappingURL;
+    }
+    return null;
   }
 
   /**
