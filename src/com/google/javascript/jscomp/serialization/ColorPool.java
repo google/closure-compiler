@@ -53,14 +53,21 @@ import java.util.Map;
  * different ColorPools, but mixing multiple ColorPools is likely a design error.
  */
 public final class ColorPool {
-  private final ImmutableMap<ColorId, Color> idToColor;
-  private final ImmutableList<ShardView> shardViews;
+  // This could be an ImmutableMap, but because it's very large, creating an ImmutableMap copy has
+  // caused OOMs in large projects. So we just use a LinkedHashMap and hide the mutability behind
+  // accessor methods.
+  private final LinkedHashMap<ColorId, Color> idToColor;
   private final ColorRegistry colorRegistry;
+  // Non-empty for testing only. Normally empty to save on memory.
+  private final ImmutableList<ShardView> shardViews;
 
-  private ColorPool(Builder builder) {
-    this.idToColor = ImmutableMap.copyOf(builder.idToColor);
-    this.shardViews = ImmutableList.copyOf(builder.protoToShard.values());
-    this.colorRegistry = builder.registry.build();
+  private ColorPool(
+      LinkedHashMap<ColorId, Color> idToColor,
+      ColorRegistry colorRegistry,
+      ImmutableList<ShardView> shardViews) {
+    this.idToColor = idToColor;
+    this.colorRegistry = colorRegistry;
+    this.shardViews = shardViews;
   }
 
   public Color getColor(ColorId id) {
@@ -71,17 +78,20 @@ public final class ColorPool {
     return this.colorRegistry;
   }
 
-  public ShardView getOnlyShard() {
+  ShardView getOnlyShardForTesting() {
     return Iterables.getOnlyElement(this.shardViews);
   }
 
   /** A view of the pool based on one of the input shards. */
   public static final class ShardView {
-    private final TypePool typePool;
-    private final StringPool stringPool;
     private final ImmutableList<ColorId> trimmedOffsetToId;
 
-    private ColorPool colorPool; // Set once the complete pool is built.
+    // Fields only present before/while the ColorPool is being built. Null afterwards.
+    private TypePool typePool;
+    private StringPool stringPool;
+
+    // Set once the complete pool is built.
+    private ColorPool colorPool;
 
     private ShardView(
         TypePool typePool, StringPool stringPool, ImmutableList<ColorId> trimmedOffsetToId) {
@@ -102,14 +112,20 @@ public final class ColorPool {
         return this.trimmedOffsetToId.get(trimOffset(untrimmedOffset));
       }
     }
+
+    private void updateStateAfterColorPoolIsBuilt(ColorPool colorPool) {
+      this.colorPool = colorPool;
+      this.typePool = null;
+      this.stringPool = null;
+    }
   }
 
   public static Builder builder() {
     return new Builder();
   }
 
-  public static ColorPool fromOnlyShard(TypePool typePool, StringPool stringPool) {
-    return ColorPool.builder().addShardAnd(typePool, stringPool).build();
+  static ColorPool fromOnlyShardForTesting(TypePool typePool, StringPool stringPool) {
+    return ColorPool.builder().addShardAnd(typePool, stringPool).forTesting().build();
   }
 
   /**
@@ -122,6 +138,7 @@ public final class ColorPool {
     private final LinkedHashMap<ColorId, Color> idToColor = new LinkedHashMap<>();
     private final ColorRegistry.Builder registry = ColorRegistry.builder();
     private final HashBasedTable<ColorId, ShardView, TypeProto> idToProto = HashBasedTable.create();
+    private boolean forTesting = false;
 
     private final ArrayDeque<ColorId> reconcilationDebugStack = new ArrayDeque<>();
 
@@ -132,6 +149,12 @@ public final class ColorPool {
     @CanIgnoreReturnValue
     public Builder addShardAnd(TypePool typePool, StringPool stringPool) {
       this.addShard(typePool, stringPool);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    private Builder forTesting() {
+      this.forTesting = true;
       return this;
     }
 
@@ -193,9 +216,16 @@ public final class ColorPool {
         }
       }
 
-      ColorPool colorPool = new ColorPool(this);
+      ColorPool colorPool =
+          new ColorPool(
+              this.idToColor,
+              this.registry.build(),
+              this.forTesting
+                  ? ImmutableList.copyOf(this.protoToShard.values())
+                  : ImmutableList.of());
+
       for (ShardView shard : this.protoToShard.values()) {
-        shard.colorPool = colorPool;
+        shard.updateStateAfterColorPoolIsBuilt(colorPool);
       }
       return colorPool;
     }

@@ -86,7 +86,7 @@ public final class TypedAstDeserializer {
   }
 
   /**
-   * Transforms a given TypedAst.List stream into a compiler AST
+   * Transforms a given TypedAst delimited stream into a compiler AST
    *
    * @param requiredInputFiles All SourceFiles that should go into the typedAstFilesystem. If a
    *     TypedAst contains a file not in this set, that file will not be added to the
@@ -183,16 +183,45 @@ public final class TypedAstDeserializer {
 
     deserializer.typedAstFilesystem.put(
         syntheticExterns,
-        () -> {
-          Node script = IR.script();
-          script.setStaticSourceFile(syntheticExterns);
-          for (ScriptNodeDeserializer d : deserializer.syntheticExternsDeserializers) {
-            script.addChildrenToBack(d.deserializeNew().removeChildren());
-          }
-          return script;
-        });
+        new SyntheticExternsDeserializer(
+                syntheticExterns, deserializer.syntheticExternsDeserializers)
+            ::deserialize);
 
     return deserializer.toDeserializedAst();
+  }
+
+  /**
+   * Helper class that is a lazy deserializer for the synthetic externs script
+   *
+   * <p>The "checks" phase of JSCompiler may synthesize new extern nodes. This means that if we are
+   * merging multiple TypedAST shards from different independent "checks" phases, each shard may
+   * have its own synthetic externs script. This class concatenates each synthetic externs script
+   * into one.
+   *
+   * <p>Note: while it's possible that other files appear in multiple TypedAST shards, we assume
+   * that those files are identical, and arbitrarily choose one copy of each file. The synthetic
+   * externs are the only case where we concatenate multiple versions of the same file rather than
+   * just choosing one.
+   */
+  private static final class SyntheticExternsDeserializer {
+    private final SourceFile syntheticExterns;
+    private final ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers;
+
+    SyntheticExternsDeserializer(
+        SourceFile syntheticExterns,
+        ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers) {
+      this.syntheticExterns = syntheticExterns;
+      this.syntheticExternsDeserializers = syntheticExternsDeserializers;
+    }
+
+    Node deserialize() {
+      Node script = IR.script();
+      script.setStaticSourceFile(syntheticExterns);
+      for (ScriptNodeDeserializer d : this.syntheticExternsDeserializers) {
+        script.addChildrenToBack(d.deserializeNew().removeChildren());
+      }
+      return script;
+    }
   }
 
   private DeserializedAst toDeserializedAst() {
@@ -278,7 +307,7 @@ public final class TypedAstDeserializer {
     }
 
     if (file.isWeak()) {
-      typedAstFilesystem.computeIfAbsent(file, this::createStubWeakScriptNode);
+      typedAstFilesystem.computeIfAbsent(file, TypedAstDeserializer::createStubWeakScriptNode);
       return;
     }
 
@@ -327,7 +356,7 @@ public final class TypedAstDeserializer {
    * <p>Weak files don't actually need to be deserialized. They're only needed for typechecking and
    * by definition a TypedAST has already been typechecked.
    */
-  private Supplier<Node> createStubWeakScriptNode(SourceFile file) {
+  private static Supplier<Node> createStubWeakScriptNode(SourceFile file) {
     return () -> {
       Node stubScript = IR.script().setStaticSourceFile(file);
       stubScript.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM);
