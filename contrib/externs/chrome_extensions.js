@@ -11007,19 +11007,6 @@ chrome.serial.onReceiveError;
 /**
  * @const
  */
-chrome.musicManagerPrivate = {};
-
-
-/**
- * @param {function(string): void} callback
- * @return {undefined}
- */
-chrome.musicManagerPrivate.getDeviceId = function(callback) {};
-
-
-/**
- * @const
- */
 chrome.mediaGalleriesPrivate = {};
 
 
