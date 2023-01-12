@@ -137,7 +137,7 @@ class GlobalNamespace
    * @param root The root of the rest of the code to build a namespace for.
    */
   GlobalNamespace(AbstractCompiler compiler, Node root) {
-    this(/* decisionsLog = */ null, compiler, null, root);
+    this(/* decisionsLog= */ null, compiler, null, root);
   }
 
   /**
@@ -1173,25 +1173,25 @@ class GlobalNamespace
    */
   enum Inlinability {
     INLINE_COMPLETELY(
-        /* shouldInlineUsages = */ true,
+        /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ true,
-        /* canCollapse = */ true),
+        /* canCollapse= */ true),
     INLINE_BUT_KEEP_DECLARATION_ENUM(
-        /* shouldInlineUsages = */ true,
+        /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ false,
-        /* canCollapse = */ true),
+        /* canCollapse= */ true),
     INLINE_BUT_KEEP_DECLARATION_INTERFACE(
-        /* shouldInlineUsages = */ true,
+        /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ false,
-        /* canCollapse = */ true),
+        /* canCollapse= */ true),
     INLINE_BUT_KEEP_DECLARATION_CLASS(
-        /* shouldInlineUsages = */ true,
+        /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ false,
-        /* canCollapse = */ true),
+        /* canCollapse= */ true),
     DO_NOT_INLINE(
-        /* shouldInlineUsages = */ false,
+        /* shouldInlineUsages= */ false,
         /* shouldRemoveDeclaration= */ false,
-        /* canCollapse = */ false);
+        /* canCollapse= */ false);
 
     private final boolean shouldInlineUsages;
     private final boolean shouldRemoveDeclaration;
@@ -1771,8 +1771,10 @@ class GlobalNamespace
             logDecision(Inlinability.DO_NOT_INLINE, "obj lit property followed by spread");
             return Inlinability.DO_NOT_INLINE;
           }
-          Node grandparent = declaration.getGrandparent();
-          if (grandparent.isOr() || grandparent.isHook()) {
+          // We may be in a deeply nested object literal like, `{a: {b: {c: 1}}}`, so find the
+          // outermost object literal node in order to determine whether it is used conditionally.
+          final Node objectLitParent = getOutermostObjectLit(declaration).getParent();
+          if (objectLitParent.isOr() || objectLitParent.isHook()) {
             // Case: `var x = y || {a: b}` or `var x = cond ? y : {a: b}`.
             logDecision(Inlinability.DO_NOT_INLINE, "conditional definition");
             return Inlinability.DO_NOT_INLINE;
@@ -2192,6 +2194,26 @@ class GlobalNamespace
   }
 
   /**
+   * Given something like the `'c'` STRING_KEY node in `x = {a: {b: {c: 0}}};`, return the Node for
+   * the outermost object literal.
+   *
+   * @param objLitKey Must be the child of an OBJECT_LIT node
+   * @return The first ancestor that is an OBJECT_LIT and whose grandparent is not an OBJECT_LIT
+   */
+  private Node getOutermostObjectLit(Node objLitKey) {
+    Node outermostObjectLit = objLitKey.getParent();
+    checkState(outermostObjectLit.isObjectLit(), outermostObjectLit);
+    while (true) {
+      final Node objLitGrandparent = outermostObjectLit.getGrandparent();
+      if (objLitGrandparent != null && objLitGrandparent.isObjectLit()) {
+        outermostObjectLit = objLitGrandparent;
+      } else {
+        return outermostObjectLit;
+      }
+    }
+  }
+
+  /**
    * True if the given Node is the GETPROP in a statement like `some.q.name;`
    *
    * <p>Such do-nothing statements often have JSDoc on them and are intended to declare the
@@ -2400,7 +2422,7 @@ class GlobalNamespace
     /** The object literal key does not represent a qualified name assignment. */
     static ObjLitStringKeyAnalysis forNonReference() {
       return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
-          /* nameString = */ null, NameType.OTHER);
+          /* nameString= */ null, NameType.OTHER);
     }
   }
 }

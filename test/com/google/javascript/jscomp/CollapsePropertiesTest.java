@@ -4420,6 +4420,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // right branch, write to undeclared prop
     test(
         srcs("var a = p ? x : {b: 1}; a.c = 2;"), expected("var a = p ? x : {b: 1}; var a$c = 2;"));
+
+    // right branch, use nested prop, alias is inlined but prop is not collapsed.
+    test(
+        srcs("    var a = p ? x : {b: { insideB: 1 }}; var t = a.b.insideB; use(          t);"),
+        expected("var a = p ? x : {b: { insideB: 1 }}; var t = null       ; use(a.b.insideB);"));
   }
 
   @Test
