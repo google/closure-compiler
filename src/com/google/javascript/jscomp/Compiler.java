@@ -116,7 +116,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.nullness.Nullable;
@@ -2452,7 +2451,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
             delimiter =
                 delimiter
-                    .replace("%name%", Matcher.quoteReplacement(inputName))
+                    .replace("%name%", inputName)
                     .replace("%num%", String.valueOf(inputSeqNum))
                     .replace("%n%", "\n");
 
