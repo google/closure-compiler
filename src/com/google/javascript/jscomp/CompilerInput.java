@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -421,9 +420,6 @@ public class CompilerInput extends DependencyInfo.Base {
       }
     }
 
-    private static final QualifiedName GOOG_DECLAREMODULEID =
-        QualifiedName.of("goog.declareModuleId");
-
     void visitSubtree(Node n, @Nullable Node parent) {
       switch (n.getToken()) {
         case CALL:
@@ -467,18 +463,16 @@ public class CompilerInput extends DependencyInfo.Base {
                 n = argument.getLastChild();
                 break;
 
+              case "declareModuleId":
+                if (!argument.isStringLit()) {
+                  return;
+                }
+                provides.add(argument.getString());
+                break;
+
               default:
                 return;
             }
-          } else if (parent.isGetProp()
-              // TODO(johnplaisted): Consolidate on declareModuleId
-              && GOOG_DECLAREMODULEID.matches(parent)
-              && parent.getParent().isCall()) {
-            Node argument = parent.getParent().getSecondChild();
-            if (!argument.isStringLit()) {
-              return;
-            }
-            provides.add(argument.getString());
           }
           break;
 
@@ -499,20 +493,20 @@ public class CompilerInput extends DependencyInfo.Base {
           }
           return;
 
-        case VAR:
-          if (n.getFirstChild().matchesName("goog")
-              && NodeUtil.isNamespaceDecl(n.getFirstChild())) {
-            provides.add("goog");
-          }
-          break;
-
         case EXPR_RESULT:
         case CONST:
+        case LET:
+        case VAR:
         case BLOCK:
-        case SCRIPT:
         case NAME:
         case DESTRUCTURING_LHS:
-        case LET:
+          break;
+
+        case SCRIPT:
+          JSDocInfo jsdoc = n.getJSDocInfo();
+          if (jsdoc != null && jsdoc.isProvideGoog()) {
+            provides.add("goog");
+          }
           break;
 
         default:
