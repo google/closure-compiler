@@ -67,6 +67,10 @@ allows us to use `ADVANCED` optimizations:
 google-closure-compiler -O ADVANCED rollup.js --js_output_file rollup.min.js
 ```
 
+NOTE: The output below is just an example and not kept up-to-date. The
+  [Flags and Options wiki page](https://github.com/google/closure-compiler/wiki/Flags-and-Options)
+  is updated during each release.
+
 To see all of the compiler's options, type:
 
 ```bash
