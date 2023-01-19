@@ -1314,10 +1314,22 @@ final class ClosureRewriteModule implements CompilerPass {
                   objectPatternOrNameNode.getString(), exportedNamespaceNameNode)
               .srcrefTreeIfMissing(call);
     }
-    functionBody.addChildToFront(declarationNode);
+
+    // If right hand side of the callback arrow function is an expression instead of BLOCK,
+    // e.g., `({Foo}) => Foo` instead of `() => { return Foo; }`, create a BLOCK to host the
+    // expression.
+    if (functionBody.isBlock()) {
+      functionBody.addChildToFront(declarationNode);
+      compiler.reportChangeToEnclosingScope(declarationNode);
+    } else {
+      Node returnStmt = this.astFactory.createReturn(functionBody.detach());
+      Node newBlock = this.astFactory.createBlock(returnStmt).srcrefTree(call);
+      newBlock.insertAfter(paramListNode);
+      newBlock.addChildToFront(declarationNode);
+      compiler.reportChangeToEnclosingScope(newBlock);
+    }
 
     compiler.reportChangeToEnclosingScope(call);
-    compiler.reportChangeToEnclosingScope(declarationNode);
   }
 
   // Rewrite

@@ -1217,6 +1217,46 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogRequireDynamic_then_destructuringPattern_withExpressionBody() {
+    test(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines(
+                "async function test() {", //
+                "  goog.requireDynamic('a.b.c').then(({Foo}) => Foo);",
+                "}")),
+        expected(
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}"),
+            lines(
+                "async function test() {", //
+                "  goog.importHandler_('sG5M4c').then(() => { ",
+                "     const {Foo} = module$exports$a$b$c;",
+                "     return Foo;",
+                "  });",
+                "}")));
+    test(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines(
+                "async function test() {", //
+                "  goog.requireDynamic('a.b.c').then(({Foo}) => console.log(Foo));",
+                "}")),
+        expected(
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}"),
+            lines(
+                "async function test() {", //
+                "  goog.importHandler_('sG5M4c').then(() => { ",
+                "     const {Foo} = module$exports$a$b$c;",
+                "     return console.log(Foo);",
+                "  });",
+                "}")));
+  }
+
+  @Test
   public void testGoogRequireDynamic_then_name() {
     test(
         srcs(
