@@ -19,18 +19,23 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
 /**
- * {@link CheckDebuggerStatement} checks for the presence of the "debugger"
- * statement in JavaScript code. It is appropriate to use this statement while
- * developing JavaScript; however, it is generally undesirable to include it in
- * production code.
+ * {@link CheckDebuggerStatement} checks for the presence of the "debugger" statement in JavaScript
+ * code. It is appropriate to use this statement while developing JavaScript; however, it is
+ * generally undesirable to include it in production code.
  */
-class CheckDebuggerStatement extends AbstractPostOrderCallback
-    implements CompilerPass {
+class CheckDebuggerStatement extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType DEBUGGER_STATEMENT_PRESENT =
-    DiagnosticType.disabled("JSC_DEBUGGER_STATEMENT_PRESENT",
-        "Using the debugger statement can halt your application if the user " +
-        "has a JavaScript debugger running.");
+      DiagnosticType.disabled(
+          "JSC_DEBUGGER_STATEMENT_PRESENT",
+          "Using the debugger statement can halt your application if the user has a JavaScript"
+              + " debugger running.\n"
+              + "To disable this check when you want to do debugging, you can suppress this message"
+              + " like this:\n"
+              // NOTE: Single quotes around curly braces are necessary to prevent them being
+              // interpreted as a placeholder for replacement. See MessageFormat javadoc.
+              + "  /** @suppress '{'checkDebuggerStatement'}' */\n"
+              + "  debugger;");
 
   private final AbstractCompiler compiler;
 
