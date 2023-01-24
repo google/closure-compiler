@@ -1280,6 +1280,64 @@ MediaStreamConstraints.prototype.video;
 MediaStreamConstraints.prototype.preferCurrentTab;
 
 /**
+ * @constructor
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-capturecontroller
+ */
+function CaptureController() {}
+
+/**
+ * @param {string} focusBehavior
+ * @return {undefined}
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-capturestartfocusbehavior
+ */
+CaptureController.prototype.setFocusBehavior = function(focusBehavior) {};
+
+/**
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-displaymediastreamoptions
+ * @record
+ */
+function DisplayMediaStreamOptions() {}
+
+/**
+ * @type {boolean|MediaTrackConstraints|undefined}
+ */
+DisplayMediaStreamOptions.prototype.audio;
+
+/**
+ * @type {boolean|MediaTrackConstraints|undefined}
+ */
+DisplayMediaStreamOptions.prototype.video;
+
+/**
+ * @type {!CaptureController|undefined}
+ */
+DisplayMediaStreamOptions.prototype.controller;
+
+/**
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-selfcapturepreferenceenum
+ * @type {string|undefined}
+ */
+DisplayMediaStreamOptions.prototype.selfBrowserSurface;
+
+/**
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-systemaudiopreferenceenum
+ * @type {string|undefined}
+ */
+DisplayMediaStreamOptions.prototype.surfaceSwitching;
+
+/**
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-surfaceswitchingpreferenceenum
+ * @type {string|undefined}
+ */
+DisplayMediaStreamOptions.prototype.systemAudio;
+
+/**
+ * @see https://wicg.github.io/prefer-current-tab/
+ * @type {boolean|undefined}
+ */
+DisplayMediaStreamOptions.prototype.preferCurrentTab;
+
+/**
  * @see {http://dev.w3.org/2011/webrtc/editor/getusermedia.html#
  *     navigatorusermediaerror-and-navigatorusermediaerrorcallback}
  * @interface
@@ -1669,20 +1727,20 @@ MediaDevices.prototype.enumerateDevices = function() {};
  * @param {!MediaStreamConstraints} constraints
  * @return {!Promise<!MediaStream>}
  */
-MediaDevices.prototype.getUserMedia = function(constraints) {}
+MediaDevices.prototype.getUserMedia = function(constraints) {};
 
 /**
  * @see https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia
- * @param {!MediaStreamConstraints=} constraints
+ * @param {!DisplayMediaStreamOptions=} options
  * @return {!Promise<!MediaStream>}
  */
-MediaDevices.prototype.getDisplayMedia = function(constraints) {}
+MediaDevices.prototype.getDisplayMedia = function(options) {};
 
 /**
  * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
  * @return {!MediaTrackSupportedConstraints}
  */
-MediaDevices.prototype.getSupportedConstraints = function() {}
+MediaDevices.prototype.getSupportedConstraints = function() {};
 
 /** @const {!MediaDevices} */
 Navigator.prototype.mediaDevices;
