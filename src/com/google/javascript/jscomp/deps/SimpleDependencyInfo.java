@@ -23,11 +23,11 @@ import com.google.errorprone.annotations.Immutable;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * A class to hold JS dependency information for a single .js file.
- */
-@Immutable @AutoValue @AutoValue.CopyAnnotations
-public abstract class SimpleDependencyInfo extends DependencyInfo.Base {
+/** A class to hold JS dependency information for a single .js file. */
+@Immutable
+@AutoValue
+@AutoValue.CopyAnnotations
+public abstract class SimpleDependencyInfo implements DependencyInfo {
 
   public static Builder builder(String srcPathRelativeToClosure, String pathOfDefiningFile) {
     return new AutoValue_SimpleDependencyInfo.Builder()

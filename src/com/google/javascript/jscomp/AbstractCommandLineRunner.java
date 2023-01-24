@@ -2403,7 +2403,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // ES6 modules will need a runtime in a bundle. Skip appending this runtime if there are no
       // ES6 modules to cut down on size.
       for (CompilerInput input : inputs) {
-        if ("es6".equals(input.getLoadFlags().get("module"))) {
+        if (input.isEs6Module()) {
           appendRuntimeTo(out);
           break;
         }

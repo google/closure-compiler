@@ -47,7 +47,7 @@ import org.jspecify.nullness.Nullable;
  * and maintain state such as module for the input and whether the input is an extern. Also
  * calculates provided and required types.
  */
-public class CompilerInput extends DependencyInfo.Base {
+public class CompilerInput implements DependencyInfo {
 
   private static final long serialVersionUID = 2L;
 
@@ -585,6 +585,20 @@ public class CompilerInput extends DependencyInfo.Base {
   @Override
   public String toString() {
     return getName();
+  }
+
+  @Override
+  public boolean isEs6Module() {
+    // Instead of doing a full parse to read all load flags, just ask the delegate, which at least
+    // has this much info
+    return getDependencyInfo().isEs6Module();
+  }
+
+  @Override
+  public boolean isGoogModule() {
+    // Instead of doing a full parse to read all load flags, just ask the delegate, which at least
+    // has this much info
+    return getDependencyInfo().isGoogModule();
   }
 
   @Override

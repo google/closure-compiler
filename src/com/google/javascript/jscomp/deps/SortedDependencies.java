@@ -207,7 +207,7 @@ public final class SortedDependencies<InputT extends DependencyInfo> {
           || (provides.size() == 1
               && firstProvide.startsWith("module$")
               // ES6 modules should always be considered as exporting something.
-              && !"es6".equals(userOrderedInput.getLoadFlags().get("module")))) {
+              && !userOrderedInput.isEs6Module())) {
         nonExportingInputs.put(
             ModuleNames.fileToModuleName(userOrderedInput.getName()), userOrderedInput);
       }

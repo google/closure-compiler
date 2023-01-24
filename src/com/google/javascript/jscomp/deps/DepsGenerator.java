@@ -219,7 +219,7 @@ public class DepsGenerator {
 
       ImmutableList<String> provides = dependencyInfo.getProvides();
 
-      if ("es6".equals(dependencyInfo.getLoadFlags().get("module"))) {
+      if (dependencyInfo.isEs6Module()) {
         String mungedProvide = loader.resolve(dependencyInfo.getName()).toModuleName();
         // Filter out the munged symbol.
         // Note that at the moment ES6 modules should not have any other provides! In the future
@@ -277,8 +277,7 @@ public class DepsGenerator {
         } else if (provider == depInfo) {
           reportSameFile(namespace, depInfo);
         } else {
-          depInfo.isModule();
-          boolean providerIsEs6Module = "es6".equals(provider.getLoadFlags().get("module"));
+          boolean providerIsEs6Module = provider.isEs6Module();
 
           switch (require.getType()) {
             case ES6_IMPORT:
@@ -363,7 +362,7 @@ public class DepsGenerator {
                 .toModuleName());
       } else {
         // ES6 modules already provide these munged symbols.
-        if (!"es6".equals(depInfo.getLoadFlags().get("module"))) {
+        if (!depInfo.isEs6Module()) {
           provides.add(loader.resolve(depInfo.getName()).toModuleName());
         }
       }

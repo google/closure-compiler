@@ -67,7 +67,7 @@ public final class LazyParsedDependencyInfoTest {
     // is lifted and we can depend on a newer Truth, these assertions should be
     // changed to assertThat(info.getLoadFlags()).containsExactly(...)
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar");
-    assertThat(info.isModule()).isFalse();
+    assertThat(info.isGoogModule()).isFalse();
   }
 
   @Test
@@ -82,7 +82,7 @@ public final class LazyParsedDependencyInfoTest {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("module", "goog", "lang", "es5");
-    assertThat(info.isModule()).isTrue();
+    assertThat(info.isGoogModule()).isTrue();
   }
 
   @Test
@@ -97,7 +97,7 @@ public final class LazyParsedDependencyInfoTest {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
-    assertThat(info.isModule()).isFalse();
+    assertThat(info.isGoogModule()).isFalse();
   }
 
   @Test
@@ -112,7 +112,7 @@ public final class LazyParsedDependencyInfoTest {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
-    assertThat(info.isModule()).isFalse();
+    assertThat(info.isGoogModule()).isFalse();
   }
 
   @Test
@@ -148,6 +148,7 @@ public final class LazyParsedDependencyInfoTest {
 
     assertThat(compiler.getErrorManager().getWarnings()).isEmpty();
     assertThat(info.getLoadFlags()).containsExactly("module", "es6", "lang", "es6");
+    assertThat(info.isEs6Module()).isFalse();
     assertThat(compiler.getErrorManager().getWarnings())
         .containsExactly(
             JSError.make(

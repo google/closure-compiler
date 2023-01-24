@@ -29,7 +29,7 @@ import java.util.TreeMap;
 import org.jspecify.nullness.Nullable;
 
 /** A DependencyInfo class that determines load flags by parsing the AST just-in-time. */
-public class LazyParsedDependencyInfo extends DependencyInfo.Base {
+public class LazyParsedDependencyInfo implements DependencyInfo {
 
   private final DependencyInfo delegate;
   private @Nullable JsAst ast;
@@ -41,6 +41,20 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
     this.delegate = checkNotNull(delegate);
     this.ast = checkNotNull(ast);
     this.compiler = checkNotNull(compiler);
+  }
+
+  @Override
+  public boolean isEs6Module() {
+    // Instead of doing a full parse to read all load flags, just ask the delegate, which at least
+    // has this much info
+    return delegate.isEs6Module();
+  }
+
+  @Override
+  public boolean isGoogModule() {
+    // Instead of doing a full parse to read all load flags, just ask the delegate, which at least
+    // has this much info
+    return delegate.isGoogModule();
   }
 
   @Override

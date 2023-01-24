@@ -189,9 +189,9 @@ public final class ClosureBundler {
   /** Append the contents of the CharSource to the supplied appendable. */
   public void appendTo(Appendable out, DependencyInfo info, CharSource content) throws IOException {
     String code = content.read();
-    if (info.isModule()) {
+    if (info.isGoogModule()) {
       mode.appendGoogModule(transpile(code), out, sourceUrl);
-    } else if ("es6".equals(info.getLoadFlags().get("module")) && transpiler == Transpiler.NULL) {
+    } else if (info.isEs6Module() && transpiler == Transpiler.NULL) {
       // TODO(johnplaisted): Make the default transpiler the ES_MODULE_TO_CJS_TRANSPILER. Currently
       // some code is passing in unicode identifiers in non-ES6 modules the compiler fails to parse.
       // Once this compiler bug is fixed we can always transpile.
