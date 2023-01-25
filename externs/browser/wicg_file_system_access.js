@@ -16,11 +16,33 @@
 
 /**
  * File System Access
- * Draft Community Group Report, 18 November 2020
- * @externs
+ * Draft Community Group Report, 12 January 2023
  * @see https://wicg.github.io/file-system-access/
+ * @externs
  */
 
+
+
+/**
+ * @typedef {string}
+ * @see https://wicg.github.io/file-system-access/#enumdef-filesystempermissionmode
+ */
+var FileSystemPermissionMode;
+
+
+/**
+ * @record
+ * @struct
+ * @extends {PermissionDescriptor}
+ * @see https://wicg.github.io/file-system-access/#dictdef-filesystempermissiondescriptor
+ */
+var FileSystemPermissionDescriptor = function() {};
+
+/** @type {!FileSystemHandle} */
+FileSystemPermissionDescriptor.prototype.handle;
+
+/** @type {undefined|!FileSystemPermissionMode} */
+FileSystemPermissionDescriptor.prototype.mode;
 
 
 /**
@@ -30,224 +52,37 @@
  */
 var FileSystemHandlePermissionDescriptor = function() {};
 
-/** @type {undefined|string} */
+/** @type {undefined|!FileSystemPermissionMode} */
 FileSystemHandlePermissionDescriptor.prototype.mode;
 
 
 /**
- * @typedef {string}
- * @see https://wicg.github.io/file-system-access/#enumdef-filesystemhandlekind
- */
-var FileSystemHandleKind;
-
-
-/**
- * @interface
- * @see https://wicg.github.io/file-system-access/#api-filesystemhandle
- */
-var FileSystemHandle = function() {};
-
-/** @const {!FileSystemHandleKind} */
-FileSystemHandle.prototype.kind;
-
-/** @const {string} */
-FileSystemHandle.prototype.name;
-
-/**
- * @param {!FileSystemHandle} other
- * @return {!Promise<boolean>}
- */
-FileSystemHandle.prototype.isSameEntry = function(other) {};
-
-/**
  * @param {!FileSystemHandlePermissionDescriptor=} opt_descriptor
  * @return {!Promise<!PermissionState>}
+ * @see https://wicg.github.io/file-system-access/#api-filesystemhandle
  */
 FileSystemHandle.prototype.queryPermission = function(opt_descriptor) {};
 
 /**
  * @param {!FileSystemHandlePermissionDescriptor=} opt_descriptor
  * @return {!Promise<!PermissionState>}
+ * @see https://wicg.github.io/file-system-access/#api-filesystemhandle
  */
 FileSystemHandle.prototype.requestPermission = function(opt_descriptor) {};
 
 
 /**
- * @record
- * @struct
- * @see https://wicg.github.io/file-system-access/#dictdef-filesystemcreatewritableoptions
- */
-var FileSystemCreateWritableOptions = function() {};
-
-/** @type {undefined|boolean} */
-FileSystemCreateWritableOptions.prototype.keepExistingData;
-
-
-/**
- * @interface
- * @extends {FileSystemHandle}
- * @see https://wicg.github.io/file-system-access/#api-filesystemfilehandle
- */
-var FileSystemFileHandle = function() {};
-
-/**
- * @return {!Promise<!File>}
- */
-FileSystemFileHandle.prototype.getFile = function() {};
-
-/**
- * @param {!FileSystemCreateWritableOptions=} opt_options
- * @return {!Promise<!FileSystemWritableFileStream>}
- */
-FileSystemFileHandle.prototype.createWritable = function(opt_options) {};
-
-
-/**
- * @record
- * @struct
- * @see https://wicg.github.io/file-system-access/#dictdef-filesystemgetfileoptions
- */
-var FileSystemGetFileOptions = function() {};
-
-/** @type {undefined|boolean} */
-FileSystemGetFileOptions.prototype.create;
-
-
-/**
- * @record
- * @struct
- * @see https://wicg.github.io/file-system-access/#dictdef-filesystemgetdirectoryoptions
- */
-var FileSystemGetDirectoryOptions = function() {};
-
-/** @type {undefined|boolean} */
-FileSystemGetDirectoryOptions.prototype.create;
-
-
-/**
- * @record
- * @struct
- * @see https://wicg.github.io/file-system-access/#dictdef-filesystemremoveoptions
- */
-var FileSystemRemoveOptions = function() {};
-
-/** @type {undefined|boolean} */
-FileSystemRemoveOptions.prototype.recursive;
-
-
-/**
- * @interface
- * @extends {FileSystemHandle}
- * @extends {AsyncIterable<!Array<string|!FileSystemHandle>>}
- * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle
- * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
- */
-var FileSystemDirectoryHandle = function() {};
-
-/**
- * @param {string} name
- * @param {!FileSystemGetFileOptions=} opt_options
- * @return {!Promise<!FileSystemFileHandle>}
- */
-FileSystemDirectoryHandle.prototype.getFileHandle = function(name, opt_options) {};
-
-/**
- * @param {string} name
- * @param {!FileSystemGetDirectoryOptions=} opt_options
- * @return {!Promise<!FileSystemDirectoryHandle>}
- */
-FileSystemDirectoryHandle.prototype.getDirectoryHandle = function(name, opt_options) {};
-
-/**
- * @param {string} name
- * @param {!FileSystemRemoveOptions=} opt_options
- * @return {!Promise<void>}
- */
-FileSystemDirectoryHandle.prototype.removeEntry = function(name, opt_options) {};
-
-/**
- * @param {!FileSystemHandle} possibleDescendant
- * @return {!Promise<?Array<string>>}
- */
-FileSystemDirectoryHandle.prototype.resolve = function(possibleDescendant) {};
-
-/**
- * @return {!AsyncIterable<!Array<string|!FileSystemHandle>>}
- * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
- */
-FileSystemDirectoryHandle.prototype.entries = function() {};
-
-/**
- * @return {!AsyncIterable<!FileSystemHandle>}
- * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
- */
-FileSystemDirectoryHandle.prototype.values = function() {};
-
-/**
- * @return {!AsyncIterable<string>}
- * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
- */
-FileSystemDirectoryHandle.prototype.keys = function() {};
-
-
-/**
  * @typedef {string}
- * @see https://wicg.github.io/file-system-access/#enumdef-writecommandtype
+ * @see https://wicg.github.io/file-system-access/#local-filesystem
  */
-var WriteCommandType;
+var WellKnownDirectory;
 
 
 /**
- * @record
- * @struct
- * @see https://wicg.github.io/file-system-access/#dictdef-writeparams
+ * @typedef {!WellKnownDirectory|!FileSystemHandle}
+ * @see https://wicg.github.io/file-system-access/#local-filesystem
  */
-var WriteParams = function() {};
-
-/** @type {!WriteCommandType} */
-WriteParams.prototype.type;
-
-/** @type {undefined|?number} */
-WriteParams.prototype.size;
-
-/** @type {undefined|?number} */
-WriteParams.prototype.position;
-
-/** @type {undefined|!BufferSource|!Blob|?string} */
-WriteParams.prototype.data;
-
-
-/**
- * @typedef {!BufferSource|!Blob|string|!WriteParams}
- * @see https://wicg.github.io/file-system-access/#typedefdef-filesystemwritechunktype
- */
-var FileSystemWriteChunkType;
-
-
-/**
- * @constructor
- * @extends {WritableStream}
- * @see https://wicg.github.io/file-system-access/#filesystemwritablefilestream
- */
-var FileSystemWritableFileStream = function() {};
-
-/**
- * @param {!FileSystemWriteChunkType} data
- * @return {!Promise<void>}
- */
-FileSystemWritableFileStream.prototype.write = function(data) {};
-
-/**
- * @param {number} position
- * @return {!Promise<void>}
- */
-FileSystemWritableFileStream.prototype.seek = function(position) {};
-
-/**
- * @param {number} size
- * @return {!Promise<void>}
- */
-FileSystemWritableFileStream.prototype.truncate = function(size) {};
+var StartInDirectory;
 
 
 /**
@@ -277,6 +112,12 @@ FilePickerOptions.prototype.types;
 /** @type {undefined|boolean} */
 FilePickerOptions.prototype.excludeAcceptAllOption;
 
+/** @type {undefined|string} */
+FilePickerOptions.prototype.id;
+
+/** @type {undefined|!StartInDirectory} */
+FilePickerOptions.prototype.startIn;
+
 
 /**
  * @record
@@ -298,6 +139,9 @@ OpenFilePickerOptions.prototype.multiple;
  */
 var SaveFilePickerOptions = function() {};
 
+/** @type {undefined|?string} */
+SaveFilePickerOptions.prototype.suggestedName;
+
 
 /**
  * @record
@@ -305,6 +149,15 @@ var SaveFilePickerOptions = function() {};
  * @see https://wicg.github.io/file-system-access/#dictdef-directorypickeroptions
  */
 var DirectoryPickerOptions = function() {};
+
+/** @type {undefined|string} */
+DirectoryPickerOptions.prototype.id;
+
+/** @type {undefined|!StartInDirectory} */
+DirectoryPickerOptions.prototype.startIn;
+
+/** @type {undefined|!FileSystemPermissionMode} */
+DirectoryPickerOptions.prototype.mode;
 
 
 /**
@@ -329,3 +182,10 @@ Window.prototype.showSaveFilePicker = function(opt_options) {};
  * @see https://wicg.github.io/file-system-access/#local-filesystem
  */
 Window.prototype.showDirectoryPicker = function(opt_options) {};
+
+
+/**
+ * @return {!Promise<?FileSystemHandle>}
+ * @see https://wicg.github.io/file-system-access/#drag-and-drop
+ */
+DataTransferItem.prototype.getAsFileSystemHandle = function() {};
