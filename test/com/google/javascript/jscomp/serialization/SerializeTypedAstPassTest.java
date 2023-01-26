@@ -435,14 +435,14 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             "    return X;",
             "}());");
 
-    String code = sourceMapTestCode + "\n//# sourceMappingURL=relativedir/foo.js.map";
+    String code = sourceMapTestCode + "\n//# sourceMappingURL=foo.js.map";
 
     SerializationResult result = compile(code);
 
     LazyAst lazyAst = result.ast.getCodeAstList().get(0);
     String sourceMappingURL = lazyAst.getSourceMappingUrl();
 
-    assertThat(sourceMappingURL).isEqualTo("relativedir/foo.js.map");
+    assertThat(sourceMappingURL).isEqualTo("foo.js.map");
   }
 
   @Test

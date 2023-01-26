@@ -3282,6 +3282,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     SourceMapInput sourceMapInput = inputSourceMaps.getOrDefault(sourceFileName, null);
     String sourceMappingURL = sourceMapInput != null ? sourceMapInput.getOriginalPath() : null;
     if (sourceMappingURL != null && !sourceMappingURL.endsWith(".inline.map")) {
+      // Set sourceMappingURL as the name of the sourcemap file, not the original location/path of
+      // the sourcemap file on disk. E.g. turn "blaze-out/.../a.js.map" into "a.js.map"
+      sourceMappingURL =
+          sourceMappingURL.contains("/")
+              ? sourceMappingURL.substring(sourceMappingURL.lastIndexOf("/") + 1)
+              : sourceMappingURL;
       return sourceMappingURL;
     }
     return null;
