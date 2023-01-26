@@ -157,14 +157,16 @@ public class CompilerOptions implements Serializable {
 
     BrowserFeaturesetYear(int year) {
       checkState(
-          year == 2012 || (year >= 2018 && year <= 2022),
-          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2022 only",
+          year == 2012 || (year >= 2018 && year <= 2023),
+          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2023 only",
           year);
       this.year = year;
     }
 
     void setDependentValuesFromYear() {
-      if (year == 2022) {
+      if (year == 2023) {
+        setOutputFeatureSet(FeatureSet.BROWSER_2023);
+      } else if (year == 2022) {
         setOutputFeatureSet(FeatureSet.BROWSER_2022);
       } else if (year == 2021) {
         setOutputFeatureSet(FeatureSet.BROWSER_2021);
@@ -214,8 +216,7 @@ public class CompilerOptions implements Serializable {
     this.typedAstOutputFile = file;
   }
 
-  @Nullable
-  Path getTypedAstOutputFile() {
+  @Nullable Path getTypedAstOutputFile() {
     return this.typedAstOutputFile;
   }
 
@@ -702,7 +703,6 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
@@ -1092,7 +1092,7 @@ public class CompilerOptions implements Serializable {
    * or side-effected. Gets that can be proven to be pure may still be considered as such.
    *
    * <p>Recall that object-spread is capable of triggering getters. Since the syntax doesn't
-   * explicitly specifiy a property, it is essentailly impossible to prove it has no side-effects
+   * explicitly specify a property, it is essentailly impossible to prove it has no side-effects
    * without this assumption.
    */
   private boolean assumeGettersArePure = true;
@@ -1800,7 +1800,7 @@ public class CompilerOptions implements Serializable {
    * Sets the features that allowed to appear in the output. Any feature in the input that is not in
    * this output must be transpiled away.
    *
-   * <p>Note: this is an package private API since not every FeatureSet value can be properly output
+   * <p>Note: this is a package private API since not every FeatureSet value can be properly output
    * by the compiler without crashing. Both the `setBrowserFeaturesetYear` and `setLanguageOut` APIs
    * are supported alternatives.
    */
@@ -2274,7 +2274,6 @@ public class CompilerOptions implements Serializable {
   public void setExportTestFunctions(boolean exportTestFunctions) {
     this.exportTestFunctions = exportTestFunctions;
   }
-
 
   public void setSyntheticBlockStartMarker(String syntheticBlockStartMarker) {
     this.syntheticBlockStartMarker = syntheticBlockStartMarker;
