@@ -237,7 +237,7 @@ public final class CommandLineRunnerTest {
             "--source_map_include_content",
             "--translations_file",
             msgBundle.toString(),
-            "--js",
+            "--externs",
             externsFile.toString(),
             "--js",
             srcFile.toString());

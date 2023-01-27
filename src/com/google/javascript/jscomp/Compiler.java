@@ -86,6 +86,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2932,7 +2933,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @VisibleForTesting
   final SourceFile SYNTHETIC_EXTERNS_FILE =
-      SourceFile.fromCode(SYNTHETIC_FILE_NAME_PREFIX + "externs] ", "");
+      SourceFile.fromCode(SYNTHETIC_FILE_NAME_PREFIX + "externs] ", "", SourceKind.EXTERN);
 
   private @Nullable CompilerInput syntheticExternsInput; // matches SYNTHETIC_EXTERNS_FILE
 
