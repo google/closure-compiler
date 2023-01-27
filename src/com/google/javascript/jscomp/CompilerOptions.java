@@ -33,7 +33,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.errorprone.annotations.InlineMe;
 import com.google.errorprone.annotations.RestrictedApi;
 import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
@@ -1552,15 +1551,6 @@ public class CompilerOptions implements Serializable {
 
   private Reach inlineFunctionsLevel;
 
-  /** Use {@link #setInlineFunctions(Reach)} instead */
-  @InlineMe(
-      replacement = "this.setInlineFunctions(inlineFunctions ? Reach.ALL : Reach.NONE)",
-      imports = "com.google.javascript.jscomp.CompilerOptions.Reach")
-  @Deprecated
-  public final void setInlineFunctions(boolean inlineFunctions) {
-    this.setInlineFunctions(inlineFunctions ? Reach.ALL : Reach.NONE);
-  }
-
   /** Set the function inlining policy for the compiler. */
   public void setInlineFunctions(Reach reach) {
     this.inlineFunctionsLevel = reach;
@@ -2386,26 +2376,12 @@ public class CompilerOptions implements Serializable {
     this.defineReplacements.putAll(defineReplacements);
   }
 
-  @InlineMe(
-      replacement =
-          "this.setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations)")
-  @Deprecated
-  public final void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
-    setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations);
-  }
-
   public void setRewriteGlobalDeclarationsForTryCatchWrapping(boolean rewrite) {
     this.rewriteGlobalDeclarationsForTryCatchWrapping = rewrite;
   }
 
   public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
     this.cssRenamingMap = cssRenamingMap;
-  }
-
-  @InlineMe(replacement = "this.setCssRenamingSkiplist(skiplist)")
-  @Deprecated
-  public final void setCssRenamingWhitelist(Set<String> skiplist) {
-    setCssRenamingSkiplist(skiplist);
   }
 
   public void setCssRenamingSkiplist(Set<String> skiplist) {
