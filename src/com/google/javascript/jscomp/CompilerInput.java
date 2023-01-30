@@ -435,7 +435,11 @@ public class CompilerInput implements DependencyInfo {
             Node argument = n.getLastChild();
             switch (callee.getString()) {
               case "module":
-                loadFlags.put("module", "goog");
+                // only mark as a goog.module if this is not bundled, e.g.
+                // goog.loadModule(function(exports) {"use strict";goog.module('Foo');
+                if (parent.isExprResult() && parent.getParent().isModuleBody()) {
+                  loadFlags.put("module", "goog");
+                }
                 // Fall-through
               case "provide":
                 if (!argument.isStringLit()) {
@@ -459,7 +463,12 @@ public class CompilerInput implements DependencyInfo {
                 return;
 
               case "loadModule":
-                // Process the block of the loadModule argument
+                // Process the block of the loadModule argument if it's a function, as opposed to
+                // a string.
+                if (argument.isStringLit()) {
+                  throw new IllegalArgumentException(
+                      "Unsupported parse of goog.loadModule with string literal");
+                }
                 n = argument.getLastChild();
                 break;
 
