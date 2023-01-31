@@ -1979,6 +1979,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  /**
+   * This hints to other parts of the compiler as to whether every input will eventually require a
+   * full AST parse.
+   *
+   * <p>NOTE: this is just intended as a hint towards improving performance. Returning true or false
+   * shouldn't affect any non-performance behavior.
+   */
+  @Override
+  boolean preferRegexParser() {
+    return preferRegexParser;
+  }
+
+  /**
+   * Artificially sets the return value of `preferRegexParser`
+   *
+   * <p>Non-public and not exposed on AbstractCompiler, as for now we want to maintain control of
+   * when the regex vs. AST parser is used.
+   */
+  void setPreferRegexParser(boolean preferRegexParser) {
+    this.preferRegexParser = preferRegexParser;
+  }
+
+  // TODO(b/264916633): make this default to false.
+  private boolean preferRegexParser = true;
+
   void orderInputsWithLargeStack() {
     runInCompilerThread(
         () -> {
@@ -2035,8 +2060,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Find modules by recursively traversing dependencies starting with the entry points.
    *
-   * <p>Causes a regex parse of every file, and a full parse of every file reachable from the entry
-   * points (which would be required by later compilation passes regardless).
+   * <p>Triggers either a regex parse or full AST-based parse of each file in order to gather
+   * dependency information.
    *
    * <p>If the dependency mode is set to PRUNE_LEGACY, inputs which the regex parse does not
    * identify as ES modules and which do not contain any provide statements are considered to be

@@ -78,8 +78,9 @@ public class CheckMissingSemicolonTest extends CompilerTestCase {
 
   @Test
   public void testWarning_export() {
+    ignoreWarnings(DiagnosticGroups.MODULE_LOAD);
     testWarning("export var x = 3");
-    testWarning("export * from 'other'");
+    testWarning("export * from './other'");
   }
 
   @Test

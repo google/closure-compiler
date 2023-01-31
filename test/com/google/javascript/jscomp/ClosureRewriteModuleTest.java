@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_C
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -1092,7 +1093,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testGoogLoadModuleString() {
-    testSame("goog.loadModule(\"goog.module('a.b.c'); exports = class {};\");");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> testSame("goog.loadModule(\"goog.module('a.b.c'); exports = class {};\");"));
   }
 
   @Test

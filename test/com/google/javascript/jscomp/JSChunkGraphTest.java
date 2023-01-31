@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.truth.Truth8.assertThat;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static java.util.Collections.shuffle;
 import static org.junit.Assert.assertThrows;
 
@@ -461,7 +462,11 @@ public final class JSChunkGraphTest {
 
   // NOTE: The newline between the @provideGoog comment and the var statement is required.
   private static final String BASEJS =
-      "/** @provideGoog */\nvar COMPILED = false; var goog = goog || {}";
+      lines(
+          "/** @fileoverview",
+          " * @provideGoog */",
+          "var COMPILED = false;",
+          "var goog = goog || {}");
 
   @Test
   public void testManageDependenciesSortOnlyImpl() throws Exception {

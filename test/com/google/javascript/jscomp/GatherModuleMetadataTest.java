@@ -151,6 +151,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testModuleIdValidation() {
+    test(srcs("goog.module();"), error(ClosureRewriteModule.INVALID_MODULE_ID_ARG));
     test(srcs("goog.module('');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
     test(srcs("goog.module(' ');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
     test(srcs("goog.module('a..b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));

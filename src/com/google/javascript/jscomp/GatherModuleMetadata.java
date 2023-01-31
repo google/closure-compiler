@@ -387,6 +387,7 @@ public final class GatherModuleMetadata implements CompilerPass {
           addNamespace(currentModule, ModuleType.GOOG_PROVIDE, namespace, t, n);
         } else {
           t.report(n, ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);
+          currentModule.metadataBuilder.usesClosure(false);
         }
       } else if (getprop.matchesQualifiedName(GOOG_MODULE)) {
         currentModule.moduleType(ModuleType.GOOG_MODULE, t, n);
@@ -395,6 +396,7 @@ public final class GatherModuleMetadata implements CompilerPass {
           addNamespace(currentModule, ModuleType.GOOG_MODULE, namespace, t, n);
         } else {
           t.report(n, ClosureRewriteModule.INVALID_MODULE_ID_ARG);
+          currentModule.metadataBuilder.usesClosure(false);
         }
       } else if (getprop.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
         currentModule.recordDeclareLegacyNamespace(n);

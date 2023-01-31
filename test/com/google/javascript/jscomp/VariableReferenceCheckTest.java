@@ -456,7 +456,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testImportStar() {
-    testSame("import * as ns from './foo.js'");
+    testSame(
+        srcs(
+            SourceFile.fromCode("foo.js", ""),
+            SourceFile.fromCode("bar.js", "import * as ns from './foo.js'")));
   }
 
   @Test

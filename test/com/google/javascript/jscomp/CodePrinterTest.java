@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.DiagnosticGroups.MODULE_LOAD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -3568,19 +3569,21 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testImports() {
-    assertPrintSame("import x from\"foo\"");
-    assertPrintSame("import\"foo\"");
-    assertPrintSame("import x,{a as b}from\"foo\"");
-    assertPrintSame("import{a as b,c as d}from\"foo\"");
-    assertPrintSame("import x,{a}from\"foo\"");
-    assertPrintSame("import{a,c}from\"foo\"");
-    assertPrintSame("import x,*as f from\"foo\"");
-    assertPrintSame("import*as f from\"foo\"");
+    diagnosticsToIgnore = ImmutableList.of(MODULE_LOAD); // allow importing nonexistent modules
+    assertPrintSame("import x from\"./foo\"");
+    assertPrintSame("import\"./foo\"");
+    assertPrintSame("import x,{a as b}from\"./foo\"");
+    assertPrintSame("import{a as b,c as d}from\"./foo\"");
+    assertPrintSame("import x,{a}from\"./foo\"");
+    assertPrintSame("import{a,c}from\"./foo\"");
+    assertPrintSame("import x,*as f from\"./foo\"");
+    assertPrintSame("import*as f from\"./foo\"");
   }
 
   @Test
   public void testExports() {
     // export declarations
+    diagnosticsToIgnore = ImmutableList.of(MODULE_LOAD); // allow importing nonexistent modules
     assertPrintSame("export var x=1");
     assertPrintSame("export var x;export var y");
     assertPrintSame("export let x=1");
@@ -3590,13 +3593,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("export class f{}export class b{}");
 
     // export all from
-    assertPrint("export * from 'a.b.c'", "export*from\"a.b.c\"");
+    assertPrint("export * from './a.b.c'", "export*from\"./a.b.c\"");
 
     // from
-    assertPrintSame("export{a}from\"a.b.c\"");
-    assertPrintSame("export{a as x}from\"a.b.c\"");
-    assertPrintSame("export{a,b}from\"a.b.c\"");
-    assertPrintSame("export{a as x,b as y}from\"a.b.c\"");
+    assertPrintSame("export{a}from\"./a.b.c\"");
+    assertPrintSame("export{a as x}from\"./a.b.c\"");
+    assertPrintSame("export{a,b}from\"./a.b.c\"");
+    assertPrintSame("export{a as x,b as y}from\"./a.b.c\"");
     assertPrintSame("export{a}");
     assertPrintSame("export{a as x}");
 

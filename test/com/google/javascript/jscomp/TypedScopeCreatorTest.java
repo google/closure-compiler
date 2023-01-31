@@ -38,7 +38,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.deps.JsFileLineParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.Export;
@@ -5241,8 +5240,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testGoogModuleMissingNamespaceDoesntCrash() {
     getOptions().setContinueAfterErrors(true);
-    testError("goog.module(); const x = 0;", JsFileLineParser.PARSE_ERROR);
-    testError("goog.module(0); const x = 0;", JsFileLineParser.PARSE_ERROR);
+    testError("goog.module(); const x = 0;", ClosureRewriteModule.INVALID_MODULE_ID_ARG);
+    testError("goog.module(0); const x = 0;", ClosureRewriteModule.INVALID_MODULE_ID_ARG);
   }
 
   @Test

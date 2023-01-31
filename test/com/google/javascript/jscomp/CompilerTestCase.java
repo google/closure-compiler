@@ -2003,6 +2003,7 @@ public abstract class CompilerTestCase {
     if (!webpackModulesById.isEmpty()) {
       compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     }
+    compiler.setPreferRegexParser(false);
     return compiler;
   }
 

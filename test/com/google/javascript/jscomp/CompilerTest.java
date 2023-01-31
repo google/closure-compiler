@@ -2346,7 +2346,7 @@ public final class CompilerTest {
         SourceFile.fromCode(
             "base.js",
             lines(
-                "/** @provideGoog */",
+                "/** @fileoverview @provideGoog */",
                 "/** @const */ var goog = goog || {};",
                 "var COMPILED = false;")));
     sources.add(

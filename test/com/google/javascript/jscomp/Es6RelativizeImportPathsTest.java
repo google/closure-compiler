@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.deps.ModuleLoader.INVALID_MODULE_PATH;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.common.collect.ImmutableList;
@@ -86,6 +87,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
   @Test
   public void testAbsolutePathsStayTheSame() {
     // Absolute means that with a scheme, not those starting with "/"
+    ignoreWarnings(INVALID_MODULE_PATH);
     testSame(
         srcs(
             SourceFile.fromCode(

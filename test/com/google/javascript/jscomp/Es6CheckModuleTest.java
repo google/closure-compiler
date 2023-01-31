@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,7 +46,7 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
   @Test
   public void testEs6ThisWithImportModule() {
     testWarning(
-        lines("import ln from 'other.x'", "if (x) {", "  alert(this);", "}"),
+        lines("import ln from './other/x'", "if (x) {", "  alert(this);", "}"),
         Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
   }
 

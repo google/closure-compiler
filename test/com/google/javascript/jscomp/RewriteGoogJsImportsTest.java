@@ -37,7 +37,8 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   // JsFileRegexParser determines if this file is base.js by looking at the first comment of the
   // file.
   private static final SourceFile BASE =
-      SourceFile.fromCode("/closure/base.js", "/** @provideGoog */");
+      SourceFile.fromCode(
+          "/closure/base.js", lines("/**", " * @fileoverview", " * @provideGoog", " */"));
 
   private static final SourceFile GOOG =
       SourceFile.fromCode(

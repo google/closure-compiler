@@ -260,6 +260,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Prints a node to source code. */
   public abstract String toSource(Node root);
 
+  /**
+   * Whether to prefer using {@link JSFileRegexParser} when calculating {@link DependencyInfo} as
+   * opposed to triggering an AST-based parse.
+   *
+   * <p>This is primarily for performance reasons. The two should produce the same results except in
+   * some edge cases.
+   */
+  abstract boolean preferRegexParser();
+
   /** Gets a default error reporter for injecting into Rhino. */
   abstract ErrorReporter getDefaultErrorReporter();
 

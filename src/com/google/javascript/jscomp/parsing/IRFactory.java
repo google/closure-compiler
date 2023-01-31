@@ -1309,7 +1309,9 @@ class IRFactory {
       if (!call.isCall()) {
         return false;
       }
-      return GOOG_MODULE.matches(call.getFirstChild());
+      return GOOG_MODULE.matches(call.getFirstChild())
+          && call.hasTwoChildren()
+          && call.getSecondChild().isStringLit();
     }
 
     /**

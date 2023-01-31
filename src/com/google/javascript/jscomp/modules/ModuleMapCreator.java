@@ -255,7 +255,13 @@ public class ModuleMapCreator implements CompilerPass {
         break;
       case GOOG_MODULE:
       case LEGACY_GOOG_MODULE:
-        processor = closureModuleProcessor;
+        if (moduleMetadata.googNamespaces().size() == 1) {
+          processor = closureModuleProcessor;
+        } else {
+          // this indicates some malformed Closure module. We should already have reported an
+          // error.
+          processor = nonEsModuleProcessor;
+        }
         break;
       default:
         processor = nonEsModuleProcessor;
