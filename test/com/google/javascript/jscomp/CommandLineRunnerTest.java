@@ -2835,6 +2835,55 @@ public final class CommandLineRunnerTest {
                 + "--instrument_for_coverage_option is set to Production");
   }
 
+  @Test
+  public void testBundleOutput_bundlesGoogModule() throws IOException {
+    // Create a path for the final output
+    File bundledFile = temporaryFolder.newFile("bundle.js");
+
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "goog.module('foo'); var b;");
+
+    args.add("--compilation_level=BUNDLE");
+    args.add("--dependency_mode=NONE");
+    args.add("--js_output_file");
+    args.add(bundledFile.getPath());
+
+    compileJsFiles("", jsFile1, jsFile2);
+
+    String bundledJs = java.nio.file.Files.readString(bundledFile.toPath());
+    String expected =
+        lines(
+            "//" + jsFile1.getValue(),
+            "var a;",
+            "//" + jsFile2.getValue(),
+            "goog.loadModule(function(exports) {'use strict';goog.module('foo'); var b;",
+            ";return exports;});",
+            "\n");
+    assertThat(bundledJs).isEqualTo(expected);
+  }
+
+  @Test
+  public void testBundleOutput_ignoresSyntaxErrors() throws IOException {
+    // Verify that if bundling, the compiler doesn't run a full parse and thus doesn't report
+    // syntax errors.
+
+    // Create a path for the final output
+    File bundledFile = temporaryFolder.newFile("bundle.js");
+
+    FlagEntry<JsSourceType> jsFile = createJsFile("test1", "var a; syntax error!");
+
+    args.add("--compilation_level=BUNDLE");
+    args.add("--dependency_mode=NONE");
+    args.add("--js_output_file");
+    args.add(bundledFile.getPath());
+
+    compileJsFiles("", jsFile);
+
+    String bundledJs = java.nio.file.Files.readString(bundledFile.toPath());
+    String expected = lines("//" + jsFile.getValue(), "var a; syntax error!\n");
+    assertThat(bundledJs).isEqualTo(expected);
+  }
+
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
@@ -3278,6 +3327,7 @@ public final class CommandLineRunnerTest {
       assertThat(compiler.getErrors()).hasSize(1);
       assertError(compiler.getErrors().get(0)).hasType(expectedError);
     }
+    lastCommandLineRunner = runner;
   }
 
   private String compile(String inputString, List<String> args) {

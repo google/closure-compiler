@@ -487,6 +487,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (config.printTree || config.printTreeJson) {
       options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_ALL_COMMENTS);
     }
+    if (config.skipNormalOutputs) {
+      // If skipping normal outputs, it's unnecessary to do a full AST parse of each input file.
+      // The regex parser may still run if ordering/pruning inputs.
+      compiler.setPreferRegexParser(true);
+    }
   }
 
   @GwtIncompatible("Unnecessary")

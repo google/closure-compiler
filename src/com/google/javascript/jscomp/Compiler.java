@@ -421,6 +421,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // description.
       options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     }
+    // If pruning many unused inputs, it's possible that it's faster to regex-parse everything and
+    // AST-parse only the non-pruned inputs, rather than just AST-parse everything once.
+    this.preferRegexParser = this.preferRegexParser || options.getDependencyOptions().shouldPrune();
   }
 
   public void printConfig() {
@@ -2001,8 +2004,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.preferRegexParser = preferRegexParser;
   }
 
-  // TODO(b/264916633): make this default to false.
-  private boolean preferRegexParser = true;
+  private boolean preferRegexParser = false;
 
   void orderInputsWithLargeStack() {
     runInCompilerThread(
