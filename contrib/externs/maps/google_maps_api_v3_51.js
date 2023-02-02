@@ -13126,7 +13126,7 @@ google.maps.marker.AdvancedMarkerViewOptions = function() {};
  * works on both raster and vector maps, however,
  * <code>AdvancedMarkerView</code> to base map&#39;s label collision only works
  * on vector maps.
- * @type {?google.maps.CollisionBehavior|undefined}
+ * @type {undefined|null|!google.maps.CollisionBehavior}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.collisionBehavior;
 
@@ -13138,7 +13138,7 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.collisionBehavior;
  * <code>AdvancedMarkerView</code> will move the DOM element and cause the
  * previous <code>AdvancedMarkerView</code> to look empty.
  * @default {@link google.maps.marker.PinView.element}
- * @type {?Element|undefined}
+ * @type {undefined|null|!Element}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.content;
 
@@ -13147,7 +13147,7 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.content;
  * <p><strong>Note</strong>: <code>AdvancedMarkerView</code> with altitude is
  * not draggable.
  * @default <code>false</code>
- * @type {?boolean|undefined}
+ * @type {undefined|null|boolean}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.draggable;
 
@@ -13162,7 +13162,7 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.element;
  * required to display the <code>AdvancedMarkerView</code> and can be provided
  * by setting {@link google.maps.marker.AdvancedMarkerView.map} if not provided
  * at the construction.
- * @type {?google.maps.Map|undefined}
+ * @type {undefined|null|!google.maps.Map}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.map;
 
@@ -13175,7 +13175,7 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.map;
  * google.maps.marker.AdvancedMarkerView.position} if not provided at the
  * construction. <p><strong>Note</strong>: <code>AdvancedMarkerView</code> with
  * altitude is only supported on vector maps.
- * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|?google.maps.LatLngAltitude|?google.maps.LatLngAltitudeLiteral|undefined}
+ * @type {undefined|null|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.position;
 
@@ -13183,7 +13183,7 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.position;
  * Rollover text. If provided, an accessibility text (e.g. for use with screen
  * readers) will be added to the <code>AdvancedMarkerView</code> with the
  * provided value.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.title;
 
@@ -13198,7 +13198,7 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.title;
  * between {@link
  * google.maps.CollisionBehavior.OPTIONAL_AND_HIDES_LOWER_PRIORITY} Advanced
  * Markers. A higher <code>zIndex</code> value indicates higher priority.
- * @type {?number|undefined}
+ * @type {undefined|null|number}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.zIndex;
 
