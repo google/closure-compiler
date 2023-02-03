@@ -424,6 +424,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // If pruning many unused inputs, it's possible that it's faster to regex-parse everything and
     // AST-parse only the non-pruned inputs, rather than just AST-parse everything once.
     this.preferRegexParser = this.preferRegexParser || options.getDependencyOptions().shouldPrune();
+
+    if (options.getMergedPrecompiledLibraries()
+        && options.getDependencyOptions().needsManagement()) {
+      throw new IllegalArgumentException(
+          "Using precompiled libraries (i.e. TypedAST) is incompatible with flags that "
+              + "automatically order/prune dependencies: "
+              + options.getDependencyOptions()
+              + "");
+    }
   }
 
   public void printConfig() {
@@ -548,6 +557,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     ImmutableSet<SourceFile> files =
         ImmutableSet.<SourceFile>builder().addAll(externs).addAll(sources).build();
 
+    options.setMergedPrecompiledLibraries(true);
+
     this.initOptions(options);
     this.init(externs, sources, options);
     this.initTypedAstFilesystem(files, typedAstListStream, options);
@@ -573,6 +584,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     ImmutableSet<SourceFile> files = filesBuilder.build();
 
+    options.setMergedPrecompiledLibraries(true);
+
     this.initOptions(options);
     this.initModules(externs, modules, options);
     this.initTypedAstFilesystem(files, typedAstListStream, options);
@@ -585,8 +598,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       CompilerOptions options) {
     checkState(this.typedAstFilesystem == null);
     maybeSetTracker();
-
-    options.setMergedPrecompiledLibraries(true);
 
     this.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
     // To speed up builds that don't run type-based optimizations, skip type deserialization

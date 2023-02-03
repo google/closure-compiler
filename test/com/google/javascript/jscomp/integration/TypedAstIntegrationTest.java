@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,8 +29,10 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CrossChunkMethodMotion;
+import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSChunk;
+import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
@@ -73,6 +76,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -93,6 +97,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -139,6 +144,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
     options.setDisambiguateProperties(true);
 
     Compiler compiler = compileTypedAstShards(options);
@@ -163,6 +169,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
     options.setDisambiguateProperties(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -256,6 +263,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -281,6 +289,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -313,6 +322,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -329,6 +339,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -348,6 +359,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -374,6 +386,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -458,6 +471,27 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void dependencyModePruningForGoogModules_banned() throws IOException {
+    precompileLibrary(
+        extern(new TestExternsBuilder().addClosureExterns().build()),
+        code("goog.module('keepMe'); const x = 1;"), // input_1
+        code("goog.module('entryPoint'); goog.require('keepMe');"), // input_2
+        code("goog.module('dropMe'); const x = 3;")); // input_3
+
+    CompilerOptions options = new CompilerOptions();
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("entryPoint"))));
+
+    // TODO(b/219588952): if we decide to support this, verify that JSCompiler no longer incorrectly
+    // prunes the 'keepMe' module.
+    // This might be fixable by just removing module rewriting from the 'checks' phase.
+    Exception ex =
+        assertThrows(IllegalArgumentException.class, () -> compileTypedAstShards(options));
+    assertThat(ex).hasMessageThat().contains("mode=PRUNE");
   }
 
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
