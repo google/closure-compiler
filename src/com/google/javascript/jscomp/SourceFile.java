@@ -122,25 +122,46 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   }
 
   /**
-   * @return the number of lines in the source file
+   * Returns the number of lines in the source file.
+   *
+   * <p>NOTE: this may be stale if the SourceFile has been {@link #clearCachedSource cleared} and
+   * the file has changed on disk. If being fully accurate is required call {@link #getCode} and
+   * then call this method.
    */
   int getNumLines() {
     if (numLines < 0) {
       // A negative value means we need to read in the code and calculate this information.
       // Otherwise, assume the file hasn't changed since we read it.
-      findLineOffsets();
+      try {
+        var unused = getCode();
+      } catch (IOException e) {
+        // this is consistent with old behavior of this method.
+        return 0;
+      }
     }
     return numLines;
   }
 
   /**
-   * @return the number of bytes in the source file
+   * Returns the number of bytes in the source file
+   *
+   * <p>Oddly, bytes is defined as 'length of code as a Java String' this is accurate assuming files
+   * only use Latin1 characters but may be inaccurate outside of that.
+   *
+   * <p>NOTE: this may be stale if the SourceFile has been {@link #clearCachedSource cleared} and
+   * the file has changed on disk. If being fully accurate is required call {@link #getCode} and
+   * then call this method.
    */
   int getNumBytes() {
     if (numBytes < 0) {
       // A negative value means we need to read in the code and calculate this information.
       // Otherwise, assume the file hasn't changed since we read it.
-      findLineOffsets();
+      try {
+        var unused = getCode();
+      } catch (IOException e) {
+        // this is consistent with old behavior of this method.
+        return 0;
+      }
     }
     return numBytes;
   }
@@ -156,28 +177,22 @@ public final class SourceFile implements StaticSourceFile, Serializable {
         localCode = this.getCode();
       } catch (IOException e) {
         localCode = "";
+        this.lineOffsets = new int[1];
+        return;
       }
     }
 
-    int[] offsets = new int[256]; // default is arbitrary. Assume most files are around 200 lines
+    // getCode() updates numLines, so this is always in sync with the code.
+    int[] offsets = new int[this.numLines];
     int index = 1; // start at 1 since the offset for line 0 is always at byte 0
     int offset = 0;
     while ((offset = localCode.indexOf('\n', offset)) != -1) {
       // +1 because this is the offset of the next line which is one past the newline
       offset++;
       offsets[index++] = offset;
-      if (index == offsets.length) {
-        offsets = Arrays.copyOf(offsets, offsets.length * 2);
-      }
     }
-    this.lineOffsets = index == offsets.length ? offsets : Arrays.copyOf(offsets, index);
-
-    // Update numLines and numBytes
-    // NOTE: In some edit/refresh development workflows, we may end up re-reading the file
-    //       and getting different numbers than we got last time we read it, so we should
-    //       not have checkState() calls here to assert they have not changed.
-    this.numLines = index;
-    this.numBytes = localCode.length();
+    checkState(index == offsets.length);
+    this.lineOffsets = offsets;
   }
 
   /** Gets all the code in this source file. */
@@ -223,8 +238,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     this.code = null;
     // Force recalculation of all of these values when they are requested.
     this.lineOffsets = null;
-    this.numLines = -1;
-    this.numBytes = -1;
 
     if (sourceCode != null) {
       if (sourceCode.startsWith(UTF8_BOM)) {
@@ -232,6 +245,20 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       this.code = sourceCode;
+      // Update numLines and numBytes
+      // NOTE: In some edit/refresh development workflows, we may end up re-reading the file
+      //       and getting different numbers than we got last time we read it, so we should
+      //       not have checkState() calls here to assert they have not changed.
+      // Misleading variable name.  This really stores the 'number of utf16' code points which is
+      // not the same as number of bytes.
+      this.numBytes = sourceCode.length();
+      int numLines = 1; // there is always at least one line
+      int index = 0;
+      while ((index = sourceCode.indexOf('\n', index)) != -1) {
+        index++;
+        numLines++;
+      }
+      this.numLines = numLines;
     }
   }
 
@@ -305,6 +332,12 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    *     null} if it does not exist, or if there was an IO exception.
    */
   public @Nullable String getLine(int lineNumber) {
+    String js;
+    try {
+      js = getCode();
+    } catch (IOException e) {
+      return null;
+    }
     findLineOffsets();
     if (lineNumber > lineOffsets.length) {
       return null;
@@ -315,15 +348,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
 
     int pos = lineOffsets[lineNumber - 1];
-    String js = "";
-    try {
-      // NOTE(nicksantos): Right now, this is optimized for few warnings.
-      // This is probably the right trade-off, but will be slow if there
-      // are lots of warnings in one file.
-      js = getCode();
-    } catch (IOException e) {
-      return null;
-    }
 
     if (js.indexOf('\n', pos) == -1) {
       // If next new line cannot be found, there are two cases
@@ -350,6 +374,12 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    *     exception.
    */
   public @Nullable Region getLines(int lineNumber, int length) {
+    String js;
+    try {
+      js = getCode();
+    } catch (IOException e) {
+      return null;
+    }
     findLineOffsets();
     if (lineNumber > lineOffsets.length) {
       return null;
@@ -360,13 +390,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
     if (length <= 0) {
       length = 1;
-    }
-
-    String js = "";
-    try {
-      js = getCode();
-    } catch (IOException e) {
-      return null;
     }
 
     int pos = lineOffsets[lineNumber - 1];
