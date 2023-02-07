@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
@@ -71,7 +72,9 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   // CFG nodes that come first lexically should be visited first, because
   // they will often be executed first in the source program.
   private final Comparator<DiGraphNode<Node, Branch>> priorityComparator =
-      Comparator.comparingInt(digraphNode -> astPosition.get(digraphNode.getValue()));
+      Comparator.comparingInt(
+          digraphNode ->
+              checkNotNull(astPosition.get(digraphNode.getValue()), digraphNode.getValue()));
 
   private int astPositionCounter;
   private int priorityCounter;
@@ -257,7 +260,22 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    astPosition.put(n, astPositionCounter++);
+    if (shouldTraverseIntoChildren(n, parent)) {
+      // Any AST node that will later have a corresponding CFG node must be in astPosition.
+      // To avoid having astPosition grow too large, we exclude AST nodes that are not traversed
+      // further, as they usually are not put in the CFG.
+      astPosition.put(n, astPositionCounter++);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns whether the children of this node should be traversed as part of this control-flow
+   * analysis, i.e. whether the control-flow graph being built may require any edges into children
+   * of this node.
+   */
+  private boolean shouldTraverseIntoChildren(Node n, Node parent) {
     switch (n.getToken()) {
       case FUNCTION:
         if (shouldTraverseFunctions || n == cfg.getEntry().getValue()) {
@@ -295,7 +313,13 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
         case FOR_OF:
         case FOR_AWAIT_OF:
           // Only traverse the body of the for loop.
-          return n == parent.getLastChild();
+          boolean shouldTraverseForChild = n == parent.getLastChild();
+          if (!shouldTraverseForChild) {
+            // The control-flow graph contains edges from a FOR node to all its children, even
+            // though only the body is actually traversed. So put the other children in astPosition.
+            astPosition.put(n, astPositionCounter++);
+          }
+          return shouldTraverseForChild;
 
         case DO:
           // Only traverse the body of the do-while.
