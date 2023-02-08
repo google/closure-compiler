@@ -52,6 +52,16 @@ testSuite({
     assertObjectEquals([], result);
   },
 
+  testFlatMap_sparseArray() {
+    const arr = [1, 2, , 3, 4];
+    assertObjectEquals([1, 2, 3, 4], arr.flatMap(x => x));
+  },
+
+  testFlatMap_arrayWithNullAndUndefined() {
+    const arr = [1, 2, undefined, null, 4];
+    assertObjectEquals([1, 2, undefined, null, 4], arr.flatMap(x => x));
+  },
+
   testFlatMap_thisArg() {
     let result = [1].flatMap(function() {
       return [this.x];

@@ -32,6 +32,16 @@ testSuite({
     assertObjectEquals([1, 2, 3, 4, [5, 6]], arr.flat(1));
   },
 
+  test_sparseArray() {
+    const arr = [1, 2, , 3, 4];
+    assertObjectEquals([1, 2, 3, 4], arr.flat());
+  },
+
+  test_arrayWithNullAndUndefined() {
+    const arr = [1, 2, 3, undefined, null, 4];
+    assertObjectEquals([1, 2, 3, undefined, null, 4], arr.flat());
+  },
+
   testFlat_emptyArray() {
     var arr = [];
     assertObjectEquals([], arr.flat());
