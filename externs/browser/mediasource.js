@@ -106,7 +106,7 @@ SourceBuffer.prototype.removeEventListener = function(
 SourceBuffer.prototype.dispatchEvent = function(evt) {};
 
 /** @type {string} */
-SourceBuffer.prototype.appendMode;
+SourceBuffer.prototype.mode;
 
 /** @type {boolean} */
 SourceBuffer.prototype.updating;
