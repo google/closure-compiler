@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARK
 import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_DEFINE_ON_LET;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_MODIFIES_ANNOTATION;
-import static com.google.javascript.jscomp.CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.JSDOC_IN_BLOCK_COMMENT;
 import static com.google.javascript.jscomp.CheckJSDoc.JSDOC_ON_RETURN;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
@@ -957,37 +956,33 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidAnnotation1() {
-    testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  public void testNoSideEffectsAnnotation1() {
+    testSame("/** @nosideeffects */ function foo() {}");
   }
 
   @Test
-  public void testInvalidAnnotation2() {
-    testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  public void testNoSideEffectsAnnotation2() {
+    testSame("var f = /** @nosideeffects */ function() {}");
   }
 
   @Test
-  public void testInvalidAnnotation3() {
-    testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  public void testNoSideEffectsAnnotation3() {
+    testSame("/** @nosideeffects */ var f = function() {}");
   }
 
   @Test
-  public void testInvalidAnnotation4() {
-    testError(
-        "var f = function() {};" + "/** @nosideeffects */ f.x = function() {}",
-        INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  public void testNoSideEffectsAnnotation4() {
+    testSame("var f = function() {};" + "/** @nosideeffects */ f.x = function() {}");
   }
 
   @Test
-  public void testInvalidAnnotation5() {
-    testError(
-        "var f = function() {};" + "f.x = /** @nosideeffects */ function() {}",
-        INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  public void testNoSideEffectsAnnotation5() {
+    testSame("var f = function() {};" + "f.x = /** @nosideeffects */ function() {}");
   }
 
   @Test
-  public void testInvalidAnnotation_withES6Modules() {
-    testError("export /** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  public void testNoSideEffectsAnnotations() {
+    testSame("export /** @nosideeffects */ function foo() {}");
   }
 
   @Test

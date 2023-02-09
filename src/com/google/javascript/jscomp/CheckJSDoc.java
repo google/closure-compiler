@@ -699,11 +699,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     }
   }
 
-  /**
-   * Check that @nosideeeffects annotations are only present in externs.
-   */
+  /** Check that @modifies annotations are only present in externs. */
   private void validateNoSideEffects(Node n, JSDocInfo info) {
-    // Cannot have @modifies or @nosideeffects in regular (non externs) js. Report errors.
+    // Cannot have @modifies in regular (non externs) js. Report errors.
     if (info == null) {
       return;
     }
@@ -714,9 +712,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
 
     if (info.hasSideEffectsArgumentsAnnotation() || info.modifiesThis()) {
       report(n, INVALID_MODIFIES_ANNOTATION);
-    }
-    if (info.isNoSideEffects()) {
-      report(n, INVALID_NO_SIDE_EFFECT_ANNOTATION);
     }
   }
 

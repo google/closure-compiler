@@ -658,10 +658,27 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         allFunctionCalls.add(node);
       }
 
+      if (node.isFunction()) {
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(node);
+        if (jsdoc != null && jsdoc.isNoSideEffects()) {
+          // Treat all names (both local aliases and exported names) as if they don't have side
+          // effects.
+          for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(node)) {
+            summary.setIsArtificiallyPure(true);
+            summary.bitmask = 0; // no side effects
+          }
+        }
+      }
+
       Node root = this.functionScopeStack.getLast().root;
       if (root != null) {
-        // We only need to look at nodes in function scopes.
         for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(root)) {
+          if (summary.isArtificiallyPure()) {
+            // Ignore node side effects for summaries that have been marked as artificially pure.
+            // We can't skip traversing the nodes in case an artificially pure node contains other
+            // function definitions.
+            continue;
+          }
           updateSideEffectsForNode(checkNotNull(summary), traversal, node);
         }
       }
@@ -1197,6 +1214,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * @return Returns true if the propagation changed the side effects on the caller.
      */
     boolean propagate(AmbiguatedFunctionSummary callee, AmbiguatedFunctionSummary caller) {
+      if (callee.isArtificiallyPure() || caller.isArtificiallyPure()) {
+        // Pure callees should never propagate their side effects to their callers
+        //   - This would already happen - this condition is just a shortcut.
+        // Pure callers should never receive side effects propagated from their callees
+        return false;
+      }
       int initialCallerFlags = caller.bitmask;
 
       if (callerIsAlias) {
@@ -1256,6 +1279,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     // The side effect flags for this set of functions.
     // TODO(nickreid): Replace this with a `Node.SideEffectFlags`.
     private int bitmask = 0;
+    private boolean isArtificiallyPure = false;
 
     /** Adds a new summary node to {@code graph}, storing the node and returning the summary. */
     static AmbiguatedFunctionSummary createInGraph(
@@ -1271,6 +1295,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     @CanIgnoreReturnValue
     private AmbiguatedFunctionSummary setMask(int mask) {
+      checkState(!isArtificiallyPure, "Artificially pure summaries should not be modified");
       bitmask |= mask;
       return this;
     }
@@ -1323,6 +1348,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     boolean hasNoFlagsSet() {
       return this.bitmask == 0;
+    }
+
+    void setIsArtificiallyPure(boolean isArtificiallyPure) {
+      this.isArtificiallyPure = isArtificiallyPure;
+    }
+
+    boolean isArtificiallyPure() {
+      return isArtificiallyPure;
     }
 
     @Override

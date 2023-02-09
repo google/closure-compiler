@@ -548,6 +548,46 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMultipleFunctionDefinitionsOnlyOneWithNoSideEffectsJsDoc() {
+    String source =
+        lines(
+            "let b = undefined;",
+            "if (true) {",
+            "  b = /** @nosideeffects */(function(){throw 0;});",
+            "} else {",
+            "  b = () => {}",
+            "}",
+            "b()");
+    assertPureCallsMarked(source, ImmutableList.of("b"));
+  }
+
+  @Test
+  public void testNoSideEffectsNoPropagationFromOtherCalls() {
+    String source =
+        lines(
+            "var hasSideEffects = function() { throw 0; }",
+            "var foo = /** @nosideeffects */ function(){ hasSideEffects(); return 0; };",
+            "var bar = function(){ hasSideEffects(); return 0; };",
+            "foo();",
+            "bar();");
+    // bar is not marked as pure because it inherits side effects from hasSideEffects
+    assertPureCallsMarked(source, ImmutableList.of("foo"));
+  }
+
+  @Test
+  public void testNoSideEffectsNoPropagationToOtherCalls() {
+    String source =
+        lines(
+            "var liesAboutSideEffects = /** @nosideeffects */ function() { throw 0; }",
+            "var foo = function(){ liesAboutSideEffects(); return 0; };",
+            "var bar = function(){ liesAboutSideEffects(); return 0; };",
+            "foo();",
+            "bar();");
+    assertPureCallsMarked(
+        source, ImmutableList.of("liesAboutSideEffects", "liesAboutSideEffects", "foo", "bar"));
+  }
+
+  @Test
   public void testAnnotationInExternStubs1() {
     // In the case where a property is defined first as a stub and then with a FUNCTION:
     // we have to make a conservative assumption about the behaviour of the extern, since the stub
