@@ -8475,6 +8475,36 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testAssignReadonlyArrayValueFails() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource("const foo = /** @type {!ReadonlyArray<number>} */ ([5]); " + "foo[0] = 3; ")
+        .diagnosticsAreErrors()
+        .addDiagnostic(TypeCheck.PROPERTY_ASSIGNMENT_TO_READONLY_VALUE)
+        .run();
+  }
+
+  @Test
+  public void testAssignReadonlyArrayValueFailsWithoutTypeParameter() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource("const foo = /** @type {!ReadonlyArray} */ ([5]); " + "foo[0] = 3; ")
+        .diagnosticsAreErrors()
+        .addDiagnostic(TypeCheck.PROPERTY_ASSIGNMENT_TO_READONLY_VALUE)
+        .run();
+  }
+
+  @Test
+  public void testAssignReadonlyArrayLengthFails() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource("const foo = /** @type {!ReadonlyArray<number>} */ ([5]); " + "foo.length = 0; ")
+        .diagnosticsAreErrors()
+        .addDiagnostic(TypeCheck.PROPERTY_ASSIGNMENT_TO_READONLY_VALUE)
+        .run();
+  }
+
+  @Test
   public void testOr1() {
     newTest()
         .addSource(

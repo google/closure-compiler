@@ -38,6 +38,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -67,6 +68,7 @@ import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
+import com.google.javascript.rhino.jstype.UnionType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -316,56 +318,62 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_SAME_INTERFACE_MULTIPLE_IMPLEMENTS",
           "Cannot @implement the same interface more than once\nRepeated interface: {0}");
 
+  static final DiagnosticType PROPERTY_ASSIGNMENT_TO_READONLY_VALUE =
+      DiagnosticType.error(
+          "JSC_PROPERTY_ASSIGNMENT_TO_READONLY_VALUE",
+          "Should not assign to a property of readonly type ''{0}''");
+
   // If a diagnostic is disabled by default, do not add it in this list
   // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
   static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
-          DETERMINISTIC_TEST,
-          INEXISTENT_ENUM_ELEMENT,
-          INEXISTENT_PROPERTY,
-          POSSIBLE_INEXISTENT_PROPERTY,
-          INEXISTENT_PROPERTY_WITH_SUGGESTION,
-          NOT_A_CONSTRUCTOR,
-          INSTANTIATE_ABSTRACT_CLASS,
-          BIT_OPERATION,
-          UNARY_OPERATION,
-          BINARY_OPERATION,
-          CONFLICTING_GETTER_SETTER_TYPE,
-          NOT_CALLABLE,
-          CONSTRUCTOR_NOT_CALLABLE,
-          FUNCTION_MASKS_VARIABLE,
-          MULTIPLE_VAR_DEF,
-          INVALID_INTERFACE_MEMBER_DECLARATION,
-          INTERFACE_METHOD_NOT_EMPTY,
-          CONFLICTING_EXTENDED_TYPE,
-          CONFLICTING_IMPLEMENTED_TYPE,
-          BAD_IMPLEMENTED_TYPE,
-          TypeValidator.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-          HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
-          UNKNOWN_OVERRIDE,
-          UNKNOWN_PROTOTYPAL_OVERRIDE,
-          WRONG_ARGUMENT_COUNT,
-          ILLEGAL_IMPLICIT_CAST,
-          INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-          EXPECTED_THIS_TYPE,
-          IN_USED_WITH_STRUCT,
-          ILLEGAL_CLASS_KEY,
-          ILLEGAL_PROPERTY_CREATION,
-          ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE,
-          ILLEGAL_OBJLIT_KEY,
-          NON_STRINGIFIABLE_OBJECT_KEY,
           ABSTRACT_METHOD_IN_CONCRETE_CLASS,
           ABSTRACT_SUPER_METHOD_NOT_USABLE,
+          BAD_IMPLEMENTED_TYPE,
+          BINARY_OPERATION,
+          BIT_OPERATION,
+          CONFLICTING_EXTENDED_TYPE,
+          CONFLICTING_GETTER_SETTER_TYPE,
+          CONFLICTING_IMPLEMENTED_TYPE,
+          CONSTRUCTOR_NOT_CALLABLE,
+          DETERMINISTIC_TEST,
           ES5_CLASS_EXTENDING_ES6_CLASS,
-          SAME_INTERFACE_MULTIPLE_IMPLEMENTS,
+          EXPECTED_THIS_TYPE,
+          FUNCTION_MASKS_VARIABLE,
+          HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
+          ILLEGAL_CLASS_KEY,
+          ILLEGAL_IMPLICIT_CAST,
+          ILLEGAL_OBJLIT_KEY,
+          ILLEGAL_PROPERTY_CREATION,
+          ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE,
+          INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+          INEXISTENT_ENUM_ELEMENT,
+          INEXISTENT_PROPERTY,
+          INEXISTENT_PROPERTY_WITH_SUGGESTION,
+          INSTANTIATE_ABSTRACT_CLASS,
+          INTERFACE_METHOD_NOT_EMPTY,
+          INVALID_INTERFACE_MEMBER_DECLARATION,
+          IN_USED_WITH_STRUCT,
+          MULTIPLE_VAR_DEF,
+          NON_STRINGIFIABLE_OBJECT_KEY,
+          NOT_A_CONSTRUCTOR,
+          NOT_CALLABLE,
+          POSSIBLE_INEXISTENT_PROPERTY,
+          PROPERTY_ASSIGNMENT_TO_READONLY_VALUE,
+          RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
           RhinoErrorReporter.TYPE_PARSE_ERROR,
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR,
-          RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
-          TypedScopeCreator.UNKNOWN_LENDS,
-          TypedScopeCreator.LENDS_ON_NON_OBJECT,
+          SAME_INTERFACE_MULTIPLE_IMPLEMENTS,
+          TypeValidator.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
           TypedScopeCreator.CTOR_INITIALIZER,
-          TypedScopeCreator.IFACE_INITIALIZER);
+          TypedScopeCreator.IFACE_INITIALIZER,
+          TypedScopeCreator.LENDS_ON_NON_OBJECT,
+          TypedScopeCreator.UNKNOWN_LENDS,
+          UNARY_OPERATION,
+          UNKNOWN_OVERRIDE,
+          UNKNOWN_PROTOTYPAL_OVERRIDE,
+          WRONG_ARGUMENT_COUNT);
 
   private final AbstractCompiler compiler;
   private final TypeValidator validator;
@@ -1302,6 +1310,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       NodeTraversal t, Node nodeToWarn, Node lvalue, JSType rightType, JSDocInfo info, String msg) {
     checkArgument(
         lvalue.isName() || lvalue.isGetProp() || lvalue.isGetElem() || lvalue.isCast(), lvalue);
+
+    // Ensure our LHS is not readonly.
+    checkNotReadonlyPropertyAssignment(lvalue);
 
     if (lvalue.isGetProp()) {
       Node object = lvalue.getFirstChild();
@@ -3443,6 +3454,47 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return classHasToString(parent);
     }
     return false;
+  }
+
+  /**
+   * Given the LHS of a property or element assignment, checks that the type that we're assigning
+   * into is not readonly (ReadonlyArray, in particular).
+   *
+   * <p>This is basically unsound since it checks just "ReadonlyArray" so casting up to "Iterable"
+   * or down to "Array" will defeat it; but it should catch basic errors.
+   */
+  private void checkNotReadonlyPropertyAssignment(Node lhs) {
+    // We only care about element or property assignments.
+    if (!lhs.isGetProp() && !lhs.isGetElem()) {
+      return;
+    }
+
+    // If we do not have type information, drop out.
+    JSType lhsType = lhs.getFirstChild().getJSType();
+    if (lhsType == null) {
+      return;
+    }
+
+    // We could be a reference to "ReadonlyArray" or a templatized wrapper.
+    JSType roArray = getNativeType(JSTypeNative.READONLY_ARRAY_TYPE);
+    ImmutableList<JSType> alternates = flattenUnion(lhsType);
+    for (int i = 0; i < alternates.size(); i++) {
+      JSType type = alternates.get(i);
+      if (roArray.equals(type) || roArray.equals(maybeReferencedType(type))) {
+        compiler.report(JSError.make(lhs, PROPERTY_ASSIGNMENT_TO_READONLY_VALUE, type.toString()));
+        break;
+      }
+    }
+  }
+
+  private static @Nullable JSType maybeReferencedType(JSType type) {
+    TemplatizedType maybeTemplatized = type.toMaybeTemplatizedType();
+    return (maybeTemplatized != null) ? maybeTemplatized.getReferencedType() : null;
+  }
+
+  private static ImmutableList<JSType> flattenUnion(JSType maybeUnion) {
+    UnionType union = maybeUnion.toMaybeUnionType();
+    return (union == null) ? ImmutableList.of(maybeUnion) : union.getAlternates();
   }
 
   private static boolean declaresOverride(@Nullable JSDocInfo jsdoc) {
