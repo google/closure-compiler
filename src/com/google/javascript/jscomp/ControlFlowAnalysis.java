@@ -476,10 +476,11 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   }
 
   private void handleDo(Node node) {
-    Node cond = node.getFirstChild();
+    Node body = node.getFirstChild();
     // The first edge can be the initial iteration as well as the iterations
     // after.
-    createEdge(node, Branch.ON_TRUE, computeFallThrough(cond));
+    createEdge(node, Branch.ON_TRUE, computeFallThrough(body));
+    Node cond = body.getNext();
     if (!cond.isTrue()) {
       // The edge that leaves the do loop if the condition fails.
       createEdge(node, Branch.ON_FALSE, computeFollowNode(node, this));
