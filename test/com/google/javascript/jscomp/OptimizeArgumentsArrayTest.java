@@ -352,4 +352,18 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
             "  console.log(arguments);",
             "}"));
   }
+
+  @Test
+  public void testGettersCannotHaveAnyParams() {
+    // Getters cannot have any parameters; synthesizing one would be an error.
+    testSame("class Foo { get prop() { arguments[0] } }");
+    testSame("const a = { get prop() { arguments[0] } }");
+  }
+
+  @Test
+  public void testSettersCanOnlyHaveOneParam() {
+    // Setters can only have one parameter; synthesizing any more would be an error.
+    testSame("class Foo { set prop(x) { arguments[1] } }");
+    testSame("const a = { set prop(x) { arguments[1] } }");
+  }
 }

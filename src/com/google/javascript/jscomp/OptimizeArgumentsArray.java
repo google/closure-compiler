@@ -149,6 +149,15 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    * @param scope scope of the function
    */
   private void tryReplaceArguments(Node scopeRoot) {
+    Node scopeRootParent = scopeRoot.getParent();
+    // Nothing to do for getters and setters:
+    // - Getters cannot have any params.
+    // - Setters can only have one param, and it is required to be present, so we cannot synthesize
+    //   any new params.
+    if (scopeRootParent.isGetterDef() || scopeRootParent.isSetterDef()) {
+      return;
+    }
+
     // Find the number of parameters that can be accessed without using `arguments`.
     Node parametersList = NodeUtil.getFunctionParameters(scopeRoot);
     checkState(parametersList.isParamList(), parametersList);
