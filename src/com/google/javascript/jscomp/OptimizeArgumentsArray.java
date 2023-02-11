@@ -150,11 +150,8 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    */
   private void tryReplaceArguments(Node scopeRoot) {
     Node scopeRootParent = scopeRoot.getParent();
-    // Nothing to do for getters and setters:
-    // - Getters cannot have any params.
-    // - Setters can only have one param, and it is required to be present, so we cannot synthesize
-    //   any new params.
-    if (scopeRootParent.isGetterDef() || scopeRootParent.isSetterDef()) {
+    // Getters cannot have any params, so there are none to replace or synthesize.
+    if (scopeRootParent.isGetterDef()) {
       return;
     }
 
@@ -170,8 +167,14 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       return;
     }
 
-    ImmutableSortedMap<Integer, String> argNames =
-        assembleParamNames(parametersList, highestIndex + 1);
+    int maxCount = highestIndex + 1;
+    // Setters can only have one param and it is required to be present, so we cannot synthesize any
+    // new params, but we can still replace references to the first param.
+    if (scopeRootParent.isSetterDef()) {
+      maxCount = 1;
+    }
+
+    ImmutableSortedMap<Integer, String> argNames = assembleParamNames(parametersList, maxCount);
     changeMethodSignature(argNames, parametersList);
     changeBody(argNames);
   }
