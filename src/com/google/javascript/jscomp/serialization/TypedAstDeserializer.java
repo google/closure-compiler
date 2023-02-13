@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +35,6 @@ import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -44,7 +42,6 @@ import com.google.protobuf.WireFormat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -283,28 +280,19 @@ public final class TypedAstDeserializer {
 
   private ImmutableList<SourceFile> toFileShard(TypedAst typedAstProto) {
     ImmutableList.Builder<SourceFile> fileShardBuilder = ImmutableList.builder();
-    HashSet<Integer> externFileIndices = new HashSet<>();
-    for (LazyAst lazyAst : typedAstProto.getExternAstList()) {
-      externFileIndices.add(lazyAst.getSourceFile() - 1);
-    }
     List<SourceFileProto> protos = typedAstProto.getSourceFilePool().getSourceFileList();
     for (int i = 0; i < protos.size(); i++) {
       SourceFileProto p = protos.get(i);
-      SourceFile file =
-          filePoolBuilder.computeIfAbsent(p.getFilename(), (n) -> SourceFile.fromProto(p));
-      // Verify that the TypedAST SourceFileProto files and the 'requiredInputFiles' SourceFiles
-      // agree on which files are externs vs. code. In non-TypedAST builds, we allow passing @extern
-      // files under the --js flag. This means 'SourceFile' objects may have a non-EXTERN
-      // SourceKind but point to a file with @externs.
-      // For TypedAST builds, we could support this, but it's an uncommon pattern and trickier to
-      // support than ban.
-      if (externFileIndices.contains(i)) {
-        Preconditions.checkState(
-            file.getKind() == SourceKind.EXTERN,
-            "TypedAST compilations must pass all extern files as externs, not js, but found %s",
-            file.getName());
+
+      SourceFile existingFile = filePoolBuilder.get(p.getFilename());
+      if (existingFile != null) {
+        // Merge the existing SourceFile with the information serialized in the TypedAST.
+        existingFile.restoreCachedStateFrom(p);
+        fileShardBuilder.add(existingFile);
+      } else {
+        SourceFile protoFile = SourceFile.fromProto(p);
+        fileShardBuilder.add(protoFile);
       }
-      fileShardBuilder.add(file);
     }
     return fileShardBuilder.build();
   }

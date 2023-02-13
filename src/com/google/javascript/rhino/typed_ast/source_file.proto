@@ -26,6 +26,13 @@ message SourceFileProto {
   // required
   SourceKind source_kind = 5;
 
+  // Optional code statistics used for metrics recording. Setting these to "0"
+  // indicates they were not computed. Other values are offset by 1 to
+  // distinguish between the "0" default value and a empty file with 0
+  // lines. For example, "num_lines_plus_one = 3" indicates a file with 2 lines.
+  uint32 num_bytes_plus_one = 6;
+  uint32 num_lines_plus_one = 7;
+
   message FileOnDisk {
     // optional; if empty then JavascriptFile::filename is the default path
     string actual_path = 1;
