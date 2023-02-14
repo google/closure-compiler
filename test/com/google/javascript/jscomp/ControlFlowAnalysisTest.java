@@ -337,6 +337,14 @@ public final class ControlFlowAnalysisTest {
   }
 
   @Test
+  public void testInifiteLoopDoWhile() {
+    String src = "var x; do { } while (true); x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.DO, Token.BLOCK, Branch.ON_TRUE);
+    assertNoEdge(cfg, Token.DO, Token.EXPR_RESULT);
+  }
+
+  @Test
   public void testInifiteLoopFor_emptyCond() {
     String src = "var x; for(;;) { } x();";
     ControlFlowGraph<Node> cfg = createCfg(src);
