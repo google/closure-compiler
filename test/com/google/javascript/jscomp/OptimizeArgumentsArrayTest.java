@@ -352,4 +352,33 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
             "  console.log(arguments);",
             "}"));
   }
+
+  @Test
+  public void testGettersCannotHaveAnyParams() {
+    // Getters cannot have any parameters; synthesizing them would be an error.
+    testSame("class Foo { get prop() { arguments[0] } }");
+    testSame("const a = { get prop() { arguments[0] } }");
+
+    // Ensure references in nested functions are still eligible.
+    test(
+        "class Foo { get prop() { function f(  ) { arguments[0] } } }", //
+        "class Foo { get prop() { function f(p0) {           p0 } } }");
+  }
+
+  @Test
+  public void testSettersCanOnlyHaveOneParam() {
+    // Setters can only have one parameter; synthesizing any more would be an error.
+    testSame("class Foo { set prop(x) { arguments[1] } }");
+    testSame("const a = { set prop(x) { arguments[1] } }");
+
+    // We can still replace references to the first param.
+    test(
+        "class Foo { set prop(x) { arguments[0]; arguments[1] } }", //
+        "class Foo { set prop(x) {            x; arguments[1] } }");
+
+    // Ensure references in nested functions are still eligible.
+    test(
+        "class Foo { set prop(x) { function f(  ) { arguments[0] } } }", //
+        "class Foo { set prop(x) { function f(p0) {           p0 } } }");
+  }
 }
