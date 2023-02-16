@@ -118844,1064 +118844,798 @@ typed_asts {
       filename: " [synthetic:externs] "
       preloaded_contents: ""
       source_kind: EXTERN
-      num_bytes_plus_one: 1
-      num_lines_plus_one: 2
     }
     source_file {
       filename: "blaze-out/k8-fastbuild/genfiles/javascript/externs/core_js_lib.js"
       file_on_disk {
       }
       source_kind: EXTERN
-      num_bytes_plus_one: 160888
-      num_lines_plus_one: 5701
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/base.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 815
-      num_lines_plus_one: 29
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1059
-      num_lines_plus_one: 35
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/at.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 882
-      num_lines_plus_one: 30
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/copywithin.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2348
-      num_lines_plus_one: 81
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/entries.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1181
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/fill.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1662
-      num_lines_plus_one: 50
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/find.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1279
-      num_lines_plus_one: 41
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/findindex.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1284
-      num_lines_plus_one: 41
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/flat.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1746
-      num_lines_plus_one: 55
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/flatmap.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2137
-      num_lines_plus_one: 60
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/from.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2390
-      num_lines_plus_one: 67
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/includes.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1616
-      num_lines_plus_one: 57
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/keys.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1043
-      num_lines_plus_one: 36
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/of.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1161
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/array/values.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1418
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/async_generator_wrapper.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 14076
-      num_lines_plus_one: 501
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/conformance.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1875
-      num_lines_plus_one: 62
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/execute_async_generator.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 3931
-      num_lines_plus_one: 122
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/generator_engine.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 26199
-      num_lines_plus_one: 883
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/globalthis.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 819
-      num_lines_plus_one: 28
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/map.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 9361
-      num_lines_plus_one: 344
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1137
-      num_lines_plus_one: 39
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/acosh.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1109
-      num_lines_plus_one: 38
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/asinh.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1170
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/atanh.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1153
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/cbrt.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1166
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/clz32.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1600
-      num_lines_plus_one: 58
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/cosh.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1101
-      num_lines_plus_one: 39
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/expm1.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1574
-      num_lines_plus_one: 56
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/fround.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2002
-      num_lines_plus_one: 55
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/hypot.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1904
-      num_lines_plus_one: 63
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/imul.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1679
-      num_lines_plus_one: 49
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/log10.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1055
-      num_lines_plus_one: 37
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/log1p.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1521
-      num_lines_plus_one: 54
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/log2.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1051
-      num_lines_plus_one: 37
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/sign.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1208
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/sinh.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1124
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/tanh.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1227
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/math/trunc.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1192
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/modules/runtime.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 12936
-      num_lines_plus_one: 513
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/nopolyfill.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1175
-      num_lines_plus_one: 34
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 899
-      num_lines_plus_one: 28
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/constants.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1317
-      num_lines_plus_one: 49
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/isfinite.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1141
-      num_lines_plus_one: 38
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/isinteger.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1118
-      num_lines_plus_one: 39
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/isnan.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1105
-      num_lines_plus_one: 38
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/issafeinteger.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1215
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/parsefloat.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 743
-      num_lines_plus_one: 23
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/number/parseint.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 739
-      num_lines_plus_one: 23
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1008
-      num_lines_plus_one: 31
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/assign.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 822
-      num_lines_plus_one: 28
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/entries.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1293
-      num_lines_plus_one: 46
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/fromentries.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1682
-      num_lines_plus_one: 64
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/getownpropertydescriptors.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1329
-      num_lines_plus_one: 43
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/getownpropertysymbols.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1085
-      num_lines_plus_one: 29
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/hasOwn.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1282
-      num_lines_plus_one: 48
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/is.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1491
-      num_lines_plus_one: 48
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/setprototypeof.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 952
-      num_lines_plus_one: 31
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/object/values.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1234
-      num_lines_plus_one: 45
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/promise.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 861
-      num_lines_plus_one: 27
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/promise/aggregateerror.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1963
-      num_lines_plus_one: 62
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/promise/allSettled.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2192
-      num_lines_plus_one: 75
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/promise/any.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2859
-      num_lines_plus_one: 89
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/promise/finally.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1339
-      num_lines_plus_one: 45
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/promise/promise.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 17207
-      num_lines_plus_one: 572
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1133
-      num_lines_plus_one: 34
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/apply.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1495
-      num_lines_plus_one: 45
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/construct.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 930
-      num_lines_plus_one: 31
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/defineproperty.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2007
-      num_lines_plus_one: 54
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/deleteproperty.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1462
-      num_lines_plus_one: 48
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/get.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1689
-      num_lines_plus_one: 50
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/getownpropertydescriptor.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 996
-      num_lines_plus_one: 27
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/getprototypeof.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 966
-      num_lines_plus_one: 27
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/has.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1159
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/isextensible.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 944
-      num_lines_plus_one: 30
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/ownkeys.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1719
-      num_lines_plus_one: 57
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/preventextensions.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1503
-      num_lines_plus_one: 47
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/reflect.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 809
-      num_lines_plus_one: 25
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/set.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1962
-      num_lines_plus_one: 59
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/reflect/setprototypeof.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1736
-      num_lines_plus_one: 62
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/set.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 4670
-      num_lines_plus_one: 167
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1134
-      num_lines_plus_one: 36
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/at.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 884
-      num_lines_plus_one: 30
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/codepointat.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1860
-      num_lines_plus_one: 58
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/endswith.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1524
-      num_lines_plus_one: 48
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/fromcodepoint.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1600
-      num_lines_plus_one: 52
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/includes.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1284
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/matchall.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 3059
-      num_lines_plus_one: 88
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/padend.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1350
-      num_lines_plus_one: 43
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/padstart.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1360
-      num_lines_plus_one: 43
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/raw.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1581
-      num_lines_plus_one: 55
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/repeat.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1470
-      num_lines_plus_one: 50
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/replaceall.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2348
-      num_lines_plus_one: 70
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/startswith.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1589
-      num_lines_plus_one: 52
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/trimend.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1283
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/string/trimstart.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1282
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/symbol.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 4594
-      num_lines_plus_one: 159
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/typed_array.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 804
-      num_lines_plus_one: 25
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/typedarray/at.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1707
-      num_lines_plus_one: 52
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/typedarray/copywithin.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1795
-      num_lines_plus_one: 57
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/typedarray/fill.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1633
-      num_lines_plus_one: 48
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/arrayfromiterable.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1101
-      num_lines_plus_one: 38
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/arrayfromiterator.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1244
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/arrayiterator.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1369
-      num_lines_plus_one: 53
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/assign.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1846
-      num_lines_plus_one: 59
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/atmethod.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1410
-      num_lines_plus_one: 46
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/construct.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 3357
-      num_lines_plus_one: 97
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/createtemplatetagfirstarg.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1498
-      num_lines_plus_one: 49
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/inherits.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2624
-      num_lines_plus_one: 88
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/iteratorfromarray.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1614
-      num_lines_plus_one: 52
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/makeasynciterator.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2423
-      num_lines_plus_one: 93
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/makeiterator.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1469
-      num_lines_plus_one: 44
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/restarguments.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1357
-      num_lines_plus_one: 43
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/util/setprototypeof.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1754
-      num_lines_plus_one: 62
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/weakmap.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 6488
-      num_lines_plus_one: 197
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6/weakset.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2577
-      num_lines_plus_one: 93
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6_dart_runtime.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2776
-      num_lines_plus_one: 89
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/es6_runtime.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1388
-      num_lines_plus_one: 46
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/modules.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 699
-      num_lines_plus_one: 24
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/checkstringargs.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1398
-      num_lines_plus_one: 42
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/defineproperty.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2022
-      num_lines_plus_one: 57
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/defines.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 2219
-      num_lines_plus_one: 72
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/finddescriptor.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1153
-      num_lines_plus_one: 39
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/findinternal.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1587
-      num_lines_plus_one: 47
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/global.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 3512
-      num_lines_plus_one: 90
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/objectcreate.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1223
-      num_lines_plus_one: 41
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/owns.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 871
-      num_lines_plus_one: 29
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/polyfill.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 9894
-      num_lines_plus_one: 241
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/reflectobject.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1606
-      num_lines_plus_one: 53
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/shouldpolyfill.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1206
-      num_lines_plus_one: 40
     }
     source_file {
       filename: "third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/stringpadding.js"
       file_on_disk {
       }
       source_kind: CODE
-      num_bytes_plus_one: 1132
-      num_lines_plus_one: 33
     }
   }
   externs_summary {
