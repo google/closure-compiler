@@ -137,3 +137,14 @@ function testIterationVarIsShadowedWithDestructuring() {
   }
   assertArrayEquals([5, 6, 7], result);
 }
+
+function testTypeErrorForNonIterable() {
+  const result = [];
+  const iterate = (iterable) => {
+    for (const value of iterable) {
+      result.push(value);
+    }
+  };
+  // non-iterable object with no `length` cannot be iterated.
+  assertThrows(() => iterate({}));
+}

@@ -32,6 +32,11 @@ $jscomp.makeIterator = function(iterable) {
   // NOTE: Disabling typechecking because [] not allowed on @struct.
   var iteratorFunction = typeof Symbol != 'undefined' && Symbol.iterator &&
       (/** @type {?} */ (iterable)[Symbol.iterator]);
-  return iteratorFunction ? iteratorFunction.call(iterable) :
-      $jscomp.arrayIterator(/** @type {!Array} */ (iterable));
+  if (iteratorFunction) {
+    return iteratorFunction.call(iterable);
+  }
+  if (typeof iterable['length'] == 'number') {
+    return $jscomp.arrayIterator(/** @type {!Array} */ (iterable));
+  }
+  throw new Error(String(iterable) + ' is not an iterable or ArrayLike');
 };
