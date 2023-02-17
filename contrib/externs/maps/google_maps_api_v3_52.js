@@ -3084,14 +3084,6 @@ google.maps.FeatureType = {
    */
   ADMINISTRATIVE_AREA_LEVEL_2: 'ADMINISTRATIVE_AREA_LEVEL_2',
   /**
-   * Indicates a third-order civil entity below the country level.
-   */
-  ADMINISTRATIVE_AREA_LEVEL_3: 'ADMINISTRATIVE_AREA_LEVEL_3',
-  /**
-   * Indicates a fourth-order civil entity below the country level.
-   */
-  ADMINISTRATIVE_AREA_LEVEL_4: 'ADMINISTRATIVE_AREA_LEVEL_4',
-  /**
    * Indicates the national political entity.
    */
   COUNTRY: 'COUNTRY',
@@ -3100,13 +3092,21 @@ google.maps.FeatureType = {
    */
   LOCALITY: 'LOCALITY',
   /**
+   * Indicates a postal code as used to address postal mail within the country.
+   */
+  POSTAL_CODE: 'POSTAL_CODE',
+  /**
    * Indicates a named neighborhood.
    */
   NEIGHBORHOOD: 'NEIGHBORHOOD',
   /**
-   * Indicates a postal code as used to address postal mail within the country.
+   * Indicates a third-order civil entity below the country level.
    */
-  POSTAL_CODE: 'POSTAL_CODE',
+  ADMINISTRATIVE_AREA_LEVEL_3: 'ADMINISTRATIVE_AREA_LEVEL_3',
+  /**
+   * Indicates a fourth-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_4: 'ADMINISTRATIVE_AREA_LEVEL_4',
   /**
    * Indicates a first-order civil entity below a locality.
    */
