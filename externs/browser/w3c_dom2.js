@@ -1712,9 +1712,9 @@ HTMLAnchorElement.prototype.focus = function() {};
 /**
  * @type {string}
  * @implicitCast
- * @see https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#api-overview
+ * @see https://wicg.github.io/attribution-reporting-api/#idl-index
  */
-HTMLAnchorElement.prototype.attributionsrc;
+HTMLAnchorElement.prototype.attributionSrc;
 
 /**
  * @constructor
@@ -1805,9 +1805,9 @@ HTMLImageElement.prototype.width;
 /**
  * @type {string}
  * @implicitCast
- * @see https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#api-overview
+ * @see https://wicg.github.io/attribution-reporting-api/#idl-index
  */
-HTMLImageElement.prototype.attributionsrc;
+HTMLImageElement.prototype.attributionSrc;
 
 /**
  * @constructor
@@ -2174,9 +2174,9 @@ HTMLScriptElement.prototype.type;
 /**
  * @type {string}
  * @implicitCast
- * @see https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#api-overview
+ * @see https://wicg.github.io/attribution-reporting-api/#idl-index
  */
-HTMLScriptElement.prototype.attributionsrc;
+HTMLScriptElement.prototype.attributionSrc;
 
 /**
  * @constructor
