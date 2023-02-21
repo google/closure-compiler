@@ -519,9 +519,59 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return builder().withPath(fileName).withContent(code).build();
   }
 
+  /**
+   * Reconciles serialized state in a {@link SourceFileProto} with the existing state in this file.
+   *
+   * <p>This should be called whenever initializing a compilation based on TypedAST protos. For
+   * these compilations, the compiler initalization methods require creating SourceFiles before
+   * deserializing TypedAST protos, so we sometimes get two copies of the same SourceFile.)
+   */
+  public void restoreCachedStateFrom(SourceFileProto protoSourceFile) {
+    checkState(
+        protoSourceFile.getFilename().equals(this.getName()),
+        "Cannot restore state for %s from %s",
+        this.getName(),
+        protoSourceFile.getFilename());
+    // TypedAST proto information is expected to be more accurate for:
+    //  1) whether a SourceFile contains an @extern annotation or not. In non-TypedAST
+    //    builds, we allow passing @extern files under the --js flag.  For TypedAST builds, we
+    //    could support this, but it's an uncommon pattern and trickier to support than ban.
+    //  2) tracking some extra state that is lazily computed in a SourceFile, like the number of
+    //     lines and bytes in a file. SourceFile::restoreCachedStateFrom handles this case.
+    // Note: the state in the proto might be incorrect in other cases, since some state cannot be
+    // computed during library-level typechecking (e.g. what files are in the weak chunk)
+    if (protoSourceFile.getSourceKind() == SourceFileProto.SourceKind.EXTERN) {
+      checkState(
+          this.getKind() == SourceKind.EXTERN,
+          "TypedAST compilations must pass all extern files as externs, not js, but found %s",
+          this.getName());
+    }
+
+    // Restore the number of lines/bytes from the proto, unless we already have cached
+    // numLines and numBytes. Offset by 1. the proto "unset" value is 0, where as in SourceFile we
+    // use "-1"
+    int protoNumLines = protoSourceFile.getNumLinesPlusOne() - 1;
+    int protoNumBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    // It's possible that this.numLines and protoNumLines are both not "-1" but contain
+    // conflicting values. This would happen if a file changes on disk after TypedAST
+    // proto serialization. We choose the proto value over this.numLines because this
+    // data is intended for metrics recording, which should care most about the size of a
+    // file when compilation began and parsing ran.
+    this.numLines = protoNumLines != -1 ? protoNumLines : this.numLines;
+    this.numBytes = protoNumBytes != -1 ? protoNumBytes : this.numBytes;
+  }
+
   @GwtIncompatible("java.io.Reader")
   public static SourceFile fromProto(SourceFileProto protoSourceFile) {
     SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);
+    SourceFile sourceFile = fromProto(protoSourceFile, sourceKind);
+    // Restore the number of lines/bytes, which are offset by 1 in the proto.
+    sourceFile.numLines = protoSourceFile.getNumLinesPlusOne() - 1;
+    sourceFile.numBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    return sourceFile;
+  }
+
+  private static SourceFile fromProto(SourceFileProto protoSourceFile, SourceKind sourceKind) {
     switch (protoSourceFile.getLoaderCase()) {
       case PRELOADED_CONTENTS:
         return SourceFile.fromCode(
@@ -939,6 +989,8 @@ public final class SourceFile implements StaticSourceFile, Serializable {
         .toProtoLocationBuilder(this.getName())
         .setFilename(this.getName())
         .setSourceKind(sourceKindToProto(this.getKind()))
+        .setNumLinesPlusOne(this.numLines + 1)
+        .setNumBytesPlusOne(this.numBytes + 1)
         .build();
   }
 
