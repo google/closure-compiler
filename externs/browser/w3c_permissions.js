@@ -23,10 +23,14 @@
 
 
 /**
- * @typedef {{name: PermissionName}}
+ * @record
+ * @struct
  * @see https://w3c.github.io/permissions/#permission-descriptor
  */
-var PermissionDescriptor;
+var PermissionDescriptor = function() {};
+
+/** @type {!PermissionName} */
+PermissionDescriptor.prototype.name;
 
 
 /**
@@ -97,7 +101,7 @@ PermissionStatus.prototype.dispatchEvent = function(evt) {};
 function Permissions() {}
 
 /**
- * @param {PermissionDescriptor} permission The permission to look up
+ * @param {!PermissionDescriptor} permission The permission to look up
  * @return {!Promise<!PermissionStatus>}
  * @see https://w3c.github.io/permissions/#dom-permissions-query
  */
