@@ -119,6 +119,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -4035,12 +4037,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           Tracer tracer = newTracer("serializeCompilerState");
-          new ObjectOutputStream(outputStream).writeObject(getCompilerState());
+          GZIPOutputStream gzipStream = new GZIPOutputStream(outputStream);
+          new ObjectOutputStream(gzipStream).writeObject(getCompilerState());
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
-          SerializeTypedAstPass.createFromOutputStream(this, outputStream)
+          SerializeTypedAstPass.createFromOutputStream(this, gzipStream)
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
+          // Finish will flush all zip buffers and write out zip trailing bytes but it will not
+          // close the stream since that is our callers responsibility.
+          gzipStream.finish();
           return null;
         });
   }
@@ -4059,7 +4065,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
           logger.fine("Deserializing the CompilerState");
           try {
-            deserializeCompilerState(inputStream);
+            deserializeCompilerState(new GZIPInputStream(inputStream));
             return null;
           } finally {
             logger.fine("Finished deserializing CompilerState");
