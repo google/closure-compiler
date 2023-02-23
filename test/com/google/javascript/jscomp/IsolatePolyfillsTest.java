@@ -115,6 +115,28 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOptChainCall_doesNotCrash() {
+    addLibrary("String.prototype.includes", "es6", "es5", "es6/string/includes");
+    addLibrary("Array.prototype.includes", "es6", "es5", "es6/array/includes");
+    test(
+        "if (a.b()?.includes()) {}",
+        lines(
+            "var $jscomp$polyfillTmp; ",
+            "if (($jscomp$polyfillTmp = a.b(),",
+            "    $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'includes',"
+                + " true))?.call($jscomp$polyfillTmp)) {}"));
+  }
+
+  @Test
+  public void testOptChainGetProp_doesNotCrash() {
+    addLibrary("String.prototype.includes", "es6", "es5", "es6/string/includes");
+    addLibrary("Array.prototype.includes", "es6", "es5", "es6/array/includes");
+    test(
+        "if (a.b?.includes()) {}",
+        lines("if ($jscomp$lookupPolyfilledValue(a.b, 'includes', true)?.call(a.b)) {}"));
+  }
+
+  @Test
   public void testClassesAreIsolated() {
     addLibrary("Map", "es6", "es5", "es6/map");
 

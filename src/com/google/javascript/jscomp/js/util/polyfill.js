@@ -59,6 +59,8 @@ $jscomp.POLYFILL_PREFIX = '$jscp$';
  *     `my.str.includes`
  * @param {string} property the name of the property, e.g. `includes` in
  *     `my.str.includes`
+ * @param {boolean=} isOptionalAccess whether the access to property is via the
+ *     optional chaining operator, e.g. `my.str?.includes`
  * @return {?} if an obfuscated symbol for the property was added onto the
  *     target, then this function returns the polyfill for the property.
  *     Otherwise simply looks up the property on the target and returns it as
@@ -66,7 +68,14 @@ $jscomp.POLYFILL_PREFIX = '$jscp$';
  * @noinline prevent inlining so IsolatePolyfills can find this declaration.
  * @suppress {reportUnknownTypes}
  */
-var $jscomp$lookupPolyfilledValue = function(target, property) {
+var $jscomp$lookupPolyfilledValue = function(
+    target, property, isOptionalAccess) {
+  if (isOptionalAccess && target == null) {
+    // For optional chain accesses such as `my.str?.includes`, we should not
+    // crash and instead return undefined.
+    return undefined;
+  }
+
   /** @const */
   var obfuscatedName = $jscomp.propertyToPolyfillSymbol[property];
   if (obfuscatedName == null) {

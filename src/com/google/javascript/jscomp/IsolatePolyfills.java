@@ -219,18 +219,24 @@ class IsolatePolyfills implements CompilerPass {
 
     if (isGlobalClass) {
       // e.g. Symbol, Map, window.Map, or goog.global.Map
+      // Optional chaining is forbidden on global classes, hence producing `getelem` for property
+      // access would suffice.
       polyfillAccess.replaceWith(
           IR.getelem(jscompPolyfillsObject.cloneTree(), IR.string(name)) // $jscomp.polyfills['Map']
               .srcrefTree(polyfillAccess));
-    } else if (parent.isCall() && polyfillAccess.isFirstChildOf(parent)) {
-      // e.g. getStr().includes('x')
+    } else if ((parent.isCall() || parent.isOptChainCall())
+        && polyfillAccess.isFirstChildOf(parent)) {
+      // e.g. `getStr().includes('x')` or `getStr()?.includes('x')`
       rewritePolyfillInCall(polyfillAccess);
     } else {
       // e.g. [].includes.call(myIter, 0)
       Node methodName = IR.string(polyfillAccess.getString()).srcref(polyfillAccess);
       Node receiver = polyfillAccess.removeFirstChild();
+      // The `$jscomp$lookupPolyfilledValue` can handle both normal prop access as well as optional
+      // by checking whether the lhs (receiver) is null or undefined first.
       polyfillAccess.replaceWith(
-          createPolyfillMethodLookup(receiver, methodName).srcrefTree(polyfillAccess));
+          createPolyfillMethodLookup(receiver, methodName, NodeUtil.isOptChainNode(polyfillAccess))
+              .srcrefTree(polyfillAccess));
     }
 
     compiler.reportChangeToEnclosingScope(parent);
@@ -257,6 +263,7 @@ class IsolatePolyfills implements CompilerPass {
   private void rewritePolyfillInCall(Node callee) {
     final Node methodName = IR.string(callee.getString()).srcref(callee);
     final Node receiver = callee.removeFirstChild();
+    final boolean isCalleeOptChain = NodeUtil.isOptChainNode(callee);
 
     boolean requiresTemp = compiler.getAstAnalyzer().mayEffectMutableState(receiver);
 
@@ -270,15 +277,22 @@ class IsolatePolyfills implements CompilerPass {
       polyfilledMethod =
           IR.comma(
               IR.assign(thisNode.cloneTree(), receiver),
-              createPolyfillMethodLookup(thisNode.cloneTree(), methodName));
+              createPolyfillMethodLookup(thisNode.cloneTree(), methodName, isCalleeOptChain));
     } else {
       thisNode = receiver;
-      polyfilledMethod = createPolyfillMethodLookup(receiver.cloneTree(), methodName);
+      polyfilledMethod =
+          createPolyfillMethodLookup(receiver.cloneTree(), methodName, isCalleeOptChain);
     }
 
     // Fix the `this` type by using .call:
-    //   lookupMethod(receiver, 'includes').call(receiver, arg)
-    Node receiverDotCall = IR.getprop(polyfilledMethod, "call").srcrefTree(callee);
+    //   lookupMethod(receiver, 'includes', isOptChainNode).call(receiver, arg)
+    Node receiverDotCall;
+    if (NodeUtil.isOptChainNode(callee)) {
+      // If optional chaining exists at this point, we can have it in the output
+      receiverDotCall = IR.startOptChainGetprop(polyfilledMethod, "call").srcrefTree(callee);
+    } else {
+      receiverDotCall = IR.getprop(polyfilledMethod, "call").srcrefTree(callee);
+    }
     callee.replaceWith(receiverDotCall);
     thisNode.insertAfter(receiverDotCall);
   }
@@ -296,10 +310,19 @@ class IsolatePolyfills implements CompilerPass {
     return IR.name(POLYFILL_TEMP).srcref(srcref);
   }
 
-  /** Returns a call <code>$jscomp$lookupPolyfilledValue(receiver, 'methodName')</code> */
-  private Node createPolyfillMethodLookup(Node receiver, Node methodName) {
+  /**
+   * Returns a call <code>$jscomp$lookupPolyfilledValue(receiver, 'methodName', isOptChainNode)
+   * </code>
+   */
+  private Node createPolyfillMethodLookup(Node receiver, Node methodName, boolean isOptChainNode) {
     usedPolyfillMethodLookup = true;
-    Node call = IR.call(jscompLookupMethod.cloneTree(), receiver, methodName);
+    Node call;
+    if (isOptChainNode) {
+      call = IR.call(jscompLookupMethod.cloneTree(), receiver, methodName, IR.trueNode());
+    } else {
+      // 3rd param of `jscompLookupMethod` is optional
+      call = IR.call(jscompLookupMethod.cloneTree(), receiver, methodName);
+    }
     call.putBooleanProp(Node.FREE_CALL, true);
     return call;
   }
