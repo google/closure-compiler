@@ -502,6 +502,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     this.process(externsRoot, jsRoot);
 
     compiler.setTypeCheckingHasRun(true);
+    compiler.setTopScope(this.topScope);
 
     return topScope;
   }
