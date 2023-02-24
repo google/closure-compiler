@@ -50,12 +50,12 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   @Test
   public void testConstantDefinition1() {
-    testSame("var XYZ = 1;");
+    testSame("/** @const */ var XYZ = 1;");
   }
 
   @Test
   public void testConstantDefinition2() {
-    testSame("var a$b$XYZ = 1;");
+    testSame("/** @const */ var a$b$XYZ = 1;");
   }
 
   @Test
@@ -71,27 +71,27 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   @Test
   public void testConstantInitializedInAnonymousNamespace1() {
-    testSame("var XYZ; (function(){ XYZ = 1; })();");
+    testSame("/** @const */ var XYZ; (function(){ XYZ = 1; })();");
   }
 
   @Test
   public void testConstantInitializedInAnonymousNamespace2() {
-    testSame("var a$b$XYZ; (function(){ a$b$XYZ = 1; })();");
+    testSame("/** @const */ var a$b$XYZ; (function(){ a$b$XYZ = 1; })();");
   }
 
   @Test
   public void testObjectModified() {
-    testSame("var IE = true, XYZ = {a:1,b:1}; if (IE) XYZ['c'] = 1;");
+    testSame("/** @const */ var IE = true, XYZ = {a:1,b:1}; if (IE) XYZ['c'] = 1;");
   }
 
   @Test
   public void testObjectPropertyInitializedLate() {
-    testSame("var XYZ = {}; for (var i = 0; i < 10; i++) { XYZ[i] = i; }");
+    testSame("/** @const */ var XYZ = {}; for (var i = 0; i < 10; i++) { XYZ[i] = i; }");
   }
 
   @Test
   public void testObjectRedefined1() {
-    testError("var XYZ = {}; XYZ = 2;");
+    testError("/** @const */ var XYZ = {}; XYZ = 2;");
   }
 
   @Test
@@ -101,12 +101,12 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   @Test
   public void testConstantRedefined1() {
-    testError("var XYZ = 1; XYZ = 2;");
+    testError("/** @const */ var XYZ = 1; XYZ = 2;");
   }
 
   @Test
   public void testConstantRedefined2() {
-    testError("var a$b$XYZ = 1; a$b$XYZ = 2;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ = 2;");
   }
 
   // test will be caught be earlier pass, but demonstrates that it returns error upon const
@@ -118,62 +118,62 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   @Test
   public void testConstantRedefined4() {
-    testError("let XYZ = 1; XYZ = 2;");
+    testError("/** @const */ let XYZ = 1; XYZ = 2;");
   }
 
   @Test
   public void testConstantRedefinedInLocalScope1() {
-    testError("var XYZ = 1; (function(){ XYZ = 2; })();");
+    testError("/** @const */ var XYZ = 1; (function(){ XYZ = 2; })();");
   }
 
   @Test
   public void testConstantRedefinedInLocalScope2() {
-    testError("var a$b$XYZ = 1; (function(){ a$b$XYZ = 2; })();");
+    testError("/** @const */ var a$b$XYZ = 1; (function(){ a$b$XYZ = 2; })();");
   }
 
   @Test
   public void testConstantRedefinedInLocalScopeOutOfOrder() {
-    testError("function f() { XYZ = 2; } var XYZ = 1;");
+    testError("function f() { XYZ = 2; } /** @const */ var XYZ = 1;");
   }
 
   @Test
   public void testConstantPostIncremented1() {
-    testError("var XYZ = 1; XYZ++;");
+    testError("/** @const */ var XYZ = 1; XYZ++;");
   }
 
   @Test
   public void testConstantPostIncremented2() {
-    testError("var a$b$XYZ = 1; a$b$XYZ++;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ++;");
   }
 
   @Test
   public void testConstantPreIncremented1() {
-    testError("var XYZ = 1; ++XYZ;");
+    testError("/** @const */ var XYZ = 1; ++XYZ;");
   }
 
   @Test
   public void testConstantPreIncremented2() {
-    testError("var a$b$XYZ = 1; ++a$b$XYZ;");
+    testError("/** @const */ var a$b$XYZ = 1; ++a$b$XYZ;");
   }
 
   @Test
   public void testConstantPostDecremented1() {
-    testError("var XYZ = 1; XYZ--;");
+    testError("/** @const */ var XYZ = 1; XYZ--;");
   }
 
   @Test
   public void testConstantPostDecremented2() {
-    testError("var a$b$XYZ = 1; a$b$XYZ--;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ--;");
   }
 
   @Test
   public void testConstantPreDecremented1() {
-    testError("var XYZ = 1; --XYZ;");
+    testError("/** @const */ var XYZ = 1; --XYZ;");
   }
 
   @Test
   public void testConstantPreDecremented2() {
-    testError("var a$b$XYZ = 1; --a$b$XYZ;");
+    testError("/** @const */ var a$b$XYZ = 1; --a$b$XYZ;");
   }
 
   @Test
@@ -183,37 +183,37 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   @Test
   public void testAbbreviatedArithmeticAssignment1() {
-    testError("var XYZ = 1; XYZ += 2;");
+    testError("/** @const */ var XYZ = 1; XYZ += 2;");
   }
 
   @Test
   public void testAbbreviatedArithmeticAssignment2() {
-    testError("var a$b$XYZ = 1; a$b$XYZ %= 2;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ %= 2;");
   }
 
   @Test
   public void testAbbreviatedArithmeticAssignment3() {
-    testError("var a$b$XYZ = 1; a$b$XYZ **= 2;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ **= 2;");
   }
 
   @Test
   public void testAbbreviatedBitAssignment1() {
-    testError("var XYZ = 1; XYZ |= 2;");
+    testError("/** @const */ var XYZ = 1; XYZ |= 2;");
   }
 
   @Test
   public void testAbbreviatedBitAssignment2() {
-    testError("var a$b$XYZ = 1; a$b$XYZ &= 2;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ &= 2;");
   }
 
   @Test
   public void testAbbreviatedShiftAssignment1() {
-    testError("var XYZ = 1; XYZ >>= 2;");
+    testError("/** @const */ var XYZ = 1; XYZ >>= 2;");
   }
 
   @Test
   public void testAbbreviatedShiftAssignment2() {
-    testError("var a$b$XYZ = 1; a$b$XYZ <<= 2;");
+    testError("/** @const */ var a$b$XYZ = 1; a$b$XYZ <<= 2;");
   }
 
   @Test

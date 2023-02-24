@@ -12147,7 +12147,7 @@ typed_asts {
         child {
           kind: IDENTIFIER
           string_value_pointer: 603
-          boolean_properties: 17592186044480
+          boolean_properties: 64
           type: 0
         }
       }
@@ -25656,7 +25656,6 @@ typed_asts {
           kind: IDENTIFIER
           string_value_pointer: 359
           relative_column: 4
-          boolean_properties: 17592186044416
           type: 314
         }
         relative_line: 7
@@ -118038,7 +118037,7 @@ typed_asts {
                               }
                               string_value_pointer: 1234
                               relative_column: 4
-                              boolean_properties: 26388279066624
+                              boolean_properties: 8796093022208
                               type: 3
                             }
                             relative_line: 1

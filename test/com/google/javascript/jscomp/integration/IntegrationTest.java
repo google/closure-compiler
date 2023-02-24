@@ -1567,7 +1567,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCheckConsts() {
     CompilerOptions options = createCompilerOptions();
     options.setInlineConstantVars(true);
-    test(options, "var FOO = true; FOO = false", DiagnosticGroups.CONST);
+    test(options, "/** @const */ var FOO = true; FOO = false", DiagnosticGroups.CONST);
   }
 
   @Test

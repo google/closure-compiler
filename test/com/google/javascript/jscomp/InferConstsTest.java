@@ -240,7 +240,14 @@ public final class InferConstsTest extends CompilerTestCase {
     assertConsts("import x from './mod';", notInferred("x"));
     assertConsts("import {x as y, z} from './mod';", notInferred("y", "z"));
     assertConsts("import * as x from './mod';", notInferred("x"));
-    assertConsts("import * as CONST_NAME from './mod';", declared("CONST_NAME"));
+    assertNotConsts("import * as CONST_NAME from './mod';", "CONST_NAME");
+  }
+
+  @Test
+  public void testConstantByConventionButNotInPractice() {
+    assertNotConsts("let CONST_NAME = 0; CONST_NAME++;", "CONST_NAME");
+    assertNotConsts("var CONST_NAME = 0; CONST_NAME++;", "CONST_NAME");
+    assertConsts("var CONST_NAME = 0;", inferred("CONST_NAME"));
   }
 
   private void assertNotConsts(String js, String... names) {

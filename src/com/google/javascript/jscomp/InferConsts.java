@@ -26,7 +26,6 @@ import org.jspecify.nullness.Nullable;
  * 1) Provably well-defined and assigned once in its lifetime.
  * 2) Annotated 'const'
  * 3) Declared with the 'const' keyword.
- * 4) Is constant by naming convention.
  *
  * These 3 are considered semantically equivalent. Notice that a variable
  * in a loop is never considered const.
@@ -66,9 +65,6 @@ class InferConsts implements CompilerPass {
     if (docInfo != null && docInfo.isConstant()) {
       nameNode.setDeclaredConstantVar(true);
     } else if (nameNode != null && nameNode.getParent().isConst()) {
-      nameNode.setDeclaredConstantVar(true);
-    } else if (nameNode != null
-        && compiler.getCodingConvention().isConstant(nameNode.getString())) {
       nameNode.setDeclaredConstantVar(true);
     }
     if (isInferredConst(v, refCollection)) {
