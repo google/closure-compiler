@@ -352,9 +352,8 @@ public final class TypedAstDeserializer {
     String sourceMappingURL = deserializer.getSourceMappingURL();
 
     if (sourceMappingURL != null && sourceMappingURL.length() > 0 && resolveSourceMapAnnotations) {
-      boolean parseInline = parseInlineSourceMaps;
       SourceFile sourceMapSourceFile =
-          SourceMapResolver.extractSourceMap(sourceFile, sourceMappingURL, parseInline);
+          SourceMapResolver.extractSourceMap(sourceFile, sourceMappingURL, parseInlineSourceMaps);
       if (sourceMapSourceFile != null) {
         compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
       }
