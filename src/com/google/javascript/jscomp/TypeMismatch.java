@@ -70,6 +70,13 @@ public abstract class TypeMismatch implements Serializable {
       if (found.isSubtypeOf(required) || required.isSubtypeOf(found)) {
         return;
       }
+      if (required.isUnionType()) {
+        for (JSType requiredAltType : required.toMaybeUnionType().getAlternates()) {
+          if (requiredAltType.isSubtypeOf(found)) {
+            return;
+          }
+        }
+      }
 
       if (bothAreNotTemplateTypes(found, required)) {
         this.mismatches.add(TypeMismatch.create(found, required, location));
