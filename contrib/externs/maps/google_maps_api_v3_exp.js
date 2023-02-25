@@ -33,7 +33,6 @@ var google = {};
 google.maps = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Loads a <a
  * href="https://developers.google.com/maps/documentation/javascript/libraries">library</a>
  * of the Maps JavaScript API, resolving with the direct members of that API
@@ -524,8 +523,6 @@ google.maps.CoordinateTransformer.prototype.fromLatLngAltitude = function(
 google.maps.CoordinateTransformer.prototype.getCameraParams = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.CoreLibrary = function() {};
@@ -2732,8 +2729,6 @@ google.maps.DistanceMatrixStatus = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.DrawingLibrary = function() {};
@@ -2792,8 +2787,6 @@ google.maps.Duration.prototype.text;
 google.maps.Duration.prototype.value;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.ElevationLibrary = function() {};
@@ -3476,8 +3469,6 @@ google.maps.GeocoderStatus = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.GeocodingLibrary = function() {};
@@ -3498,8 +3489,6 @@ google.maps.GeocodingLibrary.prototype.GeocoderLocationType;
 google.maps.GeocodingLibrary.prototype.GeocoderStatus;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.GeometryLibrary = function() {};
@@ -6020,8 +6009,6 @@ google.maps.MapsEventListener = function() {};
 google.maps.MapsEventListener.prototype.remove = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.MapsLibrary = function() {};
@@ -6565,8 +6552,6 @@ google.maps.MarkerLabel.prototype.fontWeight;
 google.maps.MarkerLabel.prototype.text;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.MarkerLibrary = function() {};
@@ -7117,15 +7102,6 @@ google.maps.PlaceFeature = function() {};
 google.maps.PlaceFeature.prototype.placeId;
 
 /**
- * The display name.
- * @type {string}
- * @deprecated <code>google.maps.PlaceFeature.displayName</code> is deprecated,
- *     and will be removed February 2023. Use
- *     <code>google.maps.PlaceFeature.fetchPlace()</code> instead.
- */
-google.maps.PlaceFeature.prototype.displayName;
-
-/**
  * Fetches a <code>Place</code> for this <code>PlaceFeature</code>. In the
  * resulting <code>Place</code> object, the <code>id</code> and the
  * <code>displayName</code> properties will be populated. (Additional fields can
@@ -7139,8 +7115,6 @@ google.maps.PlaceFeature.prototype.displayName;
 google.maps.PlaceFeature.prototype.fetchPlace = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.PlacesLibrary = function() {};
@@ -7959,8 +7933,6 @@ google.maps.RotateControlOptions = function() {};
 google.maps.RotateControlOptions.prototype.position;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.RoutesLibrary = function() {};
@@ -8172,8 +8144,6 @@ google.maps.StreetViewCoverageLayer.prototype.getMap = function() {};
 google.maps.StreetViewCoverageLayer.prototype.setMap = function(map) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.StreetViewLibrary = function() {};
@@ -9763,8 +9733,6 @@ google.maps.VisibleRegion.prototype.nearLeft;
 google.maps.VisibleRegion.prototype.nearRight;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.VisualizationLibrary = function() {};
