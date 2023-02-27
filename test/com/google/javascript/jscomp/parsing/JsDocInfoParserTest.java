@@ -2997,6 +2997,59 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testMods1() {
+    JSDocInfo info = parseFileOverview("@mods {ns.Foo} */");
+    assertThat(info.getMods()).isEqualTo("ns.Foo");
+  }
+
+  @Test
+  public void testMods2() {
+    JSDocInfo info = parseFileOverview("@mods {google3.path.to.file} */");
+    assertThat(info.getMods()).isEqualTo("google3.path.to.file");
+  }
+
+  @Test
+  public void testJsDocAfterMods() {
+    JSDocInfo info = parseFileOverview("@mods {ns.Foo} @modName {new_feature_flag} */");
+    assertThat(info.getMods()).isEqualTo("ns.Foo");
+  }
+
+  @Test
+  public void testMultipleModsTags() {
+    parseFileOverview("@mods {ns.Foo} \n * @mods {ns.Bar} */", "extra @mods tag");
+  }
+
+  @Test
+  public void testBadMods1() {
+    parseFileOverview("@mods {} */", "malformed @mods tag");
+  }
+
+  @Test
+  public void testBadMods2() {
+    parseFileOverview("@mods { */", "malformed @mods tag");
+  }
+
+  @Test
+  public void testBadMods3() {
+    parseFileOverview("@mods } */", "malformed @mods tag");
+  }
+
+  @Test
+  public void testBadMods4() {
+    parseFileOverview("@mods ns.Foo */", "malformed @mods tag");
+  }
+
+  @Test
+  public void testBadMods5() {
+    parseFileOverview("@mods {ns.Foo */", "malformed @mods tag");
+  }
+
+  @Test
+  public void testBadMods6() {
+    parseFileOverview("@mods ns.Foo} */", "malformed @mods tag");
+  }
+
+  @Test
   public void testModifies1() {
     JSDocInfo info = parse("@modifies {this} */");
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this"));
@@ -5161,7 +5214,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "* @member \n"
             + "* @memberOf \n"
             + "* @modName \n"
-            + "* @mods \n"
             + "* @name \n"
             + "* @namespace \n"
             + "* @ngInject \n"

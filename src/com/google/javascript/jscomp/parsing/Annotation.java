@@ -55,6 +55,7 @@ enum Annotation {
   MIXIN_CLASS,
   MIXIN_FUNCTION,
   MODIFIES,
+  MODS,
   NG_INJECT,
   NO_COLLAPSE,
   NO_COMPILE,
@@ -139,6 +140,7 @@ enum Annotation {
           .put("mixinClass", Annotation.MIXIN_CLASS)
           .put("mixinFunction", Annotation.MIXIN_FUNCTION)
           .put("modifies", Annotation.MODIFIES)
+          .put("mods", Annotation.MODS)
           .put("nocollapse", Annotation.NO_COLLAPSE)
           .put("nocompile", Annotation.NO_COMPILE)
           .put("nodts", Annotation.NO_DTS)
