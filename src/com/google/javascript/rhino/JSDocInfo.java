@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -487,7 +486,6 @@ public class JSDocInfo implements Serializable {
       new Property<>("fileoverviewDescription");
   private static final Property<String> RETURN_DESCRIPTION = new Property<>("returnDescription");
   private static final Property<String> ENHANCED_NAMESPACE = new Property<>("enhance");
-  private static final Property<String> MODS = new Property<>("mods");
   private static final Property<List<String>> TS_TYPES = new Property<>("tsType");
 
   private static final Property<List<String>> AUTHORS = new Property<>("authors");
@@ -1375,16 +1373,6 @@ public class JSDocInfo implements Serializable {
     return ENHANCED_NAMESPACE.get(this);
   }
 
-  /** Returns whether this has a modded namespace. */
-  public boolean hasMods() {
-    return MODS.get(this) != null;
-  }
-
-  /** Returns the modded namespace or null if none is specified. */
-  public String getMods() {
-    return MODS.get(this);
-  }
-
   /** Gets the list of all markers for the documentation in this JSDoc. */
   public Collection<Marker> getMarkers() {
     ArrayList<Marker> markers = MARKERS.get(this);
@@ -1636,14 +1624,13 @@ public class JSDocInfo implements Serializable {
      */
     public boolean isPopulatedWithFileOverview() {
       return populated
-          && ((bits
-                      & (Bit.FILEOVERVIEW.mask
-                          | Bit.EXTERNS.mask
-                          | Bit.NOCOMPILE.mask
-                          | Bit.TYPE_SUMMARY.mask
-                          | Bit.ENHANCED_NAMESPACE.mask))
-                  != 0
-              || isModsRecorded());
+          && (bits
+                  & (Bit.FILEOVERVIEW.mask
+                      | Bit.EXTERNS.mask
+                      | Bit.NOCOMPILE.mask
+                      | Bit.TYPE_SUMMARY.mask
+                      | Bit.ENHANCED_NAMESPACE.mask))
+              != 0;
     }
 
     /** Returns whether this builder recorded a description. */
@@ -2218,21 +2205,6 @@ public class JSDocInfo implements Serializable {
       setBit(Bit.ENHANCED_NAMESPACE, true);
       populated = true;
       return populateProp(ENHANCED_NAMESPACE, namespace);
-    }
-
-    /** Returns whether this builder recorded a modded namespace. */
-    public boolean isModsRecorded() {
-      return props.get(MODS) != null;
-    }
-
-    /**
-     * Records modded namespace.
-     *
-     * @return {@code true} If the modded namespace was recorded.
-     */
-    @CanIgnoreReturnValue
-    public boolean recordMods(String namespace) {
-      return populateProp(MODS, RhinoStringPool.addOrGet(namespace));
     }
 
     public boolean recordLicense(String license) {

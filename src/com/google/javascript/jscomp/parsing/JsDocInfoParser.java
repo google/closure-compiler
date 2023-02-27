@@ -549,17 +549,6 @@ public final class JsDocInfoParser {
           jsdocBuilder.recordEnhance(enhance);
           return token;
 
-        case MODS:
-          if (jsdocBuilder.isModsRecorded()) {
-            addParserWarning(Msg.JSDOC_MODS_EXTRA);
-          } else {
-            token = parseModsTag(next());
-          }
-          if (token != JsDocToken.EOC && token != JsDocToken.EOF) {
-            token = eatUntilEOLIfNotAnnotation();
-          }
-          return token;
-
         case ENUM:
           token = next();
           lineno = stream.getLineno();
@@ -1348,31 +1337,6 @@ public final class JsDocInfoParser {
       }
       return token;
     }
-  }
-
-  /**
-   * Parse a {@code @mods} tag of the form {@code @mods &#123;google3.path.to.file&#125;}.
-   *
-   * @param token The current token.
-   */
-  private JsDocToken parseModsTag(JsDocToken token) {
-    if (token != JsDocToken.LEFT_CURLY) {
-      addParserWarning(Msg.JSDOC_MODS);
-      return token;
-    }
-    if (!match(JsDocToken.STRING)) {
-      addParserWarning(Msg.JSDOC_MODS);
-      return token;
-    }
-    String namespace = stream.getString();
-    token = next();
-    if (!match(JsDocToken.RIGHT_CURLY)) {
-      addParserWarning(Msg.JSDOC_MODS);
-    } else {
-      token = next();
-      jsdocBuilder.recordMods(namespace);
-    }
-    return token;
   }
 
   /**

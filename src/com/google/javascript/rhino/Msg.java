@@ -102,8 +102,6 @@ public enum Msg {
   JSDOC_MODIFIES("malformed @modifies tag"),
   JSDOC_MODIFIES_DUPLICATE("conflicting @modifies tag"),
   JSDOC_MODIFIES_UNKNOWN("unknown @modifies parameter: {0}"),
-  JSDOC_MODS("malformed @mods tag"),
-  JSDOC_MODS_EXTRA("extra @mods tag"),
   JSDOC_NAME_SYNTAX("name not recognized due to syntax error."),
   JSDOC_NGINJECT_EXTRA("extra @ngInject tag"),
   JSDOC_NOCOLLAPSE("extra @nocollapse tag"),
