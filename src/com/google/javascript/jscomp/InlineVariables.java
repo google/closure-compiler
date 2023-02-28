@@ -972,11 +972,6 @@ class InlineVariables implements CompilerPass {
         checkState(parent.isAssign() && parent.getFirstChild() == initialization.getNode());
       }
 
-      Node n = initialization.getAssignedValue();
-      if (n.isFunction()) {
-        return compiler.getCodingConvention().isInlinableFunction(n);
-      }
-
       return true;
     }
 

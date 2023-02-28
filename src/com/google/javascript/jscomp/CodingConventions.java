@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
@@ -198,11 +196,6 @@ public final class CodingConventions {
     public void applySingletonGetter(
         NominalTypeBuilder classType, FunctionType getterType) {
       nextConvention.applySingletonGetter(classType, getterType);
-    }
-
-    @Override
-    public boolean isInlinableFunction(Node n) {
-      return nextConvention.isInlinableFunction(n);
     }
 
     @Override
@@ -436,12 +429,6 @@ public final class CodingConventions {
     public void applySingletonGetter(
         NominalTypeBuilder classType, FunctionType getterType) {
       // do nothing.
-    }
-
-    @Override
-    public boolean isInlinableFunction(Node n) {
-      checkState(n.isFunction(), n);
-      return true;
     }
 
     @Override

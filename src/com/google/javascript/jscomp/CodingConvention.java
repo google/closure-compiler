@@ -240,11 +240,6 @@ public interface CodingConvention extends Serializable {
       NominalTypeBuilder classType, FunctionType getterType);
 
   /**
-   * @return Whether the function is inlinable by convention.
-   */
-  public boolean isInlinableFunction(Node n);
-
-  /**
    * @return the delegate relationship created by the call or null.
    */
   public DelegateRelationship getDelegateRelationship(Node callNode);
