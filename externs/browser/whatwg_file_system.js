@@ -83,6 +83,11 @@ FileSystemFileHandle.prototype.createWritable = function(opt_options) {};
  */
 FileSystemFileHandle.prototype.createSyncAccessHandle = function() {};
 
+/**
+ * @return {!Promise<string>}
+ */
+FileSystemFileHandle.prototype.getUniqueId = function() {};
+
 
 /**
  * @record
