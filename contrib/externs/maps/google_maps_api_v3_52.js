@@ -4051,6 +4051,11 @@ google.maps.JourneySharingLibrary = function() {};
 google.maps.JourneySharingLibrary.prototype.AutomaticViewportMode;
 
 /**
+ * @type {typeof google.maps.journeySharing.DeliveryVehicleStopState}
+ */
+google.maps.JourneySharingLibrary.prototype.DeliveryVehicleStopState;
+
+/**
  * @type {typeof
  *     google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider}
  */
@@ -4504,7 +4509,7 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
  * When using `v=beta`, can be accessed by calling `const {LatLngAltitude} =
  * await google.map.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral}
+ * @param {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|!google.maps.LatLng}
  *     value The initializing value.
  * @param {boolean=} noClampNoWrap Whether to preserve the initialization
  *     values, even if they may not necessarily be valid latitude values in the
@@ -4537,7 +4542,8 @@ google.maps.LatLngAltitude.prototype.lng;
 
 /**
  * Comparison function.
- * @param {?google.maps.LatLngAltitude} other Another LatLngAltitude object.
+ * @param {null|!google.maps.LatLngAltitude} other Another LatLngAltitude
+ *     object.
  * @return {boolean} Whether the two objects are equal.
  */
 google.maps.LatLngAltitude.prototype.equals = function(other) {};
@@ -10648,6 +10654,54 @@ google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
+ * DeliveryVehicleStop type
+ * @record
+ */
+google.maps.journeySharing.DeliveryVehicleStop = function() {};
+
+/**
+ * The list of Tasks to be performed at this stop. <ul> <li><code>id</code>: the
+ * ID of the task. <li><code>extraDurationMillis</code>: the extra time it takes
+ * to perform the task, in milliseconds. </ul>
+ * @type {!Array<{id:?string, extraDurationMillis:?number}>}
+ */
+google.maps.journeySharing.DeliveryVehicleStop.prototype.tasks;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The current state of a {@link
+ * google.maps.journeySharing.DeliveryVehicleStop}.
+ *
+ * When using `v=beta`, can be accessed by calling
+ * `const {DeliveryVehicleStopState} = await
+ * google.map.importLibrary("journeySharing")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.journeySharing.DeliveryVehicleStopState = {
+  /**
+   * Arrived at stop. Assumes that when the vehicle is routing to the next stop,
+   * that all previous stops have been completed.
+   */
+  ARRIVED: 'ARRIVED',
+  /**
+   * Assigned and actively routing.
+   */
+  ENROUTE: 'ENROUTE',
+  /**
+   * Created, but not actively routing.
+   */
+  NEW: 'NEW',
+  /**
+   * Unknown.
+   */
+  UNSPECIFIED: 'UNSPECIFIED',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
  * Delivery Fleet Location Provider.
  *
  * When using `v=beta`, can be accessed by calling
@@ -11107,13 +11161,6 @@ google.maps.journeySharing.FleetEngineShipmentLocationProvider.prototype
     .trackingId;
 
 /**
- * Returns the currently tracked task.
- * @return {?google.maps.journeySharing.Task}
- */
-google.maps.journeySharing.FleetEngineShipmentLocationProvider.prototype
-    .getTask = function() {};
-
-/**
  * Explicitly refreshes the tracked location.
  * @return {void}
  */
@@ -11220,11 +11267,11 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderUpdateEvent =
     function() {};
 
 /**
- * The task structure returned by the update. Unmodifiable.
- * @type {?google.maps.journeySharing.Task}
+ * The task tracking info structure returned by the update. Unmodifiable.
+ * @type {?google.maps.journeySharing.TaskTrackingInfo}
  */
 google.maps.journeySharing.FleetEngineShipmentLocationProviderUpdateEvent
-    .prototype.task;
+    .prototype.taskTrackingInfo;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -12192,14 +12239,11 @@ google.maps.journeySharing.ShipmentMarkerCustomizationFunctionParams =
     function() {};
 
 /**
- * The task associated with this marker. <br><br>For information about the
- * delivery vehicle servicing this task, use {@link
- * google.maps.journeySharing.Task.latestVehicleLocationUpdate} and {@link
- * google.maps.journeySharing.Task.remainingVehicleJourneySegments}.
- * @type {!google.maps.journeySharing.Task}
+ * Information for the task associated with this marker.
+ * @type {!google.maps.journeySharing.TaskTrackingInfo}
  */
 google.maps.journeySharing.ShipmentMarkerCustomizationFunctionParams.prototype
-    .task;
+    .taskTrackingInfo;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -12311,6 +12355,100 @@ google.maps.journeySharing.TaskMarkerCustomizationFunctionParams =
  * @type {!google.maps.journeySharing.Task}
  */
 google.maps.journeySharing.TaskMarkerCustomizationFunctionParams.prototype.task;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The details for a task tracking info object returned by Fleet Engine.
+ * @record
+ */
+google.maps.journeySharing.TaskTrackingInfo = function() {};
+
+/**
+ * The estimated arrival time to the stop location.
+ * @type {?Date}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.estimatedArrivalTime;
+
+/**
+ * The estimated completion time of a Task.
+ * @type {?Date}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype
+    .estimatedTaskCompletionTime;
+
+/**
+ * Information specific to the last location update.
+ * @type {?google.maps.journeySharing.VehicleLocationUpdate}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype
+    .latestVehicleLocationUpdate;
+
+/**
+ * The name in the format
+ * &quot;providers/{provider_id}/taskTrackingInfo/{tracking_id}&quot;, where
+ * <code>tracking_id</code> represents the tracking ID.
+ * @type {string}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.name;
+
+/**
+ * The location where the Task will be completed.
+ * @type {?google.maps.LatLng}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.plannedLocation;
+
+/**
+ * The total remaining distance in meters to the <code>VehicleStop</code> of
+ * interest.
+ * @type {?number}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype
+    .remainingDrivingDistanceMeters;
+
+/**
+ * Indicates the number of stops the vehicle remaining until the task stop is
+ * reached, including the task stop. For example, if the vehicle&#39;s next stop
+ * is the task stop, the value will be 1.
+ * @type {?number}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.remainingStopCount;
+
+/**
+ * A list of points which when connected forms a polyline of the vehicle&#39;s
+ * expected route to the location of this task.
+ * @type {?Array<!google.maps.LatLng>}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.routePolylinePoints;
+
+/**
+ * The current execution state of the Task.
+ * @type {?string}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.state;
+
+/**
+ * The outcome of attempting to execute a Task.
+ * @type {?string}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.taskOutcome;
+
+/**
+ * The time when the Task&#39;s outcome was set by the provider.
+ * @type {?Date}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.taskOutcomeTime;
+
+/**
+ * The tracking ID of a Task.<br> <ul> <li>Must be a valid Unicode string.</li>
+ * <li>Limited to a maximum length of 64 characters.</li> <li>Normalized
+ * according to <a href="http://www.unicode.org/reports/tr15/">Unicode
+ * Normalization Form C</a>.</li> <li>May not contain any of the following ASCII
+ * characters: &#39;/&#39;, &#39;:&#39;, &#39;?&#39;, &#39;,&#39;, or
+ * &#39;#&#39;.</li> </ul>
+ * @type {string}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.trackingId;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -12464,32 +12602,28 @@ google.maps.journeySharing.VehicleJourneySegment = function() {};
  * The travel distance from the previous stop to this stop, in meters.
  * @type {?number}
  */
-google.maps.journeySharing.VehicleJourneySegment.prototype.distanceMeters;
+google.maps.journeySharing.VehicleJourneySegment.prototype
+    .drivingDistanceMeters;
 
 /**
- * The travel time from the previous stop to this stop, in milliseconds.
+ * The travel time from the previous stop this stop, in milliseconds.
  * @type {?number}
  */
-google.maps.journeySharing.VehicleJourneySegment.prototype.durationMillis;
+google.maps.journeySharing.VehicleJourneySegment.prototype
+    .drivingDurationMillis;
 
 /**
- * The extra travel time due to the durations of the stop&#39;s tasks, in
- * milliseconds.
- * @type {?number}
- */
-google.maps.journeySharing.VehicleJourneySegment.prototype.extraDurationMillis;
-
-/**
- * The actual stop location.
- * @type {?google.maps.LatLngLiteral}
- */
-google.maps.journeySharing.VehicleJourneySegment.prototype.location;
-
-/**
- * The path from the previous stop to this stop.
+ * The path from the previous waypoint (or the vehicle&#39;s current location,
+ * if this waypoint is the first in the list of waypoints) to this waypoint.
  * @type {?Array<!google.maps.LatLngLiteral>}
  */
 google.maps.journeySharing.VehicleJourneySegment.prototype.path;
+
+/**
+ * The stops to be served by this vehicle.
+ * @type {?Array<!google.maps.journeySharing.DeliveryVehicleStop>}
+ */
+google.maps.journeySharing.VehicleJourneySegment.prototype.stop;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -12507,7 +12641,7 @@ google.maps.journeySharing.VehicleLocationUpdate.prototype.heading;
 
 /**
  * The location of the update.
- * @type {?google.maps.LatLngLiteral}
+ * @type {?google.maps.LatLngLiteral|?google.maps.LatLng}
  */
 google.maps.journeySharing.VehicleLocationUpdate.prototype.location;
 
