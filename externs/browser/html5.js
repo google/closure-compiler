@@ -4656,6 +4656,12 @@ Document.prototype.fonts;
 Document.prototype.currentScript;
 
 /**
+ * @see https://wicg.github.io/nav-speculation/prerendering.html#dom-document-prerendering
+ * @type {boolean}
+ */
+Document.prototype.prerendering;
+
+/**
  * Definition of ShadowRoot interface,
  * @see http://www.w3.org/TR/shadow-dom/#api-shadow-root
  * @constructor

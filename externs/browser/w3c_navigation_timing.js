@@ -122,6 +122,8 @@ function PerformanceNavigationTiming() {}
 /** @type {number} */ PerformanceNavigationTiming.prototype.loadEventEnd;
 /** @type {NavigationType} */ PerformanceNavigationTiming.prototype.type;
 /** @type {number} */ PerformanceNavigationTiming.prototype.redirectCount;
+// https://wicg.github.io/nav-speculation/prerendering.html#performance-navigation-timing-extension
+/** @type {number} */ PerformanceNavigationTiming.prototype.activationStart;
 
 /**
  * https://w3c.github.io/paint-timing/#sec-PerformancePaintTiming
