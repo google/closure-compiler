@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
 
@@ -77,7 +77,7 @@ public final class DiagnosticGroup implements Serializable {
   }
 
   // DiagnosticGroups with only a single DiagnosticType.
-  private static final Map<DiagnosticType, DiagnosticGroup> singletons = new HashMap<>();
+  private static final Map<DiagnosticType, DiagnosticGroup> singletons = new LinkedHashMap<>();
 
   /** Create a diagnostic group that matches only the given type. */
   public static synchronized DiagnosticGroup forType(DiagnosticType type) {

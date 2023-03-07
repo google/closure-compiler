@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -44,7 +44,7 @@ public final class ComposeWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
   // The order that the guards were added in.
-  private final Map<WarningsGuard, Integer> orderOfAddition = new HashMap<>();
+  private final Map<WarningsGuard, Integer> orderOfAddition = new LinkedHashMap<>();
   private int numberOfAdds = 0;
 
   private final Comparator<WarningsGuard> guardComparator = new GuardComparator(orderOfAddition);
