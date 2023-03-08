@@ -27,7 +27,7 @@ import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -197,7 +197,7 @@ class FunctionArgumentInjector {
    */
   Set<String> findModifiedParameters(Node fnNode) {
     ImmutableSet<String> names = getFunctionParameterSet(fnNode);
-    Set<String> unsafeNames = new HashSet<>();
+    Set<String> unsafeNames = new LinkedHashSet<>();
     return findModifiedParameters(fnNode.getLastChild(), names, unsafeNames, false);
   }
 
@@ -406,7 +406,7 @@ class FunctionArgumentInjector {
       ImmutableSet<String> parameters, Node root) {
 
     // TODO(johnlenz): Consider using scope for this.
-    Set<String> locals = new HashSet<>(parameters);
+    Set<String> locals = new LinkedHashSet<>(parameters);
     gatherLocalNames(root, locals);
 
     ReferencedAfterSideEffect collector = new ReferencedAfterSideEffect(
@@ -442,7 +442,7 @@ class FunctionArgumentInjector {
     private final ImmutableSet<String> parameters;
     private final ImmutableSet<String> locals;
     private boolean sideEffectSeen = false;
-    private final Set<String> parametersReferenced = new HashSet<>();
+    private final Set<String> parametersReferenced = new LinkedHashSet<>();
     private int loopsEntered = 0;
 
     ReferencedAfterSideEffect(ImmutableSet<String> parameters, ImmutableSet<String> locals) {

@@ -29,7 +29,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -325,7 +325,7 @@ class FunctionToBlockMutator {
 
       // An arg map that will be updated to contain the
       // safe aliases.
-      Map<String, Node> newArgMap = new HashMap<>(argMap);
+      Map<String, Node> newArgMap = new LinkedHashMap<>(argMap);
 
       // Declare the alias in the same order as they
       // are declared.

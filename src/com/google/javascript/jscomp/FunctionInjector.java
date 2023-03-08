@@ -31,8 +31,8 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -832,7 +832,7 @@ class FunctionInjector {
       boolean hasArgs = !args.isEmpty();
       if (hasArgs) {
         // Limit the inlining
-        Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
+        Set<String> allNamesToAlias = new LinkedHashSet<>(namesToAlias);
         functionArgumentInjector.maybeAddTempsForCallArguments(
             compiler, calleeFn, args, allNamesToAlias, compiler.getCodingConvention());
         if (!allNamesToAlias.isEmpty()) {
@@ -887,7 +887,7 @@ class FunctionInjector {
     boolean hasArgs = !args.isEmpty();
     if (hasArgs) {
       // Limit the inlining
-      Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
+      Set<String> allNamesToAlias = new LinkedHashSet<>(namesToAlias);
       functionArgumentInjector.maybeAddTempsForCallArguments(
           compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
       if (!allNamesToAlias.isEmpty()) {
