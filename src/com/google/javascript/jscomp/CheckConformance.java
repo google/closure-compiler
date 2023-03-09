@@ -287,6 +287,8 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           return new ConformanceRules.BannedDependencyRegex(compiler, requirement);
         case BANNED_ENHANCE:
           return new ConformanceRules.BannedEnhance(compiler, requirement);
+        case BANNED_MODS_REGEX:
+          return new ConformanceRules.BannedModsRegex(compiler, requirement);
         case BANNED_NAME:
         case BANNED_NAME_CALL:
           return new ConformanceRules.BannedName(compiler, requirement);

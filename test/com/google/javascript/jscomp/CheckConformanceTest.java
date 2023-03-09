@@ -661,6 +661,27 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedModsRegex() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_MODS_REGEX\n"
+            + "  value: '.+_bar$'\n"
+            + "  error_message: 'Modding namespaces ending in _bar is NOT allowed.'\n"
+            + "}";
+    String violationMessage = "Violation: Modding namespaces ending in _bar is NOT allowed.";
+
+    String ban = lines("/**", " * @mods {ns.foo_bar}", " * @modName {ns.foo_bar_baz}", " */");
+    testWarning(ban, CheckConformance.CONFORMANCE_VIOLATION, violationMessage);
+
+    String allow1 = lines("/**", " * @mods {ns.foo}", " * @modName {ns.foo_bar}", " */");
+    testNoWarning(allow1);
+
+    String allow2 =
+        lines("/**", " * @fileoverview no enhance annotation should always pass.", " */");
+    testNoWarning(allow2);
+  }
+
+  @Test
   public void testBannedNameCall() {
     configuration =
         "requirement: {\n"

@@ -1927,6 +1927,49 @@ public final class ConformanceRules {
     }
   }
 
+  /** Checks that file does not include an @mods annotation for a banned namespace regex. */
+  public static final class BannedModsRegex extends AbstractRule {
+    private final Pattern bannedModsRegex;
+
+    public BannedModsRegex(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+
+      List<String> bannedModsRegexList = requirement.getValueList();
+      if (requirement.getValueCount() == 0) {
+        throw new InvalidRequirementSpec("missing value");
+      }
+      bannedModsRegex = buildPattern(bannedModsRegexList);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      JSDocInfo docInfo = n.getJSDocInfo();
+
+      if (docInfo == null || !docInfo.hasMods()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      if (bannedModsRegex.matcher(docInfo.getMods()).find()) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private static final Precondition IS_SCRIPT_NODE =
+        new Precondition() {
+          @Override
+          public boolean shouldCheck(Node n) {
+            return n.isScript();
+          }
+        };
+
+    @Override
+    public final Precondition getPrecondition() {
+      return IS_SCRIPT_NODE;
+    }
+  }
+
   private static final QualifiedName GOOG_DOM = QualifiedName.of("goog.dom");
   private static final QualifiedName GOOG_DOM_TAGNAME = QualifiedName.of("goog.dom.TagName");
 

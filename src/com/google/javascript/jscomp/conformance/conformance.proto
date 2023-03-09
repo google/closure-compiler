@@ -178,6 +178,9 @@ message Requirement {
     // based on the passed in regular expression value.
     // example: value: ".*oo.*" in "foobar" would match.
     BANNED_STRING_REGEX = 17;
+
+    // A banned @mods annotation using regular expressions.
+    BANNED_MODS_REGEX = 18;
   }
 
   enum TypeMatchingStrategy {
