@@ -3252,11 +3252,16 @@ public final class CompilerTest {
     CompilerOptions compilerOptions = new CompilerOptions();
     compiler.initOptions(compilerOptions);
     SourceFile syntheticFile = compiler.SYNTHETIC_EXTERNS_FILE;
+    SourceFile fileOne = SourceFile.fromCode("one.js", "");
+    SourceFile fileTwo = SourceFile.fromCode("two.js", "");
 
     TypedAst typedAst0 =
         TypedAst.newBuilder()
             .setStringPool(StringPool.empty().toProto())
-            .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(syntheticFile.getProto()))
+            .setSourceFilePool(
+                SourceFilePool.newBuilder()
+                    .addSourceFile(syntheticFile.getProto())
+                    .addSourceFile(fileOne.getProto()))
             .addCodeAst(
                 LazyAst.newBuilder()
                     .setSourceFile(1)
@@ -3266,11 +3271,19 @@ public final class CompilerTest {
                             .addChild(AstNode.newBuilder().setKind(NodeKind.CONST_DECLARATION))
                             .build()
                             .toByteString()))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(2)
+                    .setScript(
+                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).build().toByteString()))
             .build();
     TypedAst typedAst1 =
         TypedAst.newBuilder()
             .setStringPool(StringPool.empty().toProto())
-            .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(syntheticFile.getProto()))
+            .setSourceFilePool(
+                SourceFilePool.newBuilder()
+                    .addSourceFile(syntheticFile.getProto())
+                    .addSourceFile(fileTwo.getProto()))
             .addCodeAst(
                 LazyAst.newBuilder()
                     .setSourceFile(1)
@@ -3280,6 +3293,11 @@ public final class CompilerTest {
                             .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION))
                             .build()
                             .toByteString()))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(2)
+                    .setScript(
+                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).build().toByteString()))
             .build();
     InputStream typedAstListStream =
         new ByteArrayInputStream(
@@ -3291,7 +3309,10 @@ public final class CompilerTest {
 
     // When
     compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(), compilerOptions, typedAstListStream);
+        ImmutableList.of(),
+        ImmutableList.of(fileOne, fileTwo),
+        compilerOptions,
+        typedAstListStream);
 
     // Then
     Node insertedExterns = compiler.getExternsRoot().getOnlyChild();

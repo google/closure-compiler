@@ -241,11 +241,15 @@ public final class TypedAstDeserializer {
     ImmutableList<SourceFile> fileShard = toFileShard(typedAstProto);
 
     if (this.mode.equals(Mode.FULL_AST)) {
+      // Exclude any TypedAST shards passed to the compiler that don't contain any actual
+      // sources we care about. For example: if we're passed "--js=a.js --js=b.js", and see a
+      // TypedAST only containing ["c.js", "synthetic:externs"], it's a drain on performance to
+      // include it.
       boolean containsRequiredInput = false;
       for (LazyAst lazyAst :
           Iterables.concat(typedAstProto.getExternAstList(), typedAstProto.getCodeAstList())) {
         SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
-        if (shouldIncludeFileInResult(file)) {
+        if (requiredInputFiles.get().contains(file)) {
           containsRequiredInput = true;
           break;
         }
@@ -297,12 +301,6 @@ public final class TypedAstDeserializer {
     return fileShardBuilder.build();
   }
 
-  private boolean shouldIncludeFileInResult(SourceFile file) {
-    return identical(syntheticExterns, file) // Always preserve the synthetic externs
-        || !requiredInputFiles.isPresent()
-        || requiredInputFiles.get().contains(file);
-  }
-
   private void initLazyAstDeserializer(
       LazyAst lazyAst,
       ImmutableList<SourceFile> fileShard,
@@ -313,7 +311,11 @@ public final class TypedAstDeserializer {
       boolean parseInlineSourceMaps) {
     SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
 
-    if (!shouldIncludeFileInResult(file)) {
+    if (requiredInputFiles.isPresent()
+        && !requiredInputFiles.get().contains(file)
+        // Synthetic externs bypass the normal dependency system and are always included in a
+        // compilation.
+        && !identical(syntheticExterns, file)) {
       return;
     }
 
