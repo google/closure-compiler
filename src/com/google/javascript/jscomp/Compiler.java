@@ -2044,14 +2044,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
     if (options.getDependencyOptions().needsManagement()) {
-      for (CompilerInput input : moduleGraph.getAllInputs()) {
-        // Forward-declare all the provided types, so that they
-        // are not flagged even if they are dropped from the process.
-        for (String provide : input.getProvides()) {
-          forwardDeclareType(provide);
-        }
-      }
-
       try {
         moduleGraph.manageDependencies(this, options.getDependencyOptions());
         staleInputs = true;
