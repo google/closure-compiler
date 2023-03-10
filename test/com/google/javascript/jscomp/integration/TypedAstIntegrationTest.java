@@ -43,13 +43,14 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.zip.GZIPInputStream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -739,22 +740,16 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   /** Converts the list of paths into an input stream sequentially reading all the given files */
-  private static InputStream toInputStream(ArrayList<Path> typedAsts) {
-    InputStream inputStream = null;
+  private static InputStream toInputStream(ArrayList<Path> typedAsts) throws IOException {
+    ArrayList<InputStream> inputShards = new ArrayList<>();
     for (Path typedAst : typedAsts) {
-      FileInputStream inputShard;
-      try {
-        inputShard = new FileInputStream(typedAst.toFile());
-      } catch (FileNotFoundException ex) {
-        throw new AssertionError(ex);
-      }
-      if (inputStream == null) {
-        inputStream = inputShard;
-      } else {
-        inputStream = new SequenceInputStream(inputStream, inputShard);
-      }
+      // Each shard is a gzipped TypedAst proto.
+      // NOTE: while it's generally possible to concatenate individually gzipped files
+      // (https://stackoverflow.com/questions/8005114/fast-concatenation-of-multiple-gzip-files)
+      // it doesn't seem to work to wrap a SequenceInputStream in a GZIPInputStream directly.
+      inputShards.add(new GZIPInputStream(new FileInputStream(typedAst.toFile())));
     }
-    return inputStream;
+    return new SequenceInputStream(Collections.enumeration(inputShards));
   }
 
   private Node parseExpectedCode(String... files) {

@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * A compiler pass intended to serialize the types in the AST.
@@ -41,6 +42,12 @@ public final class SerializeTypedAstPass implements CompilerPass {
     this.consumer = astConsumer;
   }
 
+  /**
+   * Serializes a TypedAst to the given output stream.
+   *
+   * <p>Unlike {@link #createFromPath(AbstractCompiler, Path)}, this method does not automatically
+   * gzip the TypedAST. The "out" parameter may or may not already be a GZIPOutputStream.
+   */
   public static SerializeTypedAstPass createFromOutputStream(AbstractCompiler c, OutputStream out) {
     Consumer<TypedAst> toOutputStream =
         ast -> {
@@ -53,10 +60,11 @@ public final class SerializeTypedAstPass implements CompilerPass {
     return new SerializeTypedAstPass(c, toOutputStream);
   }
 
+  /** Serializes a gzipped TypedAst to the specified outputPath */
   public static SerializeTypedAstPass createFromPath(AbstractCompiler compiler, Path outputPath) {
     Consumer<TypedAst> toPath =
         ast -> {
-          try (OutputStream out = Files.newOutputStream(outputPath)) {
+          try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(outputPath))) {
             TypedAst.List.newBuilder().addTypedAsts(ast).build().writeTo(out);
           } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create TypedAst output file", e);

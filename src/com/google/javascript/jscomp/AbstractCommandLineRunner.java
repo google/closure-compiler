@@ -83,6 +83,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.jspecify.nullness.Nullable;
@@ -142,6 +143,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
               + "%outname% in the value.");
 
   static final String WAITING_FOR_INPUT_WARNING = "The compiler is waiting for input via stdin.";
+  // Use an 8MiB buffer since the concatenated TypedAst file can be very large.
+  private static final int GZIPPED_TYPEDAST_BUFFER_SIZE = 8 * 1024 * 1024;
 
   @GwtIncompatible("Unnecessary")
   private final CommandLineConfig config;
@@ -1417,8 +1420,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       List<SourceFile> sources,
       CompilerOptions options,
       String filename) {
-    try (BufferedInputStream typedAstListStream =
-        new BufferedInputStream(new FileInputStream(filename))) {
+    try (GZIPInputStream typedAstListStream =
+        new GZIPInputStream(new FileInputStream(filename), GZIPPED_TYPEDAST_BUFFER_SIZE)) {
       compiler.initWithTypedAstFilesystem(externs, sources, options, typedAstListStream);
     } catch (IOException e) {
       compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
@@ -1428,8 +1431,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private void initModulesWithTypedAstFilesystem(
       List<SourceFile> externs, List<JSChunk> chunks, CompilerOptions options, String filename) {
-    try (BufferedInputStream typedAstListStream =
-        new BufferedInputStream(new FileInputStream(filename))) {
+    try (GZIPInputStream typedAstListStream =
+        new GZIPInputStream(new FileInputStream(filename), GZIPPED_TYPEDAST_BUFFER_SIZE)) {
       compiler.initModulesWithTypedAstFilesystem(externs, chunks, options, typedAstListStream);
     } catch (IOException e) {
       compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));

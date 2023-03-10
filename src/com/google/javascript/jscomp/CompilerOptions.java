@@ -210,7 +210,11 @@ public class CompilerOptions implements Serializable {
 
   private @Nullable Path typedAstOutputFile = null;
 
-  /** Sets file to output in-progress TypedAST format to. DO NOT USE! */
+  /**
+   * Sets file to output in-progress TypedAST format to. DO NOT USE!
+   *
+   * <p>The "TypedAST format" is currently a gzipped TypedAst proto but this is not stable.
+   */
   public void setTypedAstOutputFile(@Nullable Path file) {
     this.typedAstOutputFile = file;
   }

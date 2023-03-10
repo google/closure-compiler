@@ -401,7 +401,11 @@ public final class TypedAstDeserializer {
         int tag = codedInput.readTag();
         if (WireFormat.getTagFieldNumber(tag) != TypedAst.List.TYPED_ASTS_FIELD_NUMBER
             || WireFormat.getTagWireType(tag) != WireFormat.WIRETYPE_LENGTH_DELIMITED) {
-          throw new InvalidProtocolBufferException("Unexpected tag " + tag);
+          throw new InvalidProtocolBufferException(
+              "Unexpected field number "
+                  + WireFormat.getTagFieldNumber(tag)
+                  + " or wire type "
+                  + WireFormat.getTagWireType(tag));
         }
         codedInput.readMessage(typedAstBuilder, ExtensionRegistry.getEmptyRegistry());
         TypedAst typedAst = typedAstBuilder.build();
