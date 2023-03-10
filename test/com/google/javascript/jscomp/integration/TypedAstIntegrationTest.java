@@ -213,8 +213,8 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     assertThat(compiler.getErrors())
         .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
         .containsExactly(
-            "Property 'm' was required to be disambiguated but was invalidated.\n"
-                + "See go/disambiguation-errors for more information.");
+            "Property 'm' was required to be disambiguated but was invalidated."
+            );
   }
 
   @Test
