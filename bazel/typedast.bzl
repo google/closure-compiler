@@ -28,12 +28,13 @@ def _typedast_impl(ctx):
         fail("name must end with _typedast")
 
     typedast_file = ctx.actions.declare_file(name[:-len("_typedast")] + ".typedast")
+    typedast_gz_file = ctx.actions.declare_file(name[:-len("_typedast")] + ".typedast.gz")
 
-    outputs = []
-    inputs = []
+    compiler_outputs = []
+    compiler_inputs = []
     args = ctx.actions.args()
 
-    inputs.extend(ctx.files._jdk)
+    compiler_inputs.extend(ctx.files._jdk)
     args.add_all([
         "--checks_only",
         "--strict_mode_input",
@@ -43,22 +44,28 @@ def _typedast_impl(ctx):
         "--jscomp_error=checkTypes",
         "--jscomp_off=uselessCode",
     ])
-    args.add(typedast_file, format = "--typed_ast_output_file__INTENRNAL_USE_ONLY=%s")
-    outputs.append(typedast_file)
+    args.add(typedast_gz_file, format = "--typed_ast_output_file__INTENRNAL_USE_ONLY=%s")
+    compiler_outputs.append(typedast_gz_file)
     args.add_all(ctx.files.srcs, format_each = "--js=%s")
-    inputs.extend(ctx.files.srcs)
+    compiler_inputs.extend(ctx.files.srcs)
 
     ctx.actions.run(
-        outputs = outputs,
-        inputs = inputs,
+        outputs = compiler_outputs,
+        inputs = compiler_inputs,
         executable = ctx.executable.compiler,
         arguments = [args],
         mnemonic = "TypedAST",
     )
 
+    ctx.actions.run_shell(
+        outputs = [typedast_file],
+        inputs = [typedast_gz_file],
+        command = "gunzip -c '%s' > '%s'" % (typedast_gz_file.path, typedast_file.path),
+    )
+
     return [
         DefaultInfo(
-            files = depset(outputs),
+            files = depset([typedast_file]),
         ),
     ]
 
