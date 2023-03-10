@@ -6156,6 +6156,16 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogProvide_singleNameAssignedInIfBlock() {
+    processClosurePrimitives = true;
+    testSame(srcs("goog.provide('foo'); if (!foo) { foo = {}; };"));
+
+    TypedVar fooVar = globalScope.getVar("foo");
+    assertThat(fooVar).hasJSTypeThat().toStringIsEqualTo("{}");
+    assertThat(fooVar).isInferred();
+  }
+
+  @Test
   public void testGoogProvide_ignoresBlockScopedShadow() {
     processClosurePrimitives = true;
     testSame(srcs("goog.provide('foo'); if (true) { const foo = 3; }"));

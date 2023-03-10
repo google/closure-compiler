@@ -1190,13 +1190,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           });
     }
 
-    /** Defines an assignment to a name as if it were an actual declaration. */
-    void defineAssignAsIfDeclaration(Node assignment) {
+    /** Defines an assignment to a name as if it were an actual `var` declaration. */
+    void defineAssignAsIfVarDeclaration(Node assignment) {
       JSDocInfo info = assignment.getJSDocInfo();
       Node name = assignment.getFirstChild();
       checkArgument(name.isName(), name);
       Node rvalue = assignment.getSecondChild();
-      defineName(name, rvalue, currentScope, info);
+      defineName(name, rvalue, currentScope.getClosestHoistScope(), info);
     }
 
     /** Defines a variable declared with `var`, `let`, or `const`. */
@@ -3165,7 +3165,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());
           } else if (undeclaredNamesForClosure.contains(firstChild)) {
-            defineAssignAsIfDeclaration(n);
+            defineAssignAsIfVarDeclaration(n);
           }
           break;
 
