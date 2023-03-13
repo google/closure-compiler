@@ -111,7 +111,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -3921,9 +3920,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
-    // TODO(b/235404079): Stop serializing input source maps here since we serialize them in
-    // TypedAsts
-    private final ImmutableMap<String, SourceMapInput> inputSourceMaps;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
     private final LinkedHashSet<String> injectedLibraries;
@@ -3944,7 +3940,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.runJ2clPasses = compiler.runJ2clPasses;
-      this.inputSourceMaps = ImmutableMap.copyOf(new TreeMap<>(compiler.inputSourceMaps));
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
       this.moduleToInputList = mapJSModulesToInputIds(compiler.moduleGraph.getAllChunks());
@@ -3994,19 +3989,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     changeStamp = 1;
 
     accessorSummary = compilerState.accessorSummary;
-    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
-    if (options.shouldGatherSourceMapInfo()
-        && options.sourceMapIncludeSourcesContent
-        && options.applyInputSourceMaps) {
-      // The inline source maps found by the parser in stage one will be in the restored
-      // inputSourceMaps field.
-      // addSourceMapSourceFiles() is invoked by the parser during stage one.
-      // When restoring state, we need to do it again to get the source content from
-      // the inline source maps into our current source map object.
-      for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
-        addSourceMapSourceFiles(inputSourceMap);
-      }
-    }
   }
 
   private static final ImmutableListMultimap<JSChunk, InputId> mapJSModulesToInputIds(
