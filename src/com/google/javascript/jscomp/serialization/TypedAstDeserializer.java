@@ -351,11 +351,15 @@ public final class TypedAstDeserializer {
       boolean resolveSourceMapAnnotations,
       boolean parseInlineSourceMaps) {
     SourceFile sourceFile = deserializer.getSourceFile();
-    String sourceMappingURL = deserializer.getSourceMappingURL();
+    String sourceMappingURL = deserializer.getSourceMappingURL(); // This is the encoded source map.
 
     if (sourceMappingURL != null && sourceMappingURL.length() > 0 && resolveSourceMapAnnotations) {
+      // base64EncodedSourceMap adds "data:application/json;base64," prefix to the sourceMappingURL
+      String base64EncodedSourceMap =
+          SourceMapResolver.addBase64PrefixToEncodedSourceMap(sourceMappingURL);
       SourceFile sourceMapSourceFile =
-          SourceMapResolver.extractSourceMap(sourceFile, sourceMappingURL, parseInlineSourceMaps);
+          SourceMapResolver.extractSourceMap(
+              sourceFile, base64EncodedSourceMap, parseInlineSourceMaps);
       if (sourceMapSourceFile != null) {
         compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
       }

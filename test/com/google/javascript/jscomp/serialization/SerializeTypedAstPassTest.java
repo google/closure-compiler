@@ -425,7 +425,35 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void serializesSourceMappingURL() throws InvalidProtocolBufferException {
+  public void serializeInlineSourceMappingURL() throws InvalidProtocolBufferException {
+    // We want TypedAST to support inline source maps (which are input source maps passed
+    // by embedding a `//# sourceMappingURL=<url>` where <url> is a base64-encoded "data url").
+    String sourceMapTestCode =
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());");
+
+    String base64Prefix = "data:application/json;base64,";
+    String encodedSourceMap =
+        "eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+
+    String code = sourceMapTestCode + "\n//# sourceMappingURL=" + base64Prefix + encodedSourceMap;
+
+    SerializationResult result = compile(code);
+
+    LazyAst lazyAst = result.ast.getCodeAstList().get(0);
+    String sourceMappingURL = lazyAst.getSourceMappingUrl();
+
+    assertThat(sourceMappingURL).isEqualTo(encodedSourceMap); // Do not serizile the base-64 prefix.
+  }
+
+  @Test
+  public void doesNotSerializeInputSourceMappingURL() throws InvalidProtocolBufferException {
+    // We do not want TypedAST to support input source maps (source maps in separate files).
     String sourceMapTestCode =
         lines(
             "var X = (function () {",
@@ -442,33 +470,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     LazyAst lazyAst = result.ast.getCodeAstList().get(0);
     String sourceMappingURL = lazyAst.getSourceMappingUrl();
 
-    assertThat(sourceMappingURL).isEqualTo("foo.js.map");
-  }
-
-  @Test
-  public void doesNotSerializeInlineSourceMappingURL() throws InvalidProtocolBufferException {
-    // We do not want TypedAST to support inline source maps (which are input source maps passed
-    // by embedding a `//# sourceMappingURL=<url>` where <url> is a base64-encoded "data url").
-    String sourceMapTestCode =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());");
-
-    String base64EncodedSourceMappingURL =
-        "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vdGVzdC9mb28udHMiXSwic291cmNlc0NvbnRlbnQiOlsidmFyIEEgPSAoZnVuY3Rpb24gKCkge1xuICAgIGZ1bmN0aW9uIEEoaW5wdXQpIHtcbiAgICAgICAgdGhpcy5hID0gaW5wdXQ7XG4gICAgfVxuICAgIHJldHVybiBBO1xufSgpKTtcbmNvbnNvbGUubG9nKG5ldyBBKDEpKTsiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7SUFHRSxXQUFZLEtBQWE7UUFDdkIsSUFBSSxDQUFDLENBQUMsR0FBRyxLQUFLLENBQUM7SUFDakIsQ0FBQztJQUNILFFBQUM7QUFBRCxDQUFDLEFBTkQsSUFNQztBQUVELE9BQU8sQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyJ9";
-
-    String code = sourceMapTestCode + "\n//# sourceMappingURL=" + base64EncodedSourceMappingURL;
-
-    SerializationResult result = compile(code);
-
-    LazyAst lazyAst = result.ast.getCodeAstList().get(0);
-    String sourceMappingURL = lazyAst.getSourceMappingUrl();
-
-    assertThat(sourceMappingURL).isEmpty(); // Do not serizile this base-64 sourceMappingURL.
+    assertThat(sourceMappingURL).isEmpty();
   }
 
   private AstNode compileToAstNode(String source) {

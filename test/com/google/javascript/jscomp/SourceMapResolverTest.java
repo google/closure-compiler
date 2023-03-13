@@ -116,4 +116,14 @@ public final class SourceMapResolverTest {
             SourceFile.fromCode("somePath/hello.js", ""), url, false);
     assertThat(s.getName()).isEqualTo("somePath/relative/path/to/sourcemap/hello.js.map");
   }
+
+  @Test
+  public void testAddBase64PrefixToEncodedSourceMap() {
+    String base64Prefix = "data:application/json;base64,";
+    String encodedSourceMap =
+        "eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+    String base64EncodedSourceMap =
+        SourceMapResolver.addBase64PrefixToEncodedSourceMap(encodedSourceMap);
+    assertThat(base64EncodedSourceMap).isEqualTo(base64Prefix + encodedSourceMap);
+  }
 }

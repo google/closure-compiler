@@ -34,8 +34,12 @@ message LazyAst {
   bytes script = 1;
   // 1-based index into TypedAst::source_file_pool
   uint32 source_file = 2;
-  // The URL for a source map associated with this source file (i.e. the URL
-  // specified in "//# sourceMappingURL=" comments).
+  // The encoded source map taken from the inline sourcemap comment
+  // (base64-encoded "data url" stored in `//# sourceMappingURL=` comment).
+  // E.g. If the last line of a .closure.js file is "//# sourceMappingURL=
+  // data:application/json;base64,eyJ2ZXJzaW9uI...", then we will serialize
+  // "eyJ2ZXJzaW9uI..." in this LazyAst's source_mapping_url field. We'll attach
+  // the "data:application/json;base64," prefix during deserialization.
   string source_mapping_url = 3;
 }
 
@@ -64,8 +68,8 @@ message NonLazyAst {
   AstNode script = 1;
   // 1-based index into TypedAst::source_file_pool
   uint32 source_file = 2;
-  // The URL for a source map associated with this source file (i.e. the URL
-  // specified in "//# sourceMappingURL=" comments).
+  // The encoded source map taken from the inline sourcemap comment
+  // (base64-encoded "data url" stored in `//# sourceMappingURL=` comment).
   string source_mapping_url = 3;
 }
 

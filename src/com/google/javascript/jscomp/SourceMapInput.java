@@ -76,4 +76,12 @@ public final class SourceMapInput implements Serializable {
   public String getOriginalPath() {
     return sourceFile.getName();
   }
+
+  public @Nullable String getRawSourceMapContents() {
+    try {
+      return this.sourceFile.getCode();
+    } catch (IOException e) {
+      return null;
+    }
+  }
 }

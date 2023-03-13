@@ -103,5 +103,15 @@ public final class SourceMapResolver {
         .build();
   }
 
+  /**
+   * Returns the encoded source map with the base64 prefix attached. (i.e. prefix with
+   * "data:application/json;base64,")
+   *
+   * <p>E.g. turns "eyJ2ZXJzaW9uI..." into "data:application/json;base64,eyJ2ZXJzaW9uI..."
+   */
+  public static String addBase64PrefixToEncodedSourceMap(String encoded) {
+    return BASE64_URL_PREFIX + "application/json;" + BASE64_START + encoded;
+  }
+
   private SourceMapResolver() {}
 }

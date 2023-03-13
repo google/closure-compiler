@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -35,6 +36,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
+import com.google.common.io.BaseEncoding;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -3302,26 +3304,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Returns the <url> from a `//# sourceMappingURL=<url>` comment. This sourceMappingURL is a JS
-   * file's input source map, embedded into the input JS file with a `//# sourceMappingURL=<url>`
-   * comment.
-   *
-   * <p>We do not want TypedAST to support inline source maps (which are input source maps passed by
-   * embedding a `//# sourceMappingURL=<url>` where <url> is a base64-encoded "data url"). If the
-   * sourceMappingURL ends with a ".inline.map", return null.
+   * Returns the <encoded_source_map> from a `//#
+   * sourceMappingURL=data:application/json;base64,<encoded_source_map>` comment. This
+   * sourceMappingURL comment is a JS file's inline source map, embedded into the input JS file with
+   * a base64-encoded "data url" stored in `//# sourceMappingURL=` comment.
    */
   @Override
-  public @Nullable String getInputSourceMappingURL(String sourceFileName) {
+  public @Nullable String getBase64SourceMapContents(String sourceFileName) {
     SourceMapInput sourceMapInput = inputSourceMaps.getOrDefault(sourceFileName, null);
+    // This sourceMappingURL ends with a ".inline.map", and we want to get its base4-encoded
+    // contents (i.e. "data:application/json;base64,<encoded_source_map>").
     String sourceMappingURL = sourceMapInput != null ? sourceMapInput.getOriginalPath() : null;
-    if (sourceMappingURL != null && !sourceMappingURL.endsWith(".inline.map")) {
-      // Set sourceMappingURL as the name of the sourcemap file, not the original location/path of
-      // the sourcemap file on disk. E.g. turn "blaze-out/.../a.js.map" into "a.js.map"
-      sourceMappingURL =
-          sourceMappingURL.contains("/")
-              ? sourceMappingURL.substring(sourceMappingURL.lastIndexOf("/") + 1)
-              : sourceMappingURL;
-      return sourceMappingURL;
+    if (sourceMappingURL != null && sourceMappingURL.endsWith(".inline.map")) {
+      String unencoded = sourceMapInput.getRawSourceMapContents(); // This is the sourcemap.
+      return BaseEncoding.base64().encode(unencoded.getBytes(UTF_8));
     }
     return null;
   }
@@ -3925,6 +3921,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
+    // TODO(b/235404079): Stop serializing input source maps here since we serialize them in
+    // TypedAsts
     private final ImmutableMap<String, SourceMapInput> inputSourceMaps;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;

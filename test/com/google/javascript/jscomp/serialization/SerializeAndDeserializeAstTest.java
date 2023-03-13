@@ -404,8 +404,33 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         });
   }
 
+  private static final String BASE64_PREFIX = "data:application/json;base64,";
+  private static final String ENCODED_SOURCE_MAP =
+      "eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+
   @Test
-  public void testSourceMaps() {
+  public void testInlineSourceMaps() {
+    String sourceMapTestCode =
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());");
+    String sourceMappingURLComment = "//# sourceMappingURL=" + BASE64_PREFIX + ENCODED_SOURCE_MAP;
+    ;
+    String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
+
+    Result result = testAndReturnResult(srcs(code), expected(code));
+    assertThat(result.compiler.getBase64SourceMapContents("testcode"))
+        .isEqualTo(ENCODED_SOURCE_MAP);
+  }
+
+  @Test
+  public void testSourceMapsInSeparateMapFiles() {
+    // Sourcemap URLs should be a base64 encoded data url, not the name of a .js.map file.
+    // If we see a .js.map file, we will not serialize it.
     String sourceMapTestCode =
         lines(
             "var X = (function () {",
@@ -419,7 +444,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
 
     Result result = testAndReturnResult(srcs(code), expected(code));
-    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isEqualTo(sourceMappingURL);
+    assertThat(result.compiler.getBase64SourceMapContents("testcode")).isEqualTo(null);
   }
 
   @Test
@@ -433,13 +458,13 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             "    }",
             "    return X;",
             "}());");
-    String sourceMappingURL = "foo.js.map";
-    String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMappingURL;
+    String sourceMappingURLComment = "//# sourceMappingURL=" + BASE64_PREFIX + ENCODED_SOURCE_MAP;
+    ;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
 
     Result result = testAndReturnResult(srcs(code), expected(code));
-    // Input source map not registered because `resolveSourceMapAnnotations = false`
-    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isNull();
+    // Source map not registered because `resolveSourceMapAnnotations = false`
+    assertThat(result.compiler.getBase64SourceMapContents("testcode")).isNull();
   }
 
   @Test
@@ -453,23 +478,22 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             "    }",
             "    return X;",
             "}());");
-    String sourceMappingURL = "foo.js.map";
-    String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMappingURL;
+    String sourceMappingURLComment = "//# sourceMappingURL=" + BASE64_PREFIX + ENCODED_SOURCE_MAP;
+    ;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
 
     Result result = testAndReturnResult(srcs(code), expected(code));
-    // Input source map is registered when `parseInlineSourceMaps = false`, but we won't try to
+    // Source map is registered when `parseInlineSourceMaps = false`, but we won't try to
     // parse it as a Base64 encoded source map.
-    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isEqualTo(sourceMappingURL);
+    assertThat(result.compiler.getBase64SourceMapContents("testcode")).isEqualTo(null);
   }
 
   @Test
   public void testConfiguredDirectorySourceMaps() {
     // We do not allow the TypeScript compiler to set "compilerOptions.sourceRoot" (option to
     // configure a directory to store
-    // sourcemaps). Sourcemaps (.js.map) files are placed next to the .js files.
-    // This means sourcemap URLs should be the name of the sourcemap file, not a path to the
-    // sourcemap file. If we see a path, we will serialize only the name of the sourcemap file.
+    // sourcemaps). Sourcemap URLs should be a base64 encoded data url, not a path to the
+    // sourcemap file. If we see a path, we will not serialize anything.
     String sourceMapTestCode =
         lines(
             "var X = (function () {",
@@ -483,7 +507,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
 
     Result result = testAndReturnResult(srcs(code), expected(code));
-    assertThat(result.compiler.getInputSourceMappingURL("testcode")).isEqualTo("foo.js.map");
+    assertThat(result.compiler.getBase64SourceMapContents("testcode")).isEqualTo(null);
   }
 
   @Test
