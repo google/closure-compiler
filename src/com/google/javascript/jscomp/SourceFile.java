@@ -36,8 +36,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
@@ -61,9 +59,7 @@ import org.jspecify.nullness.Nullable;
  * string. Loading is done as lazily as possible to minimize IO delays and memory cost of source
  * text.
  */
-public final class SourceFile implements StaticSourceFile, Serializable {
-
-  private static final long serialVersionUID = 1L;
+public final class SourceFile implements StaticSourceFile {
   private static final String UTF8_BOM = "\uFEFF";
 
   private static final String BANG_SLASH = "!" + Platform.getFileSeperator();
@@ -84,15 +80,11 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   private final CodeLoader loader;
 
   // Source Line Information
-  private transient int @Nullable [] lineOffsets = null;
+  private int @Nullable [] lineOffsets = null;
 
-  private transient volatile @Nullable String code = null;
+  private volatile @Nullable String code = null;
 
   // Code statistics used for metrics.
-  //
-  // These are non-transient, because we want to save and restore them to avoid
-  // rereading source files when we report metrics in the later compilation stages.
-  // See JsCompileMetricsRecorder#recordSourcesStartState
   // For both of these, a negative value means we haven't counted yet.
   private int numLines = -1;
   private int numBytes = -1;
@@ -815,9 +807,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       private static final long serialVersionUID = 1L;
 
       private final String serializableCharset;
-      // TODO(b/180553215): We shouldn't store this Path. We already have to reconstruct it from a
-      // string during deserialization.
-      private transient Path relativePath;
+      private final Path relativePath;
 
       OnDisk(Path relativePath, Charset c) {
         super();
@@ -840,18 +830,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return Files.newBufferedReader(this.relativePath, this.getCharset());
-      }
-
-      @GwtIncompatible
-      private void writeObject(ObjectOutputStream out) throws Exception {
-        out.defaultWriteObject();
-        out.writeObject(this.relativePath.toString());
-      }
-
-      @GwtIncompatible
-      private void readObject(ObjectInputStream in) throws Exception {
-        in.defaultReadObject();
-        this.relativePath = Paths.get((String) in.readObject());
       }
 
       private Charset getCharset() {
@@ -915,73 +893,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
                     .build());
       }
     }
-  }
-
-  @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(ObjectOutputStream os) throws Exception {
-    checkState(
-        this.getKind().equals(SourceKind.NON_CODE),
-        "JS SourceFiles must not be serialized and are reconstructed by TypedAstDeserializer. "
-            + "\nHit on:  %s",
-        this);
-    os.defaultWriteObject();
-    this.serializeLineOffsetsToVarintDeltas(os);
-  }
-
-  @GwtIncompatible("ObjectInputStream")
-  private void readObject(ObjectInputStream in) throws Exception {
-    in.defaultReadObject();
-    this.deserializeVarintDeltasToLineOffsets(in);
-  }
-
-  private static final int SEVEN_BITS = 0b01111111;
-
-  @GwtIncompatible("ObjectOutputStream")
-  private void serializeLineOffsetsToVarintDeltas(ObjectOutputStream os) throws Exception {
-    if (this.lineOffsets == null) {
-      os.writeInt(-1);
-      return;
-    }
-
-    os.writeInt(this.lineOffsets.length);
-
-    // The first offset is always 0.
-    for (int intIndex = 1; intIndex < this.lineOffsets.length; intIndex++) {
-      int delta = this.lineOffsets[intIndex] - this.lineOffsets[intIndex - 1];
-      while (delta > SEVEN_BITS) {
-        os.writeByte(delta | ~SEVEN_BITS);
-        delta = delta >>> 7;
-      }
-      os.writeByte(delta);
-    }
-  }
-
-  @GwtIncompatible("ObjectInputStream")
-  private void deserializeVarintDeltasToLineOffsets(ObjectInputStream in) throws Exception {
-    int lineCount = in.readInt();
-    if (lineCount == -1) {
-      this.lineOffsets = null;
-      return;
-    }
-
-    int[] lineOffsets = new int[lineCount];
-
-    // The first offset is always 0.
-    for (int intIndex = 1; intIndex < lineCount; intIndex++) {
-      int delta = 0;
-      int shift = 0;
-
-      byte segment = in.readByte();
-      for (; segment < 0; segment = in.readByte()) {
-        delta |= (segment & SEVEN_BITS) << shift;
-        shift += 7;
-      }
-      delta |= segment << shift;
-
-      lineOffsets[intIndex] = delta + lineOffsets[intIndex - 1];
-    }
-
-    this.lineOffsets = lineOffsets;
   }
 
   public SourceFileProto getProto() {

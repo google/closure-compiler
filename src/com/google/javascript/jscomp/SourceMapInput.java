@@ -19,18 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapParseException;
 import java.io.IOException;
-import java.io.Serializable;
 import org.jspecify.nullness.Nullable;
 
-/**
- * A lazy-loaded SourceMapConsumerV3 instance.
- */
-public final class SourceMapInput implements Serializable {
+/** A lazy-loaded SourceMapConsumerV3 instance. */
+public final class SourceMapInput {
   private final SourceFile sourceFile;
-  // No need to serialize the consumer, it will be recreated because the serialized version will
-  // have cached = false.
-  private transient volatile @Nullable SourceMapConsumerV3 parsedSourceMap = null;
-  private transient volatile boolean cached = false;
+  private volatile @Nullable SourceMapConsumerV3 parsedSourceMap = null;
+  private volatile boolean cached = false;
 
   static final DiagnosticType SOURCEMAP_RESOLVE_FAILED =
       DiagnosticType.warning("SOURCEMAP_RESOLVE_FAILED", "Failed to resolve sourcemap at {0}: {1}");

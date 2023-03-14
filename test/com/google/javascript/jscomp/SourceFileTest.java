@@ -25,14 +25,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.MoreFiles;
 import com.google.javascript.jscomp.serialization.SourceFileProto;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,12 +74,6 @@ public final class SourceFileTest {
   @Test
   public void testLineOffset() {
     testLineOffsetHelper((code) -> SourceFile.fromCode("test.js", code));
-  }
-
-  @Test
-  public void testLineOffset_serialization() {
-    testLineOffsetHelper(
-        (code) -> serializeRoundTrip(SourceFile.fromCode("test.js", code, SourceKind.NON_CODE)));
   }
 
   private void testLineOffsetHelper(Function<String, SourceFile> factory) {
@@ -320,39 +309,6 @@ public final class SourceFileTest {
   }
 
   @Test
-  public void testCanOnlySerializeNonCode() throws IOException, ClassNotFoundException {
-    SourceFile strong = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.STRONG);
-    SourceFile weak = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.WEAK);
-    SourceFile extern = SourceFile.fromCode("file.js", "var i;", SourceKind.EXTERN);
-    SourceFile nonCode = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.NON_CODE);
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-
-    // Files representing JS sources must be serialized via TypedAstSerializer.
-    assertThrows(Exception.class, () -> oos.writeObject(strong));
-    assertThrows(Exception.class, () -> oos.writeObject(weak));
-    assertThrows(Exception.class, () -> oos.writeObject(extern));
-
-    oos.writeObject(nonCode);
-    oos.close();
-  }
-
-  @Test
-  public void testFromCodeSerialization() throws IOException, ClassNotFoundException {
-    SourceFile sourceFile = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.NON_CODE);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(sourceFile);
-    oos.close();
-
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-    SourceFile afterSerialization = (SourceFile) ois.readObject();
-    ois.close();
-    assertThat(afterSerialization.getCode()).isEqualTo(sourceFile.getCode());
-  }
-
-  @Test
   public void testGetLines() {
     SourceFile sourceFile =
         SourceFile.fromCode("file.js", "const a = 0;\nconst b = 1;\nconst c = 2;");
@@ -562,22 +518,6 @@ public final class SourceFileTest {
             .build());
 
     assertThat(sourceFile.getNumLines()).isEqualTo(999);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T extends Serializable> T serializeRoundTrip(T t) {
-    try {
-      ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
-      ObjectOutputStream outObjects = new ObjectOutputStream(outBytes);
-      outObjects.writeObject(t);
-      outObjects.close();
-
-      ByteArrayInputStream inBytes = new ByteArrayInputStream(outBytes.toByteArray());
-      ObjectInputStream inObjects = new ObjectInputStream(inBytes);
-      return (T) inObjects.readObject();
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
   }
 
   private static String stringOfLength(int length) {
