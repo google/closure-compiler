@@ -1797,6 +1797,183 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void test_b269515361_codeGeneratedByGoogRequireDynamicForEs5() {
+    // Case 1
+    // The original code of this test case is:
+    // ```
+    // const {LateLoadTs} = await goog.requireDynamic('a.b.c');
+    // new LateLoadTs().render();
+    // ```
+    // This can be reproduced by actual compilation to es5.
+    //
+    // This case is for testing the following line, in which the alias is used in dot get property.
+    // LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs
+    test(
+        lines(
+            "var module$exports$path$lateload_ts = ", //
+            "  {",
+            "    LateLoadTs:class LateLoadTs {",
+            "      render() {}",
+            "  }",
+            "};",
+            "",
+            "var func = function() {",
+            "  var $jscomp$destructuring$var22;",
+            "  var LateLoadTs$jscomp$1;",
+            "  return $jscomp$asyncExecutePromiseGeneratorProgram(",
+            "    function($jscomp$generator$context){",
+            "      if ($jscomp$generator$context.nextAddress == 1) {",
+            "        return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);",
+            "      }",
+            "      $jscomp$destructuring$var22 = module$exports$path$lateload_ts;",
+            "      LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs;",
+            "      (new LateLoadTs$jscomp$1()).render();",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "    }",
+            "  );",
+            "};"),
+        lines(
+            "var module$exports$path$lateload_ts$LateLoadTs = ",
+            "  class LateLoadTs {",
+            "      render() {}",
+            "  };",
+            "",
+            "var func = function() {",
+            "  var $jscomp$destructuring$var22;",
+            "  var LateLoadTs$jscomp$1;",
+            "  return $jscomp$asyncExecutePromiseGeneratorProgram(",
+            "    function($jscomp$generator$context){",
+            "      if ($jscomp$generator$context.nextAddress == 1) {",
+            "        return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);",
+            "      }",
+            "      $jscomp$destructuring$var22 = null",
+            "      LateLoadTs$jscomp$1 = module$exports$path$lateload_ts$LateLoadTs;",
+            "      (new LateLoadTs$jscomp$1()).render();",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "    }",
+            "  );",
+            "};"));
+
+    // Case 2
+    // This case is for testing assigning value to the exported object.
+    //
+    // The original code of this test case is:
+    // ```
+    // const x = await goog.requireDynamic('a.b.c');
+    // x.LateLoadTs.num = 0;
+    // console.log(x.LateLoadTs);
+    // ```
+    // This can be reproduced by actual compilation to es5.
+    test(
+        lines(
+            "var module$exports$path$lateload_ts = ", //
+            "  {",
+            "    LateLoadTs:class LateLoadTs { }",
+            "};",
+            "",
+            "var func = function() {",
+            "  var x;",
+            "  return $jscomp$asyncExecutePromiseGeneratorProgram(",
+            "    function($jscomp$generator$context){",
+            "      if ($jscomp$generator$context.nextAddress == 1) {",
+            "        return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);",
+            "      }",
+            "      x = module$exports$path$lateload_ts;",
+            "      x.LateLoadTs.num = 0;",
+            "      console.log(x.LateLoadTs);",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "    }",
+            "  );",
+            "};"),
+        lines(
+            "var module$exports$path$lateload_ts$LateLoadTs = ",
+            "  class LateLoadTs { };",
+            "",
+            "var module$exports$path$lateload_ts$LateLoadTs$num;",
+            "var func = function() {",
+            "  var x;",
+            "  return $jscomp$asyncExecutePromiseGeneratorProgram(",
+            "    function($jscomp$generator$context){",
+            "      if ($jscomp$generator$context.nextAddress == 1) {",
+            "        return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);",
+            "      }",
+            "      x = null",
+            "      module$exports$path$lateload_ts$LateLoadTs$num = 0;",
+            "      console.log(module$exports$path$lateload_ts$LateLoadTs);",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "    }",
+            "  );",
+            "};"));
+    // Case 3
+    // The original code of this test case is:
+    // ```
+    // const {LateLoadTs} = await goog.requireDynamic('a.b.c');
+    // new LateLoadTs().render();
+    // ```
+    // This can be reproduced by actual compilation to es5.
+    //
+    // This case is for testing non-exported module, i.e., the global name is not prefixed with
+    // 'module$exports$'. Test should fail.
+    testSame(
+        lines(
+            "var not_module$exports$path$lateload_ts = ", //
+            "  {",
+            "    LateLoadTs:class LateLoadTs {",
+            "      render() {}",
+            "  }",
+            "};",
+            "",
+            "var func = function() {",
+            "  var $jscomp$destructuring$var22;",
+            "  var LateLoadTs$jscomp$1;",
+            "  return $jscomp$asyncExecutePromiseGeneratorProgram(",
+            "    function($jscomp$generator$context){",
+            "      if ($jscomp$generator$context.nextAddress == 1) {",
+            "        return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);",
+            "      }",
+            "      $jscomp$destructuring$var22 = not_module$exports$path$lateload_ts;",
+            "      LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs;",
+            "      (new LateLoadTs$jscomp$1()).render();",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "    }",
+            "  );",
+            "};"),
+        PARTIAL_NAMESPACE_WARNING);
+
+    // Case 4
+    // This is a manually configured example for this test.
+    //
+    // This case is for testing the case where the alias is not only used in property access/
+    // destructuring. Test should fail.
+    testSame(
+        lines(
+            "var _module$exports$path$lateload_ts = ", //
+            "  {",
+            "    LateLoadTs:class LateLoadTs {",
+            "      render() {}",
+            "  }",
+            "};",
+            "",
+            "var func = function() {",
+            "  var $jscomp$destructuring$var22;",
+            "  var LateLoadTs$jscomp$1;",
+            "  return $jscomp$asyncExecutePromiseGeneratorProgram(",
+            "    function($jscomp$generator$context){",
+            "      if ($jscomp$generator$context.nextAddress == 1) {",
+            "        return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);",
+            "      }",
+            "      $jscomp$destructuring$var22 = _module$exports$path$lateload_ts;",
+            "      $jscomp$destructuring$var22 = 'foo';   ",
+            "      LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs;",
+            "      (new LateLoadTs$jscomp$1()).render();",
+            "      $jscomp$generator$context.jumpToEnd();",
+            "    }",
+            "  );",
+            "};"),
+        PARTIAL_NAMESPACE_WARNING);
+  }
+
+  @Test
   public void testInlineCtorInObjLit() {
     test(
         lines(
