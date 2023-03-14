@@ -1073,7 +1073,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       if (type == null) {
-        type = typeRegistry.createAnonymousObjectType(info);
+        boolean isExterns = NodeUtil.getSourceFile(objectLit).isExtern();
+       	boolean fromEmptyObjLit = objectLit.getFirstChild() == null;
+        type = typeRegistry.createAnonymousObjectType(info, isExterns && fromEmptyObjLit);
       }
 
       setDeferredType(objectLit, type);
