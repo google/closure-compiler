@@ -3088,22 +3088,6 @@ google.maps.FeatureType = {
    * Indicates a postal code as used to address postal mail within the country.
    */
   POSTAL_CODE: 'POSTAL_CODE',
-  /**
-   * Indicates a named neighborhood.
-   */
-  NEIGHBORHOOD: 'NEIGHBORHOOD',
-  /**
-   * Indicates a third-order civil entity below the country level.
-   */
-  ADMINISTRATIVE_AREA_LEVEL_3: 'ADMINISTRATIVE_AREA_LEVEL_3',
-  /**
-   * Indicates a fourth-order civil entity below the country level.
-   */
-  ADMINISTRATIVE_AREA_LEVEL_4: 'ADMINISTRATIVE_AREA_LEVEL_4',
-  /**
-   * Indicates a first-order civil entity below a locality.
-   */
-  SUBLOCALITY_LEVEL_1: 'SUBLOCALITY_LEVEL_1',
 };
 
 /**
@@ -7089,13 +7073,8 @@ google.maps.Place.prototype.query;
  * An interface representing a feature with a place ID which includes features
  * of type {@link google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_1}, {@link
  * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_2}, {@link
- * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_3}, {@link
- * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_4}, {@link
- * google.maps.FeatureType.COUNTRY}, {@link
- * google.maps.FeatureType.LOCALITY}, {@link
- * google.maps.FeatureType.NEIGHBORHOOD}, {@link
- * google.maps.FeatureType.POSTAL_CODE}, and {@link
- * google.maps.FeatureType.SUBLOCALITY_LEVEL_1}.
+ * google.maps.FeatureType.COUNTRY}, {@link google.maps.FeatureType.LOCALITY},
+ * and {@link google.maps.FeatureType.POSTAL_CODE}.
  * @extends {google.maps.Feature}
  * @record
  */
@@ -8137,14 +8116,14 @@ google.maps.StreetViewCoverageLayer = function() {};
 
 /**
  * Returns the map on which this layer is displayed.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.StreetViewCoverageLayer.prototype.getMap = function() {};
 
 /**
  * Renders the layer on the specified map. If the map is set to null, the layer
  * will be removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.StreetViewCoverageLayer.prototype.setMap = function(map) {};
