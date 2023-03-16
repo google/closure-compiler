@@ -4633,6 +4633,22 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void forceLetConstTranspilationKeepAsync_doesNotKeepClass_withNoTranspile() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+    options.setForceLetConstTranspilation(true);
+
+    // test transpiling classes but leave async functions untranspiled
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        lines(
+            "var i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
+            "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
   public void forceClassTranspilationKeepAsyncFunctions_withEs2021Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
@@ -4644,6 +4660,22 @@ public final class IntegrationTest extends IntegrationTestCase {
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         lines(
             "const i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
+            "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
+  public void forceLetConstTranspilationKeepsAsyncFunctions_doesNotKeepClass_withEs2021Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setForceLetConstTranspilation(true);
+
+    // test transpiling let/const, classes but leave async functions untranspiled
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        lines(
+            "var i0$classdecl$var0 = function() {};",
             "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
             "window['C'] = i0$classdecl$var0"));
   }
@@ -4663,5 +4695,23 @@ public final class IntegrationTest extends IntegrationTestCase {
             "const i0$classdecl$var0 = function() {};",
             "i0$classdecl$var0.prototype.f = function({num}) { return Math.pow(num, 3); };",
             "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
+  public void forceLetConstTranspilationAlsoLowersDestructuringAndClasses_withEs2015Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setForceLetConstTranspilation(true);
+
+    // check that we transpile the ES2016 `**`, let/const, classes and the ES2015 destructuring
+    // parameter
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { f({num}) { return num ** 3; } }",
+        lines(
+            "var i0$classdecl$var0=function(){};i0$classdecl$var0.prototype.f=function($jscomp$destructuring$var0){var"
+                + " $jscomp$destructuring$var1=$jscomp$destructuring$var0;var"
+                + " num=$jscomp$destructuring$var1.num;return"
+                + " Math.pow(num,3)};window[\"C\"]=i0$classdecl$var0"));
   }
 }

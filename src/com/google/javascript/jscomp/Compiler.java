@@ -350,6 +350,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void initOptions(CompilerOptions options) {
     this.options = options;
     this.setFeatureSet(options.getLanguageIn().toFeatureSet());
+
+    // Lower let/const and other features needed to do the let/const lowering
+    // TODO(b/239426154): Update let/const transpiler to work in the presence of these other
+    // features when transpiling so that let/const alone can be lowered.
+    if (options.getForceLetConstTranspilation()) {
+      options.setOutputFeatureSet(
+          options
+              .getOutputFeatureSet()
+              .without(
+                  Feature.LET_DECLARATIONS,
+                  Feature.CONST_DECLARATIONS,
+                  Feature.FOR_OF,
+                  Feature.ARRAY_DESTRUCTURING,
+                  Feature.OBJECT_DESTRUCTURING));
+      options.setForceClassTranspilation(true); // also remove classes when lowering let/const
+    }
     if (options.getForceClassTranspilation()) {
       options.setOutputFeatureSet(
           options

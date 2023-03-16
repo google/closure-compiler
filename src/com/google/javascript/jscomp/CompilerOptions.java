@@ -140,6 +140,19 @@ public class CompilerOptions implements Serializable {
    */
   private boolean forceClassTranspilation = false;
 
+  /**
+   * Causes let/const to always be removed from the output featureset if present previously.
+   *
+   * <pre>{@code
+   * For targets that set `options.setForceLetConstTranspilation(true)`:
+   * - if they already set <= ES5 output, no change
+   * - if they set >= ES6 output, then { force transpile let/const + classes + rewrite ESModules +
+   * isolatePolyfills + rewritePolyfills}
+   *
+   * }</pre>
+   */
+  private boolean forceLetConstTranspilation = false;
+
   private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
 
   /** The builtin set of externs to be used */
@@ -1826,6 +1839,14 @@ public class CompilerOptions implements Serializable {
 
   public boolean getForceClassTranspilation() {
     return forceClassTranspilation;
+  }
+
+  public void setForceLetConstTranspilation(boolean forceClassTranspilation) {
+    this.forceLetConstTranspilation = forceClassTranspilation;
+  }
+
+  public boolean getForceLetConstTranspilation() {
+    return forceLetConstTranspilation;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {
