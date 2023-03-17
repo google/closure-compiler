@@ -3688,11 +3688,10 @@ RTCPeerConnection.prototype.removeStream = function(stream) {};
 
 /**
  * @param {!MediaStreamTrack} track
- * @param {!MediaStream} stream
- * @param {...MediaStream} var_args Additional streams.
+ * @param {...MediaStream} var_args Optional streams.
  * @return {!RTCRtpSender}
  */
-RTCPeerConnection.prototype.addTrack = function(track, stream, var_args) {};
+RTCPeerConnection.prototype.addTrack = function(track, var_args) {};
 
 /**
  * @param {!MediaStreamTrack|string} trackOrKind
