@@ -1655,7 +1655,7 @@ Array.prototype.includes = function(searchElement, opt_fromIndex) {};
  * defined in the specification, though.
  *
  * @override
- * @param {function(this: THIS, T, number, !IArrayLike<T>): !Array<S>}
+ * @param {function(this: THIS, T, number, !IArrayLike<T>): !ReadonlyArray<S>}
  *     callback
  * @param {THIS=} thisArg
  * @return {!Array<S>}
@@ -1755,7 +1755,7 @@ ReadonlyArray.prototype.includes = function(searchElement, opt_fromIndex) {};
  * The polyfill for this method provided by closure-compiler does behave as
  * defined in the specification, though.
  *
- * @param {function(this: THIS, T, number, !IArrayLike<T>): !Array<S>}
+ * @param {function(this: THIS, T, number, !IArrayLike<T>): !ReadonlyArray<S>}
  *     callback
  * @param {THIS=} thisArg
  * @return {!Array<S>}
