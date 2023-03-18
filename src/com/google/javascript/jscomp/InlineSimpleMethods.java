@@ -365,6 +365,14 @@ class InlineSimpleMethods implements CompilerPass {
             }
           }
           break;
+        case CALL:
+          // If a goog.reflect.objectProperty is used for a method's name, we can't assume that the method can be safely inlined.
+          if (compiler.getCodingConvention().isPropertyRenameFunction(n.getFirstChild())) {
+
+            // Other code guarantees that getSecondChild() is a STRINGLIT
+            nonMethodProperties.add(n.getSecondChild().getString());
+          }
+          break;
         default:
           break;
       }

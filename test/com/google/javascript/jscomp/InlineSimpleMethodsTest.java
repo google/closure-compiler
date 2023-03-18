@@ -529,4 +529,16 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
         "var x=new Foo;x.bar()",
         "var x=new Foo;x.bar()");
   }
+
+  @Test
+  public void testReflectObjectProperty() {
+    testWithPrefix(
+      lines(
+        "class Foo {",
+        " bar() { return 'hi'; }",
+        "}",
+        "const c = goog.reflect.objectProperty('bar', Foo.prototype);"),
+        "var x=new Foo;x.bar()",
+        "var x=new Foo;x.bar()");
+  }
 }
