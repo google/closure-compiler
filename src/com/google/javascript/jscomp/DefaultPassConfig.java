@@ -2796,7 +2796,7 @@ public final class DefaultPassConfig extends PassConfig {
                   (externs, js) -> {
                     new ConvertTypesToColors(
                             compiler,
-                            compiler.isDebugLoggingEnabled()
+                            compiler.getOptions().shouldSerializeExtraDebugInfo()
                                 ? SerializationOptions.INCLUDE_DEBUG_INFO
                                 : SerializationOptions.SKIP_DEBUG_INFO)
                         .process(externs, js);
@@ -2811,7 +2811,12 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("serializeTypedAst")
           .setInternalFactory(
               (compiler) ->
-                  SerializeTypedAstPass.createFromPath(compiler, options.getTypedAstOutputFile()))
+                  SerializeTypedAstPass.createFromPath(
+                      compiler,
+                      options.getTypedAstOutputFile(),
+                      compiler.getOptions().shouldSerializeExtraDebugInfo()
+                          ? SerializationOptions.INCLUDE_DEBUG_INFO
+                          : SerializationOptions.SKIP_DEBUG_INFO))
           .build();
 
   private final PassFactory removeUnnecessarySyntheticExterns =

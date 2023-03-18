@@ -24,11 +24,13 @@ import java.nio.file.Path;
 /** Fail-fast replacement */
 public final class SerializeTypedAstPass implements CompilerPass {
 
-  public SerializeTypedAstPass(AbstractCompiler compiler, Path out) {
+  public SerializeTypedAstPass(
+      AbstractCompiler compiler, Path out, SerializationOptions serializationOptions) {
     throw new RuntimeException("Serialization not yet supported in JS version of compiler");
   }
 
-  public static SerializeTypedAstPass createFromPath(AbstractCompiler compiler, Path outputPath) {
+  public static SerializeTypedAstPass createFromPath(
+      AbstractCompiler compiler, Path outputPath, SerializationOptions serializationOptions) {
     throw new RuntimeException("Serialization not yet supported in JS version of compiler");
   }
 

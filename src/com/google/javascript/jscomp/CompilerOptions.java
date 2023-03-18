@@ -931,6 +931,8 @@ public class CompilerOptions implements Serializable {
    */
   private String debugLogFilter;
 
+  private boolean serializeExtraDebugInfo;
+
   /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
   private boolean quoteKeywordProperties;
 
@@ -2460,6 +2462,16 @@ public class CompilerOptions implements Serializable {
 
   public String getDebugLogFilter() {
     return debugLogFilter;
+  }
+
+  boolean shouldSerializeExtraDebugInfo() {
+    // NOTE: this is tied to debug logging (via checking getDebugLogDirectory()) for convenience,
+    // and it's possible to split up the two options if this begins to trigger memory issues.
+    return this.serializeExtraDebugInfo || getDebugLogDirectory() != null;
+  }
+
+  void setSerializeExtraDebugInfo(boolean serializeExtraDebugInfo) {
+    this.serializeExtraDebugInfo = serializeExtraDebugInfo;
   }
 
   public void setQuoteKeywordProperties(boolean quoteKeywordProperties) {

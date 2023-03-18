@@ -76,6 +76,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.jscomp.serialization.ColorPool;
+import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer;
 import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
@@ -4029,7 +4030,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           new ObjectOutputStream(gzipStream).writeObject(getCompilerState());
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
-          SerializeTypedAstPass.createFromOutputStream(this, gzipStream)
+          SerializeTypedAstPass.createFromOutputStream(
+                  this,
+                  gzipStream,
+                  this.getOptions().shouldSerializeExtraDebugInfo()
+                      ? SerializationOptions.INCLUDE_DEBUG_INFO
+                      : SerializationOptions.SKIP_DEBUG_INFO)
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
           // Finish will flush all zip buffers and write out zip trailing bytes but it will not

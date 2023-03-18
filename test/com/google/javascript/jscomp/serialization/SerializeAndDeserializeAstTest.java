@@ -73,7 +73,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(compiler, consumer);
+    return new SerializeTypedAstPass(compiler, consumer, SerializationOptions.SKIP_DEBUG_INFO);
   }
 
   @Override
