@@ -518,4 +518,15 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
             "}",
             "Foo.a;"));
   }
+
+  @Test
+  public void testNoInline() {
+    testWithPrefix(
+      lines(
+        "class Foo {",
+        " /** @noinline */ bar() { return 'hi'; }",
+        "}"),
+        "var x=new Foo;x.bar()",
+        "var x=new Foo;x.bar()");
+  }
 }

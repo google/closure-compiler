@@ -22,6 +22,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -105,6 +106,11 @@ class InlineSimpleMethods implements CompilerPass {
 
       Set<Node> definitions = methodDefinitions.get(callName);
       if (definitions == null || definitions.isEmpty()) {
+        return;
+      }
+
+      // Exit early if any definitions are annotated with @noinline
+      if (anyDefinitionsNoInline(definitions)) {
         return;
       }
 
@@ -216,6 +222,17 @@ class InlineSimpleMethods implements CompilerPass {
       } // else continue
     }
     return true;
+  }
+
+  private boolean anyDefinitionsNoInline(Set<Node> definitions) {
+    for (Node n : definitions) {
+      JSDocInfo jsDocInfo = n.getParent().getJSDocInfo();
+      System.out.println(n.toString());
+      if (jsDocInfo != null && jsDocInfo.isNoInline()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
