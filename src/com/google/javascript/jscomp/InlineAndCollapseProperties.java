@@ -518,63 +518,6 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
 
     /**
-     * Recognizes aliases for the special global variables representing the `exports` values for
-     * goog modules which are safe to inline.
-     *
-     * <p>The compiler will enforce that references to these module objects only occur after they
-     * have been initialized and that they are only ever assigned one time. So, as long as a
-     * variable that aliases one of them is only ever assigned that one module exports value and
-     * only used for getting properties off of it with destructuring or dot-property access, we know
-     * it is safe to inline those aliases.
-     *
-     * <p>This inlining is important to support `await goog.requireDynamic()` when transpiling down
-     * to es5. In that case the compiler generates one of these aliases which risks producing the
-     * PARTIAL_NAMESPACE_WARNING.
-     */
-    private boolean isInlineableModuleExportsAlias(Name name, ReferenceCollection aliasRefs) {
-      final String aliasedNameStr = name.getFullName();
-      if (!aliasedNameStr.startsWith(ClosureRewriteModule.MODULE_EXPORTS_PREFIX)) {
-        return false;
-      }
-      // the first rhs value Node we find assigned to the name
-      Node firstRhs = null;
-      int size = aliasRefs.references.size();
-      for (int i = 0; i < size; i++) {
-        Reference ref = aliasRefs.references.get(i);
-        if (ref.isVarDeclaration() || ref.isLvalue()) {
-          Node rhs = null;
-          if (ref.getParent().isAssign()) {
-            rhs = ref.getParent().getSecondChild();
-          } else if (ref.isInitializingDeclaration()) {
-            rhs = ref.getNode().getFirstChild();
-          }
-
-          if (rhs != null) {
-            // Make sure that every time a value is assigned to the alias, it is
-            // the aliased name we expect. If not, we cannot inline this alias.
-            if (firstRhs == null) {
-              // NOTE: comparing with a string is slower, but necessary the first time.
-              if (!rhs.matchesQualifiedName(aliasedNameStr)) {
-                return false;
-              }
-              firstRhs = rhs;
-            } else {
-              // comparing nodes is faster than comparing with the string name
-              if (!rhs.matchesQualifiedName(firstRhs)) {
-                return false;
-              }
-            }
-          }
-          continue;
-        }
-        if (!ref.isDotPropertyAccess() && !ref.isAssignedToObjectDestructuringPattern()) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    /**
      * Attempts to inline a non-global alias of a global name.
      *
      * <p>It is assumed that the name for which it is an alias meets conditions (a) and (b).
@@ -612,9 +555,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
         Set<AstChange> newNodes = new LinkedHashSet<>();
 
-        if (aliasRefs.isWellDefined()
-            && (aliasRefs.isAssignedOnceInLifetime()
-                || isInlineableModuleExportsAlias(name, aliasRefs))) {
+        if (aliasRefs.isWellDefined() && aliasRefs.isAssignedOnceInLifetime()) {
           // The alias is well-formed, so do the inlining now.
           int size = aliasRefs.references.size();
           // It's initialized on either the first or second reference.

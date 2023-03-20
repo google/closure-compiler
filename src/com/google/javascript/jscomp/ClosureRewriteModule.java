@@ -142,7 +142,7 @@ final class ClosureRewriteModule implements CompilerPass {
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
           "Internal compiler error: rewritten module global name {0} is already in use.");
 
-  static final String MODULE_EXPORTS_PREFIX = "module$exports$";
+  private static final String MODULE_EXPORTS_PREFIX = "module$exports$";
 
   private static final String MODULE_CONTENTS_PREFIX = "module$contents$";
 
