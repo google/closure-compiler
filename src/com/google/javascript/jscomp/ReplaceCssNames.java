@@ -16,14 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -109,8 +108,6 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Set<String> skiplist;
 
-  private JSType nativeStringType;
-
   ReplaceCssNames(
       AbstractCompiler compiler,
       @Nullable Map<String, Integer> cssNames,
@@ -120,32 +117,46 @@ class ReplaceCssNames implements CompilerPass {
     this.skiplist = skiplist;
   }
 
-  private JSType getNativeStringType() {
-    if (nativeStringType == null) {
-      nativeStringType =
-        compiler.getTypeRegistry().getNativeType(STRING_TYPE);
-    }
-    return nativeStringType;
-  }
-
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, root, new FindSetCssNameTraversal());
+
     // The CssRenamingMap may not have been available from the compiler when
     // this ReplaceCssNames pass was constructed, so getCssRenamingMap() should
     // only be called before this pass is actually run.
-    symbolMap = getCssRenamingMap();
+    symbolMap = getCssRenamingMap(root);
 
-    NodeTraversal.traverse(compiler, root, new Traversal());
+    NodeTraversal.traverse(compiler, root, new ReplaceCssNamesTraversal());
   }
 
   @VisibleForTesting
-  protected CssRenamingMap getCssRenamingMap() {
+  protected CssRenamingMap getCssRenamingMap(Node root) {
     return compiler.getCssRenamingMap();
   }
 
-  private class Traversal extends AbstractPostOrderCallback {
+  private static final Node GOOG_SET_CSS_NAME_MAPPING =
+      IR.getprop(IR.name("goog"), "setCssNameMapping");
 
+  private class FindSetCssNameTraversal extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!n.isCall() || !parent.isExprResult()) {
+        return;
+      }
+      Node callee = n.getFirstChild();
+      if (!callee.matchesQualifiedName(GOOG_SET_CSS_NAME_MAPPING)) {
+        return;
+      }
+      CssRenamingMap cssRenamingMap =
+          ProcessClosurePrimitives.processSetCssNameMapping(compiler, n, parent);
+      compiler.setCssRenamingMap(cssRenamingMap);
+      compiler.reportChangeToEnclosingScope(parent);
+      parent.detach();
+    }
+  }
+
+  private class ReplaceCssNamesTraversal extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall() && n.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION)) {
@@ -184,7 +195,7 @@ class ReplaceCssNames implements CompilerPass {
               Node replacement =
                   IR.add(first, IR.string("-" + second.getString()).srcrefIfMissing(second))
                       .srcrefIfMissing(n);
-              replacement.setJSType(getNativeStringType());
+              replacement.setColor(StandardColors.STRING);
               n.replaceWith(replacement);
               t.reportCodeChange();
             }

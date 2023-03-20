@@ -69,16 +69,18 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   Map<String, Integer> cssNames;
 
   public ReplaceCssNamesTest() {
-    super(lines(
-        DEFAULT_EXTERNS,
-        "Object.prototype.getClass;",
-        "goog.getCssName;"));
+    super(
+        lines(
+            DEFAULT_EXTERNS,
+            "Object.prototype.getClass;",
+            "goog.getCssName;",
+            "goog.setCssNameMapping;"));
   }
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new ReplaceCssNames(compiler, cssNames, skiplist) {
       @Override
-      protected CssRenamingMap getCssRenamingMap() {
+      protected CssRenamingMap getCssRenamingMap(Node root) {
         return useReplacementMap ? renamingMap : null;
       }
     };
@@ -116,6 +118,36 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     // The first pass strips the goog.getCssName even if a warning is issued,
     // such that a subsequent pass won't issue a warning.
     return 1;
+  }
+
+  @Test
+  public void testSimpleValidMapping() {
+    test("function f() { goog.setCssNameMapping({}); }", "function f() {}");
+  }
+
+  @Test
+  public void testValidSetCssNameMapping() {
+    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});", "");
+    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
+    assertThat(map).isNotNull();
+    assertThat(map.get("foo")).isEqualTo("bar");
+    assertThat(map.get("biz")).isEqualTo("baz");
+  }
+
+  @Test
+  public void testValidSetCssNameMappingWithType() {
+    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');", "");
+    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
+    assertThat(map).isNotNull();
+    assertThat(map.get("foo")).isEqualTo("bar");
+    assertThat(map.get("biz")).isEqualTo("baz");
+
+    test("goog.setCssNameMapping({foo:'bar',biz:'baz','biz-foo':'baz-bar'}," + " 'BY_WHOLE');", "");
+    map = getLastCompiler().getCssRenamingMap();
+    assertThat(map).isNotNull();
+    assertThat(map.get("foo")).isEqualTo("bar");
+    assertThat(map.get("biz")).isEqualTo("baz");
+    assertThat(map.get("biz-foo")).isEqualTo("baz-bar");
   }
 
   @Test

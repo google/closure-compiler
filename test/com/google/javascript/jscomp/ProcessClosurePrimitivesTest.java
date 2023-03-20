@@ -110,32 +110,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testValidSetCssNameMapping() {
-    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});", "");
-    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get("foo")).isEqualTo("bar");
-    assertThat(map.get("biz")).isEqualTo("baz");
-  }
-
-  @Test
-  public void testValidSetCssNameMappingWithType() {
-    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');", "");
-    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get("foo")).isEqualTo("bar");
-    assertThat(map.get("biz")).isEqualTo("baz");
-
-    test("goog.setCssNameMapping({foo:'bar',biz:'baz','biz-foo':'baz-bar'}," +
-        " 'BY_WHOLE');", "");
-    map = getLastCompiler().getCssRenamingMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get("foo")).isEqualTo("bar");
-    assertThat(map.get("biz")).isEqualTo("baz");
-    assertThat(map.get("biz-foo")).isEqualTo("baz-bar");
-  }
-
-  @Test
   public void testSetCssNameMappingByShortHand() {
     testError("goog.setCssNameMapping({shortHandFirst, shortHandSecond});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
@@ -210,13 +184,11 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testSetCssNameMappingValidity() {
     // Make sure that the keys don't have -'s
-    test("goog.setCssNameMapping({'a': 'b', 'a-a': 'c'})", "", warning(INVALID_CSS_RENAMING_MAP));
+    testWarning("goog.setCssNameMapping({'a': 'b', 'a-a': 'c'})", INVALID_CSS_RENAMING_MAP);
 
     // In full mode, we check that map(a-b)=map(a)-map(b)
-    test(
-        "goog.setCssNameMapping({'a': 'b', 'a-a': 'c'}, 'BY_WHOLE')",
-        "",
-        warning(INVALID_CSS_RENAMING_MAP));
+    testWarning(
+        "goog.setCssNameMapping({'a': 'b', 'a-a': 'c'}, 'BY_WHOLE')", INVALID_CSS_RENAMING_MAP);
 
     // Unknown mapping type
     testError("goog.setCssNameMapping({foo:'bar'}, 'UNKNOWN');",
@@ -241,7 +213,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testSame("function f() { goog.isDef('a.b'); }");
     testSame("function f() { goog.inherits(a, b); }");
     testSame("function f() { goog.exportSymbol(a, b); }");
-    test("function f() { goog.setCssNameMapping({}); }", "function f() {}");
+    testSame("function f() { goog.setCssNameMapping({}); }");
     testSame("x || goog.isDef('a.b');");
     testSame("x || goog.inherits(a, b);");
     testSame("x || goog.exportSymbol(a, b);");

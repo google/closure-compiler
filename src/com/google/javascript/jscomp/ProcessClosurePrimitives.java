@@ -258,7 +258,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
         }
         break;
       case "setCssNameMapping":
-        processSetCssNameMapping(call, call.getParent());
+        var unused = processSetCssNameMapping(compiler, call, call.getParent());
         break;
       case "forwardDeclare":
         if (validatePrimitiveCallWithMessage(
@@ -546,10 +546,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
    *
    * @see #visit(NodeTraversal, Node, Node)
    */
-  private void processSetCssNameMapping(Node n, Node parent) {
+  static @Nullable CssRenamingMap processSetCssNameMapping(
+      AbstractCompiler compiler, Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    if (verifySetCssNameMapping(left, arg)) {
+    if (verifySetCssNameMapping(compiler, left, arg)) {
       // Translate OBJECTLIT into SubstitutionMap. All keys and
       // values must be strings, or an error will be thrown.
       final Map<String, String> cssNames = new HashMap<>();
@@ -559,7 +560,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
         Node value = key.getFirstChild();
         if (!key.isStringKey() || value == null || !value.isStringLit()) {
           compiler.report(JSError.make(n, NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
-          return;
+          return null;
         }
         cssNames.put(key.getString(), value.getString());
       }
@@ -574,7 +575,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
         style = CssRenamingMap.Style.valueOf(styleStr);
       } catch (IllegalArgumentException e) {
         compiler.report(JSError.make(n, INVALID_STYLE_ERROR, styleStr));
-        return;
+        return null;
       }
 
       if (style == CssRenamingMap.Style.BY_PART) {
@@ -626,10 +627,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
           return style;
         }
       };
-      compiler.setCssRenamingMap(cssRenamingMap);
-      compiler.reportChangeToEnclosingScope(parent);
-      parent.detach();
+      return cssRenamingMap;
     }
+    return null;
   }
 
   /** Process a goog.addDependency() call and record any forward declarations. */
@@ -684,7 +684,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
    *
    * @return Whether the arguments checked out okay
    */
-  private boolean verifySetCssNameMapping(Node methodName, Node firstArg) {
+  private static boolean verifySetCssNameMapping(
+      AbstractCompiler compiler, Node methodName, Node firstArg) {
     DiagnosticType diagnostic = null;
     if (firstArg == null) {
       diagnostic = NULL_ARGUMENT_ERROR;

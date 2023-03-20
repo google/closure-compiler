@@ -444,12 +444,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(checkConformance);
     }
 
-    // Replace 'goog.getCssName' before processing defines but after the
-    // other checks have been done.
-    if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
-      checks.maybeAdd(closureReplaceGetCssName);
-    }
-
     if (options.getTweakProcessing().isOn()) {
       checks.maybeAdd(processTweaks);
     }
@@ -581,6 +575,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.doLateLocalization()) {
       passes.maybeAdd(protectLocaleData);
+    }
+
+    // Replace 'goog.getCssName' before processing defines
+    if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
+      passes.maybeAdd(closureReplaceGetCssName);
     }
 
     // Defines in code always need to be processed.
