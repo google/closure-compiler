@@ -78,6 +78,16 @@ public abstract class GraphColoring<N, E> {
     }
   }
 
+  /** Using the coloring as partitions, checks whether two given nodes have the same color */
+  public boolean haveSameColor(N first, N second) {
+    checkNotNull(colorToNodeMap, "No coloring founded. color() should be called first.");
+    Color colorFirst = graph.getNode(first).getAnnotation();
+    Color colorSecond = graph.getNode(second).getAnnotation();
+    checkNotNull(colorFirst);
+    checkNotNull(colorSecond);
+    return colorFirst.equals(colorSecond);
+  }
+
   public AdjacencyGraph<N, E> getGraph() {
     return graph;
   }

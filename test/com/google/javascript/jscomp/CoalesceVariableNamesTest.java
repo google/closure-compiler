@@ -339,6 +339,83 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUsePseudoName_forWithUninitializedLetInside() {
+    usePseudoName = false;
+    String src =
+        lines(
+            "for( var i = 0;i < 10; i++) {",
+            "  let x;",
+            "  if(true) {x=3} else { x = undefined;}",
+            "  i;",
+            "}",
+            "const y = new Set();",
+            "i; y;");
+    String expected =
+        lines(
+            "var i = 0;",
+            "for(; i < 10; i++) {",
+            "  var x = void 0;",
+            "  if(true) {x=3} else { x = undefined;}",
+            "  i;",
+            "}",
+            "x = new Set();",
+            "i; x;");
+    inFunction(src, expected);
+
+    // make sure we generate the correct code with `usePseudoName = true`
+    usePseudoName = true;
+    String expectedPseudoNames =
+        lines(
+            "var i = 0;",
+            "for(; i < 10; i++) {",
+            "  var x_y = void 0;", // preserves "reset" before every iteration
+            "  if(true) {x_y=3} else { x_y = undefined;}",
+            "  i;",
+            "}",
+            "x_y = new Set();",
+            "i; x_y;");
+    inFunction(src, expectedPseudoNames);
+  }
+
+  @Test
+  public void testUsePseudoName_forWithUninitializedLetInside2() {
+    usePseudoName = true;
+    String src =
+        lines(
+            "for( var i = 0;i < 10; i++) {",
+            "  let x;",
+            "  if(someExtern) {x=3}",
+            "  i; x;",
+            "}",
+            "const y = new Set();",
+            "i; y;");
+    String expected =
+        lines(
+            "var i = 0;",
+            "for(; i < 10; i++) {",
+            "  var x_y = void 0;", // preserves "reset" before every iteration
+            "  if(someExtern) {x_y=3}",
+            "  i; x_y;",
+            "}",
+            "x_y = new Set();",
+            "i; x_y;");
+    inFunction(src, expected);
+  }
+
+  @Test
+  public void testUsePseudoName_forWithUninitializedLetInside_onlyTwoNodesInLiveness() {
+    usePseudoName = false;
+    inFunction(
+        "for(;;) { let x; x;}  const y = new Set(); y;",
+        "for(;;) { var x = void 0; x; } x = new Set(); x;");
+
+    usePseudoName = true;
+    inFunction(
+        "for(;;) { let x; x;}  const y = new Set(); y;",
+        "for(;;) { var x_y = void 0; x_y; } x_y = new Set(); x_y;");
+  }
+
+  @Test
   public void testLiveRangeChangeWithinCfgNode2() {
     inFunction("var x; var y; var a; var b; y = 1, a = 1, y, a, x = 1, b = 1; x; b");
 

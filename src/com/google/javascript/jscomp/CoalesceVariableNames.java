@@ -50,9 +50,15 @@ import org.jspecify.nullness.Nullable;
 /**
  * Reuse variable names if possible.
  *
- * <p>For example, from <code>var x = 1; print(x); var y = 2; print(y); </code>
- * to <code>var x = 1; print(x); x = 2; print(x)</code>. The benefits are
- * slightly shorter code because of the removed <code>var<code> declaration,
+ * <p>For example, from
+ * <pre>
+ * <code>var x = 1; print(x); var y = 2; print(y); </code>
+ * </pre>
+ * to
+ * <pre>
+ * <code>var x = 1; print(x); x = 2; print(x)</code>
+ * </pre>
+ * The benefits are slightly shorter code because of the removed <code>var<code> declaration,
  * less unique variables in hope for better renaming, and finally better gzip
  * compression.
  *
@@ -224,7 +230,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
         // Look for all the variables that can be merged (in the graph by now)
         // and it is merged with the current coalescedVar.
         if (colorings.peek().getGraph().getNode(iVar) != null
-            && coalescedVar.equals(colorings.peek().getPartitionSuperNode(iVar))) {
+            && colorings.peek().haveSameColor(iVar, coalescedVar)) {
           allMergedNames.add(iVar.getName());
         }
       }
@@ -450,6 +456,8 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       } else {
         // convert `let x;` to ``
         // and `for (let x;;) {}` to `for (;;) {}`
+        // TODO(b/260620378): We should handle `isUninitializedLetNameInLoopBody(name);` cases
+        //  separately here but it causes multiple test failures.
         NodeUtil.removeChild(parent, var);
       }
     }
