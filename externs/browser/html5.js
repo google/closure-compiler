@@ -137,7 +137,6 @@ HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
  * */
 HTMLCanvasElement.prototype.transferControlToOffscreen = function() {};
 
-
 /**
  * @interface
  * @extends {MediaStreamTrack}
@@ -425,6 +424,33 @@ CanvasDrawingStyles.prototype.textBaseline;
 /** @type {string} */
 CanvasDrawingStyles.prototype.letterSpacing;
 
+/**
+ * @constructor
+ * @see https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2dsettings
+ */
+function CanvasRenderingContext2DSettings() {}
+
+/**
+ * @type {boolean}
+ */
+CanvasRenderingContext2DSettings.prototype.alpha;
+
+/**
+ * @type {boolean}
+ */
+CanvasRenderingContext2DSettings.prototype.desynchronized;
+
+/**
+ * @type {string}
+ */
+CanvasRenderingContext2DSettings.prototype.colorSpace;
+
+/**
+ * @type {boolean}
+ */
+CanvasRenderingContext2DSettings.prototype.willReadFrequently;
+
+
 // TODO(dramaix): replace this with @record.
 /**
  * @constructor
@@ -437,6 +463,9 @@ function BaseRenderingContext2D() {}
 
 /** @const {!HTMLCanvasElement|!OffscreenCanvas} */
 BaseRenderingContext2D.prototype.canvas;
+
+/** @return {!CanvasRenderingContext2DSettings} */
+BaseRenderingContext2D.prototype.getContextAttributes = function() {};
 
 /**
  * @return {undefined}
