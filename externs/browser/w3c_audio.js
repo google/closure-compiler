@@ -215,6 +215,12 @@ AudioContextOptions.prototype.sampleRate;
  */
 function AudioContext(contextOptions) {}
 
+/** @type {number} */
+AudioContext.prototype.baseLatency;
+
+/** @type {number} */
+AudioContext.prototype.outputLatency;
+
 /**
  * @param {!HTMLMediaElement} mediaElement
  * @return {!MediaElementAudioSourceNode}
