@@ -550,86 +550,92 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
       AbstractCompiler compiler, Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    if (verifySetCssNameMapping(compiler, left, arg)) {
-      // Translate OBJECTLIT into SubstitutionMap. All keys and
-      // values must be strings, or an error will be thrown.
-      final Map<String, String> cssNames = new HashMap<>();
+    if (!verifySetCssNameMapping(compiler, left, arg)) {
+      return null;
+    }
+    // Translate OBJECTLIT into SubstitutionMap. All keys and
+    // values must be strings, or an error will be thrown.
+    final Map<String, String> cssNames = new HashMap<>();
 
-      for (Node key = arg.getFirstChild(); key != null;
-          key = key.getNext()) {
-        Node value = key.getFirstChild();
-        if (!key.isStringKey() || value == null || !value.isStringLit()) {
-          compiler.report(JSError.make(n, NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
-          return null;
-        }
-        cssNames.put(key.getString(), value.getString());
-      }
-
-      String styleStr = "BY_PART";
-      if (arg.getNext() != null) {
-        styleStr = arg.getNext().getString();
-      }
-
-      final CssRenamingMap.Style style;
-      try {
-        style = CssRenamingMap.Style.valueOf(styleStr);
-      } catch (IllegalArgumentException e) {
-        compiler.report(JSError.make(n, INVALID_STYLE_ERROR, styleStr));
+    for (Node key = arg.getFirstChild(); key != null; key = key.getNext()) {
+      Node value = key.getFirstChild();
+      if (!key.isStringKey() || value == null || !value.isStringLit()) {
+        compiler.report(JSError.make(n, NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
         return null;
       }
+      cssNames.put(key.getString(), value.getString());
+    }
 
-      if (style == CssRenamingMap.Style.BY_PART) {
-        // Make sure that no keys contain -'s
-        List<String> errors = new ArrayList<>();
-        for (String key : cssNames.keySet()) {
-          if (key.contains("-")) {
-            errors.add(key);
+    String styleStr = "BY_PART";
+    if (arg.getNext() != null) {
+      styleStr = arg.getNext().getString();
+    }
+
+    final CssRenamingMap.Style style;
+    try {
+      style = CssRenamingMap.Style.valueOf(styleStr);
+    } catch (IllegalArgumentException e) {
+      compiler.report(JSError.make(n, INVALID_STYLE_ERROR, styleStr));
+      return null;
+    }
+
+    if (style == CssRenamingMap.Style.BY_PART) {
+      // Make sure that no keys contain -'s
+      List<String> errors = new ArrayList<>();
+      for (String key : cssNames.keySet()) {
+        if (key.contains("-")) {
+          errors.add(key);
+        }
+      }
+      if (!errors.isEmpty()) {
+        compiler.report(JSError.make(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
+      }
+    } else if (style == CssRenamingMap.Style.BY_WHOLE) {
+      // Verifying things is a lot trickier here. We just do a quick
+      // n^2 check over the map which makes sure that if "a-b" in
+      // the map, then map(a-b) = map(a)-map(b).
+      // To speed things up, only consider cases where len(b) <= 10
+      List<String> errors = new ArrayList<>();
+      for (Map.Entry<String, String> b : cssNames.entrySet()) {
+        if (b.getKey().length() > 10) {
+          continue;
+        }
+        for (Map.Entry<String, String> a : cssNames.entrySet()) {
+          String combined = cssNames.get(a.getKey() + "-" + b.getKey());
+          if (combined != null && !combined.equals(a.getValue() + "-" + b.getValue())) {
+            errors.add(
+                "map("
+                    + a.getKey()
+                    + "-"
+                    + b.getKey()
+                    + ") != map("
+                    + a.getKey()
+                    + ")-map("
+                    + b.getKey()
+                    + ")");
           }
         }
-        if (!errors.isEmpty()) {
-          compiler.report(JSError.make(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
-        }
-      } else if (style == CssRenamingMap.Style.BY_WHOLE) {
-        // Verifying things is a lot trickier here. We just do a quick
-        // n^2 check over the map which makes sure that if "a-b" in
-        // the map, then map(a-b) = map(a)-map(b).
-        // To speed things up, only consider cases where len(b) <= 10
-        List<String> errors = new ArrayList<>();
-        for (Map.Entry<String, String> b : cssNames.entrySet()) {
-          if (b.getKey().length() > 10) {
-            continue;
-          }
-          for (Map.Entry<String, String> a : cssNames.entrySet()) {
-            String combined = cssNames.get(a.getKey() + "-" + b.getKey());
-            if (combined != null && !combined.equals(a.getValue() + "-" + b.getValue())) {
-              errors.add("map(" + a.getKey() + "-" + b.getKey() + ") != map("
-                  + a.getKey() + ")-map(" + b.getKey() + ")");
-            }
-          }
-        }
-        if (!errors.isEmpty()) {
-          compiler.report(JSError.make(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
+      }
+      if (!errors.isEmpty()) {
+        compiler.report(JSError.make(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
+      }
+    }
+
+    return new CssRenamingMap() {
+      @Override
+      public String get(String value) {
+        if (cssNames.containsKey(value)) {
+          return cssNames.get(value);
+        } else {
+          return value;
         }
       }
 
-      CssRenamingMap cssRenamingMap = new CssRenamingMap() {
-        @Override
-        public String get(String value) {
-          if (cssNames.containsKey(value)) {
-            return cssNames.get(value);
-          } else {
-            return value;
-          }
-        }
-
-        @Override
-        public CssRenamingMap.Style getStyle() {
-          return style;
-        }
-      };
-      return cssRenamingMap;
-    }
-    return null;
+      @Override
+      public CssRenamingMap.Style getStyle() {
+        return style;
+      }
+    };
   }
 
   /** Process a goog.addDependency() call and record any forward declarations. */
