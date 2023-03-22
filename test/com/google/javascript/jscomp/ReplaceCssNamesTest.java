@@ -78,12 +78,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReplaceCssNames(compiler, cssNames, skiplist) {
-      @Override
-      protected CssRenamingMap getCssRenamingMap(Node root) {
-        return useReplacementMap ? renamingMap : null;
-      }
-    };
+    return new ReplaceCssNames(
+        compiler, useReplacementMap ? renamingMap : null, cssNames, skiplist);
   }
 
   CssRenamingMap getPartialMap() {
@@ -127,27 +123,43 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
 
   @Test
   public void testValidSetCssNameMapping() {
-    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});", "");
-    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get("foo")).isEqualTo("bar");
-    assertThat(map.get("biz")).isEqualTo("baz");
+    test(
+        lines(
+            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});",
+            "const x = goog.getCssName('foo'),",
+            "  y = goog.getCssName('biz'),",
+            "  z = goog.getCssName('foo-biz');"),
+        "const x = 'bar', y = 'baz', z = 'bar-baz';");
   }
 
   @Test
-  public void testValidSetCssNameMappingWithType() {
-    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');", "");
-    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get("foo")).isEqualTo("bar");
-    assertThat(map.get("biz")).isEqualTo("baz");
+  public void testValidSetCssNameMapping_byPart() {
+    test(
+        lines(
+            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');",
+            "const x = goog.getCssName('foo'),",
+            "  y = goog.getCssName('biz'),",
+            "  z = goog.getCssName('foo-biz');"),
+        "const x = 'bar', y = 'baz', z = 'bar-baz';");
+  }
 
-    test("goog.setCssNameMapping({foo:'bar',biz:'baz','biz-foo':'baz-bar'}," + " 'BY_WHOLE');", "");
-    map = getLastCompiler().getCssRenamingMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get("foo")).isEqualTo("bar");
-    assertThat(map.get("biz")).isEqualTo("baz");
-    assertThat(map.get("biz-foo")).isEqualTo("baz-bar");
+  @Test
+  public void testValidSetCssNameMapping_byWhole() {
+    test(
+        lines(
+            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_WHOLE');",
+            "const x = goog.getCssName('foo'),",
+            "  y = goog.getCssName('biz'),",
+            "  z = goog.getCssName('foo-biz');"),
+        "const x = 'bar', y = 'baz', z = 'foo-biz';");
+
+    test(
+        lines(
+            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz','biz-foo':'baz-bar'}, 'BY_WHOLE');",
+            "const x = goog.getCssName('foo'),",
+            "  y = goog.getCssName('biz'),",
+            "  z = goog.getCssName('foo-biz');"),
+        "const x = 'bar', y = 'baz', z = 'foo-biz';");
   }
 
   @Test
@@ -337,7 +349,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     compiler.setErrorManager(errorMan);
     Node root = compiler.parseTestCode(input);
     useReplacementMap = false;
-    ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, null);
+    ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, null, null);
     replacer.process(null, root);
     assertThat(compiler.toSource(root)).isEqualTo("[\"test\",base+\"-active\"]");
     assertWithMessage("There should be no errors").that(errorMan.getErrorCount()).isEqualTo(0);

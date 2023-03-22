@@ -1620,7 +1620,11 @@ public final class DefaultPassConfig extends PassConfig {
                         newCssNames = new LinkedHashMap<>();
                       }
                       ReplaceCssNames pass =
-                          new ReplaceCssNames(compiler, newCssNames, options.cssRenamingSkiplist);
+                          new ReplaceCssNames(
+                              compiler,
+                              options.cssRenamingMap,
+                              newCssNames,
+                              options.cssRenamingSkiplist);
                       pass.process(externs, jsRoot);
                       compiler.setCssNames(newCssNames);
                     }

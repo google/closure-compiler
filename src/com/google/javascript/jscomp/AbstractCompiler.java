@@ -219,12 +219,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract void reportFunctionDeleted(Node node);
 
-  /** Sets the CssRenamingMap. */
-  abstract void setCssRenamingMap(CssRenamingMap map);
-
-  /** Gets the CssRenamingMap. */
-  abstract CssRenamingMap getCssRenamingMap();
-
   /**
    * Gets a suitable SCRIPT node to serve as a parent for code insertion. If {@code module} contains
    * any inputs, the returned node will be the SCRIPT node corresponding to its first input. If

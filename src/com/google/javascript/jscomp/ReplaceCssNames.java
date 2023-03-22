@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -104,15 +102,17 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Map<String, Integer> cssNames;
 
-  private CssRenamingMap symbolMap;
+  private @Nullable CssRenamingMap symbolMap;
 
   private final Set<String> skiplist;
 
   ReplaceCssNames(
       AbstractCompiler compiler,
+      @Nullable CssRenamingMap symbolMap,
       @Nullable Map<String, Integer> cssNames,
       @Nullable Set<String> skiplist) {
     this.compiler = compiler;
+    this.symbolMap = symbolMap;
     this.cssNames = cssNames;
     this.skiplist = skiplist;
   }
@@ -121,18 +121,7 @@ class ReplaceCssNames implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new FindSetCssNameTraversal());
-
-    // The CssRenamingMap may not have been available from the compiler when
-    // this ReplaceCssNames pass was constructed, so getCssRenamingMap() should
-    // only be called before this pass is actually run.
-    symbolMap = getCssRenamingMap(root);
-
     NodeTraversal.traverse(compiler, root, new ReplaceCssNamesTraversal());
-  }
-
-  @VisibleForTesting
-  protected CssRenamingMap getCssRenamingMap(Node root) {
-    return compiler.getCssRenamingMap();
   }
 
   private static final Node GOOG_SET_CSS_NAME_MAPPING =
@@ -150,7 +139,7 @@ class ReplaceCssNames implements CompilerPass {
       }
       CssRenamingMap cssRenamingMap =
           ProcessClosurePrimitives.processSetCssNameMapping(compiler, n, parent);
-      compiler.setCssRenamingMap(cssRenamingMap);
+      symbolMap = cssRenamingMap;
       compiler.reportChangeToEnclosingScope(parent);
       parent.detach();
     }

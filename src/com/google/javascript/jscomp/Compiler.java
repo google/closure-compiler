@@ -2948,16 +2948,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     phaseOptimizer = null;
   }
 
-  @Override
-  void setCssRenamingMap(CssRenamingMap map) {
-    options.cssRenamingMap = map;
-  }
-
-  @Override
-  CssRenamingMap getCssRenamingMap() {
-    return options.cssRenamingMap;
-  }
-
   /** Control Flow Analysis. */
   ControlFlowGraph<Node> computeCFG() {
     logger.fine("Computing Control Flow Graph");
