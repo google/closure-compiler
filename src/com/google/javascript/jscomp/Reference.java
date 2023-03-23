@@ -157,6 +157,19 @@ public final class Reference implements StaticRef, Serializable {
     return getParent().isLet();
   }
 
+  boolean isDotPropertyAccess() {
+    return getParent().isGetProp();
+  }
+
+  boolean isAssignedToObjectDestructuringPattern() {
+    final Node parent = getParent();
+    // `let { propName: varName } = ref;`
+    // or
+    // `({ propName: varName } = ref);`
+    return (parent.isDestructuringLhs() || parent.isAssign())
+        && parent.getFirstChild().isObjectPattern();
+  }
+
   public boolean isConstDeclaration() {
     return getParent().isConst();
   }
