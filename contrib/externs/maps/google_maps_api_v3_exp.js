@@ -4023,8 +4023,6 @@ google.maps.InfoWindowOptions.prototype.position;
 google.maps.InfoWindowOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.JourneySharingLibrary = function() {};
@@ -8181,20 +8179,20 @@ google.maps.StreetViewLink = function() {};
 
 /**
  * A localized string describing the link.
- * @type {?string}
+ * @type {null|string}
  */
 google.maps.StreetViewLink.prototype.description;
 
 /**
  * The heading of the link.
- * @type {?number}
+ * @type {null|number}
  */
 google.maps.StreetViewLink.prototype.heading;
 
 /**
  * A unique identifier for the panorama. This id is stable within a session but
  * unstable across sessions.
- * @type {?string}
+ * @type {null|string}
  */
 google.maps.StreetViewLink.prototype.pano;
 
@@ -8206,13 +8204,13 @@ google.maps.StreetViewLocation = function() {};
 
 /**
  * A localized string describing the location.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.StreetViewLocation.prototype.description;
 
 /**
  * The latlng of the panorama.
- * @type {?google.maps.LatLng|undefined}
+ * @type {undefined|null|!google.maps.LatLng}
  */
 google.maps.StreetViewLocation.prototype.latLng;
 
@@ -8225,7 +8223,7 @@ google.maps.StreetViewLocation.prototype.pano;
 
 /**
  * Short description of the location.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.StreetViewLocation.prototype.shortDescription;
 
@@ -8274,7 +8272,7 @@ google.maps.StreetViewPanoRequest = function() {};
 
 /**
  * Specifies the pano ID to search for.
- * @type {?string|undefined}
+ * @type {undefined|null|string}
  */
 google.maps.StreetViewPanoRequest.prototype.pano;
 
@@ -10394,8 +10392,6 @@ google.maps.geometry.spherical.interpolate = function(from, to, fraction) {};
 google.maps.journeySharing = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The auth token returned by the token fetcher.
  * @record
  */
@@ -10414,8 +10410,6 @@ google.maps.journeySharing.AuthToken.prototype.expiresInSeconds;
 google.maps.journeySharing.AuthToken.prototype.token;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains additional information needed to mint JSON Web Tokens.
  * @record
  */
@@ -10457,16 +10451,12 @@ google.maps.journeySharing.AuthTokenContext.prototype.tripId;
 google.maps.journeySharing.AuthTokenContext.prototype.vehicleId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @typedef {function(!google.maps.journeySharing.AuthTokenFetcherOptions):
  * !Promise<!google.maps.journeySharing.AuthToken>}
  */
 google.maps.journeySharing.AuthTokenFetcher;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for the auth token fetcher.
  * @record
  */
@@ -10486,8 +10476,6 @@ google.maps.journeySharing.AuthTokenFetcherOptions.prototype.context;
 google.maps.journeySharing.AuthTokenFetcherOptions.prototype.serviceType;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Automatic viewport mode.
  *
  * When using `v=beta`, can be accessed by calling
@@ -10509,8 +10497,6 @@ google.maps.journeySharing.AutomaticViewportMode = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * MarkerSetup default options.
  * @record
  * @deprecated Marker setup is deprecated. Use the
@@ -10527,8 +10513,6 @@ google.maps.journeySharing.DefaultMarkerSetupOptions.prototype
     .defaultMarkerOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * PolylineSetup default options.
  * @record
  */
@@ -10548,8 +10532,6 @@ google.maps.journeySharing.DefaultPolylineSetupOptions.prototype
 google.maps.journeySharing.DefaultPolylineSetupOptions.prototype.defaultVisible;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The details for a delivery vehicle returned by Fleet Engine.
  * @record
  */
@@ -10610,8 +10592,6 @@ google.maps.journeySharing.DeliveryVehicle.prototype
     .remainingVehicleJourneySegments;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * delivery vehicle markers. Used by {@link
  * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions.deliveryVehicleMarkerCustomization}
@@ -10631,8 +10611,6 @@ google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams
     .prototype.vehicle;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * DeliveryVehicleStop type
  * @record
  */
@@ -10647,8 +10625,6 @@ google.maps.journeySharing.DeliveryVehicleStop = function() {};
 google.maps.journeySharing.DeliveryVehicleStop.prototype.tasks;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The current state of a {@link
  * google.maps.journeySharing.DeliveryVehicleStop}.
  *
@@ -10679,8 +10655,6 @@ google.maps.journeySharing.DeliveryVehicleStopState = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Delivery Fleet Location Provider.
  *
  * When using `v=beta`, can be accessed by calling
@@ -10735,8 +10709,6 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider.prototype
     .staleLocationThresholdMillis;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for delivery fleet location provider.
  * @record
  */
@@ -10814,8 +10786,6 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions
     .prototype.staleLocationThresholdMillis;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider.update}
  * event is triggered.
@@ -10832,8 +10802,6 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderUpdateEvent
     .prototype.deliveryVehicles;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Delivery Vehicle Location Provider.
  *
  * When using `v=beta`, can be accessed by calling
@@ -10887,8 +10855,6 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProvider.prototype
     .taskFilterOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for delivery vehicle location provider.
  * @record
  */
@@ -11053,8 +11019,6 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
     .prototype.taskOutcomeMarkerCustomization;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProvider.update}
  * event is triggered.
@@ -11085,8 +11049,6 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderUpdateEvent
     .prototype.tasks;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Types of Fleet Engine services.
  *
  * When using `v=beta`, can be accessed by calling
@@ -11115,8 +11077,6 @@ google.maps.journeySharing.FleetEngineServiceType = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Shipment location provider.
  *
  * When using `v=beta`, can be accessed by calling
@@ -11147,8 +11107,6 @@ google.maps.journeySharing.FleetEngineShipmentLocationProvider.prototype
     .refresh = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for shipment location provider.
  * @record
  */
@@ -11235,8 +11193,6 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
     .trackingId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.FleetEngineShipmentLocationProvider.update} event
  * is triggered.
@@ -11253,8 +11209,6 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderUpdateEvent
     .prototype.taskTrackingInfo;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Filtering options for tasks in the Delivery Vehicle Location Provider.
  * @record
  */
@@ -11283,8 +11237,6 @@ google.maps.journeySharing.FleetEngineTaskFilterOptions.prototype
 google.maps.journeySharing.FleetEngineTaskFilterOptions.prototype.state;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Trip location provider.
  *
  * When using `v=beta`, can be accessed by calling
@@ -11314,8 +11266,6 @@ google.maps.journeySharing.FleetEngineTripLocationProvider.prototype.refresh =
     function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for trip location provider.
  * @record
  */
@@ -11441,8 +11391,6 @@ google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .waypointMarkerCustomization;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.FleetEngineTripLocationProvider.update} event is
  * triggered.
@@ -11459,8 +11407,6 @@ google.maps.journeySharing.FleetEngineTripLocationProviderUpdateEvent.prototype
     .trip;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The map view.
  *
  * When using `v=beta`, can be accessed by calling
@@ -11799,8 +11745,6 @@ google.maps.journeySharing.JourneySharingMapView.prototype.vehicleMarkers;
 google.maps.journeySharing.JourneySharingMapView.prototype.waypointMarkers;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for the map view.
  * @record
  */
@@ -12041,8 +11985,6 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
     .waypointMarkerSetup;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parent class of all location providers.
  * @abstract
  * @constructor
@@ -12061,8 +12003,6 @@ google.maps.journeySharing.LocationProvider.prototype.addListener = function(
     eventName, handler) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters that are common to all marker customization functions. No object
  * of this class is provided directly to any marker customization function; an
  * object of one of its descendent classes is provided instead.
@@ -12092,8 +12032,6 @@ google.maps.journeySharing.MarkerCustomizationFunctionParams.prototype.isNew;
 google.maps.journeySharing.MarkerCustomizationFunctionParams.prototype.marker;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @typedef {!google.maps.journeySharing.MarkerSetupOptions|(function(!google.maps.journeySharing.DefaultMarkerSetupOptions):
  * !google.maps.journeySharing.MarkerSetupOptions)}
  * @deprecated Marker setup is deprecated. Use the
@@ -12103,8 +12041,6 @@ google.maps.journeySharing.MarkerCustomizationFunctionParams.prototype.marker;
 google.maps.journeySharing.MarkerSetup;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * MarkerSetup options.
  * @record
  * @deprecated Marker setup is deprecated. Use the
@@ -12120,8 +12056,6 @@ google.maps.journeySharing.MarkerSetupOptions = function() {};
 google.maps.journeySharing.MarkerSetupOptions.prototype.markerOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * markers representing planned stops. Used by {@link
  * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions.plannedStopMarkerCustomization}.
@@ -12139,8 +12073,6 @@ google.maps.journeySharing.PlannedStopMarkerCustomizationFunctionParams
     .prototype.stopIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parent class of polling location providers.
  * @extends {google.maps.journeySharing.LocationProvider}
  * @abstract
@@ -12155,8 +12087,6 @@ google.maps.journeySharing.PollingLocationProvider = function() {};
 google.maps.journeySharing.PollingLocationProvider.prototype.isPolling;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.PollingLocationProvider.ispollingchange} event is
  * triggered.
@@ -12175,16 +12105,12 @@ google.maps.journeySharing.PollingLocationProviderIsPollingChangeEvent.prototype
     .error;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @typedef {!google.maps.journeySharing.PolylineSetupOptions|(function(!google.maps.journeySharing.DefaultPolylineSetupOptions):
  * !google.maps.journeySharing.PolylineSetupOptions)}
  */
 google.maps.journeySharing.PolylineSetup;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * PolylineSetup options.
  * @record
  */
@@ -12203,8 +12129,6 @@ google.maps.journeySharing.PolylineSetupOptions.prototype.polylineOptions;
 google.maps.journeySharing.PolylineSetupOptions.prototype.visible;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * markers representing shipment delivery vehicle and destination locations.
  * Used by {@link
@@ -12225,8 +12149,6 @@ google.maps.journeySharing.ShipmentMarkerCustomizationFunctionParams.prototype
     .taskTrackingInfo;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The details for a task returned by Fleet Engine.
  * @record
  */
@@ -12316,8 +12238,6 @@ google.maps.journeySharing.Task.prototype.type;
 google.maps.journeySharing.Task.prototype.vehicleId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * markers representing planned or actual task locations. Used by {@link
  * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions.taskMarkerCustomization}
@@ -12336,8 +12256,6 @@ google.maps.journeySharing.TaskMarkerCustomizationFunctionParams =
 google.maps.journeySharing.TaskMarkerCustomizationFunctionParams.prototype.task;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The details for a task tracking info object returned by Fleet Engine.
  * @record
  */
@@ -12430,8 +12348,6 @@ google.maps.journeySharing.TaskTrackingInfo.prototype.taskOutcomeTime;
 google.maps.journeySharing.TaskTrackingInfo.prototype.trackingId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The details for a trip returned by Fleet Engine.
  * @record
  */
@@ -12524,8 +12440,6 @@ google.maps.journeySharing.Trip.prototype.type;
 google.maps.journeySharing.Trip.prototype.vehicleId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * markers representing trip vehicle, origin and destination locations. Used
  * by {@link
@@ -12549,8 +12463,6 @@ google.maps.journeySharing.TripMarkerCustomizationFunctionParams =
 google.maps.journeySharing.TripMarkerCustomizationFunctionParams.prototype.trip;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * markers representing trip waypoint locations. Used by {@link
  * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.waypointMarkerCustomization}.
@@ -12570,8 +12482,6 @@ google.maps.journeySharing.TripWaypointMarkerCustomizationFunctionParams
     .prototype.waypointIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * VehicleJourneySegment type
  * @record
  */
@@ -12605,8 +12515,6 @@ google.maps.journeySharing.VehicleJourneySegment.prototype.path;
 google.maps.journeySharing.VehicleJourneySegment.prototype.stop;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * VehicleLocationUpdate type
  * @record
  */
@@ -12638,8 +12546,6 @@ google.maps.journeySharing.VehicleLocationUpdate.prototype
 google.maps.journeySharing.VehicleLocationUpdate.prototype.time;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * VehicleWaypoint type.
  * @record
  */
@@ -14518,6 +14424,117 @@ google.maps.places.PlaceAspectRating.prototype.rating;
  * @type {string}
  */
 google.maps.places.PlaceAspectRating.prototype.type;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Implementation of AutocompleteView for Places API
+ *
+ * When using `v=beta`, can be accessed by calling
+ * `const {PlaceAutocompleteElement} = await
+ * google.map.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
+ * @implements {google.maps.places.PlaceAutocompleteElementOptions}
+ * @constructor
+ */
+google.maps.places.PlaceAutocompleteElement = function(options) {};
+
+/**
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!HTMLElement|!SVGElement}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.element;
+
+/**
+ * The input element to show autocompletions for.
+ * @type {!HTMLInputElement}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.inputElement;
+
+/**
+ * Adds the given listener function to the given event name.
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.addListener = function(
+    eventName, handler) {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for constructing a PlaceAutocompleteElement.
+ * @record
+ */
+google.maps.places.PlaceAutocompleteElementOptions = function() {};
+
+/**
+ * The component restrictions. Component restrictions are used to restrict
+ * predictions to only those within the parent component. For example, the
+ * country.
+ * @type {?google.maps.places.ComponentRestrictions|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .componentRestrictions;
+
+/**
+ * This Field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!HTMLElement|!SVGElement}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.element;
+
+/**
+ * The input element to show autocompletions for.
+ * @type {!HTMLInputElement}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.inputElement;
+
+/**
+ * A soft boundary or hint to use when searching for places.
+ * @type {?google.maps.places.LocationBias|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.locationBias;
+
+/**
+ * Bounds to constrain search results.
+ * @type {?google.maps.places.LocationRestriction|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .locationRestriction;
+
+/**
+ * A language identifier for the language in which the results should be
+ * returned, if possible. Results in the selected language may be given a higher
+ * ranking, but suggestions are not restricted to this language. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>.
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
+
+/**
+ * A region code which is used for result formatting and for result filtering.
+ * It does not restrict the suggestions to this country. The region code accepts
+ * a <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
+
+/**
+ * The types of predictions to be returned. For supported types, see the <a
+ * href="https://developers.google.com/maps/documentation/javascript/places-autocomplete#constrain-place-types">
+ * developer&#39;s guide</a>. If no types are specified, all types will be
+ * returned.
+ * @type {?Array<string>|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
 
 /**
  * A Place details query to be sent to the <code>PlacesService</code>.
