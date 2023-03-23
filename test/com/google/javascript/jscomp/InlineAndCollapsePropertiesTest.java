@@ -2615,6 +2615,33 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDestructuringThatUsedToCrash() {
+    test(
+        lines(
+            "var CakeFlavors = {",
+            "  CARROT: 1,",
+            "  TIRAMISU: 2,",
+            "};",
+            "class UglyCake {}",
+            "const Cake = UglyCake;",
+            "/** @const */",
+            "UglyCake.Flavors = CakeFlavors;",
+            "const {Flavors: {CARROT, TIRAMISU}} = Cake;",
+            "alert(CARROT, TIRAMISU);"),
+        lines(
+            "var CakeFlavors$CARROT = 1;",
+            "var CakeFlavors$TIRAMISU = 2;",
+            "class UglyCake {}",
+            "const Cake = null;",
+            "/** @const */",
+            "var UglyCake$Flavors = null;",
+            "const destructuring$m1146332801$0 = null;",
+            "const CARROT = null;",
+            "const TIRAMISU = null;",
+            "alert(CakeFlavors$CARROT, CakeFlavors$TIRAMISU);"));
+  }
+
+  @Test
   public void namespaceInDestructuringPattern() {
     testSame(
         lines(

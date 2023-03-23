@@ -3139,8 +3139,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCannotCollapsePropertyInNestedObjectPattern() {
-    testSame("const x = {y: {z: 1}}; const {y: {z}} = x; use(z);");
+  public void testCollapsePropertyInNestedObjectPattern() {
+    test(
+        "const x = {y: {z: 1}}; const {y: {z}} = x; use(z);",
+        "var x$y$z = 1; const destructuring$m1146332801$0 = null; const z = null; use(x$y$z);");
   }
 
   @Test

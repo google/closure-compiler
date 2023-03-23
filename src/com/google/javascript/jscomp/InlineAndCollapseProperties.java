@@ -994,7 +994,7 @@ class InlineAndCollapseProperties implements CompilerPass {
    */
   private static class RewriteSimpleDestructuringAliases extends AbstractPostOrderCallback {
 
-    public boolean isSimpleDestructuringAlias(Node n) {
+    public static boolean isSimpleDestructuringAlias(Node n) {
       if (!NodeUtil.isStatement(n) || !n.isConst()) {
         return false;
       }
@@ -1011,13 +1011,21 @@ class InlineAndCollapseProperties implements CompilerPass {
       if (!rhs.isQualifiedName()) {
         return false;
       }
+      return isSimpleDestructuringPattern(objectPattern);
+    }
+
+    private static boolean isSimpleDestructuringPattern(Node objectPattern) {
+      checkArgument(objectPattern.isObjectPattern());
       for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
         if (!key.isStringKey() || key.isQuotedStringKey()) {
           return false;
         }
         checkState(key.hasOneChild());
-        Node identifier = key.getFirstChild();
-        if (!identifier.isName()) {
+        Node rhs = key.getFirstChild();
+        if (!rhs.isObjectPattern() && !rhs.isName()) {
+          return false;
+        }
+        if (rhs.isObjectPattern() && !isSimpleDestructuringPattern(rhs)) {
           return false;
         }
       }
@@ -1035,15 +1043,32 @@ class InlineAndCollapseProperties implements CompilerPass {
       Node destructuringLhs = n.getFirstChild();
       Node objectPattern = destructuringLhs.getFirstChild();
       Node rhs = destructuringLhs.getLastChild();
-      for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
-        Node identifier = key.getFirstChild();
-        Node newRhs = IR.getprop(rhs.cloneTree(), key.getString()).srcref(identifier);
-        Node newConstNode = IR.constNode(identifier.detach(), newRhs).srcref(n);
-        newConstNode.insertAfter(insertionPoint);
-        insertionPoint = newConstNode;
-      }
+      Node unusedNewInsertionPoint = expandObjectPattern(t, insertionPoint, objectPattern, rhs);
       n.detach();
       t.reportCodeChange();
+    }
+
+    private Node expandObjectPattern(
+        NodeTraversal t, Node insertionPoint, Node objectPattern, Node rhs) {
+      for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
+        Node keyChild = key.getFirstChild();
+        final Node nameNode;
+        if (keyChild.isName()) {
+          nameNode = keyChild.detach();
+        } else {
+          checkState(keyChild.isObjectPattern());
+          String uniqueId = t.getCompiler().getUniqueIdSupplier().getUniqueId(t.getInput());
+          nameNode = IR.name("destructuring$" + uniqueId).srcref(keyChild);
+        }
+        Node newRhs = IR.getprop(rhs.cloneTree(), key.getString()).srcref(keyChild);
+        Node newConstNode = IR.constNode(nameNode, newRhs).srcref(objectPattern);
+        newConstNode.insertAfter(insertionPoint);
+        insertionPoint = newConstNode;
+        if (keyChild.isObjectPattern()) {
+          insertionPoint = expandObjectPattern(t, insertionPoint, keyChild, nameNode.cloneNode());
+        }
+      }
+      return insertionPoint;
     }
   }
 
