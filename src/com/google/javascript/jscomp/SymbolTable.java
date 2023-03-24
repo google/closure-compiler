@@ -30,6 +30,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
+import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -1256,7 +1257,7 @@ public final class SymbolTable {
   }
 
   /**
-   * This function connects imported symbol back to its declaration. For example?
+   * This function connects imported symbol back to its declaration. For example:
    *
    * <pre>
    * goog.module('some.Foo');
@@ -1276,12 +1277,36 @@ public final class SymbolTable {
       // as that was done with the help of Preprocessor tables in ClosureRewriteModule pass.
       return;
     }
+    Node require = n.getLastChild();
+    String moduleName = require.getSecondChild().getString();
+    Module module = compiler.getModuleMap().getClosureModule(moduleName);
+    ModuleType moduleType = module == null ? null : module.metadata().moduleType();
+    SymbolScope moduleScope = googModuleScopes.get(moduleName);
     if (n.isName()) {
       // This is `const Foo = goog.require('some.Foo');` case.
       // The type of Foo is either a class/interface in which case we can find its symbol that
-      // declared class/interface. Alternatively it's a namespace and there is no declaration. Just
-      // skip it.
+      // declared class/interface.
       Symbol declaration = getSymbolForTypeHelper(n.getJSType(), false);
+      if (declaration != null) {
+        declaration.defineReferenceAt(n);
+      }
+      // This import might be for a constant like `const constant = goog.require('some.constant');`.
+      // Try to find it in the corresponding definition in module.
+      switch (moduleType) {
+        case GOOG_MODULE:
+        case LEGACY_GOOG_MODULE:
+          // For goog.module search for 'exports' node and use that it as declaration. It would be
+          // better to use right-handside of exports: `exports = constant;` but it's difficult to
+          // get symbol for the right-handside. So do a more limited approach.
+          declaration = moduleScope.getOwnSlot("exports");
+          break;
+        case GOOG_PROVIDE:
+          // For goog.provide `some.constant` should be defined in global namespace.
+          declaration = getSymbolForName(null, moduleName);
+          break;
+        default:
+          // skip
+      }
       if (declaration != null) {
         declaration.defineReferenceAt(n);
       }
@@ -1289,11 +1314,6 @@ public final class SymbolTable {
       // This is `const {one} = goog.require('some.foo')` case.
       // For each imported symbol in destructuring we need to find corresponding declaration symbol
       // in `some.foo` namespace and connect them.
-      Node require = n.getLastChild();
-      String moduleName = require.getSecondChild().getString();
-      ModuleType type =
-          compiler.getModuleMap().getClosureModule(moduleName).metadata().moduleType();
-      SymbolScope moduleScope = googModuleScopes.get(moduleName);
       checkState(n.getFirstChild().isObjectPattern());
       // Iterate through all symbols in destructuring.
       for (Node stringKey : n.getFirstChild().children()) {
@@ -1302,7 +1322,7 @@ public final class SymbolTable {
         Symbol varDeclaration = null;
         // AST of goog.module and goog.provide differs significantly so we need to lookup variables
         // differently.
-        switch (type) {
+        switch (moduleType) {
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
             varDeclaration = moduleScope.getOwnSlot(varName);

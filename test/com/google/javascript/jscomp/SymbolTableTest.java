@@ -428,11 +428,21 @@ public final class SymbolTableTest {
   }
 
   @Test
-  public void testGoogRequiredSymbolsConnectedToDefinitions_moduleDefaultExport() {
+  public void testGoogRequiredSymbolsConnectedToDefinitions_moduleDefaultExportClass() {
     verifySymbolReferencedInSecondFile(
         lines("goog.module('some.Foo');", "class Foo {}", "exports = Foo;"),
         lines("goog.module('some.bar');", "const Foo = goog.require('some.Foo');"),
         "Foo");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_moduleDefaultExportConstant() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.module('some.constant');", "const constant = 42;", "exports = constant;"),
+        lines("goog.module('some.bar');", "const constant = goog.require('some.constant');"),
+        // This is a tricky one. `const constant` require from the second file is a reference to the
+        // `exports` symbol in the first file.
+        "exports");
   }
 
   @Test
@@ -463,11 +473,19 @@ public final class SymbolTableTest {
   }
 
   @Test
-  public void testGoogRequiredSymbolsConnectedToDefinitions_provideDefaultExport() {
+  public void testGoogRequiredSymbolsConnectedToDefinitions_provideDefaultExportClass() {
     verifySymbolReferencedInSecondFile(
         lines("goog.provide('some.Foo');", "some.Foo = class {}"),
         lines("goog.module('some.bar');", "const Foo = goog.require('some.Foo');"),
         "some.Foo");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_provideDefaultExportPrimivite() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.provide('some.constant');", "some.constant = 123;"),
+        lines("goog.module('some.bar');", "const constant = goog.require('some.constant');"),
+        "some.constant");
   }
 
   @Test
