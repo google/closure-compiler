@@ -50,10 +50,10 @@ function Scheduler() {}
 
 /**
  * @param {!SchedulerPostTaskCallback} callback
- * @param {!SchedulerPostTaskOptions=} options
+ * @param {!SchedulerPostTaskOptions=} opt_options
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/postTask
  */
-Scheduler.prototype.postTask = function(callback, options = {}) {};
+Scheduler.prototype.postTask = function(callback, opt_options) {};
 
 /** @type {!Scheduler} */
 Window.prototype.scheduler;
