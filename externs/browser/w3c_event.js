@@ -526,6 +526,9 @@ AddEventListenerOptions.prototype.passive;
 /** @type {boolean|undefined} */
 AddEventListenerOptions.prototype.once;
 
+/** @type {AbortSignal|undefined} */
+AddEventListenerOptions.prototype.signal;
+
 /**
  * @record
  * @extends {UIEventInit}
