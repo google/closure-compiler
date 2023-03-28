@@ -84,6 +84,45 @@ WebAssembly.LinkError = function() {};
  */
 WebAssembly.RuntimeError = function(message, fileName, lineNumber) {};
 
+/**
+ * @record
+ */
+function WebAssemblyTagOptions() {};
+
+/**
+ * @type {Array<string>}
+ */
+WebAssemblyTagOptions.prototype.parameters;
+
+/**
+ * @constructor
+ * @param {!WebAssemblyTagOptions} type
+ */
+WebAssembly.Tag = function(type) {};
+
+/**
+ * @record
+ */
+function WebAssemblyExceptionOptions() {};
+
+/**
+ * @type {undefined|boolean}
+ */
+WebAssemblyExceptionOptions.prototype.traceStack;
+
+/**
+ * @constructor
+ * @param {!WebAssembly.Tag} tag
+ * @param {!Array} payload
+ * @param {WebAssemblyExceptionOptions=} options
+ */
+WebAssembly.Exception = function(tag, payload, options) {};
+
+/**
+ * @type {undefined|string}
+ */
+WebAssembly.Exception.prototype.stack;
+
 // Note: Closure compiler does not support function overloading, omit this overload for now.
 // {function(!WebAssembly.Module, Object=):!Promise<!WebAssembly.Instance>}
 /**
