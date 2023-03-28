@@ -327,6 +327,12 @@ function DocumentFragment() {}
 function Document() {}
 
 /**
+ * @type {!HTMLCollection}
+ * @see https://dom.spec.whatwg.org/#parentnode
+ */
+Document.prototype.children;
+
+/**
  * @type {DocumentType}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-doctype
  */
