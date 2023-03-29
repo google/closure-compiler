@@ -22,6 +22,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -105,6 +106,11 @@ class InlineSimpleMethods implements CompilerPass {
 
       Set<Node> definitions = methodDefinitions.get(callName);
       if (definitions == null || definitions.isEmpty()) {
+        return;
+      }
+
+      // Exit early if any definitions are annotated with @noinline
+      if (anyDefinitionsNoInline(definitions)) {
         return;
       }
 
@@ -216,6 +222,16 @@ class InlineSimpleMethods implements CompilerPass {
       } // else continue
     }
     return true;
+  }
+
+  private boolean anyDefinitionsNoInline(Set<Node> definitions) {
+    for (Node n : definitions) {
+      JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(n.getParent());
+      if (jsDocInfo != null && jsDocInfo.isNoInline()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -346,6 +362,15 @@ class InlineSimpleMethods implements CompilerPass {
               default:
                 throw new IllegalStateException("Unexpected " + n.getToken() + " key: " + key);
             }
+          }
+          break;
+        case CALL:
+          // If a goog.reflect.objectProperty is used for a method's name, we can't assume that the
+          // method can be safely inlined.
+          if (compiler.getCodingConvention().isPropertyRenameFunction(n.getFirstChild())) {
+
+            // Other code guarantees that getSecondChild() is a STRINGLIT
+            nonMethodProperties.add(n.getSecondChild().getString());
           }
           break;
         default:
