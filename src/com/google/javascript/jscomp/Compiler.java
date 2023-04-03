@@ -1995,14 +1995,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (hasErrors()) {
         return null;
       }
-      return externAndJsRoot;
-    } finally {
-      afterPass(PassNames.PARSE_INPUTS);
-      stopTracer(tracer, PassNames.PARSE_INPUTS);
-
       // Save on memory. Any future calls to "createInputConsideringTypedAstFilesystem" will throw.
       // TODO(lharker): do we actually need the synthetic externs file in stage 2?
-      if (this.typedAstFilesystem != null && !hasErrors()) {
+      if (this.typedAstFilesystem != null) {
         // If anything (besides the synthetic externs) is in the typedAstFilesystem, that indicates
         // it never should have been added in the first place: every CompilerInput should now be
         // initialized, a process which removes it from the typedAstFilesystem
@@ -2010,6 +2005,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             this.typedAstFilesystem.size() == 1 || this.typedAstFilesystem.isEmpty(),
             this.typedAstFilesystem.size());
       }
+      return externAndJsRoot;
+    } finally {
+      afterPass(PassNames.PARSE_INPUTS);
+      stopTracer(tracer, PassNames.PARSE_INPUTS);
     }
   }
 
