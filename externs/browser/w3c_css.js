@@ -3159,6 +3159,51 @@ AnimationEvent.prototype.elapsedTime;
 AnimationEvent.prototype.pseudoElement;
 
 /**
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/css-transitions-1/#dictdef-transitioneventinit
+ */
+class TransitionEventInit {
+  constructor() {
+    /** @type {(string|undefined)} */
+    this.propertyName;
+
+    /** @type {(string|undefined)} */
+    this.pseudoElement;
+
+    /** @type {(number|undefined)} */
+    this.elapsedTime;
+  }
+}
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {!TransitionEventInit=} transitionEventInitDict
+ * @extends {Event}
+ * @see https://www.w3.org/TR/css-transitions-1/#interface-transitionevent
+ */
+function TransitionEvent(type, transitionEventInitDict) {};
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-propertyName
+ */
+TransitionEvent.prototype.propertyName;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-elapsedTime
+ */
+TransitionEvent.prototype.elapsedTime;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-pseudoElement
+ */
+TransitionEvent.prototype.pseudoElement;
+
+/**
  * @constructor
  * @extends {CSSRule}
  * @see http://dev.w3.org/csswg/css-animations/#csskeyframerule
