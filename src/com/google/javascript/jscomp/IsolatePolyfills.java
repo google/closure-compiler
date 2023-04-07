@@ -191,14 +191,6 @@ class IsolatePolyfills implements CompilerPass {
     final Node parent = polyfillUsage.node().getParent();
 
     if (FILES_ALLOWED_UNQUALIFIED_POLYFILL_ACCESSES.contains(polyfillAccess.getSourceFileName())) {
-      // Special-case code in the compiler runtime libraries that executes before any polyfills are
-      // injected.
-      //   - the definition of $jscomp.global needs to look for a global variable globalThis
-      //   - the $jscomp.polyfill function needs to check whether Symbol is native
-      // If desired we could programatically detect these cases instead of having this allowlist of
-      // polyfill accesses, but that might silently allow other usages of third-party polyfills
-      // into the codebase.
-      // TODO(b/156776817): crash on early references to polyfills that are not in our allowlist.
       return;
     }
 
@@ -242,10 +234,20 @@ class IsolatePolyfills implements CompilerPass {
     compiler.reportChangeToEnclosingScope(parent);
   }
 
+  // Code in the runtime libraries that may execute before any polyfills are injected and needs
+  // to opt out from polyfill isolation.
+  //   - util/global.js looks for `globalThis`
+  //   - util/shouldpolyfill.js checks whether Symbol is native
+  //   - es6/util/construct.js looks for the native Reflect.construct
+  // If desired we could programmatically detect these cases instead of having this allowlist of
+  // polyfill accesses, but that might silently allow other usages of third-party polyfills
+  // into the codebase.
+  // TODO(b/156776817): crash on early references to polyfills that are not in our allowlist.
   private static final ImmutableSet<String> FILES_ALLOWED_UNQUALIFIED_POLYFILL_ACCESSES =
       ImmutableSet.of(
           AbstractCompiler.RUNTIME_LIB_DIR + "util/global.js",
-          AbstractCompiler.RUNTIME_LIB_DIR + "util/shouldpolyfill.js");
+          AbstractCompiler.RUNTIME_LIB_DIR + "util/shouldpolyfill.js",
+          AbstractCompiler.RUNTIME_LIB_DIR + "es6/util/construct.js");
 
   /**
    * Rewrites a call where the receiver is a potential polyfilled method

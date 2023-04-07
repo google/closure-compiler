@@ -25,6 +25,12 @@
 
 goog.module('polyfill_isolation');
 
+// Reproduce Reflect.construct bug b/276312149 by adding a class extending a
+// native type. Transpiling this code requires injecting the $jscomp.construct
+// function, which is shared by the Reflect.construct polyfill.
+class MyPromise extends Promise {}
+window['MyPromise'] = MyPromise;
+
 /**
  * Uses Map in various forms, to verify that they all a) don't crash b) and do
  * not cause Map to be injected into the global scope.
