@@ -148,7 +148,6 @@ public class TypedAstSerializerTest extends CompilerTestCase {
     new Tester()
         .expectType(ObjectTypeProto.newBuilder()) // Console
         .expectTypeWithProperties(ObjectTypeProto.newBuilder(), "log") // Console.prototype
-        .expectType(ObjectTypeProto.newBuilder().setIsInvalidating(true)) // Console.prototype.log
         .test("console.log(1);");
   }
 
@@ -169,7 +168,6 @@ public class TypedAstSerializerTest extends CompilerTestCase {
     new Tester()
         .expectType(ObjectTypeProto.newBuilder()) // Console
         .expectTypeWithProperties(ObjectTypeProto.newBuilder(), "log") // Console.prototype
-        .expectType(ObjectTypeProto.newBuilder().setIsInvalidating(true)) // Console.prototype.log
         .test("console.log(1);");
   }
 

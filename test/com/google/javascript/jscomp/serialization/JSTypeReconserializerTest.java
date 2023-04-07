@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
-import static java.util.Arrays.stream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -418,28 +417,34 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   }
 
   @Test
-  public void reconcile_differentFunctionsWithSameJspath() {
-    assertThat(
-            compileToTypes(
-                lines(
-                    "const ns = {};", //
-                    "",
-                    "ns.f = x => x;",
-                    "ns.f.a = 0;",
-                    "",
-                    "ns.f = (/** number */ x) => x;",
-                    "ns.f.b = 1;",
-                    "",
-                    "ns.f = (/** string */ x) => x;",
-                    "ns.f.c = 2;")))
+  public void reconcile_literalFunctions_toNativeType() {
+    List<TypeProto> output =
+        compileToTypes(
+            lines(
+                "const ns = {};", //
+                "",
+                "ns.f = x => x;",
+                "ns.f.a = 0;",
+                "",
+                "ns.f = (/** number */ x) => x;",
+                "ns.f.b = 1;",
+                "",
+                "ns.f = (/** string */ x) => x;",
+                "ns.f.c = 2;"));
+
+    assertThat(output)
         .ignoringFieldDescriptors(OBJECT_UUID)
         .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
-        .contains(
-            TypeProto.newBuilder()
-                .setObject(
-                    ObjectTypeProto.newBuilder()
-                        .setIsInvalidating(true)
-                        .addAllOwnProperty(findAllInStringPool("a", "b", "c")))
+        .containsExactlyElementsIn(
+            ImmutableList.<TypeProto>builder()
+                .addAll(nativeObjects())
+                .add(
+                    TypeProto.newBuilder()
+                        .setObject(
+                            ObjectTypeProto.newBuilder()
+                                .setIsInvalidating(true)
+                                .addOwnProperty(findInStringPool("f")))
+                        .build())
                 .build());
   }
 
@@ -725,10 +730,6 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
 
   private int findInStringPool(String str) {
     return this.stringPoolBuilder.put(str);
-  }
-
-  private ImmutableList<Integer> findAllInStringPool(String... str) {
-    return stream(str).map(this::findInStringPool).collect(toImmutableList());
   }
 
   private int pointerForLabel(String label) {

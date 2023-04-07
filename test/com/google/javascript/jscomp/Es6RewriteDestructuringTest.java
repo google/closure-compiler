@@ -1694,7 +1694,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     Node jscompArrayFromIterator =
         getNodeMatchingQName(lastCompiler.getJsRoot(), "$jscomp.arrayFromIterator");
-    assertNode(jscompArrayFromIterator).hasColorThat().isNotEqualTo(StandardColors.UNKNOWN);
+    assertNode(jscompArrayFromIterator).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
 
     Node jscompArrayFromIteratorCall = jscompArrayFromIterator.getParent();
     assertNode(jscompArrayFromIteratorCall)

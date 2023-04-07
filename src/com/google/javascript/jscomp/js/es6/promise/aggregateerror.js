@@ -27,7 +27,7 @@ $jscomp.polyfill('AggregateError', function(orig) {
 
   /**
    * @constructor
-   * @extends {Error}
+   * @extends {AggregateError}
    * @param {!Iterable<*>} errors
    * @param {string} message
    * @suppress {reportUnknownTypes}
@@ -43,9 +43,15 @@ $jscomp.polyfill('AggregateError', function(orig) {
       // conditionally setting it here.
       this.stack = $jscomp$tmp$error.stack;
     }
-    this.errors = errors;
+    this.errors = /** @type {!Array<!Error>} */ (errors);
     this.message = $jscomp$tmp$error.message;
   };
+  /**
+   * @suppress {checkTypes}
+   * Suppress type-mismatch between the `@extends {AggregateError}` and passing
+   * just Error as the superclass. `@extend`ing AggregateError is only for the
+   * disambiguation pass to work.
+   */
   $jscomp.inherits(polyfill, Error);
 
   /**

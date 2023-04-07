@@ -67,6 +67,7 @@ final class JSTypeReconserializer {
 
   // Cache some commonly used types.
   private final SeenTypeRecord unknownRecord;
+  private final SeenTypeRecord topObjectRecord;
 
   private final IdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache = new IdentityHashMap<>();
   private final LinkedHashMap<ColorId, SeenTypeRecord> seenTypeRecords = new LinkedHashMap<>();
@@ -123,6 +124,7 @@ final class JSTypeReconserializer {
     this.seedCachesWithAxiomaticTypes();
 
     this.unknownRecord = this.seenTypeRecords.get(StandardColors.UNKNOWN.getId());
+    this.topObjectRecord = this.seenTypeRecords.get(StandardColors.TOP_OBJECT.getId());
   }
 
   /**
@@ -177,6 +179,15 @@ final class JSTypeReconserializer {
       // template types are not serialized because optimizations don't seem to care about them.
       // serialize as the UNKNOWN_TYPE because bounded generics are unsupported
       return this.unknownRecord;
+    }
+    if (type.isFunctionType()
+        && !type.toMaybeFunctionType().hasInstanceType()
+        && type.toMaybeFunctionType().getClosurePrimitive() == null) {
+      // Distinguishing different function types does not matter for optimizations unless they
+      // are a constructor/interface or have a @closurePrimitive tag associated. Optimization colors
+      // don't track function parameter/return/template types, and function literals are all
+      // invalidating types during property disambiguation.
+      return this.topObjectRecord;
     }
 
     SeenTypeRecord jstypeRecord = this.typeToRecordCache.get(type);
