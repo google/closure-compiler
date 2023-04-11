@@ -289,7 +289,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private int changeStamp = 1;
 
   private final Timeline<Node> changeTimeline = new Timeline<>();
-  private final Timeline<Node> deleteTimeline = new Timeline<>();
 
   /**
    * When mapping symbols from a source map, we must repeatedly combine the path of the original
@@ -3040,13 +3039,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  List<Node> getDeletedScopeNodesForPass(String passName) {
-    List<Node> deletedScopeNodes = deleteTimeline.getSince(passName);
-    deleteTimeline.mark(passName);
-    return deletedScopeNodes;
-  }
-
-  @Override
   public void incrementChangeStamp() {
     changeStamp++;
   }
@@ -3107,7 +3099,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(n.isFunction());
     n.setDeleted(true);
     changeTimeline.remove(n);
-    deleteTimeline.add(n);
   }
 
   @Override

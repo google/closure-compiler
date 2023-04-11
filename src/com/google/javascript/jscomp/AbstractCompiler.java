@@ -349,13 +349,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract List<Node> getChangedScopeNodesForPass(String passName);
 
-  /**
-   * An accumulation of deleted scope nodes since the last time the given pass was run. A returned
-   * null or empty list means no scope nodes have been deleted since the last run or this is the
-   * first time the pass has run.
-   */
-  abstract List<Node> getDeletedScopeNodesForPass(String passName);
-
   /** Called to indicate that the current change stamp has been used */
   abstract void incrementChangeStamp();
 

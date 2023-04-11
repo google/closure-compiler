@@ -2064,7 +2064,6 @@ public final class CompilerTest {
 
     // In the initial state nothing has been marked changed or deleted.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isNull();
-    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isNull();
   }
 
   @Test
@@ -2076,7 +2075,6 @@ public final class CompilerTest {
 
     // Mark original baseline.
     compiler.getChangedScopeNodesForPass("FunctionInliner");
-    compiler.getDeletedScopeNodesForPass("FunctionInliner");
 
     // Mark both functions changed.
     compiler.reportChangeToChangeScope(function1);
@@ -2085,7 +2083,6 @@ public final class CompilerTest {
     // Both function1 and function2 are seen as changed and nothing is seen as deleted.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
         .containsExactly(function1, function2);
-    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
   @Test
@@ -2097,7 +2094,6 @@ public final class CompilerTest {
 
     // Mark original baseline.
     compiler.getChangedScopeNodesForPass("FunctionInliner");
-    compiler.getDeletedScopeNodesForPass("FunctionInliner");
 
     // Mark both functions changed, then delete function2 and mark it deleted.
     compiler.reportChangeToChangeScope(function1);
@@ -2108,7 +2104,6 @@ public final class CompilerTest {
     // Now function1 will be seen as changed and function2 will be seen as deleted, since delete
     // overrides change.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
-    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
   }
 
   @Test
@@ -2120,7 +2115,6 @@ public final class CompilerTest {
 
     // Mark original baseline.
     compiler.getChangedScopeNodesForPass("FunctionInliner");
-    compiler.getDeletedScopeNodesForPass("FunctionInliner");
 
     // Mark function1 changed and function2 deleted, then try to mark function2 changed.
     compiler.reportChangeToChangeScope(function1);
@@ -2131,7 +2125,6 @@ public final class CompilerTest {
     // Now function1 will be seen as changed and function2 will be seen as deleted, since change
     // does not override delete.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
-    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
   }
 
   @Test
@@ -2143,7 +2136,6 @@ public final class CompilerTest {
 
     // Mark original baseline.
     compiler.getChangedScopeNodesForPass("FunctionInliner");
-    compiler.getDeletedScopeNodesForPass("FunctionInliner");
 
     // Mark function1 changed and function2 deleted.
     compiler.reportChangeToChangeScope(function1);
@@ -2152,12 +2144,10 @@ public final class CompilerTest {
 
     // Verify their respective states are seen.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
-    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
 
     // Check states again. Should find nothing since nothing has changed since the last
     // 'FunctionInliner' request.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isEmpty();
-    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
   @Test
