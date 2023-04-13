@@ -7178,6 +7178,11 @@ google.maps.PlacesLibrary.prototype.PlacesServiceStatus;
 google.maps.PlacesLibrary.prototype.PlusCode;
 
 /**
+ * @type {typeof google.maps.places.PriceLevel}
+ */
+google.maps.PlacesLibrary.prototype.PriceLevel;
+
+/**
  * @type {typeof google.maps.places.RankBy}
  */
 google.maps.PlacesLibrary.prototype.RankBy;
@@ -13057,16 +13062,10 @@ google.maps.marker.AdvancedMarkerView.prototype.collisionBehavior;
 google.maps.marker.AdvancedMarkerView.prototype.content;
 
 /**
- * See {@link google.maps.marker.AdvancedMarkerViewOptions.draggable}.
+ * See {@link google.maps.marker.AdvancedMarkerViewOptions.gmpDraggable}.
  * @type {undefined|null|boolean}
  */
-google.maps.marker.AdvancedMarkerView.prototype.draggable;
-
-/**
- * This Field is read-only. The DOM Element backing the view.
- * @type {undefined|null|!HTMLElement|!SVGElement}
- */
-google.maps.marker.AdvancedMarkerView.prototype.element;
+google.maps.marker.AdvancedMarkerView.prototype.gmpDraggable;
 
 /**
  * See {@link google.maps.marker.AdvancedMarkerViewOptions.map}.
@@ -13082,7 +13081,7 @@ google.maps.marker.AdvancedMarkerView.prototype.position;
 
 /**
  * See {@link google.maps.marker.AdvancedMarkerViewOptions.title}.
- * @type {undefined|null|string}
+ * @type {string}
  */
 google.maps.marker.AdvancedMarkerView.prototype.title;
 
@@ -13093,10 +13092,18 @@ google.maps.marker.AdvancedMarkerView.prototype.title;
 google.maps.marker.AdvancedMarkerView.prototype.zIndex;
 
 /**
- * Adds the given listener function to the given event name.
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
+ * @type {boolean}
+ * @deprecated <code>draggable</code> is deprecated as of April 2023. Use {@link
+ *     google.maps.marker.AdvancedMarkerView.gmpDraggable} instead.
+ */
+google.maps.marker.AdvancedMarkerView.prototype.draggable;
+
+/**
+ * Adds the given listener function to the given event name in the Maps Eventing
+ * system.
+ * @param {string} eventName Observed event.
+ * @param {!Function} handler Function to handle events.
+ * @return {!google.maps.MapsEventListener} Resulting event listener.
  */
 google.maps.marker.AdvancedMarkerView.prototype.addListener = function(
     eventName, handler) {};
@@ -13134,19 +13141,19 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.collisionBehavior;
 google.maps.marker.AdvancedMarkerViewOptions.prototype.content;
 
 /**
+ * This field is read-only. The DOM Element backing the view.
+ * @type {undefined|null|!HTMLElement|!SVGElement}
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.element;
+
+/**
  * If <code>true</code>, the <code>AdvancedMarkerView</code> can be dragged.
  * <p><strong>Note</strong>: <code>AdvancedMarkerView</code> with altitude is
  * not draggable.
  * @default <code>false</code>
  * @type {undefined|null|boolean}
  */
-google.maps.marker.AdvancedMarkerViewOptions.prototype.draggable;
-
-/**
- * This Field is read-only. The DOM Element backing the view.
- * @type {undefined|null|!HTMLElement|!SVGElement}
- */
-google.maps.marker.AdvancedMarkerViewOptions.prototype.element;
+google.maps.marker.AdvancedMarkerViewOptions.prototype.gmpDraggable;
 
 /**
  * Map on which to display the <code>AdvancedMarkerView</code>. The map is
@@ -13192,6 +13199,17 @@ google.maps.marker.AdvancedMarkerViewOptions.prototype.title;
  * @type {undefined|null|number}
  */
 google.maps.marker.AdvancedMarkerViewOptions.prototype.zIndex;
+
+/**
+ * If <code>true</code>, the <code>AdvancedMarkerView</code> can be dragged.
+ * <p><strong>Note</strong>: <code>AdvancedMarkerView</code> with altitude is
+ * not draggable.
+ * @default <code>false</code>
+ * @type {undefined|null|boolean}
+ * @deprecated <code>draggable</code> is deprecated as of April 2023. Use {@link
+ *     google.maps.marker.AdvancedMarkerView.gmpDraggable} instead.
+ */
+google.maps.marker.AdvancedMarkerViewOptions.prototype.draggable;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -14161,13 +14179,6 @@ google.maps.places.Place.prototype.hasTakeout;
 google.maps.places.Place.prototype.hasWheelchairAccessibleEntrance;
 
 /**
- * URL to an image resource that can be used to represent this location&#39;s
- * category.
- * @type {?string|undefined}
- */
-google.maps.places.Place.prototype.icon;
-
-/**
  * The default HEX color code for the place&#39;s category.
  * @type {?string|undefined}
  */
@@ -14226,12 +14237,11 @@ google.maps.places.Place.prototype.photos;
 google.maps.places.Place.prototype.plusCode;
 
 /**
- * The price level of the Place, on a scale of 0 to 4. Price levels are
- * interpreted as follows: <ul style="list-style-type: none;">
- * <li><code>0</code>: Free <li><code>1</code>: Inexpensive <li><code>2</code>:
- * Moderate <li><code>3</code>: Expensive <li><code>4</code>: Very Expensive
- * </ul>
- * @type {?number|undefined}
+ * The price level of the Place. This property can return any of the following
+ * values <ul style="list-style-type: none;"> <li><code>Free</code></li>
+ * <li><code>Inexpensive</code></li> <li><code>Moderate</code></li>
+ * <li><code>Expensive</code></li> <li><code>Very Expensive</code></li> </ul>
+ * @type {?google.maps.places.PriceLevel|undefined}
  */
 google.maps.places.Place.prototype.priceLevel;
 
@@ -14338,7 +14348,7 @@ google.maps.places.Place.prototype.types;
  * google.maps.places.Place.rating}.
  * @type {?number|undefined}
  */
-google.maps.places.Place.prototype.userRatingsCount;
+google.maps.places.Place.prototype.userRatingCount;
 
 /**
  * The offset from UTC of the Place’s current timezone, in minutes. For example,
@@ -15457,6 +15467,24 @@ google.maps.places.PredictionTerm.prototype.offset;
  * @type {string}
  */
 google.maps.places.PredictionTerm.prototype.value;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Price level enum for Place objects.
+ *
+ * When using `v=beta`, can be accessed by calling `const {PriceLevel} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PriceLevel = {
+  EXPENSIVE: 'EXPENSIVE',
+  FREE: 'FREE',
+  INEXPENSIVE: 'INEXPENSIVE',
+  MODERATE: 'MODERATE',
+  VERY_EXPENSIVE: 'VERY_EXPENSIVE',
+};
 
 /**
  * Represents a single Query Autocomplete prediction.
