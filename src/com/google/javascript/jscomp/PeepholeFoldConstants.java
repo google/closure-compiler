@@ -1391,7 +1391,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           {
             BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
             BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
-            return Tri.forBoolean(lv.equals(rv));
+            if (lv != null && rv != null) {
+              return Tri.forBoolean(lv.equals(rv));
+            }
+            break;
           }
         default: // Symbol and Object cannot be folded in the general case.
           return Tri.UNKNOWN;

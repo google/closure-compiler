@@ -2197,6 +2197,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldBigIntTypes("x/0n", "x/0n");
 
     test("for (var i = 0n; i < 5n; i++) var x = 0n + i * 1n", "for(var i=0n; i < 5n; i++) var x=i");
+    test(
+        "for (var i = 0n; i % 2n === 0n; i++) var x = i % 2n",
+        "for (var i = 0n; i % 2n === 0n; i++) var x = i % 2n");
 
     test("(doSomething(),0n)*1n", "(doSomething(),0n)");
     test("1n*(doSomething(),0n)", "(doSomething(),0n)");
