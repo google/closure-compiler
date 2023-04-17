@@ -3923,6 +3923,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final int lastInjectedLibraryIndexInFirstScript;
     private final AccessorSummary accessorSummary;
     private final VariableMap stringMap;
+    private final VariableMap instrumentationMappping;
 
     CompilerState(Compiler compiler) {
       this.featureSet = checkNotNull(compiler.featureSet);
@@ -3947,6 +3948,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               : -1;
       this.accessorSummary = compiler.accessorSummary;
       this.stringMap = compiler.getStringMap();
+      this.instrumentationMappping = compiler.getInstrumentationMapping();
     }
   }
 
@@ -3986,6 +3988,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     changeStamp = 1;
 
     accessorSummary = compilerState.accessorSummary;
+    instrumentationMapping = compilerState.instrumentationMappping;
   }
 
   private static final ImmutableListMultimap<JSChunk, InputId> mapJSModulesToInputIds(
