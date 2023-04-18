@@ -343,7 +343,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     usePseudoName = false;
     String src =
         lines(
-            "for( var i = 0;i < 10; i++) {",
+            "for( var i = 0;i < 10; i++) {", //
             "  let x;",
             "  if(true) {x=3} else { x = undefined;}",
             "  i;",
@@ -352,7 +352,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "i; y;");
     String expected =
         lines(
-            "var i = 0;",
+            "var i = 0;", //
             "for(; i < 10; i++) {",
             "  var x = void 0;",
             "  if(true) {x=3} else { x = undefined;}",
@@ -366,7 +366,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     usePseudoName = true;
     String expectedPseudoNames =
         lines(
-            "var i = 0;",
+            "var i = 0;", //
             "for(; i < 10; i++) {",
             "  var x_y = void 0;", // preserves "reset" before every iteration
             "  if(true) {x_y=3} else { x_y = undefined;}",
@@ -375,6 +375,121 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "x_y = new Set();",
             "i; x_y;");
     inFunction(src, expectedPseudoNames);
+  }
+
+  @Test
+  public void test_doesNotCoalesceOverlappingLiveRange() {
+    usePseudoName = false;
+    String src =
+        lines(
+            "for( var i = 0;i < 10; i++) {", //
+            "  let x = i;",
+            "  let y;",
+            "  x;",
+            "  y;",
+            "}");
+    String expected =
+        lines(
+            "var i = 0;", //
+            "for(; i < 10; i++) {",
+            "  let x = i;",
+            "  let y;",
+            "  x;",
+            "  y;",
+            "}");
+    inFunction(src, expected);
+
+    src =
+        lines(
+            "for( var i = 0;i < 10; i++) {", //
+            "  let x = i;",
+            "  let y;",
+            "  y;",
+            "  x;",
+            "}");
+    expected =
+        lines(
+            "var i = 0;", //
+            "for(; i < 10; i++) {",
+            "  let x = i;",
+            "  let y;",
+            "  y;",
+            "  x;",
+            "}");
+    inFunction(src, expected);
+
+    usePseudoName = true; // same for usePseudoName = true code path
+    inFunction(src, expected);
+  }
+
+  // We could potentially coaleasce here but we miss.
+  @Test
+  public void test_doesNotCoalesceNonOverlappingLiveRange() {
+    usePseudoName = false;
+    String src =
+        lines(
+            "for( var i = 0;i < 10; i++) {", //
+            "  let x;",
+            "  x;",
+            "  let y;",
+            "  y;",
+            "}");
+    String expected =
+        lines(
+            "var i = 0;", //
+            "for(; i < 10; i++) {",
+            "  let x;",
+            "  x;",
+            "  let y;",
+            "  y;",
+            "}");
+    inFunction(src, expected);
+    usePseudoName = true; // same for usePseudoName = true code path
+    inFunction(src, expected);
+  }
+
+  @Test
+  public void test_doesNotUsePseudoName_coalesces_deletesUninitializedDeclInLoop() {
+    usePseudoName = false;
+    String src =
+        lines(
+            "for( var i = 0;i < 10; i++) {", //
+            "  const x = i;",
+            "  let y;", // safe to delete when coalesced
+            "  x;",
+            "  y = x;",
+            "}");
+    String expected =
+        lines(
+            "var i = 0;", //
+            "for(; i < 10; i++) {",
+            "  var x = i;",
+            "  x;",
+            "  x = x;",
+            "}");
+    inFunction(src, expected);
+  }
+
+  @Test
+  public void test_usePseudoName_coalesces_deletesUninitializedDeclInLoop() {
+    usePseudoName = true;
+    String src =
+        lines(
+            "for( var i = 0;i < 10; i++) {", //
+            "  const x = i;",
+            "  let y;", // safe to delete when coalesced
+            "  x;",
+            "  y=x;",
+            "}");
+    String expected =
+        lines(
+            "var i = 0;", //
+            "for(; i < 10; i++) {",
+            "  var x_y = i;",
+            "  x_y;",
+            "  x_y = x_y;",
+            "}");
+    inFunction(src, expected);
   }
 
   @Test

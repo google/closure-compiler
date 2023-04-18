@@ -456,8 +456,8 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       } else {
         // convert `let x;` to ``
         // and `for (let x;;) {}` to `for (;;) {}`
-        // TODO(b/260620378): We should handle `isUninitializedLetNameInLoopBody(name);` cases
-        //  separately here but it causes multiple test failures.
+        // We can expect uninitialized declarations at this point and it's okay to remove them
+        // and they've been coalesced with another declaration.
         NodeUtil.removeChild(parent, var);
       }
     }
