@@ -56,7 +56,6 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     super.setUp();
     enableCreateModuleMap();
     enableTypeInfoValidation();
-    disableScriptFeatureValidation();
   }
 
   @Override
