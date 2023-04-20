@@ -65,7 +65,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     super.setUp();
     enableNormalize();
     disableCompareJsDoc();
-    disableScriptFeatureValidation();
   }
 
   private void setupModuleExportsOnly() {

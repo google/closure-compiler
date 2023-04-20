@@ -262,7 +262,6 @@ public final class DenormalizeTest extends CompilerTestCase {
 
   @Test
   public void testLogicalAssignShorthand() {
-    disableScriptFeatureValidation();
     test("x || (x = 1);", "x ||= 1;");
     test("x && (x = 1);", "x &&= 1;");
     test("x ?? (x = 1);", "x ??= 1;");

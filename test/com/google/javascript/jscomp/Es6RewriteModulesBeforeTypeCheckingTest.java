@@ -72,7 +72,6 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
     enableTypeCheck();
     enableRunTypeCheckAfterProcessing();
     enableTypeInfoValidation();
-    disableScriptFeatureValidation();
   }
 
   @Override

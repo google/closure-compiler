@@ -50,11 +50,6 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     canMoveExterns = false;
     noStubs = false;
     enableNormalize();
-    // We move code from one script to another, and thus may move a feature from one to
-    // another.
-    // By the time CCMM runs we no longer care about what features individual scripts say
-    // they contain.
-    disableScriptFeatureValidation();
   }
 
   @Test

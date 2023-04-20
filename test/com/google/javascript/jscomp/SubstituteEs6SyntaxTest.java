@@ -29,7 +29,6 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    disableScriptFeatureValidation();
   }
 
   @Override

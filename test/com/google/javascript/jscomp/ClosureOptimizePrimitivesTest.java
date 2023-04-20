@@ -41,7 +41,6 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    disableScriptFeatureValidation();
   }
 
   @Test
