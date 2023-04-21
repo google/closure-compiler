@@ -28,14 +28,33 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
 
+  private boolean runVarCheck = false;
+
   public Es6RewriteBlockScopedDeclarationTest() {
     super(DEFAULT_EXTERNS);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    if (!runVarCheck) {
+      // This is a bit of a hack in our test framework
+      // this doesn't control the other passes,
+      // but the pass itself needs to know if it is
+      // being run without "VarCheck" to creating
+      // syntetic externs for undeclared vars.
+      options.setSkipNonTranspilationPasses(true);
+    }
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    return options;
   }
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    runVarCheck = false;
+    allowExternsChanges();
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
@@ -44,7 +63,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteBlockScopedDeclaration(compiler);
+    return (externs, root) -> {
+      // Synthetic definition of $jscomp$lookupPolyfilledValue
+      if (runVarCheck) {
+        new VarCheck(compiler).process(externs, root);
+      }
+      new Es6RewriteBlockScopedDeclaration(compiler).process(externs, root);
+    };
   }
 
   @Test
@@ -162,9 +187,14 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "    var x$0 = 2;",
             "  }",
             "}"));
+  }
 
+  @Test
+  public void testLetShadowingUndeclaredWithVarCheck() {
+    this.runVarCheck = true;
     test(
         lines(
+            "function use(x) {}", //
             "function f() {",
             "  {",
             "    let inner = 2;",
@@ -172,6 +202,29 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  use(inner)",
             "}"),
         lines(
+            "function use(x) {}", //
+            "function f() {",
+            "  {",
+            "    var inner$0 = 2;",
+            "  }",
+            "  use(inner)",
+            "}"));
+  }
+
+  @Test
+  public void testLetShadowingTranspileOnly() {
+    this.runVarCheck = false;
+    test(
+        lines(
+            "function use(x) {}", //
+            "function f() {",
+            "  {",
+            "    let inner = 2;",
+            "  }",
+            "  use(inner)",
+            "}"),
+        lines(
+            "function use(x) {}", //
             "function f() {",
             "  {",
             "    var inner$0 = 2;",

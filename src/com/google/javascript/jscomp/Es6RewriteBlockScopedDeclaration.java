@@ -63,10 +63,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
   private final Supplier<String> uniqueNameIdSupplier;
+  private final boolean astMayHaveUndeclaredVariables;
 
   public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.uniqueNameIdSupplier = compiler.getUniqueNameIdSupplier();
+    this.astMayHaveUndeclaredVariables = compiler.getOptions().skipNonTranspilationPasses;
     this.astFactory = compiler.createAstFactory();
   }
 
@@ -94,7 +96,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new CollectUndeclaredNames());
+    if (this.astMayHaveUndeclaredVariables) {
+      // If we are only transpiling, we may have undefined variables in the code.
+      NodeTraversal.traverse(compiler, root, new CollectUndeclaredNames());
+    }
     // Record names declared in externs to prevent collisions when declaring vars from let/const.
     this.externNames.addAll(NodeUtil.collectExternVariableNames(compiler, externs));
     NodeTraversal.traverse(compiler, root, this);
