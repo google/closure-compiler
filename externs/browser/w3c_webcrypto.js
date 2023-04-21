@@ -65,7 +65,7 @@ webCrypto.BigInteger;
  * @constructor
  * @see http://www.w3.org/TR/webCryptoAPI/#dfn-CryptoKey
  */
-webCrypto.CryptoKey = function() {};
+function CryptoKey() {}
 
 
 /**
@@ -73,21 +73,21 @@ webCrypto.CryptoKey = function() {};
  *    key (for symmetric algorithm), a public or a private key
  *    (for an asymmetric algorithm).
  */
-webCrypto.CryptoKey.prototype.type;
+CryptoKey.prototype.type;
 
 
 /**
  * @type {boolean} Determines whether or not the raw keying material may be
  *     exported by the application.
  */
-webCrypto.CryptoKey.prototype.extractable;
+CryptoKey.prototype.extractable;
 
 
 /**
  * @type {!Object} An opaque object representing a particular cipher the key
  *     has to be used with.
  */
-webCrypto.CryptoKey.prototype.algorithm;
+CryptoKey.prototype.algorithm;
 
 
 /**
@@ -95,26 +95,37 @@ webCrypto.CryptoKey.prototype.algorithm;
  *   usages internal slot, which indicates which cryptographic operations are
  *   permissible to be used with this key.
  */
-webCrypto.CryptoKey.prototype.usages;
+CryptoKey.prototype.usages;
 
 
 /**
  * @constructor
  * @see https://www.w3.org/TR/WebCryptoAPI/#keypair
  */
-webCrypto.CryptoKeyPair = function() {};
+function CryptoKeyPair() {}
 
 
 /**
- * @type {!webCrypto.CryptoKey}
+ * @type {!CryptoKey}
  */
-webCrypto.CryptoKeyPair.prototype.publicKey;
+CryptoKeyPair.prototype.publicKey;
 
 
 /**
- * @type {!webCrypto.CryptoKey}
+ * @type {!CryptoKey}
  */
-webCrypto.CryptoKeyPair.prototype.privateKey;
+CryptoKeyPair.prototype.privateKey;
+
+
+/** Duplicate CryptoKey{Pair} in webCrypto namespace for backwards-compatibility. */
+
+
+/** @typedef {!CryptoKey} */
+webCrypto.CryptoKey;
+
+
+/** @typedef {!CryptoKeyPair} */
+webCrypto.CryptoKeyPair;
 
 
 /**
