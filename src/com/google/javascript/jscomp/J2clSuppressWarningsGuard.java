@@ -29,6 +29,8 @@ public final class J2clSuppressWarningsGuard extends WarningsGuard {
           // code directly points to declaration and this is also required with collapse properties
           // pass, which does not support dynamic dispatch for static methods.
           DiagnosticGroups.CHECK_STATIC_OVERRIDES,
+          // Do not warn on valid Java constructs like "if(false) {...}" and other situations that
+          // may arise from transormation of complex Kotlin constructs.
           DiagnosticGroups.CHECK_USELESS_CODE,
           DiagnosticGroups.CONST,
           DiagnosticGroups.EXTRA_REQUIRE,
@@ -37,6 +39,8 @@ public final class J2clSuppressWarningsGuard extends WarningsGuard {
           //   Foo.$isInstance(value) ? /**@type {!Foo}*/ (value) : null
           // However, if value is obviously never a instance of Foo then this will cause invalid
           // cast error. At runtime it's guarded so it would be safe regardless.
+          // This also suppresses casts from non-lambda JsFunction implementations to functions.
+          // This particular feature is deprecated and will be removed (b/159954752).
           DiagnosticGroups.INVALID_CASTS,
           DiagnosticGroups.LATE_PROVIDE,
           DiagnosticGroups.MISSING_OVERRIDE,
