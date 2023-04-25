@@ -172,7 +172,7 @@ ReadableStreamSource.prototype.start;
  */
 ReadableStreamSource.prototype.pull;
 
-/** @type {(undefined|function(*):(!Promise<*>|undefined))} */
+/** @type {(undefined|function(*):(!Promise<void>|undefined))} */
 ReadableStreamSource.prototype.cancel;
 
 /** @type {(undefined|string)} */
@@ -273,7 +273,7 @@ ReadableStreamDefaultReader.prototype.closed;
 
 /**
  * @param {*} reason
- * @return {!Promise<*>}
+ * @return {!Promise<void>}
  * @see https://streams.spec.whatwg.org/#default-reader-cancel
  */
 ReadableStreamDefaultReader.prototype.cancel = function(reason) {};
@@ -308,7 +308,7 @@ ReadableStreamBYOBReader.prototype.closed;
 
 /**
  * @param {*} reason
- * @return {!Promise<*>}
+ * @return {!Promise<void>}
  * @see https://streams.spec.whatwg.org/#byob-reader-cancel
  */
 ReadableStreamBYOBReader.prototype.cancel = function(reason) {};
