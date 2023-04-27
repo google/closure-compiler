@@ -5966,6 +5966,18 @@ public final class NodeUtil {
     compiler.setFeatureSet(compiler.getFeatureSet().with(feature));
   }
 
+  /**
+   * Adds the given features to a SCRIPT node's FeatureSet property.
+   *
+   * <p>Also updates the compiler's FeatureSet.
+   */
+  static void addFeaturesToScript(Node scriptNode, FeatureSet features, AbstractCompiler compiler) {
+    checkState(scriptNode.isScript(), scriptNode);
+    for (Feature feature : features.getFeatures()) {
+      addFeatureToScript(scriptNode, feature, compiler);
+    }
+  }
+
   /** Calls {@code cb} with all NAMEs declared in a PARAM_LIST or destructuring pattern. */
   public static void getParamOrPatternNames(Node n, Consumer<Node> cb) {
     ParsingUtil.getParamOrPatternNames(n, cb);

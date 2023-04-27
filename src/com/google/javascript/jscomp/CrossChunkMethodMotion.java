@@ -344,6 +344,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
         ownerDotPrototypeNode.isQualifiedName()
             && ownerDotPrototypeNode.getString().equals("prototype"),
         ownerDotPrototypeNode);
+    Node originalScript = NodeUtil.getEnclosingScript(memberFunctionDef);
 
     if (noStubFunctions) {
       // Remove the definition from the object literal
@@ -359,6 +360,8 @@ public class CrossChunkMethodMotion implements CompilerPass {
               .createAssignStatement(ownerDotPrototypeDotPropName, functionNode.detach())
               .srcrefTreeIfMissing(memberFunctionDef);
       destParent.addChildToFront(definitionStatement);
+      NodeUtil.addFeaturesToScript(
+          destParent, NodeUtil.getFeatureSetOfScript(originalScript), compiler);
       compiler.reportChangeToEnclosingScope(destParent);
     } else {
       int stubId = idGenerator.newId();
@@ -377,6 +380,9 @@ public class CrossChunkMethodMotion implements CompilerPass {
               .createAssignStatement(ownerDotPrototypeDotPropName, unstubCall)
               .srcrefTreeIfMissing(memberFunctionDef);
       destParent.addChildToFront(definitionStatement);
+      NodeUtil.addFeaturesToScript(
+          destParent, NodeUtil.getFeatureSetOfScript(originalScript), compiler);
+
       compiler.reportChangeToEnclosingScope(destParent);
     }
   }
@@ -483,6 +489,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     checkState(classMembers.isClassMembers(), classMembers);
     Node classNode = classMembers.getParent();
     checkState(classNode.isClass(), classNode);
+    Node originalScript = NodeUtil.getEnclosingScript(methodDefinition);
 
     methodDefinition.detach();
     compiler.reportChangeToEnclosingScope(classMembers);
@@ -500,6 +507,8 @@ public class CrossChunkMethodMotion implements CompilerPass {
             .createAssignStatement(classNameDotPrototypeDotPropName, functionNode)
             .srcrefTreeIfMissing(methodDefinition);
     destinationParent.addChildToFront(definitionStatementNode);
+    NodeUtil.addFeaturesToScript(
+        destinationParent, NodeUtil.getFeatureSetOfScript(originalScript), compiler);
     compiler.reportChangeToEnclosingScope(destinationParent);
   }
 
@@ -528,6 +537,8 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node classDefiningStatement = NodeUtil.getEnclosingStatement(classMembers);
     stubDefinitionStatement.insertAfter(classDefiningStatement);
 
+    Node originalScript = NodeUtil.getEnclosingScript(methodDefinition);
+
     // remove the definition from the class
     methodDefinition.detach();
 
@@ -544,6 +555,8 @@ public class CrossChunkMethodMotion implements CompilerPass {
             .createAssignStatement(classNameDotPrototypeDotPropName2, unstubCall)
             .srcrefTreeIfMissing(methodDefinition);
     destinationParent.addChildToFront(statementNode);
+    NodeUtil.addFeaturesToScript(
+        destinationParent, NodeUtil.getFeatureSetOfScript(originalScript), compiler);
     compiler.reportChangeToEnclosingScope(destinationParent);
   }
 

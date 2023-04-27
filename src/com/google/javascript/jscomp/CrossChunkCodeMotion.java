@@ -569,10 +569,14 @@ class CrossChunkCodeMotion implements CompilerPass {
         Node statementNode = statement.getStatementNode();
         // Remove it
         compiler.reportChangeToEnclosingScope(statementNode);
+        Node originalScript = NodeUtil.getEnclosingScript(statementNode);
+
         statementNode.detach();
 
         // Add it to the new spot
         destParent.addChildToFront(statementNode);
+        NodeUtil.addFeaturesToScript(
+            destParent, NodeUtil.getFeatureSetOfScript(originalScript), compiler);
         compiler.reportChangeToEnclosingScope(statementNode);
       }
     }
