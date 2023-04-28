@@ -232,6 +232,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     arrowFn.setColor(StandardColors.UNKNOWN);
     Node iife = astFactory.createCallWithUnknownType(arrowFn).srcrefTreeIfMissing(n);
     parent.addChildToBack(iife);
+    NodeUtil.addFeatureToScript(NodeUtil.getEnclosingScript(n), Feature.ARROW_FUNCTIONS, compiler);
     compiler.reportChangeToEnclosingScope(iife);
   }
 
