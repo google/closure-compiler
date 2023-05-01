@@ -25,8 +25,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -71,10 +69,6 @@ class InlineSimpleMethods implements CompilerPass {
   private final SetMultimap<String, Node> methodDefinitions = LinkedHashMultimap.create();
 
   private final AbstractCompiler compiler;
-
-  private static final Logger logger =
-      Logger.getLogger(InlineSimpleMethods.class.getName());
-
   private final AstAnalyzer astAnalyzer;
 
   InlineSimpleMethods(AbstractCompiler compiler) {
@@ -112,9 +106,6 @@ class InlineSimpleMethods implements CompilerPass {
       // NOTE: we could also cache the 'good' result of this method having all equivalent
       // definitions and avoid recalculating later, but profile data suggests that's not too useful
       if (definitions.size() > 1 && !allDefinitionsEquivalent(definitions)) {
-        if (logger.isLoggable(Level.FINE)) {
-          logger.fine("Method '" + callName + "' has conflicting definitions.");
-        }
         nonInlineableProperties.add(callName);
         return;
       }
@@ -137,22 +128,13 @@ class InlineSimpleMethods implements CompilerPass {
         Node returned = returnedExpression(firstDefinition);
         if (returned != null) {
           if (isPropertyTree(returned) && !firstDefinition.isArrowFunction()) {
-            if (logger.isLoggable(Level.FINE)) {
-              logger.fine("Inlining property accessor: " + callName);
-            }
             inlinePropertyReturn(callNode, returned);
           } else if (NodeUtil.isLiteralValue(returned, false)
               && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
-            if (logger.isLoggable(Level.FINE)) {
-              logger.fine("Inlining constant accessor: " + callName);
-            }
             inlineConstReturn(callNode, returned);
           }
         } else if (isEmptyMethod(firstDefinition)
             && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
-          if (logger.isLoggable(Level.FINE)) {
-            logger.fine("Inlining empty method: " + callName);
-          }
           inlineEmptyMethod(t, parent, callNode);
         }
       }
