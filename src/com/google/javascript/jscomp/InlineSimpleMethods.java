@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -58,16 +57,18 @@ import org.jspecify.nullness.Nullable;
  */
 class InlineSimpleMethods implements CompilerPass {
 
-  /** List of methods defined in externs */
-  final ImmutableSet<String> externProperties;
-
-  /** List of property names that may not be methods */
-  final Set<String> nonMethodProperties = new HashSet<>();
+  // List of property names that we know are not safe to inline
+  // This includes:
+  //   - extern properties (we can't see the actual method definition for externs)
+  //   - non-method properties
+  //   - methods with @noinline
+  //   - methods with multiple, non-equivalent definitions
+  private final Set<String> nonInlineableProperties = new HashSet<>();
 
   // Use a linked map here to keep the output deterministic.  Otherwise,
   // the choice of method bodies is random when multiple identical definitions
   // are found which causes problems in the source maps.
-  final SetMultimap<String, Node> methodDefinitions = LinkedHashMultimap.create();
+  private final SetMultimap<String, Node> methodDefinitions = LinkedHashMultimap.create();
 
   private final AbstractCompiler compiler;
 
@@ -79,7 +80,7 @@ class InlineSimpleMethods implements CompilerPass {
   InlineSimpleMethods(AbstractCompiler compiler) {
     this.compiler = compiler;
     astAnalyzer = compiler.getAstAnalyzer();
-    externProperties = compiler.getExternProperties();
+    nonInlineableProperties.addAll(compiler.getExternProperties());
   }
 
   @Override
@@ -89,18 +90,15 @@ class InlineSimpleMethods implements CompilerPass {
     checkState(externs != null);
 
     NodeTraversal.traverseRoots(compiler, new GatherSignatures(), externs, root);
-    NodeTraversal.traverseRoots(compiler, new InlineTrivialAccessors(), externs, root);
+    NodeTraversal.traverse(compiler, root, new InlineTrivialAccessors());
   }
 
-  /**
-   * For each method call, see if it is a candidate for inlining.
-   * TODO(kushal): Cache the results of the checks
-   */
+  /** For each method call, see if it is a candidate for inlining, and do the inlining if so. */
   private class InlineTrivialAccessors extends InvocationsCallback {
 
     @Override
     void visit(NodeTraversal t, Node callNode, Node parent, String callName) {
-      if (externProperties.contains(callName) || nonMethodProperties.contains(callName)) {
+      if (nonInlineableProperties.contains(callName)) {
         return;
       }
 
@@ -109,8 +107,23 @@ class InlineSimpleMethods implements CompilerPass {
         return;
       }
 
-      // Exit early if any definitions are annotated with @noinline
+      // Exit early if all method definitions are not equivalent, and mark this method as not
+      // inlineable.
+      // NOTE: we could also cache the 'good' result of this method having all equivalent
+      // definitions and avoid recalculating later, but profile data suggests that's not too useful
+      if (definitions.size() > 1 && !allDefinitionsEquivalent(definitions)) {
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("Method '" + callName + "' has conflicting definitions.");
+        }
+        nonInlineableProperties.add(callName);
+        return;
+      }
+      // Exit early if any definitions are annotated with @noinline, and mark this method as not
+      // inlineable.
+      // NOTE: we could also cache the 'good' result of this method not being marked @noinline and
+      // avoid recalculating later, but profile data suggests that's not too useful.
       if (anyDefinitionsNoInline(definitions)) {
+        nonInlineableProperties.add(callName);
         return;
       }
 
@@ -118,36 +131,29 @@ class InlineSimpleMethods implements CompilerPass {
       // the order from least to most complex
       Node firstDefinition = definitions.iterator().next();
 
-      // Check any multiple definitions
-      if (definitions.size() == 1 || allDefinitionsEquivalent(definitions)) {
-        // Do not inline if the callsite is a derived class calling a base method using `super.`
-        if (!argsMayHaveSideEffects(callNode) && !NodeUtil.referencesSuper(callNode)) {
-          // Verify this is a trivial return
-          Node returned = returnedExpression(firstDefinition);
-          if (returned != null) {
-            if (isPropertyTree(returned) && !firstDefinition.isArrowFunction()) {
-              if (logger.isLoggable(Level.FINE)) {
-                logger.fine("Inlining property accessor: " + callName);
-              }
-              inlinePropertyReturn(callNode, returned);
-            } else if (NodeUtil.isLiteralValue(returned, false)
-                && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
-              if (logger.isLoggable(Level.FINE)) {
-                logger.fine("Inlining constant accessor: " + callName);
-              }
-              inlineConstReturn(callNode, returned);
+      // Do not inline if the callsite is a derived class calling a base method using `super.`
+      if (!argsMayHaveSideEffects(callNode) && !NodeUtil.referencesSuper(callNode)) {
+        // Verify this is a trivial return
+        Node returned = returnedExpression(firstDefinition);
+        if (returned != null) {
+          if (isPropertyTree(returned) && !firstDefinition.isArrowFunction()) {
+            if (logger.isLoggable(Level.FINE)) {
+              logger.fine("Inlining property accessor: " + callName);
             }
-          } else if (isEmptyMethod(firstDefinition)
+            inlinePropertyReturn(callNode, returned);
+          } else if (NodeUtil.isLiteralValue(returned, false)
               && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
             if (logger.isLoggable(Level.FINE)) {
-              logger.fine("Inlining empty method: " + callName);
+              logger.fine("Inlining constant accessor: " + callName);
             }
-            inlineEmptyMethod(t, parent, callNode);
+            inlineConstReturn(callNode, returned);
           }
-        }
-      } else {
-        if (logger.isLoggable(Level.FINE)) {
-          logger.fine("Method '" + callName + "' has conflicting definitions.");
+        } else if (isEmptyMethod(firstDefinition)
+            && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
+          if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Inlining empty method: " + callName);
+          }
+          inlineEmptyMethod(t, parent, callNode);
         }
       }
     }
@@ -299,12 +305,12 @@ class InlineSimpleMethods implements CompilerPass {
       // The node we're looking at is a function, so we can add it directly
       addSignature(name, node);
     } else {
-      nonMethodProperties.add(name);
+      nonInlineableProperties.add(name);
     }
   }
 
   private void addSignature(String name, Node function) {
-    if (externProperties.contains(name)) {
+    if (nonInlineableProperties.contains(name)) {
       return;
     }
 
@@ -353,7 +359,7 @@ class InlineSimpleMethods implements CompilerPass {
                 break;
               case SETTER_DEF:
               case GETTER_DEF:
-                nonMethodProperties.add(key.getString());
+                nonInlineableProperties.add(key.getString());
                 break;
               case COMPUTED_PROP: // complicated
               case OBJECT_SPREAD:
@@ -368,9 +374,8 @@ class InlineSimpleMethods implements CompilerPass {
           // If a goog.reflect.objectProperty is used for a method's name, we can't assume that the
           // method can be safely inlined.
           if (compiler.getCodingConvention().isPropertyRenameFunction(n.getFirstChild())) {
-
             // Other code guarantees that getSecondChild() is a STRINGLIT
-            nonMethodProperties.add(n.getSecondChild().getString());
+            nonInlineableProperties.add(n.getSecondChild().getString());
           }
           break;
         default:
