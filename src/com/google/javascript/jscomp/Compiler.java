@@ -3909,6 +3909,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean typeCheckingHasRun;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
+    private final boolean mergedPrecompiledLibraries;
     private final JSChunkGraph moduleGraph;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
@@ -3930,6 +3931,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.lifeCycleStage = compiler.getLifeCycleStage();
+      this.mergedPrecompiledLibraries = compiler.options.getMergedPrecompiledLibraries();
       this.moduleGraph = compiler.moduleGraph;
       this.uniqueNameId = compiler.uniqueNameId;
       this.uniqueIdSupplier = compiler.uniqueIdSupplier;
@@ -3967,6 +3969,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             ? LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC
             : compilerState.lifeCycleStage;
     setLifeCycleStage(stage);
+    getOptions().setMergedPrecompiledLibraries(compilerState.mergedPrecompiledLibraries);
     moduleGraph = compilerState.moduleGraph;
     uniqueNameId = compilerState.uniqueNameId;
     uniqueIdSupplier = compilerState.uniqueIdSupplier;

@@ -487,6 +487,32 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void protectsHiddenSideEffects_ignoringProtectSideEffectOption() throws IOException {
+    precompileLibrary(
+        extern("const foo = {}; foo.bar;"),
+        code("/** @fileoverview @suppress {uselessCode} */ foo.bar;"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
+    // Setting this option is, in precompiled_libraries mode, a no-op: we always protect the
+    // side effects. This is because at the library-level we always protect side effects.
+    // This means that any "hidden side effects" at the library-level are wrapped in a
+    // JSCOMPILER_PRESERVE call:
+    //   JSCOMPILER_PRESERVE(foo.bar)
+    // So optimizations/finalizations must always remove that "JSCOMPILER_PRESERVE" call added
+    // during library compilation.
+    options.setProtectHiddenSideEffects(false);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("foo.bar");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
   public void removesRegExpCallsIfSafe() throws IOException {
     precompileLibrary(
         extern(new TestExternsBuilder().addRegExp().build()), code("(/abc/gi).exec('')"));

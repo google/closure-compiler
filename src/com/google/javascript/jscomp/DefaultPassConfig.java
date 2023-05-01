@@ -920,7 +920,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // If side-effects were protected, remove the protection now.
-    if (options.shouldProtectHiddenSideEffects()) {
+    // Note that when using precompiled libraries we always run this pass regardless of the
+    // 'shouldProtectHiddenSideEffects' option: the library compilation may have run
+    // with side effect protection enabled even if the binary disables it, so we assume we may
+    // always need to strip side effect protection.
+    if (options.shouldProtectHiddenSideEffects() || options.getMergedPrecompiledLibraries()) {
       passes.maybeAdd(stripSideEffectProtection);
     }
 
