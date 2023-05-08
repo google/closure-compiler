@@ -57,7 +57,7 @@ google.maps.version;
  * google.maps.Marker.setAnimation} method on Marker or the {@link
  * google.maps.MarkerOptions.animation} option to play an animation.
  *
- * When using `v=beta`, can be accessed by calling `const {Animation} = await
+ * Access by calling `const {Animation} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
@@ -80,8 +80,8 @@ google.maps.Animation = {
 /**
  * A layer showing bike lanes and paths.
  *
- * When using `v=beta`, can be accessed by calling `const {BicyclingLayer} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {BicyclingLayer} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -162,9 +162,8 @@ google.maps.CameraParams.prototype.zoom;
  * A circle on the Earth&#39;s surface; also known as a &quot;spherical
  * cap&quot;.
  *
- * When using `v=beta`, can be accessed by calling `const {Circle} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Circle} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {(?google.maps.Circle|?google.maps.CircleLiteral|?google.maps.CircleOptions)=}
  *     circleOrCircleOptions
  * @extends {google.maps.MVCObject}
@@ -246,7 +245,7 @@ google.maps.Circle.prototype.setEditable = function(editable) {};
 google.maps.Circle.prototype.setMap = function(map) {};
 
 /**
- * @param {google.maps.CircleOptions} options
+ * @param {?google.maps.CircleOptions} options
  * @return {undefined}
  */
 google.maps.Circle.prototype.setOptions = function(options) {};
@@ -385,11 +384,9 @@ google.maps.CircleOptions.prototype.visible;
 google.maps.CircleOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
- *
- * When using `v=beta`, can be accessed by calling `const {CollisionBehavior} =
- * await google.maps.importLibrary("marker")`. See
+ * Access by calling `const {CollisionBehavior} = await
+ * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -434,8 +431,8 @@ google.maps.CollisionBehavior = {
  * bottom row flow towards the middle of the row. Elements in the left or right
  * column flow towards the middle of the column.
  *
- * When using `v=beta`, can be accessed by calling `const {ControlPosition} =
- * await google.maps.importLibrary("core")`. See
+ * Access by calling `const {ControlPosition} = await
+ * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -616,9 +613,8 @@ google.maps.CoreLibrary.prototype.UnitSystem;
  * <code>Data</code> object is a collection of <a
  * href="#Data.Feature"><code>Features</code></a>.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.Data.DataOptions=} options
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -881,9 +877,8 @@ google.maps.Data.DataOptions.prototype.style;
 /**
  * A feature has a geometry, an id, and a set of properties.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.Data.FeatureOptions=} options
  * @constructor
  */
@@ -1021,9 +1016,8 @@ google.maps.Data.Geometry.prototype.getType = function() {};
  * <code>LatLng</code> or <code>LatLngLiteral</code> objects are automatically
  * converted to <code>Data.Point</code> geometry objects.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.Geometry|!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     elements
  * @implements {google.maps.Data.Geometry}
@@ -1069,9 +1063,8 @@ google.maps.Data.GeometryCollection.prototype.getType = function() {};
 /**
  * A LineString geometry contains a number of <code>LatLng</code>s.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>} elements
  * @implements {google.maps.Data.Geometry}
  * @constructor
@@ -1117,9 +1110,8 @@ google.maps.Data.LineString.prototype.getType = function() {};
  * a closed LineString. There is no need to make the first <code>LatLng</code>
  * equal to the last <code>LatLng</code>. The LinearRing is closed implicitly.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>} elements
  * @implements {google.maps.Data.Geometry}
  * @constructor
@@ -1176,9 +1168,8 @@ google.maps.Data.MouseEvent.prototype.feature;
 /**
  * A MultiLineString geometry contains a number of <code>LineString</code>s.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.LineString|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>}
  *     elements
  * @implements {google.maps.Data.Geometry}
@@ -1224,9 +1215,8 @@ google.maps.Data.MultiLineString.prototype.getType = function() {};
 /**
  * A MultiPoint geometry contains a number of <code>LatLng</code>s.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>} elements
  * @implements {google.maps.Data.Geometry}
  * @constructor
@@ -1270,9 +1260,8 @@ google.maps.Data.MultiPoint.prototype.getType = function() {};
 /**
  * A MultiPolygon geometry contains a number of <code>Data.Polygon</code>s.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.Polygon|!Array<!google.maps.Data.LinearRing|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>>}
  *     elements
  * @implements {google.maps.Data.Geometry}
@@ -1317,9 +1306,8 @@ google.maps.Data.MultiPolygon.prototype.getType = function() {};
 /**
  * A Point geometry contains a single <code>LatLng</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @implements {google.maps.Data.Geometry}
  * @constructor
@@ -1353,9 +1341,8 @@ google.maps.Data.Point.prototype.getType = function() {};
  * href="https://developers.google.com/maps/documentation/javascript/examples/layer-data-polygon">sample
  * polygon with a hole</a>.
  *
- * When using `v=beta`, can be accessed by calling `const {Data} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.LinearRing|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>}
  *     elements
  * @implements {google.maps.Data.Geometry}
@@ -1627,6 +1614,29 @@ google.maps.Data.StyleOptions.prototype.zIndex;
 google.maps.Data.StylingFunction;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * An interface representing a feature from a Dataset. The
+ * <code>featureType</code> of a <code>DatasetFeature</code> will always be
+ * <code>FeatureType.DATASET</code>.
+ * @extends {google.maps.Feature}
+ * @record
+ */
+google.maps.DatasetFeature = function() {};
+
+/**
+ * Key-value mapping of the feature&#39;s attributes.
+ * @type {!Object<string, string>}
+ */
+google.maps.DatasetFeature.prototype.datasetAttributes;
+
+/**
+ * Dataset id of the dataset that this feature belongs to.
+ * @type {string}
+ */
+google.maps.DatasetFeature.prototype.datasetId;
+
+/**
  * A single geocoded waypoint.
  * @record
  */
@@ -1782,8 +1792,8 @@ google.maps.DirectionsPolyline.prototype.points;
  * Renders directions obtained from the <code><a
  * href="#DirectionsService">DirectionsService</a></code>.
  *
- * When using `v=beta`, can be accessed by calling `const {DirectionsRenderer} =
- * await google.maps.importLibrary("routes")`. See
+ * Access by calling `const {DirectionsRenderer} = await
+ * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.DirectionsRendererOptions=} opts
  * @extends {google.maps.MVCObject}
@@ -2209,8 +2219,8 @@ google.maps.DirectionsRoute.prototype.waypoint_order;
 /**
  * A service for computing directions between two or more places.
  *
- * When using `v=beta`, can be accessed by calling `const {DirectionsService} =
- * await google.maps.importLibrary("routes")`. See
+ * Access by calling `const {DirectionsService} = await
+ * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -2231,8 +2241,8 @@ google.maps.DirectionsService.prototype.route = function(request, callback) {};
  * constant&#39;s name. For example, <code>'OK'</code> or
  * <code>google.maps.DirectionsStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {DirectionsStatus} =
- * await google.maps.importLibrary("routes")`. See
+ * Access by calling `const {DirectionsStatus} = await
+ * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -2462,8 +2472,7 @@ google.maps.Distance.prototype.value;
  * distance matrix request. These values are specified as strings, for example,
  * <code>'OK'</code>.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {DistanceMatrixElementStatus} = await
+ * Access by calling `const {DistanceMatrixElementStatus} = await
  * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -2666,9 +2675,9 @@ google.maps.DistanceMatrixResponseRow.prototype.elements;
 /**
  * A service for computing distances between multiple origins and destinations.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {DistanceMatrixService} = await google.maps.importLibrary("routes")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {DistanceMatrixService} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
 google.maps.DistanceMatrixService = function() {};
@@ -2690,8 +2699,8 @@ google.maps.DistanceMatrixService.prototype.getDistanceMatrix = function(
  * example, <code>'OK'</code> or
  * <code>google.maps.DistanceMatrixStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {DistanceMatrixStatus}
- * = await google.maps.importLibrary("routes")`. See
+ * Access by calling `const {DistanceMatrixStatus} = await
+ * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -2835,8 +2844,8 @@ google.maps.ElevationResult.prototype.resolution;
  * Defines a service class that talks directly to Google servers for requesting
  * elevation data.
  *
- * When using `v=beta`, can be accessed by calling `const {ElevationService} =
- * await google.maps.importLibrary("elevation")`. See
+ * Access by calling `const {ElevationService} = await
+ * google.maps.importLibrary("elevation")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -2869,8 +2878,8 @@ google.maps.ElevationService.prototype.getElevationForLocations = function(
  * name. For example, <code>'OK'</code> or
  * <code>google.maps.ElevationStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {ElevationStatus} =
- * await google.maps.importLibrary("elevation")`. See
+ * Access by calling `const {ElevationStatus} = await
+ * google.maps.importLibrary("elevation")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -2911,8 +2920,6 @@ google.maps.ErrorEvent = function() {};
 google.maps.ErrorEvent.prototype.error;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * An interface representing a vector map tile feature. These are inputs to the
  * <code>FeatureStyleFunction</code>. Do not save a reference to a particular
  * <code>Feature</code> object because the reference will not be stable.
@@ -2927,14 +2934,20 @@ google.maps.Feature = function() {};
 google.maps.Feature.prototype.featureType;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * An interface representing a map layer containing features of a
  * specific {@link google.maps.FeatureType} whose style can be overridden
  * client-side, or have events attached.
  * @record
  */
 google.maps.FeatureLayer = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The Dataset ID for this <code>FeatureLayer</code>. Only present if the
+ * <code>featureType</code> is <code>FeatureType.DATASET</code>.
+ * @type {string|undefined}
+ */
+google.maps.FeatureLayer.prototype.datasetId;
 
 /**
  * The <code>FeatureType</code> associated with this <code>FeatureLayer</code>.
@@ -2979,8 +2992,6 @@ google.maps.FeatureLayer.prototype.addListener = function(
     eventName, handler) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This object is returned from a mouse event on a <code>FeatureLayer</code>.
  * @extends {google.maps.MapMouseEvent}
  * @record
@@ -2994,16 +3005,12 @@ google.maps.FeatureMouseEvent = function() {};
 google.maps.FeatureMouseEvent.prototype.features;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @typedef {function(!google.maps.FeatureStyleFunctionOptions):
  * (?google.maps.FeatureStyleOptions|undefined)}
  */
 google.maps.FeatureStyleFunction;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options passed to a <code>FeatureStyleFunction</code>.
  * @record
  */
@@ -3017,8 +3024,6 @@ google.maps.FeatureStyleFunctionOptions = function() {};
 google.maps.FeatureStyleFunctionOptions.prototype.feature;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * These options specify the way the style of a <code>Feature</code> should be
  * modified on a map.
  * @record
@@ -3058,11 +3063,9 @@ google.maps.FeatureStyleOptions.prototype.strokeOpacity;
 google.maps.FeatureStyleOptions.prototype.strokeWeight;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Identifiers for feature types.
  *
- * When using `v=beta`, can be accessed by calling `const {FeatureType} = await
+ * Access by calling `const {FeatureType} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -3080,6 +3083,10 @@ google.maps.FeatureType = {
    * Indicates the national political entity.
    */
   COUNTRY: 'COUNTRY',
+  /**
+   * Indicates a third-party dataset.
+   */
+  DATASET: 'DATASET',
   /**
    * Indicates an incorporated city or town political entity.
    */
@@ -3106,7 +3113,7 @@ google.maps.FullscreenControlOptions.prototype.position;
 /**
  * A service for converting between an address and a <code>LatLng</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {Geocoder} = await
+ * Access by calling `const {Geocoder} = await
  * google.maps.importLibrary("geocoding")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -3227,8 +3234,8 @@ google.maps.GeocoderGeometry.prototype.viewport;
  * <code>'ROOFTOP'</code> or
  * <code>google.maps.GeocoderLocationType.ROOFTOP</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {GeocoderLocationType}
- * = await google.maps.importLibrary("geocoding")`. See
+ * Access by calling `const {GeocoderLocationType} = await
+ * google.maps.importLibrary("geocoding")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3415,8 +3422,8 @@ google.maps.GeocoderResult.prototype.types;
  * constant&#39;s name. For example, <code>'OK'</code> or
  * <code>google.maps.GeocoderStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {GeocoderStatus} =
- * await google.maps.importLibrary("geocoding")`. See
+ * Access by calling `const {GeocoderStatus} = await
+ * google.maps.importLibrary("geocoding")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3495,8 +3502,8 @@ google.maps.GeometryLibrary.prototype.spherical;
 /**
  * A rectangular image overlay on the map.
  *
- * When using `v=beta`, can be accessed by calling `const {GroundOverlay} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {GroundOverlay} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {string} url
  * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
@@ -3690,7 +3697,7 @@ google.maps.IconSequence.prototype.repeat;
  * This class implements the MapType interface and is provided for rendering
  * image tiles.
  *
- * When using `v=beta`, can be accessed by calling `const {ImageMapType} = await
+ * Access by calling `const {ImageMapType} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.ImageMapTypeOptions} opts
@@ -3820,7 +3827,7 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
 /**
  * An overlay that looks like a bubble and is often connected to a marker.
  *
- * When using `v=beta`, can be accessed by calling `const {InfoWindow} = await
+ * Access by calling `const {InfoWindow} = await
  * google.maps.importLibrary("maps")` or `const {InfoWindow} = await
  * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
@@ -4149,7 +4156,7 @@ google.maps.KmlFeatureData.prototype.snippet;
  * GeoRSS file that is hosted on a publicly accessible web server. A
  * <code>KmlFeatureData</code> object is provided for each feature when clicked.
  *
- * When using `v=beta`, can be accessed by calling `const {KmlLayer} = await
+ * Access by calling `const {KmlLayer} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.KmlLayerOptions=} opts Options for this layer.
@@ -4320,8 +4327,8 @@ google.maps.KmlLayerOptions.prototype.zIndex;
  * document. Specify these by value, or by using the constant&#39;s name. For
  * example, <code>'OK'</code> or <code>google.maps.KmlLayerStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {KmlLayerStatus} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {KmlLayerStatus} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -4420,9 +4427,8 @@ google.maps.KmlMouseEvent.prototype.pixelOffset;
  * google.maps.LatLng(new google.maps.LatLng(-34, 151), true);<br> new
  * google.maps.LatLng(new google.maps.LatLng(-34, 151), null, true); </pre>
  *
- * When using `v=beta`, can be accessed by calling `const {LatLng} = await
- * google.maps.importLibrary("core")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {LatLng} = await google.maps.importLibrary("core")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {number|!google.maps.LatLngLiteral|!google.maps.LatLng}
  *     latOrLatLngOrLatLngLiteral
  * @param {?(number|boolean)=} lngOrNoClampNoWrap
@@ -4488,8 +4494,8 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
  * heights above ground level, and negative values denote heights underneath the
  * ground surface.</li> </ul>
  *
- * When using `v=beta`, can be accessed by calling `const {LatLngAltitude} =
- * await google.maps.importLibrary("core")`. See
+ * Access by calling `const {LatLngAltitude} = await
+ * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|!google.maps.LatLng}
  *     value The initializing value.
@@ -4576,7 +4582,7 @@ google.maps.LatLngAltitudeLiteral.prototype.lng;
  * rectangle in geographical coordinates, including one that crosses the 180
  * degrees longitudinal meridian.
  *
- * When using `v=beta`, can be accessed by calling `const {LatLngBounds} = await
+ * Access by calling `const {LatLngBounds} = await
  * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral|?google.maps.LatLngBounds|?google.maps.LatLngBoundsLiteral)=}
@@ -4790,7 +4796,7 @@ google.maps.LocationElevationResponse.prototype.results;
 
 /**
  *
- * When using `v=beta`, can be accessed by calling `const {MVCArray} = await
+ * Access by calling `const {MVCArray} = await
  * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {Array<T>=} array
@@ -4879,7 +4885,7 @@ google.maps.MVCArray.prototype.setAt = function(i, elem) {};
  * other classes in the API, and inheriting from other classes in the API is not
  * supported.
  *
- * When using `v=beta`, can be accessed by calling `const {MVCObject} = await
+ * Access by calling `const {MVCObject} = await
  * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -4954,9 +4960,8 @@ google.maps.MVCObject.prototype.unbindAll = function() {};
 
 /**
  *
- * When using `v=beta`, can be accessed by calling `const {Map} = await
- * google.maps.importLibrary("maps")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Map} = await google.maps.importLibrary("maps")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLElement} mapDiv The map will render to fill this element.
  * @param {!google.maps.MapOptions=} opts Options
  * @extends {google.maps.MVCObject}
@@ -5047,12 +5052,25 @@ google.maps.Map.prototype.getCenter = function() {};
 google.maps.Map.prototype.getClickableIcons = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Returns the <code>FeatureLayer</code> for the specified
+ * <code>datasetId</code>. Dataset IDs must be configured in the Google Cloud
+ * Console. If the dataset ID is not associated with the map&#39;s map style, or
+ * if Data-driven styling is not available (no map ID, no vector tiles, no
+ * Data-Driven Styling feature layers or Datasets configured in the Map Style),
+ * this logs an error, and the resulting <code>FeatureLayer.isAvailable</code>
+ * will be false.
+ * @param {string} datasetId
+ * @return {!google.maps.FeatureLayer}
+ */
+google.maps.Map.prototype.getDatasetFeatureLayer = function(datasetId) {};
+
+/**
  * @return {!HTMLElement} The mapDiv of the map.
  */
 google.maps.Map.prototype.getDiv = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Returns the <code>FeatureLayer</code> of the specific
  * <code>FeatureType</code>. A <code>FeatureLayer</code> must be enabled in the
  * Google Cloud Console. If a <code>FeatureLayer</code> of the specified
@@ -5074,7 +5092,6 @@ google.maps.Map.prototype.getFeatureLayer = function(featureType) {};
 google.maps.Map.prototype.getHeading = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Informs the caller of the current capabilities available to the map based on
  * the Map ID that was provided.
  * @return {!google.maps.MapCapabilities}
@@ -5317,8 +5334,6 @@ google.maps.MapCanvasProjection.prototype.getVisibleRegion = function() {};
 google.maps.MapCanvasProjection.prototype.getWorldWidth = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Object containing a snapshot of what capabilities are currently available for
  * the Map. See the properties for a list of possible capabilities.
  * @record
@@ -5334,6 +5349,82 @@ google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
  * @type {boolean|undefined}
  */
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * MapElement is an <code>HTMLElement</code> subclass for rendering maps. After
+ * loading the <code>maps</code> library, a map can be created in HTML. For
+ * example:<br> <code>&lt;gmp-map center=&quot;37.4220656,-122.0840897&quot;
+ * zoom=&quot;10&quot;
+ * map-id=&quot;DEMO_MAP_ID&quot;&gt;&lt;/gmp-map&gt;</code><br> <br>
+ * Internally, it uses {@link google.maps.Map}, which can be accessed with the
+ * <code>innerMap</code> property.
+ *
+ * Access by calling `const {MapElement} = await
+ * google.maps.importLibrary("maps")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.MapElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.MapElement = function() {};
+
+/**
+ * @type {null|!google.maps.LatLng|!google.maps.LatLngLiteral}
+ */
+google.maps.MapElement.prototype.center;
+
+/**
+ * A reference to the {@link google.maps.Map} that the MapElement uses
+ * internally.
+ * @type {!google.maps.Map}
+ */
+google.maps.MapElement.prototype.innerMap;
+
+/**
+ * @type {null|string}
+ */
+google.maps.MapElement.prototype.mapId;
+
+/**
+ * @type {null|number}
+ */
+google.maps.MapElement.prototype.zoom;
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * MapElementOptions object used to define the properties that can be set on a
+ * MapElement.
+ * @record
+ */
+google.maps.MapElementOptions = function() {};
+
+/**
+ * The initial Map center.
+ * @type {undefined|null|!google.maps.LatLng|!google.maps.LatLngLiteral}
+ */
+google.maps.MapElementOptions.prototype.center;
+
+/**
+ * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
+ * ID</a> of the map. This parameter cannot be set or changed after a map is
+ * instantiated.
+ * @type {undefined|null|string}
+ */
+google.maps.MapElementOptions.prototype.mapId;
+
+/**
+ * The initial Map zoom level. Valid zoom values are numbers from zero up to the
+ * supported <a
+ * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
+ * zoom level</a>. Larger zoom values correspond to a higher resolution.
+ * @type {undefined|null|number}
+ */
+google.maps.MapElementOptions.prototype.zoom;
 
 /**
  * This object is returned from various mouse events on the map and overlays,
@@ -5864,8 +5955,8 @@ google.maps.MapTypeControlOptions.prototype.style;
 /**
  * Identifiers for common MapTypesControls.
  *
- * When using `v=beta`, can be accessed by calling `const {MapTypeControlStyle}
- * = await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {MapTypeControlStyle} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -5891,7 +5982,7 @@ google.maps.MapTypeControlStyle = {
  * constant&#39;s name. For example, <code>'satellite'</code> or
  * <code>google.maps.MapTypeId.SATELLITE</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {MapTypeId} = await
+ * Access by calling `const {MapTypeId} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -5920,8 +6011,8 @@ google.maps.MapTypeId = {
 /**
  * A registry for MapType instances, keyed by MapType id.
  *
- * When using `v=beta`, can be accessed by calling `const {MapTypeRegistry} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {MapTypeRegistry} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -6129,8 +6220,8 @@ google.maps.MapsLibrary.prototype.WebGLOverlayView;
 /**
  * Base class for managing network errors in Maps.
  *
- * When using `v=beta`, can be accessed by calling `const {MapsNetworkError} =
- * await google.maps.importLibrary("core")`. See
+ * Access by calling `const {MapsNetworkError} = await
+ * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Error}
  * @constructor
@@ -6153,9 +6244,9 @@ google.maps.MapsNetworkError.prototype.endpoint;
  * Identifiers for API endpoints used by {@link google.maps.MapsNetworkError}
  * instances.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {MapsNetworkErrorEndpoint} = await google.maps.importLibrary("core")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {MapsNetworkErrorEndpoint} = await
+ * google.maps.importLibrary("core")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
 google.maps.MapsNetworkErrorEndpoint = {
@@ -6249,8 +6340,8 @@ google.maps.MapsNetworkErrorEndpoint = {
  * Represents a request error from a web service (i.e. the equivalent of a 4xx
  * code in HTTP).
  *
- * When using `v=beta`, can be accessed by calling `const {MapsRequestError} =
- * await google.maps.importLibrary("core")`. See
+ * Access by calling `const {MapsRequestError} = await
+ * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MapsNetworkError}
  * @constructor
@@ -6261,8 +6352,8 @@ google.maps.MapsRequestError = function() {};
  * Represents a server-side error from a web service (i.e. the equivalent of a
  * 5xx code in HTTP).
  *
- * When using `v=beta`, can be accessed by calling `const {MapsServerError} =
- * await google.maps.importLibrary("core")`. See
+ * Access by calling `const {MapsServerError} = await
+ * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MapsNetworkError}
  * @constructor
@@ -6271,7 +6362,7 @@ google.maps.MapsServerError = function() {};
 
 /**
  *
- * When using `v=beta`, can be accessed by calling `const {Marker} = await
+ * Access by calling `const {Marker} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.MarkerOptions=} opts Named optional arguments
@@ -6545,6 +6636,11 @@ google.maps.MarkerLabel.prototype.text;
 google.maps.MarkerLibrary = function() {};
 
 /**
+ * @type {typeof google.maps.marker.AdvancedMarkerClickEvent}
+ */
+google.maps.MarkerLibrary.prototype.AdvancedMarkerClickEvent;
+
+/**
  * @type {typeof google.maps.marker.AdvancedMarkerElement}
  */
 google.maps.MarkerLibrary.prototype.AdvancedMarkerElement;
@@ -6772,8 +6868,8 @@ google.maps.MaxZoomResult.prototype.zoom;
  * A service for obtaining the highest zoom level at which satellite imagery is
  * available for a given location.
  *
- * When using `v=beta`, can be accessed by calling `const {MaxZoomService} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {MaxZoomService} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -6798,8 +6894,8 @@ google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(
  * using the constant&#39;s name. For example, <code>'OK'</code> or
  * <code>google.maps.MaxZoomStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {MaxZoomStatus} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {MaxZoomStatus} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -6847,7 +6943,7 @@ google.maps.MotionTrackingControlOptions.prototype.position;
  * be called whenever a map property changes that could change the position of
  * the element, such as zoom, center, or map type.
  *
- * When using `v=beta`, can be accessed by calling `const {OverlayView} = await
+ * Access by calling `const {OverlayView} = await
  * google.maps.importLibrary("maps")` or `const {OverlayView} = await
  * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
@@ -7066,8 +7162,6 @@ google.maps.Place.prototype.placeId;
 google.maps.Place.prototype.query;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * An interface representing a feature with a place ID which includes features
  * of type {@link google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_1}, {@link
  * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_2}, {@link
@@ -7087,9 +7181,10 @@ google.maps.PlaceFeature.prototype.placeId;
 /**
  * Fetches a <code>Place</code> for this <code>PlaceFeature</code>. In the
  * resulting <code>Place</code> object, the <code>id</code> and the
- * <code>displayName</code> properties will be populated. (Additional fields can
- * be subsequently requested via <code>Place.fetchFields()</code> subject to
- * normal Places API enablement and billing.) Do not call this from a
+ * <code>displayName</code> properties will be populated. The display name will
+ * be in the language the end user sees on the map. (Additional fields can be
+ * subsequently requested via <code>Place.fetchFields()</code> subject to normal
+ * Places API enablement and billing.) Do not call this from a
  * <code>FeatureStyleFunction</code> since only synchronous
  * FeatureStyleFunctions are supported. The promise is rejected if there was an
  * error fetching the <code>Place</code>.
@@ -7199,9 +7294,8 @@ google.maps.PlacesLibrary.prototype.SearchBox;
 
 /**
  *
- * When using `v=beta`, can be accessed by calling `const {Point} = await
- * google.maps.importLibrary("core")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Point} = await google.maps.importLibrary("core")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {number} x
  * @param {number} y
  * @constructor
@@ -7277,7 +7371,7 @@ google.maps.PolyMouseEvent.prototype.vertex;
  * offers a simpler way of creating holes because it handles the order of the
  * inner and outer paths for you.
  *
- * When using `v=beta`, can be accessed by calling `const {Polygon} = await
+ * Access by calling `const {Polygon} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {?google.maps.PolygonOptions=} opts
@@ -7493,7 +7587,7 @@ google.maps.PolygonOptions.prototype.zIndex;
 /**
  * A polyline is a linear overlay of connected line segments on the map.
  *
- * When using `v=beta`, can be accessed by calling `const {Polyline} = await
+ * Access by calling `const {Polyline} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {?google.maps.PolylineOptions=} opts
@@ -7709,7 +7803,7 @@ google.maps.Projection.prototype.fromPointToLatLng = function(
 /**
  * A rectangle overlay.
  *
- * When using `v=beta`, can be accessed by calling `const {Rectangle} = await
+ * Access by calling `const {Rectangle} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {?google.maps.RectangleOptions=} opts
@@ -7779,7 +7873,7 @@ google.maps.Rectangle.prototype.setEditable = function(editable) {};
 google.maps.Rectangle.prototype.setMap = function(map) {};
 
 /**
- * @param {google.maps.RectangleOptions} options
+ * @param {?google.maps.RectangleOptions} options
  * @return {undefined}
  */
 google.maps.Rectangle.prototype.setOptions = function(options) {};
@@ -7886,8 +7980,8 @@ google.maps.RectangleOptions.prototype.zIndex;
 
 /**
  *
- * When using `v=beta`, can be accessed by calling `const {RenderingType} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {RenderingType} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -8008,7 +8102,7 @@ google.maps.ScaleControlStyle = {
  *
  * Settings which control the behavior of the Maps JavaScript API as a whole.
  *
- * When using `v=beta`, can be accessed by calling `const {Settings} = await
+ * Access by calling `const {Settings} = await
  * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -8038,9 +8132,8 @@ google.maps.Settings.getInstance = function() {};
 
 /**
  *
- * When using `v=beta`, can be accessed by calling `const {Size} = await
- * google.maps.importLibrary("core")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {Size} = await google.maps.importLibrary("core")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {number} width
  * @param {number} height
  * @param {string=} widthUnit
@@ -8108,8 +8201,7 @@ google.maps.StreetViewControlOptions.prototype.position;
 /**
  * A layer that illustrates the locations where Street View is available.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {StreetViewCoverageLayer} = await
+ * Access by calling `const {StreetViewCoverageLayer} = await
  * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
@@ -8287,8 +8379,8 @@ google.maps.StreetViewPanoRequest.prototype.pano;
  * &quot;viewer&quot; which can be stand-alone within a separate
  * <code>&lt;div&gt;</code> or bound to a <code>Map</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {StreetViewPanorama} =
- * await google.maps.importLibrary("streetView")`. See
+ * Access by calling `const {StreetViewPanorama} = await
+ * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLElement} container
  * @param {google.maps.StreetViewPanoramaOptions=} opts
@@ -8414,7 +8506,7 @@ google.maps.StreetViewPanorama.prototype.setMotionTracking = function(
 
 /**
  * Sets a collection of key-value pairs.
- * @param {google.maps.StreetViewPanoramaOptions} options
+ * @param {?google.maps.StreetViewPanoramaOptions} options
  * @return {undefined}
  */
 google.maps.StreetViewPanorama.prototype.setOptions = function(options) {};
@@ -8707,8 +8799,8 @@ google.maps.StreetViewPov.prototype.pitch;
  * using the constant&#39;s name. For example, <code>'best'</code> or
  * <code>google.maps.StreetViewPreference.BEST</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {StreetViewPreference}
- * = await google.maps.importLibrary("streetView")`. See
+ * Access by calling `const {StreetViewPreference} = await
+ * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -8745,8 +8837,8 @@ google.maps.StreetViewResponse.prototype.data;
  * A <code>StreetViewService</code> object performs searches for Street View
  * data.
  *
- * When using `v=beta`, can be accessed by calling `const {StreetViewService} =
- * await google.maps.importLibrary("streetView")`. See
+ * Access by calling `const {StreetViewService} = await
+ * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -8769,8 +8861,8 @@ google.maps.StreetViewService.prototype.getPanorama = function(
  * Identifiers to limit Street View searches to selected sources. These values
  * are specified as strings. For example, <code>'outdoor'</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {StreetViewSource} =
- * await google.maps.importLibrary("streetView")`. See
+ * Access by calling `const {StreetViewSource} = await
+ * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -8796,8 +8888,8 @@ google.maps.StreetViewSource = {
  * constant&#39;s name. For example, <code>'OK'</code> or
  * <code>google.maps.StreetViewStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {StreetViewStatus} =
- * await google.maps.importLibrary("streetView")`. See
+ * Access by calling `const {StreetViewStatus} = await
+ * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -8861,8 +8953,8 @@ google.maps.StreetViewTileData.prototype.getTileUrl = function(
 /**
  * The possible positions of the stroke on a polygon.
  *
- * When using `v=beta`, can be accessed by calling `const {StrokePosition} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {StrokePosition} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -8885,8 +8977,8 @@ google.maps.StrokePosition = {
 /**
  * Creates a <code>MapType</code> with a custom style.
  *
- * When using `v=beta`, can be accessed by calling `const {StyledMapType} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {StyledMapType} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {Array<google.maps.MapTypeStyle>} styles
  * @param {google.maps.StyledMapTypeOptions=} options
@@ -9078,7 +9170,7 @@ google.maps.Symbol.prototype.strokeWeight;
 /**
  * Built-in symbol paths.
  *
- * When using `v=beta`, can be accessed by calling `const {SymbolPath} = await
+ * Access by calling `const {SymbolPath} = await
  * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
@@ -9136,7 +9228,7 @@ google.maps.Time.prototype.value;
 /**
  * A traffic layer.
  *
- * When using `v=beta`, can be accessed by calling `const {TrafficLayer} = await
+ * Access by calling `const {TrafficLayer} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.TrafficLayerOptions=} opts
@@ -9192,7 +9284,7 @@ google.maps.TrafficLayerOptions.prototype.map;
  * Specify these by value, or by using the constant&#39;s name. For example,
  * <code>'bestguess'</code> or <code>google.maps.TrafficModel.BEST_GUESS</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {TrafficModel} = await
+ * Access by calling `const {TrafficModel} = await
  * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -9326,7 +9418,7 @@ google.maps.TransitFare.prototype.value;
 /**
  * A transit layer.
  *
- * When using `v=beta`, can be accessed by calling `const {TransitLayer} = await
+ * Access by calling `const {TransitLayer} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
@@ -9410,7 +9502,7 @@ google.maps.TransitLine.prototype.vehicle;
  * or by using the constant&#39;s name. For example, <code>'BUS'</code> or
  * <code>google.maps.TransitMode.BUS</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {TransitMode} = await
+ * Access by calling `const {TransitMode} = await
  * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -9483,9 +9575,9 @@ google.maps.TransitOptions.prototype.routingPreference;
  * or by using the constant&#39;s name. For example, <code>'LESS_WALKING'</code>
  * or <code>google.maps.TransitRoutePreference.LESS_WALKING</code>.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {TransitRoutePreference} = await google.maps.importLibrary("routes")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {TransitRoutePreference} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
 google.maps.TransitRoutePreference = {
@@ -9558,7 +9650,7 @@ google.maps.TransitVehicle.prototype.type;
  * constant&#39;s name. For example, <code>'BICYCLING'</code> or
  * <code>google.maps.TravelMode.BICYCLING</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {TravelMode} = await
+ * Access by calling `const {TravelMode} = await
  * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -9586,7 +9678,7 @@ google.maps.TravelMode = {
  * The valid unit systems that can be specified in a <i><code><a
  * href="#DirectionsRequest">DirectionsRequest</a></code></i>.
  *
- * When using `v=beta`, can be accessed by calling `const {UnitSystem} = await
+ * Access by calling `const {UnitSystem} = await
  * google.maps.importLibrary("core")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
@@ -9607,7 +9699,7 @@ google.maps.UnitSystem = {
 /**
  * Possible values for vehicle types.
  *
- * When using `v=beta`, can be accessed by calling `const {VehicleType} = await
+ * Access by calling `const {VehicleType} = await
  * google.maps.importLibrary("routes")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -9773,8 +9865,8 @@ google.maps.WebGLDrawOptions.prototype.transformer;
  * zoom, center, or map type. WebGLOverlayView may only be added to a vector map
  * having a {@link google.maps.MapOptions.mapId}.
  *
- * When using `v=beta`, can be accessed by calling `const {WebGLOverlayView} =
- * await google.maps.importLibrary("maps")`. See
+ * Access by calling `const {WebGLOverlayView} = await
+ * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -9886,9 +9978,8 @@ google.maps.ZoomControlOptions.prototype.position;
 /**
  * Namespace for all public event functions
  *
- * When using `v=beta`, can be accessed by calling `const {event} = await
- * google.maps.importLibrary("core")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {event} = await google.maps.importLibrary("core")`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
 google.maps.event = function() {};
@@ -10028,8 +10119,8 @@ google.maps.drawing.DrawingControlOptions.prototype.position;
  * of overlay that will be created by the user. Adds a control to the map,
  * allowing the user to switch drawing mode.
  *
- * When using `v=beta`, can be accessed by calling `const {DrawingManager} =
- * await google.maps.importLibrary("drawing")`. See
+ * Access by calling `const {DrawingManager} = await
+ * google.maps.importLibrary("drawing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.drawing.DrawingManagerOptions=} options
  * @extends {google.maps.MVCObject}
@@ -10185,7 +10276,7 @@ google.maps.drawing.OverlayCompleteEvent.prototype.type;
  * <code>'polygon'</code> or
  * <code>google.maps.drawing.OverlayType.POLYGON</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {OverlayType} = await
+ * Access by calling `const {OverlayType} = await
  * google.maps.importLibrary("drawing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -10226,7 +10317,7 @@ google.maps.geometry = {};
 /**
  * Utilities for polyline encoding and decoding.
  *
- * When using `v=beta`, can be accessed by calling `const {encoding} = await
+ * Access by calling `const {encoding} = await
  * google.maps.importLibrary("geometry")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @const
@@ -10251,7 +10342,7 @@ google.maps.geometry.encoding.encodePath = function(path) {};
 /**
  * Utility functions for computations involving polygons and polylines.
  *
- * When using `v=beta`, can be accessed by calling `const {poly} = await
+ * Access by calling `const {poly} = await
  * google.maps.importLibrary("geometry")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @const
@@ -10284,7 +10375,7 @@ google.maps.geometry.poly.isLocationOnEdge = function(
  * Utility functions for computing geodesic angles, distances and areas. The
  * default radius is Earth&#39;s radius of 6378137 meters.
  *
- * When using `v=beta`, can be accessed by calling `const {spherical} = await
+ * Access by calling `const {spherical} = await
  * google.maps.importLibrary("geometry")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @const
@@ -10483,8 +10574,7 @@ google.maps.journeySharing.AuthTokenFetcherOptions.prototype.serviceType;
 /**
  * Automatic viewport mode.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {AutomaticViewportMode} = await
+ * Access by calling `const {AutomaticViewportMode} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -10633,8 +10723,7 @@ google.maps.journeySharing.DeliveryVehicleStop.prototype.tasks;
  * The current state of a {@link
  * google.maps.journeySharing.DeliveryVehicleStop}.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {DeliveryVehicleStopState} = await
+ * Access by calling `const {DeliveryVehicleStopState} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -10662,8 +10751,7 @@ google.maps.journeySharing.DeliveryVehicleStopState = {
 /**
  * Delivery Fleet Location Provider.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {FleetEngineDeliveryFleetLocationProvider} = await
+ * Access by calling `const {FleetEngineDeliveryFleetLocationProvider} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions}
@@ -10795,8 +10883,7 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderUpdateEvent
 /**
  * Delivery Vehicle Location Provider.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {FleetEngineDeliveryVehicleLocationProvider} = await
+ * Access by calling `const {FleetEngineDeliveryVehicleLocationProvider} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions}
@@ -11042,8 +11129,7 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderUpdateEvent
 /**
  * Types of Fleet Engine services.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {FleetEngineServiceType} = await
+ * Access by calling `const {FleetEngineServiceType} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -11070,8 +11156,7 @@ google.maps.journeySharing.FleetEngineServiceType = {
 /**
  * Shipment location provider.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {FleetEngineShipmentLocationProvider} = await
+ * Access by calling `const {FleetEngineShipmentLocationProvider} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions}
@@ -11232,8 +11317,7 @@ google.maps.journeySharing.FleetEngineTaskFilterOptions.prototype.state;
 /**
  * Trip location provider.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {FleetEngineTripLocationProvider} = await
+ * Access by calling `const {FleetEngineTripLocationProvider} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineTripLocationProviderOptions}
@@ -11402,8 +11486,7 @@ google.maps.journeySharing.FleetEngineTripLocationProviderUpdateEvent.prototype
 /**
  * The map view.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {JourneySharingMapView} = await
+ * Access by calling `const {JourneySharingMapView} = await
  * google.maps.importLibrary("journeySharing")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.JourneySharingMapViewOptions} options
@@ -12229,6 +12312,12 @@ google.maps.journeySharing.Task.prototype.remainingVehicleJourneySegments;
 google.maps.journeySharing.Task.prototype.status;
 
 /**
+ * The time window during which the task should be completed.
+ * @type {?google.maps.journeySharing.TimeWindow}
+ */
+google.maps.journeySharing.Task.prototype.targetTimeWindow;
+
+/**
  * The tracking ID of the shipment.
  * @type {?string}
  */
@@ -12334,6 +12423,12 @@ google.maps.journeySharing.TaskTrackingInfo.prototype.routePolylinePoints;
 google.maps.journeySharing.TaskTrackingInfo.prototype.state;
 
 /**
+ * The time window during which the task should be completed.
+ * @type {?google.maps.journeySharing.TimeWindow}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.targetTimeWindow;
+
+/**
  * The outcome of attempting to execute a Task.
  * @type {?string}
  */
@@ -12355,6 +12450,24 @@ google.maps.journeySharing.TaskTrackingInfo.prototype.taskOutcomeTime;
  * @type {string}
  */
 google.maps.journeySharing.TaskTrackingInfo.prototype.trackingId;
+
+/**
+ * A time range.
+ * @record
+ */
+google.maps.journeySharing.TimeWindow = function() {};
+
+/**
+ * The end time of the time window (inclusive).
+ * @type {!Date}
+ */
+google.maps.journeySharing.TimeWindow.prototype.endTime;
+
+/**
+ * The start time of the time window (inclusive).
+ * @type {!Date}
+ */
+google.maps.journeySharing.TimeWindow.prototype.startTime;
 
 /**
  * The details for a trip returned by Fleet Engine.
@@ -12599,8 +12712,8 @@ google.maps.localContext = {};
  *
  * Shows a Local Context experience with a {@link google.maps.Map}.
  *
- * When using `v=beta`, can be accessed by calling `const {LocalContextMapView}
- * = await google.maps.importLibrary("localContext")`. See
+ * Access by calling `const {LocalContextMapView} = await
+ * google.maps.importLibrary("localContext")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.localContext.LocalContextMapViewOptions} options
  * @implements {google.maps.localContext.LocalContextMapViewOptions}
@@ -12814,8 +12927,8 @@ google.maps.localContext.LocalContextMapViewOptions.prototype
  * Provides settings for directions with a {@link
  * google.maps.localContext.LocalContextMapView}.
  *
- * When using `v=beta`, can be accessed by calling `const {MapDirectionsOptions}
- * = await google.maps.importLibrary("localContext")`. See
+ * Access by calling `const {MapDirectionsOptions} = await
+ * google.maps.importLibrary("localContext")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.localContext.MapDirectionsOptionsLiteral}
  * @constructor
@@ -12881,8 +12994,7 @@ google.maps.localContext.PinOptions.prototype.scale;
  *
  * Layout modes for the place chooser.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {PlaceChooserLayoutMode} = await
+ * Access by calling `const {PlaceChooserLayoutMode} = await
  * google.maps.importLibrary("localContext")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -12903,8 +13015,8 @@ google.maps.localContext.PlaceChooserLayoutMode = {
  *
  * Display positions for the place chooser.
  *
- * When using `v=beta`, can be accessed by calling `const {PlaceChooserPosition}
- * = await google.maps.importLibrary("localContext")`. See
+ * Access by calling `const {PlaceChooserPosition} = await
+ * google.maps.importLibrary("localContext")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -12953,8 +13065,7 @@ google.maps.localContext.PlaceChooserViewSetupOptions.prototype.position;
  *
  * Layout modes for the place details.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {PlaceDetailsLayoutMode} = await
+ * Access by calling `const {PlaceDetailsLayoutMode} = await
  * google.maps.importLibrary("localContext")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -12975,8 +13086,8 @@ google.maps.localContext.PlaceDetailsLayoutMode = {
  *
  * Display positions for the place details.
  *
- * When using `v=beta`, can be accessed by calling `const {PlaceDetailsPosition}
- * = await google.maps.importLibrary("localContext")`. See
+ * Access by calling `const {PlaceDetailsPosition} = await
+ * google.maps.importLibrary("localContext")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -13035,16 +13146,30 @@ google.maps.marker = {};
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
- * Creates an <code>AdvancedMarkerElement</code> with the options specified. If
- * a map is specified, the <code>AdvancedMarkerElement</code> is added to the
- * map upon construction. Note that the position must be set for the
- * <code>AdvancedMarkerElement</code> to display.
+ * This event is created from clicking an Advanced Marker. Access the
+ * marker&#39;s position with <code>event.target.position</code>.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {AdvancedMarkerElement} = await google.maps.importLibrary("marker")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {AdvancedMarkerClickEvent} = await
+ * google.maps.importLibrary("marker")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.marker.AdvancedMarkerClickEvent = function() {};
+
+/**
+ * Shows a position on a map. Note that the <code>position</code> must be set
+ * for the <code>AdvancedMarkerElement</code> to display.<br> <br>
+ * <strong>Note:</strong> Usage as a Web Component (e.g. using the custom
+ * <code>&lt;gmp-advanced-marker</code> HTML element, is only available in the
+ * <code>v=beta</code> channel).
+ *
+ * Access by calling `const {AdvancedMarkerElement} = await
+ * google.maps.importLibrary("marker")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.marker.AdvancedMarkerElementOptions=} options
  * @implements {google.maps.marker.AdvancedMarkerElementOptions}
+ * @extends {HTMLElement}
  * @constructor
  */
 google.maps.marker.AdvancedMarkerElement = function(options) {};
@@ -13098,6 +13223,8 @@ google.maps.marker.AdvancedMarkerElement.prototype.title;
  */
 google.maps.marker.AdvancedMarkerElement.prototype.zIndex;
 
+
+
 /**
  * Adds the given listener function to the given event name in the Maps Eventing
  * system.
@@ -13108,9 +13235,9 @@ google.maps.marker.AdvancedMarkerElement.prototype.zIndex;
 google.maps.marker.AdvancedMarkerElement.prototype.addListener = function(
     eventName, handler) {};
 
+
+
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for constructing an {@link google.maps.marker.AdvancedMarkerElement}.
  * @record
  */
@@ -13195,8 +13322,6 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.title;
 google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A <code>PinElement</code> represents a DOM element that consists of a shape
  * and a glyph. The shape has the same balloon style as seen in the
  * default {@link google.maps.marker.AdvancedMarkerElement}. The glyph is an
@@ -13204,7 +13329,7 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
  * <code>PinElement</code> may have a different aspect ratio depending on
  * its {@link google.maps.marker.PinElement.scale}.
  *
- * When using `v=beta`, can be accessed by calling `const {PinElement} = await
+ * Access by calling `const {PinElement} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.marker.PinElementOptions=} options
@@ -13259,8 +13384,6 @@ google.maps.marker.PinElement.prototype.addListener = function(
     eventName, handler) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for creating a {@link google.maps.marker.PinElement}.
  * @record
  */
@@ -13312,8 +13435,8 @@ google.maps.places = {};
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {AddressComponent} =
- * await google.maps.importLibrary("places")`. See
+ * Access by calling `const {AddressComponent} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -13343,7 +13466,7 @@ google.maps.places.AddressComponent.prototype.types;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {Attribution} = await
+ * Access by calling `const {Attribution} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -13367,7 +13490,7 @@ google.maps.places.Attribution.prototype.providerURI;
  * entry in that field. The list of predictions is presented as a drop-down
  * list, and is updated as text is entered.
  *
- * When using `v=beta`, can be accessed by calling `const {Autocomplete} = await
+ * Access by calling `const {Autocomplete} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLInputElement} inputField The <code>&lt;input&gt;</code> text
@@ -13588,8 +13711,8 @@ google.maps.places.AutocompleteResponse.prototype.predictions;
 /**
  * Contains methods related to retrieving Autocomplete predictions.
  *
- * When using `v=beta`, can be accessed by calling `const {AutocompleteService}
- * = await google.maps.importLibrary("places")`. See
+ * Access by calling `const {AutocompleteService} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -13629,8 +13752,7 @@ google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
  * google.maps.places.AutocompleteService.getPlacePredictions} calls followed by
  * a single {@link google.maps.places.PlacesService.getDetails} call.
  *
- * When using `v=beta`, can be accessed by calling
- * `const {AutocompleteSessionToken} = await
+ * Access by calling `const {AutocompleteSessionToken} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -13756,8 +13878,8 @@ google.maps.places.AutocompletionRequest.prototype.types;
  * name (example: <code>&#39;OPERATIONAL&#39;</code> or
  * <code>google.maps.places.BusinessStatus.OPERATIONAL</code>).
  *
- * When using `v=beta`, can be accessed by calling `const {BusinessStatus} =
- * await google.maps.importLibrary("places")`. See
+ * Access by calling `const {BusinessStatus} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -13910,7 +14032,7 @@ google.maps.places.LocationRestriction;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {OpeningHours} = await
+ * Access by calling `const {OpeningHours} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -13938,8 +14060,8 @@ google.maps.places.OpeningHours.prototype.weekdayDescriptions;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {OpeningHoursPeriod} =
- * await google.maps.importLibrary("places")`. See
+ * Access by calling `const {OpeningHoursPeriod} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -13961,8 +14083,8 @@ google.maps.places.OpeningHoursPeriod.prototype.open;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {OpeningHoursPoint} =
- * await google.maps.importLibrary("places")`. See
+ * Access by calling `const {OpeningHoursPoint} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -13993,7 +14115,7 @@ google.maps.places.OpeningHoursPoint.prototype.minute;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {Photo} = await
+ * Access by calling `const {Photo} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -14029,8 +14151,8 @@ google.maps.places.Photo.prototype.getURI = function(options) {};
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {PhotoAttribution} =
- * await google.maps.importLibrary("places")`. See
+ * Access by calling `const {PhotoAttribution} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -14069,7 +14191,7 @@ google.maps.places.PhotoOptions.prototype.maxWidth;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {Place} = await
+ * Access by calling `const {Place} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceOptions} options
@@ -14445,8 +14567,7 @@ google.maps.places.PlaceAspectRating.prototype.type;
  *
  * Implementation of AutocompleteView for Places API
  *
- * When using `v=alpha`, can be accessed by calling
- * `const {PlaceAutocompleteElement} = await
+ * Access by calling `const {PlaceAutocompleteElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
@@ -15263,8 +15384,8 @@ google.maps.places.PlaceSearchRequest.prototype.name;
  * Contains methods related to searching for places and retrieving details about
  * a place.
  *
- * When using `v=beta`, can be accessed by calling `const {PlacesService} =
- * await google.maps.importLibrary("places")`. See
+ * Access by calling `const {PlacesService} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLDivElement|!google.maps.Map} attrContainer
  * @constructor
@@ -15364,8 +15485,8 @@ google.maps.places.PlacesService.prototype.textSearch = function(
  * For example, <code>'OK'</code> or
  * <code>google.maps.places.PlacesServiceStatus.OK</code>.
  *
- * When using `v=beta`, can be accessed by calling `const {PlacesServiceStatus}
- * = await google.maps.importLibrary("places")`. See
+ * Access by calling `const {PlacesServiceStatus} = await
+ * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -15405,7 +15526,7 @@ google.maps.places.PlacesServiceStatus = {
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {PlusCode} = await
+ * Access by calling `const {PlusCode} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -15469,7 +15590,7 @@ google.maps.places.PredictionTerm.prototype.value;
  *
  * Price level enum for Place objects.
  *
- * When using `v=beta`, can be accessed by calling `const {PriceLevel} = await
+ * Access by calling `const {PriceLevel} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
@@ -15568,7 +15689,7 @@ google.maps.places.QueryAutocompletionRequest.prototype.radius;
 /**
  * Ranking options for a PlaceSearchRequest.
  *
- * When using `v=beta`, can be accessed by calling `const {RankBy} = await
+ * Access by calling `const {RankBy} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
@@ -15588,7 +15709,7 @@ google.maps.places.RankBy = {
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
- * When using `v=beta`, can be accessed by calling `const {Review} = await
+ * Access by calling `const {Review} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
@@ -15654,7 +15775,7 @@ google.maps.places.Review.prototype.textLanguageCode;
  * entry in that field. The list of predictions is presented as a drop-down
  * list, and is updated as text is entered.
  *
- * When using `v=beta`, can be accessed by calling `const {SearchBox} = await
+ * Access by calling `const {SearchBox} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLInputElement} inputField
@@ -15808,7 +15929,7 @@ google.maps.visualization = {};
  * A layer that provides a client-side rendered heatmap, depicting the intensity
  * of data at geographical points.
  *
- * When using `v=beta`, can be accessed by calling `const {HeatmapLayer} = await
+ * Access by calling `const {HeatmapLayer} = await
  * google.maps.importLibrary("visualization")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {google.maps.visualization.HeatmapLayerOptions=} opts
