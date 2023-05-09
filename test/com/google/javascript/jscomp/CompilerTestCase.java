@@ -1892,6 +1892,11 @@ public abstract class CompilerTestCase {
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
 
+    // Normalize CAST nodes from the expected AST if asked.
+    if (replaceTypesWithColors || multistageCompilation) {
+      new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
+    }
+
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER)
           .process(externsRoot, mainRoot);
@@ -1904,17 +1909,12 @@ public abstract class CompilerTestCase {
       ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
     }
 
-    if (transpileEnabled && !compiler.hasErrors()) {
-      transpileToEs5(compiler, externsRoot, mainRoot);
-    }
-
     if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosureProvidesAndRequires(compiler, false).process(externsRoot, mainRoot);
     }
 
-    // Normalize CAST nodes from the expected AST if asked.
-    if (replaceTypesWithColors || multistageCompilation) {
-      new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
+    if (transpileEnabled && !compiler.hasErrors()) {
+      transpileToEs5(compiler, externsRoot, mainRoot);
     }
 
     // Only run the normalize pass, if asked.
