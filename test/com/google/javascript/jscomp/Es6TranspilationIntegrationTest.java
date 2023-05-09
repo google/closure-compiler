@@ -201,8 +201,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         "/** @deprecated */ class C { }", "/** @constructor @deprecated */ var C = function() {};");
 
     test(
-        "/** @dict */ class C { }",
-        "/** @constructor @dict */ var C = function() {};");
+        "/**              @dict */ class C              { }", //
+        "/** @constructor @dict */ var   C = function() { };");
 
     test(
         "/** @template T */ class C { }", "/** @constructor @template T */ var C = function() {};");
@@ -1706,7 +1706,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "});"));
   }
 
-  /** @bug 20536614 */
+  /**
+   * @bug 20536614
+   */
   @Test
   public void testStaticGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -1779,12 +1781,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         lines(
-            "function f() {",
+            "function f() {", //
             "  let x = 1;",
             "  let y = Symbol('nimble');",
             "}"),
         lines(
-            "function f() {",
+            "function f() {", //
             "  var x = 1;",
             "  var y = Symbol('nimble');",
             "}"));
@@ -1871,7 +1873,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testForOfRedeclaredVar() {
     test(
         lines(
-            "for (let x of []) {",
+            "for (let x of []) {", //
             "  let x = 0;",
             "}"),
         lines(
@@ -1887,24 +1889,21 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testArgumentsEscaped() {
-    test(
+    testSame(
         lines(
-            "function f() {",
-            "  return g(arguments);",
-            "}"),
-        lines(
-            "function f() {",
+            "function f() {", //
             "  return g(arguments);",
             "}"));
   }
 
   @Test
   public void testMethodInObject() {
-    test("var obj = { f() {alert(1); } };",
+    test(
+        "var obj = {           f() {alert(1); } };", //
         "var obj = { f: function() {alert(1); } };");
 
     test(
-        "var obj = { f() { alert(1); }, x };",
+        "var obj = {           f() { alert(1); },    x };", //
         "var obj = { f: function() { alert(1); }, x: x };");
   }
 
@@ -1966,12 +1965,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "($jscomp$compprop0['f' + 1] = 1,",
             "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"));
 
-    test("({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
+    test(
+        "({'a' : 1, ['f' + 1] : 1, 'b' : 1})", //
         lines(
-        "var $jscomp$compprop0 = {};",
-        "($jscomp$compprop0['a'] = 1,",
-        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));"
-    ));
+            "var $jscomp$compprop0 = {};", //
+            "($jscomp$compprop0['a'] = 1,",
+            "  ($jscomp$compprop0['f' + 1] = 1,",
+            "    ($jscomp$compprop0['b'] = 1,",
+            "      $jscomp$compprop0)));"));
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
@@ -2084,9 +2085,15 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testUnicodeEscapes() {
-    test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
-    test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
-    test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
+    test(
+        "var \\u{73} = \'\\u{2603}\'", // ☃
+        "var       s = \'\u2603\'");
+    test(
+        "var \\u{63} = \'\\u{1f42a}\'", // 🐪
+        "var       c = \'\uD83D\uDC2A\'");
+    test(
+        "var str = `begin\\u{2026}end`", //
+        "var str = 'begin\\u2026end'");
   }
 
   @Test
@@ -2144,7 +2151,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Override
-  protected  NoninjectingCompiler getLastCompiler() {
+  protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 }
