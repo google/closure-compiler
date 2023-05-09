@@ -4123,7 +4123,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       Node script = input.getAstRoot(this); // accesses this.typedAstFilesystem
 
       externsRoot.addChildToBack(script);
-      inputsById.put(script.getInputId(), input);
+      putCompilerInput(input);
       scriptNodeByFilename.put(externFile.getName(), script);
       this.externs.add(input);
     }

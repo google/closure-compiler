@@ -1477,11 +1477,10 @@ public abstract class CompilerTestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
-        if (transpileEnabled && i == 0) {
-          recentChange.reset();
-          transpileToEs5(compiler, externsRoot, mainRoot);
-          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        } else if (rewriteEsModulesEnabled && i == 0) {
+        if ((rewriteEsModulesEnabled || transpileEnabled) && i == 0) {
+          // If we're transpiling down to ES5, then that includes ES module transpilation,
+          // but that pass isn't part of transpileToEs5(), because it happens earlier in
+          // the compilation process than most transpilation passes.
           recentChange.reset();
           rewriteEsModules(compiler, externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
@@ -1557,6 +1556,12 @@ public abstract class CompilerTestCase {
         if (rewriteClosureProvides && i == 0) {
           recentChange.reset();
           new ProcessClosureProvidesAndRequires(compiler, false).process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
+        if (transpileEnabled && i == 0) {
+          recentChange.reset();
+          transpileToEs5(compiler, externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1812,8 +1817,6 @@ public abstract class CompilerTestCase {
   }
 
   private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
-    rewriteEsModules(compiler, externsRoot, codeRoot);
-
     CompilerOptions options = compiler.getOptions();
     PassListBuilder factories = new PassListBuilder(options);
 
@@ -1914,6 +1917,7 @@ public abstract class CompilerTestCase {
     }
 
     if (transpileEnabled && !compiler.hasErrors()) {
+      rewriteEsModules(compiler, externsRoot, mainRoot);
       transpileToEs5(compiler, externsRoot, mainRoot);
     }
 
