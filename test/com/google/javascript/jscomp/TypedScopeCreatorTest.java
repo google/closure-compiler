@@ -4877,6 +4877,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDeclaredConstType_symbolCall() {
+    testSame("/** @const */ var x = Symbol('test');  function f() { var y = x; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertThat(yType).isEqualTo(registry.getNativeType(JSTypeNative.SYMBOL_TYPE));
+  }
+
+  @Test
+  public void testDeclaredConstType_shadowingGlobalSymbol_notConfusedForNativeSymbol() {
+    testSame(
+        lines(
+            "(function() {",
+            "function Symbol() {}",
+            "/** @const */ var x = Symbol();",
+            "function f() { var y = x; Y: y; }",
+            "})()"));
+    JSType yType = getLabeledStatement("Y").statementNode.getOnlyChild().getJSType();
+    assertThat(yType).isEqualTo(registry.getNativeType(JSTypeNative.VOID_TYPE));
+  }
+
+  @Test
   public void testDeclaredConstType2() {
     testSame("/** @const */ var x = {};" + "function f() { var y = x; }");
     JSType yType = lastLocalScope.getVar("y").getType();
@@ -5409,6 +5429,34 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar xVar = getLabeledStatement("X").enclosingScope.getSlot("x");
     assertThat(xVar).hasJSTypeThat().isNumber();
     assertThat(xVar).isNotInferred();
+  }
+
+  @Test
+  public void testGoogRequire_propertyOnObjectLiteralWithArrayInitializer() {
+    // Reproduce a bug seen when goog.requiring symbols from
+    // https://github.com/google/closure-library/blob/master/closure/goog/i18n/datetimesymbols.js
+    testSame(
+        srcs(
+            lines(
+                "/** @fileoverview @typeSummary */",
+                "goog.provide('goog.i18n.DateTimeSymbols');",
+                "goog.provide('goog.i18n.DateTimeSymbolsType');",
+                "/** @type {!goog.i18n.DateTimeSymbolsType} */",
+                "goog.i18n.DateTimeSymbols;",
+                "",
+                "/** @typedef {{MONTHS: !Array<string>}} */",
+                "goog.i18n.DateTimeSymbolsType;"),
+            lines(
+                "goog.module('b');",
+                "const {MONTHS} = goog.require('goog.i18n.DateTimeSymbols');",
+                "function i() { MONTHS: MONTHS; }")));
+
+    Node monthsNode = getLabeledStatement("MONTHS").statementNode.getOnlyChild();
+    assertNode(monthsNode).hasJSTypeThat().toStringIsEqualTo("Array<string>");
+
+    TypedVar monthsVar = getLabeledStatement("MONTHS").enclosingScope.getSlot("MONTHS");
+    assertThat(monthsVar).hasJSTypeThat().toStringIsEqualTo("Array<string>");
+    assertThat(monthsVar).isNotInferred();
   }
 
   @Test

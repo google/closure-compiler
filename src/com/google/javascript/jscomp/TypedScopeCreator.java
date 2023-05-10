@@ -239,20 +239,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       TypedScope resolvedScope = memoized.get(scopedImport.getScopeRoot());
       TypedVar requiredVar =
           resolvedScope != null ? resolvedScope.getSlot(scopedImport.getName()) : null;
-      Module importedModule = moduleMap.getClosureModule(scopedImport.getName());
 
       final JSType type;
       final boolean isInferred;
       if (requiredVar != null) {
         type = requiredVar.getType();
         isInferred = requiredVar.isTypeInferred();
-      } else if (importedModule != null
-          && importedModule.metadata().moduleType().equals(ModuleType.GOOG_PROVIDE)) {
-        // A goog.provided name might not exist as an entry in the global scope, but still
-        // be resolvable via properties. This is always true for "provideAlreadyProvided" names.
-        type = getTypeThroughNamespace(resolvedScope, scopedImport.getName());
-        isInferred = false;
+      } else if (resolvedScope != null) {
+        // Some imports might not exist as fully qualified names in the given scope, but are still
+        // resolvable via properties. This is always true for "provideAlreadyProvided" names.
+        JSType nsType = getTypeThroughNamespace(resolvedScope, scopedImport.getName());
+        type = nsType != null ? nsType : unknownType;
+        isInferred = (nsType == null);
       } else {
+        // if resolvedScope is null, this code is importing a module that doesn't actually exist
+        // and we'll error elsewhere.
         type = unknownType;
         isInferred = true;
       }
@@ -272,16 +273,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
   }
 
-  private static JSType getTypeThroughNamespace(TypedScope globalScope, String moduleId) {
+  private static @Nullable JSType getTypeThroughNamespace(TypedScope scope, String moduleId) {
     int split = moduleId.lastIndexOf('.');
     if (split >= 0) {
       String parentName = moduleId.substring(0, split);
       String prop = moduleId.substring(split + 1);
-      return getTypeThroughNamespace(globalScope, parentName)
-          .assertObjectType()
-          .getPropertyType(prop);
+      JSType parentType = getTypeThroughNamespace(scope, parentName);
+      if (parentType.toMaybeObjectType() != null) {
+        return parentType.assertObjectType().getPropertyType(prop);
+      }
+      return null;
     } else {
-      return globalScope.getSlot(moduleId).getType();
+      TypedVar var = scope.getSlot(moduleId);
+      return var != null ? var.getType() : null;
     }
   }
 
@@ -2600,6 +2604,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (fnType != null && fnType.hasInstanceType()) {
             return fnType.getInstanceType();
           }
+        }
+      }
+
+      if (rValue.isCall() && rValue.getFirstChild().matchesName("Symbol")) {
+        // Type calls like `Symbol('foo')`
+        TypedVar symbolVar = currentScope.getVar("Symbol");
+        if (symbolVar != null && symbolVar.getScope().isGlobal()) {
+          return typeRegistry.getNativeType(JSTypeNative.SYMBOL_TYPE);
         }
       }
 
