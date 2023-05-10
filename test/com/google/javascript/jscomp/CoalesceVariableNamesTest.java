@@ -48,7 +48,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         // enableNormalize would require output of CoalesceVariableNames to be normalized,
         // so we just manually normalize the input instead.
-        Normalize normalize = new Normalize(compiler, false);
+        Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
         normalize.process(externs, root);
         new CoalesceVariableNames(compiler, usePseudoName).process(externs, root);
       }

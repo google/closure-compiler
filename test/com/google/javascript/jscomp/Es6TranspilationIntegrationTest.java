@@ -74,8 +74,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     passes.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
-            .setInternalFactory(
-                (abstractCompiler) -> new Normalize(abstractCompiler, /* assertOnChange= */ false))
+            .setInternalFactory(Normalize::createNormalizeForOptimizations)
             .build());
     optimizer.consume(passes.build());
 

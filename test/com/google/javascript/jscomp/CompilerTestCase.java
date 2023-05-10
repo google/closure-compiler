@@ -1765,7 +1765,9 @@ public abstract class CompilerTestCase {
       // (Closure primitive rewrites, etc) runs before the Normalize pass,
       // so this can't be force on everywhere.
       if (normalizeEnabled) {
-        new Normalize(compiler, true)
+        Normalize.builder(compiler)
+            .assertOnChange(true)
+            .build()
             .process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
 
         assertNode(normalizeCheckMainRootClone)
@@ -1851,7 +1853,7 @@ public abstract class CompilerTestCase {
   }
 
   private static void normalizeActualCode(Compiler compiler, Node externsRoot, Node mainRoot) {
-    Normalize normalize = new Normalize(compiler, false);
+    Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
     normalize.process(externsRoot, mainRoot);
   }
 
@@ -1923,7 +1925,7 @@ public abstract class CompilerTestCase {
 
     // Only run the normalize pass, if asked.
     if (normalizeEnabled && !compiler.hasErrors()) {
-      Normalize normalize = new Normalize(compiler, false);
+      Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
       normalize.process(externsRoot, mainRoot);
     }
     return mainRoot;

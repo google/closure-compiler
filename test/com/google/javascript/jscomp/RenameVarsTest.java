@@ -1214,7 +1214,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      Normalize normalize = new Normalize(compiler, false);
+      Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
       normalize.process(externs, root);
 
       wrappedPass.process(externs, root);

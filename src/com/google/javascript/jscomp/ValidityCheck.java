@@ -81,7 +81,7 @@ class ValidityCheck implements CompilerPass {
     // Exceptions into Errors so that it is easier to find the root cause
     // when there are cascading issues.
     if (compiler.getLifeCycleStage().isNormalized()) {
-      (new Normalize(compiler, true)).process(externs, root);
+      Normalize.builder(compiler).assertOnChange(true).build().process(externs, root);
 
       if (compiler.getLifeCycleStage().isNormalizedUnobfuscated()) {
         boolean checkUserDeclarations = true;

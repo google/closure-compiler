@@ -2525,7 +2525,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory normalize =
       PassFactory.builder()
           .setName(PassNames.NORMALIZE)
-          .setInternalFactory((compiler) -> new Normalize(compiler, false))
+          .setInternalFactory(Normalize::createNormalizeForOptimizations)
           .build();
 
   private final PassFactory externExports =

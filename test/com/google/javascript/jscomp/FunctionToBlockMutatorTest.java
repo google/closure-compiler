@@ -288,7 +288,8 @@ public final class FunctionToBlockMutatorTest {
     compiler.parse();
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
 
-    new Normalize(compiler, false).process(compiler.getExternsRoot(), compiler.getJsRoot());
+    Normalize.createNormalizeForOptimizations(compiler)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
     GatherGetterAndSetterProperties.update(
         compiler, compiler.getExternsRoot(), compiler.getJsRoot());
     new PureFunctionIdentifier.Driver(compiler)

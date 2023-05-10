@@ -63,10 +63,45 @@ final class Normalize implements CompilerPass {
   private final AstFactory astFactory;
   private final boolean assertOnChange;
 
-  Normalize(AbstractCompiler compiler, boolean assertOnChange) {
-    this.compiler = compiler;
-    this.assertOnChange = assertOnChange;
-    this.astFactory = compiler.createAstFactory();
+  Normalize(Builder builder) {
+    this.compiler = builder.compiler;
+    this.assertOnChange = builder.assertOnChange;
+    this.astFactory = builder.compiler.createAstFactory();
+  }
+
+  static Normalize createNormalizeForOptimizations(AbstractCompiler compiler) {
+    // The default option values are the right ones for optimizations
+    return builder(compiler).build();
+  }
+
+  static Builder builder(AbstractCompiler compiler) {
+    return new Builder(compiler);
+  }
+
+  /** Configures and builds a {@link Normalize} object. */
+  static class Builder {
+    private final AbstractCompiler compiler;
+    private boolean assertOnChange = false;
+
+    Builder(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    /**
+     * If the Normalize pass finds work to do, it will throw an exception.
+     *
+     * <p>This is intended for use in validating that an AST is already normalized.
+     *
+     * <p>This option is {@code false} by default.
+     */
+    Builder assertOnChange(boolean assertOnChange) {
+      this.assertOnChange = assertOnChange;
+      return this;
+    }
+
+    Normalize build() {
+      return new Normalize(this);
+    }
   }
 
   static void normalizeSyntheticCode(AbstractCompiler compiler, Node js, String prefix) {

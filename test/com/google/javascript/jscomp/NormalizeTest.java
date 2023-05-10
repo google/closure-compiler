@@ -46,7 +46,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new Normalize(compiler, false);
+    return Normalize.createNormalizeForOptimizations(compiler);
   }
 
   @Override

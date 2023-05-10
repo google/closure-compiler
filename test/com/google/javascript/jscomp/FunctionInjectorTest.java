@@ -1929,11 +1929,11 @@ public final class FunctionInjectorTest {
     final Node expectedRoot = parseExpected(new Compiler(), expectedResult);
 
     Node mainRoot = tree;
-    new Normalize(compiler, false).process(externsRoot, mainRoot);
+    Normalize.createNormalizeForOptimizations(compiler).process(externsRoot, mainRoot);
     GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
     new PureFunctionIdentifier.Driver(compiler).process(externsRoot, mainRoot);
 
-    Normalize normalize = new Normalize(compiler, false);
+    Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
     normalize.process(externsRoot, mainRoot);
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
