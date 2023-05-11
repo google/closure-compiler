@@ -340,7 +340,7 @@ final class Normalize implements CompilerPass {
           break;
 
         case FUNCTION:
-          if (visitFunction(n, compiler)) {
+          if (visitFunction(n)) {
             reportCodeChange("Function declaration", n);
           }
           break;
@@ -426,7 +426,7 @@ final class Normalize implements CompilerPass {
           }
         }
 
-        compiler.reportChangeToEnclosingScope(n.getParent());
+        reportCodeChange("combined export and declaration", n.getParent());
       }
     }
 
@@ -444,14 +444,14 @@ final class Normalize implements CompilerPass {
      *
      * <p>This simplifies optimizations as they can now assume all functions have a BLOCK.
      */
-    static boolean visitFunction(Node n, AbstractCompiler compiler) {
+    boolean visitFunction(Node n) {
       checkState(n.isFunction(), n);
       if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
         Node returnValue = NodeUtil.getFunctionBody(n);
         Node body = IR.block(IR.returnNode(returnValue.detach()));
         body.srcrefTreeIfMissing(returnValue);
         n.addChildToBack(body);
-        compiler.reportChangeToEnclosingScope(body);
+        reportCodeChange("blockless arrow function", body);
       }
       return false;
     }
@@ -682,7 +682,7 @@ final class Normalize implements CompilerPass {
       assign.setJSDocInfo(shorthand.getJSDocInfo());
       shorthand.setJSDocInfo(null);
       insertPoint.replaceWith(assign);
-      compiler.reportChangeToEnclosingScope(assign);
+      reportCodeChange("assign shorthand", assign);
     }
 
     /**
