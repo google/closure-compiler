@@ -31,8 +31,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -182,12 +182,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     private final String name;
     // Mapping from fully qualified goog.required names to the import LHS node.
     // For standalone goog.require()s the value is the EXPR_RESULT node.
-    private final Map<String, Node> importsByLongRequiredName = new HashMap<>();
+    private final Map<String, Node> importsByLongRequiredName = new LinkedHashMap<>();
     // Module-local short names for goog.required symbols.
-    private final Set<String> shortImportNames = new HashSet<>();
+    private final Set<String> shortImportNames = new LinkedHashSet<>();
     // A map from the export names "exports.name" to the nodes of those named exports.
     // The default export is keyed with just "exports"
-    private final Map<String, Node> exportNodesByName = new HashMap<>();
+    private final Map<String, Node> exportNodesByName = new LinkedHashMap<>();
 
     ModuleInfo(String moduleName) {
       this.name = moduleName;

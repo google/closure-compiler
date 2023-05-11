@@ -32,8 +32,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -117,9 +117,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
 
   private final AbstractCompiler compiler;
 
-  private final Set<String> knownClosureSubclasses = new HashSet<>();
+  private final Set<String> knownClosureSubclasses = new LinkedHashSet<>();
 
-  private final Set<String> exportedVariables = new HashSet<>();
+  private final Set<String> exportedVariables = new LinkedHashSet<>();
 
   private final ImmutableMap<String, ModuleMetadata> closureModules;
 
@@ -555,7 +555,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     }
     // Translate OBJECTLIT into SubstitutionMap. All keys and
     // values must be strings, or an error will be thrown.
-    final Map<String, String> cssNames = new HashMap<>();
+    final Map<String, String> cssNames = new LinkedHashMap<>();
 
     for (Node key = arg.getFirstChild(); key != null; key = key.getNext()) {
       Node value = key.getFirstChild();

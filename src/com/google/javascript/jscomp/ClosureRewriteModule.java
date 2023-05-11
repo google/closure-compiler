@@ -43,9 +43,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -281,9 +280,10 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean declareLegacyNamespace;
     String namespaceId; // "a.b.c"
     String contentsPrefix; // "module$contents$a$b$c_
-    final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
+    final Set<String> topLevelNames = new LinkedHashSet<>(); // For prefixed content renaming.
     final Deque<ScriptDescription> childScripts = new ArrayDeque<>();
-    final Map<String, AliasName> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
+    final Map<String, AliasName> namesToInlineByAlias =
+        new LinkedHashMap<>(); // For alias inlining.
 
     /** Transient state. */
     boolean willCreateExportsObject;
@@ -291,8 +291,8 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean hasCreatedExportObject;
     ExportDefinition defaultExport;
     @Nullable String defaultExportLocalName;
-    final Set<String> namedExports = new HashSet<>();
-    final Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
+    final Set<String> namedExports = new LinkedHashSet<>();
+    final Map<Var, ExportDefinition> exportsToInline = new LinkedHashMap<>();
 
     // The root of the module. The MODULE_BODY node that contains the module contents.
     // For recognizing top level names.
@@ -652,9 +652,9 @@ final class ClosureRewriteModule implements CompilerPass {
   // JsDoc type references to goog.module() types in legacy scripts.
   private static final class GlobalRewriteState {
     private final Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
-        new HashMap<>();
+        new LinkedHashMap<>();
     private final Multimap<Node, String> namespaceIdsByScriptNode = HashMultimap.create();
-    private final Set<String> providedNamespaces = new HashSet<>();
+    private final Set<String> providedNamespaces = new LinkedHashSet<>();
 
     boolean containsModule(String namespaceId) {
       return scriptDescriptionsByGoogModuleNamespace.containsKey(namespaceId);
@@ -687,7 +687,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
   private final GlobalRewriteState rewriteState = new GlobalRewriteState();
   // All prefix namespaces from goog.provides and legacy goog.modules.
-  private final Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
+  private final Set<String> legacyScriptNamespacesAndPrefixes = new LinkedHashSet<>();
   private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
   private final ArrayList<Node> googModuleGetCalls = new ArrayList<>();
   private final ArrayList<Node> googRequireDynamicCalls = new ArrayList<>();

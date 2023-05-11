@@ -26,8 +26,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +68,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
   // Whether this instance has already rewritten goog.provides, which can only happen once
   private boolean hasRewritingOccurred = false;
-  private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
+  private final Set<Node> forwardDeclaresToRemove = new LinkedHashSet<>();
   private final AstFactory astFactory;
 
   ProcessClosureProvidesAndRequires(

@@ -48,8 +48,8 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -196,8 +196,8 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   }
 
   private void clearPerFileState() {
-    this.typedefs = new HashSet<>();
-    this.namesToInlineByAlias = new HashMap<>();
+    this.typedefs = new LinkedHashSet<>();
+    this.namesToInlineByAlias = new LinkedHashMap<>();
   }
 
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");

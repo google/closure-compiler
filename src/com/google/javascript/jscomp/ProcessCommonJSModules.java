@@ -29,7 +29,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.nullness.Nullable;
@@ -874,7 +874,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       exports.removeAll(exportsToRemove);
       exportsToRemove.clear();
-      HashMap<ExportInfo, ExportInfo> exportsToReplace = new HashMap<>();
+      LinkedHashMap<ExportInfo, ExportInfo> exportsToReplace = new LinkedHashMap<>();
       for (ExportInfo export : moduleExports) {
         if (NodeUtil.getEnclosingScript(export.node) == null) {
           exportsToRemove.add(export);

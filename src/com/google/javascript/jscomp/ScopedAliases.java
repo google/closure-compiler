@@ -37,8 +37,8 @@ import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -405,13 +405,13 @@ class ScopedAliases implements CompilerPass {
     private final List<AliasUsage> aliasUsages = new ArrayList<>();
 
     // This map is temporary and cleared for each scope.
-    private final Map<String, Var> aliases = new HashMap<>();
+    private final Map<String, Var> aliases = new LinkedHashMap<>();
 
     // Also temporary and cleared for each scope.
-    private final Set<Node> injectedDecls = new HashSet<>();
+    private final Set<Node> injectedDecls = new LinkedHashSet<>();
 
     // Persists across scopes.
-    private final Set<Var> deletedAliasVars = new HashSet<>();
+    private final Set<Var> deletedAliasVars = new LinkedHashSet<>();
 
     // Suppose you create an alias.
     // var x = goog.x;
@@ -423,7 +423,7 @@ class ScopedAliases implements CompilerPass {
     // normalization (before optimizations). We run it here on a limited
     // set of variables, but only as a last resort (because this will screw
     // up warning messages downstream).
-    private final Set<String> forbiddenLocals = new HashSet<>(ImmutableSet.of("$jscomp"));
+    private final Set<String> forbiddenLocals = new LinkedHashSet<>(ImmutableSet.of("$jscomp"));
 
     private boolean hasNamespaceShadows = false;
 
