@@ -74,7 +74,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     passes.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
-            .setInternalFactory(Normalize::createNormalizeForOptimizations)
+            .setInternalFactory(
+                // Disable creation of unique names to make the test cases less confusing and
+                // brittle. We're not trying to test whether Normalize will rename variables
+                // to be unique or not.
+                (abstractCompiler) ->
+                    Normalize.builder(abstractCompiler).makeDeclaredNamesUnique(false).build())
             .build());
     optimizer.consume(passes.build());
 
@@ -723,9 +728,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "/**",
             " * @constructor @extends {D}",
             " */",
-            // normalization changes the second variable named `str` to a unique name
-            "var C = function(str$jscomp$1, n) {",
-            "  (D.call(this,str$jscomp$1), this).n = n;", // super() returns `this`.
+            "var C = function(str, n) {",
+            "  (D.call(this,str), this).n = n;", // super() returns `this`.
             "  return;",
             "}",
             "$jscomp.inherits(C, D);"));
