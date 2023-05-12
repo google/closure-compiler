@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
@@ -45,16 +44,9 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   private static final String REQUIRE = "$$require";
 
   private final AbstractCompiler compiler;
-  private final String pragma;
 
   public Es6RewriteModulesToCommonJsModules(AbstractCompiler compiler) {
-    this(compiler, "use strict");
-  }
-
-  @VisibleForTesting
-  Es6RewriteModulesToCommonJsModules(AbstractCompiler compiler, String pragma) {
     this.compiler = compiler;
-    this.pragma = pragma;
   }
 
   @Override
@@ -173,21 +165,25 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      * Given an import node gets the name of the var to use for the imported module.
      *
      * <p>Example: {@code import {v} from './foo.js'; use(v);} Can become:
+     *
      * <pre>
      *   const module$foo = require('./foo.js');
      *   use(module$foo.v);
      * </pre>
+     *
      * This method would return "module$foo".
      *
      * <p>Note that if there is a star import the name will be preserved.
      *
      * <p>Example:
+     *
      * <pre>
      *   import defaultValue, * as foo from './foo.js';
      *   use(defaultValue, foo.bar);
      * </pre>
      *
      * Can become:
+     *
      * <pre>
      *   const foo = require('./foo.js'); use(foo.defaultValue, foo.bar);
      * </pre>
@@ -334,7 +330,15 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       Node block = IR.block();
       block.addChildrenToFront(script.removeChildren());
 
-      block.addChildToFront(IR.exprResult(IR.string(pragma)));
+      // TODO(b/282006497): Maybe mark this function for strict mode?
+      // NOTE: One might be tempted to add `'use strict';` here, but that causes problems.
+      // Optimizations and transpilations are not written to look for this statement,
+      // and are likely to either remove it or move other statements ahead of it,
+      // making it ineffective.
+      // The "right" way to mark the method for strict mode would be to apply the
+      // USE_STRICT node property to its body, but at the moment that will have no
+      // effect because 1) the code printer ignores it and 2) TypedAst doesn't
+      // serialize it.
 
       Node moduleFunction =
           IR.function(

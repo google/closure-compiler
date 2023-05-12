@@ -175,7 +175,6 @@ public final class ClosureBundlerTest {
     assertThat(result)
         .endsWith(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {\n"
-                + "  \"use strict\";\n"
                 + "  Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {\n"
                 + "    return foo;\n"
                 + "  }}, y:{enumerable:true, get:function() {\n"
