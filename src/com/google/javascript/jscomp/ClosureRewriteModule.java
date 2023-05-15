@@ -1885,6 +1885,10 @@ final class ClosureRewriteModule implements CompilerPass {
         this.astFactory
             .createQNameFromTypedScope(this.globalTypedScope, newString)
             .srcrefTree(nameNode);
+    // Sometimes the typechecker gave `nameNode` the correct type, but we can't infer the right type
+    // for `newQualifiedName`. If so, giving `newQualifiedName` the same type typechecking used for
+    // `nameNode` is less confusing.
+    newQualifiedName.setJSType(nameNode.getJSType());
 
     boolean replaced = safeSetStringIfDeclaration(nameParent, nameNode, newQualifiedName);
     if (replaced) {
