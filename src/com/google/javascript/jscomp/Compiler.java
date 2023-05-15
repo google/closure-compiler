@@ -563,8 +563,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Initializes a compiler that will use pre-compiled TypedAst files instead of reading the source
-   * from disk
+   * Initializes a compiler with deserialized state from the given TypedAst.List
+   *
+   * <p>This method initializes all the state needed to run `.stage2Passes()` or do any similar sort
+   * of optimization work.
+   *
+   * @param typedAstListStream a gzipped, binary-serialized TypedAst.List proto
    */
   @GwtIncompatible
   public final void initWithTypedAstFilesystem(
@@ -580,12 +584,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.initOptions(options);
     this.init(externs, sources, options);
-    this.initTypedAstFilesystem(files, typedAstListStream, options);
+    this.mergeAndDeserializeTypedAsts(files, typedAstListStream, options);
   }
 
   /**
-   * Initializes a compiler that will use pre-compiled TypedAst files instead of reading the source
-   * from disk
+   * Initializes a compiler with deserialized state from the given TypedAst.List
+   *
+   * <p>This method initializes all the state needed to run `.stage2Passes()` or do any similar sort
+   * of optimization work.
+   *
+   * @param typedAstListStream a gzipped, binary-serialized TypedAst.List proto
    */
   @GwtIncompatible
   public void initModulesWithTypedAstFilesystem(
@@ -607,11 +615,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.initOptions(options);
     this.initModules(externs, modules, options);
-    this.initTypedAstFilesystem(files, typedAstListStream, options);
+    this.mergeAndDeserializeTypedAsts(files, typedAstListStream, options);
   }
 
   @GwtIncompatible
-  private void initTypedAstFilesystem(
+  private void mergeAndDeserializeTypedAsts(
       ImmutableSet<SourceFile> requiredInputFiles,
       InputStream typedAstListStream,
       CompilerOptions options) {
@@ -646,6 +654,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.setTypeCheckingHasRun(deserializeTypes);
 
     this.getSynthesizedExternsInput(); // Force lazy creation.
+
+    runInCompilerThread(
+        () -> {
+          // TODO(lharker): refactor things to avoid this misleading 'parse' call. It's not actually
+          // parsing JS source code, just doing more deserialization & building the Rhino AST.
+          parseForCompilationInternal();
+          return null;
+        });
   }
 
   @Override
@@ -1138,6 +1154,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>TODO(bradfordcsmith): Rename this to parse()
    */
   public void parseForCompilation() {
+    checkState(
+        this.typedAstFilesystem == null, "Unnecessary if initWithTypedAstFilesystem was called");
     runInCompilerThread(
         () -> {
           parseForCompilationInternal();

@@ -3160,8 +3160,6 @@ public final class CompilerTest {
           var unused = compiler.getTypedAstDeserializer(file2);
         });
 
-    compiler.parse();
-
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
     assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
   }
@@ -3174,12 +3172,16 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     CompilerOptions compilerOptions = new CompilerOptions();
     compiler.initOptions(compilerOptions);
-    // When
-    compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file), compilerOptions, typedAstListStream);
 
-    // Then
-    Exception e = assertThrows(Exception.class, compiler::parse);
+    Exception e =
+        assertThrows(
+            Exception.class,
+            () ->
+                compiler.initWithTypedAstFilesystem(
+                    ImmutableList.of(),
+                    ImmutableList.of(file),
+                    compilerOptions,
+                    typedAstListStream));
     assertThat(e).hasMessageThat().containsMatch("missing .* test.js");
   }
 
@@ -3227,7 +3229,6 @@ public final class CompilerTest {
     // When
     compiler.initWithTypedAstFilesystem(
         ImmutableList.of(), ImmutableList.of(file), compilerOptions, typedAstListStream);
-    compiler.parse();
 
     // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
@@ -3372,7 +3373,6 @@ public final class CompilerTest {
         ImmutableList.of(weakFile, strongFile),
         compilerOptions,
         typedAstListStream);
-    compiler.parse();
     Node weakScript =
         compiler
             .getModuleGraph()

@@ -1444,7 +1444,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       String outputFilename, CompileMetricsRecorderInterface metricsRecorder) {
     metricsRecorder.recordActionName("parse & optimize");
     try {
-      compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
         metricsRecorder.recordStartState(compiler);
         compiler.stage2Passes();
@@ -1471,7 +1470,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       CompileMetricsRecorderInterface metricsRecorder) {
     metricsRecorder.recordActionName("skip-checks compile");
     try {
-      compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
         metricsRecorder.recordStartState(compiler);
         compiler.stage2Passes();

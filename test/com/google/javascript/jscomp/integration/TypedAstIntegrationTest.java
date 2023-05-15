@@ -636,7 +636,6 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
           options,
           inputStream);
     }
-    compiler.parse();
     compiler.stage2Passes();
     compiler.stage3Passes();
 
@@ -687,7 +686,6 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
           options,
           inputStream);
     }
-    compiler.parse();
     compiler.stage2Passes();
     if (!compiler.hasErrors()) {
       compiler.stage3Passes();
