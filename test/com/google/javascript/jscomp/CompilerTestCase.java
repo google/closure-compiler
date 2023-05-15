@@ -1562,11 +1562,12 @@ public abstract class CompilerTestCase {
         if (transpileEnabled && i == 0) {
           recentChange.reset();
           transpileToEs5(compiler, externsRoot, mainRoot);
+          // Transpile includes normalize except for renaming all variables to unique names.
+          Normalize normalize =
+              Normalize.builder(compiler).makeDeclaredNamesUnique(normalizeEnabled).build();
+          normalize.process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        }
-
-        // Only run the normalize pass once, if asked.
-        if (normalizeEnabled && i == 0) {
+        } else if (normalizeEnabled && i == 0) {
           normalizeActualCode(compiler, externsRoot, mainRoot);
         }
 
@@ -1921,10 +1922,11 @@ public abstract class CompilerTestCase {
     if (transpileEnabled && !compiler.hasErrors()) {
       rewriteEsModules(compiler, externsRoot, mainRoot);
       transpileToEs5(compiler, externsRoot, mainRoot);
-    }
-
-    // Only run the normalize pass, if asked.
-    if (normalizeEnabled && !compiler.hasErrors()) {
+      // Transpilation includes normalize, except for forcing all variables to unique names.
+      Normalize normalize =
+          Normalize.builder(compiler).makeDeclaredNamesUnique(normalizeEnabled).build();
+      normalize.process(externsRoot, mainRoot);
+    } else if (normalizeEnabled && !compiler.hasErrors()) {
       Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
       normalize.process(externsRoot, mainRoot);
     }
