@@ -115,8 +115,7 @@ public final class DefaultPassConfig extends PassConfig {
     super(options);
   }
 
-  @Nullable
-  PreprocessorSymbolTable getPreprocessorSymbolTable() {
+  @Nullable PreprocessorSymbolTable getPreprocessorSymbolTable() {
     return preprocessorSymbolTableFactory.getInstanceOrNull();
   }
 
@@ -155,8 +154,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
-
     if (options.needsTranspilationFrom(ES2015)) {
       if (options.getRewritePolyfills()) {
         if (options.getIsolatePolyfills()) {
@@ -168,6 +165,20 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.maybeAdd(injectRuntimeLibraries);
+
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
+
+    // Passes below this point may rely on normalization and must maintain normalization.
+    passes.maybeAdd(
+        PassFactory.builder()
+            .setName(PassNames.NORMALIZE)
+            .setInternalFactory(
+                // Since we're doing only transpilation
+                // we want to avoid renaming all variables to be unique.
+                // Doing that would break Angular runtime behavior
+                // that injects function parameters based on their names.
+                (compiler) -> Normalize.builder(compiler).makeDeclaredNamesUnique(false).build())
+            .build());
 
     passes.assertAllOneTimePasses();
     assertValidOrderForChecks(passes);

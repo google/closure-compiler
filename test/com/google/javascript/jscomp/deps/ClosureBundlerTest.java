@@ -175,6 +175,9 @@ public final class ClosureBundlerTest {
     assertThat(result)
         .endsWith(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {\n"
+                + "  function foo() {\n"
+                + "    return local;\n"
+                + "  }\n"
                 + "  Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {\n"
                 + "    return foo;\n"
                 + "  }}, y:{enumerable:true, get:function() {\n"
@@ -182,9 +185,6 @@ public final class ClosureBundlerTest {
                 + "  }}});\n"
                 + "  var module$nested$path$other = $$require(\"nested/path/other.js\");\n"
                 + "  let local;\n"
-                + "  function foo() {\n"
-                + "    return local;\n"
-                + "  }\n"
                 + "}, \"nested/path/foo.js\", [\"nested/path/other.js\"]);\n");
   }
 
