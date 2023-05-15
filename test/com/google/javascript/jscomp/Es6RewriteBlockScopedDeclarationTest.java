@@ -1561,4 +1561,114 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "  } catch (e$2) { e$2--; }",
         "}"));
   }
+
+  // Regression test for https://github.com/google/closure-compiler/issues/3599
+  @Test
+  public void testReferenceToLoopScopedLetInObjectGetterAndSetter() {
+    test(
+        lines(
+            "for (let i = 0; i < 2; i++) {",
+            "   let bar = 42;",
+            "   let a = {",
+            "     get foo() {",
+            "      return bar",
+            "     },",
+            "     set foo(x) {",
+            "      use(bar);",
+            "     },",
+            "     prop: bar",
+            "   };",
+            "   bar = 43;",
+            "   use(a);",
+            "}"),
+        lines(
+            "var $jscomp$loop$0 = {};",
+            "var i = 0;",
+            "for (; i < 2; $jscomp$loop$0 =",
+            "       {$jscomp$loop$prop$bar$1:$jscomp$loop$0.$jscomp$loop$prop$bar$1}, i++) {",
+            "  $jscomp$loop$0.$jscomp$loop$prop$bar$1 = 42;",
+            "  var a = (function($jscomp$loop$0) {",
+            "   return {",
+            "      get foo() {",
+            "       return $jscomp$loop$0.$jscomp$loop$prop$bar$1;",
+            "     },",
+            "      set foo(x) {",
+            "       use($jscomp$loop$0.$jscomp$loop$prop$bar$1);",
+            "      },",
+            // Note - this statement will be evaluated immediately after this function definition,
+            // so will evaluate to 42 and not 43. We don't strictly need this to execute as part
+            // of the IIFE body but doing so also doesn't hurt correctness.
+            "      prop: $jscomp$loop$0.$jscomp$loop$prop$bar$1",
+            "    };",
+            "  })($jscomp$loop$0);",
+            "  $jscomp$loop$0.$jscomp$loop$prop$bar$1 = 43;",
+            "  use(a);",
+            "}"));
+  }
+
+  @Test
+  public void testReferenceToMultipleLoopScopedLetConstInObjectWithGetter() {
+    test(
+        lines(
+            "for (let i = 0; i < 2; i++) {",
+            "   let bar = 42;",
+            "   const baz = 43;",
+            "   let a = {",
+            "     get foo() {",
+            "      return bar + baz",
+            "     },",
+            "   };",
+            "}"),
+        lines(
+            "var $jscomp$loop$0 = {};",
+            "var i = 0;",
+            "for (; i < 2; $jscomp$loop$0 =",
+            "       {$jscomp$loop$prop$bar$1:$jscomp$loop$0.$jscomp$loop$prop$bar$1,",
+            "        $jscomp$loop$prop$baz$2:$jscomp$loop$0.$jscomp$loop$prop$baz$2},",
+            "       i++) {",
+            "  $jscomp$loop$0.$jscomp$loop$prop$bar$1 = 42;",
+            "  /** @const */",
+            "  $jscomp$loop$0.$jscomp$loop$prop$baz$2 = 43;",
+            "  var a = (function($jscomp$loop$0) {",
+            "   return {",
+            "    get foo() {",
+            "       return $jscomp$loop$0.$jscomp$loop$prop$bar$1 +",
+            "           $jscomp$loop$0.$jscomp$loop$prop$baz$2;",
+            "    },",
+            "  };",
+            " })($jscomp$loop$0);",
+            "}"));
+  }
+
+  @Test
+  public void testReferenceToMultipleLoopScopedLetsInObjectWithSetter() {
+    test(
+        lines(
+            "for (let i = 0; i < 2; i++) {",
+            "   let bar = 42;",
+            "   let baz = 43;",
+            "   let a = {",
+            "     set foo(x =  bar) {",
+            "      return x + baz",
+            "     },",
+            "   };",
+            "}"),
+        lines(
+            "var $jscomp$loop$0 = {};",
+            "var i = 0;",
+            "for (; i < 2; $jscomp$loop$0 =",
+            "       {$jscomp$loop$prop$bar$1:$jscomp$loop$0.$jscomp$loop$prop$bar$1,",
+            "        $jscomp$loop$prop$baz$2:$jscomp$loop$0.$jscomp$loop$prop$baz$2},",
+            "       i++) {",
+            "  $jscomp$loop$0.$jscomp$loop$prop$bar$1 = 42;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$baz$2 = 43;",
+            "  var a = (function($jscomp$loop$0) {",
+            "   return {",
+            "    set foo(x = $jscomp$loop$0.$jscomp$loop$prop$bar$1) {",
+            "       return x + $jscomp$loop$0.$jscomp$loop$prop$baz$2;",
+            "    },",
+            "  };",
+            " })($jscomp$loop$0);",
+            "}"));
+  }
 }

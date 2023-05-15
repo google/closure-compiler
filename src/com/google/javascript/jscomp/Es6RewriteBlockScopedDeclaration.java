@@ -24,7 +24,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -34,7 +34,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -243,9 +242,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     private static final String LOOP_OBJECT_PROPERTY_NAME = "$jscomp$loop$prop$";
     private final Map<Node, LoopObject> loopObjectMap = new LinkedHashMap<>();
 
-    private final Multimap<Node, LoopObject> functionLoopObjectsMap = LinkedHashMultimap.create();
-    private final Multimap<Node, String> functionHandledMap = HashMultimap.create();
-    private final Multimap<Var, Node> referenceMap = LinkedHashMultimap.create();
+    private final SetMultimap<Node, LoopObject> nodesRequiringloopObjectsClosureMap =
+        LinkedHashMultimap.create();
+    private final SetMultimap<Node, String> nodesHandledForLoopObjectClosure =
+        HashMultimap.create();
+    private final SetMultimap<Var, Node> referenceMap = LinkedHashMultimap.create();
     // Maps from a var to a unique property name for that var
     // e.g. 'i' -> '$jscomp$loop$prop$i$0'
     private final Map<Var, String> propertyNameMap = new LinkedHashMap<>();
@@ -303,11 +304,26 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
 
       if (outerMostFunctionScope != null) {
-        Node function = outerMostFunctionScope.getRootNode();
-        if (functionHandledMap.containsEntry(function, name)) {
+        Node enclosingFunction = outerMostFunctionScope.getRootNode();
+
+        // There are two categories of functions we might find here:
+        //  1. a getter or setter in an object literal. We will wrap the entire object literal in
+        //     a closure to capture the value of the let/const.
+        //  2. a function declaration or expression. We will wrap the function in a closure.
+        // (At this point, class methods/getters/setters and object literal member functions are
+        // transpiled away.)
+        final Node nodeToWrapInClosure;
+        if (enclosingFunction.getParent().isGetterDef()
+            || enclosingFunction.getParent().isSetterDef()) {
+          nodeToWrapInClosure = enclosingFunction.getGrandparent();
+          checkState(nodeToWrapInClosure.isObjectLit());
+        } else {
+          nodeToWrapInClosure = enclosingFunction;
+        }
+        if (nodesHandledForLoopObjectClosure.containsEntry(nodeToWrapInClosure, name)) {
           return;
         }
-        functionHandledMap.put(function, name);
+        nodesHandledForLoopObjectClosure.put(nodeToWrapInClosure, name);
 
         LoopObject object =
             loopObjectMap.computeIfAbsent(
@@ -318,8 +334,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         String newPropertyName = createUniquePropertyName(var);
         object.vars.add(var);
         propertyNameMap.put(var, newPropertyName);
-
-        functionLoopObjectsMap.put(function, object);
+        nodesRequiringloopObjectsClosureMap.put(nodeToWrapInClosure, object);
       }
     }
 
@@ -485,9 +500,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
 
       // Create wrapper functions and call them.
-      for (Node function : functionLoopObjectsMap.keySet()) {
+      for (Node functionOrObjectLit : nodesRequiringloopObjectsClosureMap.keySet()) {
         Node returnNode = IR.returnNode();
-        Collection<LoopObject> objects = functionLoopObjectsMap.get(function);
+        Set<LoopObject> objects = nodesRequiringloopObjectsClosureMap.get(functionOrObjectLit);
         Node[] objectNames = new Node[objects.size()];
         Node[] objectNamesForCall = new Node[objects.size()];
         int i = 0;
@@ -505,18 +520,18 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 IR.block(returnNode),
                 type(StandardColors.TOP_OBJECT));
         compiler.reportChangeToChangeScope(iife);
-        Node call = astFactory.createCall(iife, type(function), objectNamesForCall);
+        Node call = astFactory.createCall(iife, type(functionOrObjectLit), objectNamesForCall);
         call.putBooleanProp(Node.FREE_CALL, true);
         Node replacement;
-        if (NodeUtil.isFunctionDeclaration(function)) {
+        if (NodeUtil.isFunctionDeclaration(functionOrObjectLit)) {
           replacement =
-              IR.var(IR.name(function.getFirstChild().getString()), call)
-                  .srcrefTreeIfMissing(function);
+              IR.var(IR.name(functionOrObjectLit.getFirstChild().getString()), call)
+                  .srcrefTreeIfMissing(functionOrObjectLit);
         } else {
-          replacement = call.srcrefTreeIfMissing(function);
+          replacement = call.srcrefTreeIfMissing(functionOrObjectLit);
         }
-        function.replaceWith(replacement);
-        returnNode.addChildToFront(function);
+        functionOrObjectLit.replaceWith(replacement);
+        returnNode.addChildToFront(functionOrObjectLit);
         compiler.reportChangeToEnclosingScope(replacement);
       }
     }
