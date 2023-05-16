@@ -1660,6 +1660,11 @@ public class Node {
     this.originalName = (s == null) ? null : RhinoStringPool.addOrGet(s);
   }
 
+  // Copy the original
+  public final void setOriginalNameFromName(Node name) {
+    this.originalName = name.getString();
+  }
+
   /** Whether this node should be indexed by static analysis / code indexing tools. */
   public final boolean isIndexable() {
     return !this.getBooleanProp(Prop.NON_INDEXABLE);
