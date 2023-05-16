@@ -54,7 +54,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
 
-    PassListBuilder passes = new PassListBuilder(compiler.getOptions());
+    CompilerOptions compilerOptions = compiler.getOptions();
+    PassListBuilder passes = new PassListBuilder(compilerOptions);
 
     passes.maybeAdd(
         PassFactory.builder()
@@ -69,7 +70,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 (c) -> new ConvertTypesToColors(c, SerializationOptions.INCLUDE_DEBUG_INFO))
             .build());
 
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compiler.getOptions());
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compilerOptions);
     // TODO(b/197349249): We will soon run some of the transpilation passes after normalization.
     passes.maybeAdd(
         PassFactory.builder()
@@ -81,6 +82,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 (abstractCompiler) ->
                     Normalize.builder(abstractCompiler).makeDeclaredNamesUnique(false).build())
             .build());
+    TranspilationPasses.addPostNormalizationTranspilationPasses(passes, compilerOptions);
     optimizer.consume(passes.build());
 
     return optimizer;

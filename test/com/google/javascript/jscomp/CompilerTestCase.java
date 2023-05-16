@@ -1562,12 +1562,9 @@ public abstract class CompilerTestCase {
         if (transpileEnabled && i == 0) {
           recentChange.reset();
           transpileToEs5(compiler, externsRoot, mainRoot);
-          // Transpile includes normalize except for renaming all variables to unique names.
-          Normalize normalize =
-              Normalize.builder(compiler).makeDeclaredNamesUnique(normalizeEnabled).build();
-          normalize.process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         } else if (normalizeEnabled && i == 0) {
+          // An explicit normalize pass is necessary since it wasn't done as part of transpilation.
           normalizeActualCode(compiler, externsRoot, mainRoot);
         }
 
@@ -1819,7 +1816,7 @@ public abstract class CompilerTestCase {
     }
   }
 
-  private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
+  private void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     CompilerOptions options = compiler.getOptions();
     PassListBuilder factories = new PassListBuilder(options);
 
@@ -1828,6 +1825,18 @@ public abstract class CompilerTestCase {
     TranspilationPasses.addTranspilationRuntimeLibraries(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
+    // Transpilation requires most of normalization.
+    factories.maybeAdd(
+        PassFactory.builder()
+            .setName(PassNames.NORMALIZE)
+            .setInternalFactory(
+                abstractCompiler ->
+                    Normalize.builder(abstractCompiler)
+                        // Only do unique variable renaming if normalize is explicitly enabled.
+                        .makeDeclaredNamesUnique(normalizeEnabled)
+                        .build())
+            .build());
+    TranspilationPasses.addPostNormalizationTranspilationPasses(factories, options);
     for (PassFactory factory : factories.build()) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }
@@ -1922,13 +1931,9 @@ public abstract class CompilerTestCase {
     if (transpileEnabled && !compiler.hasErrors()) {
       rewriteEsModules(compiler, externsRoot, mainRoot);
       transpileToEs5(compiler, externsRoot, mainRoot);
-      // Transpilation includes normalize, except for forcing all variables to unique names.
-      Normalize normalize =
-          Normalize.builder(compiler).makeDeclaredNamesUnique(normalizeEnabled).build();
-      normalize.process(externsRoot, mainRoot);
     } else if (normalizeEnabled && !compiler.hasErrors()) {
-      Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
-      normalize.process(externsRoot, mainRoot);
+      // An explicit normalize pass is necessary since it wasn't done as part of transpilation.
+      normalizeActualCode(compiler, externsRoot, mainRoot);
     }
     return mainRoot;
   }

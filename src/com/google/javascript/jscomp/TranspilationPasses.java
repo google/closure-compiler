@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -205,6 +204,13 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.GENERATORS)) {
       passes.maybeAdd(rewriteGenerators);
     }
+  }
+
+  /** Adds transpilation passes that should not be run until after normalization has been done. */
+  public static void addPostNormalizationTranspilationPasses(
+      PassListBuilder passes, CompilerOptions options) {
+    // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
+    // until that method can be deleted as a no-op.
   }
 
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */

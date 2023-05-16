@@ -180,6 +180,8 @@ public final class DefaultPassConfig extends PassConfig {
                 (compiler) -> Normalize.builder(compiler).makeDeclaredNamesUnique(false).build())
             .build());
 
+    TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
+
     passes.assertAllOneTimePasses();
     assertValidOrderForChecks(passes);
     return passes;
@@ -522,6 +524,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(processDefinesOptimize);
       TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
       passes.maybeAdd(normalize);
+      TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
       passes.maybeAdd(gatherExternPropertiesOptimize);
       passes.maybeAdd(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
       passes.maybeAdd(inlineAndCollapseProperties);
@@ -599,6 +602,8 @@ public final class DefaultPassConfig extends PassConfig {
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     passes.maybeAdd(normalize);
+
+    TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
 
     passes.maybeAdd(gatherGettersAndSetters);
 
