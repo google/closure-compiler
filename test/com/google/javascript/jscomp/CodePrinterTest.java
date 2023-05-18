@@ -3332,6 +3332,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testParensAroundArrowFnInCast() {
+    preserveTypeAnnotations = false;
+    assertPrint("x(/** @type {?} */ (()=>{x}))", "x(()=>{x})");
+    assertPrint("x(/** @type {?} */ (()=>{x})())", "x((()=>{x})())");
+    assertPrint("x(/** @type {string} */ (/** @type {?} */ (()=>{x}))())", "x((()=>{x})())");
+
+    preserveTypeAnnotations = true;
+    assertPrintSame("x(/** @type {?} */ (()=>{x}))");
+    assertPrintSame("x(/** @type {?} */ (()=>{x})())");
+    assertPrintSame("x(/** @type {string} */ (/** @type {?} */ (()=>{x}))())");
+  }
+
+  @Test
   public void testParensAroundVariableDeclarator() {
     assertPrintSame("var o=(test++,{one:1})");
     assertPrintSame("({one}=(test++,{one:1}))");

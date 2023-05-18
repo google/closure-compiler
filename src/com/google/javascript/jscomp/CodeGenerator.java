@@ -1540,8 +1540,21 @@ public class CodeGenerator {
     }
   }
 
-  private static boolean arrowFunctionNeedsParens(Node n) {
+  private boolean arrowFunctionNeedsParens(Node n) {
     Node parent = n.getParent();
+    Node expressionOrEnclosingCast = n;
+    while (parent != null && parent.isCast()) {
+      if (preserveTypeAnnotations) {
+        // If printing type annotations, any expression in a CAST automatically is wrapped in
+        // parentheses when printing the CAST. Returning true here would add a second, unnecessary
+        // pair of parentheses.
+        return false;
+      }
+      // If not printing type annotations, then pretend the CAST node is not there and check the
+      // parent of the CAST.
+      expressionOrEnclosingCast = parent;
+      parent = parent.getParent();
+    }
 
     // Once you cut through the layers of non-terminals used to define operator precedence,
     // you can see the following are true.
@@ -1585,17 +1598,12 @@ public class CodeGenerator {
       // MemberExpression '[' Expression ']'
       // MemberFunction '(' AssignmentExpressionList ')'
       // LeftHandSideExpression ? AssignmentExpression : AssignmentExpression
-      return isFirstChild(n);
+      return expressionOrEnclosingCast.isFirstChildOf(parent);
     } else {
       // All other cases are either illegal (e.g. because you cannot assign a value to an
       // ArrowFunction) or do not require parens.
       return false;
     }
-  }
-
-  private static boolean isFirstChild(Node n) {
-    Node parent = n.getParent();
-    return parent != null && n == parent.getFirstChild();
   }
 
   private void addArrowFunction(Node n, Node first, Node last, Context context) {
