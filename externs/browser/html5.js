@@ -340,8 +340,7 @@ Path2D.prototype.quadraticCurveTo = function(cpx, cpy, x, y) {};
  * @return {undefined}
  * @override
  */
-Path2D.prototype.bezierCurveTo = function(
-    cp1x, cp1y, cp2x, cp2y, x, y) {};
+Path2D.prototype.bezierCurveTo = function(cp1x, cp1y, cp2x, cp2y, x, y) {};
 
 /**
  * @param {number} x1
@@ -562,8 +561,7 @@ BaseRenderingContext2D.prototype.createRadialGradient = function(
  * @throws {Error}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#dom-context-2d-createpattern
  */
-BaseRenderingContext2D.prototype.createPattern = function(
-    image, repetition) {};
+BaseRenderingContext2D.prototype.createPattern = function(image, repetition) {};
 
 /**
  * @param {number} x
@@ -627,8 +625,7 @@ BaseRenderingContext2D.prototype.lineTo = function(x, y) {};
  * @return {undefined}
  * @override
  */
-BaseRenderingContext2D.prototype.quadraticCurveTo = function(
-    cpx, cpy, x, y) {};
+BaseRenderingContext2D.prototype.quadraticCurveTo = function(cpx, cpy, x, y) {};
 
 /**
  * @param {number} cp1x
@@ -690,15 +687,16 @@ BaseRenderingContext2D.prototype.arc = function(
  * @see http://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D/ellipse
  */
 BaseRenderingContext2D.prototype.ellipse = function(
-    x, y, radiusX, radiusY, rotation, startAngle, endAngle, opt_anticlockwise) {
-};
+    x, y, radiusX, radiusY, rotation, startAngle, endAngle,
+    opt_anticlockwise) {};
 
 /**
  * @param {Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
-BaseRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
+BaseRenderingContext2D.prototype.fill = function(
+    optFillRuleOrPath, optFillRule) {};
 
 /**
  * @param {Path2D=} optStroke
@@ -717,7 +715,8 @@ BaseRenderingContext2D.prototype.drawFocusIfNeeded = function(element) {};
  * @param {string=} optFillRule
  * @return {undefined}
  */
-BaseRenderingContext2D.prototype.clip = function(optFillRuleOrPath, optFillRule) {};
+BaseRenderingContext2D.prototype.clip = function(
+    optFillRuleOrPath, optFillRule) {};
 
 /**
  * @param {number} x
@@ -814,8 +813,9 @@ BaseRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
  * @param {number=} opt_dirtyHeight
  * @return {undefined}
  */
-BaseRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
-    opt_dirtyX, opt_dirtyY, opt_dirtyWidth, opt_dirtyHeight) {};
+BaseRenderingContext2D.prototype.putImageData = function(
+    imagedata, dx, dy, opt_dirtyX, opt_dirtyY, opt_dirtyWidth,
+    opt_dirtyHeight) {};
 
 /**
  * Note: WebKit only
@@ -1248,8 +1248,8 @@ function openDatabase(name, version, description, size, opt_callback) {}
  * @param {(DatabaseCallback|function(Database))=} opt_callback
  * @return {!Database}
  */
-Window.prototype.openDatabase =
-    function(name, version, description, size, opt_callback) {};
+Window.prototype.openDatabase = function(
+    name, version, description, size, opt_callback) {};
 
 /**
  * @type {boolean}
@@ -1652,8 +1652,8 @@ WorkerOptions.prototype.type;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {!TrustedScriptURL|!URL|string} scriptURL The URL of the script to run in
- *     the SharedWorker.
+ * @param {!TrustedScriptURL|!URL|string} scriptURL The URL of the script to run
+ *     in the SharedWorker.
  * @param {(string|!WorkerOptions)=} options A name that can
  *     later be used to obtain a reference to the same SharedWorker or a
  *     WorkerOptions object which can be be used to specify how scriptURL is
@@ -1811,8 +1811,8 @@ DedicatedWorkerGlobalScope.prototype.postMessage = function(
  *     transferOrOptions
  * @return {undefined}
  */
-DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
-    function(message, transferOrOptions) {};
+DedicatedWorkerGlobalScope.prototype.webkitPostMessage = function(
+    message, transferOrOptions) {};
 
 /**
  * Sent when the creator posts a message to this worker.
@@ -1857,7 +1857,8 @@ HTMLElement.prototype.attachShadow = function(options) {};
  * @param {?string} newValue
  * @param {?string} namespace
  */
-HTMLElement.prototype.attributeChangedCallback = function(attributeName, oldValue, newValue, namespace) {};
+HTMLElement.prototype.attributeChangedCallback = function(
+    attributeName, oldValue, newValue, namespace) {};
 
 /** @type {function()|undefined} */
 HTMLElement.prototype.connectedCallback;
@@ -2400,8 +2401,8 @@ HTMLMediaElement.prototype.muted;
  * @param {string=} opt_language Language of the text track.
  * @return {!TextTrack} TextTrack object added to the media element.
  */
-HTMLMediaElement.prototype.addTextTrack =
-    function(kind, opt_label, opt_language) {};
+HTMLMediaElement.prototype.addTextTrack = function(
+    kind, opt_label, opt_language) {};
 
 /** @type {!TextTrackList} */
 HTMLMediaElement.prototype.textTracks;
@@ -2921,8 +2922,8 @@ MessageChannel.prototype.port2;
 function MessagePort() {}
 
 /** @override */
-MessagePort.prototype.addEventListener = function(type, listener, opt_options) {
-};
+MessagePort.prototype.addEventListener = function(
+    type, listener, opt_options) {};
 
 /** @override */
 MessagePort.prototype.removeEventListener = function(
@@ -2939,8 +2940,7 @@ MessagePort.prototype.dispatchEvent = function(evt) {};
  * @param {Array<!Transferable>=} opt_transfer
  * @return {undefined}
  */
-MessagePort.prototype.postMessage = function(message, opt_transfer) {
-};
+MessagePort.prototype.postMessage = function(message, opt_transfer) {};
 
 /**
  * Begins dispatching messages received on the port.
@@ -3047,8 +3047,9 @@ MessageEvent.prototype.ports;
  * @param {!Array<MessagePort>=} portsArg
  * @return {undefined}
  */
-MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
-    cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg, portsArg) {};
+MessageEvent.prototype.initMessageEvent = function(
+    typeArg, canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg,
+    sourceArg, portsArg) {};
 
 /**
  * Initializes the event in a manner analogous to the similarly-named methods in
@@ -3064,9 +3065,9 @@ MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
  * @param {!Array<MessagePort>=} portsArg
  * @return {undefined}
  */
-MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
-    canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
-    portsArg) {};
+MessageEvent.prototype.initMessageEventNS = function(
+    namespaceURI, typeArg, canBubbleArg, cancelableArg, dataArg, originArg,
+    lastEventIdArg, sourceArg, portsArg) {};
 
 /**
  * @record
@@ -3200,7 +3201,9 @@ DataTransfer.prototype.setData = function(format, data) {};
  * @param {string} format Format for which to set data.
  * @return {string} Data for the given format.
  */
-DataTransfer.prototype.getData = function(format) { return ''; };
+DataTransfer.prototype.getData = function(format) {
+  return '';
+};
 
 /**
  * @param {HTMLElement} img The image to use when dragging.
@@ -3298,7 +3301,9 @@ DataTransferItem.prototype.getAsString = function(callback) {};
  * @return {?File} The file corresponding to this item, or null.
  * @nosideeffects
  */
-DataTransferItem.prototype.getAsFile = function() { return null; };
+DataTransferItem.prototype.getAsFile = function() {
+  return null;
+};
 
 /**
  * HTML5 DataTransferItemList class. There are some discrepancies in the docs
@@ -3321,7 +3326,9 @@ DataTransferItemList.prototype.length;
  * @return {DataTransferItem} The ith DataTransferItem in the list, or null.
  * @nosideeffects
  */
-DataTransferItemList.prototype.item = function(i) { return null; };
+DataTransferItemList.prototype.item = function(i) {
+  return null;
+};
 
 /**
  * Adds an item to the list.
@@ -3427,14 +3434,18 @@ TimeRanges.prototype.length;
  * @return {number} The start time of the range at index.
  * @throws {DOMException}
  */
-TimeRanges.prototype.start = function(index) { return 0; };
+TimeRanges.prototype.start = function(index) {
+  return 0;
+};
 
 /**
  * @param {number} index The index.
  * @return {number} The end time of the range at index.
  * @throws {DOMException}
  */
-TimeRanges.prototype.end = function(index) { return 0; };
+TimeRanges.prototype.end = function(index) {
+  return 0;
+};
 
 
 // HTML5 Web Socket class
@@ -3472,13 +3483,15 @@ WebSocket.OPEN;
 WebSocket.prototype.OPEN;
 
 /**
- * The connection is going through the closing handshake, or the close() method has been invoked.
+ * The connection is going through the closing handshake, or the close() method
+ * has been invoked.
  * @const {number}
  */
 WebSocket.CLOSING;
 
 /**
- * The connection is going through the closing handshake, or the close() method has been invoked.
+ * The connection is going through the closing handshake, or the close() method
+ * has been invoked.
  * @const {number}
  */
 WebSocket.prototype.CLOSING;
@@ -3793,8 +3806,8 @@ PopStateEvent.prototype.state;
  * @param {*} stateArg
  * @return {undefined}
  */
-PopStateEvent.prototype.initPopStateEvent = function(typeArg, canBubbleArg,
-    cancelableArg, stateArg) {};
+PopStateEvent.prototype.initPopStateEvent = function(
+    typeArg, canBubbleArg, cancelableArg, stateArg) {};
 
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/#hashchangeevent
@@ -3821,8 +3834,8 @@ HashChangeEvent.prototype.newURL;
  * @param {string} newURLArg
  * @return {undefined}
  */
-HashChangeEvent.prototype.initHashChangeEvent = function(typeArg, canBubbleArg,
-    cancelableArg, oldURLArg, newURLArg) {};
+HashChangeEvent.prototype.initHashChangeEvent = function(
+    typeArg, canBubbleArg, cancelableArg, oldURLArg, newURLArg) {};
 
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/#pagetransitionevent
@@ -3845,8 +3858,8 @@ PageTransitionEvent.prototype.persisted;
  * @param {*} persistedArg
  * @return {undefined}
  */
-PageTransitionEvent.prototype.initPageTransitionEvent = function(typeArg,
-    canBubbleArg, cancelableArg, persistedArg) {};
+PageTransitionEvent.prototype.initPageTransitionEvent = function(
+    typeArg, canBubbleArg, cancelableArg, persistedArg) {};
 
 /**
  * @constructor
@@ -3862,7 +3875,9 @@ FileList.prototype.length;
  * @return {File} The ith file in the list.
  * @nosideeffects
  */
-FileList.prototype.item = function(i) { return null; };
+FileList.prototype.item = function(i) {
+  return null;
+};
 
 /**
  * @type {boolean}
@@ -4269,7 +4284,8 @@ HTMLInputElement.prototype.selectionDirection;
  * @see https://html.spec.whatwg.org/#dom-textarea/input-setselectionrange
  * @return {undefined}
  */
-HTMLInputElement.prototype.setSelectionRange = function(start, end, direction) {};
+HTMLInputElement.prototype.setSelectionRange = function(
+    start, end, direction) {};
 
 /**
  * @param {string} replacement
@@ -4279,8 +4295,8 @@ HTMLInputElement.prototype.setSelectionRange = function(start, end, direction) {
  * @see https://html.spec.whatwg.org/#dom-textarea/input-setrangetext
  * @return {undefined}
  */
-HTMLInputElement.prototype.setRangeText =
-    function(replacement, start, end, selectionMode) {};
+HTMLInputElement.prototype.setRangeText = function(
+    replacement, start, end, selectionMode) {};
 
 /**
  * @const {ValidityState}
@@ -4667,7 +4683,8 @@ Document.prototype.registerElement = function(type, options) {};
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}} options
- * @deprecated This method has been removed and will be removed soon from this file.
+ * @deprecated This method has been removed and will be removed soon from this
+ *     file.
  */
 Document.prototype.register = function(type, options) {};
 
@@ -5464,7 +5481,7 @@ Navigator.prototype.cookieEnabled;
  * @param {string} title
  * @return {undefined}
  */
-Navigator.prototype.registerProtocolHandler = function(scheme, url, title) {}
+Navigator.prototype.registerProtocolHandler = function(scheme, url, title) {};
 
 /**
  * @param {string} mimeType
@@ -5472,21 +5489,21 @@ Navigator.prototype.registerProtocolHandler = function(scheme, url, title) {}
  * @param {string} title
  * @return {undefined}
  */
-Navigator.prototype.registerContentHandler = function(mimeType, url, title) {}
+Navigator.prototype.registerContentHandler = function(mimeType, url, title) {};
 
 /**
  * @param {string} scheme
  * @param {!URL|string} url
  * @return {undefined}
  */
-Navigator.prototype.unregisterProtocolHandler = function(scheme, url) {}
+Navigator.prototype.unregisterProtocolHandler = function(scheme, url) {};
 
 /**
  * @param {string} mimeType
  * @param {string} url
  * @return {undefined}
  */
-Navigator.prototype.unregisterContentHandler = function(mimeType, url) {}
+Navigator.prototype.unregisterContentHandler = function(mimeType, url) {};
 
 /**
  * @type {!MimeTypeArray}
@@ -5544,7 +5561,7 @@ Navigator.prototype.hardwareConcurrency;
  * @type {UserActivation|undefined}
  * @see https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation
  */
- Navigator.prototype.userActivation;
+Navigator.prototype.userActivation;
 
 /**
  * @constructor
@@ -5690,7 +5707,7 @@ function CustomElementRegistry() {}
  * @param {{extends: string}=} options
  * @return {undefined}
  */
-CustomElementRegistry.prototype.define = function (tagName, klass, options) {};
+CustomElementRegistry.prototype.define = function(tagName, klass, options) {};
 
 /**
  * @param {string} tagName
@@ -5750,7 +5767,7 @@ Event.prototype.composedPath = function() {};
  *     pointerMovementScrolls: (string|undefined)
  *   }=} opt_options
  */
-function InputDeviceCapabilities(opt_options){}
+function InputDeviceCapabilities(opt_options) {}
 
 /** @type {boolean} */
 InputDeviceCapabilities.prototype.firesTouchEvents;
@@ -5790,12 +5807,12 @@ VisualViewport.prototype.height;
 VisualViewport.prototype.scale;
 
 /** @override */
-VisualViewport.prototype.addEventListener = function(type, listener,
-    opt_options) {};
+VisualViewport.prototype.addEventListener = function(
+    type, listener, opt_options) {};
 
 /** @override */
-VisualViewport.prototype.removeEventListener = function(type, listener,
-    opt_options) {};
+VisualViewport.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
 
 /** @override */
 VisualViewport.prototype.dispatchEvent = function(evt) {};
@@ -5833,7 +5850,7 @@ var StorageEstimate;
 /*
  * Focus Management APIs
  *
- * See https://html.spec.whatwg.org/multipage/interaction.html#focus-management-apis
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#focus-management-apis
  */
 
 
