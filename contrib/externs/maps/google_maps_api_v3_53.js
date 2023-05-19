@@ -179,7 +179,7 @@ google.maps.Circle.prototype.getBounds = function() {};
 
 /**
  * Returns the center of this circle.
- * @return {google.maps.LatLng}
+ * @return {?google.maps.LatLng}
  */
 google.maps.Circle.prototype.getCenter = function() {};
 
@@ -215,7 +215,7 @@ google.maps.Circle.prototype.getVisible = function() {};
 
 /**
  * Sets the center of this circle.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} center
+ * @param {?google.maps.LatLng|?google.maps.LatLngLiteral} center
  * @return {undefined}
  */
 google.maps.Circle.prototype.setCenter = function(center) {};
@@ -13161,8 +13161,8 @@ google.maps.marker.AdvancedMarkerClickEvent = function() {};
  * Shows a position on a map. Note that the <code>position</code> must be set
  * for the <code>AdvancedMarkerElement</code> to display.<br> <br>
  * <strong>Note:</strong> Usage as a Web Component (e.g. using the custom
- * <code>&lt;gmp-advanced-marker</code> HTML element, is only available in the
- * <code>v=beta</code> channel).
+ * <code>&lt;gmp-advanced-marker&gt;</code> HTML element, is only available in
+ * the <code>v=beta</code> channel).
  *
  * Access by calling `const {AdvancedMarkerElement} = await
  * google.maps.importLibrary("marker")`. See
@@ -13327,13 +13327,16 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
  * default {@link google.maps.marker.AdvancedMarkerElement}. The glyph is an
  * optional DOM element displayed in the balloon shape. A
  * <code>PinElement</code> may have a different aspect ratio depending on
- * its {@link google.maps.marker.PinElement.scale}.
+ * its {@link google.maps.marker.PinElement.scale}.<br> <br>
+ * <strong>Note:</strong> Usage as a Web Component (e.g. usage as an HTMLElement
+ * subclass, or via HTML) is not yet supported.
  *
  * Access by calling `const {PinElement} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.marker.PinElementOptions=} options
  * @implements {google.maps.marker.PinElementOptions}
+ * @extends {HTMLElement}
  * @constructor
  */
 google.maps.marker.PinElement = function(options) {};
@@ -13374,14 +13377,7 @@ google.maps.marker.PinElement.prototype.glyphColor;
  */
 google.maps.marker.PinElement.prototype.scale;
 
-/**
- * Adds the given listener function to the given event name.
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.marker.PinElement.prototype.addListener = function(
-    eventName, handler) {};
+
 
 /**
  * Options for creating a {@link google.maps.marker.PinElement}.
@@ -13767,14 +13763,6 @@ google.maps.places.AutocompleteSessionToken = function() {};
 google.maps.places.AutocompletionRequest = function() {};
 
 /**
- * Bounds for prediction biasing. Predictions will be biased towards, but not
- * restricted to, the given <code>bounds</code>. Both <code>location</code> and
- * <code>radius</code> will be ignored if <code>bounds</code> is set.
- * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined}
- */
-google.maps.places.AutocompletionRequest.prototype.bounds;
-
-/**
  * The component restrictions. Component restrictions are used to restrict
  * predictions to only those within the parent component. For example, the
  * country.
@@ -13797,14 +13785,6 @@ google.maps.places.AutocompletionRequest.prototype.input;
  * @type {?string|undefined}
  */
 google.maps.places.AutocompletionRequest.prototype.language;
-
-/**
- * Location for prediction biasing. Predictions will be biased towards the given
- * <code>location</code> and <code>radius</code>. Alternatively,
- * <code>bounds</code> can be used.
- * @type {!google.maps.LatLng|undefined}
- */
-google.maps.places.AutocompletionRequest.prototype.location;
 
 /**
  * A soft boundary or hint to use when searching for places.
@@ -13834,15 +13814,6 @@ google.maps.places.AutocompletionRequest.prototype.offset;
 google.maps.places.AutocompletionRequest.prototype.origin;
 
 /**
- * The radius of the area used for prediction biasing. The <code>radius</code>
- * is specified in meters, and must always be accompanied by a
- * <code>location</code> property. Alternatively, <code>bounds</code> can be
- * used.
- * @type {number|undefined}
- */
-google.maps.places.AutocompletionRequest.prototype.radius;
-
-/**
  * A region code which is used for result formatting and for result filtering.
  * It does not restrict the suggestions to this country. The region code accepts
  * a <a
@@ -13870,6 +13841,40 @@ google.maps.places.AutocompletionRequest.prototype.sessionToken;
  * @type {!Array<string>|undefined}
  */
 google.maps.places.AutocompletionRequest.prototype.types;
+
+/**
+ * Bounds for prediction biasing. Predictions will be biased towards, but not
+ * restricted to, the given <code>bounds</code>. Both <code>location</code> and
+ * <code>radius</code> will be ignored if <code>bounds</code> is set.
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined}
+ * @deprecated <code>bounds</code> is deprecated as of May 2023. Use {@link
+ *     google.maps.places.AutocompletionRequest.locationBias} and {@link
+ *     google.maps.places.AutocompletionRequest.locationRestriction} instead.
+ */
+google.maps.places.AutocompletionRequest.prototype.bounds;
+
+/**
+ * Location for prediction biasing. Predictions will be biased towards the given
+ * <code>location</code> and <code>radius</code>. Alternatively,
+ * <code>bounds</code> can be used.
+ * @type {!google.maps.LatLng|undefined}
+ * @deprecated <code>location</code> is deprecated as of May 2023. Use {@link
+ *     google.maps.places.AutocompletionRequest.locationBias} and {@link
+ *     google.maps.places.AutocompletionRequest.locationRestriction} instead.
+ */
+google.maps.places.AutocompletionRequest.prototype.location;
+
+/**
+ * The radius of the area used for prediction biasing. The <code>radius</code>
+ * is specified in meters, and must always be accompanied by a
+ * <code>location</code> property. Alternatively, <code>bounds</code> can be
+ * used.
+ * @type {number|undefined}
+ * @deprecated <code>radius</code> is deprecated as of May 2023. Use {@link
+ *     google.maps.places.AutocompletionRequest.locationBias} and {@link
+ *     google.maps.places.AutocompletionRequest.locationRestriction} instead.
+ */
+google.maps.places.AutocompletionRequest.prototype.radius;
 
 /**
  * The operational status of the Place, if it is a business, returned in a
