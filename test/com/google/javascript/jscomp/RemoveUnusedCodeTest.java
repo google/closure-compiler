@@ -3384,4 +3384,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "};",
             "alert(a);"));
   }
+
+  @Test
+  public void testPreserveDestructuringWithObjectRest() {
+    testSame(
+        lines(
+            "const obj = {'one': 1, 'two': 2};",
+            "const {['one']: unused, ...remaining} = obj;",
+            "console.log(remaining);"));
+  }
 }

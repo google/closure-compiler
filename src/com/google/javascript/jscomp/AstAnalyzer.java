@@ -315,6 +315,12 @@ public class AstAnalyzer {
         if (n.getParent().isClassMembers()) {
           return checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects);
         }
+        if (parent.isObjectPattern() && parent.getLastChild().isObjectRest()) {
+          // Due to language syntax, only the last child can be an OBJECT_REST.
+          // `({ ['thisKey']: target, ...rest} = something())`
+          // The presence of `thisKey` affects what properties get put into `rest`.
+          return true;
+        }
         break; // Assume that COMPUTED_PROP keys in OBJECT_PATTERN never trigger getters.
       case MEMBER_FIELD_DEF:
         if (n.isStaticMember()
