@@ -692,7 +692,7 @@ final class ClosureRewriteModule implements CompilerPass {
   private final ArrayList<Node> googModuleGetCalls = new ArrayList<>();
   private final ArrayList<Node> googRequireDynamicCalls = new ArrayList<>();
 
-  private final TypedScope globalTypedScope;
+  private final @Nullable TypedScope globalTypedScope;
 
   ClosureRewriteModule(
       AbstractCompiler compiler,

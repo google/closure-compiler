@@ -616,14 +616,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           .setClassMembersToDeclare(new LinkedHashMap<>());
     }
 
-    /**
-     * Creates an instance for a class statement or a class expression in a simple assignment or var
-     * statement with a qualified name. In any other case, returns null.
-     */
-    static @Nullable ClassDeclarationMetadata create(Node classNode, Node parent) {
-      return create(classNode, parent, AstFactory.createFactoryWithoutTypes());
-    }
-
     private static @Nullable ClassDeclarationMetadata create(
         Node classNode, Node parent, AstFactory astFactory) {
       Node classNameNode = classNode.getFirstChild();

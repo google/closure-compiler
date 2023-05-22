@@ -180,10 +180,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract void clearTypedScopeCreator();
 
   /** Gets the top scope. */
-  public abstract TypedScope getTopScope();
+  public abstract @Nullable TypedScope getTopScope();
 
   /** Sets the top scope. */
-  abstract void setTopScope(TypedScope x);
+  abstract void setTopScope(@Nullable TypedScope x);
 
   /**
    * Returns a scope containing only externs and synthetic code or other code in the first script.
@@ -556,9 +556,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public final AstFactory createAstFactory() {
     return hasTypeCheckingRun()
         ? (hasOptimizationColors()
-            ? AstFactory.createFactoryWithColors(getColorRegistry())
-            : AstFactory.createFactoryWithTypes(getTypeRegistry()))
-        : AstFactory.createFactoryWithoutTypes();
+            ? AstFactory.createFactoryWithColors(stage, getColorRegistry())
+            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry()))
+        : AstFactory.createFactoryWithoutTypes(stage);
   }
 
   /**
@@ -566,7 +566,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * checking has already happened.
    */
   public final AstFactory createAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes();
+    return AstFactory.createFactoryWithoutTypes(stage);
   }
 
   /**

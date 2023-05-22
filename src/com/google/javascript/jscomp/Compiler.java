@@ -1768,12 +1768,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private @Nullable TypedScope topScope = null;
 
   @Override
-  public TypedScope getTopScope() {
+  public @Nullable TypedScope getTopScope() {
     return this.topScope;
   }
 
   @Override
-  void setTopScope(TypedScope x) {
+  void setTopScope(@Nullable TypedScope x) {
     checkState(x == null || x.getParent() == null, x);
     this.topScope = x;
   }

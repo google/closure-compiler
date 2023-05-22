@@ -61,7 +61,6 @@ public class AstFactoryTest {
     return compiler.getTypeRegistry();
   }
 
-
   private JSType getNativeType(JSTypeNative nativeType) {
     return getRegistry().getNativeType(nativeType);
   }
@@ -112,11 +111,12 @@ public class AstFactoryTest {
   }
 
   private AstFactory createTestAstFactory() {
-    return AstFactory.createFactoryWithTypes(getRegistry());
+    return AstFactory.createFactoryWithTypes(compiler.getLifeCycleStage(), getRegistry());
   }
 
   private AstFactory createTestAstFactoryWithColors() {
     return AstFactory.createFactoryWithColors(
+        compiler.getLifeCycleStage(),
         // the built-in color registry is available only if we've run parseAndAddColors()
         compiler.hasOptimizationColors()
             ? compiler.getColorRegistry()
@@ -124,7 +124,7 @@ public class AstFactoryTest {
   }
 
   private AstFactory createTestAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes();
+    return AstFactory.createFactoryWithoutTypes(compiler.getLifeCycleStage());
   }
 
   private Scope getScope(Node root) {
@@ -1091,17 +1091,16 @@ public class AstFactoryTest {
     // NOTE: This method is testing both createCall() and createQName()
     AstFactory astFactory = createTestAstFactory();
 
-
-        parseAndAddTypes(
-            lines(
-                "class Foo {",
-                "  /**",
-                "   * @param {string} arg1",
-                "   * @param {number} arg2",
-                "   * @return {string}",
-                "   */",
-                "  static method(arg1, arg2) { return arg1; }",
-                "}"));
+    parseAndAddTypes(
+        lines(
+            "class Foo {",
+            "  /**",
+            "   * @param {string} arg1",
+            "   * @param {number} arg2",
+            "   * @return {string}",
+            "   */",
+            "  static method(arg1, arg2) { return arg1; }",
+            "}"));
     StaticScope scope = compiler.getTranspilationNamespace();
 
     // createQName only accepts globally qualified qnames. While Foo.method is a global qualified
@@ -1190,6 +1189,27 @@ public class AstFactoryTest {
     assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
     assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
     assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testCreateNameMaintainsNormalization() {
+    AstFactory astFactory = createTestAstFactory();
+
+    final Node root = parseAndAddTypes("const obj = {}");
+
+    // Simulate normalization adding the IS_CONSTANT_NAME property ot `obj` NAME node
+    Node objName =
+        root.getFirstChild() // SCRIPT
+            .getFirstChild() // CONST
+            .getFirstChild(); // obj NAME
+    assertNode(objName).isName("obj");
+    objName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+
+    Node newObjName = astFactory.createName(compiler.getTranspilationNamespace(), "obj");
+
+    // Assert that the newly created NAME node gets the IS_CONSTANT_NAME property it should in
+    // order to be consistent with normalization.
+    assertThat(newObjName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
   }
 
   @Test

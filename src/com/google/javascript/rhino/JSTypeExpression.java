@@ -156,18 +156,18 @@ public final class JSTypeExpression implements Serializable {
     }
   }
 
-  /** @return Whether this expression denotes an optional {@code @param}. */
+  /** Does this expression denote an optional {@code @param}? */
   public boolean isOptionalArg() {
     return root.getToken() == Token.EQUALS;
   }
 
-  /** @return Whether this expression denotes a rest args {@code @param}. */
+  /** Does this expression denote a rest args {@code @param}? */
   public boolean isVarArgs() {
     return root.getToken() == Token.ITER_REST;
   }
 
   /** Evaluates the type expression into a {@code JSType} object. */
-  public JSType evaluate(StaticTypedScope scope, JSTypeRegistry registry) {
+  public JSType evaluate(@Nullable StaticTypedScope scope, JSTypeRegistry registry) {
     JSType type = registry.createTypeFromCommentNode(root, sourceName, scope);
     root.setJSType(type);
     return type;

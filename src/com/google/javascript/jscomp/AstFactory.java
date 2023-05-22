@@ -24,6 +24,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -87,38 +88,43 @@ final class AstFactory {
   }
 
   private final TypeMode typeMode;
+  private final LifeCycleStage lifeCycleStage;
 
-  private AstFactory(JSTypeRegistry registry) {
+  private AstFactory(LifeCycleStage lifeCycleStage, JSTypeRegistry registry) {
+    this.lifeCycleStage = lifeCycleStage;
     this.registry = registry;
     this.colorRegistry = null;
     this.unknownType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     this.typeMode = TypeMode.JSTYPE;
   }
 
-  private AstFactory() {
+  private AstFactory(LifeCycleStage lifeCycleStage) {
+    this.lifeCycleStage = lifeCycleStage;
     this.registry = null;
     this.colorRegistry = null;
     this.unknownType = null;
     this.typeMode = TypeMode.NONE;
   }
 
-  private AstFactory(ColorRegistry colorRegistry) {
+  private AstFactory(LifeCycleStage lifeCycleStage, ColorRegistry colorRegistry) {
+    this.lifeCycleStage = lifeCycleStage;
     this.registry = null;
     this.colorRegistry = colorRegistry;
     this.unknownType = null;
     this.typeMode = TypeMode.COLOR;
   }
 
-  static AstFactory createFactoryWithoutTypes() {
-    return new AstFactory();
+  static AstFactory createFactoryWithoutTypes(LifeCycleStage lifeCycleStage) {
+    return new AstFactory(lifeCycleStage);
   }
 
-  static AstFactory createFactoryWithTypes(JSTypeRegistry registry) {
-    return new AstFactory(registry);
+  static AstFactory createFactoryWithTypes(LifeCycleStage lifeCycleStage, JSTypeRegistry registry) {
+    return new AstFactory(lifeCycleStage, registry);
   }
 
-  static AstFactory createFactoryWithColors(ColorRegistry colorRegistry) {
-    return new AstFactory(colorRegistry);
+  static AstFactory createFactoryWithColors(
+      LifeCycleStage lifeCycleStage, ColorRegistry colorRegistry) {
+    return new AstFactory(lifeCycleStage, colorRegistry);
   }
 
   /** Does this class instance add types to the nodes it creates? */
@@ -546,22 +552,38 @@ final class AstFactory {
     return result;
   }
 
-  Node createName(StaticScope scope, String name) {
-    Node result = IR.name(name);
-    switch (this.typeMode) {
-      case JSTYPE:
-        JSType definitionType = getVarDefinitionNode(scope, name).getJSType();
-        // TODO(b/149843534): crash instead of defaulting to unknown
-        result.setJSType(definitionType != null ? definitionType : unknownType);
-        break;
-      case COLOR:
-        Color definitionColor = getVarDefinitionNode(scope, name).getColor();
-        // TODO(b/149843534): crash instead of defaulting to unknown
-        result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
-        break;
-      case NONE:
-        break;
+  Node createName(@Nullable StaticScope scope, String name) {
+    final Node result = IR.name(name);
+
+    if (lifeCycleStage.isNormalized() || !typeMode.equals(TypeMode.NONE)) {
+      // We need a scope to maintain normalization and / or propagate type information
+      checkNotNull(
+          scope,
+          "A scope is required [lifeCycleStage: %s, typeMode: %s]",
+          lifeCycleStage,
+          typeMode);
+      final Node varDefinitionNode = getVarDefinitionNode(scope, name);
+
+      // Normalization requires that all references to a constant variable have this property.
+      if (varDefinitionNode.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      }
+      switch (typeMode) {
+        case JSTYPE:
+          JSType definitionType = varDefinitionNode.getJSType();
+          // TODO(b/149843534): crash instead of defaulting to unknown
+          result.setJSType(definitionType != null ? definitionType : unknownType);
+          break;
+        case COLOR:
+          Color definitionColor = varDefinitionNode.getColor();
+          // TODO(b/149843534): crash instead of defaulting to unknown
+          result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
+          break;
+        case NONE:
+          break;
+      }
     }
+
     return result;
   }
 
