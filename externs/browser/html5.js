@@ -138,7 +138,7 @@ HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 HTMLCanvasElement.prototype.transferControlToOffscreen = function() {};
 
 /**
- * @interface
+ * @constructor
  * @extends {MediaStreamTrack}
  * @see https://w3c.github.io/mediacapture-fromelement/#the-canvascapturemediastreamtrack
  */
@@ -161,7 +161,6 @@ CanvasCaptureMediaStreamTrack.prototype.requestFrame = function() {};
 /**
  * @see https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface
  * @implements {EventTarget}
- * @implements {Transferable}
  * @param {number} width
  * @param {number} height
  * @nosideeffects

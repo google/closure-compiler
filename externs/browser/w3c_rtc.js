@@ -309,8 +309,8 @@ MediaTrackSupportedConstraints.prototype.groupId;
 
 
 /**
- * @interface
- * @extends {EventTarget}
+ * @constructor
+ * @implements {EventTarget}
  * @see https://www.w3.org/TR/mediacapture-streams/#mediastreamtrack
  */
 function MediaStreamTrack() {}
@@ -353,7 +353,7 @@ MediaStreamTrack.prototype.contentHint;
 MediaStreamTrack.prototype.remote;
 
 /**
- * @type {MediaStreamTrackState}
+ * @const {!MediaStreamTrackState}
  * Read only.
  */
 MediaStreamTrack.prototype.readyState;
@@ -406,6 +406,20 @@ MediaStreamTrack.prototype.getConstraints = function() {};
 
 /** @return {!MediaTrackSettings} */
 MediaStreamTrack.prototype.getSettings = function() {};
+
+/** @override */
+MediaStreamTrack.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+MediaStreamTrack.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/**
+ * @override
+ * @return {boolean}
+ */
+MediaStreamTrack.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @typedef {{track: MediaStreamTrack}}
@@ -3592,3 +3606,43 @@ RTCErrorEvent.prototype.error;
 
 /** @const {string} */
 RTCErrorEvent.prototype.message;
+
+/**
+ * @template T
+ * @record
+ * @struct
+ */
+function MediaStreamTrackProcessor() {}
+
+/** @const {!ReadableStream<T>} */
+MediaStreamTrackProcessor.prototype.readable;
+
+/**
+ * @typedef {{kind: string}}
+ * @see https://alvestrand.github.io/mediacapture-transform/chrome-96.html#generator
+ */
+var MediaStreamTrackGeneratorInit;
+
+/**
+ * @template T
+ * @param {!MediaStreamTrackGeneratorInit} kind
+ * @extends {MediaStreamTrack}
+ * @constructor
+ */
+function MediaStreamTrackGenerator(kind) {}
+
+/** @const {!WritableStream<T>} */
+MediaStreamTrackGenerator.prototype.writable;
+
+/** @const {!ReadableStream} */
+MediaStreamTrackGenerator.prototype.readableControl;
+
+/**
+ * @type {?function(!MediaStreamTrackEvent)}
+ */
+MediaStreamTrackGenerator.prototype.onaddtrack;
+
+/**
+ * @type {?function(!MediaStreamTrackEvent)}
+ */
+MediaStreamTrackGenerator.prototype.onremovetrack;
