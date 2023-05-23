@@ -127,31 +127,8 @@ public class CompilerOptions implements Serializable {
   /** The JavaScript features that are allowed to be in the output. */
   private Optional<FeatureSet> outputFeatureSet = Optional.absent();
 
-  /**
-   * Causes classes to always be removed from the output featureset if present previously.
-   *
-   * <pre>{@code
-   * For targets that set `options.setForceClassTranspilation(true)`:
-   * - if they already set <= ES5 output, no change
-   * - if they set >= ES6 output, then { force transpile classes + rewrite ESModules +
-   * isolatePolyfills + rewritePolyfills}
-   *
-   * }</pre>
-   */
-  private boolean forceClassTranspilation = false;
-
-  /**
-   * Causes let/const to always be removed from the output featureset if present previously.
-   *
-   * <pre>{@code
-   * For targets that set `options.setForceLetConstTranspilation(true)`:
-   * - if they already set <= ES5 output, no change
-   * - if they set >= ES6 output, then { force transpile let/const + classes + rewrite ESModules +
-   * isolatePolyfills + rewritePolyfills}
-   *
-   * }</pre>
-   */
-  private boolean forceLetConstTranspilation = false;
+  private ImmutableList<ExperimentalForceTranspile> experimentalForceTranspiles =
+      ImmutableList.of();
 
   private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
 
@@ -1835,20 +1812,49 @@ public class CompilerOptions implements Serializable {
     return languageIn.toFeatureSet();
   }
 
-  public void setForceClassTranspilation(boolean forceClassTranspilation) {
-    this.forceClassTranspilation = forceClassTranspilation;
+  /** Options to force transpile specific features for performance experiments. */
+  public enum ExperimentalForceTranspile {
+    /**
+     * Causes let/const to always be removed from the output featureset if present previously.
+     *
+     * <pre>{@code
+     * For targets that set `options.setForceLetConstTranspilation(true)`:
+     * - if they already set <= ES5 output, no change
+     * - if they set >= ES6 output, then { force transpile let/const + classes + rewrite ESModules +
+     * isolatePolyfills + rewritePolyfills}
+     *
+     * }</pre>
+     */
+    LET_CONST,
+
+    /**
+     * Causes classes to always be removed from the output featureset if present previously.
+     *
+     * <pre>{@code
+     * For targets that set `options.setForceClassTranspilation(true)`:
+     * - if they already set <= ES5 output, no change
+     * - if they set >= ES6 output, then { force transpile classes + rewrite ESModules +
+     * isolatePolyfills + rewritePolyfills}
+     *
+     * }</pre>
+     */
+    CLASS,
+
+    /** Transpile all features down to ES5 except ASYNC AWAIT */
+    ALL_EXCEPT_ASYNC_AWAIT
+  };
+
+  public void setExperimentalForceTranspiles(
+      ExperimentalForceTranspile... experimentalForceTranspile) {
+    if (experimentalForceTranspile.length > 1) {
+      checkState(
+          !experimentalForceTranspiles.contains(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT));
+    }
+    experimentalForceTranspiles = ImmutableList.copyOf(experimentalForceTranspile);
   }
 
-  public boolean getForceClassTranspilation() {
-    return forceClassTranspilation;
-  }
-
-  public void setForceLetConstTranspilation(boolean forceClassTranspilation) {
-    this.forceLetConstTranspilation = forceClassTranspilation;
-  }
-
-  public boolean getForceLetConstTranspilation() {
-    return forceLetConstTranspilation;
+  public ImmutableList<ExperimentalForceTranspile> getExperimentalForceTranspiles() {
+    return experimentalForceTranspiles;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {

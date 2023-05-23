@@ -88,11 +88,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
           return false;
         }
         break;
-      case FUNCTION:
-        if (n.isAsyncFunction()) {
-          throw new IllegalStateException("async functions should have already been converted");
-        }
-        break;
       default:
         break;
     }

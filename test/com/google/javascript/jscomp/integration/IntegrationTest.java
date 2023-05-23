@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
+import com.google.javascript.jscomp.CompilerOptions.ExperimentalForceTranspile;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -4620,7 +4621,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceClassTranspilationKeepAsync_withNoTranspile() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
-    options.setForceClassTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
 
     // test transpiling classes but leave async functions untranspiled
     test(
@@ -4636,7 +4637,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceLetConstTranspilationKeepAsync_doesNotKeepClass_withNoTranspile() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
-    options.setForceLetConstTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
 
     // test transpiling classes but leave async functions untranspiled
     test(
@@ -4652,7 +4653,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceClassTranspilationKeepAsyncFunctions_withEs2021Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    options.setForceClassTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
 
     // test transpiling classes but leave async functions untranspiled
     test(
@@ -4668,7 +4669,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceLetConstTranspilationKeepsAsyncFunctions_doesNotKeepClass_withEs2021Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    options.setForceLetConstTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
 
     // test transpiling let/const, classes but leave async functions untranspiled
     test(
@@ -4681,10 +4682,48 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(
+        LanguageMode
+            .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+
+    // test transpiling let/const and classes but leave async functions untranspiled
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        lines(
+            "var i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
+            "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
+  public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(
+        LanguageMode
+            .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+
+    // test transpiling let/const, opt-chain and classes but leave async functions untranspiled
+    test(
+        options,
+        "class C { async f(p) { let obj = await p; return obj?.prop; } }",
+        lines(
+            "var C=function(){};",
+            "C.prototype.f=async function(p){var obj=await p;",
+            "  var $jscomp$optchain$tmp98447280$0;",
+            "  return($jscomp$optchain$tmp98447280$0=obj)==null?void"
+                + " 0:$jscomp$optchain$tmp98447280$0.prop}"));
+  }
+
+  @Test
   public void forceClassTranspilationKeepDestructuring_withEs2015Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setForceClassTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
 
     // check that we can transpile the ES2016 `**` + classes, but leave the ES2015 destructuring
     // parameter behind.
@@ -4701,7 +4740,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceLetConstTranspilationAlsoLowersDestructuringAndClasses_withEs2015Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setForceLetConstTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
 
     // check that we transpile the ES2016 `**`, let/const, classes and the ES2015 destructuring
     // parameter
