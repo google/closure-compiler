@@ -12247,6 +12247,12 @@ google.maps.journeySharing.ShipmentMarkerCustomizationFunctionParams.prototype
 google.maps.journeySharing.Task = function() {};
 
 /**
+ * Attributes assigned to the task.
+ * @type {!Object<string, *>}
+ */
+google.maps.journeySharing.Task.prototype.attributes;
+
+/**
  * The timestamp of the estimated completion time of the task.
  * @type {?Date}
  */
@@ -12358,6 +12364,12 @@ google.maps.journeySharing.TaskMarkerCustomizationFunctionParams.prototype.task;
  * @record
  */
 google.maps.journeySharing.TaskTrackingInfo = function() {};
+
+/**
+ * Attributes assigned to the task.
+ * @type {!Object<string, *>}
+ */
+google.maps.journeySharing.TaskTrackingInfo.prototype.attributes;
 
 /**
  * The estimated arrival time to the stop location.
@@ -12624,15 +12636,15 @@ google.maps.journeySharing.VehicleJourneySegment.prototype
     .drivingDurationMillis;
 
 /**
- * The path from the previous waypoint (or the vehicle&#39;s current location,
- * if this waypoint is the first in the list of waypoints) to this waypoint.
+ * The path from the previous stop (or the vehicle&#39;s current location, if
+ * this stop is the first in the list of stops) to this stop.
  * @type {?Array<!google.maps.LatLngLiteral>}
  */
 google.maps.journeySharing.VehicleJourneySegment.prototype.path;
 
 /**
- * The stops to be served by this vehicle.
- * @type {?Array<!google.maps.journeySharing.DeliveryVehicleStop>}
+ * Information about the stop.
+ * @type {?google.maps.journeySharing.DeliveryVehicleStop}
  */
 google.maps.journeySharing.VehicleJourneySegment.prototype.stop;
 
@@ -14521,10 +14533,9 @@ google.maps.places.Place.prototype.fetchFields = function(options) {};
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Calculates the timestamp (as milliseconds since the epoch, suitable for use
- * with <code>new Date()</code>) representing the next OpeningHoursTime. Returns
- * undefined if the data is insufficient to calculate the result, or this place
- * is not operational.
+ * Calculates the Date representing the next OpeningHoursTime. Returns undefined
+ * if the data is insufficient to calculate the result, or this place is not
+ * operational.
  * @param {!Date=} date
  * @return {!Promise<!Date|undefined>}
  */
