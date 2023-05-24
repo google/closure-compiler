@@ -112,6 +112,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -345,6 +346,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void initExperimentalForceTranspileOptions(CompilerOptions options) {
+    FeatureSet featureSet = options.getOutputFeatureSet();
+    if (Objects.equals(featureSet, FeatureSet.ES5) || Objects.equals(featureSet, FeatureSet.ES3)) {
+      // do not change anything if language_out is configured to be ES5 or ES3.
+      return;
+    }
+
     for (ExperimentalForceTranspile experimentalForceTranspile :
         options.getExperimentalForceTranspiles()) {
       switch (experimentalForceTranspile) {

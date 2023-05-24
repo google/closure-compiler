@@ -4720,6 +4720,18 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void forceTranspileExceptAsyncAwait_withEs5Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+
+    // respects ES5 mode and lowers async await down to ES5 despite forcing `ALL_EXCEPT_ASYNC_AWAIT`
+    testNoWarnings(options, "class C { async f(p) { let obj = await p; return obj?.prop; } }");
+    assertThat(lastCompiler.toSource()).doesNotContain("async ");
+    assertThat(lastCompiler.toSource()).doesNotContain("await ");
+  }
+
+  @Test
   public void forceClassTranspilationKeepDestructuring_withEs2015Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
