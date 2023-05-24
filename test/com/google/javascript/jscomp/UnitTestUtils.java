@@ -36,7 +36,7 @@ public final class UnitTestUtils {
    * calculated uniqueID hashString based on the corresponding test's input file.
    *
    * <p>The vars created during certain compiler passes have a filePath based uniqueID in them. For
-   * readability of tests, this uniqueID is obfucated by using a generic name, e.g.
+   * readability of tests, this uniqueID is obfuscated by using a generic name, e.g.
    * `TAGGED_TEMPLATE_TMP_VAR` in the test sources. This function replaces that generic name by a
    * specific name consisting of the runtime-computed uniqueID before test execution.
    *
