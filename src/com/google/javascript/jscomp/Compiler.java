@@ -1837,11 +1837,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (this.transpilationNamespace == null) {
       // Note: this also needs to happen /after/ the runtime libraries are injected, or we will not
       // be able to find the runtime library code.
-      checkState(
-          !getLifeCycleStage().isNormalized(),
-          "cannot init transpilation namespace after optimizations phase, or information may be"
-              + " lost");
-
+      // TODO(bradfordcsmith): It would be good to add a check to ensure that library injection has
+      // already happened. We used to check for normalization, but that's going too far and
+      // prevents us moving transpilation after normalization.
       GlobalNamespace gn = new GlobalNamespace(this, this.getExternsRoot(), this.getJsRoot());
       // Exclude user-defined code names, to save memory and help prevent misuse.
       gn.setShouldTraverseScriptPredicate(
