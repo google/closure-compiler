@@ -74,7 +74,7 @@ final class Es6RewriteGenerators implements CompilerPass {
   private static final String GENERATOR_CONTEXT = "$jscomp$generator$context";
   private static final String GENERATOR_ARGUMENTS = "$jscomp$generator$arguments";
   private static final String GENERATOR_THIS = "$jscomp$generator$this";
-  private static final String GENERATOR_FORIN_PREFIX = "$jscomp$generator$forin$";
+  private static final String GENERATOR_FORIN_PREFIX = "$jscomp$generator$forin";
 
   private static final QualifiedName JSCOMP_ASYNC_EXECUTE =
       QualifiedName.of("$jscomp.asyncExecutePromiseGeneratorFunction");
@@ -89,6 +89,7 @@ final class Es6RewriteGenerators implements CompilerPass {
   private final @Nullable Color nullableStringType;
   private final Supplier<AstFactory.Type> generatorContextType;
   private final Supplier<AstFactory.Type> propertyIteratorType;
+  private final UniqueIdSupplier uniqueIdSupplier;
 
   Es6RewriteGenerators(AbstractCompiler compiler) {
     checkNotNull(compiler);
@@ -116,6 +117,7 @@ final class Es6RewriteGenerators implements CompilerPass {
                     astFactory.createNewNode(
                         astFactory.createQName(
                             this.namespace, "$jscomp.generator.Context.PropertyIterator"))));
+    uniqueIdSupplier = compiler.getUniqueIdSupplier();
   }
 
   @Override
@@ -193,35 +195,32 @@ final class Es6RewriteGenerators implements CompilerPass {
   }
 
   /** Finds generator functions and performs ES6 -> ES3 trnspilation */
-  private class GeneratorFunctionsTranspiler implements NodeTraversal.Callback {
-    int generatorNestingLevel = 0;
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (n.isGeneratorFunction()) {
-        ++generatorNestingLevel;
-      }
-      return true;
-    }
-
+  private class GeneratorFunctionsTranspiler extends NodeTraversal.AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGeneratorFunction()) {
-        new SingleGeneratorFunctionTranspiler(n, --generatorNestingLevel).transpile();
+        new SingleGeneratorFunctionTranspiler(n, uniqueIdSupplier.getUniqueId(t.getInput()))
+            .transpile();
       }
     }
   }
 
   /** Transpiles a single generator function into a state machine program. */
   private class SingleGeneratorFunctionTranspiler {
-
-    final int generatorNestingLevel;
+    final String uniqueId;
 
     /** The transpilation context for the state machine program. */
     final TranspilationContext context;
 
     /** The body of original generator function that should be transpiled */
     final Node originalGeneratorBody;
+
+    /**
+     * Counter to generate unique variable names for for-in loops.
+     *
+     * <p>If there are multiple for-in loops, we'll need a separate variable for each of them.
+     */
+    int forInCounter = 0;
 
     /**
      * The body of a replacement function.
@@ -238,14 +237,14 @@ final class Es6RewriteGenerators implements CompilerPass {
      * }
      * </pre>
      *
-     * The assumtion is that the hoist block always ends with a return statement, and all local
+     * The assumption is that the hoist block always ends with a return statement, and all local
      * variables are added before this "return" statement.
      */
     Node newGeneratorHoistBlock;
 
-    SingleGeneratorFunctionTranspiler(Node genFunc, int genaratorNestingLevel) {
-      this.generatorNestingLevel = genaratorNestingLevel;
+    SingleGeneratorFunctionTranspiler(Node genFunc, String uniqueId) {
       this.originalGeneratorBody = genFunc.getLastChild();
+      this.uniqueId = uniqueId;
       this.context = new TranspilationContext();
     }
 
@@ -315,8 +314,9 @@ final class Es6RewriteGenerators implements CompilerPass {
 
         program = originalGeneratorBody.getParent();
         // function *() {...}   =>   function *(context) {}
-        originalGeneratorBody.getPrevious().addChildToBack(
-            context.getJsContextNameNode(originalGeneratorBody));
+        originalGeneratorBody
+            .getPrevious()
+            .addChildToBack(context.getJsContextNameNode(originalGeneratorBody));
         originalGeneratorBody.replaceWith(generatorBody);
       } else {
         changeScopeNode = generatorFunction;
@@ -391,7 +391,9 @@ final class Es6RewriteGenerators implements CompilerPass {
       compiler.reportChangeToChangeScope(changeScopeNode);
     }
 
-    /** @see #transpileStatement(Node, TranspilationContext.Case, TranspilationContext.Case) */
+    /**
+     * @see #transpileStatement(Node, TranspilationContext.Case, TranspilationContext.Case)
+     */
     void transpileStatement(Node statement) {
       transpileStatement(statement, null, null);
     }
@@ -622,8 +624,7 @@ final class Es6RewriteGenerators implements CompilerPass {
      * Makes unmarked node containing arbitary code suitable to write using {@link
      * TranspilationContext#writeGeneratedNode} method.
      */
-    @Nullable
-    Node prepareNodeForWrite(@Nullable Node n) {
+    @Nullable Node prepareNodeForWrite(@Nullable Node n) {
       if (n == null) {
         return null;
       }
@@ -705,9 +706,9 @@ final class Es6RewriteGenerators implements CompilerPass {
       // Unmarked "if" block (marked "else")
       if (!ifBlock.isGeneratorMarker()) {
         TranspilationContext.Case endCase = context.maybeCreateCase(breakCase);
-        Node jumoToBlock = context.createJumpToBlock(endCase, /** allowEmbedding=*/ false, ifBlock);
-        while (jumoToBlock.hasChildren()) {
-          Node jumpToNode = jumoToBlock.removeFirstChild();
+        Node jumpToBlock = context.createJumpToBlock(endCase, /* allowEmbedding= */ false, ifBlock);
+        while (jumpToBlock.hasChildren()) {
+          Node jumpToNode = jumpToBlock.removeFirstChild();
           jumpToNode.setGeneratorSafe(true);
           ifBlock.addChildToBack(jumpToNode);
         }
@@ -722,7 +723,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // "if" and "else" blocks marked
       condition = prepareNodeForWrite(condition);
-      Node newIfBlock = context.createJumpToBlock(ifCase, /** allowEmbedding=*/ true, n);
+      Node newIfBlock = context.createJumpToBlock(ifCase, /* allowEmbedding= */ true, n);
       context.writeGeneratedNode(
           astFactory.createIf(prepareNodeForWrite(condition), newIfBlock).srcref(n));
       transpileStatement(elseBlock);
@@ -775,11 +776,7 @@ final class Es6RewriteGenerators implements CompilerPass {
             astFactory
                 .createIf(
                     astFactory.createNot(condition).srcref(condition),
-                    context.createJumpToBlock(
-                        endCase,
-                        /** allowEmbedding= */
-                        true,
-                        n))
+                    context.createJumpToBlock(endCase, /* allowEmbedding= */ true, n))
                 .srcref(n));
       }
 
@@ -841,9 +838,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       Node forIn =
           astFactory
               .createName(
-                  context.getScopedName(
-                      GENERATOR_FORIN_PREFIX + compiler.getUniqueNameIdSupplier().get()),
-                  type(child))
+                  context.getScopedName(GENERATOR_FORIN_PREFIX) + "$" + forInCounter++, type(child))
               .srcref(target);
       // "$context.forIn(x)"
       forIn.addChildToFront(child);
@@ -884,6 +879,13 @@ final class Es6RewriteGenerators implements CompilerPass {
         Node n,
         TranspilationContext.@Nullable Case breakCase,
         TranspilationContext.@Nullable Case continueCase) {
+      // TODO(bradfordcsmith): Delete this method when Es6RewriteGenerators moves after
+      //   normalization.
+      // Normalization turns all while loops into for loops.
+      // This test exists because at the moment Es6RewriteGenerators runs before normalization,
+      // so it still has to deal with while loops in the code.
+      checkState(
+          !compiler.getLifeCycleStage().isNormalized(), "while() loop appears in normalized code");
       TranspilationContext.Case startCase = context.maybeCreateCase(continueCase);
       TranspilationContext.Case endCase = context.maybeCreateCase(breakCase);
 
@@ -896,11 +898,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           astFactory
               .createIf(
                   astFactory.createNot(condition).srcref(condition),
-                  context.createJumpToBlock(
-                      endCase,
-                      /** allowEmbedding= */
-                      true,
-                      n))
+                  context.createJumpToBlock(endCase, /* allowEmbedding= */ true, n))
               .srcref(n));
 
       // Transpile "while" body
@@ -935,12 +933,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       context.writeGeneratedNode(
           astFactory
               .createIf(
-                  condition,
-                  context.createJumpToBlock(
-                      startCase,
-                      /** allowEmbedding= */
-                      false,
-                      n))
+                  condition, context.createJumpToBlock(startCase, /* allowEmbedding= */ false, n))
               .srcref(n));
       context.switchCaseTo(breakCase);
     }
@@ -1141,7 +1134,6 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
     }
 
-
     /** State machine context that is used during generator function transpilation. */
     private class TranspilationContext {
       final HashMap<String, LabelCases> namedLabels = new HashMap<>();
@@ -1184,7 +1176,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /**
-       * Removes unnesesary cases.
+       * Removes unnecessary cases.
        *
        * <p>This optimization is needed to reduce number of switch cases, which is used then to
        * generate even shorter state machine programs.
@@ -1312,9 +1304,7 @@ final class Es6RewriteGenerators implements CompilerPass {
         }
       }
 
-      /**
-       * Replaces "...; break;" with "return ...;".
-       */
+      /** Replaces "...; break;" with "return ...;". */
       void eliminateSwitchBreaks() {
         for (Node breakNode : switchBreaks) {
           Node prevStatement = breakNode.getPrevious();
@@ -1449,7 +1439,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       /** Returns unique name in the current context. */
       String getScopedName(String name) {
-        return name + (generatorNestingLevel == 0 ? "" : "$" + generatorNestingLevel);
+        return name + "$" + uniqueId;
       }
 
       /** Creates node that access a specified field of the current context. */
@@ -1516,7 +1506,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       /** Instructs a state machine program to jump to a selected case section. */
       void writeJumpTo(Case section, Node sourceNode) {
         currentCase.jumpTo(
-            section, createJumpToBlock(section, /** allowEmbedding=*/ false, sourceNode));
+            section, createJumpToBlock(section, /* allowEmbedding= */ false, sourceNode));
       }
 
       /**
@@ -1888,6 +1878,7 @@ final class Es6RewriteGenerators implements CompilerPass {
          * node.
          *
          * <p>Usually "<code>if (a) {b();} else { c(); }</code>" is transpiled into:
+         *
          * <pre>
          *   if (a) { goto labelIf; }
          *   c();
@@ -2171,8 +2162,8 @@ final class Es6RewriteGenerators implements CompilerPass {
         }
 
         /**
-         * Hoists {@code var} declarations in for-in loops into the closure containing the
-         * generator to preserve their state across multiple invocation of state machine program.
+         * Hoists {@code var} declarations in for-in loops into the closure containing the generator
+         * to preserve their state across multiple invocation of state machine program.
          *
          * <p>
          *
