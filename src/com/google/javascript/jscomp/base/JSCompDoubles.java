@@ -124,7 +124,7 @@ public final class JSCompDoubles {
     // Step 3
     double posInt = (number >= 0) ? Math.floor(number) : Math.ceil(number);
 
-    /**
+    /*
      * Step 4
      *
      * <p>Afer modding, the value must fit into a long, but not necessarily an int.
@@ -135,7 +135,7 @@ public final class JSCompDoubles {
      */
     long int32bit = (long) (posInt % POW_2_32);
 
-    /**
+    /*
      * Step 5
      *
      * <p>The instructions in the spec are equivalent to interpreting the last 32 bits of `int32bit`
