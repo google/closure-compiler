@@ -1707,7 +1707,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setInlineVariables(true);
-    test(options, code, "(function foo() {})(3);");
+    test(options, code, "(function() {})(3);");
   }
 
   @Test
@@ -2225,7 +2225,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "function f() { var x = 3; return 5; }");
 
     String unusedVar = "function f() { var x; x = 5; return x; } f()";
-    test(options, unusedVar, "(function f() { var x; return 5; })()");
+    test(options, unusedVar, "(function() { var x; return 5; })()");
 
     options.setRemoveUnusedVariables(Reach.ALL);
     test(options, unusedVar, "(function () { return 5; })()");

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
@@ -772,6 +773,14 @@ class InlineVariables implements CompilerPass {
       // Check for function declarations before the value is moved in the AST.
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
       if (isFunctionDeclaration) {
+        // We're inlining this function declaration because there was only one reference to it,
+        // probably the rhs of an assignment statement. Since we're eliminating the only
+        // reference, we can get rid of it. See b/277538101.
+        Node funcName = value.getFirstChild();
+        checkNotNull(funcName);
+        checkState(funcName.isName());
+        funcName.setString("");
+
         // In addition to changing the containing scope, inlining function declarations also changes
         // the function name scope from the containing scope to the inner scope.
         compiler.reportChangeToChangeScope(value);

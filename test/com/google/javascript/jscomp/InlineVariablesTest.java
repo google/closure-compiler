@@ -603,7 +603,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "", //
             "var x = a;",
             "", // declaration removed
-            "(function cow(){ a++; })();",
+            "(function(){ a++; })();",
             "", // unused `z` removed
             ""));
     test(
@@ -1464,7 +1464,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             ""),
         lines(
             "", //
-            "var y = function f(x) {};",
+            "var y = function(x) {};",
             "g();",
             "y();y();",
             ""));
@@ -1500,7 +1500,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             ""),
         lines(
             "", //
-            "var y; y = function f(x) {};",
+            "var y; y = function(x) {};",
             "g();",
             "y();y();",
             ""));
@@ -1675,7 +1675,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "};"),
         lines(
             "(/** @constructor */",
-            "function C() {}).prototype.m = function() {",
+            "function() {}).prototype.m = function() {",
             "  if (true) {",
             "    alert(this);",
             "  }",
@@ -1781,7 +1781,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineNamedFunction() {
-    test("function f() {} f();", "(function f(){})()");
+    test("function f() {} f();", "(function(){})()");
   }
 
   @Test
@@ -2268,7 +2268,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "}",
             "var output = myTag`My name is ${name} ${3}`;"),
         lines(
-            "var output = function myTag(strings, nameExp, numExp) {",
+            "var output = function(strings, nameExp, numExp) {",
             "  var modStr;",
             "  if (numExp > 2) {",
             "    modStr = nameExp + 'Bar'",
@@ -2333,9 +2333,24 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
     String[] expected = {
       "", //
-      "use(function f() {});"
+      "use(function() {});"
     };
 
     test(srcs(srcs), expected(expected));
+  }
+
+  @Test
+  public void testFunctionVarInliningElidesFunctionName() {
+    // When there's only one reference to a function name (e.g. in the rhs of an assignment), we
+    // should elide that function name.
+    test(
+        "function notRecursive(x) { return 4 }; exports.y = notRecursive;",
+        ";exports.y = function(x) { return 4; }");
+
+    // In this case, the function is recursive, so there's more than one reference, we should keep
+    // the name.
+    testSame(
+        "function factorial(x) { if (x == 1) return 1; return x + factorial(x - 1); };"
+            + "exports.x = factorial;");
   }
 }
