@@ -148,7 +148,7 @@ public class LowestCommonAncestorFinder<N, E> {
     // In two's-complement, (2^n - 1) sets the lowest n bits high.
     Color allColor = Color.create((1 << roots.size()) - 1);
 
-    /**
+    /*
      * Paint up from each root using the color associated with that root.
      *
      * <p>When done, the set of common ancestors is the set of nodes painted `allColor`.
@@ -165,7 +165,7 @@ public class LowestCommonAncestorFinder<N, E> {
       bitForRoot <<= 1;
     }
 
-    /**
+    /*
      * For every common ancestor, paint all of its ancestors with a color indicating it is not the
      * lowest.
      */
