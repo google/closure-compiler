@@ -54,7 +54,7 @@ final class UseSiteRenamer {
     ImmutableMap<ColorGraphNode, String> clusterNames = createAllClusterNames(prop);
 
     if (clusterNames.size() <= 1) {
-      /**
+      /*
        * Don't bother renaming clusters with a single element. Renaming won't actaully disambiguate
        * anything in this case, so skip the work.
        */

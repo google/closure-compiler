@@ -164,7 +164,7 @@ public class AmbiguateProperties implements CompilerPass {
 
     FixedPointGraphTraversal.<ColorGraphNode, Object>newReverseTraversal(
             (subtype, e, supertype) -> {
-              /**
+              /*
                * Cheap path for when we're sure there's going to be a change.
                *
                * <p>Since bits only ever turn on, using more bits means there are definitely more

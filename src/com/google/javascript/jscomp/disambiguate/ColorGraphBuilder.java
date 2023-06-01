@@ -114,7 +114,7 @@ final class ColorGraphBuilder {
       return;
     }
 
-    /**
+    /*
      * Connect the LCAs to the union.
      *
      * <p>The union itself will be found in most cases, but since we don't add self-edges, that
@@ -165,7 +165,7 @@ final class ColorGraphBuilder {
       }
     }
 
-    /**
+    /*
      * Add all instance and prototype colors when visiting a constructor. We won't necessarily see
      * all possible instance colors that exist at runtime during an AST traversal.
      *

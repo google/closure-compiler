@@ -188,7 +188,7 @@ public final class DisambiguateProperties implements CompilerPass {
 
   private static void invalidateWellKnownProperties(
       LinkedHashMap<String, PropertyClustering> propIndex) {
-    /**
+    /*
      * Expand this list as needed; it wasn't created exhaustively.
      *
      * <p>Good candidates are: props accessed by builtin functions, props accessed by syntax sugar,
