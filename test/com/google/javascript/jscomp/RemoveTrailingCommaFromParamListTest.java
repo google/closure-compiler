@@ -30,8 +30,9 @@ import org.junit.runners.JUnit4;
 public class RemoveTrailingCommaFromParamListTest extends CompilerTestCase {
 
   @Before
-  public void enableTypeCheckBeforePass() {
+  public void customSetUp() {
     enableTypeCheck();
+    enableNormalize();
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
@@ -39,7 +40,7 @@ public class RemoveTrailingCommaFromParamListTest extends CompilerTestCase {
     // comparison.
     disableCompareAsTree();
   }
-
+  
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RemoveTrailingCommaFromParamList(compiler);
