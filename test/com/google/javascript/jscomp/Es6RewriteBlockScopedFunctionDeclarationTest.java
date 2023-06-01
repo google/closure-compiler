@@ -26,10 +26,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteBlockScopedFunctionDeclarationTest extends CompilerTestCase {
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
+    enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
     enableTypeInfoValidation();
