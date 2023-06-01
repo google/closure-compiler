@@ -46,7 +46,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 @SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public final class Es6ConvertSuperTest extends CompilerTestCase {
-
   public Es6ConvertSuperTest() {
     super(MINIMAL_EXTERNS);
   }
@@ -65,7 +64,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-
+    enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     enableTypeCheck();
@@ -862,15 +861,15 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
                 "class B extends A {",
                 "  constructor() { super(); }",
                 "",
-                "  /** @param {number} x */",
-                "  set f(x) { super.g(x); }",
+                "  /** @param {number} y */",
+                "  set f(y) { super.g(y); }",
                 "}")),
         expected(
             lines(
                 "class B extends A {",
                 "  constructor() { super(); }",
                 "",
-                "  set f(x) { A.prototype.g.call(this, x); }",
+                "  set f(y) { A.prototype.g.call(this, y); }",
                 "}")));
 
     // get types we need to check
