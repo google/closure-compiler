@@ -4211,7 +4211,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "function reportError() {}",
               "try {",
               " foo();",
-              "} catch ($jscomp$unused$catch) {",
+              "} catch ($jscomp$unused$catch$98447280$0) {",
               "  reportError();",
               "}")
         });

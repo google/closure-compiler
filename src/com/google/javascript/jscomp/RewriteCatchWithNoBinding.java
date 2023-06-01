@@ -44,14 +44,16 @@ import com.google.javascript.rhino.Node;
 final class RewriteCatchWithNoBinding implements CompilerPass {
   private static final FeatureSet TRANSPILED_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.OPTIONAL_CATCH_BINDING);
-  private static final String BINDING_NAME = "$jscomp$unused$catch";
+  private static final String BINDING_NAME = "$jscomp$unused$catch$";
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
+  private final UniqueIdSupplier uniqueIdSupplier;
 
   RewriteCatchWithNoBinding(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
   }
 
   private class AddBindings extends AbstractPostOrderCallback {
@@ -61,7 +63,9 @@ final class RewriteCatchWithNoBinding implements CompilerPass {
         return;
       }
 
-      Node name = astFactory.createNameWithUnknownType(BINDING_NAME);
+      Node name =
+          astFactory.createNameWithUnknownType(
+              BINDING_NAME + uniqueIdSupplier.getUniqueId(t.getInput()));
       n.getFirstChild().replaceWith(name.srcrefTree(n.getFirstChild()));
       t.reportCodeChange();
     }
