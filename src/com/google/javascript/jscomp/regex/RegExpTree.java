@@ -118,7 +118,7 @@ public abstract class RegExpTree {
   public static RegExpTree parseRegExp(
       final String pattern, final String flags) {
 
-    /** A recursive descent parser that closes over pattern and flags above. */
+    /* A recursive descent parser that closes over pattern and flags above. */
     class Parser {
       /** The number of characters in pattern consumed. */
       int pos;
