@@ -91,6 +91,8 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableParseTypeInfo();
     functionsToInspect = DEFAULT_FUNCTIONS_TO_INSPECT;
     runDisambiguateProperties = false;

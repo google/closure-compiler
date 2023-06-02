@@ -151,6 +151,9 @@ public abstract class CompilerTestCase {
    */
   private boolean normalizeEnabled;
 
+  /** If Normalize is enabled, then run it on the expected output also before comparing. */
+  private boolean normalizeExpectedOutputEnabled;
+
   private boolean polymerPass;
 
   /** Whether ES module rewriting runs before the pass being tested. */
@@ -679,6 +682,7 @@ public abstract class CompilerTestCase {
     this.browserFeaturesetYear = null;
     this.multistageCompilation = false;
     this.normalizeEnabled = false;
+    this.normalizeExpectedOutputEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
     this.processCommonJsModules = false;
@@ -981,7 +985,36 @@ public abstract class CompilerTestCase {
     this.enableMultistageCompilation();
   }
 
-  /** Perform AST transpilation before running the test pass. */
+  /**
+   * If normalization is enabled for test inputs, then also run normalization on the expected
+   * outputs.
+   *
+   * <p>Enabling this can cause the results of test failures to be confusing, since the expected
+   * output written in the test case is modified before it is compared with the test results. So,
+   * you should avoid using this when you can. However, there are some ways that Normalization
+   * modifies the AST (e.g. adding properties to nodes) that cannot be represented in input JS
+   * source text but will affect whether the AST comparison succeeds. This option is intended to
+   * allow Normalization to make those changes on the expected output code.
+   *
+   * @see #enableNormalize
+   */
+  protected final void enableNormalizeExpectedOutput() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    checkState(this.normalizeEnabled, "Enabled normalize on output, but not input.");
+    this.normalizeExpectedOutputEnabled = true;
+  }
+
+  /**
+   * Perform AST transpilation before running the test pass and also on the expected output.
+   *
+   * <p>This also has the side effect of forcing normalization of the expected output if you also
+   * enable normalization.
+   *
+   * <p>Although this method is not deprecated, it is only used in a few very special cases. The
+   * test behavior this creates can be confusing, especially since it modifies the expected output,
+   * so that diffs will not necessarily reflect the expected output text written directly into the
+   * test cases. Adding new usages of this is probably a bad idea.
+   */
   protected final void enableTranspile() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     transpileEnabled = true;
@@ -1930,8 +1963,12 @@ public abstract class CompilerTestCase {
 
     if (transpileEnabled && !compiler.hasErrors()) {
       rewriteEsModules(compiler, externsRoot, mainRoot);
+      // TODO(bradfordcsmith): Notice that transpileToEs5() will perform normalization, if that
+      // is enabled, without checking normalizeExpectedOutputEnabled.
+      // This behavior is documented in enableTranspile(), which is used only in a very few
+      // special cases.
       transpileToEs5(compiler, externsRoot, mainRoot);
-    } else if (normalizeEnabled && !compiler.hasErrors()) {
+    } else if (normalizeEnabled && normalizeExpectedOutputEnabled && !compiler.hasErrors()) {
       // An explicit normalize pass is necessary since it wasn't done as part of transpilation.
       normalizeActualCode(compiler, externsRoot, mainRoot);
     }

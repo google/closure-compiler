@@ -39,6 +39,8 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
   }
 
   @Override

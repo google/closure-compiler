@@ -219,6 +219,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testRemoveDuplicateStatements() {
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     fold("if (a) { x = 1; x++ } else { x = 2; x++ }",
          "x=(a) ? 1 : 2; x++");
     fold("if (a) { x = 1; x++; y += 1; z = pi; }" +
@@ -509,8 +511,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
     foldSame("while(1) if (a) break");
     enableNormalize();
-    foldSame("while(1) if (a) break");
-    disableNormalize();
+    foldSame("for (; 1; ) if (a) break");
   }
 
   @Test
@@ -539,6 +540,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void testSubsituteReturn() {
     late = false;
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
 
     fold("function f() { while(x) { return }}",
          "function f() { while(x) { break }}");
@@ -613,6 +616,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void testSubsituteBreakForThrow() {
     late = false;
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
 
     foldSame("function f() { while(x) { throw Error }}");
 

@@ -44,6 +44,8 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize(); // Required for `OptimizeCalls`.
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
   }
 

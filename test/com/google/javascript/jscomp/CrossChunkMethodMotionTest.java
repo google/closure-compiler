@@ -50,6 +50,8 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     canMoveExterns = false;
     noStubs = false;
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
   }
 
   @Test

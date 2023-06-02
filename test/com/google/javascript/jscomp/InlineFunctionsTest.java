@@ -48,6 +48,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     super.setUp();
     maybeEnableInferConsts();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableComputeSideEffects();
     inliningReach = Reach.ALL;
     assumeStrictThis = false;

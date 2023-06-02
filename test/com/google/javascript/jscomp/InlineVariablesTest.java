@@ -36,6 +36,8 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     disableCompareJsDoc();
     // NOTE: We are not enabling var checks here, so it is OK to use undeclared variables in
     // these tests. They will be treated as if they were externs.

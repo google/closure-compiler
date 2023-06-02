@@ -52,6 +52,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     generatePseudoNames = false;
     prevUsedPropertyMap = null;
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
   }
 

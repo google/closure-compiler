@@ -93,7 +93,7 @@ public class RewriteNewDotTargetTest extends CompilerTestCase {
             "class Foo {",
             "  constructor() {",
             "    this.constructor;",
-            "    () => this.constructor;", // works in arrow functions, too
+            "    () => { return this.constructor; };", // works in arrow functions, too
             "  }",
             "}",
             ""));

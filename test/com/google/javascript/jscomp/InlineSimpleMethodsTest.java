@@ -34,6 +34,8 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     super.setUp();
     enableGatherExternProperties();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
   }
 
   /**

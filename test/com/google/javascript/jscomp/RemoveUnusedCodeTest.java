@@ -88,6 +88,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     super.setUp();
     // Allow testing of features that aren't supported for output yet.
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;

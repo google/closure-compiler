@@ -34,6 +34,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     super.setUp();
 
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     late = false;
     numRepetitions = 2;
   }

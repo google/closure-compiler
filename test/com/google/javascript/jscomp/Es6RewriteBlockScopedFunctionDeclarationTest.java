@@ -80,6 +80,32 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
             "function f() {",
             "  var x = 1;",
             "  if (a) {",
+            "    x1();",
+            "    function x1() { return x1; }",
+            "  }",
+            "  return x;",
+            "}"),
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  if (a) {",
+            "    let x1 = function() { return x1; };",
+            "    x1();",
+            "  }",
+            "  return x;",
+            "}"));
+  }
+
+  @Test
+  public void testBlockNestedInsideFunctionUnnormalized() {
+    // delete this test if we start always doing normalization, even in transpile-only cases.
+    // Note that there are multiple variables with the same name in this case.
+    disableNormalize();
+    test(
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  if (a) {",
             "    x();",
             "    function x() { return x; }",
             "  }",
@@ -99,15 +125,10 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
   @Test
   public void testFunctionInLoop() {
     test(
+        lines("for (var x of y) {", "  y();", "  function f() {", "    let z;", "  }", "}"),
         lines(
-            "for (var x of y) {",
-            "  y();",
-            "  function f() {",
-            "    let z;",
-            "  }",
-            "}"),
-        lines(
-            "for (var x of y) {",
+            "var x;",
+            "for (x of y) {",
             "  let f = function() {",
             "    let z;",
             "  };",

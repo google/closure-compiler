@@ -159,6 +159,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
     // Allow testing of features that are not yet fully supported.
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     disableCompareJsDoc();
     enableGatherExternProperties();
     enableTypeCheck();

@@ -89,6 +89,8 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();

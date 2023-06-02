@@ -108,6 +108,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     super.setUp();
     // Allow testing of features that aren't fully supported for output yet.
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
   }
 

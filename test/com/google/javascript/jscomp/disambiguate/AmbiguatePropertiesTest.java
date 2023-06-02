@@ -58,6 +58,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
     disableCompareJsDoc(); // removeTypes also deletes JSDocInfo
   }

@@ -78,6 +78,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testFoldLiteralObjectConstructors() {
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
 
     // Can fold when normalized
     test("x = new Object", "x = ({})");
@@ -99,6 +101,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testFoldLiteralObjectConstructors_onWindow() {
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
 
     // Can fold when normalized
     test("x = new window.Object", "x = ({})");
@@ -189,6 +193,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testRemoveWindowRefs() {
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test("x = window.Object", "x = Object");
     test("x = window.Object.keys", "x = Object.keys");
     test("if (window.Object) {}", "if (Object) {}");
@@ -314,6 +320,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("var x = undefined");
     testSame("function f(f) {var undefined=2;var x = undefined;}");
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test("var x = undefined", "var x=void 0");
     testSame("var undefined = 1;" + "function f() {var undefined=2;var x = undefined;}");
     testSame("function f(undefined) {}");
