@@ -4765,4 +4765,33 @@ public final class IntegrationTest extends IntegrationTestCase {
                 + " num=$jscomp$destructuring$var1.num;return"
                 + " Math.pow(num,3)};window[\"C\"]=i0$classdecl$var0"));
   }
+
+  @Test
+  public void testNoSideEffectsPropagationOnStaticMembers_withEs2018Out() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+
+    test(
+        options,
+        lines(
+            "class ClazzWithStatic {\n"
+                + "constructor() {}\n"
+                + "\n"
+                + "  /** @nosideeffects */\n"
+                + "  static Create() {\n"
+                + "    if (Math.random() > .5) {\n"
+                + "      throw new Error('Bad input');\n"
+                + "    }\n"
+                + "    return new ClazzWithStatic();\n"
+                + "  }\n"
+                + "}\n"
+                + "\n"
+                + "const xUnused = ClazzWithStatic.Create();\n"
+                + "const yUnused = ClazzWithStatic.Create();"),
+        // This should optimize to nothing, because the two variables are unused and we are trying
+        // to hide side-effects.
+        "");
+  }
 }

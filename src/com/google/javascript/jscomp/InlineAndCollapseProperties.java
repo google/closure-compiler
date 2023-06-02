@@ -2017,6 +2017,10 @@ class InlineAndCollapseProperties implements CompilerPass {
       // add a var declaration, creating `var Foo$m = function() {}; class Foo {}`
       Node varDecl = IR.var(NodeUtil.newName(compiler, alias, memberFn), fnNode).srcref(memberFn);
       varDecl.insertBefore(enclosingStatement);
+      // We would lose optimization-relevant jsdoc tags here because they are stored on the class
+      // member node, not the function node. Copy them over to the new declaration statement so
+      // later passes can make use of them.
+      varDecl.setJSDocInfo(memberFn.getJSDocInfo());
       compiler.reportChangeToEnclosingScope(varDecl);
 
       // collapsing this name's properties requires updating this Ref
