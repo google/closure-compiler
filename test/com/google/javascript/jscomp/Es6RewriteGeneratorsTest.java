@@ -89,8 +89,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
@@ -193,7 +191,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorsTest(
         srcs(
             lines(
-                "f = function(a) {",
+                "f = function(x) {",
                 "  var $jscomp$restParams = [];",
                 "  for (var $jscomp$restIndex = 0;",
                 "      $jscomp$restIndex < arguments.length;",
@@ -204,27 +202,28 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 "    var bla$0 = $jscomp$restParams;",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function *() {",
-                "          var x = bla$0[0];",
-                "        yield x;",
+                "          var y = bla$0[0];",
+                "          yield y;",
                 "        });",
                 "  }",
                 "}")),
         expected(
             lines(
-                "f = function (a) {",
+                "f = function (x) {",
                 "  var $jscomp$restParams = [];",
-                "  for (var $jscomp$restIndex = 0;",
+                "  var $jscomp$restIndex = 0;",
+                "  for (;",
                 "      $jscomp$restIndex < arguments.length;",
                 "      ++$jscomp$restIndex) {",
                 "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
                 "  }",
                 "  {",
                 "    var bla$0 = $jscomp$restParams;",
-                "    var x;",
+                "    var y;",
                 "    return $jscomp.asyncExecutePromiseGeneratorProgram(",
                 "        function (GEN_CONTEXT$0) {",
-                "          x = bla$0[0];",
-                "          return GEN_CONTEXT$0.yield(x, 0);",
+                "          y = bla$0[0];",
+                "          return GEN_CONTEXT$0.yield(y, 0);",
                 "        });",
                 "  }",
                 "}")));
@@ -253,11 +252,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBody("yield 1;", lines("  return GEN_CONTEXT$0.yield(1, 0);"));
 
-    Sources srcs = srcs("/** @param {*} a */ function *f(a, b) {}");
+    Sources srcs = srcs("/** @param {*} x */ function *f(x, y) {}");
     Expected originalExpected =
         expected(
             lines(
-                "function f(a, b) {",
+                "function f(x, y) {",
                 "  return $jscomp.generator.createGenerator(",
                 "      f,",
                 "      function(GEN_CONTEXT$0) {",
@@ -268,7 +267,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBodyWithVars(
         "var i = 0, j = 2;",
-        "var i, j;",
+        lines(
+            "var i;", //
+            "var j;"),
         lines(
             "i = 0;", //
             "j = 2;",
@@ -315,7 +316,8 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 "          return GEN_CONTEXT$0.yield(i,2);",
                 "        }",
                 "        use(i);",
-                "        for (i = 0; i < 3 ; i++) use(i);",
+                "        i = 0;",
+                "        for (; i < 3 ; i++) use(i);",
                 "        GEN_CONTEXT$0.jumpToEnd();",
                 "      })",
                 "}")));
@@ -379,7 +381,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; }",
         "var i; var j;",
-        lines("i = 0;", "for (j = 0; j < 10; j++) { i += j; }", "GEN_CONTEXT$0.jumpToEnd();"));
+        lines(
+            "i = 0;", //
+            "j = 0;",
+            "for (; j < 10; j++) {",
+            "  i = i + j;", // normalization rewrote this
+            "}",
+            "GEN_CONTEXT$0.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = yield; j < 10; j++) { i += j; }",
@@ -389,7 +397,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  i = 0;",
             "  return GEN_CONTEXT$0.yield(void 0, 2);",
             "}",
-            "for (j = GEN_CONTEXT$0.yieldResult; j < 10; j++) { i += j; }",
+            "j = GEN_CONTEXT$0.yieldResult;",
+            "for (; j < 10; j++) {",
+            "  i = i + j;", // normalization rewrote this
+            "}",
             "GEN_CONTEXT$0.jumpToEnd();"));
 
     rewriteGeneratorBody("for (;;) { yield 1; }", lines("  return GEN_CONTEXT$0.yield(1, 1);"));
@@ -433,7 +444,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  if (!(j < 10)) {",
             "    return GEN_CONTEXT$0.jumpTo(0);",
             "  }",
-            "  i += j;",
+            "  i = i + j;", // normalization rewrote this
             "  return GEN_CONTEXT$0.yield(5, 3);",
             "}",
             "j++;",
@@ -445,7 +456,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; while (i < 10) { i++; i++; i++; } yield i;",
         "  var i;",
-        lines("i = 0;", "while (i < 10) { i ++; i++; i++; }", "return GEN_CONTEXT$0.yield(i, 0);"));
+        lines(
+            "i = 0;", //
+            "for (; i < 10;) { i ++; i++; i++; }",
+            "return GEN_CONTEXT$0.yield(i, 0);"));
 
     rewriteGeneratorSwitchBodyWithVars(
         "var j = 0; while (j < 10) { yield j; j++; } j += 10;",
@@ -463,7 +477,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  GEN_CONTEXT$0.jumpTo(2);",
             "  break;",
             "case 4:",
-            "  j += 10;",
+            "  j = j + 10;", // normalization rewrote this
             "  GEN_CONTEXT$0.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
@@ -569,13 +583,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         srcs(
             lines(
                 "/* @return {?} */ function *f() {",
-                "  var obj = {bar: function(x) {}};",
-                "  (yield 5) && obj.bar(yield 5);",
+                "  var o = {bar: function(x) {}};",
+                "  (yield 5) && o.bar(yield 5);",
                 "}")),
         expected(
             lines(
                 "function f(){",
-                "  var obj;",
+                "  var o;",
                 "  var JSCompiler_temp$jscomp$0;",
                 "  var JSCompiler_temp_const$jscomp$2;",
                 "  var JSCompiler_temp_const$jscomp$1;",
@@ -583,14 +597,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 "  return $jscomp.generator.createGenerator(f, function(GEN_CONTEXT$0) {",
                 "    switch(GEN_CONTEXT$0.nextAddress) {",
                 "      case 1:",
-                "        obj = {bar:function(x) {}};",
+                "        o = {bar:function(x) {}};",
                 "        return GEN_CONTEXT$0.yield(5, 2);",
                 "      case 2:",
                 "        if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult)) {",
                 "          GEN_CONTEXT$0.jumpTo(3);",
                 "          break;",
                 "        }",
-                "        JSCompiler_temp_const$jscomp$2 = obj;",
+                "        JSCompiler_temp_const$jscomp$2 = o;",
                 "        JSCompiler_temp_const$jscomp$1 = JSCompiler_temp_const$jscomp$2.bar;",
                 "        JSCompiler_temp_const$jscomp$3 = JSCompiler_temp_const$jscomp$2;",
                 "        return GEN_CONTEXT$0.yield(5, 4);",
@@ -635,15 +649,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);"));
 
     rewriteGeneratorBodyWithVars(
-        "var obj = {bar: function(x) {}}; obj.bar(yield 5);",
+        "var o = {bar: function(x) {}}; o.bar(yield 5);",
         lines(
-            "var obj;",
-            "var JSCompiler_temp_const$jscomp$1;",
-            "var JSCompiler_temp_const$jscomp$0;"),
+            "var o;", "var JSCompiler_temp_const$jscomp$1;", "var JSCompiler_temp_const$jscomp$0;"),
         lines(
             "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  obj = {bar: function(x) {}};",
-            "  JSCompiler_temp_const$jscomp$1 = obj;",
+            "  o = {bar: function(x) {}};",
+            "  JSCompiler_temp_const$jscomp$1 = o;",
             "  JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;",
             "  return GEN_CONTEXT$0.yield(5, 2);",
             "}",
@@ -668,7 +680,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testLabels() {
     rewriteGeneratorBody(
         "l: if (true) { break l; }",
-        lines("  l: if (true) { break l; }", "  GEN_CONTEXT$0.jumpToEnd();"));
+        lines(
+            "  l: {", //
+            "    if (true) { break l; }",
+            "  }",
+            "  GEN_CONTEXT$0.jumpToEnd();"));
 
     rewriteGeneratorBody(
         "l: if (yield) { break l; }",
@@ -687,7 +703,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  return GEN_CONTEXT$0.yield(void 0, 3);",
             "}",
             "if (GEN_CONTEXT$0.yieldResult) {",
-            "  while (1) {",
+            "  for (; 1;) {",
             "    return GEN_CONTEXT$0.jumpTo(0);",
             "  }",
             "}",
@@ -747,7 +763,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "    return;",
             "  }",
             "}"),
-        lines("var gen;", "var gotResponse;", "var response, GEN_FORIN$0$0;"),
+        lines(
+            "var gen;", //
+            "var gotResponse;",
+            "var response;",
+            "var GEN_FORIN$0$0;"),
         lines(
             "switch (GEN_CONTEXT$0.nextAddress) {",
             "  case 1:",
@@ -1152,38 +1172,43 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   @Test
   public void testVar() {
     rewriteGeneratorBodyWithVars(
-        "var a = 10, b, c = yield 10, d = yield 20, f, g='test';",
-        "var a, b; var c; var d, f, g;",
+        "var va = 10, vb, vc = yield 10, vd = yield 20, vf, vg='test';",
+        lines(
+            "var va;", //
+            "var vb;", "var vc;", "var vd;", "var vf;", "var vg;"),
         lines(
             "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  a = 10;",
+            "  va = 10;",
             "  return GEN_CONTEXT$0.yield(10, 2);",
             "}",
             "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  c = GEN_CONTEXT$0.yieldResult;",
+            "  vc = GEN_CONTEXT$0.yieldResult;",
             "  return GEN_CONTEXT$0.yield(20, 3);",
             "}",
-            "d = GEN_CONTEXT$0.yieldResult;",
-            "g = 'test';",
+            "vd = GEN_CONTEXT$0.yieldResult;",
+            "vg = 'test';",
             "GEN_CONTEXT$0.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
-        lines("var /** @const */ a = 10, b, c = yield 10, d = yield 20, f, g='test';"),
+        lines("var /** @const */ va = 10, vb, vc = yield 10, vd = yield 20, vf, vg='test';"),
         lines(
-            "var /** @const */ a, b;",
-            "var c;", // note that the yields cause the var declarations to be split up
-            "var d, f, g;"),
+            "var /** @const */ va;", //
+            "var vb;",
+            "var vc;",
+            "var vd",
+            "var vf;",
+            "var vg;"),
         lines(
             "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  a = 10;",
+            "  va = 10;",
             "  return GEN_CONTEXT$0.yield(10, 2);",
             "}",
             "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  c = GEN_CONTEXT$0.yieldResult;",
+            "  vc = GEN_CONTEXT$0.yieldResult;",
             "  return GEN_CONTEXT$0.yield(20, 3);",
             "}",
-            "d = GEN_CONTEXT$0.yieldResult;",
-            "g = 'test';",
+            "vd = GEN_CONTEXT$0.yieldResult;",
+            "vg = 'test';",
             "GEN_CONTEXT$0.jumpToEnd();"));
   }
 
@@ -1274,7 +1299,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBodyWithVars(
         "for (var i in j) { yield i; }",
-        "var i, GEN_FORIN$0$0;",
+        lines(
+            "var i;", //
+            "var GEN_FORIN$0$0;"),
         lines(
             "if (GEN_CONTEXT$0.nextAddress == 1) {",
             "  GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);",
@@ -1286,7 +1313,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBodyWithVars(
         "for (var i in yield) { yield i; }",
-        "var i, GEN_FORIN$0$0;",
+        lines(
+            "var i;", //
+            "var GEN_FORIN$0$0;"),
         lines(
             "if (GEN_CONTEXT$0.nextAddress == 1) {",
             "  return GEN_CONTEXT$0.yield(void 0, 2)",
@@ -1510,7 +1539,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node case1Node =
         testAndReturnBodyForNumericGenerator(
             "for (var i in []) { yield 3; };",
-            "var i, GEN_FORIN$0$0;",
+            lines(
+                "var i;", //
+                "var GEN_FORIN$0$0;"),
             lines(
                 "if (GEN_CONTEXT$0.nextAddress == 1) {",
                 "  GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn([]);",
@@ -1621,20 +1652,22 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testGeneratorMultipleVars_withTypes() {
     Node firstStatementExprResult =
         testAndReturnBodyForNumericGenerator(
-            "var a = 1, b = '2';", //
-            "var a, b;",
+            "var x = 1, y = '2';", //
             lines(
-                "a = 1;", //
-                "b = '2';",
+                "var x;", //
+                "var y;"),
+            lines(
+                "x = 1;", //
+                "y = '2';",
                 "GEN_CONTEXT$0.jumpToEnd();"));
-    // a = 1
+    // x = 1
     final NodeSubject firstStatementSubject = assertNode(firstStatementExprResult).isExprResult();
     final NodeSubject assignASubject = firstStatementSubject.hasOneChildThat().isAssign();
     assignASubject.hasColorThat().isEqualTo(StandardColors.NUMBER);
     assignASubject.hasFirstChildThat().hasColorThat().isEqualTo(StandardColors.NUMBER);
     assignASubject.hasSecondChildThat().hasColorThat().isEqualTo(StandardColors.NUMBER);
 
-    // b = '2';
+    // y = '2';
     final NodeSubject secondStatementSubject =
         assertNode(firstStatementExprResult.getNext()).isExprResult();
     final NodeSubject assignBSubject = secondStatementSubject.hasOneChildThat().isAssign();
