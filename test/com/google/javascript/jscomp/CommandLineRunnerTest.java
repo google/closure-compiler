@@ -2748,7 +2748,8 @@ public final class CommandLineRunnerTest {
     test(
         "function foo(){ const answerToAll = 42; }",
         lines(
-            "self.window||(self.window=self,self.window.top=self);var __jscov=window.top.__jscov||",
+            "(function(a){a.window||(a.window=a,a.window.top=a)})(\"undefined\"!==typeof"
+                + " self?self:globalThis);var __jscov=window.top.__jscov||",
             "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),",
             "JSCompiler_lcov_data_input0=[];",
             "__jscov.executedLines.push(JSCompiler_lcov_data_input0);",
@@ -2764,7 +2765,8 @@ public final class CommandLineRunnerTest {
     test(
         "function foo(){ const answerToAll = 42; }",
         lines(
-            "self.window||(self.window=self,self.window.top=self);",
+            "(function(a){a.window||(a.window=a,a.window.top=a)})(\"undefined\"!==typeof"
+                + " self?self:globalThis);",
             "var __jscov=window.top.__jscov||(window.top.__jscov= ",
             "{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]}); ",
             "function foo(){}"));

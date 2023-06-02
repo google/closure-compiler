@@ -1,7 +1,9 @@
-if (!self.window) {
-  self.window = self;
-  self.window.top = self;
-}
+(function(self) {
+  if (!self.window) {
+    self.window = self;
+    self.window.top = self;
+  }
+})(typeof self !== "undefined" ? self : globalThis);
 var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "branchPresent":[], "branchesInLine":[], "branchesTaken":[]});
 var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_DoWhileLoopMultiLineBranch_jsdata = [];
 __jscov["branchesTaken"].push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_DoWhileLoopMultiLineBranch_jsdata);

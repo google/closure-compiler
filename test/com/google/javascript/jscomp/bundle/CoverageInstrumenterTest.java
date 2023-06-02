@@ -92,7 +92,8 @@ public final class CoverageInstrumenterTest {
     CoverageInstrumenter.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     String[] expected =
         new String[] {
-          "if(!self.window){self.window=self;self.window.top=self}",
+          "(function(self){if(!self.window){self.window=self;self.window.top=self}})(typeof"
+              + " self!==\"undefined\"?self:globalThis);",
           "var __jscov=window.top[\"__jscov\"]||",
           "(window.top[\"__jscov\"]={\"fileNames\":[],\"instrumentedLines\":[],\"executedLines\":[]});",
           "var JSCompiler_lcov_data_source_js=[];",

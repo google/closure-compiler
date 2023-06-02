@@ -83,7 +83,8 @@ public class CoverageInstrumentationPass implements CompilerPass {
         compiler
             .parseSyntheticCode(
                 "coverage_instrumentation_header",
-                "if (!self.window) { self.window = self; self.window.top = self; }")
+                "(function(self) { if (!self.window) { self.window = self; self.window.top = self;"
+                    + " }})(typeof self !== 'undefined' ? self : globalThis)")
             .removeFirstChild()
             .srcrefTreeIfMissing(script));
   }

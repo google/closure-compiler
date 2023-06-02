@@ -1,7 +1,9 @@
-if (!self.window) {
-  self.window = self;
-  self.window.top = self;
-}
+(function(self) {
+  if (!self.window) {
+    self.window = self;
+    self.window.top = self;
+  }
+})(typeof self !== "undefined" ? self : globalThis);
 var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "instrumentedLines":[], "executedLines":[]});
 var JSCompiler_lcov_data_CoverageInstrumentationPassTest_ArrowBlock_jsdata = [];
 __jscov["executedLines"].push(JSCompiler_lcov_data_CoverageInstrumentationPassTest_ArrowBlock_jsdata);
