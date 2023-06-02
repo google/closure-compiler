@@ -42,16 +42,16 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
           "/** @const */",
           "var $jscomp = {};",
           "$jscomp.createTemplateTagFirstArg = function(arrayStrings) {};",
-          "$jscomp.createTemplateTagFirstArgWithRaw = function(arrayStrings, rawArrayStrings) {};");
+          "$jscomp.createTemplateTagFirstArgWithRaw = function(anotherArray,"
+              + " rawArrayStrings) {};");
 
   public LateEs6ToEs3ConverterTest() {
     super(MINIMAL_EXTERNS + RUNTIME_STUBS);
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
+    enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
