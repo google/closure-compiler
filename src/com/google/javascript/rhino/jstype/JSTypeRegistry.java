@@ -403,7 +403,7 @@ public final class JSTypeRegistry {
     iThenableTemplateKey = new TemplateType(this, "TYPE");
     promiseTemplateKey = new TemplateType(this, "TYPE");
 
-    /**
+    /*
      * The default implicit prototype of all functions, as well as the ".prototype" field of
      * `(typeof Function)`.
      *
@@ -420,7 +420,7 @@ public final class JSTypeRegistry {
             .build();
     registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, functionPrototype);
 
-    /**
+    /*
      * The ".prototype" property of the type `Function`.
      *
      * <p>So named because `Function` constructs `?`s. This type is not particularly interesting,
@@ -434,7 +434,7 @@ public final class JSTypeRegistry {
             .build();
     registerNativeType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE, functionInstancePrototype);
 
-    /**
+    /*
      * `Function`
      *
      * <p>The default implicit prototype of all `FunctionType`s is `functionPrototype`.
@@ -451,7 +451,7 @@ public final class JSTypeRegistry {
     functionType.setPrototype(functionInstancePrototype, null);
     registerNativeType(JSTypeNative.FUNCTION_TYPE, functionType);
 
-    /**
+    /*
      * `(typeof Function)`
      *
      * <p>The default implict prototype of all `FunctionType`s is `functionPrototype`.

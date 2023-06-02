@@ -243,7 +243,7 @@ final class EqualityChecker {
       }
     }
 
-    /**
+    /*
      * Unwrap proxies.
      *
      * <p>Remember that `TemplateType` has identity semantics and shouldn't be unwrapped.
@@ -366,7 +366,7 @@ final class EqualityChecker {
    * Such structural relationships are correctly expressed in terms of subtyping.
    */
   private boolean areRecordEqual(RecordType left, RecordType right) {
-    /**
+    /*
      * Don't check inherited properties; checking them is both incorrect and slow.
      *
      * <p>The full definition of a record type is contained in its "own" properties (i.e. `{a:

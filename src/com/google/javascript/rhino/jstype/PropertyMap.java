@@ -214,14 +214,14 @@ final class PropertyMap {
       }
     }
 
-    /**
+    /*
      * If any counter is greater than this counter, there has been a mutation and the cache must be
      * rebuilt.
      */
     if (maxAncestorCounter != this.cachedKeySetCounter || this.cachedKeySet == null) {
       TreeSet<String> keys = new TreeSet<>();
       for (PropertyMap ancestor : ancestors) {
-        /**
+        /*
          * Update the counters in all ancestors.
          *
          * <p>This update scheme is convergent. As long as there are no mutations, calls {@link

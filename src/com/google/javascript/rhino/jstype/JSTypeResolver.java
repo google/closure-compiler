@@ -116,7 +116,7 @@ public final class JSTypeResolver {
    * capturing all new types.
    */
   void addUnresolved(JSType captured) {
-    /**
+    /*
      * This method exists to make it easier to debug the source of unresolved types in the future.
      *
      * <p>In theory we should be able to capture all types using `resolveIfClosed`, but this way we

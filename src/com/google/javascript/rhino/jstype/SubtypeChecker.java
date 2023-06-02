@@ -227,7 +227,7 @@ final class SubtypeChecker {
       return true;
     }
 
-    /**
+    /*
      * Unwrap proxy types.
      *
      * <p>Only named types are unwrapped because other subclasses of `ProxyObjectType` should not be
@@ -265,7 +265,7 @@ final class SubtypeChecker {
     TemplateTypeMap supertypeParams = supertype.getTemplateTypeMap();
     boolean bivarantMatch = false;
 
-    /**
+    /*
      * Array and Object are exempt from template type invariance.
      *
      * <p>They also have to be checked first because the `Object` index key acts like an operator;
@@ -285,7 +285,7 @@ final class SubtypeChecker {
     }
 
     if (this.isUsingStructuralTyping && supertype.isStructuralType()) {
-      /**
+      /*
        * Do this before considering templatization in general.
        *
        * <p>If the super type is a structural type, then we can't safely unwrap any templatized
@@ -294,7 +294,7 @@ final class SubtypeChecker {
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
     } else if (supertype.isRecordType()) {
-      /**
+      /*
        * Anonymous record types are always considered structurally when supertypes.
        *
        * <p>Structural typing is the only kind of typing they support. However, we limit to the case
@@ -304,7 +304,7 @@ final class SubtypeChecker {
           subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
     }
 
-    /**
+    /*
      * Wait to check template types until after structural checks.
      *
      * <p>It's possible for a subtructural type to satisfy the shape defined by a template
@@ -534,7 +534,7 @@ final class SubtypeChecker {
   }
 
   private boolean isProxyObjectSubtype(ProxyObjectType subtype, JSType supertype) {
-    /**
+    /*
      * Don't check the cache here.
      *
      * <p>If we do, we get false positives for recursion because proxy types are equal to their
@@ -566,7 +566,7 @@ final class SubtypeChecker {
     TemplateTypeMap submap = subtype.getTemplateTypeMap();
     TemplateTypeMap supermap = supertype.getTemplateTypeMap();
 
-    /**
+    /*
      * We only need to iterate the keys of the supermap.
      *
      * <p>A submap may have additional entries not present in the supermap, so long as it also has
@@ -751,7 +751,7 @@ final class SubtypeChecker {
         return true;
       }
 
-      /**
+      /*
        * The vast majority of cases will have already returned by now, since equality isn't even
        * checked unless the hash code matches, and in most cases there's only one instance of any
        * equivalent JSType floating around. The remainder only occurs for cyclic (or otherwise

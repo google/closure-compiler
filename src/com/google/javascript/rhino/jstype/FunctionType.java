@@ -181,7 +181,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     if (builder.typeOfThis != null) {
       this.typeOfThis = builder.typeOfThis;
     } else if (this instanceof NoResolvedType) {
-      /**
+      /*
        * TODO(b/112425334): Delete this special case if NO_RESOLVED_TYPE is deleted.
        *
        * <p>Despite being a subclass of `NoType`, `NoResolvedType` should behave more like `?`.
@@ -1310,7 +1310,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   public final ImmutableList<TemplateType> getConstructorOnlyTemplateParameters() {
     checkState(this.isConstructor(), this);
 
-    /**
+    /*
      * Structural constructor types (e.g `function(new:Foo<T>)`) cannot have template params of
      * their own.
      */
@@ -1598,7 +1598,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       switch (this.kind) {
         case CONSTRUCTOR:
         case INTERFACE:
-          /**
+          /*
            * These kinds have no implication on whether `returnsOwnInstanceType` is reasonable. This
            * configuration may be intended to synthesize an instance type. The return type and
            * instance type are independent.

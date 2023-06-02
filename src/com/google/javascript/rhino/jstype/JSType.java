@@ -1507,7 +1507,7 @@ public abstract class JSType {
   public final JSType resolve(ErrorReporter reporter) {
     registry.getResolver().assertLegalToResolveTypes();
     if (!this.isResolved()) {
-      /**
+      /*
        * Prevent infinite recursion in cyclically defined types.
        *
        * <p>If resolve is called a twice on a type, before the first call completes, there is a
