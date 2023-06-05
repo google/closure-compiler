@@ -1839,6 +1839,12 @@ SharedWorkerGlobalScope.prototype.onconnect;
 HTMLElement.observedAttributes;
 
 /**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
+ * @type {boolean|undefined}
+ */
+HTMLElement.formAssociated;
+
+/**
  * @param {!Document} oldDocument
  * @param {!Document} newDocument
  */
@@ -1888,6 +1894,30 @@ HTMLElement.prototype.inert;
 
 /** @type {boolean} */
 HTMLElement.prototype.spellcheck;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
+ * @param {HTMLFormElement} form
+ */
+HTMLElement.prototype.formAssociatedCallback = function(form) {};
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
+ * @param {boolean} disabled
+ */
+HTMLElement.prototype.formDisabledCallback = function(disabled) {};
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
+ * @type {function()|undefined}
+ */
+HTMLElement.prototype.formResetCallback;
+
+/**
+ * @param {null|string|!File|!Array<!Array<string|!File>>} state
+ * @param {string} reason
+ */
+HTMLElement.prototype.formStateRestoreCallback = function(state, reason) {};
 
 /**
  * @see https://dom.spec.whatwg.org/#dictdef-getrootnodeoptions
