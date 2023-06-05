@@ -562,25 +562,43 @@ final class AstFactory {
           "A scope is required [lifeCycleStage: %s, typeMode: %s]",
           lifeCycleStage,
           typeMode);
-      final Node varDefinitionNode = getVarDefinitionNode(scope, name);
+      final StaticSlot var = scope.getSlot(name);
+      if (var == null) {
+        // TODO(bradfordcsmith): Why is this special exception needed?
+        // There are a few cases where `$jscomp` isn't found in the code (implying that runtime
+        // library injection somehow didn't happen), but we do perform transpilations which require
+        // it to exist. Can we fix that?
+        // This only happens when type checking is not being done.
+        checkState(
+            name.equals("$jscomp") && typeMode.equals(TypeMode.NONE),
+            "Missing var %s in scope %s",
+            name,
+            scope);
+      } else {
+        final StaticRef declaration =
+            checkNotNull(
+                var.getDeclaration(), "Cannot find type for var with missing declaration %s", var);
+        final Node varDefinitionNode =
+            checkNotNull(declaration.getNode(), "Missing node for declaration %s", declaration);
 
-      // Normalization requires that all references to a constant variable have this property.
-      if (varDefinitionNode.getBooleanProp(Node.IS_CONSTANT_NAME)) {
-        result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-      }
-      switch (typeMode) {
-        case JSTYPE:
-          JSType definitionType = varDefinitionNode.getJSType();
-          // TODO(b/149843534): crash instead of defaulting to unknown
-          result.setJSType(definitionType != null ? definitionType : unknownType);
-          break;
-        case COLOR:
-          Color definitionColor = varDefinitionNode.getColor();
-          // TODO(b/149843534): crash instead of defaulting to unknown
-          result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
-          break;
-        case NONE:
-          break;
+        // Normalization requires that all references to a constant variable have this property.
+        if (varDefinitionNode.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+          result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        }
+        switch (typeMode) {
+          case JSTYPE:
+            JSType definitionType = varDefinitionNode.getJSType();
+            // TODO(b/149843534): crash instead of defaulting to unknown
+            result.setJSType(definitionType != null ? definitionType : unknownType);
+            break;
+          case COLOR:
+            Color definitionColor = varDefinitionNode.getColor();
+            // TODO(b/149843534): crash instead of defaulting to unknown
+            result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
+            break;
+          case NONE:
+            break;
+        }
       }
     }
 
@@ -1428,15 +1446,6 @@ final class AstFactory {
     checkNotNull(registry, "registry is null");
     return checkNotNull(
         registry.getNativeType(nativeType), "native type not found: %s", nativeType);
-  }
-
-  private Node getVarDefinitionNode(StaticScope scope, String name) {
-    StaticSlot var = checkNotNull(scope.getSlot(name), "Missing var %s in scope %s", name, scope);
-
-    StaticRef declaration =
-        checkNotNull(
-            var.getDeclaration(), "Cannot find type for var with missing declaration %s", var);
-    return checkNotNull(declaration.getNode(), "Missing node for declaration %s", declaration);
   }
 
   private JSType getJsTypeForProperty(Node receiver, String propertyName) {

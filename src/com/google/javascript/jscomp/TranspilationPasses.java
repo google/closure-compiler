@@ -201,9 +201,6 @@ public class TranspilationPasses {
         FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS))) {
       passes.maybeAdd(rewriteBlockScopedDeclaration);
     }
-    if (options.needsTranspilationOf(Feature.GENERATORS)) {
-      passes.maybeAdd(rewriteGenerators);
-    }
   }
 
   /** Adds transpilation passes that should not be run until after normalization has been done. */
@@ -211,6 +208,9 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+    if (options.needsTranspilationOf(Feature.GENERATORS)) {
+      passes.maybeAdd(rewriteGenerators);
+    }
   }
 
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */

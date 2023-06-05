@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
@@ -122,6 +123,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     TranspilationPasses.processTranspile(
         compiler, root, transpiledFeatures, new GeneratorFunctionsTranspiler());
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
@@ -249,12 +251,29 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     /**
-     * Hoists a node inside {@link #newGeneratorHoistBlock}.
+     * Hoists a var node inside {@link #newGeneratorHoistBlock}.
+     *
+     * <p>The last statement in the block is expected to be the call to the generator execution
+     * function.
      *
      * @see #newGeneratorHoistBlock
      */
-    private void hoistNode(Node node) {
+    private void hoistVarNode(Node node) {
+      checkState(node.isVar(), node);
       node.insertBefore(newGeneratorHoistBlock.getLastChild());
+    }
+
+    /**
+     * Hoists a function declaration statement inside {@link #newGeneratorHoistBlock}.
+     *
+     * <p>In order to maintain the requirements of normalization, function declaration statements
+     * must always be at the beginning of the function body.
+     *
+     * @see #newGeneratorHoistBlock
+     */
+    private void hoistFunctionDeclarationNode(Node node) {
+      checkState(node.isFunction(), node);
+      newGeneratorHoistBlock.addChildToFront(node);
     }
 
     /**
@@ -326,7 +345,15 @@ final class Es6RewriteGenerators implements CompilerPass {
         if (genFuncName.getString().isEmpty()) {
           genFuncName.setString(context.getScopedName(GENERATOR_FUNCTION));
           if (astFactory.isAddingColors()) {
-            genFuncName.setColor(StandardColors.TOP_OBJECT);
+            // The name of the function is a variable with the same type as the function expression
+            // itself.
+            genFuncName.setColor(generatorFunction.getColor());
+          }
+          // If this function is being assigned to a constant, then the name we just added
+          // and the clones made of it must also be marked as constant.
+          final JSDocInfo genFuncJsDocInfo = NodeUtil.getBestJSDocInfo(genFuncName);
+          if (genFuncJsDocInfo != null && genFuncJsDocInfo.isConstant()) {
+            genFuncName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           }
         }
 
@@ -351,13 +378,7 @@ final class Es6RewriteGenerators implements CompilerPass {
                     .createReturn(
                         // TODO(b/142881197): we can't give a more accurate type right now.
                         astFactory.createCallWithUnknownType(
-                            createGenerator,
-                            // function name passed as parameter must have the type of the
-                            // generator function itself
-                            astFactory
-                                .createName(genFuncName.getString(), type(generatorFunction))
-                                .srcref(genFuncName),
-                            program))
+                            createGenerator, genFuncName.cloneNode(), program))
                     .srcrefTree(originalGeneratorBody));
         originalGeneratorBody.replaceWith(newGeneratorHoistBlock);
       }
@@ -452,10 +473,6 @@ final class Es6RewriteGenerators implements CompilerPass {
           transpileForIn(statement, breakCase, continueCase);
           break;
 
-        case WHILE:
-          transpileWhile(statement, breakCase, continueCase);
-          break;
-
         case DO:
           transpileDo(statement, breakCase, continueCase);
           break;
@@ -469,6 +486,8 @@ final class Es6RewriteGenerators implements CompilerPass {
           break;
 
         default:
+          // NOTE: There is no WHILE case, becasue this pass runs after normalization,
+          // which converts all while loops to for loops.
           throw new IllegalStateException("Unsupported token: " + statement.getToken());
       }
     }
@@ -477,15 +496,18 @@ final class Es6RewriteGenerators implements CompilerPass {
     void transpileUnmarkedNode(Node n) {
       checkState(!n.isGeneratorMarker());
       if (n.isFunction()) {
-        // All function statemnts will be normalized:
-        // "function a() {}"   =>   "var a = function() {};"
-        // so we have to move them to the outer scope.
+        // An inner function should be created only once, when the generator function is first
+        // called, not every time the inner callback we create is called, so we will hoist
+        // function declaration statements into the outer scope along with the other variable
+        // declarations.
+        // TODO(bradfordcsmith): Ideally we should probably also hoist out function expressions,
+        // but there's no strong need to do this now and it would be tricky to get right.
         String functionName = n.getFirstChild().getString();
         // Make sure there are no "function (...) {...}" statements (note that
         // "function *(...) {...}" becomes "function $jscomp$generator$function(...) {...}" as
         // inner generator functions are transpiled first).
         checkState(!functionName.isEmpty() && !functionName.startsWith(GENERATOR_FUNCTION));
-        hoistNode(n);
+        hoistFunctionDeclarationNode(n);
         return;
       }
       context.transpileUnmarkedBlock(n.isBlock() || n.isAddedBlock() ? n : IR.block(n));
@@ -621,7 +643,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     /**
-     * Makes unmarked node containing arbitary code suitable to write using {@link
+     * Makes unmarked node containing arbitrary code suitable to write using {@link
      * TranspilationContext#writeGeneratedNode} method.
      */
     @Nullable Node prepareNodeForWrite(@Nullable Node n) {
@@ -629,7 +651,7 @@ final class Es6RewriteGenerators implements CompilerPass {
         return null;
       }
 
-      // Need to wrap a node so it can be replaced in the tree with some other node if nessesary.
+      // Need to wrap a node so, it can be replaced in the tree with some other node if necessary.
       Node wrapper = IR.mayBeStatement(n) ? astFactory.createBlock(n) : astFactory.exprResult(n);
       NodeTraversal.traverse(compiler, wrapper, context.new UnmarkedNodeTranspiler());
       checkState(wrapper.hasOneChild());
@@ -872,42 +894,6 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // Transpile "for" instead of "for in".
       transpileFor(forNode, breakCase, continueCase);
-    }
-
-    /** Transpiles "while" statement. */
-    void transpileWhile(
-        Node n,
-        TranspilationContext.@Nullable Case breakCase,
-        TranspilationContext.@Nullable Case continueCase) {
-      // TODO(bradfordcsmith): Delete this method when Es6RewriteGenerators moves after
-      //   normalization.
-      // Normalization turns all while loops into for loops.
-      // This test exists because at the moment Es6RewriteGenerators runs before normalization,
-      // so it still has to deal with while loops in the code.
-      checkState(
-          !compiler.getLifeCycleStage().isNormalized(), "while() loop appears in normalized code");
-      TranspilationContext.Case startCase = context.maybeCreateCase(continueCase);
-      TranspilationContext.Case endCase = context.maybeCreateCase(breakCase);
-
-      context.switchCaseTo(startCase);
-
-      // Transpile condition
-      Node condition = prepareNodeForWrite(maybeDecomposeExpression(n.removeFirstChild()));
-      Node body = n.removeFirstChild();
-      context.writeGeneratedNode(
-          astFactory
-              .createIf(
-                  astFactory.createNot(condition).srcref(condition),
-                  context.createJumpToBlock(endCase, /* allowEmbedding= */ true, n))
-              .srcref(n));
-
-      // Transpile "while" body
-      context.pushBreakContinueContext(endCase, startCase);
-      transpileStatement(body);
-      context.popBreakContinueContext();
-      context.writeJumpTo(startCase, n);
-
-      context.switchCaseTo(endCase);
     }
 
     /** Transpiles "do while" statement. */
@@ -1718,7 +1704,7 @@ final class Es6RewriteGenerators implements CompilerPass {
         Case nextCatchCase = getNextCatchCase();
 
         if (catchNames.add(exceptionName.getString())) {
-          hoistNode(IR.var(exceptionName.cloneNode()).srcref(exceptionName));
+          hoistVarNode(IR.var(exceptionName.cloneNode()).srcref(exceptionName));
         }
 
         ArrayList<Node> args = new ArrayList<>();
@@ -1977,7 +1963,7 @@ final class Es6RewriteGenerators implements CompilerPass {
        * <p>The following transformations are performed:
        *
        * <ul>
-       *   <li>moving <code>var</code> into hois scope;
+       *   <li>moving <code>var</code> into hoist scope;
        *   <li>transpiling <code>return</code> statements;
        *   <li>transpiling <code>break</code> and <code>continue</code> statements;
        *   <li>transpiling references to <code>this</code> and <code>arguments</code>.
@@ -2083,7 +2069,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           n.replaceWith(newThis);
           if (!thisReferenceFound) {
             Node var = IR.var(newThis.cloneNode().srcref(n), n).srcref(newGeneratorHoistBlock);
-            hoistNode(var);
+            hoistVarNode(var);
             thisReferenceFound = true;
           }
         }
@@ -2098,7 +2084,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           n.replaceWith(newArguments);
           if (!argumentsReferenceFound) {
             Node var = IR.var(newArguments.cloneNode(), n).srcref(newGeneratorHoistBlock);
-            hoistNode(var);
+            hoistVarNode(var);
             argumentsReferenceFound = true;
           }
         }
@@ -2128,7 +2114,7 @@ final class Es6RewriteGenerators implements CompilerPass {
             varStatement.replaceWith(astFactory.exprResult(commaExpression));
           }
           // Move declaration without initial values to just before the program method definition.
-          hoistNode(varStatement);
+          hoistVarNode(varStatement);
         }
 
         /**
@@ -2158,7 +2144,7 @@ final class Es6RewriteGenerators implements CompilerPass {
             varDeclaration.replaceWith(commaExpression);
           }
           // Move declaration without initial values to just before the program method definition.
-          hoistNode(varDeclaration);
+          hoistVarNode(varDeclaration);
         }
 
         /**
@@ -2186,7 +2172,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           // becomes `for (varName in ` ...
           varDeclaration.replaceWith(clonedVarName);
           // Move declaration without initial values to just before the program method definition.
-          hoistNode(varDeclaration);
+          hoistVarNode(varDeclaration);
         }
 
         /**

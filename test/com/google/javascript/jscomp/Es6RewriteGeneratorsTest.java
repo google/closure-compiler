@@ -245,6 +245,162 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConst() {
+    rewriteGeneratorsTest(
+        srcs(
+            lines(
+                "/** @const */", //
+                "var f = function *() {};")),
+        expected(
+            lines(
+                "/** @const */", //
+                "var f = function GEN_FUNC$0() {",
+                "  return $jscomp.generator.createGenerator(",
+                "      GEN_FUNC$0,",
+                "      function (GEN_CONTEXT$0) {",
+                "         GEN_CONTEXT$0.jumpToEnd();",
+                "      });",
+                "}")));
+  }
+
+  @Test
+  public void testContainsClosure() {
+    rewriteGeneratorsTest(
+        srcs(
+            lines(
+                "function *f(o) {", //
+                "  var i = 0",
+                "  var pp;",
+                "  function msg(p) {",
+                "    return i++ + ' ' + p + '\\n';",
+                "  }",
+                "  for (pp in obj) {",
+                "    yield msg(pp);",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "function f(o) {",
+                "  function msg(p) {",
+                "    return i++ + ' ' + p + '\\n';",
+                "  }",
+                "  var i",
+                "  var pp;",
+                "  var GEN_FORIN$0$0;",
+                "  return $jscomp.generator.createGenerator(",
+                "      f,",
+                "      function (GEN_CONTEXT$0) {",
+                "         if (GEN_CONTEXT$0.nextAddress == 1) {",
+                "           i = 0;",
+                "           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);",
+                "         }",
+                "         if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {",
+                "           return GEN_CONTEXT$0.jumpTo(0);",
+                "         }",
+                "         return GEN_CONTEXT$0.yield(msg(pp), 2);",
+                "      });",
+                "}")));
+  }
+
+  @Test
+  public void testContainsClosureAssignedToVariable() {
+    rewriteGeneratorsTest(
+        srcs(
+            lines(
+                "function *f(o) {", //
+                "  var i = 0",
+                "  var pp;",
+                "  var msg = function(p) {",
+                "    return i++ + ' ' + p + '\\n';",
+                "  }",
+                "  for (pp in obj) {",
+                "    yield msg(pp);",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "function f(o) {",
+                "  var i",
+                "  var pp;",
+                "  var msg;",
+                "  var GEN_FORIN$0$0;",
+                "  return $jscomp.generator.createGenerator(",
+                "      f,",
+                "      function (GEN_CONTEXT$0) {",
+                "         if (GEN_CONTEXT$0.nextAddress == 1) {",
+                "           i = 0;",
+                // TODO(bradfordcsmith): Maybe it would be better if we hoisted this function
+                // expression out so it doesn't create a new closure every time we enter this
+                // callback function?
+                "           msg = function(p) {",
+                "             return i++ + ' ' + p + '\\n';",
+                "           };",
+                "           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);",
+                "         }",
+                "         if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {",
+                "           return GEN_CONTEXT$0.jumpTo(0);",
+                "         }",
+                "         return GEN_CONTEXT$0.yield(msg(pp), 2);",
+                "      });",
+                "}")));
+  }
+
+  @Test
+  public void testContainsClosureAndTranspiledFromAsync() {
+    rewriteGeneratorsTest(
+        srcs(
+            lines(
+                "function f(o) {",
+                "  use(o);",
+                "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
+                "      function *() {", //
+                "        var i = 0",
+                "        var pp;",
+                "        function msg(p) {",
+                "          return i++ + ' ' + p + '\\n';",
+                "        }",
+                "        for (pp in obj) {",
+                "          yield msg(pp);",
+                "        }",
+                "      });",
+                "}")),
+        expected(
+            lines(
+                "function f(o) {",
+                // When Es6RewriteGenerators recognizes that it is transpiling code that was
+                // originally an async function, it will use the body of that function as the
+                // place to move variable declarations instead of putting them in the generator
+                // function body itself.
+                //
+                // To maintain normalization, all function declarations must go to the top
+                "  function msg(p) {",
+                "    return i++ + ' ' + p + '\\n';",
+                "  }",
+                // In a real situation the only thing that is likely to be here is code that
+                // was generated by transpilations that occurred after async function transpilation
+                // and before generator transpilation. For example code for handling parameter
+                // destructuring.
+                "  use(o);",
+                // Regular var declarations just go in the order they originally appeared
+                // immediately before the executor call.
+                "  var i",
+                "  var pp;",
+                "  var GEN_FORIN$0$0;",
+                "  return $jscomp.asyncExecutePromiseGeneratorProgram(",
+                "      function (GEN_CONTEXT$0) {",
+                "         if (GEN_CONTEXT$0.nextAddress == 1) {",
+                "           i = 0;",
+                "           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);",
+                "         }",
+                "         if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {",
+                "           return GEN_CONTEXT$0.jumpTo(0);",
+                "         }",
+                "         return GEN_CONTEXT$0.yield(msg(pp), 2);",
+                "      });",
+                "}")));
+  }
+
+  @Test
   public void testSimpleGenerator() {
     rewriteGeneratorBody("", "  GEN_CONTEXT$0.jumpToEnd();");
 
@@ -505,70 +661,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "}",
             "if (GEN_CONTEXT$0.nextAddress != 5) {",
             "  return GEN_CONTEXT$0.yield(void 0, 5);",
-            "}",
-            "if (!(GEN_CONTEXT$0.yieldResult)) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "j++;",
-            "return GEN_CONTEXT$0.jumpTo(2);"));
-  }
-
-  @Test
-  public void testWhileLoopsNoNormalization() {
-    // TODO(bradfordcsmith): Delete this test when Es6RewriteGenerators moves after normalization.
-    // Normalization turns all while loops into for loops.
-    // This test exists because at the moment Es6RewriteGenerators runs before normalization,
-    // so it still has to deal with while loops in the code.
-    disableNormalize();
-    rewriteGeneratorBodyWithVars(
-        "var i = 0; while (i < 10) { i++; i++; i++; } yield i;",
-        "  var i;",
-        lines("i = 0;", "while (i < 10) { i ++; i++; i++; }", "return GEN_CONTEXT$0.yield(i, 0);"));
-
-    rewriteGeneratorSwitchBodyWithVars(
-        "var j = 0; while (j < 10) { yield j; j++; } j += 10;",
-        "var j;",
-        lines(
-            "  j = 0;",
-            "case 2:",
-            "  if (!(j < 10)) {",
-            "    GEN_CONTEXT$0.jumpTo(3);",
-            "    break;",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 4)",
-            "case 4:",
-            "  j++;",
-            "  GEN_CONTEXT$0.jumpTo(2);",
-            "  break;",
-            "case 3:",
-            "  j += 10;",
-            "  GEN_CONTEXT$0.jumpToEnd();"));
-
-    rewriteGeneratorBodyWithVars(
-        "var j = 0; while (j < 10) { yield j; j++; } yield 5",
-        "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 4) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.yield(5, 0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 4)",
-            "}",
-            "  j++;",
-            "  return GEN_CONTEXT$0.jumpTo(2);"));
-
-    rewriteGeneratorBodyWithVars(
-        "var j = 0; while (yield) { j++; }",
-        "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 4) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 4);",
             "}",
             "if (!(GEN_CONTEXT$0.yieldResult)) {",
             "  return GEN_CONTEXT$0.jumpTo(0);",

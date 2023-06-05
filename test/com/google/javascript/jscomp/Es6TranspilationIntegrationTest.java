@@ -38,6 +38,35 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
+  public Es6TranspilationIntegrationTest() {
+    super(getDefaultExterns());
+  }
+
+  private static String getDefaultExterns() {
+    return getDefaultExternsBuilder().build();
+  }
+
+  private static TestExternsBuilder getDefaultExternsBuilder() {
+    return new TestExternsBuilder()
+        .addAsyncIterable()
+        .addArray()
+        .addArguments()
+        .addObject()
+        .addMath()
+        .addExtra(
+            // stubs of runtime libraries
+            lines(
+                "/** @const */",
+                "var $jscomp = {};",
+                "$jscomp.generator = {};",
+                "$jscomp.generator.createGenerator = function() {};",
+                "/** @constructor */",
+                "$jscomp.generator.Context = function() {};",
+                "/** @constructor */",
+                "$jscomp.generator.Context.PropertyIterator = function() {};",
+                "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"));
+  }
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -1008,15 +1037,35 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testExtendNonNativeObject() {
-    // TODO(sdh): If a normal Object extern is found, then this test fails because
-    // the pass adds extra handling for super() possibly changing 'this'.  Does setting
-    // the externs to "" to prevent this defeat the purpose of this test?  It became
-    // necessary as a result of adding "/** @constructor */ function Object() {}" to
-    // the externs used by this test.
-
     // No special handling when Object is redefined.
+    Externs customExterns =
+        externs(
+            new TestExternsBuilder()
+                .addAsyncIterable()
+                .addArray()
+                .addArguments()
+                // TODO(sdh): If a normal Object extern is found, then this test fails because
+                // the pass adds extra handling for super() possibly changing 'this'.  Does setting
+                // the externs to "" to prevent this defeat the purpose of this test?  It became
+                // necessary as a result of adding "/** @constructor */ function Object() {}" to
+                // the externs used by this test.
+                // .addObject()
+                .addMath()
+                .addExtra(
+                    // stubs of runtime libraries
+                    lines(
+                        "/** @const */",
+                        "var $jscomp = {};",
+                        "$jscomp.generator = {};",
+                        "$jscomp.generator.createGenerator = function() {};",
+                        "/** @constructor */",
+                        "$jscomp.generator.Context = function() {};",
+                        "/** @constructor */",
+                        "$jscomp.generator.Context.PropertyIterator = function() {};",
+                        "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"))
+                .build());
     test(
-        externs(""),
+        customExterns,
         srcs(
             lines(
                 "class Object {}",
@@ -1043,7 +1092,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "};",
                 "$jscomp.inherits(Foo, Object);")));
     test(
-        externs(""),
+        customExterns,
         srcs(
             lines(
                 "class Object {}", //
@@ -1404,9 +1453,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testInheritFromExterns() {
     test(
         externs(
-            lines(
-                "/** @constructor */ function ExternsClass() {}",
-                "ExternsClass.m = function() {};")),
+            getDefaultExternsBuilder()
+                .addExtra(
+                    lines(
+                        "/** @constructor */ function ExternsClass() {}",
+                        "ExternsClass.m = function() {};"))
+                .build()),
         srcs("class CodeClass extends ExternsClass {}"),
         expected(
             lines(
