@@ -27,13 +27,9 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     this.enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
   }
 
   @Override
@@ -74,7 +70,7 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArrow() {
-    testSame("function f() { var g = () => this; }");
+    testSame("function f() { var g = () => { return this; }; }");
     // It would be safe to collapse this one because it doesn't reference 'this' or 'arguments'
     // but (at least for now) we don't.
     testSame("let f = () => { console.log(0); };");

@@ -54,14 +54,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         .build();
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
-    // disableCompareJsDoc();
   }
 
   @Test
@@ -126,7 +121,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "a.b.staticProp = 5;",
             "/** @constructor */",
             "function f() { ",
-            "  while (true) { ",
+            "  for (; true;) { ",
             "    var b = a?.b;", // not inlined when optional chain
             "    alert(b?.staticProp);",
             "  }",
@@ -184,7 +179,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "function f() { ",
             // Not an alias for `a.b` when it's an optional chain.
             "  var b = a?.b;",
-            "  while (true) { ",
+            "  for (; true;) { ",
             "    alert(b?.staticProp);",
             "  }",
             "}"));
@@ -365,7 +360,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testAliasingOfReassignedProperty5() {
     test(
         "var obj = {foo: {bar: 3}}; var bar = obj.foo.bar; var obj; alert(bar);",
-        "var obj = {foo: {bar: 3}}; var bar =        null; var obj; alert(obj.foo.bar);");
+        "var obj = {foo: {bar: 3}}; var bar =        null;          alert(obj.foo.bar);");
   }
 
   @Test
@@ -914,7 +909,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "      }",
             "    }",
             "  }",
-            "  var tmp1, tmp2, state = 0;",
+            "  var tmp1;",
+            "  var tmp2;",
+            "  var state = 0;",
             "  g();",
             "  return g();",
             "}"),
@@ -935,7 +932,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "      }",
             "    }",
             "  }",
-            "  var tmp1, tmp2, state = 0;",
+            "  var tmp1;",
+            "  var tmp2;",
+            "  var state = 0;",
             "  g();",
             "  return g();",
             "}"));
@@ -2064,8 +2063,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testGlobalClassAlias3() {
     test(
-        "class A {} const B = A; B.prototype.fn = () => 5;",
-        "class A {} const B = null; A.prototype.fn = () => 5;");
+        "class A {} const B =    A; B.prototype.fn = () =>          5   ;",
+        "class A {} const B = null; A.prototype.fn = () => { return 5; };");
   }
 
   @Test
@@ -2278,7 +2277,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns2.B = class extends ns1.A {}",
             "use(ns2.B.staticProp.bar);"),
         lines(
-            "var ns1 = {}, ns2 = {};",
+            "var ns1 = {};",
+            "var ns2 = {};",
             "ns1.A = class {};",
             "ns1.A.staticProp = {foo: 'bar'};",
             "ns2.B = class extends ns1.A {}",
@@ -2291,14 +2291,16 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns2.B = class extends ns1.A {}",
             "use(ns2.B.staticProp?.bar);"),
         lines(
-            "var ns1 = {}, ns2 = {};",
+            "var ns1 = {};",
+            "var ns2 = {};",
             "ns1.A = class {};",
             "ns1.A.staticProp = {foo: 'bar'};",
             "ns2.B = class extends ns1.A {}",
             "use(ns1.A.staticProp?.bar);"));
     testSame(
         lines(
-            "var ns1 = {}, ns2 = {};",
+            "var ns1 = {};",
+            "var ns2 = {};",
             "ns1.A = class {};",
             "ns1.A.staticProp = {foo: 'bar'};",
             "ns2.B = class extends ns1.A {}",
@@ -2857,10 +2859,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     test(
         lines(
             "class Foo { static m() {} }",
-            "class Bar extends Foo { static m() { return () => super.m(); } }"),
+            "class Bar extends Foo { static m() { return () =>       super.m(); } }"),
         lines(
             "class Foo { static m() {} }",
-            "class Bar extends Foo { static m() { return () =>   Foo.m(); } }"));
+            "class Bar extends Foo { static m() { return () => { return Foo.m(); }; } }"));
   }
 
   @Test

@@ -34,13 +34,9 @@ import org.junit.runners.JUnit4;
 public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
   private CrossChunkReferenceCollector testedCollector;
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
   }
 
   @Override
@@ -78,14 +74,14 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
   @Test
   public void testVarInLoopNotAssignedOnlyOnceInLifetime() {
-    testSame("var x; while (true) { x = 0; }");
+    testSame("var x; for (; true;) { x = 0; }");
     ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
     Var xVar = globalVariableNamesMap.get("x");
     assertThat(globalVariableNamesMap).containsKey("x");
     ReferenceCollection xRefs = testedCollector.getReferences(xVar);
     assertThat(xRefs.isAssignedOnceInLifetime()).isFalse();
 
-    testSame("let x; while (true) { x = 0; }");
+    testSame("let x; for (; true;) { x = 0; }");
     globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
     xVar = globalVariableNamesMap.get("x");
     assertThat(globalVariableNamesMap).containsKey("x");
@@ -203,8 +199,11 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
             "var x = 1;",
             "const y = x;",
             "let z = x - y;",
-            "function f(x, y) {", // only f and z globals referenced
-            "  return x + y + z;",
+            "function f(x1, y1) {", // only f and z globals referenced
+            // NOTE: If we try to name the parameters the same as the global variables, then
+            // Normalization will rename them. Normalization always runs before
+            // CrossChunkReferenceCollector does.
+            "  return x1 + y1 + z;",
             "}"));
 
     // Pull out all the references for comparison.
@@ -466,9 +465,9 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
             // setters
             "  set x(x) {},",
             "  set 'a'(v) {},",
-            "  set ['a'](v) {},",
-            "  set 678(v) {},",
-            "  set [678](v) {},",
+            "  set ['a'](v1) {},",
+            "  set 678(v2) {},",
+            "  set [678](v3) {},",
             // spread
             "  ...wellDefinedName,",
             "};"));

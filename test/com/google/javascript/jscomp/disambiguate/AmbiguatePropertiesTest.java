@@ -51,15 +51,11 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     enableTypeCheck();
     replaceTypesWithColors();
     enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
     disableCompareJsDoc(); // removeTypes also deletes JSDocInfo
   }
@@ -807,30 +803,32 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testImplementsAndExtends() {
-    String js = lines(
-        "/** @interface */ function Foo() {}",
-        "/** @constructor */ function Bar(){}",
-        "Bar.prototype.y = function() { return 3; };",
-        "/**",
-        " * @constructor",
-        " * @extends {Bar}",
-        " * @implements {Foo}",
-        " */",
-        "function SubBar(){ }",
-        "/** @param {Foo} x */ function f(x) { x.z = 3; }",
-        "/** @param {SubBar} x */ function g(x) { x.z = 3; }");
-    String output = lines(
-        "/** @interface */ function Foo(){}",
-        "/** @constructor */ function Bar(){}",
-        "Bar.prototype.b = function() { return 3; };",
-        "/**",
-        " * @constructor",
-        " * @extends {Bar}",
-        " * @implements {Foo}",
-        " */",
-        "function SubBar(){}",
-        "/** @param {Foo} x */ function f(x) { x.a = 3; }",
-        "/** @param {SubBar} x */ function g(x) { x.a = 3; }");
+    String js =
+        lines(
+            "/** @interface */ function Foo() {}",
+            "/** @constructor */ function Bar(){}",
+            "Bar.prototype.y = function() { return 3; };",
+            "/**",
+            " * @constructor",
+            " * @extends {Bar}",
+            " * @implements {Foo}",
+            " */",
+            "function SubBar(){ }",
+            "/** @param {Foo} x1 */ function f(x1) { x1.z = 3; }",
+            "/** @param {SubBar} x2 */ function g(x2) { x2.z = 3; }");
+    String output =
+        lines(
+            "/** @interface */ function Foo(){}",
+            "/** @constructor */ function Bar(){}",
+            "Bar.prototype.b = function() { return 3; };",
+            "/**",
+            " * @constructor",
+            " * @extends {Bar}",
+            " * @implements {Foo}",
+            " */",
+            "function SubBar(){}",
+            "/** @param {Foo} x1 */ function f(x1) { x1.a = 3; }",
+            "/** @param {SubBar} x2 */ function g(x2) { x2.a = 3; }");
     test(js, output);
   }
 
@@ -849,8 +847,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             " * @implements {A}",
             " */",
             "function C2(){}",
-            "/** @param {C1} x */ function f(x) { x.y = 3; }",
-            "/** @param {A} x */ function g(x) { x.z = 3; }");
+            "/** @param {C1} x1 */ function f(x1) { x1.y = 3; }",
+            "/** @param {A} x2 */ function g(x2) { x2.z = 3; }");
     String output =
         lines(
             "/** @interface */ function A(){}",
@@ -864,8 +862,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             " * @implements {A}",
             " */",
             "function C2(){}",
-            "/** @param {C1} x */ function f(x) { x.a = 3; }",
-            "/** @param {A} x */ function g(x) { x.b = 3; }");
+            "/** @param {C1} x1 */ function f(x1) { x1.a = 3; }",
+            "/** @param {A} x2 */ function g(x2) { x2.b = 3; }");
     test(js, output);
   }
 
@@ -889,8 +887,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "}",
             "/** @implements {A} */",
             "class C2 extends C1 {}",
-            "/** @param {A} x */ function f(x) { x.y = 3; }",
-            "/** @param {C1} x */ function g(x) { x.z = 3; }");
+            "/** @param {A} x1 */ function f(x1) { x1.y = 3; }",
+            "/** @param {C1} x2 */ function g(x2) { x2.z = 3; }");
     String output =
         lines(
             "/** @interface */",
@@ -908,23 +906,25 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "}",
             "/** @implements {A} */",
             "class C2 extends C1 {}",
-            "/** @param {A} x */ function f(x) { x.a = 3; }",
-            "/** @param {C1} x */ function g(x) { x.b = 3; }");
+            "/** @param {A} x1 */ function f(x1) { x1.a = 3; }",
+            "/** @param {C1} x2 */ function g(x2) { x2.b = 3; }");
     test(js, output);
   }
 
   @Test
   public void testExtendsInterface() {
-    String js = lines(
-        "/** @interface */ function A() {}",
-        "/** @interface \n @extends {A} */ function B() {}",
-        "/** @param {A} x */ function f(x) { x.y = 3; }",
-        "/** @param {B} x */ function g(x) { x.z = 3; }\n");
-    String output = lines(
-        "/** @interface */ function A(){}",
-        "/** @interface \n @extends {A} */ function B(){}",
-        "/** @param {A} x */ function f(x) { x.a = 3; }",
-        "/** @param {B} x */ function g(x) { x.b = 3; }\n");
+    String js =
+        lines(
+            "/** @interface */ function A() {}",
+            "/** @interface \n @extends {A} */ function B() {}",
+            "/** @param {A} x1 */ function f(x1) { x1.y = 3; }",
+            "/** @param {B} x2 */ function g(x2) { x2.z = 3; }\n");
+    String output =
+        lines(
+            "/** @interface */ function A(){}",
+            "/** @interface \n @extends {A} */ function B(){}",
+            "/** @param {A} x1 */ function f(x1) { x1.a = 3; }",
+            "/** @param {B} x2 */ function g(x2) { x2.b = 3; }\n");
     test(js, output);
   }
 
@@ -1814,10 +1814,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             lines(
                 "/** @constructor */",
                 "function Foo() {}",
-                "Foo.a = () => 3;",
+                "Foo.a = () => { return 3; };",
                 "/** @constructor */",
                 "function Bar() {}",
-                "Bar.a = () => 4;",
+                "Bar.a = () => { return 4; };",
                 "Object.setPrototypeOf(Foo, Bar);")));
     // now trying to reference Foo.barMethod will not work, and will call barMethod instead.
     // AmbiguateProperties currently ignores this case
@@ -1893,7 +1893,9 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "class Foo {", //
             "  a() {}",
             "}",
-            "const {a: method = () => 3} = new Foo();"));
+            "const {",
+            "  a: method = () => { return 3; }",
+            "} = new Foo();"));
   }
 
   @Test
