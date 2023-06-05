@@ -59,13 +59,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         .build();
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
     disableCompareJsDoc();
   }
 
@@ -374,6 +370,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjLitDeclarationWithSet1() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame("var a = {set b(a){}};");
   }
 
@@ -522,6 +520,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalObjectNameInBooleanExpressionDepth1_3() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
 
     test(
         srcs("var a = {b: 0}; a.c = 1; while (a || a.c) x();"),
@@ -642,6 +642,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDontCollapseObjectLiteralVarDeclarationInsideLoop() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // See https://github.com/google/closure-compiler/issues/3050
     // Another solution to the issue would be to explicitly initialize obj.val to undefined at the
     // start of the loop, but that requires some more refactoring of CollapseProperties.
@@ -658,6 +660,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDontCollapseObjectLiteralPropertyDeclarationInsideLoop() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // we can collapse `obj.x` but not `obj.x.val`
     test(
         srcs(
@@ -683,6 +687,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDontCollapseConstructorDeclarationInsideLoop() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         lines(
             "for (var i = 0; i < 2; i++) {",
@@ -697,6 +703,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDoCollapsePropertiesDeclaredInsideLoop() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // It's okay that this property is declared inside a loop as long as the object it's on is not.
     test(
         srcs(
@@ -754,6 +762,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testAliasCreatedForObjectDepth2_2() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs("var a = {}; a.b = {c: 0}; for (var p in a.b) { e(a.b[p]); }"),
         expected("var a$b = {c: 0}; for (var p in a$b) { e(a$b[p]); }"));
@@ -837,6 +847,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testAliasCreatedForEnumDepth1_4() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs("/** @enum */ var a = {b: 0}; for (var p in a) { f(a[p]); }"),
         expected("var a$b = 0; /** @enum */ var a = {b: a$b}; for (var p in a) { f(a[p]); }"));
@@ -890,6 +902,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testAliasCreatedForEnumDepth2_2() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             lines(
@@ -909,6 +923,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDontCollapseEnumWhenParentNamespaceAliased() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         lines(
             "var a = {}; var d = 1; d = a; /** @enum */ a.b = {c: 0};",
@@ -1565,6 +1581,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testNamespaceResetInGlobalScope4() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs("var a = {}; /** @constructor */ a.b = function() {}; var a = a || {};"),
         expected("var a = {}; /** @constructor */ var a$b = function() {}; var a = a || {};"));
@@ -2183,6 +2201,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testInlineAliasWithModifications() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame("var x = 10; function f() { var y = x; x++; alert(y)} ");
     testSame("var x = 10; function f() { var y = x; x+=1; alert(y)} ");
     test(
@@ -2219,6 +2239,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testBug1974371() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs("/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}}; for (var key in Foo) {}"),
         expected(
@@ -2287,6 +2309,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnumOfObjects1() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             lines(
@@ -2332,6 +2356,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnumOfObjects3() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             lines(
@@ -2353,6 +2379,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnumOfObjects4() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
 
     // Note that this produces bad code, but that's OK, because
     // checkConsts will yell at you for reassigning an enum value.
@@ -2384,7 +2412,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testObjectOfObjects1() {
     // Basically the same as testEnumOfObjects4, but without the
     // constant enum values.
-    testSame("var Foo = {a: {c: 2}, b: {c: 3}}; for (var key in Foo) {} Foo.a = 3; alert(Foo.a);");
+    testSame(
+        "var Foo = {a: {c: 2}, b: {c: 3}}; var key; for (key in Foo) {} Foo.a = 3; alert(Foo.a);");
   }
 
   @Test
@@ -3153,11 +3182,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testCanCollapseSinglePropertyInObjectPatternInForLoopClosure() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame("const x = {y: 1}; for (const {y} = x; true;) { use(() => y); }");
   }
 
   @Test
   public void testPropertyInArray() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame("var a, b = [{}, {}]; a.foo = 5; b.bar = 6;");
 
     test(
@@ -3296,6 +3329,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassNonStaticMembers() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // Call class method inside class scope
     testSame(
         lines(
@@ -3363,6 +3398,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassWithMultipleStaticMembers() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             lines(
@@ -3618,6 +3655,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticMemberUsingSuperInArrowFnNotCollapsed() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         lines(
             "class Baz extends Bar() {",
@@ -3925,6 +3964,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPropertyMethodAssignment_receiverAffectedByCollapse() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // ES5 version
     test(
         lines(

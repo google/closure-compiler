@@ -32,13 +32,9 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     super("var extern;");
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
   }
 
   @Override
@@ -79,6 +75,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testLoops() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("for(var a=0; a<10; a++) {}");
     inFunction("var x; for(var a=0; a<10; a++) {x=a}; a(x)");
     inFunction("var x; for(var a=0; x=a<10; a++) {}",
@@ -98,6 +96,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testMultiPaths() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x,y; if(x)y=1;", "var x,y; if(x)1;");
     inFunction("var x,y; if(x)y=1; y=2; x(y)", "var x,y; if(x)1; y=2; x(y)");
     inFunction("var x; switch(x) { case(1): x=1; break; } x");
@@ -107,6 +107,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testUsedAsConditions() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x; while(x=1){}", "var x; while(1){}");
     inFunction("var x; if(x=1){}", "var x; if(1){}");
     inFunction("var x; do{}while(x=1)", "var x; do{}while(1)");
@@ -121,6 +123,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void nullishCoalesce() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x; if(x=1==4??1){}", "var x; if(1==4??1) {}");
     inFunction("var x; if(0??(x=1)){}", "var x; if(0??1){}");
     inFunction("var x; if((x=2)??(x=1)){}", "var x; if(2??1){}");
@@ -132,6 +136,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testUsedAsConditionsInSwitchStatements() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x; switch(x=1){}", "var x; switch(1){}");
     inFunction("var x; switch(x){case(x=1):break;}",
         "var x; switch(x){case(1):break;}");
@@ -168,6 +174,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   /** BUG #1358904 */
   @Test
   public void testAssignAndReadInCondition() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var a, b; if ((a = 1) && (b = a)) {b}");
     inFunction("var a, b; if ((b = a) && (a = 1)) {b}",
                "var a, b; if ((b = a) && (1)) {b}");
@@ -182,6 +190,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testErrorHandling() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x; try{ x=1 } catch(e){ x=2 }; x");
     inFunction("var x; try{ x=1 } catch(e){ x=2 }",
         "var x;try{ 1 } catch(e) { 2 }");
@@ -223,6 +233,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testDeadVarDeclarations2() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x=1;");
     inFunction("var x=1; x=2; x", "var x; 1; x=2; x");
     inFunction("var x=1, y=10; x=2; x", "var x; 1; var y; 10; x=2; x");
@@ -232,6 +244,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testDeadVarDeclarations_forLoop() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("for(var x=1;;);");
     inFunction("for(var x=1,y=x;;);");
     inFunction("for(var x=1;10;);");
@@ -245,6 +259,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testInnerFunctions() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x = function() { var x; x=1; }",
         "var x = function() { var x; 1; }");
   }
@@ -273,6 +289,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testAssignmentOpUsedAsLhs() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x,y; y = x += foo(); print(y)",
                "var x,y; y = x +  foo(); print(y)");
     inFunction("var x,y; y = x += foo?.(); print(y)", "var x,y; y = x +  foo?.(); print(y)");
@@ -280,6 +298,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testAssignmentOpUsedAsCondition() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x; if(x += foo()) {}",
                "var x; if(x +  foo()) {}");
     inFunction("var x; if(x += foo?.()) {}", "var x; if(x +  foo?.()) {}");
@@ -315,6 +335,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testDeadButAlivePartiallyWithinTheExpression() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x; x = 100, print(x), x = 101;",
                "var x; x = 100, print(x),     101;");
     inFunction("var x; x = 100, print(x), print(x), x = 101;",
@@ -350,6 +372,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testAssignmentChain() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var a,b,c,d,e; a = b = c = d = e = 1",
                "var a,b,c,d,e; 1");
     inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(c)",
@@ -365,6 +389,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testAssignmentOpChain() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var a,b,c,d,e; a = b = c += d = e = 1",
                "var a,b,c,d,e;         c + 1");
     inFunction("var a,b,c,d,e; a = b = c += d = e = 1;  print(e)",
@@ -399,6 +425,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testNestedReassignments() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var a; a = (a = 1)", "var a; 1");
     inFunction("var a; a = (a *= 2)", "var a; a*2");
 
@@ -431,6 +459,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIncrementalReassignmentInForLoops() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("for(;x+=1;x+=1) {}");
     inFunction("for(;x;x+=1){}");
     inFunction("for(;x+=1;){foo(x)}");
@@ -445,6 +475,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testBug8730257() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
         "  try {" +
         "     var sortIndices = {};" +
@@ -596,6 +628,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIssue384a() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
             " var a, b;\n" +
             " if (f(b = true) || f(b = false))\n" +
@@ -607,6 +641,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIssue384b() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
             " var a, b;\n" +
             " (f(b = true) || f(b = false)) ? (a = b) : (a = null);\n" +
@@ -615,6 +651,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIssue384c() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
             " var a, b;\n" +
             " (a ? f(b = true) : f(b = false)) && (a = b);\n" +
@@ -623,6 +661,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIssue384d() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
             " var a, b;\n" +
             " (f(b = true) || f(b = false)) && (a = b);\n" +
@@ -631,6 +671,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testForIn() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x = {}; for (var y in x) { y() }");
     inFunction("var x, y, z; x = {}; z = {}; for (y in x = z) { y() }",
                "var x, y, z;   ({}); z = {}; for (y in z)     { y() }");
@@ -726,6 +768,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testGenerators() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         lines(
             "function* f() {",
@@ -744,6 +788,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testForOf() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var x = {}; for (var y of x) { y() }");
 
     inFunction("var x, y, z; x = {}; z = {}; for (y of x = z) {}",
@@ -752,6 +798,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testForAwaitOf() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inAsyncFunction("var x = {}; for await (var y of x) { y() }");
 
     inAsyncFunction(
@@ -769,6 +817,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testDestructuring() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("var a, b, c; [a, b, c] = [1, 2, 3];");
 
     inFunction("var a, b, c; [a, b, c] = [1, 2, 3]; return a + c;");
@@ -830,6 +880,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testForOfWithDestructuring() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
         lines(
             "let x;",
@@ -852,6 +904,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testReferenceInDestructuringPatternDefaultValue() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction(
         lines(
             "let bar = [];",
@@ -871,6 +925,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testReferenceInDestructuringPatternComputedProperty() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     inFunction("let str; str = 'bar'; const {[str + 'baz']: foo} = obj; foo;");
 
     inFunction(
