@@ -1930,10 +1930,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         scriptNodeByFilename.put(input.getSourceFile().getName(), n);
       }
 
-      if (options.transformAMDToCJSModules) {
-        processAMDModules(moduleGraph.getAllInputs());
-      }
-
       if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)
           || options.getProcessCommonJSModules()) {
         initializeModuleLoader();
@@ -2345,15 +2341,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Call getRequires to force regex-based dependency parsing to happen.
       input.getRequires();
       input.setJsModuleType(ModuleType.ES6);
-    }
-  }
-
-  /** Transforms AMD to CJS modules */
-  void processAMDModules(Iterable<CompilerInput> inputs) {
-    for (CompilerInput input : inputs) {
-      input.setCompiler(this);
-      Node root = checkNotNull(input.getAstRoot(this));
-      new TransformAMDToCJSModule(this).process(null, root);
     }
   }
 

@@ -472,7 +472,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
-    options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.setProcessCommonJSModules(config.processCommonJSModules);
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
@@ -3069,15 +3068,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     @CanIgnoreReturnValue
     public CommandLineConfig setManifestMaps(List<String> manifestMaps) {
       this.manifestMaps = manifestMaps;
-      return this;
-    }
-
-    private boolean transformAMDToCJSModules = false;
-
-    /** Set whether to transform AMD to Commonchunks. */
-    @CanIgnoreReturnValue
-    public CommandLineConfig setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
-      this.transformAMDToCJSModules = transformAMDToCJSModules;
       return this;
     }
 

@@ -828,9 +828,6 @@ public class CompilerOptions implements Serializable {
   /** List of properties that we report invalidation errors for. */
   private ImmutableSet<String> propertiesThatMustDisambiguate;
 
-  /** Transform AMD to CommonJS modules. */
-  boolean transformAMDToCJSModules = false;
-
   /** Rewrite CommonJS modules so that they can be concatenated together. */
   private boolean processCommonJSModules = false;
 
@@ -2561,11 +2558,6 @@ public class CompilerOptions implements Serializable {
     this.sourceMapLocationMappings = sourceMapLocationMappings;
   }
 
-  /** Activates transformation of AMD to CommonJS modules. */
-  public void setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
-    this.transformAMDToCJSModules = transformAMDToCJSModules;
-  }
-
   /**
    * Rewrites CommonJS modules so that modules can be concatenated together, by renaming all globals
    * to avoid conflicting with other modules.
@@ -2946,7 +2938,6 @@ public class CompilerOptions implements Serializable {
         .add("syntheticBlockStartMarker", syntheticBlockStartMarker)
         .add("tcProjectId", tcProjectId)
         .add("tracer", tracer)
-        .add("transformAMDToCJSModules", transformAMDToCJSModules)
         .add("trustedStrings", trustedStrings)
         .add("tweakProcessing", getTweakProcessing())
         .add("emitUseStrict", emitUseStrict)
