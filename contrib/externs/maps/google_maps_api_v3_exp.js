@@ -8446,7 +8446,7 @@ google.maps.StreetViewPanorama.prototype.getPhotographerPov = function() {};
 /**
  * Returns the current <code>LatLng</code> position for the Street View
  * panorama.
- * @return {google.maps.LatLng}
+ * @return {?google.maps.LatLng}
  */
 google.maps.StreetViewPanorama.prototype.getPosition = function() {};
 
@@ -8459,7 +8459,7 @@ google.maps.StreetViewPanorama.prototype.getPov = function() {};
 /**
  * Returns the status of the panorama on completion of the
  * <code>setPosition()</code> or <code>setPano()</code> request.
- * @return {google.maps.StreetViewStatus}
+ * @return {!google.maps.StreetViewStatus}
  */
 google.maps.StreetViewPanorama.prototype.getStatus = function() {};
 
@@ -8520,7 +8520,7 @@ google.maps.StreetViewPanorama.prototype.setPano = function(pano) {};
 
 /**
  * Sets the current <code>LatLng</code> position for the Street View panorama.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} latLng
+ * @param {?google.maps.LatLng|?google.maps.LatLngLiteral} latLng
  * @return {undefined}
  */
 google.maps.StreetViewPanorama.prototype.setPosition = function(latLng) {};
@@ -10494,7 +10494,8 @@ google.maps.journeySharing = {};
 google.maps.journeySharing.AuthToken = function() {};
 
 /**
- * The expiration time of this token, in seconds from token issuance.
+ * The expiration time in seconds. A token expires in this amount of time after
+ * fetching.
  * @type {number}
  */
 google.maps.journeySharing.AuthToken.prototype.expiresInSeconds;
@@ -10680,7 +10681,10 @@ google.maps.journeySharing.DeliveryVehicle.prototype.remainingDurationMillis;
 
 /**
  * The journey segments assigned to this delivery vehicle, starting from the
- * vehicle&#39;s most recently reported location.
+ * vehicle&#39;s most recently reported location. This is only populated when
+ * the {@link google.maps.journeySharing.DeliveryVehicle} data object is
+ * provided through {@link
+ * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProvider}.
  * @type {!Array<!google.maps.journeySharing.VehicleJourneySegment>}
  */
 google.maps.journeySharing.DeliveryVehicle.prototype
@@ -10712,10 +10716,22 @@ google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams
 google.maps.journeySharing.DeliveryVehicleStop = function() {};
 
 /**
+ * The location of the stop.
+ * @type {?google.maps.LatLngLiteral}
+ */
+google.maps.journeySharing.DeliveryVehicleStop.prototype.plannedLocation;
+
+/**
+ * The state of the stop.
+ * @type {?google.maps.journeySharing.DeliveryVehicleStopState}
+ */
+google.maps.journeySharing.DeliveryVehicleStop.prototype.state;
+
+/**
  * The list of Tasks to be performed at this stop. <ul> <li><code>id</code>: the
  * ID of the task. <li><code>extraDurationMillis</code>: the extra time it takes
  * to perform the task, in milliseconds. </ul>
- * @type {!Array<{id:?string, extraDurationMillis:?number}>}
+ * @type {!Array<!google.maps.journeySharing.TaskInfo>}
  */
 google.maps.journeySharing.DeliveryVehicleStop.prototype.tasks;
 
@@ -12342,6 +12358,31 @@ google.maps.journeySharing.Task.prototype.type;
 google.maps.journeySharing.Task.prototype.vehicleId;
 
 /**
+ * TaskInfo type, used by {@link
+ * google.maps.journeySharing.DeliveryVehicleStop}.
+ * @record
+ */
+google.maps.journeySharing.TaskInfo = function() {};
+
+/**
+ * The extra time it takes to perform the task, in milliseconds.
+ * @type {?number}
+ */
+google.maps.journeySharing.TaskInfo.prototype.extraDurationMillis;
+
+/**
+ * The ID of the task.
+ * @type {?string}
+ */
+google.maps.journeySharing.TaskInfo.prototype.id;
+
+/**
+ * The time window during which the task should be completed.
+ * @type {?google.maps.journeySharing.TimeWindow}
+ */
+google.maps.journeySharing.TaskInfo.prototype.targetTimeWindow;
+
+/**
  * Parameters specific to marker customization functions that apply options to
  * markers representing planned or actual task locations. Used by {@link
  * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions.taskMarkerCustomization}
@@ -13195,7 +13236,7 @@ google.maps.marker.AdvancedMarkerElement.prototype.collisionBehavior;
 
 /**
  * See {@link google.maps.marker.AdvancedMarkerElementOptions.content}.
- * @type {undefined|null|!Element}
+ * @type {undefined|null|!Node}
  */
 google.maps.marker.AdvancedMarkerElement.prototype.content;
 
@@ -13275,7 +13316,7 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.collisionBehavior;
  * <code>AdvancedMarkerElement</code> will move the DOM element and cause the
  * previous <code>AdvancedMarkerElement</code> to look empty.
  * @default {@link google.maps.marker.PinElement.element}
- * @type {undefined|null|!Element}
+ * @type {undefined|null|!Node}
  */
 google.maps.marker.AdvancedMarkerElementOptions.prototype.content;
 
