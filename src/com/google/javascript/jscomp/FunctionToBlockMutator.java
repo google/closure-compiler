@@ -263,10 +263,17 @@ class FunctionToBlockMutator {
         compiler,
         null,
         ImmutableList.of(fnNode),
-        new MakeDeclaredNamesUnique(
-            new InlineRenamer(
-                compiler.getCodingConvention(), idSupplier, "inline_", isCallInLoop, true, null),
-            false),
+        MakeDeclaredNamesUnique.builder()
+            .withRenamer(
+                new InlineRenamer(
+                    compiler.getCodingConvention(),
+                    idSupplier,
+                    "inline_",
+                    isCallInLoop,
+                    true,
+                    null))
+            .withMarkChanges(false)
+            .build(),
         true);
     // Make label names unique to this instance.
     new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false, false)

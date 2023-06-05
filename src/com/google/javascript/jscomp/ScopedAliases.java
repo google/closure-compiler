@@ -721,7 +721,8 @@ class ScopedAliases implements CompilerPass {
         for (String s : forbiddenLocals) {
           renamer.addDeclaredName(s, false);
         }
-        MakeDeclaredNamesUnique uniquifier = new MakeDeclaredNamesUnique(renamer);
+        MakeDeclaredNamesUnique uniquifier =
+            MakeDeclaredNamesUnique.builder().withRenamer(renamer).build();
         NodeTraversal.traverseScopeRoots(
             compiler, null, ImmutableList.of(t.getScopeRoot()), uniquifier, true);
       }

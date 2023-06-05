@@ -126,9 +126,11 @@ final class Normalize implements CompilerPass {
     NodeTraversal.traverse(
         compiler,
         js,
-        new MakeDeclaredNamesUnique(
-            new BoilerplateRenamer(
-                compiler.getCodingConvention(), compiler.getUniqueNameIdSupplier(), prefix)));
+        MakeDeclaredNamesUnique.builder()
+            .withRenamer(
+                new BoilerplateRenamer(
+                    compiler.getCodingConvention(), compiler.getUniqueNameIdSupplier(), prefix))
+            .build());
   }
 
   static Node parseAndNormalizeTestCode(AbstractCompiler compiler, String code) {
@@ -147,7 +149,7 @@ final class Normalize implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     if (makeDeclaredNamesUnique) {
-      MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
+      MakeDeclaredNamesUnique renamer = MakeDeclaredNamesUnique.builder().build();
       NodeTraversal.traverseRoots(compiler, renamer, externs, root);
     }
 

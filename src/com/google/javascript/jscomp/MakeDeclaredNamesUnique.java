@@ -55,17 +55,42 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   private final Renamer rootRenamer;
   private final boolean markChanges;
 
-  MakeDeclaredNamesUnique() {
-    this(new ContextualRenamer(), true);
-  }
-
-  MakeDeclaredNamesUnique(Renamer renamer) {
-    this(renamer, true);
-  }
-
-  MakeDeclaredNamesUnique(Renamer renamer, boolean markChanges) {
+  private MakeDeclaredNamesUnique(Renamer renamer, boolean markChanges) {
     this.rootRenamer = renamer;
     this.markChanges = markChanges;
+  }
+
+  static final class Builder {
+    private Renamer renamer;
+    private boolean markChanges = true;
+
+    private Builder() {}
+
+    Builder withRenamer(Renamer renamer) {
+      this.renamer = renamer;
+      return this;
+    }
+
+    /**
+     * Enables the option to call {@link AbstractCompiler#reportCodeChange} on any code changes
+     *
+     * <p>This option is {@code true} by default.
+     */
+    Builder withMarkChanges(boolean markChanges) {
+      this.markChanges = markChanges;
+      return this;
+    }
+
+    MakeDeclaredNamesUnique build() {
+      if (renamer == null) {
+        renamer = new ContextualRenamer();
+      }
+      return new MakeDeclaredNamesUnique(renamer, markChanges);
+    }
+  }
+
+  static Builder builder() {
+    return new Builder();
   }
 
   static CompilerPass getContextualRenameInverter(AbstractCompiler compiler) {

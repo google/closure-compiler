@@ -46,17 +46,19 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
           compiler.resetUniqueNameId();
           MakeDeclaredNamesUnique renamer;
           if (useDefaultRenamer) {
-            renamer = new MakeDeclaredNamesUnique();
+            renamer = MakeDeclaredNamesUnique.builder().build();
           } else {
             renamer =
-                new MakeDeclaredNamesUnique(
-                    new InlineRenamer(
-                        compiler.getCodingConvention(),
-                        compiler.getUniqueNameIdSupplier(),
-                        LOCAL_NAME_PREFIX,
-                        removeConst,
-                        true,
-                        null));
+                MakeDeclaredNamesUnique.builder()
+                    .withRenamer(
+                        new InlineRenamer(
+                            compiler.getCodingConvention(),
+                            compiler.getUniqueNameIdSupplier(),
+                            LOCAL_NAME_PREFIX,
+                            removeConst,
+                            true,
+                            null))
+                    .build();
           }
           NodeTraversal.traverseRoots(compiler, renamer, externs, root);
         }
