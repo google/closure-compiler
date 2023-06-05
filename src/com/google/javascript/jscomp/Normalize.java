@@ -149,7 +149,8 @@ final class Normalize implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     if (makeDeclaredNamesUnique) {
-      MakeDeclaredNamesUnique renamer = MakeDeclaredNamesUnique.builder().build();
+      MakeDeclaredNamesUnique renamer =
+          MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange).build();
       NodeTraversal.traverseRoots(compiler, renamer, externs, root);
     }
 

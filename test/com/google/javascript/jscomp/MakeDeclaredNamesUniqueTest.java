@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -35,6 +38,8 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   private boolean invert = false;
   // removeConst = true; removes const-ness of a name (e.g. If the variable name is CONST)
   private boolean removeConst = false;
+  // whether to throw an exception on any names newly made unique.
+  private boolean assertOnChange;
   private static final String LOCAL_NAME_PREFIX = "unique_";
 
   @Override
@@ -44,23 +49,20 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         @Override
         public void process(Node externs, Node root) {
           compiler.resetUniqueNameId();
-          MakeDeclaredNamesUnique renamer;
-          if (useDefaultRenamer) {
-            renamer = MakeDeclaredNamesUnique.builder().build();
-          } else {
+          MakeDeclaredNamesUnique.Builder renamer =
+              MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange);
+          if (!useDefaultRenamer) {
             renamer =
-                MakeDeclaredNamesUnique.builder()
-                    .withRenamer(
-                        new InlineRenamer(
-                            compiler.getCodingConvention(),
-                            compiler.getUniqueNameIdSupplier(),
-                            LOCAL_NAME_PREFIX,
-                            removeConst,
-                            true,
-                            null))
-                    .build();
+                renamer.withRenamer(
+                    new InlineRenamer(
+                        compiler.getCodingConvention(),
+                        compiler.getUniqueNameIdSupplier(),
+                        LOCAL_NAME_PREFIX,
+                        removeConst,
+                        true,
+                        null));
           }
-          NodeTraversal.traverseRoots(compiler, renamer, externs, root);
+          NodeTraversal.traverseRoots(compiler, renamer.build(), externs, root);
         }
       };
     } else {
@@ -88,6 +90,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     removeConst = false;
     invert = false;
     useDefaultRenamer = false;
+    assertOnChange = false;
   }
 
   private void testWithInversion(String original, String expected) {
@@ -1072,5 +1075,24 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         new String[] {
           "let a = 5;", "import * as a$jscomp$1 from './a.js'; const TAU = 2 * a$jscomp$1.PI"
         });
+  }
+
+  @Test
+  public void assertOnChange_throwsException() {
+    this.useDefaultRenamer = true;
+    this.assertOnChange = true;
+
+    Exception e =
+        assertThrows(
+            RuntimeException.class, () -> testNoWarning("var a; function foo() { var a = 1; } "));
+    assertThat(e).hasMessageThat().contains("NAME a");
+  }
+
+  @Test
+  public void assertOnChange_noExceptionIfNothingChanges() {
+    this.useDefaultRenamer = true;
+    this.assertOnChange = true;
+
+    testSame("const x = 1; function foo() { const y = 2; }");
   }
 }

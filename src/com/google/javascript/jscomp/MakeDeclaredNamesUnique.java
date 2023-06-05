@@ -54,15 +54,18 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   private final Deque<Renamer> renamerStack = new ArrayDeque<>();
   private final Renamer rootRenamer;
   private final boolean markChanges;
+  private final boolean assertOnChange;
 
-  private MakeDeclaredNamesUnique(Renamer renamer, boolean markChanges) {
+  private MakeDeclaredNamesUnique(Renamer renamer, boolean markChanges, boolean assertOnChange) {
     this.rootRenamer = renamer;
     this.markChanges = markChanges;
+    this.assertOnChange = assertOnChange;
   }
 
   static final class Builder {
     private Renamer renamer;
     private boolean markChanges = true;
+    private boolean assertOnChange = false;
 
     private Builder() {}
 
@@ -81,11 +84,23 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       return this;
     }
 
+    /**
+     * If this class finds any names that are not unique, throws an exception
+     *
+     * <p>This is intended for use in validating that an AST is already normalized.
+     *
+     * <p>This option is {@code false} by default.
+     */
+    Builder withAssertOnChange(boolean assertOnChange) {
+      this.assertOnChange = assertOnChange;
+      return this;
+    }
+
     MakeDeclaredNamesUnique build() {
       if (renamer == null) {
         renamer = new ContextualRenamer();
       }
-      return new MakeDeclaredNamesUnique(renamer, markChanges);
+      return new MakeDeclaredNamesUnique(renamer, markChanges, assertOnChange);
     }
   }
 
@@ -143,25 +158,31 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       return;
     }
     String newName = getReplacementName(n.getString());
-    if (newName != null) {
-      Renamer renamer = renamerStack.peek();
-      if (renamer.stripConstIfReplaced()) {
-        n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
-        Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(n);
-        if (jsDocInfoNode != null && jsDocInfoNode.getJSDocInfo() != null) {
-          JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(jsDocInfoNode.getJSDocInfo());
-          builder.recordMutable();
-          jsDocInfoNode.setJSDocInfo(builder.build());
-        }
+    if (newName == null) {
+      return;
+    }
+    if (assertOnChange) {
+      throw new IllegalStateException(
+          "Unexpected renaming in MakeDeclaredNamesUnique. new name: " + newName + " for " + n);
+    }
+
+    Renamer renamer = renamerStack.peek();
+    if (renamer.stripConstIfReplaced()) {
+      n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
+      Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(n);
+      if (jsDocInfoNode != null && jsDocInfoNode.getJSDocInfo() != null) {
+        JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(jsDocInfoNode.getJSDocInfo());
+        builder.recordMutable();
+        jsDocInfoNode.setJSDocInfo(builder.build());
       }
-      n.setString(newName);
-      if (markChanges) {
-        t.reportCodeChange();
-        // If we are renaming a function declaration, make sure the containing scope
-        // has the opporunity to act on the change.
-        if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-          t.getCompiler().reportChangeToEnclosingScope(parent);
-        }
+    }
+    n.setString(newName);
+    if (markChanges) {
+      t.reportCodeChange();
+      // If we are renaming a function declaration, make sure the containing scope
+      // has the opporunity to act on the change.
+      if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+        t.getCompiler().reportChangeToEnclosingScope(parent);
       }
     }
   }
