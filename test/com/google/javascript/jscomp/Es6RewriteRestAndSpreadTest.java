@@ -28,7 +28,12 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
-  private static final String EXTERNS_BASE = new TestExternsBuilder().addJSCompLibraries().build();
+  private static final String EXTERNS_BASE =
+      new TestExternsBuilder()
+          .addFunction()
+          .addJSCompLibraries()
+          .addExtra("$jscomp.getRestArguments = function(argument) {};")
+          .build();
 
   public Es6RewriteRestAndSpreadTest() {
     super(EXTERNS_BASE);

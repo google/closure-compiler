@@ -93,14 +93,14 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       return;
     }
 
-    // TODO(bradfordcsmith): Why can't we use the createQName() method that takes a scope here?
-    // Hint: the unit test needs a fake externs definition for `$jscomp.getRestArguments`.
     Node let =
         astFactory
             .createSingleLetNameDeclaration(
                 paramName,
                 astFactory.createCall(
-                    astFactory.createQNameWithUnknownType("$jscomp.getRestArguments.apply"),
+                    astFactory.createGetPropWithUnknownType(
+                        astFactory.createQName(this.namespace, "$jscomp.getRestArguments"),
+                        "apply"),
                     type(nameNode),
                     astFactory.createNumber(restIndex),
                     astFactory.createArgumentsReference()))
