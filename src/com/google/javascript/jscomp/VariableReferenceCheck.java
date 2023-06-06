@@ -148,7 +148,7 @@ class VariableReferenceCheck implements CompilerPass {
       NodeTraversal.traverse(
           compiler,
           param.getParentNode().getSecondChild(),
-          /**
+          /*
            * Do a shallow check since cases like: {@code
            *   function f(y = () => x, x = 5) { return y(); }
            * } is legal. We are going to miss cases like: {@code
