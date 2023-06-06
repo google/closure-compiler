@@ -262,7 +262,7 @@ public final class RewriteOptionalChainingOperatorTest {
               lines(
                   "let tmp0;",
                   "let tmp1;",
-                  "while(",
+                  "for(;",
                   "    obj = ",
                   "        (tmp1 = ary) == null",
                   "            ? void 0",
@@ -270,7 +270,7 @@ public final class RewriteOptionalChainingOperatorTest {
                   "                (tmp0 = obj) == null",
                   "                    ? void 0",
                   "                    : tmp0.getNum()",
-                  "            ]) {",
+                  "            ];) {",
                   "}"),
             },
             {
@@ -341,10 +341,9 @@ public final class RewriteOptionalChainingOperatorTest {
           });
     }
 
-    @Override
     @Before
-    public void setUp() throws Exception {
-      super.setUp();
+    public void customSetUp() throws Exception {
+      enableNormalize();
       enableTypeCheck();
       enableTypeInfoValidation();
       replaceTypesWithColors();
