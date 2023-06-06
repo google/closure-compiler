@@ -328,7 +328,7 @@ public class Protocol {
    */
   private static int maxInputSize;
 
-  /**
+  /*
    * Initialize maxInputSize to the value from the MAX_INPUT_SIZE_KEY property
    * at startup.
    */
