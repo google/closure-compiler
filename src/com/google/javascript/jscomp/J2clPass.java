@@ -43,14 +43,19 @@ public class J2clPass implements CompilerPass {
     }
 
     /*
-     * Inlines Arrays.$create(), Arrays.$init(), Arrays.$instanceIsOfType(), Arrays.$castTo() and
-     * Casts.$to() so that all references to $isInstance() functions will be fully qualified to work
-     * with collapse properties.
+     * Inline functions in Arrays that take references to static $isInstance() functions. This
+     * ensures that the references will be fully qualified to work with collapse properties.
      */
     inlineFunctionsInFile(
         root,
         "Arrays.impl.java.js",
-        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
+        ImmutableSet.of(
+            "$create",
+            "$createWithInitializer",
+            "$init",
+            "$instanceIsOfType",
+            "$castTo",
+            "$stampType"),
         InliningMode.DIRECT);
     inlineFunctionsInFile(root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
 
