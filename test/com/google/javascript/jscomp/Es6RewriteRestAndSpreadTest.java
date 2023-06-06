@@ -49,11 +49,9 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
-
+  public void customSetUp() {
+    enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeInfoValidation();

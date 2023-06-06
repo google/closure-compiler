@@ -93,6 +93,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       return;
     }
 
+    // TODO(bradfordcsmith): Why can't we use the createQName() method that takes a scope here?
+    // Hint: the unit test needs a fake externs definition for `$jscomp.getRestArguments`.
     Node let =
         astFactory
             .createSingleLetNameDeclaration(
@@ -284,8 +286,9 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         // If the first group is an array literal, we can just use that for concatenation,
         // otherwise use an empty array literal.
         //
-        // TODO(nickreid): Stop distringuishing between array literals and variables when this pass
-        // is moved after type-checking.
+        // TODO(bradfordcsmith): Now that this pass runs after type checking, it would be nice
+        // to skip creating an array literal when when the type of the first element says it is
+        // an Array.
         Node baseArrayLit =
             groups.get(0).isArrayLit() ? groups.remove(0) : astFactory.createArraylit();
         Node concat = astFactory.createGetProp(baseArrayLit, "concat", concatFnType);

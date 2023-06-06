@@ -44,6 +44,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
 
@@ -546,9 +547,27 @@ final class AstFactory {
     return createSingleConstNameDeclaration(aliasName, createArgumentsReference());
   }
 
+  /**
+   * Creates a name node with the provided type information.
+   *
+   * <p>NOTE: You should use {@link #createName(StaticScope, String)} when creating a new name node
+   * that references an existing variable. That version will look up the declaration of the variable
+   * and ensure this reference to it is correct by adding type information and / or any other
+   * necessary data.
+   *
+   * <p>If you are creating a reference to a variable that won't be visible in the current scope
+   * (e.g. because you are creating a new variable), you can use this method. However, if you've
+   * just created the variable declaration, you could also just clone the {@code NAME} node from it
+   * to create the new reference.
+   */
   Node createName(String name, Type type) {
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
+    if (lifeCycleStage.isNormalized() && Objects.equals(name, "$jscomp")) {
+      // $jscomp will always be a constant and needs to be marked that way to satisfy
+      // the normalization invariants.
+      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
     return result;
   }
 
