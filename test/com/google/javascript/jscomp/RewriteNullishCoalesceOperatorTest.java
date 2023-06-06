@@ -24,10 +24,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
+    enableNormalize();
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
