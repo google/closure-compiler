@@ -1885,7 +1885,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // Note: it may be useful to fold symbols in the future.
     testSame("var y = Symbol(); var a = {[y]: 3}[y];");
 
-    /**
+    /*
      * We can fold member functions sometimes.
      *
      * <p>Even though they're different from fn expressions and arrow fns, extracting them only

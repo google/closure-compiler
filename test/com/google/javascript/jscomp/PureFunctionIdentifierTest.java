@@ -1465,7 +1465,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testThrow_insideTry_afterNestedTry_hasNoSideEffects() {
-    /** Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
+    /* Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
     String source =
         lines(
             "function f() {",
@@ -1486,7 +1486,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testThrow_insideFunction_insideTry_hasNoSideEffects() {
-    /** Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
+    /* Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
     String source =
         lines(
             "function f() {",

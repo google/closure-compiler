@@ -422,7 +422,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("`abc`.toUpperCase()");
     foldSame("`a ${bc}`.toUpperCase()");
 
-    /**
+    /*
      * Make sure things aren't totally broken for non-ASCII strings, non-exhaustive.
      *
      * <p>This includes things like:
@@ -454,7 +454,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("`ABC`.toLowerCase()");
     foldSame("`A ${BC}`.toLowerCase()");
 
-    /**
+    /*
      * Make sure things aren't totally broken for non-ASCII strings, non-exhaustive.
      *
      * <p>This includes things like:

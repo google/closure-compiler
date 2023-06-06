@@ -4572,7 +4572,7 @@ public final class NodeUtilTest {
                                 });
                           })));
 
-      /**
+      /*
        * Add a few cases using `super` to check it behaves the same.
        *
        * <p>These aren't exhaustive becuase it's hard to construct valid strings that use `super`.
