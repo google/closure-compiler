@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
@@ -26,13 +25,14 @@ import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
 /**
- * ReplaceCssNames replaces occurrences of goog.getCssName('foo') with
- * a shorter version from the passed in renaming map. There are two
- * styles of operation: for 'BY_WHOLE' we look up the whole string in the
- * renaming map. For 'BY_PART', all the class name's components,
- * separated by '-', are renamed individually and then recombined.
+ * ReplaceCssNames replaces occurrences of goog.getCssName('foo') with a shorter version from the
+ * passed in renaming map. There are two styles of operation: for 'BY_WHOLE' we look up the whole
+ * string in the renaming map. For 'BY_PART', all the class name's components, separated by '-', are
+ * renamed individually and then recombined.
  *
- * Given the renaming map:
+ * <p>Given the renaming map:
+ *
+ * <pre><code>
  *   {
  *     once:  'a',
  *     upon:  'b',
@@ -41,9 +41,11 @@ import org.jspecify.nullness.Nullable;
  *     time:  'e',
  *     ago:   'f'
  *   }
+ * </code></pre>
  *
- * The following outputs are expected with the 'BY_PART' renaming style:
+ * <p>The following outputs are expected with the 'BY_PART' renaming style:
  *
+ * <pre><code>
  * goog.getCssName('once') -> 'a'
  * goog.getCssName('once-upon-atime') -> 'a-b-c'
  *
@@ -52,17 +54,22 @@ import org.jspecify.nullness.Nullable;
  * ->
  * var baseClass = 'd-e';
  * el.className = baseClass + '-f';
+ * </code></pre>
  *
- * However if we have the following renaming map with the 'BY_WHOLE' renaming style:
+ * <p>However if we have the following renaming map with the 'BY_WHOLE' renaming style:
+ *
+ * <pre><code>
  *   {
  *     once: 'a',
  *     upon-atime: 'b',
  *     long-time: 'c',
  *     ago: 'd'
  *   }
+ * </code></pre>
  *
- * Then we would expect:
+ * <p>Then we would expect:
  *
+ * <pre><code>
  * goog.getCssName('once') -> 'a'
  *
  * var baseClass = goog.getCssName('long-time');
@@ -70,35 +77,41 @@ import org.jspecify.nullness.Nullable;
  * ->
  * var baseClass = 'c';
  * el.className = baseClass + '-d';
+ * </code></pre>
  *
- * In addition, the CSS names before replacement can optionally be gathered.
+ * <p>In addition, the CSS names before replacement can optionally be gathered.
  */
 class ReplaceCssNames implements CompilerPass {
 
+  // This is used only for qualified name comparison, so it's OK to build it with IR instead of
+  // AstFactory. Type information isn't important here.
   static final Node GET_CSS_NAME_FUNCTION = IR.getprop(IR.name("goog"), "getCssName");
 
   static final DiagnosticType INVALID_NUM_ARGUMENTS_ERROR =
-      DiagnosticType.error("JSC_GETCSSNAME_NUM_ARGS",
+      DiagnosticType.error(
+          "JSC_GETCSSNAME_NUM_ARGS",
           "goog.getCssName called with \"{0}\" arguments, expected 1 or 2.");
 
   static final DiagnosticType STRING_LITERAL_EXPECTED_ERROR =
-      DiagnosticType.error("JSC_GETCSSNAME_STRING_LITERAL_EXPECTED",
-          "goog.getCssName called with invalid argument, string literal " +
-          "expected.  Was \"{0}\".");
+      DiagnosticType.error(
+          "JSC_GETCSSNAME_STRING_LITERAL_EXPECTED",
+          "goog.getCssName called with invalid argument, string literal "
+              + "expected.  Was \"{0}\".");
 
   static final DiagnosticType UNEXPECTED_STRING_LITERAL_ERROR =
-    DiagnosticType.error("JSC_GETCSSNAME_UNEXPECTED_STRING_LITERAL",
-        "goog.getCssName called with invalid arguments, string literal " +
-        "passed as first of two arguments.  Did you mean " +
-        "goog.getCssName(\"{0}-{1}\")?");
+      DiagnosticType.error(
+          "JSC_GETCSSNAME_UNEXPECTED_STRING_LITERAL",
+          "goog.getCssName called with invalid arguments, string literal "
+              + "passed as first of two arguments.  Did you mean "
+              + "goog.getCssName(\"{0}-{1}\")?");
 
   static final DiagnosticType UNKNOWN_SYMBOL_WARNING =
-      DiagnosticType.warning("JSC_GETCSSNAME_UNKNOWN_CSS_SYMBOL",
-         "goog.getCssName called with unrecognized symbol \"{0}\" in class " +
-         "\"{1}\".");
-
+      DiagnosticType.warning(
+          "JSC_GETCSSNAME_UNKNOWN_CSS_SYMBOL",
+          "goog.getCssName called with unrecognized symbol \"{0}\" in class " + "\"{1}\".");
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
 
   private final Map<String, Integer> cssNames;
 
@@ -112,11 +125,11 @@ class ReplaceCssNames implements CompilerPass {
       @Nullable Map<String, Integer> cssNames,
       @Nullable Set<String> skiplist) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
     this.symbolMap = symbolMap;
     this.cssNames = cssNames;
     this.skiplist = skiplist;
   }
-
 
   @Override
   public void process(Node externs, Node root) {
@@ -124,6 +137,8 @@ class ReplaceCssNames implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new ReplaceCssNamesTraversal());
   }
 
+  // This is used only for qualified name comparison, so it's OK to build it with IR instead of
+  // AstFactory. Type information isn't important here.
   private static final Node GOOG_SET_CSS_NAME_MAPPING =
       IR.getprop(IR.name("goog"), "setCssNameMapping");
 
@@ -153,8 +168,9 @@ class ReplaceCssNames implements CompilerPass {
         Node first = n.getSecondChild();
         switch (count) {
           case 2:
-            // Replace the function call with the processed argument.
+            // convert `goog.getCssName('some-literal-class-name')` to `'processed-name'`
             if (first.isStringLit()) {
+              // Replace the string in `first` with a processed version of itself
               processStringNode(first);
               first.detach();
               n.replaceWith(first);
@@ -166,8 +182,8 @@ class ReplaceCssNames implements CompilerPass {
             break;
 
           case 3:
-            // Replace function call with concatenation of two args.  It's
-            // assumed the first arg has already been processed.
+            // convert `goog.getCssName(someExpression, 'some-literal-class-name')`
+            // to `someExpression + '-processed-name'
 
             Node second = first.getNext();
 
@@ -179,12 +195,13 @@ class ReplaceCssNames implements CompilerPass {
                   JSError.make(
                       n, UNEXPECTED_STRING_LITERAL_ERROR, first.getString(), second.getString()));
             } else {
+              // Replace the string in `second` with a processed version of itself
               processStringNode(second);
+              // prepend a '-' so we don't have to do `someExpression + '-' + 'processed-name'`
+              second.setString("-" + second.getString());
               first.detach();
-              Node replacement =
-                  IR.add(first, IR.string("-" + second.getString()).srcrefIfMissing(second))
-                      .srcrefIfMissing(n);
-              replacement.setColor(StandardColors.STRING);
+              second.detach();
+              Node replacement = astFactory.createAdd(first, second).srcref(n);
               n.replaceWith(replacement);
               t.reportCodeChange();
             }
@@ -250,5 +267,4 @@ class ReplaceCssNames implements CompilerPass {
       }
     }
   }
-
 }
