@@ -1309,16 +1309,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           .setName("validityCheck")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(ValidityCheck::new)
+          // TODO(b/280906684): Cannot use a lambda nor a simple anonymous function (which might be
+          // converted to lambdas) directly due to this inference problem. Needs the cast to
+          // make jscompiler happy.
           .setCondition(
-              new Function<CompilerOptions, Boolean>() {
-                @Override
-                public Boolean apply(CompilerOptions o) {
-                  throw new IllegalStateException("Unexpected");
-                }
-              }) // not used
-          // o -> {
-
-          // }) // not used.
+              (Function<CompilerOptions, Boolean>)
+                  (o -> {
+                    throw new IllegalStateException("Unexpected");
+                  }))
           .build();
 
   private void runValidityCheck() {
