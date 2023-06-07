@@ -1899,7 +1899,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           return; // Ctors and interfaces need to be able to reference `this`
         }
         if (docInfo.hasThisType()) {
-          /**
+          /*
            * Use `@this` as a signal that the reference is intentional.
            *
            * <p>TODO(b/156823102): This signal also silences the check on all transpiled static

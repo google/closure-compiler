@@ -613,7 +613,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      /**
+      /*
        * Efficiently filter out nearly all candidates.
        *
        * <p>Ideally we could use a hashset containing the qualified names, but it turns out that
@@ -623,7 +623,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      /**
+      /*
        * Defer expensive infrequent checks.
        *
        * <p>These could be a precondition, but they don't usually need to be checked. Since they're
@@ -773,7 +773,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      /**
+      /*
        * Avoid type operations when possible.
        *
        * <p>checkTypes is almost always empty, and operations on unions can be expensive.

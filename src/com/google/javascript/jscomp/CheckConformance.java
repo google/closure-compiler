@@ -132,7 +132,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    /**
+    /*
      * Use counted loops and backward iteration for performance.
      *
      * <p>These loops are run a huge number of times. The overhead of enhanced-for loops and even

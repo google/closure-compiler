@@ -804,7 +804,7 @@ class InlineVariables implements CompilerPass {
         if (r.getNode() == v.getNameNode()) {
           removeDeclaration(r);
         } else if (r.isSimpleAssignmentToName()) {
-          /**
+          /*
            * This is the initialization.
            *
            * <p>Replace the entire assignment with just the value, and use the original value node

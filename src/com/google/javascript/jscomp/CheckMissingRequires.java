@@ -212,13 +212,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
 
       final DiagnosticType toReport;
       if (currentFile.isModule()) {
-        /**
+        /*
          * In files that represent modules, report a require without an alias the same as a totally
          * missing require.
          */
         toReport = isStrongReference ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE;
       } else if (!hasAcceptableRequire(currentFile, subName, requiredFile, isStrongReference)) {
-        /**
+        /*
          * In files that aren't modules, report a qualified name reference only if there's no
          * require to satisfy it.
          */

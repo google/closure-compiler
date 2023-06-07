@@ -987,7 +987,7 @@ final class Es6RewriteGenerators implements CompilerPass {
         return;
       }
 
-      /** Stores a detached body of a case statement and a case section assosiated with it. */
+      /* Stores a detached body of a case statement and a case section assosiated with it. */
       class SwitchCase {
         private final TranspilationContext.Case generatedCase;
         private final Node body;

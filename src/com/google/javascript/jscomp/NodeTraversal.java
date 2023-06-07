@@ -939,7 +939,7 @@ public class NodeTraversal {
       }
     }
 
-    /**
+    /*
      * Intentionally inlined call to traverseChildren.
      *
      * <p>Calling traverseChildren here would double the maximum stack depth seen during

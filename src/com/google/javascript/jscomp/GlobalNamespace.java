@@ -379,7 +379,7 @@ class GlobalNamespace
       return cached;
     }
 
-    /**
+    /*
      * Iterate backward over all children of the object-literal, filling in the cache.
      *
      * <p>We iterate the entire literal because we expect to eventually need the result for each of
