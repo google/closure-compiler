@@ -652,13 +652,13 @@ public final class SuggestedFix {
       if (scriptMetadata.supportsRequireAliases()) {
         String existingAlias = scriptMetadata.getAlias(namespace);
         if (existingAlias != null) {
-          /**
+          /*
            * Each fix muct be independently valid, so go through the steps of adding a require even
            * if one may already exist or have been added by another fix.
            */
           alias = existingAlias;
         } else if (namespace.indexOf('.') == -1) {
-          /**
+          /*
            * For unqualified names, the exisiting references will still be valid so long as we keep
            * the same name for the alias.
            */
