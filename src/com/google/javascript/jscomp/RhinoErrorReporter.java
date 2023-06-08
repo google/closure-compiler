@@ -161,6 +161,7 @@ class RhinoErrorReporter {
               JSDOC_IMPORT_TYPE_WARNING)
           // Type annotation errors.
           .put(Pattern.compile("^Bad type annotation.*"), TYPE_PARSE_ERROR)
+          .put(Pattern.compile("constructed type must be an object type"), TYPE_PARSE_ERROR)
           // Parse tree too deep.
           .put(Pattern.compile("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
           // Old-style octal literals

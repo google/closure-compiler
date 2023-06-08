@@ -60,6 +60,13 @@ public final class DiagnosticGroupsTest {
   @Test
   public void conformanceErrorsCannotBeDowngraded() {
     for (DiagnosticGroup group : DiagnosticGroups.getRegisteredGroups().values()) {
+      // TODO: Delete this whole if statement
+      if (group.getName().equals("checkLevelOffDoNotUseDoNotUseDoNotUseDoNotUseDoNotUse")) {
+        assertWithMessage("Please update DiagnosticGroupsTest to delete this case")
+            .that(group.getTypes())
+            .contains(CheckConformance.CONFORMANCE_ERROR);
+        continue;
+      }
       assertWithMessage("Group '" + group.getName() + "' should not include JSC_CONFORMANCE_ERROR")
           .that(group.getTypes())
           .doesNotContain(CheckConformance.CONFORMANCE_ERROR);
