@@ -8415,7 +8415,7 @@ google.maps.StreetViewPanorama.prototype.getLinks = function() {};
 
 /**
  * Returns the StreetViewLocation of the current panorama.
- * @return {google.maps.StreetViewLocation}
+ * @return {!google.maps.StreetViewLocation}
  */
 google.maps.StreetViewPanorama.prototype.getLocation = function() {};
 
