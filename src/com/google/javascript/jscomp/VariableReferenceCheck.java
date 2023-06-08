@@ -323,13 +323,19 @@ class VariableReferenceCheck implements CompilerPass {
               && NodeUtil.isBlockScopedDeclaration(referenceNode)
               && v.getScope() == reference.getScope().getParent();
 
+      boolean isFunctionDecl =
+          (v.getParentNode() != null
+              && v.getParentNode().isFunction()
+              && v.getParentNode().getFirstChild() == referenceNode);
+
       if (v.isLet()
           || v.isConst()
           || v.isClass()
           || letConstShadowsVar
           || shadowCatchVar
           || shadowParam
-          || v.isImport()) {
+          || v.isImport()
+          || isFunctionDecl) {
         // These cases are all hard errors that violate ES6 semantics
         diagnosticType = REDECLARED_VARIABLE_ERROR;
       } else if (reference.getNode().getParent().isCatch()) {
