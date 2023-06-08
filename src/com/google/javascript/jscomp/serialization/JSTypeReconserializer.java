@@ -338,7 +338,7 @@ final class JSTypeReconserializer {
 
       isInvalidating |= this.invalidatingTypes.isInvalidating(objType);
 
-      /**
+      /*
        * To support legacy code, property disambiguation never renames properties of enums (e.g. 'A'
        * in '/** @enum * / const E = {A: 0}`). In theory this would be safe to remove if we clean up
        * code depending on the lack of renaming
