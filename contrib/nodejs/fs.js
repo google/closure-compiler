@@ -307,6 +307,8 @@ fs.readdir;
 
 /**
  * @param {string} path
+ * @param {{encoding: ?string, withFileTypes: boolean, recursive: boolean}=}
+ *     options
  * @return {Array.<string>}
  * @nosideeffects
  */
