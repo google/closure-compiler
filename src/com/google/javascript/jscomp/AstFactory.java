@@ -295,7 +295,7 @@ final class AstFactory {
    * @param value value to yield
    */
   Node createYield(Type type, Node value) {
-    Node result = IR.yield(value);
+    Node result = IR.yieldNode(value);
     this.setJSTypeOrColor(type, result);
     return result;
   }
