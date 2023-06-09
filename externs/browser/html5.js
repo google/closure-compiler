@@ -127,14 +127,14 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
  * @param {number=} opt_framerate
  * @return {!MediaStream}
  * @throws {Error}
- * */
+ */
 HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
  * @see https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-transfercontroltooffscreen
  * @return {!OffscreenCanvas}
  * @throws {Error}
- * */
+ */
 HTMLCanvasElement.prototype.transferControlToOffscreen = function() {};
 
 /**
@@ -1855,6 +1855,11 @@ HTMLElement.prototype.adoptedCallback = function(oldDocument, newDocument) {};
  * @return {!ShadowRoot}
  */
 HTMLElement.prototype.attachShadow = function(options) {};
+
+/**
+ * @return {!ElementInternals}
+ */
+HTMLElement.prototype.attachInternals = function() {};
 
 /**
  * @param {string} attributeName
@@ -6056,3 +6061,86 @@ UserActivation.prototype.isActive;
 
 /** @type {boolean} */
 UserActivation.prototype.hasBeenActive;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#the-elementinternals-interface
+ * @constructor
+ */
+function ElementInternals() {}
+
+/** @type {!ShadowRoot|null} */
+ElementInternals.prototype.shadowRoot;
+
+/**
+ * @param {!File|string|!FormData|null} value
+ * @param {!File|string|!FormData|null} state
+ */
+ElementInternals.prototype.setFormValue = function(value, state) {};
+
+/** @type {!HTMLFormElement|null} */
+ElementInternals.prototype.form;
+
+/**
+ * @param {!ValidityStateFlags|undefined} flags
+ * @param {string|undefined} message
+ * @param {!HTMLElement|undefined} anchor
+ */
+ElementInternals.prototype.setValidity = function(flags, message, anchor) {};
+
+/** @type {boolean} */
+ElementInternals.prototype.willValidate;
+
+/** @type {!ValidityState} */
+ElementInternals.prototype.validity;
+
+/** @type {string} */
+ElementInternals.prototype.validationMessage;
+
+/**
+ * @return {boolean}
+ */
+ElementInternals.prototype.checkValidity = function() {}
+
+/**
+ * @return {boolean}
+ */
+ElementInternals.prototype.reportValidity = function() {}
+
+/** @type {!NodeList<!HTMLLabelElement>} */
+ElementInternals.prototype.labels;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#the-elementinternals-interface
+ * @record
+ */
+function ValidityStateFlags() {}
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.valueMissing;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.typeMismatch;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.patternMismatch;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.tooLong;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.tooShort;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.rangeUnderflow;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.rangeOverflow;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.stepMismatch;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.badInput;
+
+/** @type {boolean|undefined} */
+ValidityStateFlags.prototype.customError;
