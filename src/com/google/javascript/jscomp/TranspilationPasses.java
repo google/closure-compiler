@@ -129,10 +129,6 @@ public class TranspilationPasses {
       }
     }
 
-    if (options.needsTranspilationOf(Feature.TRAILING_COMMA_IN_PARAM_LIST)) {
-      passes.maybeAdd(removeTrailingCommaFromParamList);
-    }
-
     if (options.needsTranspilationOf(Feature.ASYNC_FUNCTIONS)) {
       passes.maybeAdd(rewriteAsyncFunctions);
     }
@@ -260,12 +256,6 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("rewriteNewDotTarget")
           .setInternalFactory(RewriteNewDotTarget::new)
-          .build();
-
-  private static final PassFactory removeTrailingCommaFromParamList =
-      PassFactory.builder()
-          .setName("removeTrailingCommaFromParamList")
-          .setInternalFactory(RemoveTrailingCommaFromParamList::new)
           .build();
 
   private static final PassFactory reportBigIntLiteralTranspilationUnsupported =

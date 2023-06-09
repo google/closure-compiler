@@ -352,6 +352,15 @@ final class Normalize implements CompilerPass {
           splitExportDeclaration(n);
           break;
 
+        case ARRAYLIT:
+        case CALL:
+        case PARAM_LIST:
+        case NEW:
+        case OBJECTLIT:
+        case OPTCHAIN_CALL:
+          n.setTrailingComma(false);
+          break;
+
         case NAME:
         case GETPROP:
         case OPTCHAIN_GETPROP:

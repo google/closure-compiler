@@ -991,7 +991,6 @@ public class Parser {
           commaPositions.add(getTreeEndLocation());
         }
         if (peek(TokenType.CLOSE_PAREN)) {
-          recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in formal parameter list");
           }
@@ -3240,7 +3239,6 @@ public class Parser {
           commaPositions.add(comma.getStart());
         }
         if (peek(TokenType.CLOSE_PAREN)) {
-          recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in arguments list");
           }

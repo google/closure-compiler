@@ -187,7 +187,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testFunctionTrailingComma() {
-    expectFeatures(Feature.TRAILING_COMMA_IN_PARAM_LIST);
     parse("var f = function(x,y,z,) {}");
     parse("function f(x,y,z,) {}");
   }
@@ -208,7 +207,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testCallTrailingComma() {
-    expectFeatures(Feature.TRAILING_COMMA_IN_PARAM_LIST);
     parse("f(x,y,z,);");
   }
 

@@ -1507,15 +1507,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testFeatureValidation_objectLiteralsWithSpread() {
     testFeatureValidation("var obj = {...something};", Feature.OBJECT_LITERALS_WITH_SPREAD);
   }
-
-  @Test
-  public void testFeatureValidation_trailingCommaInParamList() {
-    testFeatureValidation("function f(a, b, c, ) {}", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    testFeatureValidation("f(a, b, c, )", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    testFeatureValidation("x?.f(a, b, c, )", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    testFeatureValidation("new C(a, b, c, )", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-  }
-
   @Test
   public void testValidFeatureInScript() {
     // Since we're building the AST by hand, there won't be any types on it.

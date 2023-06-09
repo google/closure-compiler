@@ -202,7 +202,6 @@ public final class FeatureSet implements Serializable {
 
     // ES 2017 features:
     ASYNC_FUNCTIONS("async function", LangVersion.ES2017),
-    TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES2017),
 
     // ES 2018 adds https://github.com/tc39/proposal-object-rest-spread
     OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES2018),

@@ -159,9 +159,6 @@ final class ScriptNodeDeserializer {
         case PARAM_LIST:
         case CALL:
         case NEW:
-          if (node.hasTrailingComma()) {
-            this.addScriptFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST);
-          }
           return;
 
         case STRING_KEY:
