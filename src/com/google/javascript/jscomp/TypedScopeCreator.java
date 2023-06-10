@@ -3682,7 +3682,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     ModuleMetadata metadata = module.metadata();
     checkState(metadata.isModule(), metadata);
 
-    /**
+    /*
      * This module may not have a goog.module/goog.declareModuleId. Also don't crash if it's
      * malformed with multiple module IDs.
      */

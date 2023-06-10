@@ -194,11 +194,7 @@ final class PolymerClassDefinition {
     overwriteMembersIfPresent(
         properties,
         PolymerPassStaticUtils.extractProperties(
-            descriptor,
-            DefinitionType.ObjectLiteral,
-            compiler,
-            /** constructor= */
-            null));
+            descriptor, DefinitionType.ObjectLiteral, compiler, /* constructor= */ null));
 
     // Behaviors might get included multiple times for the same element. See test case
     // testDuplicatedBehaviorsAreCopiedOnce

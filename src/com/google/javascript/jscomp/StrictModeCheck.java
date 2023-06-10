@@ -175,7 +175,7 @@ class StrictModeCheck extends AbstractPostOrderCallback implements CompilerPass 
     HashSet<String> staticGetters = new HashSet<>();
     HashSet<String> staticSetters = new HashSet<>();
 
-    /**
+    /*
      * Iterate backwards because the last duplicate is the one that will be used in sloppy or ES6
      * code. The earlier duplicates are the ones that should be removed.
      */

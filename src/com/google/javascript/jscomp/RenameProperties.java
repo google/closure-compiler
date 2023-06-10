@@ -95,12 +95,12 @@ class RenameProperties implements CompilerPass {
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
       (Property p1, Property p2) -> {
 
-        /** First a frequently used names would always be picked first. */
+        /* First a frequently used names would always be picked first. */
         if (p1.numOccurrences != p2.numOccurrences) {
           return p2.numOccurrences - p1.numOccurrences;
         }
 
-        /** Finally, for determinism, we compare them based on the old name. */
+        /* Finally, for determinism, we compare them based on the old name. */
         return p1.oldName.compareTo(p2.oldName);
       };
 

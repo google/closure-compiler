@@ -329,7 +329,7 @@ class ProcessDefines implements CompilerPass {
         totalSets += existingDefine.name.getTotalSets();
       }
 
-      /**
+      /*
        * We have to report this here because otherwise we don't remember which names have the same
        * define name. It's not worth it tracking a set of names, because it makes the rest of the
        * pass more complex.
@@ -456,7 +456,7 @@ class ProcessDefines implements CompilerPass {
                 define.defineName));
       }
 
-      /**
+      /*
        * Process defines should not depend on check types being enabled, so we look for the JSDoc
        * instead of the inferred type.
        */
@@ -473,7 +473,7 @@ class ProcessDefines implements CompilerPass {
       return;
     }
 
-    /**
+    /*
      * This has to be done using a traversal because the global namespace doesn't record symbols
      * which only appear in local scopes.
      *

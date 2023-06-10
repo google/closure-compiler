@@ -1791,12 +1791,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    /** `super` captures a hidden reference to the declaring objectlit, so we can't fold it away. */
+    /* `super` captures a hidden reference to the declaring objectlit, so we can't fold it away. */
     if (NodeUtil.referencesSuper(value)) {
       return n;
     }
 
-    /**
+    /*
      * Check to see if there are any side-effects to this object-literal.
      *
      * <p>We remove the value we're going to use because its side-effects will be preserved.
@@ -1818,7 +1818,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       //   {get x() {...}}.x;
       //   {get ['x']() {...}}.x;
 
-      /**
+      /*
        * It's not safe, in general, to convert that to just a function call, because the receiver
        * value will be wrong.
        *
@@ -1835,7 +1835,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (NodeUtil.isOptChainNode(parent)) {
 
-      /**
+      /*
        * If the chain continues after `n`, simply doing `n.replaceWith(value)` below would leave the
        * subsequent nodes in the current chain segment optional, with their start `n` replaced.
        *

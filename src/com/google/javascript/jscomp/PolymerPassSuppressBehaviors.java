@@ -85,8 +85,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
             behaviorValue,
             PolymerClassDefinition.DefinitionType.ObjectLiteral,
             compiler,
-            /** constructor= */
-            null);
+            /* constructor= */ null);
     for (MemberDefinition property : properties) {
       property.name.setJSDocInfo(null);
     }
@@ -98,8 +97,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
             behaviorValue,
             PolymerClassDefinition.DefinitionType.ObjectLiteral,
             compiler,
-            /** constructor= */
-            null)) {
+            /* constructor= */ null)) {
       if (!property.value.isObjectLit()) {
         continue;
       }

@@ -534,11 +534,7 @@ final class PolymerClassRewriter {
     // Add @this and @return to default property values.
     for (MemberDefinition property :
         PolymerPassStaticUtils.extractProperties(
-            objLit,
-            defType,
-            compiler,
-            /** constructor= */
-            null)) {
+            objLit, defType, compiler, /* constructor= */ null)) {
       if (!property.value.isObjectLit()) {
         continue;
       }
@@ -832,11 +828,7 @@ final class PolymerClassRewriter {
       final Node objLit, PolymerClassDefinition.DefinitionType defType) {
     for (MemberDefinition prop :
         PolymerPassStaticUtils.extractProperties(
-            objLit,
-            defType,
-            compiler,
-            /** constructor= */
-            null)) {
+            objLit, defType, compiler, /* constructor= */ null)) {
       prop.name.setJSDocInfo(null);
     }
   }
