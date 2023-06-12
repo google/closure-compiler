@@ -16,10 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -105,6 +111,10 @@ class ReplaceCssNames implements CompilerPass {
               + "passed as first of two arguments.  Did you mean "
               + "goog.getCssName(\"{0}-{1}\")?");
 
+  static final DiagnosticType NESTED_CALL_ERROR =
+      DiagnosticType.error(
+          "JSC_GETCSSNAME_NESTED_CALL", "goog.getCssName: nested call is not allowed.");
+
   static final DiagnosticType UNKNOWN_SYMBOL_WARNING =
       DiagnosticType.warning(
           "JSC_GETCSSNAME_UNKNOWN_CSS_SYMBOL",
@@ -134,7 +144,26 @@ class ReplaceCssNames implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new FindSetCssNameTraversal());
-    NodeTraversal.traverse(compiler, root, new ReplaceCssNamesTraversal());
+    List<GetCssNameInstance> getCssNameInstances = gatherGetCssNameInstances(root);
+    for (GetCssNameInstance getCssNameInstance : getCssNameInstances) {
+      getCssNameInstance.replaceWithExpression();
+    }
+  }
+
+  /**
+   * Create a list of objects representing all the `goog.getCssName()` calls in the AST.
+   *
+   * <p>The elements in this list will be in depth-first left-to-right order. So, if you perform
+   * actions on them in this order you'll affect nested calls before the containing calls. e.g.
+   *
+   * <pre><code>
+   *   goog.getCssName(goog.getCssName('me-first'), 'me-second')
+   * </code></pre>
+   */
+  private List<GetCssNameInstance> gatherGetCssNameInstances(Node root) {
+    GatherCssNamesTraversal gatherCssNamesTraversal = new GatherCssNamesTraversal();
+    NodeTraversal.traverse(compiler, root, gatherCssNamesTraversal);
+    return gatherCssNamesTraversal.listOfCssNameInstances;
   }
 
   // This is used only for qualified name comparison, so it's OK to build it with IR instead of
@@ -160,110 +189,198 @@ class ReplaceCssNames implements CompilerPass {
     }
   }
 
-  private class ReplaceCssNamesTraversal extends AbstractPostOrderCallback {
+  private class GatherCssNamesTraversal extends AbstractPostOrderCallback {
+    final List<GetCssNameInstance> listOfCssNameInstances = new ArrayList<>();
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall() && n.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION)) {
-        int count = n.getChildCount();
-        Node first = n.getSecondChild();
-        switch (count) {
-          case 2:
-            // convert `goog.getCssName('some-literal-class-name')` to `'processed-name'`
-            if (first.isStringLit()) {
-              // Replace the string in `first` with a processed version of itself
-              processStringNode(first);
-              first.detach();
-              n.replaceWith(first);
-              t.reportCodeChange();
-            } else {
-              compiler.report(
-                  JSError.make(n, STRING_LITERAL_EXPECTED_ERROR, first.getToken().toString()));
-            }
-            break;
-
-          case 3:
-            // convert `goog.getCssName(someExpression, 'some-literal-class-name')`
-            // to `someExpression + '-processed-name'
-
-            Node second = first.getNext();
-
-            if (!second.isStringLit()) {
-              compiler.report(
-                  JSError.make(n, STRING_LITERAL_EXPECTED_ERROR, second.getToken().toString()));
-            } else if (first.isStringLit()) {
-              compiler.report(
-                  JSError.make(
-                      n, UNEXPECTED_STRING_LITERAL_ERROR, first.getString(), second.getString()));
-            } else {
-              // Replace the string in `second` with a processed version of itself
-              processStringNode(second);
-              // prepend a '-' so we don't have to do `someExpression + '-' + 'processed-name'`
-              second.setString("-" + second.getString());
-              first.detach();
-              second.detach();
-              Node replacement = astFactory.createAdd(first, second).srcref(n);
-              n.replaceWith(replacement);
-              t.reportCodeChange();
-            }
-            break;
-
-          default:
-            compiler.report(JSError.make(n, INVALID_NUM_ARGUMENTS_ERROR, String.valueOf(count)));
+      if (isGetCssNameCall(n)) {
+        GetCssNameInstance getCssNameInstance = createGetCssNameInstance(n);
+        if (getCssNameInstance.isValid()) {
+          listOfCssNameInstances.add(getCssNameInstance);
+        } else {
+          compiler.report(getCssNameInstance.getValidationError());
         }
       }
     }
+  }
+
+  private boolean isGetCssNameCall(Node node) {
+    return node.isCall() && node.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION);
+  }
+
+  private GetCssNameInstance createGetCssNameInstance(Node n) {
+    return new GetCssNameInstance(n, validateGetCssNameCall(n));
+  }
+
+  /** Represents a `goog.getCssName()` call. */
+  private class GetCssNameInstance {
 
     /**
-     * Processes a string argument to goog.getCssName(). The string will be renamed based off the
-     * symbol map. If there is no map or any part of the name can't be renamed, a warning is
-     * reported to the compiler and the node is left unchanged.
+     * The CALL node representing `goog.getCssName()`.
      *
-     * <p>If the type is unexpected then an error is reported to the compiler.
-     *
-     * @param n The string node to process.
+     * <p>We shouldn't store final pointers to any of the children of this node, because they might
+     * be changed between creation of this object and performance of other methods.
      */
-    private void processStringNode(Node n) {
-      String name = n.getString();
-      if (skiplist != null && skiplist.contains(name)) {
-        // We apply the skiplist before splitting on dashes, and not after.
-        // External substitution maps should do the same.
-        return;
+    final Node callNode;
+
+    /** Non-null if the shape of the function call was invalid, when this object was created. */
+    final JSError validationError;
+
+    GetCssNameInstance(Node callNode, JSError validationError) {
+      this.callNode = callNode;
+      this.validationError = validationError;
+    }
+
+    boolean isValid() {
+      return validationError == null;
+    }
+
+    JSError getValidationError() {
+      checkNotNull(validationError, "No validation error found: %s", callNode);
+      return validationError;
+    }
+
+    /** Replace this `goog.getCssName()` call in the AST with a string typed expression. */
+    void replaceWithExpression() {
+      checkState(isValid(), "not a valid goog.getCssName() call: %s", callNode);
+      checkNotNull(callNode.getParent(), "already replaced: %s", callNode);
+      final int childCount = callNode.getChildCount();
+      switch (childCount) {
+        case 2:
+          replaceWithConvertedSingleArg();
+          break;
+        case 3:
+          replaceWithConcatenatedArgs();
+          break;
+        default:
+          throw new IllegalStateException(
+              SimpleFormat.format("invalid number of children: %s for: %s", childCount, callNode));
       }
-      String[] parts = name.split("-");
-      if (symbolMap != null) {
-        String replacement = null;
-        switch (symbolMap.getStyle()) {
-          case BY_WHOLE:
-            replacement = symbolMap.get(name);
-            if (replacement == null) {
-              compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, name, name));
+    }
+
+    private void replaceWithConvertedSingleArg() {
+      // `goog.getCssName('some-literal')` -> `'mapped-literal'`
+      final Node stringLitArg = checkNotNull(callNode.getSecondChild(), callNode);
+      checkState(stringLitArg.isStringLit(), "not a string literal: %s", stringLitArg);
+      stringLitArg.detach();
+      processStringNode(stringLitArg);
+      callNode.replaceWith(stringLitArg);
+      compiler.reportChangeToEnclosingScope(stringLitArg);
+    }
+
+    private void replaceWithConcatenatedArgs() {
+      // `goog.getCssName(someExpr, 'some-literal')` -> `someExpr + '-mapped-literal'`
+      final Node firstArg = checkNotNull(callNode.getSecondChild(), callNode);
+      final Node secondArg = checkNotNull(firstArg.getNext(), firstArg);
+      firstArg.detach();
+      secondArg.detach();
+      processStringNode(secondArg);
+      secondArg.setString("-" + secondArg.getString());
+      final Node replacement = astFactory.createAdd(firstArg, secondArg).srcref(callNode);
+      callNode.replaceWith(replacement);
+      compiler.reportChangeToEnclosingScope(replacement);
+    }
+  }
+
+  private @Nullable JSError validateGetCssNameCall(Node callNode) {
+    int childCount = callNode.getChildCount();
+    switch (childCount) {
+      case 2:
+        return validateSingleArgGetCssNameCall(callNode);
+      case 3:
+        return validateTwoArgGetCssNameCall(callNode);
+      default:
+        return JSError.make(callNode, INVALID_NUM_ARGUMENTS_ERROR, String.valueOf(childCount));
+    }
+  }
+
+  private @Nullable JSError validateSingleArgGetCssNameCall(Node callNode) {
+    // `goog.getCssName('css-name')`
+    final Node stringLiteralArg = checkNotNull(callNode.getLastChild());
+    if (!stringLiteralArg.isStringLit()) {
+      return JSError.make(
+          callNode, STRING_LITERAL_EXPECTED_ERROR, stringLiteralArg.getToken().toString());
+    }
+    return null;
+  }
+
+  private @Nullable JSError validateTwoArgGetCssNameCall(Node callNode) {
+    // `goog.getCssName(BASE_CSS_NAME, 'css-suffix')`
+    // The first child is the callee, so the first argument is the second child
+    final Node firstArg = checkNotNull(callNode.getSecondChild());
+    final Node secondArg = checkNotNull(firstArg.getNext());
+
+    if (!secondArg.isStringLit()) {
+      return JSError.make(callNode, STRING_LITERAL_EXPECTED_ERROR, secondArg.getToken().toString());
+    }
+    if (firstArg.isStringLit()) {
+      return JSError.make(
+          callNode, UNEXPECTED_STRING_LITERAL_ERROR, firstArg.getString(), secondArg.getString());
+    }
+    if (isGetCssNameCall(firstArg)) {
+      // Disallow `goog.getCssName(goog.getCssName('n1'), 'n2')`.
+      // Disallowing this is a bit arbitrary and is done for historical reasons.
+      // The 2-argument form results in more JS code shipped to the browser and
+      // forces users to have camelCase CSS names, which contravenes normal CSS style.
+      // Since we'd like to stop supporting the 2-argument form, we don't want to
+      // start allowing any form of it that was previously an error.
+      return JSError.make(firstArg, NESTED_CALL_ERROR);
+    }
+
+    return null;
+  }
+
+  /**
+   * Processes a string argument to goog.getCssName(). The string will be renamed based off the
+   * symbol map. If there is no map or any part of the name can't be renamed, a warning is reported
+   * to the compiler and the node is left unchanged.
+   *
+   * <p>If the type is unexpected then an error is reported to the compiler.
+   *
+   * @param n The string node to process.
+   */
+  private void processStringNode(Node n) {
+    String name = n.getString();
+    if (skiplist != null && skiplist.contains(name)) {
+      // We apply the skiplist before splitting on dashes, and not after.
+      // External substitution maps should do the same.
+      return;
+    }
+    String[] parts = name.split("-");
+    if (symbolMap != null) {
+      String replacement = null;
+      switch (symbolMap.getStyle()) {
+        case BY_WHOLE:
+          replacement = symbolMap.get(name);
+          if (replacement == null) {
+            compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, name, name));
+            return;
+          }
+          break;
+        case BY_PART:
+          String[] replaced = new String[parts.length];
+          for (int i = 0; i < parts.length; i++) {
+            String part = symbolMap.get(parts[i]);
+            if (part == null) {
+              // If we can't encode all parts, don't encode any of it.
+              compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, parts[i], name));
               return;
             }
-            break;
-          case BY_PART:
-            String[] replaced = new String[parts.length];
-            for (int i = 0; i < parts.length; i++) {
-              String part = symbolMap.get(parts[i]);
-              if (part == null) {
-                // If we can't encode all parts, don't encode any of it.
-                compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, parts[i], name));
-                return;
-              }
-              replaced[i] = part;
-            }
-            replacement = Joiner.on("-").join(replaced);
-            break;
-        }
-        n.setString(replacement);
+            replaced[i] = part;
+          }
+          replacement = Joiner.on("-").join(replaced);
+          break;
       }
-      if (cssNames != null) {
-        // We still want to collect statistics even if we've already
-        // done the full replace. The statistics are collected on a
-        // per-part basis.
-        for (String element : parts) {
-          int count = cssNames.getOrDefault(element, 0);
-          cssNames.put(element, count + 1);
-        }
+      n.setString(replacement);
+    }
+    if (cssNames != null) {
+      // We still want to collect statistics even if we've already
+      // done the full replace. The statistics are collected on a
+      // per-part basis.
+      for (String element : parts) {
+        int count = cssNames.getOrDefault(element, 0);
+        cssNames.put(element, count + 1);
       }
     }
   }

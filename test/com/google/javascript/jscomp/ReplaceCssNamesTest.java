@@ -294,9 +294,13 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
     testError(
         "setClass(goog.getCssName('buttonbar', 'disabled'))", UNEXPECTED_STRING_LITERAL_ERROR);
+  }
+
+  @Test
+  public void testNestedCall() {
     testError(
         "setClass(goog.getCssName(goog.getCssName('buttonbar'), 'active'))",
-        UNEXPECTED_STRING_LITERAL_ERROR);
+        ReplaceCssNames.NESTED_CALL_ERROR);
   }
 
   @Test
