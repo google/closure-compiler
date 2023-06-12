@@ -677,7 +677,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       if (yieldNode.isYieldAll()) {
         context.yieldAll(yieldExpression, jumpToSection, yieldNode);
       } else {
-        context.yield(yieldExpression, jumpToSection, yieldNode);
+        context.yieldValue(yieldExpression, jumpToSection, yieldNode);
       }
       context.switchCaseTo(jumpToSection);
       Node yieldResult = context.yieldResult(yieldNode);
@@ -1172,7 +1172,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
         // Shortcut jump chains:
         //   case 100:
-        //     $context.yield("something", 101);
+        //     $context.yieldValue("something", 101);
         //     break;
         //   case 101:
         //     $context.jumpTo(102);
@@ -1182,7 +1182,7 @@ final class Es6RewriteGenerators implements CompilerPass {
         //     break;
         // becomes:
         //   case 100:
-        //     $context.yield("something", 200);
+        //     $context.yieldValue("something", 200);
         //     break;
         //   case 101:
         //     $context.jumpTo(102);
@@ -1561,7 +1561,7 @@ final class Es6RewriteGenerators implements CompilerPass {
        * Instructs a state machine program to yield a value and then jump to a selected case
        * section.
        */
-      void yield(
+      void yieldValue(
           @Nullable Node expression, TranspilationContext.Case jumpToSection, Node sourceNode) {
         ArrayList<Node> args = new ArrayList<>();
         args.add(
