@@ -19,7 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CrossChunkReferenceCollector.TopLevelStatement;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -34,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A compiler pass for moving global variable declarations and assignments to their properties to a
@@ -59,11 +63,14 @@ import java.util.Set;
  *       references to GlobalSymbols in c[i] from DSGs in GlobalSymbolCycles c[i+1]...c[n].
  *   <li>Traverse the list in that order, so statements for GlobalSymbol X will only be moved after
  *       all statements that refer to X have already been moved.
- *   <li>Within a GlobalSymbolCycle, combine statements from DSGs in the same chunk and keep them
- *       in the same order when moving them.
+ *   <li>Within a GlobalSymbolCycle, combine statements from DSGs in the same chunk and keep them in
+ *       the same order when moving them.
  * </ol>
  */
 class CrossChunkCodeMotion implements CompilerPass {
+
+  // Allocated & cleaned up by process()
+  private @Nullable LogFile cccmLog;
 
   private final AbstractCompiler compiler;
   private final JSChunkGraph graph;
@@ -92,15 +99,23 @@ class CrossChunkCodeMotion implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    // If there are <2 chunks, then we will never move anything, so we're done
-    if (graph.getChunkCount() > 1) {
-      CrossChunkReferenceCollector referenceCollector =
-          new CrossChunkReferenceCollector(compiler, new SyntacticScopeCreator(compiler));
-      referenceCollector.process(root);
-      Collection<GlobalSymbol> globalSymbols =
-          new GlobalSymbolCollector().collectGlobalSymbols(referenceCollector);
-      moveGlobalSymbols(globalSymbols);
-      addInstanceofGuards(globalSymbols);
+    try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "cccm.log")) {
+      cccmLog = logFile;
+      cccmLog.log("doing cccm");
+      // If there are <2 chunks, then we will never move anything, so we're done
+      if (graph.getChunkCount() > 1) {
+        CrossChunkReferenceCollector referenceCollector =
+            new CrossChunkReferenceCollector(compiler, new SyntacticScopeCreator(compiler));
+        referenceCollector.process(root);
+        Collection<GlobalSymbol> globalSymbols =
+            new GlobalSymbolCollector().collectGlobalSymbols(referenceCollector);
+        moveGlobalSymbols(globalSymbols);
+        addInstanceofGuards(globalSymbols);
+      } else {
+        cccmLog.log("only one chunk exists");
+      }
+    } finally {
+      cccmLog = null;
     }
   }
 
@@ -234,8 +249,8 @@ class CrossChunkCodeMotion implements CompilerPass {
     /**
      * Symbols whose declaration statements refer to this symbol.
      *
-     * This is a LinkedHashSet in order to enforce a consistent ordering when we iterate over these
-     * to identify cycles. This guarantees that the order in which statements are moved won't
+     * <p>This is a LinkedHashSet in order to enforce a consistent ordering when we iterate over
+     * these to identify cycles. This guarantees that the order in which statements are moved won't
      * depend on the arbitrary ordering of HashSet.
      */
     final Set<GlobalSymbol> referencingGlobalSymbols = new LinkedHashSet<>();
@@ -300,8 +315,8 @@ class CrossChunkCodeMotion implements CompilerPass {
   }
 
   /**
-   * Represents a set of global symbols that all refer to each other, and so must be considered
-   * for movement as a group.
+   * Represents a set of global symbols that all refer to each other, and so must be considered for
+   * movement as a group.
    */
   private class GlobalSymbolCycle {
     final Deque<GlobalSymbol> symbols = new ArrayDeque<>();
@@ -401,8 +416,8 @@ class CrossChunkCodeMotion implements CompilerPass {
   /**
    * A group of declaration statements that must be moved (or not) as a group.
    *
-   * <p>All of the statements must be in the same chunk initially. If there are declarations for
-   * the same variable in different chunks, they will be grouped separately.
+   * <p>All of the statements must be in the same chunk initially. If there are declarations for the
+   * same variable in different chunks, they will be grouped separately.
    */
   private static class DeclarationStatementGroup {
 
@@ -535,8 +550,8 @@ class CrossChunkCodeMotion implements CompilerPass {
   }
 
   /**
-   * One or more DeclarationStatementGroups that that share the same chunk and whose declared
-   * global symbols refer to each other.
+   * One or more DeclarationStatementGroups that that share the same chunk and whose declared global
+   * symbols refer to each other.
    */
   private class DeclarationStatementGroupCycle {
     final JSChunk currentModule;
@@ -550,14 +565,35 @@ class CrossChunkCodeMotion implements CompilerPass {
     void moveToPreferredModule(BitSet modulesWithImmovableReferences) {
       JSChunk preferredModule = getPreferredModule(modulesWithImmovableReferences);
       if (!preferredModule.equals(currentModule)) {
+        if (cccmLog.isLogging()) {
+          // Write a separate log for each global symbol, because this is easier to work
+          // with when analyzing the log.
+          // Include a header, so we can tell which ones were treated as a cycle
+          cccmLog.log("start DSG Cycle move");
+          for (String globalSymbolName : getGlobalSymbolNames()) {
+            cccmLog.log(
+                () ->
+                    SimpleFormat.format(
+                        "Moving DSG for %s from chunk %s to chunk %s",
+                        globalSymbolName, currentModule, preferredModule));
+          }
+        }
         moveStatementsToModule(preferredModule);
       }
       // Now that all the statements have been moved, update the current chunk for all the DSGs
-      // and treat all of the references they contain as now immovable.
+      // and treat all the references they contain as now immovable.
       for (DeclarationStatementGroup dsg : dsgs) {
         dsg.currentModule = preferredModule;
         dsg.makeReferencesImmovable();
       }
+    }
+
+    private ImmutableList<String> getGlobalSymbolNames() {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      for (DeclarationStatementGroup dsg : dsgs) {
+        builder.add(dsg.declaredGlobalSymbol.var.getName());
+      }
+      return builder.build();
     }
 
     private void moveStatementsToModule(JSChunk preferredModule) {
