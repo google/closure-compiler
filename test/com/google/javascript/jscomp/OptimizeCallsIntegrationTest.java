@@ -508,6 +508,17 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         "var b=function(c,d,e){return d};b(1,2,3);use(b(new use(),4,new use()))",
         "var b=function(c,d  ){return d};b(0,2  );use(b(new use(),4,new use()))");
 
+    test(
+        "var a=0; var b=function(c,d){return d};b((a++, 1),2);use(b(new use(),4));use(a)",
+        "var a=0;var b=function(c,d){return d};b((a++, 0),2);use(b(new use(),4));use(a)");
+
+    test(
+        "var a=0;var b=function(c,d){return d};b((a++,a++,1),2);use(b(new use(),4));use(a)",
+        "var a=0;var b=function(c,d){return d};b((a++,a++,0),2);use(b(new use(),4));use(a)");
+
+    testSame(
+        "var a=0; var b=function(c,d){return d};b((a++, 1, a++),2);use(b(new use(),4));use(a)");
+
     // Recursive calls are OK.
     test(
         "var b=function(c,d){b(1,2);return d};b(3,4);use(b(5,6))",

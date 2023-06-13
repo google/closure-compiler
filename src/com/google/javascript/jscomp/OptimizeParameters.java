@@ -350,17 +350,38 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
               isRemovableTrailingUndefined || astAnalyzer.mayHaveSideEffects(arg);
           if (!hasSideEffects) {
             if (unremovable.get(index)) {
-              if (!arg.isNumber() || arg.getDouble() != 0) {
-                toReplaceWithZero.add(arg);
-              }
+              recordReplaceWithZero(arg);
             } else {
               toRemove.add(arg);
               return removedAllTrailing;
             }
+          } else {
+            // If there is a comma operator with side effects on the first node, the
+            // second node can be optimized knowing that the parameter is not used.
+            removeFromCommaIfNoSideEffects(arg);
           }
         }
       }
       return false;
+    }
+
+    /** Replaces a no side-effect value in a comma operator recursively. */
+    void removeFromCommaIfNoSideEffects(Node arg) {
+      if (arg.isComma()) {
+        Node secondChild = arg.getSecondChild();
+        if (!astAnalyzer.mayHaveSideEffects(secondChild)) {
+          recordReplaceWithZero(secondChild);
+        } else {
+          removeFromCommaIfNoSideEffects(secondChild);
+        }
+      }
+    }
+
+    /** Records node to be replaced with zero. */
+    private void recordReplaceWithZero(Node arg) {
+      if (!arg.isNumber() || arg.getDouble() != 0) {
+        toReplaceWithZero.add(arg);
+      }
     }
 
     /**
