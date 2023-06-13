@@ -5526,6 +5526,19 @@ public final class NodeUtil {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
 
+  /** Whether the given node is referencing the `exports` object in some goog.module */
+  static boolean isGoogModuleExportsReference(Scope scope, Node possibleName) {
+    if (!possibleName.isName() || !possibleName.getString().equals("exports")) {
+      return false;
+    }
+    Var var = scope.getVar(possibleName.getString());
+    Node scopeRoot = var != null ? var.getScopeRoot() : null;
+    return scopeRoot != null
+        && (scopeRoot.isModuleBody()
+            || (scopeRoot.isFunction()
+                && isBundledGoogModuleScopeRoot(getFunctionBody(scopeRoot))));
+  }
+
   private static final QualifiedName GOOG_LOADMODULE = QualifiedName.of("goog.loadModule");
 
   static boolean isBundledGoogModuleCall(Node n) {
