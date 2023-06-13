@@ -95,6 +95,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
 
+  private static final QualifiedName GOOG_FORWARD_DECLARE = QualifiedName.of("goog.forwardDeclare");
+
   private static final QualifiedName GOOG_REQUIRE_DYNAMIC = QualifiedName.of("goog.requireDynamic");
 
   // Utility class; do not instantiate.
@@ -5510,6 +5512,14 @@ public final class NodeUtil {
     if (call.isCall()) {
       Node target = call.getFirstChild();
       return GOOG_REQUIRE_TYPE.matches(target);
+    }
+    return false;
+  }
+
+  static boolean isGoogForwardDeclareCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_FORWARD_DECLARE.matches(target);
     }
     return false;
   }

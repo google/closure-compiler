@@ -398,6 +398,14 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
         }
       }
     }
+    if (importLhs.isExprResult() && NodeUtil.isGoogForwardDeclareCall(importLhs.getOnlyChild())) {
+      // goog.forwardDeclare does not need to be aliased.
+      // This is because goog.forwardDeclares that are aliased have stricter semantics than those
+      // that are not aliased: aliased goog.forwardDeclares always need to reference a namespace
+      // that's actually defined, while non-aliased forwardDeclares may reference namespaces that
+      // do not actually exist.
+      return;
+    }
 
     this.compiler.report(JSError.make(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, qname));
   }

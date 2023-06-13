@@ -713,6 +713,17 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLegalForwardDeclareNoAlias() {
+    testNoWarning(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "goog.forwardDeclare('foo.utils');",
+            "",
+            "exports = function() { return foo.utils.doThing(''); };"));
+  }
+
+  @Test
   public void testSingleNameImportNoAlias1() {
     testError(
         lines(
@@ -731,6 +742,18 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "goog.module('x.y.z');",
             "",
             "var bar = goog.require('foo');",
+            "",
+            "exports = function() { return foo.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+  }
+
+  @Test
+  public void testSingleNameImportWithRenamingAlias_forwardDeclare() {
+    testError(
+        lines(
+            "goog.module('x.y.z');",
+            "",
+            "var bar = goog.forwardDeclare('foo');",
             "",
             "exports = function() { return foo.doThing(''); };"),
         REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
