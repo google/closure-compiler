@@ -35,16 +35,15 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     super(new TestExternsBuilder().addObject().build());
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Before
   public void enableTypeCheckBeforePass() {
+    enableNormalize();
     enableTypeCheck();
     enableTypeInfoValidation();
     disableCompareSyntheticCode();
