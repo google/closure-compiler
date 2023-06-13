@@ -27,6 +27,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
@@ -1631,6 +1632,52 @@ public final class SyntacticScopeCreatorTest {
   }
 
   @Test
+  public void testTwoGoogProvidesOfNameInScope() {
+    Node root = getRoot("goog.provide('foo.bar'); goog.provide('foo.baz');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isTrue();
+    assertThat(this.redeclarations).isEmpty();
+  }
+
+  @Test
+  public void testTwoGoogProvidesOfNameInScope_withTreatProvidesAsRedeclarations() {
+    scopeCreator =
+        new SyntacticScopeCreator(
+            compiler,
+            new RecordingRedeclarationHandler(),
+            /* treatProvidesAsRedeclarations= */ true);
+
+    Node root = getRoot("goog.provide('foo.bar'); goog.provide('foo.baz');");
+    scopeCreator.createScope(root, null);
+
+    assertThat(this.redeclarations).isEmpty();
+  }
+
+  @Test
+  public void testVarFollowedByGoogProvidesOfNameInScope() {
+    Node root = getRoot("var foo; goog.provide('foo.bar');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isFalse();
+    assertThat(this.redeclarations).isEmpty();
+  }
+
+  @Test
+  public void testVarFollowedByGoogProvidesOfNameInScope_withTreatProvidesAsRedeclarations() {
+    scopeCreator =
+        new SyntacticScopeCreator(
+            compiler,
+            new RecordingRedeclarationHandler(),
+            /* treatProvidesAsRedeclarations= */ true);
+
+    Node root = getRoot("var foo; goog.provide('foo.bar'); goog.provide('foo');");
+    scopeCreator.createScope(root, null);
+
+    assertThat(this.redeclarations).hasSize(2);
+  }
+
+  @Test
   public void testLegacyGoogModuleNamespaceInScope() {
     Node root = getRoot("goog.module('foo.bar'); goog.module.declareLegacyNamespace();");
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -1642,6 +1689,51 @@ public final class SyntacticScopeCreatorTest {
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
     assertScope(moduleScope).declares("foo").on(globalScope);
+  }
+
+  @Test
+  public void testTwoLegacyNamespaceGoogModules() {
+    Node file1 = getRoot("goog.module('foo.bar'); goog.module.declareLegacyNamespace();");
+    Node file2 = getRoot("goog.module('foo.baz'); goog.module.declareLegacyNamespace();");
+
+    Scope globalScope = scopeCreator.createScope(IR.root(file1, file2), null);
+    assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isTrue();
+    assertThat(this.redeclarations).isEmpty();
+  }
+
+  @Test
+  public void testTwoLegacyNamespaceGoogModules_withTreatProvidesAsRedeclarations() {
+    scopeCreator =
+        new SyntacticScopeCreator(
+            compiler,
+            new RecordingRedeclarationHandler(),
+            /* treatProvidesAsRedeclarations= */ true);
+
+    Node file1 = getRoot("goog.module('foo.bar'); goog.module.declareLegacyNamespace();");
+    Node file2 = getRoot("goog.module('foo.baz'); goog.module.declareLegacyNamespace();");
+
+    Scope globalScope = scopeCreator.createScope(IR.root(file1, file2), null);
+    assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isTrue();
+    assertThat(this.redeclarations).isEmpty();
+  }
+
+  @Test
+  public void testVarFollowedByLegacyGoogModuleNamespace_withTreatProvidesAsRedeclarations() {
+    scopeCreator =
+        new SyntacticScopeCreator(
+            compiler,
+            new RecordingRedeclarationHandler(),
+            /* treatProvidesAsRedeclarations= */ true);
+
+    Node file1 = getRoot("var foo;");
+    Node file2 = getRoot("goog.module('foo.bar'); goog.module.declareLegacyNamespace();");
+    Scope globalScope = scopeCreator.createScope(IR.root(file1, file2), null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isFalse();
+    assertThat(this.redeclarations).hasSize(1);
   }
 
   @Test

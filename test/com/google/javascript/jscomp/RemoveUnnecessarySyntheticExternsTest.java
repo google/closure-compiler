@@ -82,6 +82,36 @@ public final class RemoveUnnecessarySyntheticExternsTest extends CompilerTestCas
   }
 
   @Test
+  public void removesSyntheticExternDeclaredInGoogProvide() {
+    this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("x"));
+    this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("y"));
+
+    testExternChanges(srcs("goog.provide('x');"), expected("var y;"));
+    testExternChanges(srcs("goog.provide('x.y.z');"), expected("var y;"));
+    testExternChanges(srcs("goog.provide('other'); goog.provide('x.y');"), expected("var y;"));
+  }
+
+  @Test
+  public void doesNotRemovesSyntheticExternForLegacyGoogModule() {
+    this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("x"));
+    this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("y"));
+
+    testExternChanges(srcs("goog.module('x');"), expected("var x; var y;"));
+    testExternChanges(srcs("goog.module('x.y');"), expected("var x; var y;"));
+  }
+
+  @Test
+  public void removesSyntheticExternDeclaredInLegacyGoogModuleNamespace() {
+    this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("x"));
+    this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("y"));
+
+    testExternChanges(
+        srcs("goog.module('x'); goog.module.declareLegacyNamespace();"), expected("var y;"));
+    testExternChanges(
+        srcs("goog.module('x.y'); goog.module.declareLegacyNamespace();"), expected("var y;"));
+  }
+
+  @Test
   public void removesSyntheticExternDeclaredInOtherExterns() {
     this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("x"));
     this.syntheticExternsToAdd.add(createUnfulfilledDeclaration("y"));

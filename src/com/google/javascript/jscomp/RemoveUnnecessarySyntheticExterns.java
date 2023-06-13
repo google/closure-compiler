@@ -49,8 +49,8 @@ final class RemoveUnnecessarySyntheticExterns implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     Node globalRoot = externs.getParent();
-    ScopeCreator scopeCreator =
-        new SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
+    SyntacticScopeCreator scopeCreator =
+        new SyntacticScopeCreator(compiler, new RedeclarationCheckHandler(), true);
 
     // This call will invoke the RedeclarationCheckHandler on duplicate synthetic names
     scopeCreator.createScope(globalRoot, /* parent= */ null);
