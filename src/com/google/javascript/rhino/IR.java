@@ -675,7 +675,7 @@ public class IR {
   }
 
   public static Node stringKey(String s, Node value) {
-    checkState(mayBeExpression(value) || value.isDefaultValue());
+    checkState(mayBeExpression(value) || value.isDefaultValue() || value.isObjectPattern());
     Node stringKey = stringKey(s);
     stringKey.addChildToFront(value);
     return stringKey;
