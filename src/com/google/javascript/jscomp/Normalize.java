@@ -206,7 +206,7 @@ final class Normalize implements CompilerPass {
           if (assertOnChange) {
             String name = n.getString();
             throw new IllegalStateException(
-                "Unexpected const change.\n"
+                "Should be const but not marked as const.\n"
                     + "  name: "
                     + name
                     + "\n"
@@ -406,7 +406,7 @@ final class Normalize implements CompilerPass {
 
       if (!n.getBooleanProp(Node.IS_CONSTANT_NAME)
           && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
-        checkState(!assertOnChange, "Unexpected const change: %s", n);
+        checkState(!assertOnChange, "Not marked as constant when it should be: %s", n);
         n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
     }
