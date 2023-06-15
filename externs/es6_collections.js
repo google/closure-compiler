@@ -21,11 +21,70 @@
  */
 
 // TODO(johnlenz): Use Tuples for the Map and Set iterators where appropriate.
+/**
+ * @record
+ * @extends {Iterable<!Array<KEY|VALUE>>}
+ * @template KEY, VALUE
+ */
+function ReadonlyMap() {}
+
+/**
+ * @return {!IteratorIterable<!Array<KEY|VALUE>>}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype.entries = function() {};
+
+/**
+ * @param {function(this:THIS, VALUE, KEY, MAP): ?} callback
+ * @param {THIS=} opt_thisArg
+ * @this {MAP}
+ * @template MAP, THIS
+ * @return {undefined}
+ */
+ReadonlyMap.prototype.forEach = function(callback, opt_thisArg) {};
+
+/**
+ * @param {KEY} key
+ * @return {VALUE}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype.get = function(key) {};
+
+/**
+ * @param {KEY} key
+ * @return {boolean}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype.has = function(key) {};
+
+/**
+ * @return {!IteratorIterable<KEY>}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype.keys = function() {};
+
+/**
+ * @const {number}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype.size;
+
+/**
+ * @return {!IteratorIterable<VALUE>}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype.values = function() {};
+
+/**
+ * @return {!Iterator<!Array<KEY|VALUE>>}
+ * @nosideeffects
+ */
+ReadonlyMap.prototype[Symbol.iterator] = function() {};
 
 /**
  * @constructor @struct
  * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
- * @implements {Iterable<!Array<KEY|VALUE>>}
+ * @implements {ReadonlyMap<KEY, VALUE>}
  * @template KEY, VALUE
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
@@ -42,20 +101,24 @@ Map.prototype.clear = function() {};
 Map.prototype.delete = function(key) {};
 
 /**
+ * @override
  * @return {!IteratorIterable<!Array<KEY|VALUE>>}
  * @nosideeffects
  */
 Map.prototype.entries = function() {};
 
 /**
- * @param {function(this:THIS, VALUE, KEY, MAP)} callback
+ * @override
+ * @param {function(this:THIS, VALUE, KEY, MAP): ?} callback
  * @param {THIS=} opt_thisArg
  * @this {MAP}
  * @template MAP,THIS
+ * @return {undefined}
  */
 Map.prototype.forEach = function(callback, opt_thisArg) {};
 
 /**
+ * @override
  * @param {KEY} key
  * @return {VALUE}
  * @nosideeffects
@@ -63,6 +126,7 @@ Map.prototype.forEach = function(callback, opt_thisArg) {};
 Map.prototype.get = function(key) {};
 
 /**
+ * @override
  * @param {KEY} key
  * @return {boolean}
  * @nosideeffects
@@ -70,6 +134,7 @@ Map.prototype.get = function(key) {};
 Map.prototype.has = function(key) {};
 
 /**
+ * @override
  * @return {!IteratorIterable<KEY>}
  * @nosideeffects
  */
@@ -85,19 +150,23 @@ Map.prototype.keys = function() {};
 Map.prototype.set = function(key, value) {};
 
 /**
+ * @override
  * @type {number}
- * (readonly)
+ * @nosideeffects
  */
 Map.prototype.size;
 
 /**
+ * @override
  * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
  */
 Map.prototype.values = function() {};
 
 /**
+ * @override
  * @return {!Iterator<!Array<KEY|VALUE>>}
+ * @nosideeffects
  */
 Map.prototype[Symbol.iterator] = function() {};
 
