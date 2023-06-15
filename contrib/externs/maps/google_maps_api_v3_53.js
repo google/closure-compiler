@@ -8383,7 +8383,7 @@ google.maps.StreetViewPanoRequest.prototype.pano;
  * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLElement} container
- * @param {google.maps.StreetViewPanoramaOptions=} opts
+ * @param {?google.maps.StreetViewPanoramaOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
