@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,6 +126,8 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Map<String, Integer> cssNames;
 
+  private final Map<String, String> cssNamesBySymbol;
+
   private @Nullable CssRenamingMap symbolMap;
 
   private final Set<String> skiplist;
@@ -139,6 +142,7 @@ class ReplaceCssNames implements CompilerPass {
     this.symbolMap = symbolMap;
     this.cssNames = cssNames;
     this.skiplist = skiplist;
+    this.cssNamesBySymbol = new LinkedHashMap<>();
   }
 
   @Override
@@ -146,8 +150,15 @@ class ReplaceCssNames implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new FindSetCssNameTraversal());
     List<GetCssNameInstance> getCssNameInstances = gatherGetCssNameInstances(root);
     for (GetCssNameInstance getCssNameInstance : getCssNameInstances) {
+      String cssClassName = getCssNameInstance.getCssClassName();
+      if (getCssNameInstance.isCssClosureFileClassesMember()) {
+        cssNamesBySymbol.put(getCssNameInstance.getCssClosureClassesMemberName(), cssClassName);
+      } else {
+        updateCssNamesCount(cssClassName);
+      }
       getCssNameInstance.replaceWithExpression();
     }
+    NodeTraversal.traverse(compiler, root, new CountCssNamesBySymbol());
   }
 
   /**
@@ -205,12 +216,43 @@ class ReplaceCssNames implements CompilerPass {
     }
   }
 
+  /**
+   * Update the count of CSS class names.
+   *
+   * <p>We maintain a count of references to CSS classes, so that unused classes can be flagged.
+   *
+   * <p>Unused class matching is always done by-part: if a CSS class definition or reference
+   * contains hyphens, each hyphenated section is checked separately. For example, if the CSS class
+   * contains .myComponent-highlight, it can be satisfied by separate calls to
+   * goog.getCssName('myComponent') and goog.getCssName('highlight'). A single call to
+   * goog.getCssName('myComponent-highlight') will also work.
+   */
+  private void updateCssNamesCount(String cssClassName) {
+    if (cssNames != null) {
+      String[] parts = cssClassName.split("-", -1);
+      for (String element : parts) {
+        int count = cssNames.getOrDefault(element, 0);
+        cssNames.put(element, count + 1);
+      }
+    }
+  }
+
+  private boolean isNotInCssClosureFile(Node node) {
+    String sourceFileName = node.getSourceFileName();
+    return sourceFileName == null || !sourceFileName.endsWith(".css.closure.js");
+  }
+
   private boolean isGetCssNameCall(Node node) {
     return node.isCall() && node.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION);
   }
 
   private GetCssNameInstance createGetCssNameInstance(Node n) {
-    return new GetCssNameInstance(n, validateGetCssNameCall(n));
+    JSError validationError = validateGetCssNameCall(n);
+    String cssClosureClassesMemberName = null;
+    if (validationError == null) {
+      cssClosureClassesMemberName = getCssClosureClassesMemberName(n);
+    }
+    return new GetCssNameInstance(n, validationError, cssClosureClassesMemberName);
   }
 
   /** Represents a `goog.getCssName()` call. */
@@ -227,9 +269,12 @@ class ReplaceCssNames implements CompilerPass {
     /** Non-null if the shape of the function call was invalid, when this object was created. */
     final JSError validationError;
 
-    GetCssNameInstance(Node callNode, JSError validationError) {
+    final String cssClosureClassesMemberName;
+
+    GetCssNameInstance(Node callNode, JSError validationError, String cssClosureClassesMemberName) {
       this.callNode = callNode;
       this.validationError = validationError;
+      this.cssClosureClassesMemberName = cssClosureClassesMemberName;
     }
 
     boolean isValid() {
@@ -281,6 +326,87 @@ class ReplaceCssNames implements CompilerPass {
       callNode.replaceWith(replacement);
       compiler.reportChangeToEnclosingScope(replacement);
     }
+
+    boolean isCssClosureFileClassesMember() {
+      return cssClosureClassesMemberName != null;
+    }
+
+    @Nullable String getCssClosureClassesMemberName() {
+      checkNotNull(
+          cssClosureClassesMemberName, "No css closure file classess member found: %s", callNode);
+      return cssClosureClassesMemberName;
+    }
+
+    @Nullable String getCssClassName() {
+      checkState(isValid(), "not a valid goog.getCssName() call: %s", callNode);
+      checkNotNull(callNode.getParent(), "already replaced: %s", callNode);
+      final int childCount = callNode.getChildCount();
+      final Node firstArg = checkNotNull(callNode.getSecondChild(), callNode);
+      switch (childCount) {
+        case 2:
+          checkState(firstArg.isStringLit(), "not a string literal: %s", firstArg);
+          return firstArg.getString();
+        case 3:
+          final Node secondArg = checkNotNull(firstArg.getNext(), firstArg);
+          checkState(secondArg.isStringLit(), "not a string literal: %s", secondArg);
+          return secondArg.getString();
+        default:
+          throw new IllegalStateException(
+              SimpleFormat.format("invalid number of children: %s for: %s", childCount, callNode));
+      }
+    }
+  }
+
+  /**
+   * Checks if the goog.getCssName() call is part of a classes object in a .css.closure.js file.
+   *
+   * <p>Check if the callNode is an export from a .css.closure.js file with the following structure:
+   *
+   * <pre>
+   *   module$exports$foo.classes = { "shortName": goog.getCssName("className") };
+   * </pre>
+   *
+   * If so, return the qualified name for the member name, i.e.
+   * "module$exports$foo.classes.shortName".
+   *
+   * <p>This method assumes that callNode has already been validated to be a goog.getCssName() call.
+   */
+  private @Nullable String getCssClosureClassesMemberName(Node callNode) {
+    /*
+     * For clarity, this is the structure that we're looking for.
+     *
+     * ASSIGN
+     *   GETPROP - classes
+     *     NAME - module$exports$whatever
+     *   OBJECTLIT
+     *     STRING_KEY - "shortName"
+     *       CALL
+     *         GETPROP - getCssName
+     *           NAME - goog
+     *         STRINGLIT - "className"
+     */
+    if (isNotInCssClosureFile(callNode) || callNode.getChildCount() != 2) {
+      return null;
+    }
+    Node shortName = callNode.getParent();
+    if (shortName == null || !shortName.isStringKey()) {
+      return null;
+    }
+    Node objectLitNode = shortName.getParent();
+    if (objectLitNode == null || !objectLitNode.isObjectLit()) {
+      return null;
+    }
+    Node assignNode = objectLitNode.getParent();
+    if (assignNode == null
+        || !assignNode.isAssign()
+        || assignNode.getSecondChild() != objectLitNode) {
+      return null;
+    }
+    Node classes = assignNode.getFirstChild();
+    if (!classes.isGetProp()) {
+      return null;
+    }
+    return classes.getQualifiedName() + "." + shortName.getString();
   }
 
   private @Nullable JSError validateGetCssNameCall(Node callNode) {
@@ -374,13 +500,25 @@ class ReplaceCssNames implements CompilerPass {
       }
       n.setString(replacement);
     }
-    if (cssNames != null) {
-      // We still want to collect statistics even if we've already
-      // done the full replace. The statistics are collected on a
-      // per-part basis.
-      for (String element : parts) {
-        int count = cssNames.getOrDefault(element, 0);
-        cssNames.put(element, count + 1);
+  }
+
+  private class CountCssNamesBySymbol implements NodeTraversal.Callback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (n.isScript()) {
+        // Only descend into source files NOT named `*.css.closure.js`
+        return isNotInCssClosureFile(n);
+      } else {
+        return true; // descend into every other node
+      }
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      String qualifiedName = n.getQualifiedName();
+      if (qualifiedName != null && cssNamesBySymbol.containsKey(qualifiedName)) {
+        String className = cssNamesBySymbol.get(qualifiedName);
+        updateCssNamesCount(className);
       }
     }
   }

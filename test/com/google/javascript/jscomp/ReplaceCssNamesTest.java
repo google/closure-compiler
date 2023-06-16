@@ -48,6 +48,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
           .put("elephant", "e")
           .put("footer", "f")
           .put("goog", "g")
+          .put("fooStylesBar", "fsr")
+          .put("fooStylesBaz", "fsz")
           .buildOrThrow();
 
   Map<String, String> replacementMapFull =
@@ -103,6 +105,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
+    enableRewriteClosureCode();
     cssNames = new HashMap<>();
     useReplacementMap = true;
     renamingMap = getPartialMap();
@@ -419,5 +422,71 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     test(
         "var x = goog.getCssName('goog-elephant')", //
         "var x = 'goog-elephant'");
+  }
+
+  @Test
+  public void testVariableReferencesToCssClasses() {
+    SourceFile cssVarsDefinition =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "goog.module('foo.styles$2ecss');",
+                // These files will be automatically generated, so we know the
+                // exported 'classes' property will always be declared like this.
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': goog.getCssName('fooStylesBar'),",
+                "  'Baz': goog.getCssName('fooStylesBaz'),",
+                "}"));
+    SourceFile cssVarsExpected =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': 'fsr',",
+                "  'Baz': 'fsz',",
+                "}"));
+    SourceFile importer =
+        SourceFile.fromCode(
+            "foo/importer.closure.js",
+            lines(
+                "goog.module('foo.importer');",
+                "/** @type {string} */",
+                "const foo_styles_css = goog.require('foo.styles$2ecss')",
+                // Even when the original TS import was
+                // `import {classes as foo} from './path/to/file';`
+                // tsickle will convert references to `foo` into a fully qualified
+                // name like this rather than creating an alias variable named `foo`.
+                "var x = foo_styles_css.classes.Bar"));
+    test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importer));
+    assertThat(cssNames).containsExactly("fooStylesBar", 1);
+  }
+
+  @Test
+  public void testIgnoreReferencesInCssTsFiles() {
+    SourceFile cssVarsDefinition =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': goog.getCssName('fooStylesBar'),",
+                "  'Baz': goog.getCssName('fooStylesBaz'),",
+                "}"));
+    SourceFile cssVarsExpected =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': 'fsr',",
+                "  'Baz': 'fsz',",
+                "}"));
+    test(srcs(cssVarsDefinition), expected(cssVarsExpected));
+    assertThat(cssNames).isEmpty();
   }
 }
