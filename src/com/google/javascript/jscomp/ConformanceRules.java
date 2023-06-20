@@ -2481,7 +2481,7 @@ public final class ConformanceRules {
       if (type == null) {
         return Optional.absent();
       }
-      if (elementType != null && type.isSubtypeOf(elementType)) {
+      if (elementType != null && type.restrictByNotNullOrUndefined().isSubtypeOf(elementType)) {
         return Optional.of(propertyName);
       }
       return Optional.absent();
@@ -2543,6 +2543,7 @@ public final class ConformanceRules {
       if (objType == null || elementType == null) {
         return false;
       }
+      objType = objType.restrictByNotNullOrUndefined();
       // If the type of the object is not known to be a subtype of Element, the code is not
       // equivalent to setAttribute. Without this check, we will get overwhelmed by false
       // positives.
@@ -2713,7 +2714,7 @@ public final class ConformanceRules {
         return false;
       }
       JSType documentType = compiler.getTypeRegistry().getGlobalType("Document");
-      if (documentType == null || !type.isSubtypeOf(documentType)) {
+      if (documentType == null || !type.restrictByNotNullOrUndefined().isSubtypeOf(documentType)) {
         return false;
       }
       return true;
