@@ -45,7 +45,7 @@ ReadonlyMap.prototype.forEach = function(callback, opt_thisArg) {};
 
 /**
  * @param {KEY} key
- * @return {VALUE}
+ * @return {VALUE|undefined}
  * @nosideeffects
  */
 ReadonlyMap.prototype.get = function(key) {};
