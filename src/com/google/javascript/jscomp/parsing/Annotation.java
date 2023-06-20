@@ -99,6 +99,7 @@ enum Annotation {
   UNRESTRICTED,
   WIZACTION,
   TS_TYPE,
+  WIZ_ANALYZER,
   WIZCALLBACK;
 
   static final ImmutableMap<String, Annotation> recognizedAnnotations =
@@ -175,6 +176,7 @@ enum Annotation {
           .put("unrestricted", Annotation.UNRESTRICTED)
           .put("wizaction", Annotation.WIZACTION)
           .put("tsType", Annotation.TS_TYPE)
+          .put("wizAnalyzer", Annotation.WIZ_ANALYZER)
           .put("wizcallback", Annotation.WIZCALLBACK)
           .buildOrThrow();
 }

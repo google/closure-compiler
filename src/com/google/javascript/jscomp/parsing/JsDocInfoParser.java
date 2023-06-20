@@ -1037,6 +1037,7 @@ public final class JsDocInfoParser {
         case JSX_FRAGMENT:
         case SOY_MODULE:
         case SOY_TEMPLATE:
+        case WIZ_ANALYZER:
           return eatUntilEOLIfNotAnnotation();
         case WIZACTION:
           if (!jsdocBuilder.recordWizaction()) {
