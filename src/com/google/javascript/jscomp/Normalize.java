@@ -185,36 +185,30 @@ final class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Note: Constant properties annotations are not propagated.
-      if (n.isName() || n.isStringKey()) {
-        if (n.getString().isEmpty()) {
+      if (!n.isName() || n.getString().isEmpty()) {
           return;
-        }
+      }
 
-        JSDocInfo info = null;
-        // Find the JSDocInfo for a top-level variable (only if this is a name and not an object
-        // literal key)
-        Var var = n.isName() ? t.getScope().getVar(n.getString()) : null;
-        if (var != null) {
-          info = var.getJSDocInfo();
-        }
+      // Find the JSDocInfo for a top-level variable
+      Var var = t.getScope().getVar(n.getString());
+      JSDocInfo info = (var != null) ? var.getJSDocInfo() : null;
 
-        boolean shouldBeConstant =
-            (info != null && info.isConstant())
-                || NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
-        boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
-        if (shouldBeConstant && !isMarkedConstant) {
-          if (assertOnChange) {
-            String name = n.getString();
-            throw new IllegalStateException(
-                "Should be const but not marked as const.\n"
-                    + "  name: "
-                    + name
-                    + "\n"
-                    + "  parent:"
-                    + n.getParent().toStringTree());
-          }
-          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      boolean shouldBeConstant =
+          (info != null && info.isConstant())
+              || NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
+      boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
+      if (shouldBeConstant && !isMarkedConstant) {
+        if (assertOnChange) {
+          String name = n.getString();
+          throw new IllegalStateException(
+              "Should be const but not marked as const.\n"
+                  + "  name: "
+                  + name
+                  + "\n"
+                  + "  parent:"
+                  + n.getParent().toStringTree());
         }
+        n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
     }
   }
@@ -362,10 +356,6 @@ final class Normalize implements CompilerPass {
           break;
 
         case NAME:
-        case GETPROP:
-        case OPTCHAIN_GETPROP:
-        case GETTER_DEF:
-        case SETTER_DEF:
           annotateConstantsByConvention(n);
           break;
 
@@ -382,25 +372,11 @@ final class Normalize implements CompilerPass {
 
     /** Mark names and properties that are constants by convention. */
     private void annotateConstantsByConvention(Node n) {
-      checkState(
-          n.isName()
-              || n.isOptChainGetProp()
-              || n.isGetProp()
-              || n.isStringKey()
-              || n.isGetterDef()
-              || n.isSetterDef());
+      checkState(n.isName());
 
       // Need to check that variables have not been renamed, to determine whether
       // coding conventions still apply.
       if (compiler.getLifeCycleStage().isNormalizedObfuscated()) {
-        return;
-      }
-
-      // There are only two cases where a string token
-      // may be a variable reference: The right side of a GETPROP (or OPTCHAIN_GETPROP)
-      // or an OBJECTLIT key.
-      boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(n);
-      if (!n.isName() && !NodeUtil.mayBeObjectLitKey(n) && !isGetprop) {
         return;
       }
 

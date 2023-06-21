@@ -982,12 +982,12 @@ public final class NormalizeTest extends CompilerTestCase {
   @Test
   public void testIsConstantByDestructuring() {
     test(
-        "var {CONST} = {CONST:3}; var b = CONST;",
-        "var {CONST: CONST} = {CONST:3}; var b = CONST;");
+        "const {CONST} = {CONST:3}; const b = CONST;",
+        "const {CONST: CONST} = {CONST:3}; const b = CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(4);
+    assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
     }
@@ -997,19 +997,7 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testIsConstantByDestructuringWithDefault() {
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
 
-    test("var {CONST = 3} = {}; var b = CONST;", "var {CONST: CONST = 3} = {}; var b = CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(3);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testPropertyIsConstant1() {
-    testSame("var a = {}; a.CONST = 3; var b = a.CONST;");
+    test("const {CONST = 3} = {}; var b = CONST;", "const {CONST: CONST = 3} = {}; var b = CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
@@ -1019,91 +1007,6 @@ public final class NormalizeTest extends CompilerTestCase {
     }
   }
 
-  @Test
-  public void testPropertyIsConstant1_optChain() {
-    testSame("var a = {}; a.CONST = 3; var b = a?.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testPropertyIsConstant2() {
-    testSame("var a = {CONST: 3}; var b = a.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testPropertyIsConstant2_optChain() {
-    testSame("var a = {CONST: 3}; var b = a?.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testGetterPropertyIsConstant() {
-    testSame("var a = { get CONST() {return 3} }; var b = a.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testGetterPropertyIsConstant_optChain() {
-    testSame("var a = { get CONST() {return 3} }; var b = a?.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testSetterPropertyIsConstant() {
-    // Verifying that a SET is properly annotated.
-    testSame("var a = { set CONST(b) {throw 'invalid'} }; var c = a.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
-
-  @Test
-  public void testSetterPropertyIsConstant_optChain() {
-    // Verifying that a SET is properly annotated.
-    testSame("var a = { set CONST(b) {throw 'invalid'} }; var c = a?.CONST;");
-    Node n = getLastCompiler().getRoot();
-
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
-    assertThat(constantNodes).hasSize(2);
-    for (Node hasProp : constantNodes) {
-      assertThat(hasProp.getString()).isEqualTo("CONST");
-    }
-  }
 
   @Test
   public void testPropertyIsConstantIfMatchesConstantName() {
