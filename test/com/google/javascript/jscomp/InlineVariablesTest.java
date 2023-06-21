@@ -2199,7 +2199,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
         lines(
             "", //
             "function f(x) {",
-            "  x; const g = 2;",
+            "  x;",
             "  {3;}",
             "}"));
   }

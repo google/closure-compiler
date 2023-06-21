@@ -137,8 +137,9 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
 
     Node statement = NodeUtil.getEnclosingStatement(classNode);
     Node originalExtends = classNode.getSecondChild();
-    originalExtends.replaceWith(
-        astFactory.createName(name, type(originalExtends)).srcref(originalExtends));
+    Node nameNode =
+        astFactory.createConstantName(name, type(originalExtends)).srcref(originalExtends);
+    originalExtends.replaceWith(nameNode);
     Node extendsAlias =
         astFactory
             .createSingleConstNameDeclaration(name, originalExtends)

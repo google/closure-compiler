@@ -34,7 +34,7 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
-import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
+import com.google.javascript.jscomp.Normalize.PropagateConstantPropertyOverVars;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -1301,7 +1301,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       // This shouldn't be necessary, this pass should already be setting new constants as
       // constant.
       // TODO(b/64256754): Investigate.
-      new PropagateConstantAnnotationsOverVars(compiler, false).process(externs, root);
+      new PropagateConstantPropertyOverVars(compiler, false).process(externs, root);
     }
 
     private boolean canCollapse(Name name) {

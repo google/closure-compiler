@@ -180,7 +180,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     if (markChanges) {
       t.reportCodeChange();
       // If we are renaming a function declaration, make sure the containing scope
-      // has the opporunity to act on the change.
+      // has the opportunity to act on the change.
       if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
         t.getCompiler().reportChangeToEnclosingScope(parent);
       }
@@ -479,9 +479,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       return new ContextualRenamer(scopeRoot, nameUsage, hoistingTargetScope, this);
     }
 
-    /**
-     * Adds a name to the map of names declared in this scope.
-     */
+    /** Adds a name to the map of names declared in this scope. */
     @Override
     public void addDeclaredName(String name, boolean hoisted) {
       if (hoisted && hoistRenamer != this) {
