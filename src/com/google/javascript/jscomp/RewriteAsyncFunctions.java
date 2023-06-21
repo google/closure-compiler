@@ -333,8 +333,9 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       // super.propertyName
       final Node superDotProperty = wrapperInfo.firstInstanceOfSuperDotProperty.cloneTree();
 
-      // () => super.propertyName
-      return astFactory.createZeroArgArrowFunctionForExpression(superDotProperty);
+      // () => { return super.propertyName; };
+      return astFactory.createZeroArgArrowFunctionForExpression(
+          astFactory.createBlock(astFactory.createReturn(superDotProperty)));
     }
 
     @Override
@@ -495,7 +496,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     for (SuperPropertyWrapperInfo superPropertyWrapperInfo :
         functionContext.superPropertyWrappers.asCollection()) {
       Node arrowFunction = functionContext.createWrapperArrowFunction(superPropertyWrapperInfo);
-
       // const super$get$x = () => super.x;
       Node arrowFunctionDeclarationStatement =
           astFactory.createSingleConstNameDeclaration(

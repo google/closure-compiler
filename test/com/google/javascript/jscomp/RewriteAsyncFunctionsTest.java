@@ -43,12 +43,11 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     super(EXTERNS_BASE);
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
+    enableNormalize();
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
@@ -204,7 +203,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "class X extends A {",
                 "  m() {",
                 "    const $jscomp$async$this = this;",
-                "    const $jscomp$async$super$get$m = () => super.m;",
+                "    const $jscomp$async$super$get$m = () => {",
+                "      return super.m;",
+                "    };",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function* () {",
                 "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
@@ -243,7 +244,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
 
     // get `super.m` from `() => `super.m`
-    Node superDotM = wrapperArrowFunction.getLastChild();
+    Node superDotM = wrapperArrowFunction.getLastChild().getFirstFirstChild();
     assertNode(superDotM)
         .matchesQualifiedName("super.m")
         .hasColorThat()
@@ -292,7 +293,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "}",
                 "class X extends A {",
                 "  m() {",
-                "    const $jscomp$async$super$get$m = () => super.m;",
+                "    const $jscomp$async$super$get$m = () => {",
+                "      return super.m;",
+                "    };",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function* () {",
                 "          const tmp = $jscomp$async$super$get$m();",
@@ -333,7 +336,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
 
     // get `super.m` from `() => `super.m`
-    Node superDotM = wrapperArrowFunction.getLastChild();
+    Node superDotM = wrapperArrowFunction.getLastChild().getFirstFirstChild();
     assertNode(superDotM)
         .matchesQualifiedName("super.m")
         .hasColorThat()
@@ -375,7 +378,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "class TextFieldBase extends UpdatingElement {",
             "  _getUpdateComplete() {",
             "    const $jscomp$async$this = this;",
-            "    const $jscomp$async$super$get$getUpdateComplete = () => super.getUpdateComplete;",
+            "    const $jscomp$async$super$get$getUpdateComplete = () => {",
+            "      return super.getUpdateComplete;",
+            "    };",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
             "      if ($jscomp$async$super$get$getUpdateComplete()) {",
             "        yield $jscomp$async$super$get$getUpdateComplete().call($jscomp$async$this);",
@@ -389,7 +394,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   public void testNestedArrowFunctionUsingThis() {
     test(
         lines(
-            "class X {",
+            "class X {", //
             "  m() {",
             "    return async () => (() => this);",
             "  }",
@@ -401,7 +406,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "      const $jscomp$async$this = this;",
             "      return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "          function* () {",
-            "            return () => $jscomp$async$this;",
+            "            return () => {",
+            "              return $jscomp$async$this;",
+            "            };",
             "          })",
             "    }",
             "  }",
@@ -508,15 +515,15 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         lines(
             "function outer() {",
             "  /**",
-            "   * @param {...?} var_args",
+            "   * @param {...?} varArgs",
             "   * @return {!Promise<number>}",
             "   */",
-            "  async function f(var_args) { return arguments.length; }",
+            "  async function f(varArgs) { return arguments.length; }",
             "  return f(arguments)",
             "}"),
         lines(
             "function outer() {",
-            "  function f(var_args) {",
+            "  function f(varArgs) {",
             "    const $jscomp$async$arguments = arguments;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
