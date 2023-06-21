@@ -793,6 +793,10 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case SASS_GENERATED_CSS_TS:
+          jsdocBuilder.recordSassGeneratedCssTs();
+          return eatUntilEOLIfNotAnnotation();
+
         case THROWS:
           {
             lineno = stream.getLineno();

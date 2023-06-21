@@ -85,6 +85,7 @@ enum Annotation {
   PUBLIC,
   PURE_OR_BREAK_MY_CODE,
   RETURN,
+  SASS_GENERATED_CSS_TS,
   SEE,
   SOY_MODULE,
   SOY_TEMPLATE,
@@ -162,6 +163,7 @@ enum Annotation {
           .put("pureOrBreakMyCode", Annotation.PURE_OR_BREAK_MY_CODE)
           .put("return", Annotation.RETURN)
           .put("returns", Annotation.RETURN)
+          .put("sassGeneratedCssTs", Annotation.SASS_GENERATED_CSS_TS)
           .put("see", Annotation.SEE)
           .put("soyModule", Annotation.SOY_MODULE)
           .put("soyTemplate", Annotation.SOY_TEMPLATE)

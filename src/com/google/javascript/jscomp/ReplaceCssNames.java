@@ -23,6 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -121,6 +122,11 @@ class ReplaceCssNames implements CompilerPass {
           "JSC_GETCSSNAME_UNKNOWN_CSS_SYMBOL",
           "goog.getCssName called with unrecognized symbol \"{0}\" in class " + "\"{1}\".");
 
+  static final DiagnosticType UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR =
+      DiagnosticType.error(
+          "JSC_UNEXPECTED_SASS_GENERATED_CSS_TS",
+          "@sass_generated_css_ts JSDoc annotation is only allowed on .css.closure.js files.");
+
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
 
@@ -200,13 +206,30 @@ class ReplaceCssNames implements CompilerPass {
     }
   }
 
-  private class GatherCssNamesTraversal extends AbstractPostOrderCallback {
+  private class GatherCssNamesTraversal implements NodeTraversal.Callback {
     final List<GetCssNameInstance> listOfCssNameInstances = new ArrayList<>();
+    boolean isSassGeneratedCssTs = false;
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      JSDocInfo jsDocInfo = n.getJSDocInfo();
+      if (jsDocInfo != null && jsDocInfo.isSassGeneratedCssTs()) {
+        if (!n.isScript() || isNotInCssClosureFile(n)) {
+          compiler.report(JSError.make(n, UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR));
+          return false;
+        }
+        isSassGeneratedCssTs = jsDocInfo.isSassGeneratedCssTs();
+      }
+      return true;
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (isGetCssNameCall(n)) {
-        GetCssNameInstance getCssNameInstance = createGetCssNameInstance(n);
+      if (n.isScript()) {
+        // Clear isSassGeneratedCss once we've finished processing the current SCRIPT.
+        isSassGeneratedCssTs = false;
+      } else if (isGetCssNameCall(n)) {
+        GetCssNameInstance getCssNameInstance = createGetCssNameInstance(n, isSassGeneratedCssTs);
         if (getCssNameInstance.isValid()) {
           listOfCssNameInstances.add(getCssNameInstance);
         } else {
@@ -246,10 +269,10 @@ class ReplaceCssNames implements CompilerPass {
     return node.isCall() && node.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION);
   }
 
-  private GetCssNameInstance createGetCssNameInstance(Node n) {
+  private GetCssNameInstance createGetCssNameInstance(Node n, boolean isSassGeneratedCssTs) {
     JSError validationError = validateGetCssNameCall(n);
     String cssClosureClassesMemberName = null;
-    if (validationError == null) {
+    if (validationError == null && isSassGeneratedCssTs) {
       cssClosureClassesMemberName = getCssClosureClassesMemberName(n);
     }
     return new GetCssNameInstance(n, validationError, cssClosureClassesMemberName);

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_STRING_LITERAL_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNING;
 
@@ -430,6 +431,10 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
             lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
                 "goog.module('foo.styles$2ecss');",
                 // These files will be automatically generated, so we know the
                 // exported 'classes' property will always be declared like this.
@@ -442,6 +447,10 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
             lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
                 "goog.module('foo.styles$2ecss');",
                 "/** @type {{Bar: string, Baz: string}} */",
                 "exports.classes = {",
@@ -470,6 +479,10 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
             lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
                 "goog.module('foo.styles$2ecss');",
                 "/** @type {{Bar: string, Baz: string}} */",
                 "exports.classes = {",
@@ -480,6 +493,10 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
             lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
                 "goog.module('foo.styles$2ecss');",
                 "/** @type {{Bar: string, Baz: string}} */",
                 "exports.classes = {",
@@ -488,5 +505,20 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
                 "}"));
     test(srcs(cssVarsDefinition), expected(cssVarsExpected));
     assertThat(cssNames).isEmpty();
+  }
+
+  @Test
+  public void testUnexpectedSassGeneratedCssTsError() {
+    SourceFile nonCssClosureFile =
+        SourceFile.fromCode(
+            "foo/invalid.closure.js",
+            lines(
+                "/**",
+                " * @fileoverview contains an invalid sassGeneratedCssTs annotation",
+                // This annotation is invalid since this is not a .css.closure.js file
+                " * @sassGeneratedCssTs",
+                " */",
+                "var x = 'foo';"));
+    test(srcs(nonCssClosureFile), error(UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR));
   }
 }
