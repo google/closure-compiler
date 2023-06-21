@@ -159,20 +159,20 @@ final class Normalize implements CompilerPass {
 
     removeDuplicateDeclarations(externs, root);
 
-    new PropagateConstantPropertyOverVars(compiler, assertOnChange).process(externs, root);
+    new PropagateConstantAnnotationsOverVars(compiler, assertOnChange).process(externs, root);
 
     if (!compiler.getLifeCycleStage().isNormalized()) {
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     }
   }
 
-  /** Propagate constant annotations and IS_CONSTANT_NAME property over the Var graph. */
-  static class PropagateConstantPropertyOverVars extends AbstractPostOrderCallback
+  /** Propagate constant annotations over the Var graph. */
+  static class PropagateConstantAnnotationsOverVars extends AbstractPostOrderCallback
       implements CompilerPass {
     private final AbstractCompiler compiler;
     private final boolean assertOnChange;
 
-    PropagateConstantPropertyOverVars(AbstractCompiler compiler, boolean forbidChanges) {
+    PropagateConstantAnnotationsOverVars(AbstractCompiler compiler, boolean forbidChanges) {
       this.compiler = compiler;
       this.assertOnChange = forbidChanges;
     }
@@ -184,6 +184,7 @@ final class Normalize implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // Note: Constant properties annotations are not propagated.
       if (n.isName() || n.isStringKey()) {
         if (n.getString().isEmpty()) {
           return;
@@ -198,8 +199,7 @@ final class Normalize implements CompilerPass {
         }
 
         boolean shouldBeConstant =
-            (var != null && var.isConst())
-                || (info != null && info.isConstant())
+            (info != null && info.isConstant())
                 || NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (shouldBeConstant && !isMarkedConstant) {

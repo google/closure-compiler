@@ -83,8 +83,10 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     return 1;
   }
 
+  @Override
   @Before
-  public void customSetUp() throws Exception {
+  public void setUp() throws Exception {
+    super.setUp();
     removeConst = false;
     invert = false;
     useDefaultRenamer = false;
@@ -439,23 +441,17 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSame("a;");
 
     // Local names are made unique.
-    test(
-        lines(
-            "var a;", //
-            "function foo(a){var b;a}"),
-        lines(
-            "var a$jscomp$unique_0;",
-            "function foo$jscomp$unique_1(a$jscomp$unique_2){",
-            "  var b$jscomp$unique_3;a$jscomp$unique_2}"));
-    test(
-        lines(
-            "var a;", //
-            "function foo(){var b;a}",
-            "function boo(){var b;a}"),
-        lines(
-            "var a$jscomp$unique_0;",
-            "function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}",
-            "function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}"));
+    test("var a;"
+         + "function foo(a){var b;a}",
+         "var a$jscomp$unique_0;"
+         + "function foo$jscomp$unique_1(a$jscomp$unique_2){"
+         + "  var b$jscomp$unique_3;a$jscomp$unique_2}");
+    test("var a;"
+         + "function foo(){var b;a}"
+         + "function boo(){var b;a}",
+         "var a$jscomp$unique_0;" +
+         "function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}"
+         + "function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}");
 
     test(
         "let a; function foo(a) {let b; a; }",

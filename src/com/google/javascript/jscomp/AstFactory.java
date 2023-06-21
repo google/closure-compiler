@@ -44,6 +44,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
 
@@ -505,8 +506,7 @@ final class AstFactory {
    * <p>e.g. `const variableName = value;`
    */
   Node createSingleConstNameDeclaration(String variableName, Node value) {
-    Node nameNode = createConstantName(variableName, type(value.getJSType(), value.getColor()));
-    return IR.constNode(nameNode, value);
+    return IR.constNode(createName(variableName, type(value.getJSType(), value.getColor())), value);
   }
 
   /**
@@ -563,19 +563,9 @@ final class AstFactory {
   Node createName(String name, Type type) {
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
-    if (lifeCycleStage.isNormalized() && name.startsWith("$jscomp")) {
+    if (lifeCycleStage.isNormalized() && Objects.equals(name, "$jscomp")) {
       // $jscomp will always be a constant and needs to be marked that way to satisfy
       // the normalization invariants.
-      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    }
-    return result;
-  }
-
-  /** Use this when you know you need to create a constant name for const declarations */
-  Node createConstantName(String name, Type type) {
-    Node result = IR.name(name);
-    setJSTypeOrColor(type, result);
-    if (lifeCycleStage.isNormalized()) {
       result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
     return result;

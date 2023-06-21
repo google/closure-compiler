@@ -249,7 +249,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
 
     Node statement = NodeUtil.getEnclosingStatement(parent);
     // class name node used as LHS in newly created assignment
-    Node classNameLhs = astFactory.createConstantName(name, type(classNode));
+    Node classNameLhs = astFactory.createName(name, type(classNode));
     // class name node that replaces the class literal in the original statement
     Node classNameRhs = classNameLhs.cloneTree();
     classNode.replaceWith(classNameRhs);

@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -63,123 +62,13 @@ public final class NormalizeTest extends CompilerTestCase {
     return 1;
   }
 
-  @Before
-  public void customSetUp() throws Exception {
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
     // Validate that Normalize copies colors onto any nodes it synthesizes
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
-  }
-
-  @Test
-  public void testConstAnnotationPropagation() {
-    test(
-        "const x = 3; var a,     b; var y = x + 2;", //
-        "const x = 3; var a; var b; var y = x + 2;");
-    Node root = getLastCompiler().getRoot();
-    Node scriptNode =
-        root.getLastChild() // ROOT of input sources
-            .getLastChild();
-
-    // `const x = 3;`
-    Node constNode = scriptNode.getFirstChild();
-
-    // `x`
-    Node constName = constNode.getOnlyChild();
-    assertThat(constName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-
-    // `var y = x + 2;`
-    Node lastStatement = scriptNode.getLastChild();
-    // `y = x + 2`
-    Node yVar = lastStatement.getOnlyChild();
-    Node secondNameNodeOfX =
-        yVar.getFirstChild() // `x + 2`
-            .getFirstChild();
-
-    assertThat(secondNameNodeOfX.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-  }
-
-  @Test
-  public void testRestConstAnnotationPropagation() {
-    testSame(
-        lines(
-            "const {...x} = {a: 3};", //
-            "var y = x;"));
-    Node root = getLastCompiler().getRoot();
-    Node scriptNode =
-        root.getLastChild() // ROOT of input sources
-            .getLastChild();
-
-    // `const {...x} = {a: 3};`
-    Node constNode = scriptNode.getFirstChild();
-
-    // `{...x}`
-    Node objectPattern =
-        constNode
-            .getFirstChild() // DESTRUCTURING_LHS
-            .getFirstChild();
-
-    // `x`
-    Node constName =
-        objectPattern
-            .getFirstChild() // OBJECT_REST
-            .getFirstChild();
-    assertThat(constName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-
-    // `var y = x`
-    Node lastStatement = scriptNode.getLastChild();
-    // `y = x`
-    Node yVar = lastStatement.getOnlyChild();
-    Node secondNameNodeOfX = yVar.getFirstChild();
-    assertThat(secondNameNodeOfX.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-  }
-
-  @Test
-  public void testRestConstAnnotationPropagation_onlyConstVars() {
-    testSame(
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};",
-            "const {...rest} = obj;",
-            "const y = rest;"));
-    Node root = getLastCompiler().getRoot();
-    Node scriptNode =
-        root.getLastChild() // ROOT of input sources
-            .getLastChild();
-    Node firstStatement = scriptNode.getFirstChild();
-
-    // `obj` from `const obj = {a: 3, b: 'string', c: null}`
-    Node objName = firstStatement.getFirstChild();
-    assertThat(objName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-
-    // `const {...rest} = obj`
-    Node constNode = firstStatement.getNext();
-
-    // `{...rest} = obj
-    Node destructuringNode = constNode.getFirstChild();
-
-    // `obj` from previous comment
-    Node secondObjName = destructuringNode.getLastChild();
-    assertThat(secondObjName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-
-    // `{...rest}
-    Node objectPattern = destructuringNode.getFirstChild();
-
-    // `rest`
-    Node constName =
-        objectPattern
-            .getFirstChild() // OBJECT_REST
-            .getFirstChild();
-    assertThat(constName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-
-    // `const y = rest`
-    Node secondConstNode = constNode.getNext();
-
-    // `y = rest`
-    Node yVar = secondConstNode.getOnlyChild();
-    assertThat(yVar.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
-
-    Node secondConstName = yVar.getFirstChild();
-    assertThat(secondConstName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
   }
 
   @Test

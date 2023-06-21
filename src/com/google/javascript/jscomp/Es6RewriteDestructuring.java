@@ -320,7 +320,11 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
    * (the compiler only assigns $jscomp$destructuring$var[num] once)
    */
   private Node createTempVarNameNode(String name, AstFactory.Type type) {
-    return astFactory.createConstantName(name, type);
+    Node nameNode = astFactory.createName(name, type);
+    if (compiler.getLifeCycleStage().isNormalized()) {
+      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
+    return nameNode;
   }
 
   /** Creates a new unique name to use for a pattern we need to rewrite. */
@@ -538,9 +542,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
 
       Node newNode;
       if (NodeUtil.isNameDeclaration(parent)) {
-        if (parent.isConst()) {
-          newLHS.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        }
         newNode = IR.declaration(newLHS, newRHS, parent.getToken());
       } else if (parent.isAssign()) {
         newNode = IR.exprResult(astFactory.createAssign(newLHS, newRHS));

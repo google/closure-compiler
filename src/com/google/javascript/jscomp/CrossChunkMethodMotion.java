@@ -473,17 +473,17 @@ public class CrossChunkMethodMotion implements CompilerPass {
       }
 
       Node destinationParent = compiler.getNodeForCodeInsertion(deepestCommonModuleRef);
-      Node classNameNode = rootVar.getNameNode();
+      String className = rootVar.getName();
       if (noStubFunctions) {
-        moveClassInstanceMethodWithoutStub(classNameNode, definitionNode, destinationParent);
+        moveClassInstanceMethodWithoutStub(className, definitionNode, destinationParent);
       } else {
-        moveClassInstanceMethodWithStub(classNameNode, definitionNode, destinationParent);
+        moveClassInstanceMethodWithStub(className, definitionNode, destinationParent);
       }
     }
   }
 
   private void moveClassInstanceMethodWithoutStub(
-      Node classNameNode, Node methodDefinition, Node destinationParent) {
+      String className, Node methodDefinition, Node destinationParent) {
     checkArgument(methodDefinition.isMemberFunctionDef(), methodDefinition);
     Node classMembers = checkNotNull(methodDefinition.getParent());
     checkState(classMembers.isClassMembers(), classMembers);
@@ -498,7 +498,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node functionNode = checkNotNull(methodDefinition.getOnlyChild());
     Node classNameDotPrototypeDotPropName =
         astFactory.createGetProp(
-            astFactory.createPrototypeAccess(classNameNode.cloneNode()),
+            astFactory.createPrototypeAccess(astFactory.createName(className, type(classNode))),
             methodDefinition.getString(),
             type(functionNode));
     functionNode.detach();
@@ -513,7 +513,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
   }
 
   private void moveClassInstanceMethodWithStub(
-      Node classNameNode, Node methodDefinition, Node destinationParent) {
+      String className, Node methodDefinition, Node destinationParent) {
     checkArgument(methodDefinition.isMemberFunctionDef(), methodDefinition);
     Node classMembers = checkNotNull(methodDefinition.getParent());
     checkState(classMembers.isClassMembers(), classMembers);
@@ -526,7 +526,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     // ClassName.prototype.propertyName = JSCompiler_stubMethod(id);
     Node classNameDotPrototypeDotPropName =
         astFactory.createGetProp(
-            astFactory.createPrototypeAccess(classNameNode.cloneNode()),
+            astFactory.createPrototypeAccess(astFactory.createName(className, type(classNode))),
             methodDefinition.getString(),
             type(methodDefinition));
     Node stubCall = createStubCall(methodDefinition, stubId);
