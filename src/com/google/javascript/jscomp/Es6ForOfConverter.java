@@ -61,15 +61,17 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
   // TODO(lharker): break up this method
   private void visitForOf(Node node) {
+    // `var v` or `let v` or v any valid lhs
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
-
     JSDocInfo varJSDocInfo = variable.getJSDocInfo();
+    // `$jscomp$iter$0`
     Node iterName =
         astFactory.createName(
             ITER_BASE + compiler.getUniqueNameIdSupplier().get(), type(StandardColors.ITERATOR_ID));
     iterName.makeNonIndexable();
+    // `$jscomp$iter$0.next()`
     Node getNext =
         astFactory.createCallWithUnknownType(
             astFactory.createGetPropWithUnknownType(iterName.cloneTree(), "next"));
@@ -82,18 +84,24 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       // give arbitrary lhs expressions an arbitrary name
       iteratorResultName += namer.generateNextName();
     }
+    // `$jscomp$key$extraName`
     Node iterResult = astFactory.createNameWithUnknownType(iteratorResultName);
     iterResult.makeNonIndexable();
-
-    Node call = astFactory.createJSCompMakeIteratorCall(iterable, this.namespace);
-    Node init = IR.var(iterName.cloneTree().setColor(iterName.getColor()), call);
-    Node initIterResult = iterResult.cloneTree();
-    initIterResult.addChildToFront(getNext.cloneTree());
-    init.addChildToBack(initIterResult);
-
+    // `$jscomp.makeIterator(iterable)`
+    Node callMakeIterator =
+        astFactory
+            .createJSCompMakeIteratorCall(iterable, this.namespace)
+            .srcrefTreeIfMissing(iterable);
+    // `var $jscomp$iter$0 = $jscomp.makeIterator(iterable)`
+    Node initIter = IR.var(iterName, callMakeIterator).srcrefTreeIfMissing(iterable);
+    // var $jscomp$key$extraName = $jscomp$iter$0.next();
+    Node initIterResult =
+        IR.var(iterResult.cloneTree(), getNext.cloneTree()).srcrefTreeIfMissing(iterable);
+    // !$jscomp$key$extraName.done
     Node cond =
         astFactory.createNot(
             astFactory.createGetProp(iterResult.cloneTree(), "done", type(StandardColors.BOOLEAN)));
+    // $jscomp$key$extraName = $jscomp$iter$0.next()
     Node incr = astFactory.createAssign(iterResult.cloneTree(), getNext.cloneTree());
 
     Node declarationOrAssign;
@@ -119,9 +127,16 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
-    Node newFor = IR.forNode(init, cond, incr, newBody);
-    newFor.srcrefTreeIfMissing(node);
+    Node empty = astFactory.createEmpty();
+    Node newFor = IR.forNode(empty, cond, incr, newBody).srcrefTreeIfMissing(node);
     node.replaceWith(newFor);
+    // Check if the for loop has a parent that is a label i.e. `loop 1: for(...of .. .)`
+    Node insertionPoint = newFor;
+    while (insertionPoint.getParent().isLabel()) {
+      insertionPoint = insertionPoint.getParent();
+    }
+    initIter.insertBefore(insertionPoint);
+    initIterResult.insertAfter(initIter);
     compiler.reportChangeToEnclosingScope(newFor);
   }
 }
