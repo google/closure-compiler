@@ -69,7 +69,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       "$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE";
   private static final String ACTION_ENUM_YIELD_STAR =
       "$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR";
-
+  
   // Variables with these names get created when rewriting for-await-of loops
   private static final String FOR_AWAIT_ITERATOR_TEMP_NAME = "$jscomp$forAwait$tempIterator";
   private static final String FOR_AWAIT_RESULT_TEMP_NAME = "$jscomp$forAwait$tempResult";
@@ -412,7 +412,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       newActionRecord.addChildToBack(astFactory.createQName(this.namespace, ACTION_ENUM_YIELD));
       newActionRecord.addChildToBack(expression);
     }
-
+    
     newActionRecord.srcrefTreeIfMissing(yieldNode);
     yieldNode.addChildToFront(newActionRecord);
     yieldNode.putBooleanProp(Node.YIELD_ALL, false);
@@ -440,18 +440,18 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     checkState(returnNode.isReturn());
     checkState(ctx != null && ctx.function != null);
     checkState(ctx.function.isAsyncGeneratorFunction());
-
+    
     Node expression = returnNode.removeFirstChild();
     Node newActionRecord =
         astFactory.createNewNode(astFactory.createQName(this.namespace, ACTION_RECORD_NAME));
-
+    
     if (expression == null) {
       expression = NodeUtil.newUndefinedNode(null);
     }
     // return expression becomes new ActionRecord(YIELD, expression)
     newActionRecord.addChildToBack(astFactory.createQName(this.namespace, ACTION_ENUM_YIELD));
     newActionRecord.addChildToBack(expression);
-
+    
     newActionRecord.srcrefTreeIfMissing(returnNode);
     returnNode.addChildToFront(newActionRecord);
   }
@@ -598,7 +598,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
 
     Node newForLoop =
         astFactory.createFor(
-            initializer,
+            astFactory.createEmpty(),
             astFactory.createEmpty(),
             astFactory.createEmpty(),
             astFactory.createBlock(
@@ -607,9 +607,10 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     if (replacementPoint.isLabel()) {
       newForLoop = astFactory.createLabel(replacementPoint.getFirstChild().cloneNode(), newForLoop);
     }
-
+    
     // Generates code `try { .. newForLoop .. }`
     Node tryNode = createOuterTry(newForLoop);
+    initializer.insertBefore(newForLoop);
 
     // Generate code `catch(e) { errorRes = { error: e }; }`
     Node catchNode = createOuterCatch(catchErrorParamTempName, errorResultTempName);
@@ -631,7 +632,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     errorResDecl.insertBefore(tryCatchFinally);
     tempResultDecl.insertBefore(tryCatchFinally);
     returnFuncDecl.insertBefore(tryCatchFinally);
-
+    
     compiler.reportChangeToEnclosingScope(tryCatchFinally);
   }
 
@@ -936,15 +937,16 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   }
 
   private Node createSuperMethodReferenceGetter(Node replacedMethodReference, NodeTraversal t) {
-
-    // const super$get$x = () => super.x;
+    // const super$get$x = () => { return super.x; };
     AstFactory.Type typeOfSuper = type(replacedMethodReference.getFirstChild());
     Node superReference = astFactory.createSuper(typeOfSuper);
     String replacedMethodName = replacedMethodReference.getString();
     Node arrowFunction =
         astFactory.createZeroArgArrowFunctionForExpression(
-            astFactory.createGetProp(
-                superReference, replacedMethodName, type(replacedMethodReference)));
+            astFactory.createBlock(
+                astFactory.createReturn(
+                    astFactory.createGetProp(
+                        superReference, replacedMethodName, type(replacedMethodReference)))));
     compiler.reportChangeToChangeScope(arrowFunction);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
     String superReplacementName = SUPER_PROP_GETTER_PREFIX + replacedMethodName;
