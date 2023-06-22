@@ -2815,7 +2815,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertNoPureCalls(
         lines(
             "function foo(a) { const [...x] = a; }", //
-            "foo(x);"));
+            "foo(v);"));
   }
 
   @Test
