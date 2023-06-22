@@ -3123,8 +3123,8 @@ google.maps.Geocoder = function() {};
 /**
  * Geocode a request.
  * @param {!google.maps.GeocoderRequest} request
- * @param {(undefined|null|(function((null|!Array<!google.maps.GeocoderResult>),
- *     !google.maps.GeocoderStatus): void))=} callback
+ * @param {((function((!Array<!google.maps.GeocoderResult>|null),
+ *     !google.maps.GeocoderStatus): void)|null)=} callback
  * @return {!Promise<!google.maps.GeocoderResponse>}
  */
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
@@ -3167,33 +3167,33 @@ google.maps.GeocoderComponentRestrictions = function() {};
 
 /**
  * Matches all the <code>administrative_area levels</code>. Optional.
- * @type {undefined|string}
+ * @type {string|undefined}
  */
 google.maps.GeocoderComponentRestrictions.prototype.administrativeArea;
 
 /**
  * Matches a country name or a two letter ISO 3166-1 country code. Optional.
- * @type {undefined|string}
+ * @type {string|undefined}
  */
 google.maps.GeocoderComponentRestrictions.prototype.country;
 
 /**
  * Matches against both <code>locality</code> and <code>sublocality</code>
  * types. Optional.
- * @type {undefined|string}
+ * @type {string|undefined}
  */
 google.maps.GeocoderComponentRestrictions.prototype.locality;
 
 /**
  * Matches <code>postal_code</code> and <code>postal_code_prefix</code>.
  * Optional.
- * @type {undefined|string}
+ * @type {string|undefined}
  */
 google.maps.GeocoderComponentRestrictions.prototype.postalCode;
 
 /**
  * Matches the long or short name of a <code>route</code>. Optional.
- * @type {undefined|string}
+ * @type {string|undefined}
  */
 google.maps.GeocoderComponentRestrictions.prototype.route;
 
@@ -3205,7 +3205,7 @@ google.maps.GeocoderGeometry = function() {};
 
 /**
  * The precise bounds of this <code>GeocoderResult</code>, if applicable
- * @type {undefined|!google.maps.LatLngBounds}
+ * @type {!google.maps.LatLngBounds|undefined}
  */
 google.maps.GeocoderGeometry.prototype.bounds;
 
@@ -3272,13 +3272,13 @@ google.maps.GeocoderRequest = function() {};
 /**
  * Address to geocode. One, and only one, of <code>address</code>,
  * <code>location</code> and <code>placeId</code> must be supplied.
- * @type {undefined|null|string}
+ * @type {string|null|undefined}
  */
 google.maps.GeocoderRequest.prototype.address;
 
 /**
  * <code>LatLngBounds</code> within which to search. Optional.
- * @type {undefined|null|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
+ * @type {!google.maps.LatLngBounds|null|!google.maps.LatLngBoundsLiteral|undefined}
  */
 google.maps.GeocoderRequest.prototype.bounds;
 
@@ -3289,7 +3289,7 @@ google.maps.GeocoderRequest.prototype.bounds;
  * <code>country</code>. Only the results that match all the filters will be
  * returned. Filter values support the same methods of spelling correction and
  * partial matching as other geocoding requests. Optional.
- * @type {undefined|null|!google.maps.GeocoderComponentRestrictions}
+ * @type {!google.maps.GeocoderComponentRestrictions|null|undefined}
  */
 google.maps.GeocoderRequest.prototype.componentRestrictions;
 
@@ -3298,7 +3298,7 @@ google.maps.GeocoderRequest.prototype.componentRestrictions;
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
  * supported languages</a>.
- * @type {undefined|null|string}
+ * @type {string|null|undefined}
  */
 google.maps.GeocoderRequest.prototype.language;
 
@@ -3309,7 +3309,7 @@ google.maps.GeocoderRequest.prototype.language;
  * Reverse Geocoding</a> for more information. One, and only one, of
  * <code>address</code>, <code>location</code> and <code>placeId</code> must be
  * supplied.
- * @type {undefined|null|!google.maps.LatLng|!google.maps.LatLngLiteral}
+ * @type {!google.maps.LatLng|null|!google.maps.LatLngLiteral|undefined}
  */
 google.maps.GeocoderRequest.prototype.location;
 
@@ -3323,7 +3323,7 @@ google.maps.GeocoderRequest.prototype.location;
  * Geocoding</a> for more information. One, and only one, of
  * <code>address</code>, <code>location</code> and <code>placeId</code> must be
  * supplied.
- * @type {undefined|null|string}
+ * @type {string|null|undefined}
  */
 google.maps.GeocoderRequest.prototype.placeId;
 
@@ -3332,7 +3332,7 @@ google.maps.GeocoderRequest.prototype.placeId;
  * (non-numeric) Unicode region subtag / CLDR identifier. Optional. See <a
  * href="http://developers.google.com/maps/coverage">Google Maps Platform
  * Coverage Details</a> for supported regions.
- * @type {undefined|null|string}
+ * @type {string|null|undefined}
  */
 google.maps.GeocoderRequest.prototype.region;
 
@@ -3380,7 +3380,7 @@ google.maps.GeocoderResult.prototype.geometry;
  * Whether the geocoder did not return an exact match for the original request,
  * though it was able to match part of the requested address. If an exact match,
  * the value will be <code>undefined</code>.
- * @type {undefined|boolean}
+ * @type {boolean|undefined}
  */
 google.maps.GeocoderResult.prototype.partial_match;
 
@@ -3395,7 +3395,7 @@ google.maps.GeocoderResult.prototype.place_id;
 
 /**
  * The plus code associated with the location.
- * @type {undefined|!google.maps.places.PlacePlusCode}
+ * @type {!google.maps.places.PlacePlusCode|undefined}
  */
 google.maps.GeocoderResult.prototype.plus_code;
 
@@ -3403,7 +3403,7 @@ google.maps.GeocoderResult.prototype.plus_code;
  * An array of strings denoting all the localities contained in a postal code.
  * This is only present when the result is a postal code that contains multiple
  * localities.
- * @type {undefined|!Array<string>}
+ * @type {!Array<string>|undefined}
  */
 google.maps.GeocoderResult.prototype.postcode_localities;
 
@@ -5335,17 +5335,30 @@ google.maps.MapCanvasProjection.prototype.getWorldWidth = function() {};
 
 /**
  * Object containing a snapshot of what capabilities are currently available for
- * the Map. See the properties for a list of possible capabilities.
+ * the Map. Note that this does not necessarily mean that relevant modules are
+ * loaded or initialized, but rather that the current map has permission to use
+ * these APIs. See the properties for a list of possible capabilities.
  * @record
  */
 google.maps.MapCapabilities = function() {};
 
 /**
+ * If true, this map is configured properly to allow for the use of advanced
+ * markers. Note that you must still import the <code>marker</code> library in
+ * order to use advanced markers. See <a
+ * href="https://developers.google.com/maps/documentation/javascript/advanced-markers/start#update_your_map_initialization_code">https://developers.google.com/maps/documentation/javascript/advanced-markers/start#update_your_map_initialization_code</a>
+ * for more information.
  * @type {boolean|undefined}
  */
 google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
 
 /**
+ * If true, this map is configured properly to allow for the use of data-driven
+ * styling for at least one FeatureLayer. See <a
+ * href="https://developers.google.com/maps/documentation/javascript/dds-boundaries/overview">https://developers.google.com/maps/documentation/javascript/dds-boundaries/overview</a>
+ * and <a
+ * href="https://developers.google.com/maps/documentation/javascript/reference/data-driven-styling#FeatureLayer.isAvailable">https://developers.google.com/maps/documentation/javascript/reference/data-driven-styling#FeatureLayer.isAvailable</a>
+ * for more information.
  * @type {boolean|undefined}
  */
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
@@ -12796,7 +12809,7 @@ google.maps.localContext.LocalContextMapView.prototype.directionsOptions;
 
 /**
  * This Field is read-only. The DOM Element backing the view.
- * @type {undefined|null|!HTMLElement|!SVGElement}
+ * @type {!HTMLElement|!SVGElement|null|undefined}
  */
 google.maps.localContext.LocalContextMapView.prototype.element;
 
@@ -12890,7 +12903,7 @@ google.maps.localContext.LocalContextMapViewOptions.prototype.directionsOptions;
 
 /**
  * This Field is read-only. The DOM Element backing the view.
- * @type {undefined|null|!HTMLElement|!SVGElement}
+ * @type {!HTMLElement|!SVGElement|null|undefined}
  */
 google.maps.localContext.LocalContextMapViewOptions.prototype.element;
 
@@ -14635,7 +14648,7 @@ google.maps.places.PlaceAutocompleteElement = function(options) {};
 
 /**
  * This Field is read-only. The DOM Element backing the view.
- * @type {undefined|null|!HTMLElement|!SVGElement}
+ * @type {!HTMLElement|!SVGElement|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.element;
 
@@ -14673,7 +14686,7 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype
 
 /**
  * This Field is read-only. The DOM Element backing the view.
- * @type {undefined|null|!HTMLElement|!SVGElement}
+ * @type {!HTMLElement|!SVGElement|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.element;
 
