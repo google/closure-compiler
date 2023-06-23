@@ -960,6 +960,18 @@ final class AstFactory {
     return result;
   }
 
+  Node createBitwiseAnd(Node left, Node right) {
+    Node result = IR.bitwiseAnd(left, right);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
+    return result;
+  }
+
+  Node createRightShift(Node left, Node right) {
+    Node result = IR.rightShift(left, right);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
+    return result;
+  }
+
   Node createCall(Node callee, Type resultType, Node... args) {
     Node result = NodeUtil.newCallNode(callee, args);
     setJSTypeOrColor(resultType, result);

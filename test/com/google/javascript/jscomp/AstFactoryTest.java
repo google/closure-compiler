@@ -939,6 +939,62 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateBitwiseAnd_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node bitAnd = astFactory.createBitwiseAnd(zero, one);
+
+    assertNode(bitAnd).hasToken(Token.BITAND);
+    assertThat(childList(bitAnd)).containsExactly(zero, one);
+    assertNode(bitAnd).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+  }
+
+  @Test
+  public void testCreateBitwiseAnd_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node bitAnd = astFactory.createBitwiseAnd(zero, one);
+
+    assertNode(bitAnd).hasToken(Token.BITAND);
+    assertThat(childList(bitAnd)).containsExactly(zero, one);
+    assertNode(bitAnd).hasColorThat().isEqualTo(StandardColors.NUMBER);
+  }
+
+  @Test
+  public void testCreateRightShift_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node rightShift = astFactory.createRightShift(zero, one);
+
+    assertNode(rightShift).hasToken(Token.RSH);
+    assertThat(childList(rightShift)).containsExactly(zero, one);
+    assertNode(rightShift).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+  }
+
+  @Test
+  public void testCreateRightShift_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node rightShift = astFactory.createRightShift(zero, one);
+
+    assertNode(rightShift).hasToken(Token.RSH);
+    assertThat(childList(rightShift)).containsExactly(zero, one);
+    assertNode(rightShift).hasColorThat().isEqualTo(StandardColors.NUMBER);
+  }
+
+  @Test
   public void testCreateInc_prefix_jstypes() {
     AstFactory astFactory = createTestAstFactory();
 

@@ -24,6 +24,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.MustBeClosed;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
@@ -687,4 +688,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * rewriting has not occurred.
    */
   abstract void mergeSyntheticCodeInput();
+
+  /**
+   * Records the mapping of toggle names to ordinals, which is read from a bootstrap JS file by the
+   * first (check) pass of {@link RewriteToggles}.
+   */
+  void setToggleOrdinalMapping(@Nullable ImmutableMap<String, Integer> mapping) {}
+
+  /** Returns the recorded toggle-name-to-ordinal mapping. */
+  @Nullable ImmutableMap<String, Integer> getToggleOrdinalMapping() {
+    return null;
+  }
 }

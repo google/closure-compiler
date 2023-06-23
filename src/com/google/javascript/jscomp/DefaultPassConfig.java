@@ -356,6 +356,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.maybeAdd(closurePrimitives);
+      checks.maybeAdd(replaceTogglesCheck);
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
@@ -634,6 +635,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(j2clAssertRemovalPass);
     }
 
+    passes.maybeAdd(replaceToggles);
     passes.maybeAdd(inlineAndCollapseProperties);
 
     if (options.getTweakProcessing().shouldStrip()
@@ -2078,6 +2080,24 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.CHECK_CONST_PARAMS)
           .setInternalFactory(ConstParamCheck::new)
           .build();
+
+  private final PassFactory replaceTogglesCheck = createReplaceToggles(true);
+  private final PassFactory replaceToggles = createReplaceToggles(false);
+
+  /** Replaces goog.toggle calls with toggle lookups. */
+  private final PassFactory createReplaceToggles(boolean check) {
+    return PassFactory.builder()
+        .setName("replaceToggles" + (check ? "Check" : ""))
+        .setInternalFactory(
+            (compiler) ->
+                new CompilerPass() {
+                  @Override
+                  public void process(Node externs, Node root) {
+                    new ReplaceToggles(compiler, check).process(externs, root);
+                  }
+                })
+        .build();
+  }
 
   /** Generates unique ids. */
   private final PassFactory replaceIdGenerators =

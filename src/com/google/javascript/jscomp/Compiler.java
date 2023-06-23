@@ -292,6 +292,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final Timeline<Node> changeTimeline = new Timeline<>();
 
+  private @Nullable ImmutableMap<String, Integer> toggleOrdinalMapping = null;
+
   /**
    * When mapping symbols from a source map, we must repeatedly combine the path of the original
    * file with the path from the source map to compute the SourceFile of the underlying code. When
@@ -4285,5 +4287,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     checkState(!script.getFirstChild().isModuleBody(), msg, args);
     return script;
+  }
+
+  @Override
+  void setToggleOrdinalMapping(@Nullable ImmutableMap<String, Integer> mapping) {
+    this.toggleOrdinalMapping = mapping;
+  }
+
+  @Override
+  @Nullable ImmutableMap<String, Integer> getToggleOrdinalMapping() {
+    return toggleOrdinalMapping;
   }
 }
