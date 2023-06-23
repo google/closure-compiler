@@ -81,6 +81,11 @@ public final class GatherModuleMetadata implements CompilerPass {
   static final DiagnosticType INVALID_NESTED_LOAD_MODULE =
       DiagnosticType.error("JSC_INVALID_NESTED_LOAD_MODULE", "goog.loadModule cannot be nested.");
 
+  static final DiagnosticType INVALID_READ_TOGGLE =
+      DiagnosticType.error(
+          "JSC_INVALID_READ_TOGGLE",
+          "Argument to goog.readToggleInternalDoNotCallDirectly must be a string.");
+
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
@@ -90,6 +95,8 @@ public final class GatherModuleMetadata implements CompilerPass {
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
       IR.getprop(GOOG_MODULE.cloneTree(), "declareLegacyNamespace");
   private static final Node GOOG_DECLARE_MODULE_ID = IR.getprop(IR.name("goog"), "declareModuleId");
+  private static final Node GOOG_READ_TOGGLE =
+      IR.getprop(IR.name("goog"), "readToggleInternalDoNotCallDirectly");
 
   // TODO(johnplaisted): Remove once clients have migrated to declareModuleId
   private static final Node GOOG_MODULE_DECLARNAMESPACE =
@@ -444,6 +451,12 @@ public final class GatherModuleMetadata implements CompilerPass {
               .add(n.getLastChild().getString());
         } else {
           t.report(n, INVALID_REQUIRE_DYNAMIC);
+        }
+      } else if (getprop.matchesQualifiedName(GOOG_READ_TOGGLE)) {
+        if (n.hasTwoChildren() && n.getLastChild().isStringLit()) {
+          currentModule.metadataBuilder.readTogglesBuilder().add(n.getLastChild().getString());
+        } else {
+          t.report(n, INVALID_READ_TOGGLE);
         }
       }
     }

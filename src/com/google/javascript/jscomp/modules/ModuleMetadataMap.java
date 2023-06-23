@@ -197,6 +197,14 @@ public final class ModuleMetadataMap {
 
     public abstract ImmutableList<ModuleMetadata> nestedModules();
 
+    /**
+     * Arguments to goog.readToggleInternalDoNotCallDirectly() calls.
+     *
+     * <p>This is a multiset as it does not warn on duplicate toggles, but will still encapsulate
+     * that information with this multiset.
+     */
+    public abstract ImmutableMultiset<String> readToggles();
+
     public abstract @Nullable ModulePath path();
 
     public static Builder builder() {
@@ -238,6 +246,8 @@ public final class ModuleMetadataMap {
       public abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
 
       public abstract ImmutableList.Builder<ModuleMetadata> nestedModulesBuilder();
+
+      public abstract ImmutableMultiset.Builder<String> readTogglesBuilder();
 
       public abstract Builder path(@Nullable ModulePath value);
 

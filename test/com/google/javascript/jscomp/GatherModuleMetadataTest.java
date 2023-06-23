@@ -734,4 +734,14 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isNonProvideScript()).isTrue();
     assertThat(m.es6ImportSpecifiers()).containsExactly("./imported.js");
   }
+
+  @Test
+  public void testReadToggle() {
+    testSame(
+        lines(
+            "goog.readToggleInternalDoNotCallDirectly('foo_bar');",
+            "goog.readToggleInternalDoNotCallDirectly('baz');"));
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.readToggles()).containsExactly("foo_bar", "baz");
+  }
 }

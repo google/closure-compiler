@@ -217,6 +217,12 @@ public final class JsFileFullParserTest {
     assertThat(info.delcalls).containsExactly("a");
   }
 
+  @Test
+  public void testReadToggle() {
+    FileInfo info = parse("goog.readToggleInternalDoNotCallDirectly('foo_bar');");
+    assertThat(info.readToggles).containsExactly("foo_bar");
+  }
+
   private static FileInfo parse(String... lines) {
     return JsFileFullParser.parse(
         Joiner.on('\n').join(lines),

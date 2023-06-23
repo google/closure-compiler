@@ -78,6 +78,7 @@ public class JsFileFullParser {
     // Use a LinkedHashSet as import order matters!
     public final Set<String> importedModules = new LinkedHashSet<>();
     public final Set<String> dynamicRequires = new LinkedHashSet<>();
+    public final Set<String> readToggles = new LinkedHashSet<>();
     public final List<String> modName = new ArrayList<>();
     public final List<String> mods = new ArrayList<>();
 
@@ -251,6 +252,7 @@ public class JsFileFullParser {
       info.provides.addAll(module.googNamespaces());
       info.requires.addAll(module.stronglyRequiredGoogNamespaces());
       info.dynamicRequires.addAll(module.dynamicallyRequiredGoogNamespaces().elementSet());
+      info.readToggles.addAll(module.readToggles().elementSet());
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
     }
