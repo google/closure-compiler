@@ -201,9 +201,7 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   }
 
   private Postcondition expectOrdinals(ImmutableMap<String, Integer> expected) {
-    return (Compiler c) -> {
-      assertThat(c.getToggleOrdinalMapping()).isEqualTo(expected);
-    };
+    return (Compiler c) -> assertThat(c.getToggleOrdinalMapping()).isEqualTo(expected);
   }
 
   @Override
