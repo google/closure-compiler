@@ -73,13 +73,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     switch (subtree.getToken()) {
       case OPTCHAIN_CALL:
       case CALL:
-        return tryFoldCall(subtree);
+        return tryFoldUselessObjectDotDefinePropertiesCall(subtree);
 
       case NEW:
         return tryFoldCtorCall(subtree);
 
       case TYPEOF:
         return tryFoldTypeof(subtree);
+
+      case ITER_SPREAD:
+        return tryFoldSpread(subtree);
 
       case ARRAYLIT:
       case OBJECTLIT:
@@ -1454,11 +1457,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-  /**
-   * Remove useless calls:
-   *   Object.defineProperties(o, {})  ->  o
-   */
-  private Node tryFoldCall(Node n) {
+  /** Remove useless calls: Object.defineProperties(o, {}) -> o */
+  private Node tryFoldUselessObjectDotDefinePropertiesCall(Node n) {
     checkArgument(n.isCall() || n.isOptChainCall());
 
     if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
@@ -1633,6 +1633,19 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     n.replaceWith(elem);
     reportChangeToEnclosingScope(elem);
     return elem;
+  }
+
+  /** Fold any occurrences of spread of array literals e.g. {@code ...[1,2,3]} to {@code 1,2,3} */
+  private Node tryFoldSpread(Node spread) {
+    checkState(spread.isSpread());
+    Node parent = spread.getParent();
+    Node child = spread.getOnlyChild();
+    if (child.isArrayLit()) {
+      parent.addChildrenAfter(child.removeChildren(), spread);
+      spread.detach();
+      reportChangeToEnclosingScope(parent);
+    }
+    return parent;
   }
 
   /**

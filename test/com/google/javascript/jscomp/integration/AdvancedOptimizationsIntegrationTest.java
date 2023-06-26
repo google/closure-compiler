@@ -57,6 +57,24 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testFoldSpread() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines("function foo(x) {console.log(x);} foo(...(false ? [0] : [1]))"),
+        lines(
+            // tests that we do not generate (function(a) { console.log(a); })(...[1]);
+            "console.log(1)"));
+  }
+
+  @Test
   public void testBug123583793() {
     // Avoid including the transpilation library
     useNoninjectingCompiler = true;

@@ -1411,6 +1411,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = [...[0, 1], 2, ...[3, 4]]", "x = [0, 1, 2, 3, 4]");
     test("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
     testSame("[...[x]] = arr");
+    test("foo([...[...[0], 1], 2])", "foo([0, 1, 2])");
+  }
+
+  @Test
+  public void testFoldArrayLitSpreadInArg() {
+    test("foo(...[0], 1)", "foo(0, 1)");
+    testSame("foo(...(false ? [0] : [1]))"); // other opts need to fold the ternery first
   }
 
   @Test
