@@ -116,6 +116,7 @@ public enum Msg {
   JSDOC_POLYMER_EXTRA("extra @polymer tag"),
   JSDOC_PUREORBREAKMYCODE("extra @pureOrBreakMyCode tag"),
   JSDOC_RECORD("conflicting @record tag."),
+  JSDOC_SASS_GENERATED_CSS_TS("extra @sassGeneratedCssTs tag"),
   JSDOC_SEEMISSING("@see tag missing description"),
   JSDOC_SUPPRESS("malformed @suppress tag"),
   JSDOC_SUPPRESS_UNKNOWN("unknown @suppress parameter: {0}"),

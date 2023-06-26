@@ -35,4 +35,14 @@ public class JSDocSerializerTest {
         JSDocSerializer.convertJSDocInfoForOptimizations(originalJsDocInfo);
     assertThat(convertedJsDocInfo.isTypeSummary()).isTrue();
   }
+
+  @Test
+  public void preserveIsSassGeneratedCssTs() {
+    final JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordSassGeneratedCssTs();
+    final JSDocInfo originalJsDocInfo = builder.build();
+    final JSDocInfo convertedJsDocInfo =
+        JSDocSerializer.convertJSDocInfoForOptimizations(originalJsDocInfo);
+    assertThat(convertedJsDocInfo.isSassGeneratedCssTs()).isTrue();
+  }
 }

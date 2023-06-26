@@ -61,6 +61,10 @@ public final class JSDocSerializer {
       builder.setLicenseTextPointer(stringPool.put(jsdoc.getLicense()));
     }
 
+    if (jsdoc.isSassGeneratedCssTs()) {
+      builder.addKind(JsdocTag.JSDOC_SASS_GENERATED_CSS_TS);
+    }
+
     if (jsdoc.isNoInline()) {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
@@ -318,6 +322,10 @@ public final class JSDocSerializer {
 
         case JSDOC_FILEOVERVIEW:
           builder.recordFileOverview("");
+          continue;
+
+        case JSDOC_SASS_GENERATED_CSS_TS:
+          builder.recordSassGeneratedCssTs();
           continue;
 
         case JSDOC_UNSPECIFIED:

@@ -794,7 +794,11 @@ public final class JsDocInfoParser {
           return eatUntilEOLIfNotAnnotation();
 
         case SASS_GENERATED_CSS_TS:
-          jsdocBuilder.recordSassGeneratedCssTs();
+          if (jsdocBuilder.isSassGeneratedCssTsRecorded()) {
+            addParserWarning(Msg.JSDOC_SASS_GENERATED_CSS_TS);
+          } else {
+            jsdocBuilder.recordSassGeneratedCssTs();
+          }
           return eatUntilEOLIfNotAnnotation();
 
         case THROWS:

@@ -70,4 +70,7 @@ enum JsdocTag {
 
   // Use by goog.provide rewriting
   JSDOC_PROVIDE_ALREADY_PROVIDED = 33;
+
+  // Used to identify Sass generated css (.css.closure.js) files.
+  JSDOC_SASS_GENERATED_CSS_TS = 34;
 }

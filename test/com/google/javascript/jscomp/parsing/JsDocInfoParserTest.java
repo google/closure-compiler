@@ -5326,6 +5326,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseSassGeneratedCssTs() {
+    assertThat(parse("@sassGeneratedCssTs*/").isSassGeneratedCssTs()).isTrue();
+  }
+
+  @Test
+  public void testParseSassGeneratedCssTsExtra() {
+    parse("@sassGeneratedCssTs \n@sassGeneratedCssTs*/", "extra @sassGeneratedCssTs tag");
+  }
+
+  @Test
   public void testParseWizaction1() {
     assertThat(parse("@wizaction*/").isWizaction()).isTrue();
   }
