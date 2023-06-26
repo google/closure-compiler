@@ -1846,13 +1846,11 @@ typed_asts {
     }
     type {
       object {
-        is_invalidating: true
         uuid: "\003\246\331*\260\233\311\030"
       }
     }
     type {
       object {
-        is_invalidating: true
         uuid: "\025\214v\336\312\241\372\236"
         own_property: 25
         own_property: 32
@@ -113086,7 +113084,7 @@ typed_asts {
       file_on_disk {
       }
       source_kind: EXTERN
-      num_bytes_plus_one: 162169
+      num_bytes_plus_one: 162172
       num_lines_plus_one: 5770
     }
     source_file {

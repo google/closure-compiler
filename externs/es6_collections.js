@@ -22,7 +22,7 @@
 
 // TODO(johnlenz): Use Tuples for the Map and Set iterators where appropriate.
 /**
- * @record
+ * @interface
  * @extends {Iterable<!Array<KEY|VALUE>>}
  * @template KEY, VALUE
  */
