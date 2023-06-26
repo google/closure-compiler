@@ -23,10 +23,10 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -127,12 +127,24 @@ class ReplaceCssNames implements CompilerPass {
           "JSC_UNEXPECTED_SASS_GENERATED_CSS_TS",
           "@sass_generated_css_ts JSDoc annotation is only allowed on .css.closure.js files.");
 
+  static final DiagnosticType UNKNOWN_SYMBOL_ERROR =
+      DiagnosticType.error(
+          "JSC_UNKNOWN_CSS_SYMBOL_IN_CLASSES_OBJECT",
+          "Symbol was not defined \"{0}\" in classes object.");
+
+  static final DiagnosticType INVALID_USE_OF_CLASSES_OBJECT_ERROR =
+      DiagnosticType.error(
+          "JSC_INVALID_USE_OF_CLASSES_OBJECT",
+          "invalid use of generated classes object. Only accessing its members is allowed.");
+
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
 
   private final Map<String, Integer> cssNames;
 
   private final Map<String, String> cssNamesBySymbol;
+
+  private final Set<String> classesObjectsQualifiedNames;
 
   private @Nullable CssRenamingMap symbolMap;
 
@@ -149,6 +161,7 @@ class ReplaceCssNames implements CompilerPass {
     this.cssNames = cssNames;
     this.skiplist = skiplist;
     this.cssNamesBySymbol = new LinkedHashMap<>();
+    this.classesObjectsQualifiedNames = new LinkedHashSet<>();
   }
 
   @Override
@@ -159,6 +172,7 @@ class ReplaceCssNames implements CompilerPass {
       String cssClassName = getCssNameInstance.getCssClassName();
       if (getCssNameInstance.isCssClosureFileClassesMember()) {
         cssNamesBySymbol.put(getCssNameInstance.getCssClosureClassesMemberName(), cssClassName);
+        classesObjectsQualifiedNames.add(getCssNameInstance.getCssClosureClassesQualifiedName());
       } else {
         updateCssNamesCount(cssClassName);
       }
@@ -208,34 +222,91 @@ class ReplaceCssNames implements CompilerPass {
 
   private class GatherCssNamesTraversal implements NodeTraversal.Callback {
     final List<GetCssNameInstance> listOfCssNameInstances = new ArrayList<>();
-    boolean isSassGeneratedCssTs = false;
+    final TraversalState traversalState = new TraversalState();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      JSDocInfo jsDocInfo = n.getJSDocInfo();
-      if (jsDocInfo != null && jsDocInfo.isSassGeneratedCssTs()) {
-        if (!n.isScript() || isNotInCssClosureFile(n)) {
-          compiler.report(JSError.make(n, UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR));
-          return false;
-        }
-        isSassGeneratedCssTs = jsDocInfo.isSassGeneratedCssTs();
+      SassGeneratedCssTsExpert sassGeneratedCssTsExpert = createSassGeneratedCssTsExpert(n);
+      if (sassGeneratedCssTsExpert.sassGeneratedCssTsValidationError != null) {
+        compiler.report(sassGeneratedCssTsExpert.sassGeneratedCssTsValidationError);
+        // Skip all nodes that are descendants of this one, since we found an invalid
+        // @sassGeneratedCssTs JSDoc annotation, and are in an invalid state.
+        return false;
+      }
+      if (n.isScript()) {
+        traversalState.inSassGeneratedCssTsScript =
+            sassGeneratedCssTsExpert.hasSassGeneratedCssTsJsDoc;
+        traversalState.cssClosureClassesQualifiedName = null;
+      } else if (traversalState.inSassGeneratedCssTsScript
+          && sassGeneratedCssTsExpert.isCssClosureClassesAssignment) {
+        traversalState.cssClosureClassesQualifiedName =
+            sassGeneratedCssTsExpert.cssClosureClassesQualifiedName;
       }
       return true;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isScript()) {
-        // Clear isSassGeneratedCss once we've finished processing the current SCRIPT.
-        isSassGeneratedCssTs = false;
-      } else if (isGetCssNameCall(n)) {
-        GetCssNameInstance getCssNameInstance = createGetCssNameInstance(n, isSassGeneratedCssTs);
+      if (isGetCssNameCall(n)) {
+        GetCssNameInstance getCssNameInstance =
+            createGetCssNameInstance(n, traversalState.cssClosureClassesQualifiedName);
         if (getCssNameInstance.isValid()) {
           listOfCssNameInstances.add(getCssNameInstance);
         } else {
           compiler.report(getCssNameInstance.getValidationError());
         }
       }
+    }
+
+    public SassGeneratedCssTsExpert createSassGeneratedCssTsExpert(Node n) {
+      boolean hasSassGeneratedCssTsJsDoc =
+          n.getJSDocInfo() != null && n.getJSDocInfo().isSassGeneratedCssTs();
+
+      JSError sassGeneratedCssTsValidationError = null;
+      boolean isInvalidSassGeneratedCssTsJsDoc = !n.isScript() || isNotInCssClosureFile(n);
+      if (hasSassGeneratedCssTsJsDoc && isInvalidSassGeneratedCssTsJsDoc) {
+        sassGeneratedCssTsValidationError = JSError.make(n, UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR);
+      }
+
+      Node assignmentTarget = n.getFirstChild();
+      boolean isCssClosureClassesAssignment =
+          n.isAssign()
+              && assignmentTarget.isGetProp()
+              && assignmentTarget.getString().equals("classes");
+
+      String cssClosureClassesQualifiedName = null;
+      if (isCssClosureClassesAssignment) {
+        cssClosureClassesQualifiedName = assignmentTarget.getQualifiedName();
+      }
+
+      return new SassGeneratedCssTsExpert(
+          hasSassGeneratedCssTsJsDoc,
+          sassGeneratedCssTsValidationError,
+          isCssClosureClassesAssignment,
+          cssClosureClassesQualifiedName);
+    }
+
+    private class SassGeneratedCssTsExpert {
+      public final boolean hasSassGeneratedCssTsJsDoc;
+      public final JSError sassGeneratedCssTsValidationError;
+      public final boolean isCssClosureClassesAssignment;
+      public final String cssClosureClassesQualifiedName;
+
+      public SassGeneratedCssTsExpert(
+          boolean hasSassGeneratedCssTsJsDoc,
+          JSError sassGeneratedCssTsValidationError,
+          boolean isCssClosureClassesAssignment,
+          String cssClosureClassesQualifiedName) {
+        this.hasSassGeneratedCssTsJsDoc = hasSassGeneratedCssTsJsDoc;
+        this.sassGeneratedCssTsValidationError = sassGeneratedCssTsValidationError;
+        this.isCssClosureClassesAssignment = isCssClosureClassesAssignment;
+        this.cssClosureClassesQualifiedName = cssClosureClassesQualifiedName;
+      }
+    }
+
+    private class TraversalState {
+      public boolean inSassGeneratedCssTsScript;
+      public String cssClosureClassesQualifiedName;
     }
   }
 
@@ -269,13 +340,10 @@ class ReplaceCssNames implements CompilerPass {
     return node.isCall() && node.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION);
   }
 
-  private GetCssNameInstance createGetCssNameInstance(Node n, boolean isSassGeneratedCssTs) {
+  private GetCssNameInstance createGetCssNameInstance(
+      Node n, String cssClosureClassesQualifiedName) {
     JSError validationError = validateGetCssNameCall(n);
-    String cssClosureClassesMemberName = null;
-    if (validationError == null && isSassGeneratedCssTs) {
-      cssClosureClassesMemberName = getCssClosureClassesMemberName(n);
-    }
-    return new GetCssNameInstance(n, validationError, cssClosureClassesMemberName);
+    return new GetCssNameInstance(n, validationError, cssClosureClassesQualifiedName);
   }
 
   /** Represents a `goog.getCssName()` call. */
@@ -292,12 +360,17 @@ class ReplaceCssNames implements CompilerPass {
     /** Non-null if the shape of the function call was invalid, when this object was created. */
     final JSError validationError;
 
-    final String cssClosureClassesMemberName;
+    /**
+     * The qualified name for the classes object if we're in a Sass-generated .css.ts file, or null
+     * otherwise. For example "module$exports$foo.classes".
+     */
+    final String cssClosureClassesQualifiedName;
 
-    GetCssNameInstance(Node callNode, JSError validationError, String cssClosureClassesMemberName) {
+    GetCssNameInstance(
+        Node callNode, JSError validationError, String cssClosureClassesQualifiedName) {
       this.callNode = callNode;
       this.validationError = validationError;
-      this.cssClosureClassesMemberName = cssClosureClassesMemberName;
+      this.cssClosureClassesQualifiedName = cssClosureClassesQualifiedName;
     }
 
     boolean isValid() {
@@ -351,13 +424,20 @@ class ReplaceCssNames implements CompilerPass {
     }
 
     boolean isCssClosureFileClassesMember() {
-      return cssClosureClassesMemberName != null;
+      return cssClosureClassesQualifiedName != null;
+    }
+
+    @Nullable String getCssClosureClassesQualifiedName() {
+      checkNotNull(
+          cssClosureClassesQualifiedName, "Not a css closure file classes object: %s", callNode);
+      return cssClosureClassesQualifiedName;
     }
 
     @Nullable String getCssClosureClassesMemberName() {
       checkNotNull(
-          cssClosureClassesMemberName, "No css closure file classess member found: %s", callNode);
-      return cssClosureClassesMemberName;
+          cssClosureClassesQualifiedName, "Not a css closure file classes object: %s", callNode);
+      String memberName = callNode.getParent().getString();
+      return cssClosureClassesQualifiedName + "." + memberName;
     }
 
     @Nullable String getCssClassName() {
@@ -378,58 +458,6 @@ class ReplaceCssNames implements CompilerPass {
               SimpleFormat.format("invalid number of children: %s for: %s", childCount, callNode));
       }
     }
-  }
-
-  /**
-   * Checks if the goog.getCssName() call is part of a classes object in a .css.closure.js file.
-   *
-   * <p>Check if the callNode is an export from a .css.closure.js file with the following structure:
-   *
-   * <pre>
-   *   module$exports$foo.classes = { "shortName": goog.getCssName("className") };
-   * </pre>
-   *
-   * If so, return the qualified name for the member name, i.e.
-   * "module$exports$foo.classes.shortName".
-   *
-   * <p>This method assumes that callNode has already been validated to be a goog.getCssName() call.
-   */
-  private @Nullable String getCssClosureClassesMemberName(Node callNode) {
-    /*
-     * For clarity, this is the structure that we're looking for.
-     *
-     * ASSIGN
-     *   GETPROP - classes
-     *     NAME - module$exports$whatever
-     *   OBJECTLIT
-     *     STRING_KEY - "shortName"
-     *       CALL
-     *         GETPROP - getCssName
-     *           NAME - goog
-     *         STRINGLIT - "className"
-     */
-    if (isNotInCssClosureFile(callNode) || callNode.getChildCount() != 2) {
-      return null;
-    }
-    Node shortName = callNode.getParent();
-    if (shortName == null || !shortName.isStringKey()) {
-      return null;
-    }
-    Node objectLitNode = shortName.getParent();
-    if (objectLitNode == null || !objectLitNode.isObjectLit()) {
-      return null;
-    }
-    Node assignNode = objectLitNode.getParent();
-    if (assignNode == null
-        || !assignNode.isAssign()
-        || assignNode.getSecondChild() != objectLitNode) {
-      return null;
-    }
-    Node classes = assignNode.getFirstChild();
-    if (!classes.isGetProp()) {
-      return null;
-    }
-    return classes.getQualifiedName() + "." + shortName.getString();
   }
 
   private @Nullable JSError validateGetCssNameCall(Node callNode) {
@@ -538,11 +566,23 @@ class ReplaceCssNames implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      String qualifiedName = n.getQualifiedName();
-      if (qualifiedName != null && cssNamesBySymbol.containsKey(qualifiedName)) {
-        String className = cssNamesBySymbol.get(qualifiedName);
-        updateCssNamesCount(className);
+      String classesObjectQualifiedName = n.getQualifiedName();
+      if (classesObjectQualifiedName == null
+          || !classesObjectsQualifiedNames.contains(classesObjectQualifiedName)) {
+        return;
       }
+      Node classNameNode = n.getParent();
+      if (!n.isGetProp() || !classNameNode.isGetProp()) {
+        compiler.report(JSError.make(n, INVALID_USE_OF_CLASSES_OBJECT_ERROR));
+        return;
+      }
+      String classQualifiedName = classNameNode.getQualifiedName();
+      if (classQualifiedName == null || !cssNamesBySymbol.containsKey(classQualifiedName)) {
+        compiler.report(JSError.make(n, UNKNOWN_SYMBOL_ERROR, classNameNode.getString()));
+        return;
+      }
+      String className = cssNamesBySymbol.get(classQualifiedName);
+      updateCssNamesCount(className);
     }
   }
 }

@@ -18,8 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.ReplaceCssNames.INVALID_USE_OF_CLASSES_OBJECT_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_STRING_LITERAL_ERROR;
+import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNING;
 
 import com.google.common.collect.ImmutableMap;
@@ -520,5 +522,59 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
                 " */",
                 "var x = 'foo';"));
     test(srcs(nonCssClosureFile), error(UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR));
+  }
+
+  @Test
+  public void testInvalidUseOfClassesObjectError() {
+    SourceFile cssVarsDefinition =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': goog.getCssName('fooStylesBar'),",
+                "  'Baz': goog.getCssName('fooStylesBaz'),",
+                "}"));
+    SourceFile importer =
+        SourceFile.fromCode(
+            "foo/importer.closure.js",
+            lines(
+                "goog.module('foo.importer');",
+                "/** @type {string} */",
+                "const foo_styles_css = goog.require('foo.styles$2ecss')",
+                "var x = foo_styles_css.classes;"));
+    test(srcs(cssVarsDefinition, importer), error(INVALID_USE_OF_CLASSES_OBJECT_ERROR));
+  }
+
+  @Test
+  public void testUnknownSymbolError() {
+    SourceFile cssVarsDefinition =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': goog.getCssName('fooStylesBar'),",
+                "  'Baz': goog.getCssName('fooStylesBaz'),",
+                "}"));
+    SourceFile importer =
+        SourceFile.fromCode(
+            "foo/importer.closure.js",
+            lines(
+                "goog.module('foo.importer');",
+                "/** @type {string} */",
+                "const foo_styles_css = goog.require('foo.styles$2ecss')",
+                "var x = foo_styles_css.classes.Quux;"));
+    test(srcs(cssVarsDefinition, importer), error(UNKNOWN_SYMBOL_ERROR));
   }
 }
