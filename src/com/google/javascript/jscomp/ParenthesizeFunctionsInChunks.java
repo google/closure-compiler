@@ -27,7 +27,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,7 +86,7 @@ public final class ParenthesizeFunctionsInChunks implements CompilerPass {
     private final ListMultimap<Node, Node> hoistNodesToScope = ArrayListMultimap.create();
 
     // Map for recording diagnostic information about what was marked for eager compilation.
-    private final Map<String, Long> chunkToEagerCompileFnCounts = new HashMap<>();
+    private final Map<String, Long> chunkToEagerCompileFnCounts = new LinkedHashMap<>();
 
     public Traversal(Set<String> parenthesizeFunctionsInChunks) {
       this.parenthesizeFunctionsInChunks = parenthesizeFunctionsInChunks;

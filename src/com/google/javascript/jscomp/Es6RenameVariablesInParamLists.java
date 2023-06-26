@@ -22,7 +22,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -94,7 +94,7 @@ public final class Es6RenameVariablesInParamLists
   /** Collects all references in a naive way. */
   private static class CollectReferences {
 
-    private final Set<String> currFuncReferences = new HashSet<>();
+    private final Set<String> currFuncReferences = new LinkedHashSet<>();
 
     void collect(Node fn) {
       checkState(fn.isFunction());

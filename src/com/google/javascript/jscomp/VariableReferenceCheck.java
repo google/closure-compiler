@@ -25,7 +25,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -79,7 +79,7 @@ class VariableReferenceCheck implements CompilerPass {
 
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
   // we clear after each method call, because the Set never gets too big.
-  private final Set<BasicBlock> blocksWithDeclarations = new HashSet<>();
+  private final Set<BasicBlock> blocksWithDeclarations = new LinkedHashSet<>();
 
   // These types do not permit a block-scoped declaration inside them without an explicit block.
   // e.g. if (b) let x;
@@ -112,7 +112,7 @@ class VariableReferenceCheck implements CompilerPass {
     private final Set<String> varsInFunctionBody;
 
     private ReferenceCheckingBehavior() {
-      varsInFunctionBody = new HashSet<>();
+      varsInFunctionBody = new LinkedHashSet<>();
     }
 
     @Override

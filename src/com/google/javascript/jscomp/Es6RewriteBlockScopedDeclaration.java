@@ -34,7 +34,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -56,9 +55,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final Table<Node, String, String> renameTable = HashBasedTable.create();
-  private final Set<Node> letConsts = new HashSet<>();
-  private final Set<String> undeclaredNames = new HashSet<>();
-  private final Set<String> externNames = new HashSet<>();
+  private final Set<Node> letConsts = new LinkedHashSet<>();
+  private final Set<String> undeclaredNames = new LinkedHashSet<>();
+  private final Set<String> externNames = new LinkedHashSet<>();
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
   private final Supplier<String> uniqueNameIdSupplier;
