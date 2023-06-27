@@ -3220,9 +3220,37 @@ var RTCDataChannelInitDictionary_;
 var RTCDataChannelInit;
 
 /**
- * @typedef {{expires: number}}
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcdtlsfingerprint
  */
-var RTCCertificate;
+function RTCDtlsFingerprint() {}
+
+/** @const {string|undefined} */
+RTCDtlsFingerprint.prototype.algorithm;
+
+/** @const {string|undefined} */
+RTCDtlsFingerprint.prototype.value;
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtccertificate
+ */
+function RTCCertificate() {}
+
+/** @const {number} */
+RTCCertificate.prototype.expires;
+
+/** @return {!Array<!RTCDtlsFingerprint>} */
+RTCCertificate.prototype.getFingerprints = function() {};
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtccertificateexpiration
+ */
+function RTCCertificateExpiration() {}
+
+/** @const {number|undefined} */
+RTCCertificateExpiration.prototype.expires;
 
 /**
  * @record
@@ -3250,7 +3278,9 @@ RTCOfferOptions.prototype.offerToReceiveVideo;
 function RTCPeerConnection(configuration, constraints) {}
 
 /**
- * @param {Object} keygenAlgorithm
+ * TODO(b/240494860): Reference webCrypto.AlgorithmIdentifier instead of using
+ * Object.
+ * @param {!webCrypto.AlgorithmIdentifier|!RTCCertificateExpiration} keygenAlgorithm
  * @return {Promise<RTCCertificate>}
  */
 RTCPeerConnection.generateCertificate = function(keygenAlgorithm) {};
