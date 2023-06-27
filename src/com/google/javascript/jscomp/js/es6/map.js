@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * @fileoverview
+ * @suppress {lintVarDeclarations}
+ */
+
 'require es6/conformance';
 'require es6/symbol';
 'require es6/util/makeiterator';
@@ -98,11 +103,25 @@ $jscomp.polyfill('Map',
   /** @const {!WeakMap<!Object, string>} */
   var idMap = new WeakMap();
 
+  // Numeric indices to avoid ambiguation failures breaking code that extends
+  // the Map class.  They will actually be extending the polyfill if it is used.
+  // We need to make sure that ambiguation will not try to reuse the property
+  // names for any properties that the extending class adds.
+  /**
+   * @const Index for PolyfillMap's data property, of type
+   *        !Object<!Array<!$jscomp.MapEntry<KEY, VALUE>>>
+   */
+  var DATA = 0;
+  /**
+   * @const Index for PolyfillMap's head property, of type
+   *        !$jscomp.MapEntry<KEY, VALUE>
+   */
+  var HEAD = 1;
 
   /**
    * Polyfill for the global Map data type.
    * @constructor
-   * @struct
+   * @unrestricted
    * @extends {Map<KEY, VALUE>}
    * @implements {Iterable<!Array<KEY|VALUE>>}
    * @template KEY, VALUE
@@ -111,11 +130,8 @@ $jscomp.polyfill('Map',
    */
   // TODO(sdh): fix param type if heterogeneous arrays ever supported.
   var PolyfillMap = function(opt_iterable) {
-    /** @private {!Object<!Array<!$jscomp.MapEntry<KEY, VALUE>>>} */
-    this.data_ = {};
-
-    /** @private {!$jscomp.MapEntry<KEY, VALUE>} */
-    this.head_ = createHead();
+    this[DATA] = {};
+    this[HEAD] = createHead();
 
     // Note: this property should not be changed.  If we're willing to give up
     // ES3 support, we could define it as a property directly.  It should be
@@ -141,19 +157,19 @@ $jscomp.polyfill('Map',
     key = key === 0 ? 0 : key;
     var r = maybeGetEntry(this, key);
     if (!r.list) {
-      r.list = (this.data_[r.id] = []);
+      r.list = (this[DATA][r.id] = []);
     }
     if (!r.entry) {
       r.entry = {
-        next: this.head_,
-        previous: this.head_.previous,
-        head: this.head_,
+        next: this[HEAD],
+        previous: this[HEAD].previous,
+        head: this[HEAD],
         key: key,
         value: value,
       };
       r.list.push(r.entry);
-      this.head_.previous.next = r.entry;
-      this.head_.previous = r.entry;
+      this[HEAD].previous.next = r.entry;
+      this[HEAD].previous = r.entry;
       this.size++;
     } else {
       r.entry.value = value;
@@ -167,7 +183,7 @@ $jscomp.polyfill('Map',
     var r = maybeGetEntry(this, key);
     if (r.entry && r.list) {
       r.list.splice(r.index, 1);
-      if (!r.list.length) delete this.data_[r.id];
+      if (!r.list.length) delete this[DATA][r.id];
       r.entry.previous.next = r.entry.next;
       r.entry.next.previous = r.entry.previous;
       r.entry.head = null;
@@ -180,8 +196,9 @@ $jscomp.polyfill('Map',
 
   /** @override */
   PolyfillMap.prototype.clear = function() {
-    this.data_ = {};
-    this.head_ = this.head_.previous = createHead();
+    this[DATA] = {};
+    this[HEAD] =
+        this[HEAD].previous = createHead();
     this.size = 0;
   };
 
@@ -259,8 +276,8 @@ $jscomp.polyfill('Map',
    */
   var maybeGetEntry = function(map, key) {
     var id = getId(key);
-    var list = map.data_[id];
-    if (list && $jscomp.owns(map.data_, id)) {
+    var list = map[DATA][id];
+    if (list && $jscomp.owns(map[DATA], id)) {
       for (var index = 0; index < list.length; index++) {
         var entry = list[index];
         if ((key !== key && entry.key !== entry.key) || key === entry.key) {
@@ -281,10 +298,10 @@ $jscomp.polyfill('Map',
    * @private
    */
   var makeIterator = function(map, func) {
-    var entry = map.head_;
+    var entry = map[HEAD];
     return $jscomp.iteratorPrototype(function() {
       if (entry) {
-        while (entry.head != map.head_) {
+        while (entry.head != map[HEAD]) {
           entry = entry.previous;
         }
         while (entry.next != entry.head) {
