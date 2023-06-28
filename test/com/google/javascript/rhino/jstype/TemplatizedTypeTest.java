@@ -168,11 +168,10 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
         registry.createTemplatizedType(rawType, ImmutableList.of(UNKNOWN_TYPE, UNKNOWN_TYPE));
     assertType(rawType).isEqualTo(templatizedUnknownUnknown);
 
-    // TODO(b/176172011): Should test `isNotEqualTo`, but if possible delete CHECKED_UNKNOWN_TYPE.
     JSType templatizedCheckedUnknownUnknown =
         registry.createTemplatizedType(
             rawType, ImmutableList.of(CHECKED_UNKNOWN_TYPE, UNKNOWN_TYPE));
-    assertType(rawType).isEqualTo(templatizedCheckedUnknownUnknown);
+    assertType(rawType).isNotEqualTo(templatizedCheckedUnknownUnknown);
 
     TemplateType ramdomTemplate = this.registry.createTemplateType("X");
     JSType templatizedTemplateUnknown =

@@ -393,17 +393,17 @@ final class EqualityChecker {
 
   private boolean areTypeMapEqual(TemplateTypeMap left, TemplateTypeMap right) {
     ImmutableList<TemplateType> leftKeys = left.getTemplateKeys();
+    ImmutableList<JSType> leftValues = left.getTemplateValues();
     ImmutableList<TemplateType> rightKeys = right.getTemplateKeys();
+    ImmutableList<JSType> rightValues = right.getTemplateValues();
 
     outer:
     for (int i = 0; i < leftKeys.size(); i++) {
       TemplateType leftKey = leftKeys.get(i);
-      JSType leftType = left.getResolvedTemplateType(leftKey);
 
       inner:
       for (int j = 0; j < rightKeys.size(); j++) {
         TemplateType rightKey = rightKeys.get(j);
-        JSType rightType = right.getResolvedTemplateType(rightKey);
 
         // Cross-compare every key-value pair in this TemplateTypeMap with
         // those in that TemplateTypeMap. Update the Equivalence match for both
@@ -412,7 +412,12 @@ final class EqualityChecker {
           continue inner;
         }
 
-        if (this.areEqualCaching(leftType, rightType)) {
+        // The arrays are index-aligned but we can have more keys than values.
+        JSType leftValue =
+            i < leftValues.size() ? leftValues.get(i) : left.defaultValueType(leftKey);
+        JSType rightValue =
+            j < rightValues.size() ? rightValues.get(j) : right.defaultValueType(rightKey);
+        if (this.areEqualCaching(leftValue, rightValue)) {
           continue outer;
         }
       }
@@ -434,11 +439,7 @@ final class EqualityChecker {
     }
 
     @Override
-    @SuppressWarnings({
-      "ShortCircuitBoolean",
-      "EqualsBrokenForNull",
-      "EqualsUnsafeCast"
-    })
+    @SuppressWarnings({"ShortCircuitBoolean", "EqualsBrokenForNull", "EqualsUnsafeCast"})
     public boolean equals(Object other) {
       // Calling left with `null` or not a `Key` should cause a crash.
       CacheKey right = (CacheKey) other;

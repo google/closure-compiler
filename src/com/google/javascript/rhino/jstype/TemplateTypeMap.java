@@ -298,7 +298,7 @@ public final class TemplateTypeMap {
   public JSType getResolvedTemplateType(TemplateType key) {
     int index = getTemplateTypeIndex(key);
     return (index == -1)
-        ? unknownIfUnbounded(key)
+        ? defaultValueType(key)
         : resolvedTemplateValues[index];
   }
 
@@ -339,11 +339,15 @@ public final class TemplateTypeMap {
     checkArgument(builder.size() <= keys.size());
 
     for (int i = builder.size(); i < keys.size(); i++) {
-      builder.add(unknownIfUnbounded(keys.get(i)));
+      builder.add(defaultValueType(keys.get(i)));
     }
   }
 
-  private JSType unknownIfUnbounded(TemplateType type) {
+  /**
+   * Returns the default value type for the given key type. Since the bounded generics feature
+   * was removed, in practice this always returns `?`.
+   */
+  JSType defaultValueType(TemplateType type) {
     return type.getBound().isUnknownType()
         ? this.registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
         : type;
