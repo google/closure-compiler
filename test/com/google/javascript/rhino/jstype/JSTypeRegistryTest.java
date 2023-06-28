@@ -106,14 +106,12 @@ public class JSTypeRegistryTest {
 
   @Test
   public void testGetBuiltInType_iterable() {
-    assertType(registry.getGlobalType("Iterable"))
-        .isEqualTo(registry.getNativeType(ITERABLE_TYPE));
+    assertType(registry.getGlobalType("Iterable")).isEqualTo(registry.getNativeType(ITERABLE_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_iterator() {
-    assertType(registry.getGlobalType("Iterator"))
-        .isEqualTo(registry.getNativeType(ITERATOR_TYPE));
+    assertType(registry.getGlobalType("Iterator")).isEqualTo(registry.getNativeType(ITERATOR_TYPE));
   }
 
   @Test
@@ -310,6 +308,32 @@ public class JSTypeRegistryTest {
         registry.createTypeFromCommentNode(
             new Node(Token.BANG, IR.string("Foo")), "srcfile.js", emptyLocalScope);
     assertThat(type).isInstanceOf(NamedType.class);
+  }
+
+  @Test
+  public void testGetBuiltInType_ReadonlyMap() {
+    ObjectType readonlyMapType = registry.getNativeObjectType(JSTypeNative.READONLY_MAP_TYPE);
+    assertType(registry.getGlobalType("ReadonlyMap")).isEqualTo(readonlyMapType);
+  }
+
+  @Test
+  public void testGetBuiltInType_Map() {
+    // Ensure we have a Map.
+    ObjectType mapType = registry.getNativeObjectType(JSTypeNative.MAP_TYPE);
+    assertType(registry.getGlobalType("Map")).isEqualTo(mapType);
+
+    // Ensure it implements ReadonlyMap.
+    ObjectType readonlyMapType = registry.getNativeObjectType(JSTypeNative.READONLY_MAP_TYPE);
+    assertThat(mapType.getCtorImplementedInterfaces()).hasSize(1);
+    assertThat(ImmutableList.copyOf(mapType.getCtorImplementedInterfaces()).get(0).getRawType())
+        .isEqualTo(readonlyMapType);
+
+    // Ensure it takes one optional parameter of the appropriate type.
+    ImmutableList<FunctionType.Parameter> paramList = mapType.getConstructor().getParameters();
+    assertThat(paramList).hasSize(1);
+    assertThat(paramList.get(0).isOptional()).isTrue();
+    assertThat(paramList.get(0).getJSType().toString())
+        .isEqualTo("(Array<Array<(KEY|VALUE)>>|Iterable<Array<(KEY|VALUE)>>|null|undefined)");
   }
 
   /** Returns a scope that overrides a few methods from {@link AbstractStaticScope} */

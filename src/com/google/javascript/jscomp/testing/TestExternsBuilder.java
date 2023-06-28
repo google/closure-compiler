@@ -629,6 +629,30 @@ public class TestExternsBuilder {
           " */",
           "Array.prototype.includes = function(searchElement, fromIndex) {};",
           "");
+  private static final String MAP_EXTERNS =
+      lines(
+          "/**",
+          " * @interface",
+          " * @extends {Iterable<KEY|VALUE>}",
+          " * @template KEY, VALUE",
+          " */",
+          "function ReadonlyMap() {}",
+          "/**",
+          " * @return {!IteratorIterable<KEY|VALUE>}",
+          " */",
+          "ReadonlyMap.prototype.entries = function() {};",
+          "/**",
+          " * @constructor @struct",
+          " * @param {?Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable",
+          " * @implements {ReadonlyMap<KEY, VALUE>}",
+          " * @template KEY, VALUE",
+          " */",
+          "function Map(opt_iterable) {}",
+          "/**",
+          " * @override",
+          " * @return {!IteratorIterable<KEY|VALUE>}",
+          " */",
+          "Map.prototype.entries = function() {};");
 
   private static final String ARGUMENTS_EXTERNS =
       lines(
@@ -940,6 +964,7 @@ public class TestExternsBuilder {
   private boolean includeFunctionExterns = false;
   private boolean includeObjectExterns = false;
   private boolean includeArrayExterns = false;
+  private boolean includeMapExterns = false;
   private boolean includeArgumentsExterns = false;
   private boolean includeConsoleExterns = false;
   private boolean includeAlertExterns = false;
@@ -989,6 +1014,13 @@ public class TestExternsBuilder {
   public TestExternsBuilder addArray() {
     includeArrayExterns = true;
     addIterable(); // Array implements Iterable
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addMap() {
+    includeMapExterns = true;
+    addArray(); // Map requires array for its ctor arg.
     return this;
   }
 
@@ -1110,6 +1142,9 @@ public class TestExternsBuilder {
     }
     if (includeArrayExterns) {
       externSections.add(ARRAY_EXTERNS);
+    }
+    if (includeMapExterns) {
+      externSections.add(MAP_EXTERNS);
     }
     if (includeReflectExterns) {
       externSections.add(REFLECT_EXTERNS);

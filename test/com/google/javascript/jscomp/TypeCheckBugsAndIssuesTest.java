@@ -982,7 +982,6 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
         .addSource(
             "/** @return {!Object} */ "
                 + "function proto(obj) { return obj.prototype; }"
-                + "/** @constructor */ function Map() {}"
                 + "/**\n"
                 + " * @constructor\n"
                 + " * @extends {Map}\n"

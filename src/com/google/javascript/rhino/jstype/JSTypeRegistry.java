@@ -151,6 +151,18 @@ public final class JSTypeRegistry {
   /** The template variable in {@code ReadonlyArray<T>}. */
   private TemplateType readonlyArrayElementTemplateKey;
 
+  /** The key variable in {@code ReadonlyMap<K, V>}. */
+  private TemplateType readonlyMapKeyTemplateKey;
+
+  /** The value variable in {@code ReadonlyMap<K, V>}. */
+  private TemplateType readonlyMapValueTemplateKey;
+
+  /** The key variable in {@code Map<K, V>}. */
+  private TemplateType mapKeyTemplateKey;
+
+  /** The value variable in {@code Map<K, V>}. */
+  private TemplateType mapValueTemplateKey;
+
   @Deprecated public static final String OBJECT_ELEMENT_TEMPLATE = I_OBJECT_ELEMENT_TEMPLATE;
 
   // TODO(user): An instance of this class should be used during
@@ -261,6 +273,16 @@ public final class JSTypeRegistry {
   /** Returns the template variable for the element type of ReadonlyArrays. */
   public TemplateType getReadonlyArrayElementKey() {
     return readonlyArrayElementTemplateKey;
+  }
+
+  /** Returns the template variable for the key type of ReadonlyMaps. */
+  public TemplateType getReadonlyMapKey() {
+    return readonlyMapKeyTemplateKey;
+  }
+
+  /** Returns the template variable for the value type of ReadonlyMaps. */
+  public TemplateType getReadonlyMapValue() {
+    return readonlyMapValueTemplateKey;
   }
 
   /**
@@ -375,13 +397,22 @@ public final class JSTypeRegistry {
     registerNativeType(JSTypeNative.ALL_TYPE, allType);
 
     // Template Types
+    // These should match the template type name in externs files.
     iObjectIndexTemplateKey = new TemplateType(this, "IOBJECT_KEY");
     iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
-    // These should match the template type name in externs files.
+    iteratorValueTemplate = new TemplateType(this, "VALUE");
+
+    // Array-related template types.
     TemplateType iArrayLikeTemplate = new TemplateType(this, "VALUE2");
     arrayElementTemplateKey = new TemplateType(this, "T");
     readonlyArrayElementTemplateKey = new TemplateType(this, "T");
-    iteratorValueTemplate = new TemplateType(this, "VALUE");
+
+    // Map-related template types.
+    readonlyMapKeyTemplateKey = new TemplateType(this, "KEY");
+    readonlyMapValueTemplateKey = new TemplateType(this, "VALUE");
+    mapKeyTemplateKey = new TemplateType(this, "KEY");
+    mapValueTemplateKey = new TemplateType(this, "VALUE");
+
     // TODO(b/142881197): start using these unused iterator (and related type) template params
     // https://github.com/google/closure-compiler/issues/3489
     TemplateType iteratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
@@ -850,12 +881,55 @@ public final class JSTypeRegistry {
     // Register the prototype property. See the comments below in
     // registerPropertyOnType about the bootstrapping process.
     registerPropertyOnType("prototype", objectFunctionType);
+
+    // ReadonlyMap
+    FunctionType readonlyMapFunctionType =
+        nativeInterface("ReadonlyMap", readonlyMapKeyTemplateKey, readonlyMapValueTemplateKey);
+    registerNativeType(JSTypeNative.READONLY_MAP_FUNCTION_TYPE, readonlyMapFunctionType);
+    readonlyMapFunctionType.setExtendedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(
+                iterableType,
+                createTemplatizedType(
+                    arrayType,
+                    createUnionType(readonlyMapKeyTemplateKey, readonlyMapValueTemplateKey)))));
+    ObjectType readonlyMapType = readonlyMapFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.READONLY_MAP_TYPE, readonlyMapType);
+
+    // Map
+    FunctionType mapFunctionType =
+        nativeConstructorBuilder("Map")
+            .withParameters(
+                createOptionalParameters(
+                    createUnionType(
+                        nullType,
+                        createTemplatizedType(
+                            iterableType,
+                            createTemplatizedType(
+                                arrayType,
+                                createUnionType(mapKeyTemplateKey, mapValueTemplateKey))),
+                        createTemplatizedType(
+                            arrayType,
+                            createTemplatizedType(
+                                arrayType,
+                                createUnionType(mapKeyTemplateKey, mapValueTemplateKey))))))
+            .withTemplateKeys(mapKeyTemplateKey, mapValueTemplateKey)
+            .build();
+    registerNativeType(JSTypeNative.MAP_FUNCTION_TYPE, mapFunctionType);
+    mapFunctionType.getPrototype(); // Force initialization
+    mapFunctionType.setImplementedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(readonlyMapType, mapKeyTemplateKey, mapValueTemplateKey)));
+    ObjectType mapType = mapFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.MAP_TYPE, mapType);
   }
 
   private void initializeRegistry() {
     registerGlobalType(getNativeType(JSTypeNative.ARGUMENTS_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ARRAY_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.READONLY_ARRAY_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.MAP_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.READONLY_MAP_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE));

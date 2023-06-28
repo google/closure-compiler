@@ -404,13 +404,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testDontCrashOnRecursiveTemplateReference() {
     newTest()
-        .addExterns(
-            "/**",
-            " * @constructor @struct",
-            " * @implements {Iterable<!Array<KEY|VAL>>}",
-            " * @template KEY, VAL",
-            " */",
-            "function Map(opt_iterable) {}")
         .addSource(
             "/** @constructor @implements {Iterable<VALUE>} @template VALUE */",
             "function Foo() {",

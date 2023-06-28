@@ -1464,8 +1464,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        "function Foo(){} Foo.prototype.JSC$43_bar = 3;"
-            + "function Baz(){} Baz.prototype.JSC$45_bar = 3;");
+        "function Foo(){} Foo.prototype.JSC$44_bar = 3;"
+            + "function Baz(){} Baz.prototype.JSC$46_bar = 3;");
   }
 
   // When closure-code-removal runs before disambiguate-properties, make sure
@@ -1811,13 +1811,13 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String expected =
         "function A() {} "
-            + "A.prototype.JSC$43_foo = function() { "
+            + "A.prototype.JSC$44_foo = function() { "
             + "  window.console.log('A'); "
             + "}; "
             + "function B() {} "
             + "window['main'] = function() { "
             + "  var a = window['a'] = new A; "
-            + "  a.JSC$43_foo(); "
+            + "  a.JSC$44_foo(); "
             + "  window['b'] = new B; "
             + "}";
 
@@ -1877,21 +1877,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     // type ambiguity in function notCalled is unreachable.
     String expected =
         "function A() {} "
-            + "A.prototype.JSC$43_always = function() { "
+            + "A.prototype.JSC$44_always = function() { "
             + "  window.console.log('AA'); "
             + "}; "
-            + "A.prototype.JSC$43_sometimes = function(){ "
+            + "A.prototype.JSC$44_sometimes = function(){ "
             + "  window.console.log('SA'); "
             + "}; "
             + "function B() {} "
-            + "B.prototype.JSC$45_always=function(){ "
+            + "B.prototype.JSC$46_always=function(){ "
             + "  window.console.log('AB'); "
             + "};"
             + "window['main'] = function() { "
             + "  var a = window['a'] = new A; "
-            + "  a.JSC$43_always(); "
-            + "  a.JSC$43_sometimes(); "
-            + "  (window['b'] = new B).JSC$45_always(); "
+            + "  a.JSC$44_always(); "
+            + "  a.JSC$44_sometimes(); "
+            + "  (window['b'] = new B).JSC$46_always(); "
             + "}";
 
     test(options, code, expected);
@@ -1985,10 +1985,10 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var Arrays = function() {};",
             "Arrays.$create = function() { return {}; }",
             "/** @constructor */",
-            "function Foo() { this.JSC$43_myprop = 1; }",
+            "function Foo() { this.JSC$44_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$45_myprop = 2; }",
-            "var x = {}.JSC$43_myprop;"));
+            "function Bar() { this.JSC$46_myprop = 2; }",
+            "var x = {}.JSC$44_myprop;"));
   }
 
   @Test
@@ -2024,16 +2024,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         lines(
             "/** @constructor */",
-            "function Foo() { this.JSC$42_myprop = 1; }",
+            "function Foo() { this.JSC$43_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$44_myprop = 2; }",
+            "function Bar() { this.JSC$45_myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$42_myprop;",
+            "  return 1 != getSomething().JSC$43_myprop;",
             "})()"));
   }
 
@@ -2076,16 +2076,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         lines(
             "/** @constructor */",
-            "function Foo() { this.JSC$42_myprop = 1; }",
+            "function Foo() { this.JSC$43_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$44_myprop = 2; }",
+            "function Bar() { this.JSC$45_myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$42_myprop;",
+            "  return 1 != getSomething().JSC$43_myprop;",
             "})()"));
   }
 

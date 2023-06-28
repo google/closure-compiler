@@ -82,8 +82,14 @@ abstract class IntegrationTestCase {
                       " * @extends {Array<string>}",
                       " */",
                       "var ITemplateArray = function() {};",
-                      "/** @constructor */",
-                      "var Map;",
+                      "/**",
+                      " * @constructor @struct",
+                      " * @param {?Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=}"
+                          + " opt_iterable",
+                      " * @implements {ReadonlyMap<KEY, VALUE>}",
+                      " * @template KEY, VALUE",
+                      " */",
+                      "function Map(opt_iterable) {}",
                       "/** @constructor */",
                       "var Set;",
                       "/** @constructor */ function Window() {}",
@@ -158,7 +164,7 @@ abstract class IntegrationTestCase {
   }
 
   protected void testSame(CompilerOptions options, String original) {
-    testSame(options, new String[] { original });
+    testSame(options, new String[] {original});
   }
 
   protected void testSame(CompilerOptions options, String[] original) {
@@ -166,20 +172,18 @@ abstract class IntegrationTestCase {
   }
 
   /**
-   * Asserts that when compiling with the given compiler options,
-   * {@code original} is transformed into {@code compiled}.
+   * Asserts that when compiling with the given compiler options, {@code original} is transformed
+   * into {@code compiled}.
    */
-  protected void test(CompilerOptions options,
-      String original, String compiled) {
-    test(options, new String[] { original }, new String[] { compiled });
+  protected void test(CompilerOptions options, String original, String compiled) {
+    test(options, new String[] {original}, new String[] {compiled});
   }
 
   /**
-   * Asserts that when compiling with the given compiler options,
-   * {@code original} is transformed into {@code compiled}.
+   * Asserts that when compiling with the given compiler options, {@code original} is transformed
+   * into {@code compiled}.
    */
-  protected void test(CompilerOptions options,
-      String[] original, String[] compiled) {
+  protected void test(CompilerOptions options, String[] original, String[] compiled) {
     Compiler compiler = compile(options, original);
 
     Node root = compiler.getRoot().getLastChild();
@@ -293,8 +297,7 @@ abstract class IntegrationTestCase {
     }
   }
 
-  protected void checkUnexpectedErrorsOrWarnings(
-      Compiler compiler, int expected) {
+  protected void checkUnexpectedErrorsOrWarnings(Compiler compiler, int expected) {
     int actual = compiler.getErrors().size() + compiler.getWarnings().size();
     if (actual != expected) {
       String msg = "";
@@ -309,7 +312,7 @@ abstract class IntegrationTestCase {
   }
 
   protected Compiler compile(CompilerOptions options, String original) {
-    return compile(options, new String[] { original });
+    return compile(options, new String[] {original});
   }
 
   protected Compiler compile(CompilerOptions options, String[] original) {
@@ -346,7 +349,7 @@ abstract class IntegrationTestCase {
   }
 
   protected void testNoWarnings(CompilerOptions options, String code) {
-    testNoWarnings(options, new String[] { code });
+    testNoWarnings(options, new String[] {code});
   }
 
   protected void testNoWarnings(CompilerOptions options, String[] sources) {
@@ -381,5 +384,4 @@ abstract class IntegrationTestCase {
 
     return compiler.getRoot().getLastChild();
   }
-
 }
