@@ -1615,7 +1615,7 @@ public final class CompilerTest {
             "input.js",
             Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"));
     JsAst realAst = new JsAst(inputSourceFile);
-    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
+    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors= */ true)));
     compiler.initModules(externs, ImmutableList.of(m), options);
 
     compiler.parse();
@@ -1627,7 +1627,7 @@ public final class CompilerTest {
 
     compiler = new Compiler(new TestErrorManager());
     m = new JSChunk("m");
-    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
+    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors= */ true)));
     compiler.initModules(externs, ImmutableList.of(m), options);
     restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 

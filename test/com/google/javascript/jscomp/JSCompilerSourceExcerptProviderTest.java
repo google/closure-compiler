@@ -24,24 +24,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/**
+ */
 @RunWith(JUnit4.class)
 public final class JSCompilerSourceExcerptProviderTest {
   private SourceExcerptProvider provider;
 
   @Before
   public void setUp() throws Exception {
-    SourceFile foo = SourceFile.fromCode("foo",
-        "foo:first line\nfoo:second line\nfoo:third line\n");
-    SourceFile bar = SourceFile.fromCode("bar",
-        "bar:first line\nbar:second line\nbar:third line\nbar:fourth line\n");
-    SourceFile foo2 = SourceFile.fromCode("foo2",
-        "foo2:first line\nfoo2:second line\nfoo2:third line");
+    SourceFile foo =
+        SourceFile.fromCode("foo", "foo:first line\nfoo:second line\nfoo:third line\n");
+    SourceFile bar =
+        SourceFile.fromCode(
+            "bar", "bar:first line\nbar:second line\nbar:third line\nbar:fourth line\n");
+    SourceFile foo2 =
+        SourceFile.fromCode("foo2", "foo2:first line\nfoo2:second line\nfoo2:third line");
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    compiler.init(
-        ImmutableList.<SourceFile>of(),
-        ImmutableList.of(foo, bar, foo2),
-        options);
+    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(foo, bar, foo2), options);
     this.provider = compiler;
   }
 
@@ -106,9 +106,8 @@ public final class JSCompilerSourceExcerptProviderTest {
   }
 
   /**
-   * Asserts that a region is 'well formed': it must not be an empty and
-   * cannot start or finish by a carriage return. In addition, it must
-   * contain the line whose region we are taking.
+   * Asserts that a region is 'well formed': it must not be an empty and cannot start or finish by a
+   * carriage return. In addition, it must contain the line whose region we are taking.
    */
   private void assertRegionWellFormed(String sourceName, int lineNumber) {
     Region region = provider.getSourceRegion(sourceName, lineNumber);

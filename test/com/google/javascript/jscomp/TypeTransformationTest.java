@@ -1141,8 +1141,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
     return record(ImmutableMap.<String, JSType>of(p1, t1, p2, t2));
   }
 
-  private JSType record(String p1, JSType t1, String p2, JSType t2,
-      String p3, JSType t3) {
+  private JSType record(String p1, JSType t1, String p2, JSType t2, String p3, JSType t3) {
     return record(ImmutableMap.<String, JSType>of(p1, t1, p2, t2, p3, t3));
   }
 
@@ -1154,27 +1153,26 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
     return builder.build();
   }
 
-  private void testTTL(JSType expectedType, String ttlExp,
-      String... expectedWarnings) {
+  private void testTTL(JSType expectedType, String ttlExp, String... expectedWarnings) {
     try (JSTypeResolver.Closer closer =
         compiler.getTypeRegistry().getResolver().openForDefinition()) {
-    TypeTransformationParser ttlParser = new TypeTransformationParser(ttlExp,
-        SourceFile.fromCode("[testcode]", ttlExp), errorReporter, 0, 0);
-    // Run the test if the parsing was successful
-    if (ttlParser.parseTypeTransformation()) {
-      Node ast = ttlParser.getTypeTransformationAst();
-      // Create the scope using the extra definitions
-      Node extraTypeDefs = compiler.parseTestCode(EXTRA_TYPE_DEFS);
-      TypedScope scope =
-          new TypedScopeCreator(compiler)
-              .createScope(IR.root(IR.root(), IR.root(extraTypeDefs)), null);
-      // Evaluate the type transformation
-      TypeTransformation typeTransformation =
-          new TypeTransformation(compiler, scope);
-      JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
-      checkReportedWarningsHelper(expectedWarnings);
-      assertTypeEquals(expectedType, resultType);
-    }
+      TypeTransformationParser ttlParser =
+          new TypeTransformationParser(
+              ttlExp, SourceFile.fromCode("[testcode]", ttlExp), errorReporter, 0, 0);
+      // Run the test if the parsing was successful
+      if (ttlParser.parseTypeTransformation()) {
+        Node ast = ttlParser.getTypeTransformationAst();
+        // Create the scope using the extra definitions
+        Node extraTypeDefs = compiler.parseTestCode(EXTRA_TYPE_DEFS);
+        TypedScope scope =
+            new TypedScopeCreator(compiler)
+                .createScope(IR.root(IR.root(), IR.root(extraTypeDefs)), null);
+        // Evaluate the type transformation
+        TypeTransformation typeTransformation = new TypeTransformation(compiler, scope);
+        JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
+        checkReportedWarningsHelper(expectedWarnings);
+        assertTypeEquals(expectedType, resultType);
+      }
     }
   }
 }

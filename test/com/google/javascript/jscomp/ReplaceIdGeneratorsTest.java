@@ -26,10 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link ReplaceIdGenerators}.
- *
- */
+/** Tests for {@link ReplaceIdGenerators}. */
 @RunWith(JUnit4.class)
 public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
@@ -39,16 +36,19 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    RenamingMap idTestMap = new RenamingMap() {
-      private final ImmutableMap<String, String> map = ImmutableMap.of(
-          "foo", ":foo:",
-          "bar", ":bar:");
-      @Override
-      public String get(String value) {
-        String replacement = map.get(value);
-        return replacement != null ? replacement : "unknown:" + value;
-      }
-    };
+    RenamingMap idTestMap =
+        new RenamingMap() {
+          private final ImmutableMap<String, String> map =
+              ImmutableMap.of(
+                  "foo", ":foo:",
+                  "bar", ":bar:");
+
+          @Override
+          public String get(String value) {
+            String replacement = map.get(value);
+            return replacement != null ? replacement : "unknown:" + value;
+          }
+        };
     RenamingMap gen = new UniqueRenamingToken();
     lastPass =
         new ReplaceIdGenerators(
@@ -75,29 +75,16 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testBackwardCompat() {
-    testWithPseudo("foo.bar = goog.events.getUniqueId('foo_bar')",
-         "foo.bar = 'a'",
-         "foo.bar = 'foo_bar$0'");
+    testWithPseudo(
+        "foo.bar = goog.events.getUniqueId('foo_bar')", "foo.bar = 'a'", "foo.bar = 'foo_bar$0'");
   }
 
   @Test
   public void testSerialization1() {
     testMap(
-        lines(
-        "var x = goog.events.getUniqueId('xxx');",
-        "var y = goog.events.getUniqueId('yyy');"),
-
-        lines(
-        "var x = 'a';",
-        "var y = 'b';"),
-
-        lines(
-            "[goog.events.getUniqueId]",
-            "",
-            "a:testcode:1:32",
-            "b:testcode:2:32",
-            "",
-            ""));
+        lines("var x = goog.events.getUniqueId('xxx');", "var y = goog.events.getUniqueId('yyy');"),
+        lines("var x = 'a';", "var y = 'b';"),
+        lines("[goog.events.getUniqueId]", "", "a:testcode:1:32", "b:testcode:2:32", "", ""));
   }
 
   @Test
@@ -114,61 +101,49 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testReusePreviousSerialization1() {
-    previousMappings = lines(
-        "[goog.events.getUniqueId]",
-        "",
-        "previous1:testcode:1:32",
-        "previous2:testcode:2:32",
-        "",
-        "[goog.place.getUniqueId]",
-        "",
-        "");
-    testMap("var x = goog.events.getUniqueId('xxx');\n" +
-            "var y = goog.events.getUniqueId('yyy');\n",
-
-            "var x = 'previous1';\n" +
-            "var y = 'previous2';\n",
-
-            "[goog.events.getUniqueId]\n" +
-            "\n" +
-            "previous1:testcode:1:32\n" +
-            "previous2:testcode:2:32\n" +
-            "\n");
+    previousMappings =
+        lines(
+            "[goog.events.getUniqueId]",
+            "",
+            "previous1:testcode:1:32",
+            "previous2:testcode:2:32",
+            "",
+            "[goog.place.getUniqueId]",
+            "",
+            "");
+    testMap(
+        "var x = goog.events.getUniqueId('xxx');\n" + "var y = goog.events.getUniqueId('yyy');\n",
+        "var x = 'previous1';\n" + "var y = 'previous2';\n",
+        "[goog.events.getUniqueId]\n"
+            + "\n"
+            + "previous1:testcode:1:32\n"
+            + "previous2:testcode:2:32\n"
+            + "\n");
   }
 
   @Test
   public void testReusePreviousSerialization2() {
     previousMappings =
-        "[goog.events.getUniqueId]\n" +
-        "\n" +
-        "a:testcode:1:32\n" +
-        "b:testcode:2:32\n" +
-        "\n" +
-        "[goog.place.getUniqueId]\n" +
-        "\n" +
-        "\n";
+        "[goog.events.getUniqueId]\n"
+            + "\n"
+            + "a:testcode:1:32\n"
+            + "b:testcode:2:32\n"
+            + "\n"
+            + "[goog.place.getUniqueId]\n"
+            + "\n"
+            + "\n";
     testMap(
-        "var x = goog.events.getUniqueId('xxx');\n" +
-        "\n" + // new line to change location
-        "var y = goog.events.getUniqueId('yyy');\n",
-
-        "var x = 'a';\n" +
-        "var y = 'c';\n",
-
-        "[goog.events.getUniqueId]\n" +
-        "\n" +
-        "a:testcode:1:32\n" +
-        "c:testcode:3:32\n" +
-        "\n");
+        "var x = goog.events.getUniqueId('xxx');\n"
+            + "\n"
+            + // new line to change location
+            "var y = goog.events.getUniqueId('yyy');\n",
+        "var x = 'a';\n" + "var y = 'c';\n",
+        "[goog.events.getUniqueId]\n" + "\n" + "a:testcode:1:32\n" + "c:testcode:3:32\n" + "\n");
   }
 
   @Test
   public void testReusePreviousSerializationConsistent1() {
-    previousMappings =
-        "[id]\n" +
-        "\n" +
-        "a:f1\n" +
-        "\n";
+    previousMappings = "[id]\n" + "\n" + "a:f1\n" + "\n";
     testMap(
         lines(
             "/** @idGenerator {consistent} */ id = function() {};",
@@ -196,12 +171,8 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         lines(
             "/** @idGenerator */ foo.getUniqueId = function() {};",
             "foo.bar = foo.getUniqueId('foo_bar')"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};",
-            "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};",
-            "foo.bar = 'foo_bar$0'"));
+        lines("/** @idGenerator */ foo.getUniqueId = function() {};", "foo.bar = 'a'"),
+        lines("/** @idGenerator */ foo.getUniqueId = function() {};", "foo.bar = 'foo_bar$0'"));
 
     testWithPseudo(
         lines(
@@ -250,8 +221,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "/** @idGenerator */ goog.id = function() {};",
             "things = goog.id({foo1: 'test', 'foo bar': 'test'})"),
         lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = {'a': 'test', 'b': 'test'}"),
+            "/** @idGenerator */ goog.id = function() {};", "things = {'a': 'test', 'b': 'test'}"),
         lines(
             "/** @idGenerator */ goog.id = function() {};",
             "things = {'foo1$0': 'test', 'foo bar$1': 'test'}"));
@@ -293,37 +263,29 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         lines(
             "/** @idGenerator */ goog.id = function() {};",
             "things = goog.id({foo: function() {}})"),
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = {'a': function() {}}"),
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = {'foo$0': function() {}}"));
+        lines("/** @idGenerator */ goog.id = function() {};", "things = {'a': function() {}}"),
+        lines("/** @idGenerator */ goog.id = function() {};", "things = {'foo$0': function() {}}"));
 
     testWithPseudo(
         lines(
             "/** @idGenerator */ goog.id = function() {};",
             "things = goog.id({foo: function*() {}})"),
+        lines("/** @idGenerator */ goog.id = function() {};", "things = {'a': function*() {}}"),
         lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = {'a': function*() {}}"),
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = {'foo$0': function*() {}}"));
+            "/** @idGenerator */ goog.id = function() {};", "things = {'foo$0': function*() {}}"));
   }
 
   @Test
   public void testObjectLit_ES6() {
-    testError(lines(
-        "/** @idGenerator */",
-        "goog.id = function() {};",
-        "things = goog.id({fooX() {}})"),
+    testError(
+        lines("/** @idGenerator */", "goog.id = function() {};", "things = goog.id({fooX() {}})"),
         ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
 
-    testError(lines(
-        "/** @idGenerator */",
-        "goog.id = function() {};",
-        "things = goog.id({['fooX']: 'test'})"),
+    testError(
+        lines(
+            "/** @idGenerator */",
+            "goog.id = function() {};",
+            "things = goog.id({['fooX']: 'test'})"),
         ReplaceIdGenerators.COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN);
   }
 
@@ -387,10 +349,8 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         lines("/** @idGenerator {xid} */ id = function() {};", "foo.bar = 'QB6rXc'"));
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {xid} */ id = function() {};", "f1 = id('foo');", "f1 = id('foo')"),
-        lines(
-            "/** @idGenerator {xid} */ id = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
+        lines("/** @idGenerator {xid} */ id = function() {};", "f1 = id('foo');", "f1 = id('foo')"),
+        lines("/** @idGenerator {xid} */ id = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
   }
 
   @Test
@@ -452,21 +412,16 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         lines("/** @idGenerator {stable} */ get.id = function() {};", "foo.bar = {a: '125lGg'}"));
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: get.id('foo')}"),
-        lines(
-            "/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: 'QB6rXc'}"));
+        lines("/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: get.id('foo')}"),
+        lines("/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: 'QB6rXc'}"));
   }
 
   @Test
   public void testInObjLit_mapped() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: id('foo')}"),
-        lines(
-            "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"),
-        lines(
-            "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"));
+        lines("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: id('foo')}"),
+        lines("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"),
+        lines("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"));
   }
 
   @Test
@@ -568,39 +523,37 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testNonLiteralParam1() {
-    testSame("/** @idGenerator */ var id = function() {}; "
-            + "var x = 'foo';"
-            + "id(x);",
+    testSame(
+        "/** @idGenerator */ var id = function() {}; " + "var x = 'foo';" + "id(x);",
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testNonLiteralParam2() {
-    testSame("/** @idGenerator */ var id = function() {}; "
-            + "id('foo' + 'bar');",
+    testSame(
+        "/** @idGenerator */ var id = function() {}; " + "id('foo' + 'bar');",
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testLocalCall() {
-    testError("/** @idGenerator */ var id = function() {}; "
-            + "function Foo() { id('foo'); }",
+    testError(
+        "/** @idGenerator */ var id = function() {}; " + "function Foo() { id('foo'); }",
         ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
   @Test
   public void testConditionalCall() {
     testError(
-        lines(
-            "/** @idGenerator */", "var id = function() {}; ", "while(0){ id('foo');}"),
+        lines("/** @idGenerator */", "var id = function() {}; ", "while(0){ id('foo');}"),
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testError(
         lines("/** @idGenerator */", "var id = function() {}; ", "for(;;){ id('foo');}"),
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
-    testError("/** @idGenerator */ var id = function() {}; "
-            + "if(x) id('foo');",
+    testError(
+        "/** @idGenerator */ var id = function() {}; " + "if(x) id('foo');",
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testWithPseudo(
@@ -624,9 +577,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
     testError(
         lines(
-            "/** @idGenerator */",
-            "var id = function() {}; ",
-            "for(x of [1, 2, 3]){ id('foo');}"),
+            "/** @idGenerator */", "var id = function() {}; ", "for(x of [1, 2, 3]){ id('foo');}"),
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
   }
 
@@ -658,18 +609,18 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testUnknownMapping() {
-    testSame(lines(
-        "/** @idGenerator {mapped} */",
-        "var unknownId = function() {};",
-        "function Foo() { unknownId('foo'); }"),
+    testSame(
+        lines(
+            "/** @idGenerator {mapped} */",
+            "var unknownId = function() {};",
+            "function Foo() { unknownId('foo'); }"),
         ReplaceIdGenerators.MISSING_NAME_MAP_FOR_GENERATOR);
   }
 
   @Test
   public void testBadGenerator1() {
-    testSame("/** @idGenerator */ id = function() {};" +
-         "foo.bar = id()",
-         INVALID_GENERATOR_PARAMETER);
+    testSame(
+        "/** @idGenerator */ id = function() {};" + "foo.bar = id()", INVALID_GENERATOR_PARAMETER);
   }
 
   @Test

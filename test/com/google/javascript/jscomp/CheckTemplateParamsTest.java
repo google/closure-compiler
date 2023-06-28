@@ -88,9 +88,7 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
   public void testArray() {
     testSame("/** @type {!Array} */ var x;");
     testSame("/** @type {!Array<string>} */ var x;");
-    test(
-        srcs("/** @type {!Array<string, number>} */ var x;"),
-        warning(TOO_MANY_TEMPLATE_PARAMS));
+    test(srcs("/** @type {!Array<string, number>} */ var x;"), warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 
   @Test
@@ -107,19 +105,22 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
   public void testClass() {
     testSame("/** @constructor */ function SomeClass() {}; /** @type {!SomeClass} */ var x;");
     test(
-        srcs(lines(
-            "/** @constructor */ function SomeClass() {};",
-            "/** @type {!SomeClass<string>} */ var x;")),
+        srcs(
+            lines(
+                "/** @constructor */ function SomeClass() {};",
+                "/** @type {!SomeClass<string>} */ var x;")),
         warning(TOO_MANY_TEMPLATE_PARAMS));
 
-    testSame(lines(
-        "/** @constructor @template T */ function SomeClass() {};",
-        "/** @type {!SomeClass<string>} */ var x;"));
+    testSame(
+        lines(
+            "/** @constructor @template T */ function SomeClass() {};",
+            "/** @type {!SomeClass<string>} */ var x;"));
 
     test(
-        srcs(lines(
-            "/** @constructor @template T */ function SomeClass() {};",
-            "/** @type {!SomeClass<number, string>} */ var x;")),
+        srcs(
+            lines(
+                "/** @constructor @template T */ function SomeClass() {};",
+                "/** @type {!SomeClass<number, string>} */ var x;")),
         warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 

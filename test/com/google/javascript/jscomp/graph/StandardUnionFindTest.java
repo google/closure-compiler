@@ -28,10 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit test for the {@link StandardUnionFind} data structure.
- *
- */
+/** Unit test for the {@link StandardUnionFind} data structure. */
 @RunWith(JUnit4.class)
 public final class StandardUnionFindTest {
   private StandardUnionFind<String> union;
@@ -104,8 +101,9 @@ public final class StandardUnionFindTest {
     union.union("F", "F");
 
     ImmutableList<ImmutableSet<String>> classes = union.allEquivalenceClasses();
-    assertThat(classes).containsExactly(
-        ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
+    assertThat(classes)
+        .containsExactly(
+            ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
   }
 
   @Test

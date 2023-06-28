@@ -25,16 +25,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CheckPathsBetweenNodes}.
- *
- */
+/** Tests for {@link CheckPathsBetweenNodes}. */
 @RunWith(JUnit4.class)
 public final class CheckPathsBetweenNodesTest {
 
-  /**
-   * Predicate satisfied by strings with a given prefix.
-   */
+  /** Predicate satisfied by strings with a given prefix. */
   private static class PrefixPredicate implements Predicate<String> {
     final String prefix;
 
@@ -50,11 +45,9 @@ public final class CheckPathsBetweenNodesTest {
 
   private static final Predicate<String> FALSE = Predicates.alwaysFalse();
 
-  private static final Predicate<DiGraphEdge<String, String>> ALL_EDGE =
-      Predicates.alwaysTrue();
+  private static final Predicate<DiGraphEdge<String, String>> ALL_EDGE = Predicates.alwaysTrue();
 
-  private static final Predicate<DiGraphEdge<String, String>> NO_EDGE =
-    Predicates.alwaysFalse();
+  private static final Predicate<DiGraphEdge<String, String>> NO_EDGE = Predicates.alwaysFalse();
 
   /** Tests straight-line graphs. */
   @Test
@@ -72,7 +65,7 @@ public final class CheckPathsBetweenNodesTest {
 
     // Simple case: the sole path from a to d has a matching node.
     assertGood(createTest(g, "a", "d", Predicates.equalTo("b"), edgeIs("-")));
-    //Test two edge cases where satisfying node is the first and last node on
+    // Test two edge cases where satisfying node is the first and last node on
     // the path.
     assertGood(createTest(g, "a", "d", Predicates.equalTo("a"), edgeIs("-")));
     assertGood(createTest(g, "a", "d", Predicates.equalTo("d"), edgeIs("-")));
@@ -115,12 +108,12 @@ public final class CheckPathsBetweenNodesTest {
     g.createNode("c3");
     g.createNode("d");
 
-    g.connect("a",  "-", "b");
-    g.connect("b",  "-", "c1");
-    g.connect("b",  "-", "c2");
+    g.connect("a", "-", "b");
+    g.connect("b", "-", "c1");
+    g.connect("b", "-", "c2");
     g.connect("c2", "-", "d");
     g.connect("c1", "-", "d");
-    g.connect("a",  "-", "c3");
+    g.connect("a", "-", "c3");
     g.connect("c3", "-", "d");
 
     assertGood(createTest(g, "a", "d", new PrefixPredicate("c"), ALL_EDGE));
@@ -266,8 +259,7 @@ public final class CheckPathsBetweenNodesTest {
     g.connect("4a", "-", "5");
     g.connect("4b", "-", "5");
 
-    CountingPredicate<String> p =
-      new CountingPredicate<>(Predicates.equalTo("4a"));
+    CountingPredicate<String> p = new CountingPredicate<>(Predicates.equalTo("4a"));
 
     assertThat(createTest(g, "1", "5", p, ALL_EDGE).somePathsSatisfyPredicate()).isTrue();
 
@@ -316,13 +308,12 @@ public final class CheckPathsBetweenNodesTest {
         graph, graph.getNode(entry), graph.getNode(exit), nodePredicate, edgePredicate);
   }
 
-  private static CheckPathsBetweenNodes<String, String>
-      createNonInclusiveTest(
-        DiGraph<String, String> graph,
-        String entry,
-        String exit,
-        Predicate<String> nodePredicate,
-        Predicate<DiGraphEdge<String, String>> edgePredicate) {
+  private static CheckPathsBetweenNodes<String, String> createNonInclusiveTest(
+      DiGraph<String, String> graph,
+      String entry,
+      String exit,
+      Predicate<String> nodePredicate,
+      Predicate<DiGraphEdge<String, String>> edgePredicate) {
     return new CheckPathsBetweenNodes<>(
         graph, graph.getNode(entry), graph.getNode(exit), nodePredicate, edgePredicate, false);
   }
@@ -339,6 +330,7 @@ public final class CheckPathsBetweenNodesTest {
     private CountingPredicate(Predicate<T> delegate) {
       this.delegate = delegate;
     }
+
     @Override
     public boolean apply(T input) {
       count++;

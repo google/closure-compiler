@@ -30,7 +30,6 @@ import org.junit.runners.JUnit4;
 /**
  * This file contains the only tests that use the infrastructure in CompilerTestCase to run multiple
  * passes and do validity checks. The other files that use CompilerTestCase unit test a single pass.
- *
  */
 @RunWith(JUnit4.class)
 public final class MultiPassTest extends CompilerTestCase {
@@ -72,8 +71,7 @@ public final class MultiPassTest extends CompilerTestCase {
     passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
-    test("function f() { var x = 1; return x + 5; }",
-        "function f() { return 6; }");
+    test("function f() { var x = 1; return x + 5; }", "function f() { return 6; }");
   }
 
   @Test
@@ -100,16 +98,14 @@ public final class MultiPassTest extends CompilerTestCase {
   public void testCollapseObjectLiteralsScopeChange() {
     passes = new ArrayList<>();
     addCollapseObjectLiterals();
-    test("function f() {" +
-        "  var obj = { x: 1 };" +
-        "  var z = function() { return obj.x; }" +
-        "}",
-        "function f(){" +
-        "  var JSCompiler_object_inline_x_0 = 1;" +
-        "  var z = function(){" +
-        "    return JSCompiler_object_inline_x_0;" +
-        "  }" +
-        "}");
+    test(
+        "function f() {" + "  var obj = { x: 1 };" + "  var z = function() { return obj.x; }" + "}",
+        "function f(){"
+            + "  var JSCompiler_object_inline_x_0 = 1;"
+            + "  var z = function(){"
+            + "    return JSCompiler_object_inline_x_0;"
+            + "  }"
+            + "}");
   }
 
   @Test
@@ -125,12 +121,9 @@ public final class MultiPassTest extends CompilerTestCase {
   public void testRemoveUnusedVariablesScopeChange() {
     passes = new ArrayList<>();
     addRemoveUnusedVars();
-    test("function f() { var x; }",
-        "function f() {}");
-    test("function g() { function f(x, y) { return 1; } }",
-        "function g() {}");
-    test("function f() { var x = 123; }",
-        "function f() {}");
+    test("function f() { var x; }", "function f() {}");
+    test("function g() { function f(x, y) { return 1; } }", "function g() {}");
+    test("function f() { var x = 123; }", "function f() {}");
   }
 
   @Test

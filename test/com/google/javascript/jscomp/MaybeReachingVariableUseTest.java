@@ -223,10 +223,8 @@ public final class MaybeReachingVariableUseTest {
 
   @Test
   public void testTryCatch() {
-    assertMatch(""
-        + "D: var x = 1; "
-        + "try { U: var y = foo() + x; } catch (e) {} "
-        + "U: var z = x;");
+    assertMatch(
+        "" + "D: var x = 1; " + "try { U: var y = foo() + x; } catch (e) {} " + "U: var z = x;");
 
     assertMatch("" + "D: var x = 1; " + "try { x=2; U: var y = foo() + x; } catch (e) {} ");
 

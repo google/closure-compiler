@@ -53,10 +53,7 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
-    return new ReferenceCollector(
-        compiler,
-        this.behavior,
-        scopeCreator);
+    return new ReferenceCollector(compiler, this.behavior, scopeCreator);
   }
 
   @Override
@@ -182,14 +179,7 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testVarInBlock() {
     testBehavior(
-        lines(
-            "function f(x) {",
-            "  if (true) {",
-            "    var y = x;",
-            "    y;",
-            "    y;",
-            "  }",
-            "}"),
+        lines("function f(x) {", "  if (true) {", "    var y = x;", "    y;", "    y;", "  }", "}"),
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -315,35 +305,15 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
           }
         };
     testBehavior(
-        lines(
-            "try {",
-            "} catch (e) {",
-            "  var y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
-        behavior);
+        lines("try {", "} catch (e) {", "  var y = e;", "  g();", "  y;y;", "}"), behavior);
     testBehavior(
-        lines(
-            "try {",
-            "} catch (e) {",
-            "  var y; y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
-        behavior);
+        lines("try {", "} catch (e) {", "  var y; y = e;", "  g();", "  y;y;", "}"), behavior);
   }
 
   @Test
   public void testLetAssignedOnceInLifetime1() {
     testBehavior(
-        lines(
-            "try {",
-            "} catch (e) {",
-            "  let y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
+        lines("try {", "} catch (e) {", "  let y = e;", "  g();", "  y;y;", "}"),
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -361,13 +331,7 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testLetAssignedOnceInLifetime2() {
     testBehavior(
-        lines(
-            "try {",
-            "} catch (e) {",
-            "  let y; y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
+        lines("try {", "} catch (e) {", "  let y; y = e;", "  g();", "  y;y;", "}"),
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -385,12 +349,7 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testBasicBlocks() {
     testBehavior(
-        lines(
-            "var x = 0;",
-            "switch (x) {",
-            "  case 0:",
-            "    x;",
-            "}"),
+        lines("var x = 0;", "switch (x) {", "  case 0:", "    x;", "}"),
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {

@@ -56,9 +56,7 @@ public final class LazyParsedDependencyInfoTest {
     compiler.initOptions(new CompilerOptions());
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "// nothing here"));
     SimpleDependencyInfo delegate =
-        SimpleDependencyInfo.builder("", "")
-            .setLoadFlags(ImmutableMap.of("foo", "bar"))
-            .build();
+        SimpleDependencyInfo.builder("", "").setLoadFlags(ImmutableMap.of("foo", "bar")).build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     // TODO(sdh): We're currently stuck on an earlier version of Truth that doesn't
@@ -91,9 +89,7 @@ public final class LazyParsedDependencyInfoTest {
     compiler.initOptions(new CompilerOptions());
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "class X {}"));
     SimpleDependencyInfo delegate =
-        SimpleDependencyInfo.builder("", "")
-            .setLoadFlags(ImmutableMap.of("foo", "bar"))
-            .build();
+        SimpleDependencyInfo.builder("", "").setLoadFlags(ImmutableMap.of("foo", "bar")).build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
@@ -106,9 +102,7 @@ public final class LazyParsedDependencyInfoTest {
     compiler.initOptions(new CompilerOptions());
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "let [a, b] = [1, 2];"));
     SimpleDependencyInfo delegate =
-        SimpleDependencyInfo.builder("", "")
-            .setLoadFlags(ImmutableMap.of("foo", "bar"))
-            .build();
+        SimpleDependencyInfo.builder("", "").setLoadFlags(ImmutableMap.of("foo", "bar")).build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
@@ -120,8 +114,7 @@ public final class LazyParsedDependencyInfoTest {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "parse error"));
-    SimpleDependencyInfo delegate =
-        SimpleDependencyInfo.builder("", "").build();
+    SimpleDependencyInfo delegate = SimpleDependencyInfo.builder("", "").build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     info.getName();

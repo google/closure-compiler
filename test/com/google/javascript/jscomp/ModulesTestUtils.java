@@ -39,8 +39,7 @@ final class ModulesTestUtils {
     test.test(CompilerTestCase.srcs(inputs), CompilerTestCase.expected(expecteds));
   }
 
-  static void testModulesError(
-      CompilerTestCase test, String input, DiagnosticType error) {
+  static void testModulesError(CompilerTestCase test, String input, DiagnosticType error) {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));

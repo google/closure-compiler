@@ -2325,6 +2325,7 @@ public abstract class CompilerTestCase {
       this.expected = files;
     }
   }
+
   // TODO(sdh): make a shorter function to get this - e.g. same(), expectSame(), sameOutput() ?
   // TODO(sdh): also make an ignoreOutput() and noOutput() ?
   private static final Expected EXPECTED_SAME = new Expected(null);

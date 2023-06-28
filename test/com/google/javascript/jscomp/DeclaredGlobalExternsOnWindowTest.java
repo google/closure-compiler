@@ -203,27 +203,17 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Test
   public void testWindowPropertyWithJsDoc() {
     testSame(
-        externs(lines(
-            MINIMAL_EXTERNS,
-            "var window;",
-            "/** @type {string} */ var x;")),
-        srcs(lines(
-            "/** @param {number} n*/",
-            "function f(n) {}",
-            "f(window.x);")),
+        externs(lines(MINIMAL_EXTERNS, "var window;", "/** @type {string} */ var x;")),
+        srcs(lines("/** @param {number} n*/", "function f(n) {}", "f(window.x);")),
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   @Test
   public void testEnum() {
     testSame(
-        externs(lines(
-            MINIMAL_EXTERNS,
-            "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};")),
-        srcs(lines(
-            "/** @param {Enum} e*/",
-            "function f(e) {}",
-            "f(window.Enum.FOO);")));
+        externs(
+            lines(MINIMAL_EXTERNS, "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};")),
+        srcs(lines("/** @param {Enum} e*/", "function f(e) {}", "f(window.Enum.FOO);")));
   }
 
   /**
@@ -233,22 +223,11 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Test
   public void testConstructorIsSameType() {
     testSame(
-        externs(lines(
-            MINIMAL_EXTERNS,
-            "var window;",
-            "/** @constructor */ function Foo() {}")),
-        srcs(lines(
-            "/** @param {!window.Foo} f*/",
-            "function bar(f) {}",
-            "bar(new Foo());")));
+        externs(lines(MINIMAL_EXTERNS, "var window;", "/** @constructor */ function Foo() {}")),
+        srcs(lines("/** @param {!window.Foo} f*/", "function bar(f) {}", "bar(new Foo());")));
 
     testSame(
-        externs(lines(
-            MINIMAL_EXTERNS,
-            "/** @constructor */ function Foo() {}")),
-        srcs(lines(
-            "/** @param {!Foo} f*/",
-            "function bar(f) {}",
-            "bar(new window.Foo());")));
+        externs(lines(MINIMAL_EXTERNS, "/** @constructor */ function Foo() {}")),
+        srcs(lines("/** @param {!Foo} f*/", "function bar(f) {}", "bar(new window.Foo());")));
   }
 }

@@ -537,9 +537,7 @@ public final class ModuleLoaderTest {
                         .buildOrThrow()))
             .build();
 
-    assertUri(
-        "index.js",
-        loader.resolve("fake.js").resolveModuleAsPath("@project0/index.js"));
+    assertUri("index.js", loader.resolve("fake.js").resolveModuleAsPath("@project0/index.js"));
     assertUri(
         "foo/bar/index.js",
         loader.resolve("fake.js").resolveModuleAsPath("+project1/foo/bar/index.js"));

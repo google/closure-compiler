@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link Es6RenameVariablesInParamLists}.
- *
- */
+/** Test case for {@link Es6RenameVariablesInParamLists}. */
 @RunWith(JUnit4.class)
 public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
@@ -55,8 +52,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
   @Test
   public void testRenameVar() {
     ignoreWarnings(TypeCheck.FUNCTION_MASKS_VARIABLE);
-    test("var x = 5; function f(y=x) { var x; }",
-        "var x = 5; function f(y=x) { var x$0; }");
+    test("var x = 5; function f(y=x) { var x; }", "var x = 5; function f(y=x) { var x$0; }");
 
     test(
         lines(
@@ -111,20 +107,15 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
 
     test(
-        lines(
-            "var x = 4;", "function f(a=x) { let x = 5; { let x = 99; } return a + x; }"),
-        lines(
-            "var x = 4;", "function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }"));
-
+        lines("var x = 4;", "function f(a=x) { let x = 5; { let x = 99; } return a + x; }"),
+        lines("var x = 4;", "function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }"));
   }
 
   @Test
   public void testRenameFunction() {
     test(
-        lines(
-            "function x() {}", "function f(y=x()) {", "  x();", "  function x() {}", "}"),
-        lines(
-            "function x() {}", "function f(y=x()) {", "  x$0();", "  function x$0() {}", "}"));
+        lines("function x() {}", "function f(y=x()) {", "  x();", "  function x() {}", "}"),
+        lines("function x() {}", "function f(y=x()) {", "  x$0();", "  function x$0() {}", "}"));
   }
 
   @Test
@@ -231,7 +222,8 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
   @Test
   public void testArrow() {
     testSame("var x = true; var f = (a=x) => x;");
-    test("var x = true; var f = (a=x) => { var x = false; return a; }",
+    test(
+        "var x = true; var f = (a=x) => { var x = false; return a; }",
         "var x = true; var f = (a=x) => { var x$0 = false; return a; }");
   }
 }

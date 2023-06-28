@@ -79,7 +79,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     test(code, expected, warning);
   }
 
-
   @Test
   public void testBasic1() {
     testRewrite(

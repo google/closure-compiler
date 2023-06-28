@@ -21,10 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CheckMissingReturn}.
- *
- */
+/** Tests for {@link CheckMissingReturn}. */
 @RunWith(JUnit4.class)
 public final class CheckMissingReturnTest extends CompilerTestCase {
 
@@ -81,8 +78,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("try {} catch (e) {} finally {return foo()};");
 
     // Nested function.
-    testNotMissing(
-        "/** @return {number} */ function f() { return 1; }; return 1;");
+    testNotMissing("/** @return {number} */ function f() { return 1; }; return 1;");
 
     // Strange tests that come up when reviewing closure code.
     testNotMissing("try { return 12; } finally { return 62; }");
@@ -117,8 +113,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("try { return 1; } finally { while (true) { } }");
     testMissing("try { } finally { while (x) { } }");
     testMissing("try { } finally { while (x) { if (x) { break; } } }");
-    testNotMissing(
-        "try { return 2; } finally { while (x) { if (x) { break; } } }");
+    testNotMissing("try { return 2; } finally { while (x) { if (x) { break; } } }");
 
     // Test various cases with nested try statements.
     testMissing("try { } finally { try { } finally { } }");
@@ -213,9 +208,10 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   public void testConstructors() {
     testSame("/** @constructor */ function foo() {} ");
 
-    final String constructorWithReturn = "/** @constructor \n" +
-        " * @return {!foo} */ function foo() {" +
-        " if (!(this instanceof foo)) { return new foo; } }";
+    final String constructorWithReturn =
+        "/** @constructor \n"
+            + " * @return {!foo} */ function foo() {"
+            + " if (!(this instanceof foo)) { return new foo; } }";
     testSame(constructorWithReturn);
   }
 
@@ -228,8 +224,8 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
     testNotMissing(closureDefs + "goog.asserts.fail('');");
 
-    testNotMissing(closureDefs
-        + "switch (x) { case 1: return 1; default: goog.asserts.fail(''); }");
+    testNotMissing(
+        closureDefs + "switch (x) { case 1: return 1; default: goog.asserts.fail(''); }");
   }
 
   @Test
@@ -243,13 +239,9 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     return "/** @return {" + returnType + "} */ function foo() {" + body + "}";
   }
 
-  private static String createShorthandFunctionInObjLit(
-      String returnType, String body) {
+  private static String createShorthandFunctionInObjLit(String returnType, String body) {
     return lines(
-        "var obj = {",
-        "  /** @return {" + returnType + "} */",
-        "  foo() {", body, "}",
-        "}");
+        "var obj = {", "  /** @return {" + returnType + "} */", "  foo() {", body, "}", "}");
   }
 
   private void testMissingInTraditionalFunction(String returnType, String body) {
@@ -308,8 +300,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Test
   public void testArrowFunctions_block() {
     testSame(
-        lines(
-            "/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { return 0; }}"));
+        lines("/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { return 0; }}"));
   }
 
   @Test

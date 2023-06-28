@@ -20,22 +20,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for variable declaration collapsing.
- *
- */
+/** Tests for variable declaration collapsing. */
 @RunWith(JUnit4.class)
 public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
   @Test
   public void testCollapsing() {
     // Basic collapsing
-    test("var a;var b;",
-         "var a,b;");
+    test("var a;var b;", "var a,b;");
 
     // With initial values
-    test("var a = 1;var b = 1;",
-         "var a=1,b=1;");
+    test("var a = 1;var b = 1;", "var a=1,b=1;");
 
     // Already collapsed
     testSame("var a, b;");
@@ -44,12 +39,10 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("var a = 1, b = 1;");
 
     // Some already collapsed
-    test("var a;var b, c;var d;",
-         "var a,b,c,d;");
+    test("var a;var b, c;var d;", "var a,b,c,d;");
 
     // Some already collapsed with values
-    test("var a = 1;var b = 2, c = 3;var d = 4;",
-         "var a=1,b=2,c=3,d=4;");
+    test("var a = 1;var b = 2, c = 3;var d = 4;", "var a=1,b=2,c=3,d=4;");
 
     test(
         "var x = 2; foo(x); x = 3; x = 1; var y = 2; var z = 4; x = 5",
@@ -77,16 +70,13 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
   @Test
   public void testIssue397() {
-    test("var x; var y = 3; x = 5;",
-         "var x, y = 3; x = 5;");
+    test("var x; var y = 3; x = 5;", "var x, y = 3; x = 5;");
 
     testSame("var x; x = 5; var z = 7;");
 
-    test("var x; var y = 3; x = 5; var z = 7;",
-         "var x, y = 3; x = 5; var z = 7;");
+    test("var x; var y = 3; x = 5; var z = 7;", "var x, y = 3; x = 5; var z = 7;");
 
-    test("var a = 1; var x; var y = 3; x = 5;",
-         "var a = 1, x, y = 3; x = 5;");
+    test("var a = 1; var x; var y = 3; x = 5;", "var a = 1, x, y = 3; x = 5;");
   }
 
   @Test
@@ -98,12 +88,10 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
   @Test
   public void testCollapsingLetConst() {
     // Basic collapsing
-    test("let a;let b;",
-         "let a,b;");
+    test("let a;let b;", "let a,b;");
 
     // With initial values
-    test("const a = 1;const b = 1;",
-         "const a=1,b=1;");
+    test("const a = 1;const b = 1;", "const a=1,b=1;");
 
     // Already collapsed
     testSame("let a, b;");
@@ -112,12 +100,10 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("let a = 1, b = 1;");
 
     // Some already collapsed
-    test("let a;let b, c;let d;",
-         "let a,b,c,d;");
+    test("let a;let b, c;let d;", "let a,b,c,d;");
 
     // Some already collapsed with values
-    test("let a = 1;let b = 2, c = 3;let d = 4;",
-         "let a=1,b=2,c=3,d=4;");
+    test("let a = 1;let b = 2, c = 3;let d = 4;", "let a=1,b=2,c=3,d=4;");
 
     // Different variable types
     testSame("let a = 1; const b = 2;");
@@ -153,8 +139,7 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunction() {
-    test("() => {let x = 1; let y = 2; x + y; }",
-         "() => {let x = 1, y = 2; x + y; }");
+    test("() => {let x = 1; let y = 2; x + y; }", "() => {let x = 1, y = 2; x + y; }");
 
     // do not redeclare function parameters
     // incompatible with strict mode
@@ -170,13 +155,11 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
   @Test
   public void testMixedDeclarationTypes() {
-    //lets, vars, const declarations consecutive
+    // lets, vars, const declarations consecutive
 
-    test("let x = 1; let z = 3; var y = 2;",
-         "let x = 1, z = 3; var y = 2;");
+    test("let x = 1; let z = 3; var y = 2;", "let x = 1, z = 3; var y = 2;");
 
-    test("let x = 1; let y = 2; var z = 3; var a = 4;",
-         "let x = 1, y = 2; var z = 3, a = 4");
+    test("let x = 1; let y = 2; var z = 3; var a = 4;", "let x = 1, y = 2; var z = 3, a = 4");
   }
 
   @Override

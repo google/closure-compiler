@@ -33,12 +33,8 @@ public final class GoogleCodingConventionTest {
 
   @Test
   public void testVarAndOptionalParams() {
-    Node args = IR.paramList(
-        IR.name("a"),
-        IR.name("b"));
-    Node optArgs = IR.paramList(
-        IR.name("opt_a"),
-        IR.name("opt_b"));
+    Node args = IR.paramList(IR.name("a"), IR.name("b"));
+    Node optArgs = IR.paramList(IR.name("opt_a"), IR.name("opt_b"));
     Node rest = IR.paramList(IR.iterRest(IR.name("more")));
 
     assertThat(conv.isVarArgsParameter(args.getFirstChild())).isFalse();
@@ -199,11 +195,9 @@ public final class GoogleCodingConventionTest {
     assertThat(conv.getClassesDefinedByCall(n.getFirstChild())).isNull();
   }
 
-  private void assertDefinesClasses(String code, String subclassName,
-      String superclassName) {
+  private void assertDefinesClasses(String code, String subclassName, String superclassName) {
     Node n = parseTestCode(code);
-    SubclassRelationship classes =
-        conv.getClassesDefinedByCall(n.getFirstChild());
+    SubclassRelationship classes = conv.getClassesDefinedByCall(n.getFirstChild());
     assertThat(classes).isNotNull();
     assertThat(classes.subclassName).isEqualTo(subclassName);
     assertThat(classes.superclassName).isEqualTo(superclassName);

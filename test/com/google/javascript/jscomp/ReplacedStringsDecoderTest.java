@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for ReplacedStringsDecoder.
- *
- */
+/** Tests for ReplacedStringsDecoder. */
 @RunWith(JUnit4.class)
 public class ReplacedStringsDecoderTest {
 
@@ -35,9 +32,7 @@ public class ReplacedStringsDecoderTest {
 
   private void verifyDecoder(String original, String replacement, String args) {
     String encoding = "Xy"; // an arbitrary encoding for the test
-    VariableMap variableMap = VariableMap.fromMap(ImmutableMap.of(
-        encoding, replacement
-    ));
+    VariableMap variableMap = VariableMap.fromMap(ImmutableMap.of(encoding, replacement));
     ReplacedStringsDecoder decoder = new ReplacedStringsDecoder(variableMap);
     assertThat(decoder.decode(encoding + args)).isEqualTo(original);
   }

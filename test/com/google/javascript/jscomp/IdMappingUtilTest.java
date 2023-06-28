@@ -32,7 +32,8 @@ public final class IdMappingUtilTest {
   @Test
   public void testParseIdMapping() {
     StringBuilder mapping = new StringBuilder();
-    mapping.append("[gen1]")
+    mapping
+        .append("[gen1]")
         .append(NEW_LINE)
         .append("id1:data1")
         .append(NEW_LINE)

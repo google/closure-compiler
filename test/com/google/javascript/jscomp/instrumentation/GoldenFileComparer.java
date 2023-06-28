@@ -41,9 +41,9 @@ public final class GoldenFileComparer {
           + "com/google/javascript/jscomp/testdata/";
 
   private static ImmutableList<SourceFile> coverageExterns() {
-    SourceFile externs = SourceFile.fromCode(
-        "externs", "function Symbol() {}; var window; var self;");
-      return ImmutableList.of(externs);
+    SourceFile externs =
+        SourceFile.fromCode("externs", "function Symbol() {}; var window; var self;");
+    return ImmutableList.of(externs);
   }
 
   private static String compile(
@@ -64,7 +64,7 @@ public final class GoldenFileComparer {
 
   private static SourceFile readSource(String fileName) throws IOException {
     String source = readFile(toFullPath(fileName));
-   return SourceFile.fromCode(fileName, source);
+    return SourceFile.fromCode(fileName, source);
   }
 
   private static boolean compare(String compiledSource, String goldenSource) {

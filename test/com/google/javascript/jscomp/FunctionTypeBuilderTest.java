@@ -24,10 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {@link FunctionTypeBuilder}.
- *
- */
+/** Unit tests for {@link FunctionTypeBuilder}. */
 @RunWith(JUnit4.class)
 public final class FunctionTypeBuilderTest extends CompilerTestCase {
 
@@ -43,9 +40,9 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     // By turning on type checking, the FunctionTypeBuilder will be invoked.
     return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node js) {}
-        };
+      @Override
+      public void process(Node externs, Node js) {}
+    };
   }
 
   @Test

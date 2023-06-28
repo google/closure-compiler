@@ -43,12 +43,10 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   /**
-   * Returns the number of times the pass should be run before results are
-   * verified.
+   * Returns the number of times the pass should be run before results are verified.
    *
-   * This pass is not idempotent so we only run it once.
+   * <p>This pass is not idempotent so we only run it once.
    */
-
   @Test
   public void testSimpleAliasInJSDoc_isUnchanged() {
     testSame("/** @constructor */ function Foo(){} const alias = Foo; /** @type {alias} */ var x;");
@@ -153,11 +151,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testAliasCycleError() {
-    testError(
-        lines(
-            "/** @const */ var x = y;",
-            "/** @const */ var y = x;"),
-        ALIAS_CYCLE);
+    testError(lines("/** @const */ var x = y;", "/** @const */ var y = x;"), ALIAS_CYCLE);
   }
 
   @Test
@@ -422,14 +416,8 @@ public class InlineAliasesTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuringAssignWithoutDeclaration() {
     test(
-        lines(
-            "var Foo = class {};",
-            "var /** @const */ A = Foo;",
-            "({a, b} = {a: A, b: A});"),
-        lines(
-            "var Foo = class {};",
-            "var /** @const */ A = Foo;",
-            "({a, b} = {a: Foo, b: Foo});"));
+        lines("var Foo = class {};", "var /** @const */ A = Foo;", "({a, b} = {a: A, b: A});"),
+        lines("var Foo = class {};", "var /** @const */ A = Foo;", "({a, b} = {a: Foo, b: Foo});"));
   }
 
   @Test
@@ -451,10 +439,7 @@ public class InlineAliasesTest extends CompilerTestCase {
   public void testObjectDestructuringDefaultVals() {
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
     test(
-        lines(
-            "var Foo = class {};",
-            "var /** @const */ A = Foo;",
-            "var {a = A, b = A} = {a: 13};"),
+        lines("var Foo = class {};", "var /** @const */ A = Foo;", "var {a = A, b = A} = {a: 13};"),
         lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",

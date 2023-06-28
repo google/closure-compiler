@@ -335,27 +335,15 @@ public class ColorSerializerTest {
   @Test
   public void skipMismatches() {
     TestColor testColor1 =
-        new TestObjectColorBuilder()
-            .setColorId("color001")
-            .setTrimmedPoolOffset(0)
-            .build();
+        new TestObjectColorBuilder().setColorId("color001").setTrimmedPoolOffset(0).build();
     TestColor testColor2 =
-        new TestObjectColorBuilder()
-            .setColorId("color002")
-            .setTrimmedPoolOffset(1)
-            .build();
+        new TestObjectColorBuilder().setColorId("color002").setTrimmedPoolOffset(1).build();
     TestMismatch testMismatch1 = TestMismatch.create("location1", testColor1, testColor2);
 
     TestColor testColor3 =
-        new TestObjectColorBuilder()
-            .setColorId("color003")
-            .setTrimmedPoolOffset(2)
-            .build();
+        new TestObjectColorBuilder().setColorId("color003").setTrimmedPoolOffset(2).build();
     TestColor testColor4 =
-        new TestObjectColorBuilder()
-            .setColorId("color004")
-            .setTrimmedPoolOffset(3)
-            .build();
+        new TestObjectColorBuilder().setColorId("color004").setTrimmedPoolOffset(3).build();
     TestMismatch testMismatch2 = TestMismatch.create("location2", testColor3, testColor4);
 
     final TypePool expectedTypePool =

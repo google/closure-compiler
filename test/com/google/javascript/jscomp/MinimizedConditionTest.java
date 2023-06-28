@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link MinimizedCondition} in isolation. Tests for the containing
  * PeepholeMinimizeConditions pass are in {@link PeepholeMinimizeConditionsTest}.
- *
  */
 @RunWith(JUnit4.class)
 public final class MinimizedConditionTest {
@@ -142,15 +141,12 @@ public final class MinimizedConditionTest {
 
   @Test
   public void testMinimizeComplementableOperator() {
-    minCond(
-        "0===c && (2===a || 1===a)",
-        "0===c && (2===a || 1===a)",
-        "!(0!==c || 2!==a && 1!==a)");
+    minCond("0===c && (2===a || 1===a)", "0===c && (2===a || 1===a)", "!(0!==c || 2!==a && 1!==a)");
   }
 
   @Test
   public void testMinimizeHook() {
-    minCond("!(x ? y : z)", "(x ? !y : !z)",  "!(x ? y : z)");
+    minCond("!(x ? y : z)", "(x ? !y : !z)", "!(x ? y : z)");
   }
 
   @Test
@@ -159,5 +155,4 @@ public final class MinimizedConditionTest {
     minCond("!(inc?.(), test?.())", "inc?.(), !test?.()", "!(inc?.(), test?.())");
     minCond("!((x,y)&&z)", "(x,!y)||!z", "!((x,y)&&z)");
   }
-
 }

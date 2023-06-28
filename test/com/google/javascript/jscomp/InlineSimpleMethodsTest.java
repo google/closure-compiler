@@ -39,8 +39,8 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   /**
-   * Helper for tests that expects definitions to remain unchanged, such
-   * that {@code definitions+js} is converted to {@code definitions+expected}.
+   * Helper for tests that expects definitions to remain unchanged, such that {@code definitions+js}
+   * is converted to {@code definitions+expected}.
    */
   private void testWithPrefix(String definitions, String js, String expected) {
     test(definitions + js, definitions + expected);
@@ -80,16 +80,16 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   @Test
   public void testSimpleInline1() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
         "var x=(new Foo).bar();var y=(new Foo).bar();",
         "var x=(new Foo).baz;var y=(new Foo).baz");
   }
 
   @Test
   public void testSimpleInline2() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype={bar:function(){return this.baz}};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype={bar:function(){return this.baz}};",
         "var x=(new Foo).bar();var y=(new Foo).bar();",
         "var x=(new Foo).baz;var y=(new Foo).baz");
   }
@@ -97,137 +97,133 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testSimpleGetterInline1() {
     // TODO(johnlenz): Support this case.
-    testSame("function Foo(){}" +
-      "Foo.prototype={get bar(){return this.baz}};" +
-      "var x=(new Foo).bar;var y=(new Foo).bar");
+    testSame(
+        "function Foo(){}"
+            + "Foo.prototype={get bar(){return this.baz}};"
+            + "var x=(new Foo).bar;var y=(new Foo).bar");
     // Verify we are not confusing calling the result of an ES5 getter
     // with call the getter.
-    testSame("function Foo(){}" +
-      "Foo.prototype={get bar(){return this.baz}};" +
-      "var x=(new Foo).bar();var y=(new Foo).bar()");
+    testSame(
+        "function Foo(){}"
+            + "Foo.prototype={get bar(){return this.baz}};"
+            + "var x=(new Foo).bar();var y=(new Foo).bar()");
   }
 
   @Test
   public void testSimpleSetterInline1() {
     // Verify 'get' and 'set' are not confused.
-    testSame("function Foo(){}" +
-      "Foo.prototype={set bar(a){return this.baz}};" +
-      "var x=(new Foo).bar;var y=(new Foo).bar");
-    testSame("function Foo(){}" +
-      "Foo.prototype={set bar(a){return this.baz}};" +
-      "var x=(new Foo).bar();var y=(new Foo).bar()");
+    testSame(
+        "function Foo(){}"
+            + "Foo.prototype={set bar(a){return this.baz}};"
+            + "var x=(new Foo).bar;var y=(new Foo).bar");
+    testSame(
+        "function Foo(){}"
+            + "Foo.prototype={set bar(a){return this.baz}};"
+            + "var x=(new Foo).bar();var y=(new Foo).bar()");
   }
 
   @Test
   public void testSelfInline() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
         "Foo.prototype.meth=function(){this.bar();}",
         "Foo.prototype.meth=function(){this.baz}");
   }
 
   @Test
   public void testCallWithArgs() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
         "var x=(new Foo).bar(3,new Foo)",
         "var x=(new Foo).bar(3,new Foo)");
   }
 
   @Test
   public void testCallWithConstArgs() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(a){return this.baz};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(a){return this.baz};",
         "var x=(new Foo).bar(3, 4)",
         "var x=(new Foo).baz");
   }
 
   @Test
   public void testNestedProperties() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz.ooka};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz.ooka};",
         "(new Foo).bar()",
         "(new Foo).baz.ooka");
   }
 
   @Test
   public void testSkipComplexMethods() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz};" +
-        "Foo.prototype.condy=function(){return this.baz?this.baz:1};",
+    testWithPrefix(
+        "function Foo(){}"
+            + "Foo.prototype.bar=function(){return this.baz};"
+            + "Foo.prototype.condy=function(){return this.baz?this.baz:1};",
         "var x=(new Foo).argy()",
         "var x=(new Foo).argy()");
   }
 
   @Test
   public void testSkipConflictingMethods() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz};" +
-        "Foo.prototype.bar=function(){return this.bazz};",
+    testWithPrefix(
+        "function Foo(){}"
+            + "Foo.prototype.bar=function(){return this.baz};"
+            + "Foo.prototype.bar=function(){return this.bazz};",
         "var x=(new Foo).bar()",
         "var x=(new Foo).bar()");
   }
 
   @Test
   public void testSameNamesDifferentDefinitions() {
-    testWithPrefix("function A(){}" +
-        "A.prototype.g=function(){return this.a};" +
-        "function B(){}" +
-        "B.prototype.g=function(){return this.b};",
-        "var x=(new A).g();" +
-        "var y=(new B).g();" +
-        "var a=new A;" +
-        "var ag=a.g();",
-        "var x=(new A).g();" +
-        "var y=(new B).g();" +
-        "var a=new A;" +
-        "var ag=a.g()");
+    testWithPrefix(
+        "function A(){}"
+            + "A.prototype.g=function(){return this.a};"
+            + "function B(){}"
+            + "B.prototype.g=function(){return this.b};",
+        "var x=(new A).g();" + "var y=(new B).g();" + "var a=new A;" + "var ag=a.g();",
+        "var x=(new A).g();" + "var y=(new B).g();" + "var a=new A;" + "var ag=a.g()");
   }
 
   @Test
   public void testSameNamesSameDefinitions() {
-    testWithPrefix("function A(){}" +
-        "A.prototype.g=function(){return this.a};" +
-        "function B(){}" +
-        "B.prototype.g=function(){return this.a};",
-        "var x=(new A).g();" +
-        "var y=(new B).g();" +
-        "var a=new A;" +
-        "var ag=a.g();",
-        "var x=(new A).a;" +
-        "var y=(new B).a;" +
-        "var a=new A;" +
-        "var ag=a.a");
+    testWithPrefix(
+        "function A(){}"
+            + "A.prototype.g=function(){return this.a};"
+            + "function B(){}"
+            + "B.prototype.g=function(){return this.a};",
+        "var x=(new A).g();" + "var y=(new B).g();" + "var a=new A;" + "var ag=a.g();",
+        "var x=(new A).a;" + "var y=(new B).a;" + "var a=new A;" + "var ag=a.a");
   }
 
   @Test
   public void testConfusingNames() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return this.baz};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
         "function bar(){var bar=function(){};bar()}",
         "function bar(){var bar=function(){};bar()}");
   }
 
   @Test
   public void testConstantInline() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return 3};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return 3};",
         "var f=new Foo;var x=f.bar()",
         "var f=new Foo;var x=3");
   }
 
   @Test
   public void testConstantArrayInline() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return[3,4]};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return[3,4]};",
         "var f=new Foo;var x=f.bar()",
         "var f=new Foo;var x=[3,4]");
   }
 
   @Test
   public void testConstantInlineWithSideEffects() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){return 3};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){return 3};",
         "var x=(new Foo).bar()",
         "var x=(new Foo).bar()");
   }
@@ -242,32 +238,32 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   @Test
   public void testEmptyMethodInlineWithSideEffects() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){};",
         "(new Foo).bar();var y=new Foo;y.bar(new Foo)",
         "(new Foo).bar();var y=new Foo;y.bar(new Foo)");
   }
 
   @Test
   public void testEmptyMethodInlineInAssign1() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){};",
         "var x=new Foo;var y=x.bar()",
         "var x=new Foo;var y=void 0");
   }
 
   @Test
   public void testEmptyMethodInlineInAssign2() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){};",
         "var x=new Foo;var y=x.bar().toString()",
         "var x=new Foo;var y=(void 0).toString()");
   }
 
   @Test
   public void testNormalMethod() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(){var x=1};",
+    testWithPrefix(
+        "function Foo(){}" + "Foo.prototype.bar=function(){var x=1};",
         "var x=new Foo;x.bar()",
         "var x=new Foo;x.bar()");
   }
@@ -291,9 +287,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoInlineOfDangerousProperty() {
-    testSame("function Foo(){this.bar=3}" +
-        "Foo.prototype.bar=function(){};" +
-        "var x=new Foo;var y=x.bar()");
+    testSame(
+        "function Foo(){this.bar=3}"
+            + "Foo.prototype.bar=function(){};"
+            + "var x=new Foo;var y=x.bar()");
   }
 
   // Don't warn about argument naming conventions (this is done in another pass)
@@ -301,39 +298,38 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   //   var_args must be last
   @Test
   public void testNoWarn() {
-    testSame("function Foo(){}" +
-        "Foo.prototype.bar=function(opt_a,b){var x=1};" +
-        "var x=new Foo;x.bar()");
+    testSame(
+        "function Foo(){}"
+            + "Foo.prototype.bar=function(opt_a,b){var x=1};"
+            + "var x=new Foo;x.bar()");
 
-    testSame("function Foo(){}" +
-        "Foo.prototype.bar=function(var_args,b){var x=1};" +
-        "var x=new Foo;x.bar()");
+    testSame(
+        "function Foo(){}"
+            + "Foo.prototype.bar=function(var_args,b){var x=1};"
+            + "var x=new Foo;x.bar()");
   }
 
   @Test
   public void testObjectLit() {
-    testSame("Foo.prototype.bar=function(){return this.baz_};" +
-             "var blah={bar:function(){}};" +
-             "(new Foo).bar()");
+    testSame(
+        "Foo.prototype.bar=function(){return this.baz_};"
+            + "var blah={bar:function(){}};"
+            + "(new Foo).bar()");
   }
 
   @Test
   public void testObjectLit2() {
-    testSame("var blah={bar:function(){}};" +
-             "(new Foo).bar()");
+    testSame("var blah={bar:function(){}};" + "(new Foo).bar()");
   }
 
   @Test
   public void testObjectLit3() {
-    testSame("var blah={bar(){}};"
-        + "(new Foo).bar()");
+    testSame("var blah={bar(){}};" + "(new Foo).bar()");
   }
 
   @Test
   public void testObjectLit4() {
-    testSame("var key='bar';"
-        + "var blah={[key]:a};"
-        + "(new Foo).bar");
+    testSame("var key='bar';" + "var blah={[key]:a};" + "(new Foo).bar");
   }
 
   @Test

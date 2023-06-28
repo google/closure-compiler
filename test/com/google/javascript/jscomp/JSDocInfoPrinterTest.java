@@ -34,7 +34,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author moz@google.com (Michael Zhou) */
+/**
+ * @author moz@google.com (Michael Zhou)
+ */
 @RunWith(JUnit4.class)
 public final class JSDocInfoPrinterTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
@@ -119,7 +121,6 @@ public final class JSDocInfoPrinterTest {
                 " * @suppress {globalThis,uselessCode} Common description.",
                 " */\n"));
   }
-
 
   @Test
   public void testFinal() {

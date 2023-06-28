@@ -34,13 +34,15 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class TypeMatchingStrategyTest {
 
-  private static final String EXTERNS = Joiner.on("\n").join(
-      "/** @constructor */",
-      "var OtherType = function() {};",
-      "/** @constructor */",
-      "var SuperType = function() {};",
-      "/** @constructor @extends {SuperType} */",
-      "var SubType = function() {};");
+  private static final String EXTERNS =
+      Joiner.on("\n")
+          .join(
+              "/** @constructor */",
+              "var OtherType = function() {};",
+              "/** @constructor */",
+              "var SuperType = function() {};",
+              "/** @constructor @extends {SuperType} */",
+              "var SubType = function() {};");
 
   @Test
   public void testMatch_default() {

@@ -41,16 +41,16 @@ import org.junit.runners.JUnit4;
  * A test suite with a very small programming language that has two types of instructions: {@link
  * BranchInstruction} and {@link ArithmeticInstruction}. Test cases must construct a small program
  * with these instructions and manually put each instruction in a {@code ControlFlowGraph}.
- *
  */
 @RunWith(JUnit4.class)
 public final class DataFlowAnalysisTest {
 
-  /**
-   * Operations supported by ArithmeticInstruction.
-   */
+  /** Operations supported by ArithmeticInstruction. */
   enum Operation {
-    ADD("+"), SUB("-"), DIV("/"), MUL("*");
+    ADD("+"),
+    SUB("-"),
+    DIV("/"),
+    MUL("*");
     private final String stringRep;
 
     private Operation(String stringRep) {
@@ -63,9 +63,7 @@ public final class DataFlowAnalysisTest {
     }
   }
 
-  /**
-   * A simple value.
-   */
+  /** A simple value. */
   abstract static class Value {
 
     boolean isNumber() {
@@ -77,9 +75,7 @@ public final class DataFlowAnalysisTest {
     }
   }
 
-  /**
-   * A variable.
-   */
+  /** A variable. */
   static class Variable extends Value {
     private final String name;
 
@@ -116,9 +112,7 @@ public final class DataFlowAnalysisTest {
     }
   }
 
-  /**
-   * A number constant.
-   */
+  /** A number constant. */
   static class NumberValue extends Value {
     private final int value;
 
@@ -154,9 +148,7 @@ public final class DataFlowAnalysisTest {
     }
   }
 
-  /**
-   * An instruction of the dummy program.
-   */
+  /** An instruction of the dummy program. */
   abstract static class Instruction {
 
     int order = 0;
@@ -315,9 +307,7 @@ public final class DataFlowAnalysisTest {
     return new ArithmeticInstruction(lhs, rhs, Operation.ADD, 0);
   }
 
-  /**
-   * Branch instruction based on a {@link Value} as a condition.
-   */
+  /** Branch instruction based on a {@link Value} as a condition. */
   static class BranchInstruction extends Instruction {
     private Value condition;
 
@@ -335,8 +325,8 @@ public final class DataFlowAnalysisTest {
   }
 
   /**
-   * A lattice to represent constant states. Each variable of the program will
-   * have a lattice defined as:
+   * A lattice to represent constant states. Each variable of the program will have a lattice
+   * defined as:
    *
    * <pre>
    *        TOP
@@ -347,11 +337,11 @@ public final class DataFlowAnalysisTest {
    * </pre>
    *
    * Where BOTTOM represents the variable is not a constant.
-   * <p>
-   * This class will represent a product lattice of each variable's lattice. The
-   * whole lattice is store in a {@code HashMap}. If variable {@code x} is
-   * defined to be constant 10. The map will contain the value 10 with the
-   * variable {@code x} as key. Otherwise, {@code x} is not a constant.
+   *
+   * <p>This class will represent a product lattice of each variable's lattice. The whole lattice is
+   * store in a {@code HashMap}. If variable {@code x} is defined to be constant 10. The map will
+   * contain the value 10 with the variable {@code x} as key. Otherwise, {@code x} is not a
+   * constant.
    */
   private static class ConstPropLatticeElement implements LatticeElement {
     private final Map<Variable, Integer> constMap;
@@ -367,9 +357,7 @@ public final class DataFlowAnalysisTest {
       this.constMap = new HashMap<>();
     }
 
-    /**
-     * Create a lattice where every variable is defined to be not constant.
-     */
+    /** Create a lattice where every variable is defined to be not constant. */
     ConstPropLatticeElement() {
       this(false);
     }
@@ -401,8 +389,7 @@ public final class DataFlowAnalysisTest {
     public boolean equals(Object other) {
       if (other instanceof ConstPropLatticeElement) {
         ConstPropLatticeElement otherLattice = (ConstPropLatticeElement) other;
-        return (this.isTop == otherLattice.isTop) &&
-            this.constMap.equals(otherLattice.constMap);
+        return (this.isTop == otherLattice.isTop) && this.constMap.equals(otherLattice.constMap);
       }
       return false;
     }
@@ -453,11 +440,9 @@ public final class DataFlowAnalysisTest {
     }
   }
 
-  /**
-   * A simple forward constant propagation.
-   */
-  static class DummyConstPropagation extends
-      DataFlowAnalysis<Instruction, ConstPropLatticeElement> {
+  /** A simple forward constant propagation. */
+  static class DummyConstPropagation
+      extends DataFlowAnalysis<Instruction, ConstPropLatticeElement> {
 
     /**
      * Constructor.
@@ -479,13 +464,11 @@ public final class DataFlowAnalysisTest {
     }
 
     @Override
-    ConstPropLatticeElement flowThrough(Instruction node,
-        ConstPropLatticeElement input) {
+    ConstPropLatticeElement flowThrough(Instruction node, ConstPropLatticeElement input) {
       if (node.isBranch()) {
         return new ConstPropLatticeElement(input);
       } else {
-        return flowThroughArithmeticInstruction((ArithmeticInstruction) node,
-            input);
+        return flowThroughArithmeticInstruction((ArithmeticInstruction) node, input);
       }
     }
 
@@ -783,11 +766,9 @@ public final class DataFlowAnalysisTest {
     }
 
     @Override
-    ConstPropLatticeElement flowThrough(Instruction node,
-        ConstPropLatticeElement input) {
+    ConstPropLatticeElement flowThrough(Instruction node, ConstPropLatticeElement input) {
       if (node.isArithmetic()) {
-        return flowThroughArithmeticInstruction(
-            (ArithmeticInstruction) node, input);
+        return flowThroughArithmeticInstruction((ArithmeticInstruction) node, input);
       } else {
         return new ConstPropLatticeElement(input);
       }
@@ -851,8 +832,7 @@ public final class DataFlowAnalysisTest {
     cfg.connect(inst2, ControlFlowGraph.Branch.UNCOND, inst4);
     cfg.connect(inst3, ControlFlowGraph.Branch.UNCOND, inst4);
 
-    BranchedDummyConstPropagation constProp =
-        new BranchedDummyConstPropagation(cfg);
+    BranchedDummyConstPropagation constProp = new BranchedDummyConstPropagation(cfg);
     constProp.analyze();
 
     // We cannot conclude anything from if (a).

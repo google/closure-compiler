@@ -83,8 +83,9 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInArrow_ExpressionBody() {
-    test("var f = () => this;",
-         "const $jscomp$this = this; var f = function() { return $jscomp$this; };");
+    test(
+        "var f = () => this;",
+        "const $jscomp$this = this; var f = function() { return $jscomp$this; };");
   }
 
   @Test
@@ -170,10 +171,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   @Test
   public void testCapturingEnclosingFunctionArgumentsInArrow() {
     test(
-        lines(
-            "function f() {",
-            "  var x = () => arguments;",
-            "}"),
+        lines("function f() {", "  var x = () => arguments;", "}"),
         lines(
             "function f() {",
             "  const $jscomp$arguments = arguments;",
@@ -183,8 +181,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testAssigningArrowToObjectLiteralField_ExpressionBody() {
-    test("var obj = { f: () => 'bar' };",
-         "var obj = { f: function() { return 'bar'; } };");
+    test("var obj = { f: () => 'bar' };", "var obj = { f: function() { return 'bar'; } };");
   }
 
   @Test

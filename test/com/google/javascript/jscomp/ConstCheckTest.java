@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests {@link ConstCheck}.
- *
- */
+/** Tests {@link ConstCheck}. */
 @RunWith(JUnit4.class)
 public final class ConstCheckTest extends CompilerTestCase {
 
@@ -44,7 +41,7 @@ public final class ConstCheckTest extends CompilerTestCase {
     };
   }
 
-  private void testWarning(String js){
+  private void testWarning(String js) {
     testWarning(js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
@@ -233,11 +230,12 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   @Test
   public void testConstSuppressionInFileJsDoc() {
-    testSame("/**\n" +
-             " * @fileoverview\n" +
-             " * @suppress {const}\n" +
-             " */\n" +
-             "/** @const */ var xyz = 1; xyz = 3;");
+    testSame(
+        "/**\n"
+            + " * @fileoverview\n"
+            + " * @suppress {const}\n"
+            + " */\n"
+            + "/** @const */ var xyz = 1; xyz = 3;");
   }
 
   @Test

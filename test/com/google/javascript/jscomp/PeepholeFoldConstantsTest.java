@@ -945,18 +945,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("1 << 32");
     testSame("1 << -1");
     testSame("1 >> 32");
-    testSame("1.5 << 0",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    testSame("1 << .5",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    testSame("1.5 >>> 0",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    testSame("1 >>> .5",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    testSame("1.5 >> 0",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    testSame("1 >> .5",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("1.5 << 0", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("1 << .5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("1.5 >>> 0", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("1 >>> .5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("1.5 >> 0", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("1 >> .5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
   @Test
@@ -1009,6 +1003,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x = (p2 + 'a') + (1 + p1 + p2)");
     testSame("x = (p2 + 'a') + (1 + (p1 + p2))");
   }
+
   @Test
   public void testStringAdd_identity() {
     enableTypeCheck();
@@ -1867,16 +1862,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("({get a() {},set a(b) {}}).a", "(function (){})()");
 
     // a function remains a function not a call.
-    test("var x = ({a:function(){return 1}}).a",
-         "var x = function(){return 1}");
+    test("var x = ({a:function(){return 1}}).a", "var x = function(){return 1}");
 
     test("var x = ({a:1}).a", "var x = 1");
     test("var x = ({a:1, a:2}).a", "var x = 2");
     test("var x = ({a:1, a:foo()}).a", "var x = foo()");
     test("var x = ({a:foo()}).a", "var x = foo()");
 
-    test("function f() { return {a:1, b:2}.a; }",
-         "function f() { return 1; }");
+    test("function f() { return {a:1, b:2}.a; }", "function f() { return 1; }");
 
     // GETELEM is handled the same way.
     test("var x = ({'a':1})['a']", "var x = 1");
@@ -2032,17 +2025,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         "function foo(x = (1 !== void 0), y) {return x+y;}",
         "function foo(x = true, y) {return x+y;}");
     test(
-        lines(
-            "class Foo {",
-            "  constructor() {this.x = null <= null;}",
-            "}"),
-        lines(
-            "class Foo {",
-            "  constructor() {this.x = true;}",
-            "}"));
-    test(
-        "function foo() {return `${false && y}`}",
-        "function foo() {return `${false}`}");
+        lines("class Foo {", "  constructor() {this.x = null <= null;}", "}"),
+        lines("class Foo {", "  constructor() {this.x = true;}", "}"));
+    test("function foo() {return `${false && y}`}", "function foo() {return `${false}`}");
   }
 
   @Test
@@ -2077,11 +2062,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
           "Infinity",
           // TODO(nicksantos): Add more literals
           "-Infinity"
-          //"({})",
+          // "({})",
           // "[]"
-          //"[0]",
-          //"Object",
-          //"(function() {})"
+          // "[0]",
+          // "Object",
+          // "(function() {})"
           );
 
   @Test
@@ -2102,9 +2087,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     ImmutableSet<String> uncomparables = ImmutableSet.of("undefined", "void 0");
     ImmutableList<String> operators = ImmutableList.copyOf(inverses.values());
     for (int iOperandA = 0; iOperandA < LITERAL_OPERANDS.size(); iOperandA++) {
-      for (int iOperandB = 0;
-           iOperandB < LITERAL_OPERANDS.size();
-           iOperandB++) {
+      for (int iOperandB = 0; iOperandB < LITERAL_OPERANDS.size(); iOperandB++) {
         for (int iOp = 0; iOp < operators.size(); iOp++) {
           String a = LITERAL_OPERANDS.get(iOperandA);
           String b = LITERAL_OPERANDS.get(iOperandB);
@@ -2113,15 +2096,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
           // Test invertability.
           if (comparators.contains(op)) {
-              if (uncomparables.contains(a) || uncomparables.contains(b)
-                  || (a.equals("null") && NodeUtil.getStringNumberValue(b) == null)) {
-                assertSameResults(join(a, op, b), "false");
-                assertSameResults(join(a, inverse, b), "false");
-              }
+            if (uncomparables.contains(a)
+                || uncomparables.contains(b)
+                || (a.equals("null") && NodeUtil.getStringNumberValue(b) == null)) {
+              assertSameResults(join(a, op, b), "false");
+              assertSameResults(join(a, inverse, b), "false");
+            }
           } else if (a.equals(b) && equalitors.contains(op)) {
-            if (a.equals("NaN") ||
-                a.equals("Infinity") ||
-                a.equals("-Infinity")) {
+            if (a.equals("NaN") || a.equals("Infinity") || a.equals("-Infinity")) {
               test(join(a, op, b), a.equals("NaN") ? "false" : "true");
             } else {
               assertSameResults(join(a, op, b), "true");

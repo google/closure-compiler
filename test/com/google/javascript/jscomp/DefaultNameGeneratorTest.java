@@ -29,8 +29,8 @@ public final class DefaultNameGeneratorTest {
 
   private static final ImmutableSet<String> RESERVED_NAMES = ImmutableSet.of("ba", "xba");
 
-  private static String[] generate(
-      DefaultNameGenerator ng, String prefix, int num) throws Exception {
+  private static String[] generate(DefaultNameGenerator ng, String prefix, int num)
+      throws Exception {
     String[] result = new String[num];
     for (int i = 0; i < num; i++) {
       result[i] = ng.generateNextName();
@@ -65,8 +65,7 @@ public final class DefaultNameGeneratorTest {
 
   @Test
   public void testGenerate() throws Exception {
-    DefaultNameGenerator ng = new DefaultNameGenerator(
-        RESERVED_NAMES, "", null);
+    DefaultNameGenerator ng = new DefaultNameGenerator(RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
     assertThat(result[0]).isEqualTo("a");
     assertThat(result[25]).isEqualTo("z");
@@ -92,8 +91,7 @@ public final class DefaultNameGeneratorTest {
 
   @Test
   public void testReserve() throws Exception {
-    DefaultNameGenerator ng = new DefaultNameGenerator(
-        RESERVED_NAMES, "", new char[] {'$'});
+    DefaultNameGenerator ng = new DefaultNameGenerator(RESERVED_NAMES, "", new char[] {'$'});
     String[] result = generate(ng, "", 106);
     assertThat(result[0]).isEqualTo("a");
     assertThat(result[25]).isEqualTo("z");
@@ -122,8 +120,7 @@ public final class DefaultNameGeneratorTest {
 
   @Test
   public void testGenerateWithPriority1() throws Exception {
-    DefaultNameGenerator ng = new DefaultNameGenerator(
-        RESERVED_NAMES, "", null);
+    DefaultNameGenerator ng = new DefaultNameGenerator(RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
     assertThat(result[0]).isEqualTo("a");
     assertThat(result[25]).isEqualTo("z");
@@ -151,8 +148,7 @@ public final class DefaultNameGeneratorTest {
 
   @Test
   public void testGenerateWithPriority2() throws Exception {
-    DefaultNameGenerator ng = new DefaultNameGenerator(
-        RESERVED_NAMES, "", null);
+    DefaultNameGenerator ng = new DefaultNameGenerator(RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
     assertThat(result[0]).isEqualTo("a");
     assertThat(result[25]).isEqualTo("z");
@@ -192,8 +188,7 @@ public final class DefaultNameGeneratorTest {
 
   @Test
   public void testGenerateWithPriority3() throws Exception {
-    DefaultNameGenerator ng = new DefaultNameGenerator(
-        RESERVED_NAMES, "", null);
+    DefaultNameGenerator ng = new DefaultNameGenerator(RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
     ng.favors("???");
     ng.reset(RESERVED_NAMES, "", null);

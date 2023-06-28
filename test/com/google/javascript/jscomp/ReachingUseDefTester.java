@@ -88,7 +88,7 @@ final class ReachingUseDefTester {
    * all uses of each variable in the test source.
    */
   void computeReachingDef(String src) {
-    Node script = parseScript(src, /*async=*/ false);
+    Node script = parseScript(src, /* async= */ false);
     root = script.getFirstChild();
     Scope funcBlockScope = computeFunctionBlockScope(script, root);
     ControlFlowGraph<Node> cfg = computeCfg(root);

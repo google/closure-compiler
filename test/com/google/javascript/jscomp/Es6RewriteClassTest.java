@@ -2176,7 +2176,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
-  /** @bug 20536614 */
+  /**
+   * @bug 20536614
+   */
   @Test
   public void testStaticGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);

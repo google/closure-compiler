@@ -830,12 +830,15 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewriteNestedFunction() {
-    test(NoRewriteNestedFunctionTestInput.PREFIX +
-         NoRewriteNestedFunctionTestInput.INNER + "};" +
-         NoRewriteNestedFunctionTestInput.SUFFIX,
-         NoRewriteNestedFunctionTestInput.EXPECTED_PREFIX +
-         NoRewriteNestedFunctionTestInput.INNER + "};" +
-         NoRewriteNestedFunctionTestInput.EXPECTED_SUFFIX);
+    test(
+        NoRewriteNestedFunctionTestInput.PREFIX
+            + NoRewriteNestedFunctionTestInput.INNER
+            + "};"
+            + NoRewriteNestedFunctionTestInput.SUFFIX,
+        NoRewriteNestedFunctionTestInput.EXPECTED_PREFIX
+            + NoRewriteNestedFunctionTestInput.INNER
+            + "};"
+            + NoRewriteNestedFunctionTestInput.EXPECTED_SUFFIX);
   }
 
   @Test

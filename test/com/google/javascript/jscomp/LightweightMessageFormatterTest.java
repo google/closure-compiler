@@ -34,11 +34,12 @@ public final class LightweightMessageFormatterTest {
   private static final DiagnosticType FOO_TYPE =
       DiagnosticType.error("TEST_FOO", "error description here");
   private static final String ORIGINAL_SOURCE_FILE = "original/source.html";
-  private static final OriginalMapping ORIGINAL_SOURCE = OriginalMapping.newBuilder()
-      .setOriginalFile(ORIGINAL_SOURCE_FILE)
-      .setLineNumber(3)
-      .setColumnPosition(15)
-      .build();
+  private static final OriginalMapping ORIGINAL_SOURCE =
+      OriginalMapping.newBuilder()
+          .setOriginalFile(ORIGINAL_SOURCE_FILE)
+          .setLineNumber(3)
+          .setColumnPosition(15)
+          .build();
 
   @Test
   public void testNull() {
@@ -114,8 +115,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testFormatErrorSpaceEndOfLine1() {
-    JSError error = JSError.make("javascript/complex.js",
-        1, 10, FOO_TYPE);
+    JSError error = JSError.make("javascript/complex.js", 1, 10, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("assert (1;");
     assertThat(formatter.formatError(error))
         .isEqualTo(
@@ -126,8 +126,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testFormatErrorSpaceEndOfLine2() {
-    JSError error = JSError.make("javascript/complex.js",
-        6, 7, FOO_TYPE);
+    JSError error = JSError.make("javascript/complex.js", 6, 7, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("if (foo");
     assertThat(formatter.formatError(error))
         .isEqualTo(
@@ -142,8 +141,7 @@ public final class LightweightMessageFormatterTest {
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
-    LightweightMessageFormatter formatter =
-        formatter("    if (foobar) {", "<div ng-show='(foo'>");
+    LightweightMessageFormatter formatter = formatter("    if (foobar) {", "<div ng-show='(foo'>");
     assertThat(formatter.formatError(error))
         .isEqualTo(
             "javascript/complex.js:5:8: \n"
@@ -272,8 +270,7 @@ public final class LightweightMessageFormatterTest {
     return new LightweightMessageFormatter(source(string, null));
   }
 
-  private LightweightMessageFormatter formatter(String string,
-                                                String originalSource) {
+  private LightweightMessageFormatter formatter(String string, String originalSource) {
     return new LightweightMessageFormatter(source(string, originalSource));
   }
 
@@ -320,8 +317,7 @@ public final class LightweightMessageFormatterTest {
     return new LineNumberingFormatter().formatRegion(region);
   }
 
-  private Region region(final int startLine, final int endLine,
-      final String source) {
+  private Region region(final int startLine, final int endLine, final String source) {
     return new SimpleRegion(startLine, endLine, source);
   }
 }

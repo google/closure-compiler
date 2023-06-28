@@ -89,26 +89,25 @@ public abstract class CodePrinterTestBase {
     return root.getFirstChild();
   }
 
-  private void checkUnexpectedErrorsOrWarnings(
-      Compiler compiler, int expected) {
+  private void checkUnexpectedErrorsOrWarnings(Compiler compiler, int expected) {
     int actual = 0;
-      String msg = "";
-      for (JSError err : compiler.getErrors()) {
+    String msg = "";
+    for (JSError err : compiler.getErrors()) {
       if (shouldIgnore(err)) {
         continue;
       }
       actual++;
-        msg += "Error:" + err + "\n";
-      }
-      if (!allowWarnings) {
-        for (JSError err : compiler.getWarnings()) {
+      msg += "Error:" + err + "\n";
+    }
+    if (!allowWarnings) {
+      for (JSError err : compiler.getWarnings()) {
         if (shouldIgnore(err)) {
           continue;
         }
         actual++;
-          msg += "Warning:" + err + "\n";
-        }
+        msg += "Warning:" + err + "\n";
       }
+    }
     if (actual != expected) {
       assertWithMessage("Unexpected warnings or errors.\n " + msg).that(actual).isEqualTo(expected);
     }

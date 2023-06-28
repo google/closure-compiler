@@ -28,7 +28,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author nicksantos@google.com (Nick Santos) */
+/**
+ * @author nicksantos@google.com (Nick Santos)
+ */
 @RunWith(JUnit4.class)
 public final class ValidityCheckTest extends CompilerTestCase {
 

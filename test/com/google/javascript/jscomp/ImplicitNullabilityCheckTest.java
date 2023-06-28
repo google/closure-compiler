@@ -95,9 +95,10 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Test
   public void testParameterizedObject() {
-    warnImplicitlyNullable(lines(
-        "/** @param {Object<string, string>=} opt_values */",
-        "function getMsg(opt_values) {};"));
+    warnImplicitlyNullable(
+        lines(
+            "/** @param {Object<string, string>=} opt_values */",
+            "function getMsg(opt_values) {};"));
   }
 
   @Test
@@ -146,26 +147,26 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Test
   public void testUserDefinedClass() {
-    warnImplicitlyNullable(lines(
-        "/** @constructor */",
-        "function Foo() {}",
-        "/** @type {Foo} */ var x;"));
+    warnImplicitlyNullable(
+        lines("/** @constructor */", "function Foo() {}", "/** @type {Foo} */ var x;"));
 
-    warnImplicitlyNullable(lines(
-        "function f() {",
-        "  /** @constructor */",
-        "  function Foo() {}",
-        "  /** @type {Foo} */ var x;",
-        "}"));
+    warnImplicitlyNullable(
+        lines(
+            "function f() {",
+            "  /** @constructor */",
+            "  function Foo() {}",
+            "  /** @type {Foo} */ var x;",
+            "}"));
   }
 
   @Test
   public void testNamespacedTypeDoesntCrash() {
-    warnImplicitlyNullable(lines(
-        "/** @const */ var a = {};",
-        "/** @const */ a.b = {};",
-        "/** @constructor */ a.b.Foo = function() {};",
-        "/** @type Array<!a.b.Foo> */ var foos = [];"));
+    warnImplicitlyNullable(
+        lines(
+            "/** @const */ var a = {};",
+            "/** @const */ a.b = {};",
+            "/** @constructor */ a.b.Foo = function() {};",
+            "/** @type Array<!a.b.Foo> */ var foos = [];"));
 
     // in goog.module
     test(

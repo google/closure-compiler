@@ -132,8 +132,7 @@ public final class CheckPrimitiveAsObjectTest extends CompilerTestCase {
   @Test
   public void testWarningForBooleanParameterDeclarationInTypedef() {
     testWarning(
-        lines(
-            "/**", " * @typedef {function(Boolean=)}", " */", "var takesOptionalBoolean;"),
+        lines("/**", " * @typedef {function(Boolean=)}", " */", "var takesOptionalBoolean;"),
         PRIMITIVE_OBJECT_DECLARATION);
   }
 
@@ -159,8 +158,7 @@ public final class CheckPrimitiveAsObjectTest extends CompilerTestCase {
   @Test
   public void testWarningForNumberReturnDeclaration_withES6Modules() {
     testWarning(
-        lines(
-            "export", "/**", " * @return {Number}", " */", "function f() {", "  return 5;", "}"),
+        lines("export", "/**", " * @return {Number}", " */", "function f() {", "  return 5;", "}"),
         PRIMITIVE_OBJECT_DECLARATION);
   }
 }

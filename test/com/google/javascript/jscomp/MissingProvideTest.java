@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for the "missing provides" checks in {@link ProcessClosurePrimitives} and {@link
  * ClosureRewriteModule}.
- *
  */
 @RunWith(JUnit4.class)
 public final class MissingProvideTest extends CompilerTestCase {
@@ -96,9 +95,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "/** @constructor */ function A() {}",
             "exports = A;");
     String legacyScript =
-        lines(
-            "goog.provide('legacy.script.B');",
-            "goog.require('normal.goog.module.A');");
+        lines("goog.provide('legacy.script.B');", "goog.require('normal.goog.module.A');");
 
     testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
@@ -295,7 +292,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "/** @constructor */ function B() {}",
             "exports = B;");
 
-    testNoWarning(srcs(new String[] { googModule }));
+    testNoWarning(srcs(new String[] {googModule}));
   }
 
   @Test

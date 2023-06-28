@@ -94,71 +94,28 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Test
   public void testExtraneousClassAnnotations() {
     testWarning(
-        lines(
-            "/**",
-            " * @constructor",
-            " */",
-            "var X = class {};"),
-        CLASS_DISALLOWED_JSDOC);
+        lines("/**", " * @constructor", " */", "var X = class {};"), CLASS_DISALLOWED_JSDOC);
 
-    testWarning(
-        lines(
-            "/**",
-            " * @constructor",
-            " */",
-            "class X {};"),
-        CLASS_DISALLOWED_JSDOC);
+    testWarning(lines("/**", " * @constructor", " */", "class X {};"), CLASS_DISALLOWED_JSDOC);
 
     // TODO(tbreisacher): Warn for @extends too. We need to distinguish between cases like this
     // which are totally redundant...
-    testSame(
-        lines(
-            "/**",
-            " * @extends {Y}",
-            " */",
-            "class X extends Y {};"));
+    testSame(lines("/**", " * @extends {Y}", " */", "class X extends Y {};"));
 
     // ... and ones like this which are not.
-    testSame(
-        lines(
-            "/**",
-            " * @extends {Y<number>}",
-            " */",
-            "class X extends Y {};"));
+    testSame(lines("/**", " * @extends {Y<number>}", " */", "class X extends Y {};"));
 
-    testSame(
-        lines(
-            "/**",
-            " * @implements {Z}",
-            " */",
-            "class X extends Y {};"));
+    testSame(lines("/**", " * @implements {Z}", " */", "class X extends Y {};"));
 
-    testSame(
-        lines(
-            "/**",
-            " * @interface",
-            " * @extends {Y}",
-            " */",
-            "class X extends Y {};"));
+    testSame(lines("/**", " * @interface", " * @extends {Y}", " */", "class X extends Y {};"));
 
-    testSame(
-        lines(
-            "/**",
-            " * @record",
-            " * @extends {Y}",
-            " */",
-            "class X extends Y {};"));
+    testSame(lines("/**", " * @record", " * @extends {Y}", " */", "class X extends Y {};"));
   }
 
   @Test
   public void testInvalidExtraneousClassAnnotations_withES6Modules() {
     testWarning(
-        lines(
-            "export",
-            "/**",
-            " * @constructor",
-            " */",
-            "var X = class {};"),
+        lines("export", "/**", " * @constructor", " */", "var X = class {};"),
         CLASS_DISALLOWED_JSDOC);
   }
 
@@ -302,28 +259,31 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testSame("myArray.forEach(function(elem) { alert(elem); });");
 
-    testSame(lines(
-        "Polymer({",
-        "  is: 'example-elem',",
-        "  /** @return {null} */",
-        "  someMethod: function() {},",
-        "});"));
+    testSame(
+        lines(
+            "Polymer({",
+            "  is: 'example-elem',",
+            "  /** @return {null} */",
+            "  someMethod: function() {},",
+            "});"));
 
-    testSame(lines(
-        "Polymer({",
-        "  is: 'example-elem',",
-        "  /** @return {null} */",
-        "  someMethod() {},",
-        "});"));
+    testSame(
+        lines(
+            "Polymer({",
+            "  is: 'example-elem',",
+            "  /** @return {null} */",
+            "  someMethod() {},",
+            "});"));
   }
 
   @Test
   public void testMissingJsDoc_noWarningIfNotTopLevelAndNoParams() {
-    testSame(lines(
-        "describe('a karma test', function() {",
-        "  /** @ngInject */",
-        "  var helperFunction = function($compile, $rootScope) {};",
-        "})"));
+    testSame(
+        lines(
+            "describe('a karma test', function() {",
+            "  /** @ngInject */",
+            "  var helperFunction = function($compile, $rootScope) {};",
+            "})"));
   }
 
   @Test
@@ -437,42 +397,26 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   @Test
   public void testMissingParam_noWarning() {
-    testSame(lines(
-        "/**",
-        " * @param {string} x",
-        " * @param {string} y",
-        " */",
-        "function f(x, y) {}"));
+    testSame(
+        lines("/**", " * @param {string} x", " * @param {string} y", " */", "function f(x, y) {}"));
 
-    testSame(lines(
-        "/**",
-        " * @param {string=} x",
-        " */",
-        "function f(x = 1) {}"));
+    testSame(lines("/**", " * @param {string=} x", " */", "function f(x = 1) {}"));
 
-    testSame(lines(
-        "/**",
-        " * @param {number=} x",
-        " * @param {number=} y",
-        " * @param {number=} z",
-        " */",
-        "function f(x = 1, y = 2, z = 3) {}"));
+    testSame(
+        lines(
+            "/**",
+            " * @param {number=} x",
+            " * @param {number=} y",
+            " * @param {number=} z",
+            " */",
+            "function f(x = 1, y = 2, z = 3) {}"));
 
-    testSame(lines(
-        "/**",
-        " * @param {...string} args",
-        " */",
-        "function f(...args) {}"));
+    testSame(lines("/**", " * @param {...string} args", " */", "function f(...args) {}"));
 
-    testSame(lines(
-        "(function() {",
-        "  myArray.forEach(function(elem) { alert(elem); });",
-        "})();"));
+    testSame(
+        lines("(function() {", "  myArray.forEach(function(elem) { alert(elem); });", "})();"));
 
-    testSame(lines(
-        "(function() {",
-        "  myArray.forEach(elem => alert(elem));",
-        "})();"));
+    testSame(lines("(function() {", "  myArray.forEach(elem => alert(elem));", "})();"));
 
     testSame("/** @type {function(number)} */ function f(x) {}");
 
@@ -503,11 +447,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         WRONG_NUMBER_OF_PARAMS);
 
     testWarning(
-        lines(
-            "/**",
-            " * @param {string} x",
-            " */",
-            "function f(x = 1) {}"),
+        lines("/**", " * @param {string} x", " */", "function f(x = 1) {}"),
         OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
 
     testWarning(
@@ -544,8 +484,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Test
   public void testMissingParam_withES6Modules02() {
     testWarning(
-        "export /** @param {string} x */ function f(x = 1) {}",
-        OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
+        "export /** @param {string} x */ function f(x = 1) {}", OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
   }
 
   @Test
@@ -762,11 +701,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Test
   public void testParamWithNoTypeInfo() {
     testSame(
-        lines(
-            "/**",
-            " * @param x A param with no type information.",
-            " */",
-            "function f(x) { }"));
+        lines("/**", " * @param x A param with no type information.", " */", "function f(x) { }"));
   }
 
   @Test
@@ -813,18 +748,9 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " */",
             "X.prototype.foo_ = function() { return 0; }"));
 
-    testSame(
-        lines(
-            "/**",
-            " * @type {number}",
-            " * @private",
-            " */",
-            "X.prototype.foo_ = 0;"));
+    testSame(lines("/**", " * @type {number}", " * @private", " */", "X.prototype.foo_ = 0;"));
 
-    testSame(
-        lines(
-            "/** @type {number} */",
-            "X.prototype['@some_special_property'] = 0;"));
+    testSame(lines("/** @type {number} */", "X.prototype['@some_special_property'] = 0;"));
   }
 
   @Test
@@ -850,15 +776,9 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "}"));
   }
 
-
   @Test
   public void testMissingPrivate_dontWarnOnObjectLiteral() {
-    testSame(
-        lines(
-            "var obj = {",
-            "  /** @return {number} */",
-            "  foo_() { return 0; }",
-            "}"));
+    testSame(lines("var obj = {", "  /** @return {number} */", "  foo_() { return 0; }", "}"));
   }
 
   @Test
@@ -868,26 +788,13 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   @Test
   public void testOptionalArgs() {
-    testSame(
-        lines(
-            "/**",
-            " * @param {number=} n",
-            " */",
-            "function f(n) {}"));
+    testSame(lines("/**", " * @param {number=} n", " */", "function f(n) {}"));
 
     testSame(
-        lines(
-            "/**",
-            " * @param {number} opt_n",
-            " */",
-            "function f(opt_n) {}"),
+        lines("/**", " * @param {number} opt_n", " */", "function f(opt_n) {}"),
         OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
 
-    testSame(lines(
-        "/**",
-        " * @param {number=} opt_n",
-        " */",
-        "function f(opt_n) {}"));
+    testSame(lines("/**", " * @param {number=} opt_n", " */", "function f(opt_n) {}"));
   }
 
   @Test
@@ -1224,10 +1131,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   @Test
   public void testExternsAnnotation() {
-    test(
-        externs("function Example() {}"),
-        srcs(""),
-        warning(EXTERNS_FILES_SHOULD_BE_ANNOTATED));
+    test(externs("function Example() {}"), srcs(""), warning(EXTERNS_FILES_SHOULD_BE_ANNOTATED));
 
     testSame(
         externs(

@@ -20,10 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {@link StatementFusion}.
- *
- */
+/** Unit tests for {@link StatementFusion}. */
 @RunWith(JUnit4.class)
 public final class StatementFusionTest extends CompilerTestCase {
 
@@ -120,8 +117,7 @@ public final class StatementFusionTest extends CompilerTestCase {
   @Test
   public void testFuseIntoBlock() {
     fuse("a;b;c;{d;e;f}", "{a,b,c,d,e,f}");
-    fuse("a;b; label: { if(q) break label; bar(); }",
-         "label: { if(a,b,q) break label; bar(); }");
+    fuse("a;b; label: { if(q) break label; bar(); }", "label: { if(a,b,q) break label; bar(); }");
     fuseSame("a;b;c;{var x;d;e;}");
     fuseSame("a;b;c;label:{break label;d;e;}");
   }
@@ -168,8 +164,9 @@ public final class StatementFusionTest extends CompilerTestCase {
   }
 
   private void fuse(String before, String after) {
-    test("function F(){if(CONDITION){" + before + "}}",
-         "function F(){if(CONDITION){" + after + "}}");
+    test(
+        "function F(){if(CONDITION){" + before + "}}",
+        "function F(){if(CONDITION){" + after + "}}");
   }
 
   private void fuseSame(String code) {

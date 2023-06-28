@@ -45,8 +45,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
-        new PeepholeOptimizationsPass(
-            compiler, getName(), new PeepholeMinimizeConditions(late));
+        new PeepholeOptimizationsPass(compiler, getName(), new PeepholeMinimizeConditions(late));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
@@ -63,24 +62,19 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testFoldOneChildBlocks() {
     late = false;
-    fold("function f(){if(x)a();x=3}",
-        "function f(){x&&a();x=3}");
+    fold("function f(){if(x)a();x=3}", "function f(){x&&a();x=3}");
     fold("function f(){if(x)a?.();x=3}", "function f(){x&&a?.();x=3}");
 
-    fold("function f(){if(x){a()}x=3}",
-        "function f(){x&&a();x=3}");
+    fold("function f(){if(x){a()}x=3}", "function f(){x&&a();x=3}");
     fold("function f(){if(x){a?.()}x=3}", "function f(){x&&a?.();x=3}");
 
-    fold("function f(){if(x){return 3}}",
-        "function f(){if(x)return 3}");
-    fold("function f(){if(x){a()}}",
-        "function f(){x&&a()}");
+    fold("function f(){if(x){return 3}}", "function f(){if(x)return 3}");
+    fold("function f(){if(x){a()}}", "function f(){x&&a()}");
     fold("function f(){if(x){throw 1}}", "function f(){if(x)throw 1;}");
 
     // Try it out with functions
     fold("function f(){if(x){foo()}}", "function f(){x&&foo()}");
-    fold("function f(){if(x){foo()}else{bar()}}",
-         "function f(){x?foo():bar()}");
+    fold("function f(){if(x){foo()}else{bar()}}", "function f(){x?foo():bar()}");
 
     // Try it out with properties and methods
     fold("function f(){if(x){a.b=1}}", "function f(){if(x)a.b=1}");
@@ -99,81 +93,65 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     // Do while loops stay in a block if that's where they started
     foldSame("function f(){if(e1){do foo();while(e2)}else foo2()}");
     // Test an obscure case with do and while
-    fold("if(x){do{foo()}while(y)}else bar()",
-         "if(x){do foo();while(y)}else bar()");
+    fold("if(x){do{foo()}while(y)}else bar()", "if(x){do foo();while(y)}else bar()");
 
     // Play with nested IFs
-    fold("function f(){if(x){if(y)foo()}}",
-         "function f(){x && (y && foo())}");
-    fold("function f(){if(x){if(y)foo();else bar()}}",
-         "function f(){x&&(y?foo():bar())}");
-    fold("function f(){if(x){if(y)foo()}else bar()}",
-         "function f(){x?y&&foo():bar()}");
-    fold("function f(){if(x){if(y)foo();else bar()}else{baz()}}",
-         "function f(){x?y?foo():bar():baz()}");
+    fold("function f(){if(x){if(y)foo()}}", "function f(){x && (y && foo())}");
+    fold("function f(){if(x){if(y)foo();else bar()}}", "function f(){x&&(y?foo():bar())}");
+    fold("function f(){if(x){if(y)foo()}else bar()}", "function f(){x?y&&foo():bar()}");
+    fold(
+        "function f(){if(x){if(y)foo();else bar()}else{baz()}}",
+        "function f(){x?y?foo():bar():baz()}");
 
-    fold("if(e1){while(e2){if(e3){foo()}}}else{bar()}",
-         "if(e1)while(e2)e3&&foo();else bar()");
+    fold("if(e1){while(e2){if(e3){foo()}}}else{bar()}", "if(e1)while(e2)e3&&foo();else bar()");
 
-    fold("if(e1){with(e2){if(e3){foo()}}}else{bar()}",
-         "if(e1)with(e2)e3&&foo();else bar()");
+    fold("if(e1){with(e2){if(e3){foo()}}}else{bar()}", "if(e1)with(e2)e3&&foo();else bar()");
 
     fold("if(a||b){if(c||d){var x;}}", "if(a||b)if(c||d)var x");
-    fold("if(x){ if(y){var x;}else{var z;} }",
-         "if(x)if(y)var x;else var z");
+    fold("if(x){ if(y){var x;}else{var z;} }", "if(x)if(y)var x;else var z");
 
     // NOTE - technically we can remove the blocks since both the parent
     // and child have elses. But we don't since it causes ambiguities in
     // some cases where not all descendent ifs having elses
-    fold("if(x){ if(y){var x;}else{var z;} }else{var w}",
-         "if(x)if(y)var x;else var z;else var w");
-    fold("if (x) {var x;}else { if (y) { var y;} }",
-         "if(x)var x;else if(y)var y");
+    fold("if(x){ if(y){var x;}else{var z;} }else{var w}", "if(x)if(y)var x;else var z;else var w");
+    fold("if (x) {var x;}else { if (y) { var y;} }", "if(x)var x;else if(y)var y");
 
     // Here's some of the ambiguous cases
-    fold("if(a){if(b){f1();f2();}else if(c){f3();}}else {if(d){f4();}}",
-         "if(a)if(b){f1();f2()}else c&&f3();else d&&f4()");
+    fold(
+        "if(a){if(b){f1();f2();}else if(c){f3();}}else {if(d){f4();}}",
+        "if(a)if(b){f1();f2()}else c&&f3();else d&&f4()");
 
     fold("function f(){foo()}", "function f(){foo()}");
     fold("switch(x){case y: foo()}", "switch(x){case y:foo()}");
-    fold("try{foo()}catch(ex){bar()}finally{baz()}",
-         "try{foo()}catch(ex){bar()}finally{baz()}");
+    fold("try{foo()}catch(ex){bar()}finally{baz()}", "try{foo()}catch(ex){bar()}finally{baz()}");
   }
 
   /** Try to minimize returns */
   @Test
   public void testFoldReturns() {
-    fold("function f(){if(x)return 1;else return 2}",
-         "function f(){return x?1:2}");
-    fold("function f(){if(x)return 1;return 2}",
-         "function f(){return x?1:2}");
-    fold("function f(){if(x)return;return 2}",
-         "function f(){return x?void 0:2}");
-    fold("function f(){if(x)return 1+x;else return 2-x}",
-         "function f(){return x?1+x:2-x}");
-    fold("function f(){if(x)return 1+x;return 2-x}",
-         "function f(){return x?1+x:2-x}");
-    fold("function f(){if(x)return y += 1;else return y += 2}",
-         "function f(){return x?(y+=1):(y+=2)}");
+    fold("function f(){if(x)return 1;else return 2}", "function f(){return x?1:2}");
+    fold("function f(){if(x)return 1;return 2}", "function f(){return x?1:2}");
+    fold("function f(){if(x)return;return 2}", "function f(){return x?void 0:2}");
+    fold("function f(){if(x)return 1+x;else return 2-x}", "function f(){return x?1+x:2-x}");
+    fold("function f(){if(x)return 1+x;return 2-x}", "function f(){return x?1+x:2-x}");
+    fold(
+        "function f(){if(x)return y += 1;else return y += 2}",
+        "function f(){return x?(y+=1):(y+=2)}");
 
-    fold("function f(){if(x)return;else return 2-x}",
-         "function f(){if(x);else return 2-x}");
-    fold("function f(){if(x)return;return 2-x}",
-         "function f(){return x?void 0:2-x}");
-    fold("function f(){if(x)return x;else return}",
-         "function f(){if(x)return x;{}}");
-    fold("function f(){if(x)return x;return}",
-         "function f(){if(x)return x}");
+    fold("function f(){if(x)return;else return 2-x}", "function f(){if(x);else return 2-x}");
+    fold("function f(){if(x)return;return 2-x}", "function f(){return x?void 0:2-x}");
+    fold("function f(){if(x)return x;else return}", "function f(){if(x)return x;{}}");
+    fold("function f(){if(x)return x;return}", "function f(){if(x)return x}");
 
     foldSame("function f(){for(var x in y) { return x.y; } return k}");
   }
 
   @Test
   public void testCombineIfs1() {
-    fold("function f() {if (x) return 1; if (y) return 1}",
-         "function f() {if (x||y) return 1;}");
-    fold("function f() {if (x) return 1; if (y) foo(); else return 1}",
-         "function f() {if ((!x)&&y) foo(); else return 1;}");
+    fold("function f() {if (x) return 1; if (y) return 1}", "function f() {if (x||y) return 1;}");
+    fold(
+        "function f() {if (x) return 1; if (y) foo(); else return 1}",
+        "function f() {if ((!x)&&y) foo(); else return 1;}");
   }
 
   @Test
@@ -181,12 +159,10 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     // combinable but not yet done
     foldSame("function f() {if (x) throw 1; if (y) throw 1}");
     // Can't combine, side-effect
-    fold("function f(){ if (x) g(); if (y) g() }",
-         "function f(){ x&&g(); y&&g() }");
+    fold("function f(){ if (x) g(); if (y) g() }", "function f(){ x&&g(); y&&g() }");
     fold("function f(){ if (x) g?.(); if (y) g?.() }", "function f(){ x&&g?.(); y&&g?.() }");
     // Can't combine, side-effect
-    fold("function f(){ if (x) y = 0; if (y) y = 0; }",
-         "function f(){ x&&(y = 0); y&&(y = 0); }");
+    fold("function f(){ if (x) y = 0; if (y) y = 0; }", "function f(){ x&&(y = 0); y&&(y = 0); }");
   }
 
   @Test
@@ -221,28 +197,28 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     enableNormalize();
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    fold("if (a) { x = 1; x++ } else { x = 2; x++ }",
-         "x=(a) ? 1 : 2; x++");
-    fold("if (a) { x = 1; x++; y += 1; z = pi; }" +
-         " else  { x = 2; x++; y += 1; z = pi; }",
-         "x=(a) ? 1 : 2; x++; y += 1; z = pi;");
-    fold("function z() {" +
-         "if (a) { foo(); return !0 } else { goo(); return !0 }" +
-         "}",
-         "function z() {(a) ? foo() : goo(); return !0}");
-    fold("function z() {if (a) { foo(); x = true; return true " +
-         "} else { goo(); x = true; return true }}",
-         "function z() {(a) ? foo() : goo(); x = true; return true}");
+    fold("if (a) { x = 1; x++ } else { x = 2; x++ }", "x=(a) ? 1 : 2; x++");
+    fold(
+        "if (a) { x = 1; x++; y += 1; z = pi; }" + " else  { x = 2; x++; y += 1; z = pi; }",
+        "x=(a) ? 1 : 2; x++; y += 1; z = pi;");
+    fold(
+        "function z() {" + "if (a) { foo(); return !0 } else { goo(); return !0 }" + "}",
+        "function z() {(a) ? foo() : goo(); return !0}");
+    fold(
+        "function z() {if (a) { foo(); x = true; return true "
+            + "} else { goo(); x = true; return true }}",
+        "function z() {(a) ? foo() : goo(); x = true; return true}");
 
-    fold("function z() {" +
-         "  if (a) { bar(); foo(); return true }" +
-         "    else { bar(); goo(); return true }" +
-         "}",
-         "function z() {" +
-         "  if (a) { bar(); foo(); }" +
-         "    else { bar(); goo(); }" +
-         "  return true;" +
-         "}");
+    fold(
+        "function z() {"
+            + "  if (a) { bar(); foo(); return true }"
+            + "    else { bar(); goo(); return true }"
+            + "}",
+        "function z() {"
+            + "  if (a) { bar(); foo(); }"
+            + "    else { bar(); goo(); }"
+            + "  return true;"
+            + "}");
   }
 
   @Test
@@ -268,15 +244,13 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("function f(){if(!x)b=1}", "function f(){x||(b=1)}");
     fold("if(!x)z=1;else if(y)z=2", "if(x){y&&(z=2);}else{z=1;}");
     fold("if(x)y&&(z=2);else z=1;", "x ? y&&(z=2) : z=1");
-    fold("function f(){if(!(x=1))a.b=1}",
-         "function f(){(x=1)||(a.b=1)}");
+    fold("function f(){if(!(x=1))a.b=1}", "function f(){(x=1)||(a.b=1)}");
   }
 
   @Test
   public void testAndParenthesesCount() {
     fold("function f(){if(x||y)a.foo()}", "function f(){(x||y)&&a.foo()}");
-    fold("function f(){if(x.a)x.a=0}",
-         "function f(){x.a&&(x.a=0)}");
+    fold("function f(){if(x.a)x.a=0}", "function f(){x.a&&(x.a=0)}");
     fold("function f(){if(x?.a)x.a=0}", "function f(){x?.a&&(x.a=0)}");
     foldSame("function f(){if(x()||y()){x()||y()}}");
   }
@@ -290,8 +264,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testFoldNot() {
-    fold("while(!(x==y)){a=b;}" , "while(x!=y){a=b;}");
-    fold("while(!(x!=y)){a=b;}" , "while(x==y){a=b;}");
+    fold("while(!(x==y)){a=b;}", "while(x!=y){a=b;}");
+    fold("while(!(x!=y)){a=b;}", "while(x==y){a=b;}");
     fold("while(!(x===y)){a=b;}", "while(x!==y){a=b;}");
     fold("while(!(x!==y)){a=b;}", "while(x===y){a=b;}");
     // Because !(x<NaN) != x>=NaN don't fold < and > cases.
@@ -377,20 +351,21 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testMinimizeDemorgan11() {
-    fold("if (x && (y===2 || !f()) && (y===3 || !h())) foo()",
-         "(!x || y!==2 && f() || y!==3 && h()) || foo()");
+    fold(
+        "if (x && (y===2 || !f()) && (y===3 || !h())) foo()",
+        "(!x || y!==2 && f() || y!==3 && h()) || foo()");
   }
 
   @Test
   public void testMinimizeDemorgan20a() {
-    fold("if (0===c && (2===a || 1===a)) f(); else g()",
-         "if (0!==c || 2!==a && 1!==a) g(); else f()");
+    fold(
+        "if (0===c && (2===a || 1===a)) f(); else g()",
+        "if (0!==c || 2!==a && 1!==a) g(); else f()");
   }
 
   @Test
   public void testMinimizeDemorgan20b() {
-    fold("if (0!==c || 2!==a && 1!==a) g(); else f()",
-         "(0!==c || 2!==a && 1!==a) ? g() : f()");
+    fold("if (0!==c || 2!==a && 1!==a) g(); else f()", "(0!==c || 2!==a && 1!==a) ? g() : f()");
   }
 
   @Test
@@ -416,20 +391,15 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     foldSame("x() ? x() : y()");
     foldSame("x?.() ? x?.() : y()");
 
-    fold("!x ? foo() : bar()",
-         "x ? bar() : foo()");
-    fold("while(!(x ? y : z)) foo();",
-         "while(x ? !y : !z) foo();");
-    fold("(x ? !y : !z) ? foo() : bar()",
-         "(x ? y : z) ? bar() : foo()");
+    fold("!x ? foo() : bar()", "x ? bar() : foo()");
+    fold("while(!(x ? y : z)) foo();", "while(x ? !y : !z) foo();");
+    fold("(x ? !y : !z) ? foo() : bar()", "(x ? y : z) ? bar() : foo()");
   }
 
   @Test
   public void testMinimizeComma() {
-    fold("while(!(inc(), test())) foo();",
-         "while(inc(), !test()) foo();");
-    fold("(inc(), !test()) ? foo() : bar()",
-         "(inc(), test()) ? bar() : foo()");
+    fold("while(!(inc(), test())) foo();", "while(inc(), !test()) foo();");
+    fold("(inc(), !test()) ? foo() : bar()", "(inc(), test()) ? bar() : foo()");
   }
 
   @Test
@@ -442,8 +412,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testMinimizeDemorgan21() {
-    fold("if (0===c && (2===a || 1===a)) f()",
-         "(0!==c || 2!==a && 1!==a) || f()");
+    fold("if (0===c && (2===a || 1===a)) f()", "(0!==c || 2!==a && 1!==a) || f()");
   }
 
   @Test
@@ -488,11 +457,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     foldSame("for(;;) if (a) { f(); break }");
     fold("for(;;) if (a) break; else f()", "for(;!a;) { { f(); } }");
     fold("for(;a;) if (b) break", "for(;a && !b;);");
-    fold("for(;a;) { if (b) break; if (c) break; }",
-         "for(;(a && !b);) if (c) break;");
+    fold("for(;a;) { if (b) break; if (c) break; }", "for(;(a && !b);) if (c) break;");
     fold("for(;(a && !b);) if (c) break;", "for(;(a && !b) && !c;);");
-    fold("for(;;) { if (foo) { break; var x; } } x;",
-        "var x; for(;!foo;) {} x;");
+    fold("for(;;) { if (foo) { break; var x; } } x;", "var x; for(;!foo;) {} x;");
 
     // 'while' is normalized to 'for'
     enableNormalize();
@@ -528,12 +495,11 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testFoldIfWithLowerOperatorsInside() {
-    fold("if (x + (y=5)) z && (w,z);",
-         "x + (y=5) && (z && (w,z))");
-    fold("if (!(x+(y=5))) z && (w,z);",
-         "x + (y=5) || z && (w,z)");
-    fold("if (x + (y=5)) if (z && (w,z)) for(;;) foo();",
-         "if (x + (y=5) && (z && (w,z))) for(;;) foo();");
+    fold("if (x + (y=5)) z && (w,z);", "x + (y=5) && (z && (w,z))");
+    fold("if (!(x+(y=5))) z && (w,z);", "x + (y=5) || z && (w,z)");
+    fold(
+        "if (x + (y=5)) if (z && (w,z)) for(;;) foo();",
+        "if (x + (y=5) && (z && (w,z))) for(;;) foo();");
   }
 
   @Test
@@ -543,73 +509,73 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
 
-    fold("function f() { while(x) { return }}",
-         "function f() { while(x) { break }}");
+    fold("function f() { while(x) { return }}", "function f() { while(x) { break }}");
 
     foldSame("function f() { while(x) { return 5 } }");
 
     foldSame("function f() { a: { return 5 } }");
 
-    fold("function f() { while(x) { return 5}  return 5}",
-         "function f() { while(x) { break }    return 5}");
+    fold(
+        "function f() { while(x) { return 5}  return 5}",
+        "function f() { while(x) { break }    return 5}");
 
-    fold("function f() { while(x) { return x}  return x}",
-         "function f() { while(x) { break }    return x}");
+    fold(
+        "function f() { while(x) { return x}  return x}",
+        "function f() { while(x) { break }    return x}");
 
-    fold("function f() { while(x) { if (y) { return }}}",
-         "function f() { while(x) { if (y) { break  }}}");
+    fold(
+        "function f() { while(x) { if (y) { return }}}",
+        "function f() { while(x) { if (y) { break  }}}");
 
-    fold("function f() { while(x) { if (y) { return }} return}",
-         "function f() { while(x) { if (y) { break  }}}");
+    fold(
+        "function f() { while(x) { if (y) { return }} return}",
+        "function f() { while(x) { if (y) { break  }}}");
 
-    fold("function f() { while(x) { if (y) { return 5 }} return 5}",
-         "function f() { while(x) { if (y) { break    }} return 5}");
+    fold(
+        "function f() { while(x) { if (y) { return 5 }} return 5}",
+        "function f() { while(x) { if (y) { break    }} return 5}");
 
     // It doesn't matter if x is changed between them. We are still returning
     // x at whatever x value current holds. The whole x = 1 is skipped.
-    fold("function f() { while(x) { if (y) { return x } x = 1} return x}",
-         "function f() { while(x) { if (y) { break    } x = 1} return x}");
+    fold(
+        "function f() { while(x) { if (y) { return x } x = 1} return x}",
+        "function f() { while(x) { if (y) { break    } x = 1} return x}");
 
     // RemoveUnreachableCode would take care of the useless breaks.
-    fold("function f() { while(x) { if (y) { return x } return x} return x}",
-         "function f() { while(x) { if (y) {} break }return x}");
+    fold(
+        "function f() { while(x) { if (y) { return x } return x} return x}",
+        "function f() { while(x) { if (y) {} break }return x}");
 
     // A break here only breaks out of the inner loop.
     foldSame("function f() { while(x) { while (y) { return } } }");
 
     foldSame("function f() { while(1) { return 7}  return 5}");
 
+    foldSame("function f() {" + "  try { while(x) {return f()}} catch (e) { } return f()}");
 
-    foldSame("function f() {" +
-             "  try { while(x) {return f()}} catch (e) { } return f()}");
-
-    foldSame("function f() {" +
-             "  try { while(x) {return f()}} finally {alert(1)} return f()}");
-
+    foldSame("function f() {" + "  try { while(x) {return f()}} finally {alert(1)} return f()}");
 
     // Both returns has the same handler
-    fold("function f() {" +
-         "  try { while(x) { return f() } return f() } catch (e) { } }",
-         "function f() {" +
-         "  try { while(x) { break } return f() } catch (e) { } }");
+    fold(
+        "function f() {" + "  try { while(x) { return f() } return f() } catch (e) { } }",
+        "function f() {" + "  try { while(x) { break } return f() } catch (e) { } }");
 
     // We can't fold this because it'll change the order of when foo is called.
-    foldSame("function f() {" +
-             "  try { while(x) { return foo() } } finally { alert(1) } "  +
-             "  return foo()}");
+    foldSame(
+        "function f() {"
+            + "  try { while(x) { return foo() } } finally { alert(1) } "
+            + "  return foo()}");
 
     // This is fine, we have no side effect in the return value.
-    fold("function f() {" +
-         "  try { while(x) { return 1 } } finally { alert(1) } return 1}",
-         "function f() {" +
-         "  try { while(x) { break    } } finally { alert(1) } return 1}"
-         );
+    fold(
+        "function f() {" + "  try { while(x) { return 1 } } finally { alert(1) } return 1}",
+        "function f() {" + "  try { while(x) { break    } } finally { alert(1) } return 1}");
 
     foldSame("function f() { try{ return a } finally { a = 2 } return a; }");
 
     fold(
-      "function f() { switch(a){ case 1: return a; default: g();} return a;}",
-      "function f() { switch(a){ case 1: break; default: g();} return a; }");
+        "function f() { switch(a){ case 1: return a; default: g();} return a;}",
+        "function f() { switch(a){ case 1: break; default: g();} return a; }");
   }
 
   @Test
@@ -621,8 +587,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
     foldSame("function f() { while(x) { throw Error }}");
 
-    fold("function f() { while(x) { throw Error } throw Error }",
-         "function f() { while(x) { break } throw Error}");
+    fold(
+        "function f() { while(x) { throw Error } throw Error }",
+        "function f() { while(x) { break } throw Error}");
     foldSame("function f() { while(x) { throw Error(1) } throw Error(2)}");
     foldSame("function f() { while(x) { throw Error(1) } return Error(2)}");
 
@@ -630,65 +597,65 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
     foldSame("function f() { a: { throw 5 } }");
 
-    fold("function f() { while(x) { throw 5}  throw 5}",
-         "function f() { while(x) { break }   throw 5}");
+    fold(
+        "function f() { while(x) { throw 5}  throw 5}",
+        "function f() { while(x) { break }   throw 5}");
 
-    fold("function f() { while(x) { throw x}  throw x}",
-         "function f() { while(x) { break }   throw x}");
+    fold(
+        "function f() { while(x) { throw x}  throw x}",
+        "function f() { while(x) { break }   throw x}");
 
     foldSame("function f() { while(x) { if (y) { throw Error }}}");
 
-    fold("function f() { while(x) { if (y) { throw Error }} throw Error}",
-         "function f() { while(x) { if (y) { break }} throw Error}");
+    fold(
+        "function f() { while(x) { if (y) { throw Error }} throw Error}",
+        "function f() { while(x) { if (y) { break }} throw Error}");
 
-    fold("function f() { while(x) { if (y) { throw 5 }} throw 5}",
-         "function f() { while(x) { if (y) { break    }} throw 5}");
+    fold(
+        "function f() { while(x) { if (y) { throw 5 }} throw 5}",
+        "function f() { while(x) { if (y) { break    }} throw 5}");
 
     // It doesn't matter if x is changed between them. We are still throwing
     // x at whatever x value current holds. The whole x = 1 is skipped.
-    fold("function f() { while(x) { if (y) { throw x } x = 1} throw x}",
-         "function f() { while(x) { if (y) { break    } x = 1} throw x}");
+    fold(
+        "function f() { while(x) { if (y) { throw x } x = 1} throw x}",
+        "function f() { while(x) { if (y) { break    } x = 1} throw x}");
 
     // RemoveUnreachableCode would take care of the useless breaks.
-    fold("function f() { while(x) { if (y) { throw x } throw x} throw x}",
-         "function f() { while(x) { if (y) {} break }throw x}");
+    fold(
+        "function f() { while(x) { if (y) { throw x } throw x} throw x}",
+        "function f() { while(x) { if (y) {} break }throw x}");
 
     // A break here only breaks out of the inner loop.
     foldSame("function f() { while(x) { while (y) { throw Error } } }");
 
     foldSame("function f() { while(1) { throw 7}  throw 5}");
 
+    foldSame("function f() {" + "  try { while(x) {throw f()}} catch (e) { } throw f()}");
 
-    foldSame("function f() {" +
-             "  try { while(x) {throw f()}} catch (e) { } throw f()}");
-
-    foldSame("function f() {" +
-             "  try { while(x) {throw f()}} finally {alert(1)} throw f()}");
-
+    foldSame("function f() {" + "  try { while(x) {throw f()}} finally {alert(1)} throw f()}");
 
     // Both throws has the same handler
-    fold("function f() {" +
-         "  try { while(x) { throw f() } throw f() } catch (e) { } }",
-         "function f() {" +
-         "  try { while(x) { break } throw f() } catch (e) { } }");
+    fold(
+        "function f() {" + "  try { while(x) { throw f() } throw f() } catch (e) { } }",
+        "function f() {" + "  try { while(x) { break } throw f() } catch (e) { } }");
 
     // We can't fold this because it'll change the order of when foo is called.
-    foldSame("function f() {" +
-             "  try { while(x) { throw foo() } } finally { alert(1) } "  +
-             "  throw foo()}");
+    foldSame(
+        "function f() {"
+            + "  try { while(x) { throw foo() } } finally { alert(1) } "
+            + "  throw foo()}");
 
     // This is fine, we have no side effect in the throw value.
-    fold("function f() {" +
-         "  try { while(x) { throw 1 } } finally { alert(1) } throw 1}",
-         "function f() {" +
-         "  try { while(x) { break    } } finally { alert(1) } throw 1}"
-         );
+    fold(
+        "function f() {" + "  try { while(x) { throw 1 } } finally { alert(1) } throw 1}",
+        "function f() {" + "  try { while(x) { break    } } finally { alert(1) } throw 1}");
 
     foldSame("function f() { try{ throw a } finally { a = 2 } throw a; }");
 
     fold(
-      "function f() { switch(a){ case 1: throw a; default: g();} throw a;}",
-      "function f() { switch(a){ case 1: break; default: g();} throw a; }");
+        "function f() { switch(a){ case 1: throw a; default: g();} throw a;}",
+        "function f() { switch(a){ case 1: break; default: g();} throw a; }");
   }
 
   @Test
@@ -696,31 +663,27 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     late = false;
     enableNormalize();
 
-    fold("function f() { return; }",
-         "function f(){}");
+    fold("function f() { return; }", "function f(){}");
     foldSame("function f() { return a; }");
-    fold("function f() { if (x) { return a } return a; }",
-         "function f() { if (x) {} return a; }");
-    foldSame(
-      "function f() { try { if (x) { return a } } catch(e) {} return a; }");
-    foldSame(
-      "function f() { try { if (x) {} } catch(e) {} return 1; }");
+    fold("function f() { if (x) { return a } return a; }", "function f() { if (x) {} return a; }");
+    foldSame("function f() { try { if (x) { return a } } catch(e) {} return a; }");
+    foldSame("function f() { try { if (x) {} } catch(e) {} return 1; }");
 
     // finally clauses may have side effects
-    foldSame(
-      "function f() { try { if (x) { return a } } finally { a++ } return a; }");
+    foldSame("function f() { try { if (x) { return a } } finally { a++ } return a; }");
     // but they don't matter if the result doesn't have side effects and can't
     // be affect by side-effects.
-    fold("function f() { try { if (x) { return 1 } } finally {} return 1; }",
-         "function f() { try { if (x) {} } finally {} return 1; }");
+    fold(
+        "function f() { try { if (x) { return 1 } } finally {} return 1; }",
+        "function f() { try { if (x) {} } finally {} return 1; }");
 
-    fold("function f() { switch(a){ case 1: return a; } return a; }",
-         "function f() { switch(a){ case 1: } return a; }");
+    fold(
+        "function f() { switch(a){ case 1: return a; } return a; }",
+        "function f() { switch(a){ case 1: } return a; }");
 
-    fold("function f() { switch(a){ " +
-         "  case 1: return a; case 2: return a; } return a; }",
-         "function f() { switch(a){ " +
-         "  case 1: break; case 2: } return a; }");
+    fold(
+        "function f() { switch(a){ " + "  case 1: return a; case 2: return a; } return a; }",
+        "function f() { switch(a){ " + "  case 1: break; case 2: } return a; }");
   }
 
   @Test
@@ -729,34 +692,30 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     enableNormalize();
 
     foldSame("function f() { throw a; }");
-    fold("function f() { if (x) { throw a } throw a; }",
-         "function f() { if (x) {} throw a; }");
-    foldSame(
-      "function f() { try { if (x) {throw a} } catch(e) {} throw a; }");
-    foldSame(
-      "function f() { try { if (x) {throw 1} } catch(e) {f()} throw 1; }");
-    foldSame(
-      "function f() { try { if (x) {throw 1} } catch(e) {f()} throw 1; }");
-    foldSame(
-      "function f() { try { if (x) {throw 1} } catch(e) {throw 1}}");
+    fold("function f() { if (x) { throw a } throw a; }", "function f() { if (x) {} throw a; }");
+    foldSame("function f() { try { if (x) {throw a} } catch(e) {} throw a; }");
+    foldSame("function f() { try { if (x) {throw 1} } catch(e) {f()} throw 1; }");
+    foldSame("function f() { try { if (x) {throw 1} } catch(e) {f()} throw 1; }");
+    foldSame("function f() { try { if (x) {throw 1} } catch(e) {throw 1}}");
     fold(
-      "function f() { try { if (x) {throw 1} } catch(e) {throw 1} throw 1; }",
-      "function f() { try { if (x) {throw 1} } catch(e) {} throw 1; }");
+        "function f() { try { if (x) {throw 1} } catch(e) {throw 1} throw 1; }",
+        "function f() { try { if (x) {throw 1} } catch(e) {} throw 1; }");
 
     // finally clauses may have side effects
-    foldSame(
-      "function f() { try { if (x) { throw a } } finally { a++ } throw a; }");
+    foldSame("function f() { try { if (x) { throw a } } finally { a++ } throw a; }");
     // but they don't matter if the result doesn't have side effects and can't
     // be affect by side-effects.
-    fold("function f() { try { if (x) { throw 1 } } finally {} throw 1; }",
-         "function f() { try { if (x) {} } finally {} throw 1; }");
+    fold(
+        "function f() { try { if (x) { throw 1 } } finally {} throw 1; }",
+        "function f() { try { if (x) {} } finally {} throw 1; }");
 
-    fold("function f() { switch(a){ case 1: throw a; } throw a; }",
-         "function f() { switch(a){ case 1: } throw a; }");
+    fold(
+        "function f() { switch(a){ case 1: throw a; } throw a; }",
+        "function f() { switch(a){ case 1: } throw a; }");
 
-    fold("function f() { switch(a){ " +
-             "case 1: throw a; case 2: throw a; } throw a; }",
-         "function f() { switch(a){ case 1: break; case 2: } throw a; }");
+    fold(
+        "function f() { switch(a){ " + "case 1: throw a; case 2: throw a; } throw a; }",
+        "function f() { switch(a){ case 1: break; case 2: } throw a; }");
   }
 
   @Test
@@ -803,28 +762,20 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testRemoveElseCause() {
-    test("function f() {" +
-         " if(x) return 1;" +
-         " else if(x) return 2;" +
-         " else if(x) return 3 }",
-         "function f() {" +
-         " if(x) return 1;" +
-         "{ if(x) return 2;" +
-         "{ if(x) return 3 } } }");
+    test(
+        "function f() {" + " if(x) return 1;" + " else if(x) return 2;" + " else if(x) return 3 }",
+        "function f() {" + " if(x) return 1;" + "{ if(x) return 2;" + "{ if(x) return 3 } } }");
   }
 
   @Test
   public void testRemoveElseCause1() {
-    test("function f() { if (x) throw 1; else f() }",
-         "function f() { if (x) throw 1; { f() } }");
+    test("function f() { if (x) throw 1; else f() }", "function f() { if (x) throw 1; { f() } }");
   }
 
   @Test
   public void testRemoveElseCause2() {
-    test("function f() { if (x) return 1; else f() }",
-         "function f() { if (x) return 1; { f() } }");
-    test("function f() { if (x) return; else f() }",
-         "function f() { if (x) {} else { f() } }");
+    test("function f() { if (x) return 1; else f() }", "function f() { if (x) return 1; { f() } }");
+    test("function f() { if (x) return; else f() }", "function f() { if (x) {} else { f() } }");
     // This case is handled by minimize exit points.
     testSame("function f() { if (x) return; f() }");
   }
@@ -844,19 +795,11 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testIssue925() {
     test(
-        "if (x[--y] === 1) {\n" +
-        "    x[y] = 0;\n" +
-        "} else {\n" +
-        "    x[y] = 1;\n" +
-        "}",
+        "if (x[--y] === 1) {\n" + "    x[y] = 0;\n" + "} else {\n" + "    x[y] = 1;\n" + "}",
         "(x[--y] === 1) ? x[y] = 0 : x[y] = 1;");
 
     test(
-        "if (x[--y]) {\n" +
-        "    a = 0;\n" +
-        "} else {\n" +
-        "    a = 1;\n" +
-        "}",
+        "if (x[--y]) {\n" + "    a = 0;\n" + "} else {\n" + "    a = 1;\n" + "}",
         "a = (x[--y]) ? 0 : 1;");
 
     test(
@@ -868,11 +811,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
             "}"),
         "a = (x?.[--y]) ? 0 : 1;");
 
-    test("if (x++) { x += 2 } else { x += 3 }",
-         "x++ ? x += 2 : x += 3");
+    test("if (x++) { x += 2 } else { x += 3 }", "x++ ? x += 2 : x += 3");
 
-    test("if (x++) { x = x + 2 } else { x = x + 3 }",
-        "x = x++ ? x + 2 : x + 3");
+    test("if (x++) { x = x + 2 } else { x = x + 3 }", "x = x++ ? x + 2 : x + 3");
   }
 
   @Test
@@ -941,14 +882,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testCoercionSubstitution_hook() {
     enableTypeCheck();
-    testSame(
-        lines(
-            "var x = {};",
-            "var y = x != null ? 1 : 2;"));
-    testSame(
-        lines(
-            "var x = 1;",
-            "var y = x != 0 ? 1 : 2;"));
+    testSame(lines("var x = {};", "var y = x != null ? 1 : 2;"));
+    testSame(lines("var x = 1;", "var y = x != 0 ? 1 : 2;"));
   }
 
   @Test

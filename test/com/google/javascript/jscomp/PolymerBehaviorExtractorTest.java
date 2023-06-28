@@ -672,6 +672,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
   private boolean isBehaviorArrayDeclaration(Node node) {
     return node.isArrayLit()
-        && node.getParent().isStringKey() && node.getParent().getString().equals("behaviors");
+        && node.getParent().isStringKey()
+        && node.getParent().getString().equals("behaviors");
   }
 }

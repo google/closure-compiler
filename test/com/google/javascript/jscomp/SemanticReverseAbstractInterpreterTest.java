@@ -514,7 +514,7 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("x", getNativeObjectType()),
             new TypedName("s", getNativeStringObjectConstructorType())));
   }
-  
+
   @Test
   public void testInstanceOf4() {
     FlowScope[] blind = newScope();

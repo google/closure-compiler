@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;

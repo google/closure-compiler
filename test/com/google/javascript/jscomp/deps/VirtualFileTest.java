@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test for equals and hashCode.
- *
- */
+/** Test for equals and hashCode. */
 @RunWith(JUnit4.class)
 public final class VirtualFileTest {
   @Test

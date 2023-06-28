@@ -275,19 +275,19 @@ public final class InferConstsTest extends CompilerTestCase {
   }
 
   static Expectation declared(String... names) {
-    return new Expectation(/*isInferred=*/ false, /*isConst=*/ true, names);
+    return new Expectation(/* isInferred= */ false, /* isConst= */ true, names);
   }
 
   static Expectation inferred(String... names) {
-    return new Expectation(/*isInferred=*/ true, /*isConst=*/ true, names);
+    return new Expectation(/* isInferred= */ true, /* isConst= */ true, names);
   }
 
   static Expectation notInferred(String... names) {
-    return new Expectation(/*isInferred=*/ true, /*isConst=*/ false, names);
+    return new Expectation(/* isInferred= */ true, /* isConst= */ false, names);
   }
 
   static Expectation notDeclared(String... names) {
-    return new Expectation(/*isInferred=*/ false, /*isConst=*/ false, names);
+    return new Expectation(/* isInferred= */ false, /* isConst= */ false, names);
   }
 
   private static final class Expectation {

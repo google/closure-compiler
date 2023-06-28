@@ -28,10 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests {@link SortingErrorManager}.
- *
- */
+/** Tests {@link SortingErrorManager}. */
 @RunWith(JUnit4.class)
 public final class SortingErrorManagerTest {
   private static final @Nullable String NULL_SOURCE = null;
@@ -40,11 +37,9 @@ public final class SortingErrorManagerTest {
 
   static final CheckLevel E = CheckLevel.ERROR;
 
-  private static final DiagnosticType FOO_TYPE =
-      DiagnosticType.error("TEST_FOO", "Foo");
+  private static final DiagnosticType FOO_TYPE = DiagnosticType.error("TEST_FOO", "Foo");
 
-  private static final DiagnosticType JOO_TYPE =
-      DiagnosticType.error("TEST_JOO", "Joo");
+  private static final DiagnosticType JOO_TYPE = DiagnosticType.error("TEST_JOO", "Joo");
 
   @Test
   public void testOrderingBothNull() {
@@ -121,15 +116,16 @@ public final class SortingErrorManagerTest {
   @Test
   public void testDeduplicatedErrors() {
     final List<JSError> printedErrors = new ArrayList<>();
-    BasicErrorManager manager = new BasicErrorManager() {
-      @Override
-      public void println(CheckLevel level, JSError error) {
-        printedErrors.add(error);
-      }
+    BasicErrorManager manager =
+        new BasicErrorManager() {
+          @Override
+          public void println(CheckLevel level, JSError error) {
+            printedErrors.add(error);
+          }
 
-      @Override
-      protected void printSummary() { }
-    };
+          @Override
+          protected void printSummary() {}
+        };
     JSError e1 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
     JSError e2 = JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE);
     manager.report(CheckLevel.ERROR, e1);

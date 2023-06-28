@@ -77,20 +77,18 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         externs("/** @type {symbol} */ Symbol.iterator;"),
         srcs("var x = {[Symbol.iterator]: function() { return this; }};"),
-        expected(lines(
-            "var $jscomp$compprop0 = {};",
-            "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
-            "         $jscomp$compprop0)")));
+        expected(
+            lines(
+                "var $jscomp$compprop0 = {};",
+                "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
+                "         $jscomp$compprop0)")));
   }
 
   @Test
   public void testMethodInObject() {
-    test("var obj = { f() {alert(1); } };",
-        "var obj = { f: function() {alert(1); } };");
+    test("var obj = { f() {alert(1); } };", "var obj = { f: function() {alert(1); } };");
 
-    test(
-        "var obj = { f() { alert(1); }, x };",
-        "var obj = { f: function() { alert(1); }, x: x };");
+    test("var obj = { f() { alert(1); }, x };", "var obj = { f: function() { alert(1); }, x: x };");
   }
 
   @Test
@@ -151,12 +149,13 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "($jscomp$compprop0['f' + 1] = 1,",
             "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"));
 
-    test("({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
+    test(
+        "({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
         lines(
-        "var $jscomp$compprop0 = {};",
-        "($jscomp$compprop0['a'] = 1,",
-        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));"
-    ));
+            "var $jscomp$compprop0 = {};",
+            "($jscomp$compprop0['a'] = 1,",
+            "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1,"
+                + " $jscomp$compprop0)));"));
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
@@ -457,8 +456,8 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   @Test
   public void testUnicodeEscapes() {
-    test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
-    test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
+    test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'"); // ☃
+    test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'"); // 🐪
     test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
   }
 }

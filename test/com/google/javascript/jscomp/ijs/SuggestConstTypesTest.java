@@ -54,5 +54,4 @@ public final class SuggestConstTypesTest extends CompilerTestCase {
     suggests("/** @const */ var x = cond ? true : 5;", "{(boolean|number)}");
     suggests("/** @constructor */ function Foo() {} /** @const */ var x = new Foo;", "{!Foo}");
   }
-
 }

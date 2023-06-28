@@ -29,10 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link DepsFileRegexParser}.
- *
- */
+/** Tests for {@link DepsFileRegexParser}. */
 @RunWith(JUnit4.class)
 public final class DepsFileRegexParserTest {
 
@@ -129,9 +126,11 @@ public final class DepsFileRegexParserTest {
 
   @Test
   public void testGoogModule() {
-    List<DependencyInfo> result = parser.parseFile(SRC_PATH,
-        "goog.addDependency('yes1', [], [], true);\n" +
-        "goog.addDependency('yes2', [], [], false);\n");
+    List<DependencyInfo> result =
+        parser.parseFile(
+            SRC_PATH,
+            "goog.addDependency('yes1', [], [], true);\n"
+                + "goog.addDependency('yes2', [], [], false);\n");
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH).setGoogModule(true).build(),
@@ -163,10 +162,13 @@ public final class DepsFileRegexParserTest {
 
   @Test
   public void testLoadFlags() {
-    List<DependencyInfo> result = parser.parseFile(SRC_PATH, ""
-        + "goog.addDependency('yes1', [], [], {'module': 'goog'});\n"
-        + "goog.addDependency('yes2', [], [], {\"lang\": \"es6\"});\n"
-        + "goog.addDependency('yes3', [], [], {});\n");
+    List<DependencyInfo> result =
+        parser.parseFile(
+            SRC_PATH,
+            ""
+                + "goog.addDependency('yes1', [], [], {'module': 'goog'});\n"
+                + "goog.addDependency('yes2', [], [], {\"lang\": \"es6\"});\n"
+                + "goog.addDependency('yes3', [], [], {});\n");
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH)
@@ -181,23 +183,26 @@ public final class DepsFileRegexParserTest {
 
   @Test
   public void testShortcutMode() {
-    List<DependencyInfo> result = parser.parseFile(SRC_PATH,
-        "goog.addDependency('yes1', [], []); \n" +
-        "foo();\n" +
-        "goog.addDependency('no1', [], []);");
-    ImmutableList<DependencyInfo> expected = ImmutableList.<DependencyInfo>of(
-        SimpleDependencyInfo.builder("yes1", SRC_PATH)
-            .build());
+    List<DependencyInfo> result =
+        parser.parseFile(
+            SRC_PATH,
+            "goog.addDependency('yes1', [], []); \n"
+                + "foo();\n"
+                + "goog.addDependency('no1', [], []);");
+    ImmutableList<DependencyInfo> expected =
+        ImmutableList.<DependencyInfo>of(SimpleDependencyInfo.builder("yes1", SRC_PATH).build());
     assertThat(result).isEqualTo(expected);
   }
 
   @Test
   public void testNoShortcutMode() {
     parser.setShortcutMode(false);
-    List<DependencyInfo> result = parser.parseFile(SRC_PATH,
-        "goog.addDependency('yes1', [], []); \n" +
-        "foo();\n" +
-        "goog.addDependency('yes2', [], []);");
+    List<DependencyInfo> result =
+        parser.parseFile(
+            SRC_PATH,
+            "goog.addDependency('yes1', [], []); \n"
+                + "foo();\n"
+                + "goog.addDependency('yes2', [], []);");
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH).build(),

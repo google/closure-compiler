@@ -218,19 +218,21 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   public void testForIn() {
     // This is the basic assumption that this pass makes:
     // that it can warn even if it is used indirectly in a for-in loop
-    unused(lines(
-        "/** @constructor */ var X = function() {",
-        "  /** @private */ this.y = 1;",
-        "}",
-        "for (var a in new X()) { alert(x[a]) }"));
+    unused(
+        lines(
+            "/** @constructor */ var X = function() {",
+            "  /** @private */ this.y = 1;",
+            "}",
+            "for (var a in new X()) { alert(x[a]) }"));
   }
 
   @Test
   public void testObjectReflection1() {
     // Verify reflection prevents warning.
-    used(lines(
-        "/** @constructor */ function A() {/** @private */ this.foo = 1;}",
-        "use(goog.reflect.object(A, {foo: 'foo'}));"));
+    used(
+        lines(
+            "/** @constructor */ function A() {/** @private */ this.foo = 1;}",
+            "use(goog.reflect.object(A, {foo: 'foo'}));"));
 
     // Verify reflection prevents warning.
     used(
@@ -250,9 +252,10 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testObjectReflection2() {
     // Any object literal definition prevents warning.
-    used(lines(
-        "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
-        "use({foo: 'foo'});"));
+    used(
+        lines(
+            "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
+            "use({foo: 'foo'});"));
 
     // member functions prevent renaming (since we allow them in goog.reflect.object)
     used(
@@ -269,11 +272,12 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPrototypeProps1() {
-    unused(lines(
-        "/** @constructor */ function A() {this.foo = 1;}",
-        "/** @private */ A.prototype.foo = 0;",
-        "A.prototype.method = function() {this.foo++};",
-        "new A().method()"));
+    unused(
+        lines(
+            "/** @constructor */ function A() {this.foo = 1;}",
+            "/** @private */ A.prototype.foo = 0;",
+            "A.prototype.method = function() {this.foo++};",
+            "new A().method()"));
   }
 
   @Test
@@ -289,20 +293,22 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testTypedef() {
-    used(lines(
-        "/** @constructor */ function A() {}",
-        "/** @private @typedef {string} */ A.typedef_;"));
+    used(
+        lines(
+            "/** @constructor */ function A() {}",
+            "/** @private @typedef {string} */ A.typedef_;"));
   }
 
   @Test
   public void testInterface() {
-    used(lines(
-        "/** @constructor */ function A() {}",
-        "/**",
-        " * @interface",
-        " * @private",
-        " */",
-        "A.Interface = function() {};"));
+    used(
+        lines(
+            "/** @constructor */ function A() {}",
+            "/**",
+            " * @interface",
+            " * @private",
+            " */",
+            "A.Interface = function() {};"));
   }
 
   @Test
@@ -314,9 +320,9 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   public void testConstructorProperty2() {
     used(
         "/** @constructor */ function C() {} "
-        + "/** @private */ C.prop = 1; "
-        + "function use(a) { alert(a.prop) }; "
-        + "use(C)");
+            + "/** @private */ C.prop = 1; "
+            + "function use(a) { alert(a.prop) }; "
+            + "use(C)");
   }
 
   @Test

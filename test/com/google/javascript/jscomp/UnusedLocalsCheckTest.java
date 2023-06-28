@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test that warnings are generated in appropriate cases and appropriate cases only by
  * VariableReferenceCheck
- *
  */
 @RunWith(JUnit4.class)
 public final class UnusedLocalsCheckTest extends CompilerTestCase {
@@ -308,12 +307,14 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
 
   @Test
   public void testGoogModule_bundled() {
-    assertNoWarning("goog.loadModule(function(exports) { 'use strict';"
-                    + "goog.module('example'); var X = 3; use(X);"
-                    + "return exports; });");
-    assertUnused("goog.loadModule(function(exports) { 'use strict';"
-                 + "goog.module('example'); var X = 3;"
-                 + "return exports; });");
+    assertNoWarning(
+        "goog.loadModule(function(exports) { 'use strict';"
+            + "goog.module('example'); var X = 3; use(X);"
+            + "return exports; });");
+    assertUnused(
+        "goog.loadModule(function(exports) { 'use strict';"
+            + "goog.module('example'); var X = 3;"
+            + "return exports; });");
   }
 
   @Test
@@ -377,16 +378,13 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
   private void assertEarlyReferenceWarning(String js) {
     testWarning(js, EARLY_REFERENCE);
   }
-  /**
-   * Expects the JS to generate one unused local error.
-   */
+
+  /** Expects the JS to generate one unused local error. */
   private void assertUnused(String js) {
     testWarning(js, UNUSED_LOCAL_ASSIGNMENT);
   }
 
-  /**
-   * Expects the JS to generate no errors or warnings.
-   */
+  /** Expects the JS to generate no errors or warnings. */
   private void assertNoWarning(String js) {
     testSame(js);
   }

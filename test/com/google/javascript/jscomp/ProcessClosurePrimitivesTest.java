@@ -33,10 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link ProcessClosurePrimitives}.
- *
- */
+/** Tests for {@link ProcessClosurePrimitives}. */
 @RunWith(JUnit4.class)
 public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
@@ -111,15 +108,17 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Test
   public void testSetCssNameMappingByShortHand() {
-    testError("goog.setCssNameMapping({shortHandFirst, shortHandSecond});",
+    testError(
+        "goog.setCssNameMapping({shortHandFirst, shortHandSecond});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
   }
 
   @Test
   public void testSetCssNameMappingByTemplate() {
-    testError("goog.setCssNameMapping({foo: `bar`});",
-        NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
-    testError("goog.setCssNameMapping({foo: `${vari}bar`});",
+    testError(
+        "goog.setCssNameMapping({foo: `bar`});", NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
+    testError(
+        "goog.setCssNameMapping({foo: `${vari}bar`});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
   }
 
@@ -133,14 +132,16 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testError("goog.setCssNameMapping(undefined);", EXPECTED_OBJECTLIT_ERROR);
 
     // Make sure all values of the object literal are string literals.
-    testError("var BAR = 'bar'; goog.setCssNameMapping({foo:BAR});",
+    testError(
+        "var BAR = 'bar'; goog.setCssNameMapping({foo:BAR});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
     testError("goog.setCssNameMapping({foo:6});", NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
-    testError("goog.setCssNameMapping({foo:false});",
-        NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
-    testError("goog.setCssNameMapping({foo:null});",
-        NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
-    testError("goog.setCssNameMapping({foo:undefined});",
+    testError(
+        "goog.setCssNameMapping({foo:false});", NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
+    testError(
+        "goog.setCssNameMapping({foo:null});", NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
+    testError(
+        "goog.setCssNameMapping({foo:undefined});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
   }
 
@@ -191,8 +192,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         "goog.setCssNameMapping({'a': 'b', 'a-a': 'c'}, 'BY_WHOLE')", INVALID_CSS_RENAMING_MAP);
 
     // Unknown mapping type
-    testError("goog.setCssNameMapping({foo:'bar'}, 'UNKNOWN');",
-        INVALID_STYLE_ERROR);
+    testError("goog.setCssNameMapping({foo:'bar'}, 'UNKNOWN');", INVALID_STYLE_ERROR);
   }
 
   @Test
@@ -223,157 +223,145 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private static final String METHOD_FORMAT =
       "function Foo() {} Foo.prototype.method = function() { %s };";
 
-  private static final String FOO_INHERITS =
-      "goog.inherits(Foo, BaseFoo);";
+  private static final String FOO_INHERITS = "goog.inherits(Foo, BaseFoo);";
 
   @Test
   public void testInvalidBase1() {
     testError(
-        "var Foo = function() {};" + FOO_INHERITS +
-        "Foo.base(this, 'method');", BASE_CLASS_ERROR);
+        "var Foo = function() {};" + FOO_INHERITS + "Foo.base(this, 'method');", BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase2() {
-    testError("function Foo() {}" + FOO_INHERITS +
-        "Foo.method = function() {" +
-        "  Foo.base(this, 'method');" +
-        "};", BASE_CLASS_ERROR);
+    testError(
+        "function Foo() {}"
+            + FOO_INHERITS
+            + "Foo.method = function() {"
+            + "  Foo.base(this, 'method');"
+            + "};",
+        BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase3() {
-    testError(String.format(FOO_INHERITS + METHOD_FORMAT, "Foo.base();"),
-        BASE_CLASS_ERROR);
+    testError(String.format(FOO_INHERITS + METHOD_FORMAT, "Foo.base();"), BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase4() {
-    testError(String.format(FOO_INHERITS + METHOD_FORMAT, "Foo.base(this, 'bar');"),
-        BASE_CLASS_ERROR);
+    testError(
+        String.format(FOO_INHERITS + METHOD_FORMAT, "Foo.base(this, 'bar');"), BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase5() {
-    testError(String.format(FOO_INHERITS + METHOD_FORMAT,
-        "Foo.base('foo', 'method');"),
+    testError(
+        String.format(FOO_INHERITS + METHOD_FORMAT, "Foo.base('foo', 'method');"),
         BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase7() {
-    testError("function Foo() { Foo.base(this); };" + FOO_INHERITS,
-        BASE_CLASS_ERROR);
+    testError("function Foo() { Foo.base(this); };" + FOO_INHERITS, BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase8() {
-    testError("var Foo = function() { Foo.base(this); };" + FOO_INHERITS,
-        BASE_CLASS_ERROR);
+    testError("var Foo = function() { Foo.base(this); };" + FOO_INHERITS, BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase9() {
-    testError("var goog = {}; goog.Foo = function() { goog.Foo.base(this); };"
-        + FOO_INHERITS,
+    testError(
+        "var goog = {}; goog.Foo = function() { goog.Foo.base(this); };" + FOO_INHERITS,
         BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase10() {
-    testError("function Foo() { Foo.base(this); }" + FOO_INHERITS,
-        BASE_CLASS_ERROR);
+    testError("function Foo() { Foo.base(this); }" + FOO_INHERITS, BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase11() {
-    testError("function Foo() { Foo.base(this, 'method'); }" + FOO_INHERITS,
-        BASE_CLASS_ERROR);
+    testError("function Foo() { Foo.base(this, 'method'); }" + FOO_INHERITS, BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase12() {
-    testError("function Foo() { Foo.base(this, 1, 2); }" + FOO_INHERITS,
-        BASE_CLASS_ERROR);
+    testError("function Foo() { Foo.base(this, 1, 2); }" + FOO_INHERITS, BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidBase13() {
     testError(
-        "function Bar(){ Bar.base(this, 'constructor'); }" +
-        "goog.inherits(Bar, Goo);" +
-        "function Foo(){ Bar.base(this, 'constructor'); }" + FOO_INHERITS,
+        "function Bar(){ Bar.base(this, 'constructor'); }"
+            + "goog.inherits(Bar, Goo);"
+            + "function Foo(){ Bar.base(this, 'constructor'); }"
+            + FOO_INHERITS,
         BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidGoogBase14() {
-    testError("class Foo extends BaseFoo { constructor() { Foo.base(this); } }",
-        BASE_CLASS_ERROR);
+    testError("class Foo extends BaseFoo { constructor() { Foo.base(this); } }", BASE_CLASS_ERROR);
   }
 
   @Test
   public void testInvalidGoogBase14b() {
-    testError("class Foo extends BaseFoo { method() { Foo.base(this, 'method'); } }",
-        BASE_CLASS_ERROR);
+    testError(
+        "class Foo extends BaseFoo { method() { Foo.base(this, 'method'); } }", BASE_CLASS_ERROR);
   }
 
   @Test
   public void testValidBase1() {
-    test(FOO_INHERITS
-         + String.format(METHOD_FORMAT, "Foo.base(this, 'method');"),
-         FOO_INHERITS
-         + String.format(METHOD_FORMAT, "Foo.superClass_.method.call(this)"));
+    test(
+        FOO_INHERITS + String.format(METHOD_FORMAT, "Foo.base(this, 'method');"),
+        FOO_INHERITS + String.format(METHOD_FORMAT, "Foo.superClass_.method.call(this)"));
   }
 
   @Test
   public void testValidBase2() {
-    test(FOO_INHERITS
-         + String.format(METHOD_FORMAT, "Foo.base(this, 'method', 1, 2);"),
-         FOO_INHERITS
-         + String.format(METHOD_FORMAT,
-             "Foo.superClass_.method.call(this, 1, 2)"));
+    test(
+        FOO_INHERITS + String.format(METHOD_FORMAT, "Foo.base(this, 'method', 1, 2);"),
+        FOO_INHERITS + String.format(METHOD_FORMAT, "Foo.superClass_.method.call(this, 1, 2)"));
   }
 
   @Test
   public void testValidBase3() {
-    test(FOO_INHERITS
-         + String.format(METHOD_FORMAT, "return Foo.base(this, 'method');"),
-         FOO_INHERITS
-         + String.format(METHOD_FORMAT,
-             "return Foo.superClass_.method.call(this)"));
+    test(
+        FOO_INHERITS + String.format(METHOD_FORMAT, "return Foo.base(this, 'method');"),
+        FOO_INHERITS + String.format(METHOD_FORMAT, "return Foo.superClass_.method.call(this)"));
   }
 
   @Test
   public void testValidBase4() {
-    test("function Foo() { Foo.base(this, 'constructor', 1, 2); }"
-         + FOO_INHERITS,
-         "function Foo() { BaseFoo.call(this, 1, 2); } " + FOO_INHERITS);
+    test(
+        "function Foo() { Foo.base(this, 'constructor', 1, 2); }" + FOO_INHERITS,
+        "function Foo() { BaseFoo.call(this, 1, 2); } " + FOO_INHERITS);
   }
 
   @Test
   public void testValidBase5() {
-    test("var Foo = function() { Foo.base(this, 'constructor', 1); };"
-         + FOO_INHERITS,
-         "var Foo = function() { BaseFoo.call(this, 1); }; " + FOO_INHERITS);
+    test(
+        "var Foo = function() { Foo.base(this, 'constructor', 1); };" + FOO_INHERITS,
+        "var Foo = function() { BaseFoo.call(this, 1); }; " + FOO_INHERITS);
   }
 
   @Test
   public void testValidBase6() {
-    test("var goog = {}; goog.Foo = function() {" +
-         "goog.Foo.base(this, 'constructor'); }; " +
-         "goog.inherits(goog.Foo, goog.BaseFoo);",
-         "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; " +
-         "goog.inherits(goog.Foo, goog.BaseFoo);");
+    test(
+        "var goog = {}; goog.Foo = function() {"
+            + "goog.Foo.base(this, 'constructor'); }; "
+            + "goog.inherits(goog.Foo, goog.BaseFoo);",
+        "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; "
+            + "goog.inherits(goog.Foo, goog.BaseFoo);");
   }
 
   @Test
   public void testValidBase7() {
     // No goog.inherits, so this is probably a different 'base' function.
-    testSame(""
-        + "var a = function() {"
-        + "  a.base(this, 'constructor');"
-        + "};");
+    testSame("" + "var a = function() {" + "  a.base(this, 'constructor');" + "};");
   }
 
   @Test

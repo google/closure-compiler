@@ -248,7 +248,9 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     return new TypeCheckResult(jsNode.getFirstChild(), s);
   }
 
-  /** @param n A valid statement node, SCRIPT, or ROOT node. */
+  /**
+   * @param n A valid statement node, SCRIPT, or ROOT node.
+   */
   protected Node typeCheck(Node n) {
     Node jsRoot;
     if (n.isRoot()) {

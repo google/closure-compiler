@@ -42,10 +42,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
   @Test
   public void testGoogIsObject1() {
     testClosureFunction(
-        "goog.isObject",
-        getNativeAllType(),
-        getNativeNoObjectType(),
-        getNativeAllType());
+        "goog.isObject", getNativeAllType(), getNativeNoObjectType(), getNativeAllType());
   }
 
   @Test

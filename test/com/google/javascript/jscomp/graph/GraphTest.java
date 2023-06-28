@@ -27,17 +27,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for the graph data structure.
- *
- */
+/** Tests for the graph data structure. */
 @RunWith(JUnit4.class)
 public final class GraphTest {
 
   @Test
   public void testDirectedSimple() {
-    DiGraph<String, String> graph =
-        LinkedDirectedGraph.create();
+    DiGraph<String, String> graph = LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -86,8 +82,7 @@ public final class GraphTest {
 
   @Test
   public void testUndirectedSimple() {
-    UndiGraph<String, String> graph =
-        LinkedUndirectedGraph.create();
+    UndiGraph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -114,8 +109,7 @@ public final class GraphTest {
 
   @Test
   public void testDirectedSelfLoop() {
-    DiGraph<String, String> graph =
-        LinkedDirectedGraph.create();
+    DiGraph<String, String> graph = LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.connect("a", "->", "a");
@@ -144,8 +138,7 @@ public final class GraphTest {
 
   @Test
   public void testUndirectedSelfLoop() {
-    UndiGraph<String, String> graph =
-        LinkedUndirectedGraph.create();
+    UndiGraph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.connect("a", "--", "a");
@@ -160,8 +153,7 @@ public final class GraphTest {
 
   @Test
   public void testDirectedInAndOutEdges() {
-    DiGraph<String, String> graph =
-        LinkedDirectedGraph.create();
+    DiGraph<String, String> graph = LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -183,8 +175,7 @@ public final class GraphTest {
 
   @Test
   public void testUndirectedNeighbors() {
-    UndiGraph<String, String> graph =
-        LinkedUndirectedGraph.create();
+    UndiGraph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -206,8 +197,7 @@ public final class GraphTest {
 
   @Test
   public void testDirectedGetFirstEdge() {
-    DiGraph<String, String> graph =
-      LinkedDirectedGraph.create();
+    DiGraph<String, String> graph = LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -219,8 +209,7 @@ public final class GraphTest {
 
   @Test
   public void testUndirectedGetFirstEdge() {
-    UndiGraph<String, String> graph =
-      LinkedUndirectedGraph.create();
+    UndiGraph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -251,8 +240,7 @@ public final class GraphTest {
     checkAnnotations(graph, a, b);
   }
 
-  private static void checkAnnotations(
-      Graph<String, String> graph, Annotatable a, Annotatable b) {
+  private static void checkAnnotations(Graph<String, String> graph, Annotatable a, Annotatable b) {
     final Annotation A = new Annotation() {};
     final Annotation B = new Annotation() {};
 
@@ -323,10 +311,8 @@ public final class GraphTest {
 
   @Test
   public void testDirectedConnectIfNotFound() {
-    testDirectedConnectIfNotFound(
-        LinkedDirectedGraph.<String, String>create());
-    testDirectedConnectIfNotFound(
-        LinkedUndirectedGraph.<String, String>create());
+    testDirectedConnectIfNotFound(LinkedDirectedGraph.<String, String>create());
+    testDirectedConnectIfNotFound(LinkedUndirectedGraph.<String, String>create());
   }
 
   public void testDirectedConnectIfNotFound(Graph<String, String> graph) {
@@ -344,8 +330,7 @@ public final class GraphTest {
 
   @Test
   public void testSimpleSubGraph() {
-    UndiGraph<String, String> graph =
-        LinkedUndirectedGraph.create();
+    UndiGraph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");

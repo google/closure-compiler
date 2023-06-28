@@ -36,16 +36,17 @@ import org.junit.runners.JUnit4;
 public final class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
-  private static final String EXTERNS = lines(
-      MINIMAL_EXTERNS,
-      "Function.prototype.call=function(){};",
-      "Function.prototype.inherits=function(){};",
-      "Object.defineProperties = function(typeRef, definitions) {};",
-      "Object.prototype.toString = function() {};",
-      "var google = { gears: { factory: {}, workerPool: {} } };",
-      "/** @return {?} */ function any() {};",
-      "/** @constructor */ function Window() {}",
-      "/** @const */ var window = {};");
+  private static final String EXTERNS =
+      lines(
+          MINIMAL_EXTERNS,
+          "Function.prototype.call=function(){};",
+          "Function.prototype.inherits=function(){};",
+          "Object.defineProperties = function(typeRef, definitions) {};",
+          "Object.prototype.toString = function() {};",
+          "var google = { gears: { factory: {}, workerPool: {} } };",
+          "/** @return {?} */ function any() {};",
+          "/** @constructor */ function Window() {}",
+          "/** @const */ var window = {};");
 
   public AmbiguatePropertiesTest() {
     super(EXTERNS);
@@ -75,26 +76,23 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testOneVar1() {
-    test("/** @constructor */ var Foo = function(){};Foo.prototype.b = 0;",
-         "/** @constructor */ var Foo = function(){};Foo.prototype.a = 0;");
+    test(
+        "/** @constructor */ var Foo = function(){};Foo.prototype.b = 0;",
+        "/** @constructor */ var Foo = function(){};Foo.prototype.a = 0;");
   }
 
   @Test
   public void testOneVar2() {
-    test(lines(
-            "/** @constructor */ var Foo = function(){};",
-            "Foo.prototype = {b: 0};"),
-        lines(
-            "/** @constructor */ var Foo = function(){};",
-            "Foo.prototype = {a: 0};"));
+    test(
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {b: 0};"),
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {a: 0};"));
   }
 
   @Test
   public void testOneVar3() {
     test(
         lines(
-            "/** @constructor */ var Foo = function(){};",
-            "Foo.prototype = {get b() {return 0}};"),
+            "/** @constructor */ var Foo = function(){};", "Foo.prototype = {get b() {return 0}};"),
         lines(
             "/** @constructor */ var Foo = function(){};",
             "Foo.prototype = {get a() {return 0}};"));
@@ -103,71 +101,71 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testOneVar4() {
     test(
-        lines(
-            "/** @constructor */ var Foo = function(){};",
-            "Foo.prototype = {set b(a) {}};"),
-        lines(
-            "/** @constructor */ var Foo = function(){};",
-            "Foo.prototype = {set a(a) {}};"));
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {set b(a) {}};"),
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {set a(a) {}};"));
   }
 
   @Test
   public void testTwoVar1() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.z=0;",
-        "Foo.prototype.z=0;",
-        "Foo.prototype.x=0;");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.a=0;",
-        "Foo.prototype.a=0;",
-        "Foo.prototype.b=0;");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.z=0;",
+            "Foo.prototype.z=0;",
+            "Foo.prototype.x=0;");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.a=0;",
+            "Foo.prototype.a=0;",
+            "Foo.prototype.b=0;");
     test(js, output);
   }
 
   @Test
   public void testTwoVar2() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {z:0, z:1, x:0};");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {a:0, a:1, b:0};");
+    String js =
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {z:0, z:1, x:0};");
+    String output =
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {a:0, a:1, b:0};");
     test(js, output);
   }
 
   @Test
   public void testTwoIndependentVar() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.b = 0;",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype.c = 0;");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.a=0;",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype.a=0;");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.b = 0;",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.c = 0;");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.a=0;",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.a=0;");
     test(js, output);
   }
 
   @Test
   public void testTwoTypesTwoVar() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.r = 0;",
-        "Foo.prototype.g = 0;",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype.c = 0;",
-        "Bar.prototype.r = 0;");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.a=0;",
-        "Foo.prototype.b=0;",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype.b=0;",
-        "Bar.prototype.a=0;");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.r = 0;",
+            "Foo.prototype.g = 0;",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.c = 0;",
+            "Bar.prototype.r = 0;");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.a=0;",
+            "Foo.prototype.b=0;",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.b=0;",
+            "Bar.prototype.a=0;");
     test(js, output);
   }
 
@@ -227,48 +225,50 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testUnions() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "/** @constructor */ var Baz = function(){};",
-        "/** @constructor */ var Bat = function(){};",
-        "Foo.prototype.lone1=0;",
-        "Bar.prototype.lone2=0;",
-        "Baz.prototype.lone3=0;",
-        "Bat.prototype.lone4=0;",
-        "/** @type {Foo|Bar} */",
-        "var U1 = any();",
-        "U1.j1;",
-        "U1.j2;",
-        "/** @type {Baz|Bar} */",
-        "var U2 = any();",
-        "U2.j3;",
-        "U2.j4;",
-        "/** @type {Baz|Bat} */",
-        "var U3 = any();",
-        "U3.j5;",
-        "U3.j6");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "/** @constructor */ var Baz = function(){};",
-        "/** @constructor */ var Bat = function(){};",
-        "Foo.prototype.c=0;",
-        "Bar.prototype.e=0;",
-        "Baz.prototype.e=0;",
-        "Bat.prototype.c=0;",
-        "/** @type {Foo|Bar} */",
-        "var U1 = any();",
-        "U1.a;",
-        "U1.b;",
-        "/** @type {Baz|Bar} */",
-        "var U2 = any();",
-        "U2.c;",
-        "U2.d;",
-        "/** @type {Baz|Bat} */",
-        "var U3 = any();",
-        "U3.a;",
-        "U3.b");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "/** @constructor */ var Baz = function(){};",
+            "/** @constructor */ var Bat = function(){};",
+            "Foo.prototype.lone1=0;",
+            "Bar.prototype.lone2=0;",
+            "Baz.prototype.lone3=0;",
+            "Bat.prototype.lone4=0;",
+            "/** @type {Foo|Bar} */",
+            "var U1 = any();",
+            "U1.j1;",
+            "U1.j2;",
+            "/** @type {Baz|Bar} */",
+            "var U2 = any();",
+            "U2.j3;",
+            "U2.j4;",
+            "/** @type {Baz|Bat} */",
+            "var U3 = any();",
+            "U3.j5;",
+            "U3.j6");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "/** @constructor */ var Baz = function(){};",
+            "/** @constructor */ var Bat = function(){};",
+            "Foo.prototype.c=0;",
+            "Bar.prototype.e=0;",
+            "Baz.prototype.e=0;",
+            "Bat.prototype.c=0;",
+            "/** @type {Foo|Bar} */",
+            "var U1 = any();",
+            "U1.a;",
+            "U1.b;",
+            "/** @type {Baz|Bar} */",
+            "var U2 = any();",
+            "U2.c;",
+            "U2.d;",
+            "/** @type {Baz|Bat} */",
+            "var U3 = any();",
+            "U3.a;",
+            "U3.b");
     test(js, output);
   }
 
@@ -276,30 +276,32 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public void testExtends() {
     this.enableClosurePass();
 
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.x=0;",
-        "/** @constructor \n @extends Foo */ var Bar = function(){};",
-        "goog.inherits(Bar, Foo);",
-        "Bar.prototype.y=0;",
-        "Bar.prototype.z=0;",
-        "/** @constructor */ var Baz = function(){};",
-        "Baz.prototype.l=0;",
-        "Baz.prototype.m=0;",
-        "Baz.prototype.n=0;",
-        "(new Baz).m\n");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.a=0;",
-        "/** @constructor \n @extends Foo */ var Bar = function(){};",
-        "goog.inherits(Bar, Foo);",
-        "Bar.prototype.b=0;",
-        "Bar.prototype.c=0;",
-        "/** @constructor */ var Baz = function(){};",
-        "Baz.prototype.b=0;",
-        "Baz.prototype.a=0;",
-        "Baz.prototype.c=0;",
-        "(new Baz).a\n");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.x=0;",
+            "/** @constructor \n @extends Foo */ var Bar = function(){};",
+            "goog.inherits(Bar, Foo);",
+            "Bar.prototype.y=0;",
+            "Bar.prototype.z=0;",
+            "/** @constructor */ var Baz = function(){};",
+            "Baz.prototype.l=0;",
+            "Baz.prototype.m=0;",
+            "Baz.prototype.n=0;",
+            "(new Baz).m\n");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.a=0;",
+            "/** @constructor \n @extends Foo */ var Bar = function(){};",
+            "goog.inherits(Bar, Foo);",
+            "Bar.prototype.b=0;",
+            "Bar.prototype.c=0;",
+            "/** @constructor */ var Baz = function(){};",
+            "Baz.prototype.b=0;",
+            "Baz.prototype.a=0;",
+            "Baz.prototype.c=0;",
+            "(new Baz).a\n");
     test(js, output);
   }
 
@@ -336,43 +338,48 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionType() {
-    String js = lines(
-        "/** @constructor */ function Foo(){};",
-        "/** @return {Bar} */",
-        "Foo.prototype.fun = function() { return new Bar(); };",
-        "/** @constructor */ function Bar(){};",
-        "Bar.prototype.bazz;",
-        "(new Foo).fun().bazz();");
-    String output = lines(
-        "/** @constructor */ function Foo(){};",
-        "/** @return {Bar} */",
-        "Foo.prototype.a = function() { return new Bar(); };",
-        "/** @constructor */ function Bar(){};",
-        "Bar.prototype.a;",
-        "(new Foo).a().a();");
+    String js =
+        lines(
+            "/** @constructor */ function Foo(){};",
+            "/** @return {Bar} */",
+            "Foo.prototype.fun = function() { return new Bar(); };",
+            "/** @constructor */ function Bar(){};",
+            "Bar.prototype.bazz;",
+            "(new Foo).fun().bazz();");
+    String output =
+        lines(
+            "/** @constructor */ function Foo(){};",
+            "/** @return {Bar} */",
+            "Foo.prototype.a = function() { return new Bar(); };",
+            "/** @constructor */ function Bar(){};",
+            "Bar.prototype.a;",
+            "(new Foo).a().a();");
     test(js, output);
   }
 
   @Test
   public void testPrototypePropertiesAsObjLitKeys1() {
-    test("/** @constructor */ function Bar() {};" +
-             "Bar.prototype = {2: function(){}, getA: function(){}};",
-             "/** @constructor */ function Bar() {};" +
-             "Bar.prototype = {2: function(){}, a: function(){}};");
+    test(
+        "/** @constructor */ function Bar() {};"
+            + "Bar.prototype = {2: function(){}, getA: function(){}};",
+        "/** @constructor */ function Bar() {};"
+            + "Bar.prototype = {2: function(){}, a: function(){}};");
   }
 
   @Test
   public void testPrototypePropertiesAsObjLitKeys2() {
-    testSame("/** @constructor */ function Bar() {};" +
-             "Bar.prototype = {2: function(){}, 'getA': function(){}};");
+    testSame(
+        "/** @constructor */ function Bar() {};"
+            + "Bar.prototype = {2: function(){}, 'getA': function(){}};");
   }
 
   @Test
   public void testQuotedPrototypeProperty() {
-    testSame("/** @constructor */ function Bar() {};" +
-             "Bar.prototype['getA'] = function(){};" +
-             "var bar = new Bar();" +
-             "bar['getA']();");
+    testSame(
+        "/** @constructor */ function Bar() {};"
+            + "Bar.prototype['getA'] = function(){};"
+            + "var bar = new Bar();"
+            + "bar['getA']();");
   }
 
   @Test
@@ -587,10 +594,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     testSame(
         lines(
             "/** @constructor */ function Foo(){};",
-             "Foo.prototype.prop = 0;",
-             "function go(aFoo){",
-             "  aFoo.prop = 1;",
-             "}"));
+            "Foo.prototype.prop = 0;",
+            "function go(aFoo){",
+            "  aFoo.prop = 1;",
+            "}"));
   }
 
   @Test
@@ -632,82 +639,91 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testStaticAndInstanceMethodWithSameName() {
-    test("/** @constructor */function Bar(){}; Bar.getA = function(){}; " +
-         "Bar.prototype.getA = function(){}; Bar.getA();" +
-         "var bar = new Bar(); bar.getA();",
-         "/** @constructor */function Bar(){}; Bar.a = function(){};" +
-         "Bar.prototype.a = function(){}; Bar.a();" +
-         "var bar = new Bar(); bar.a();");
+    test(
+        "/** @constructor */function Bar(){}; Bar.getA = function(){}; "
+            + "Bar.prototype.getA = function(){}; Bar.getA();"
+            + "var bar = new Bar(); bar.getA();",
+        "/** @constructor */function Bar(){}; Bar.a = function(){};"
+            + "Bar.prototype.a = function(){}; Bar.a();"
+            + "var bar = new Bar(); bar.a();");
   }
 
   @Test
   public void testStaticAndInstanceProperties() {
-    test("/** @constructor */function Bar(){};" +
-         "Bar.getA = function(){}; " +
-         "Bar.prototype.getB = function(){};",
-         "/** @constructor */function Bar(){}; Bar.a = function(){};" +
-         "Bar.prototype.a = function(){};");
+    test(
+        "/** @constructor */function Bar(){};"
+            + "Bar.getA = function(){}; "
+            + "Bar.prototype.getB = function(){};",
+        "/** @constructor */function Bar(){}; Bar.a = function(){};"
+            + "Bar.prototype.a = function(){};");
   }
 
   @Test
   public void testStaticAndSubInstanceProperties() {
     this.enableClosurePass();
 
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.x=0;",
-        "/** @constructor \n @extends Foo */ var Bar = function(){};",
-        "goog.inherits(Bar, Foo);",
-        "Bar.y=0;",
-        "Bar.prototype.z=0;\n");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.a=0;",
-        "/** @constructor \n @extends Foo */ var Bar = function(){};",
-        "goog.inherits(Bar, Foo);",
-        "Bar.a=0;",
-        "Bar.prototype.a=0;\n");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.x=0;",
+            "/** @constructor \n @extends Foo */ var Bar = function(){};",
+            "goog.inherits(Bar, Foo);",
+            "Bar.y=0;",
+            "Bar.prototype.z=0;\n");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.a=0;",
+            "/** @constructor \n @extends Foo */ var Bar = function(){};",
+            "goog.inherits(Bar, Foo);",
+            "Bar.a=0;",
+            "Bar.prototype.a=0;\n");
     test(js, output);
   }
 
   @Test
   public void testStatic() {
-    String js = lines(
-      "/** @constructor */ var Foo = function() {};",
-      "Foo.x = 0;",
-      "/** @constructor */ var Bar = function() {};",
-      "Bar.y = 0;");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.x = 0;",
+            "/** @constructor */ var Bar = function() {};",
+            "Bar.y = 0;");
 
-    String output = lines(
-      "/** @constructor */ var Foo = function() {};",
-      "Foo.a = 0;",
-      "/** @constructor */ var Bar = function() {};",
-      "Bar.a = 0;");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.a = 0;",
+            "/** @constructor */ var Bar = function() {};",
+            "Bar.a = 0;");
     test(js, output);
   }
 
   @Test
   public void testClassWithStaticsPassedToUnrelatedFunction() {
-    String js = lines(
-      "/** @constructor */ var Foo = function() {};",
-      "Foo.x = 0;",
-      "/** @param {!Function} x */ function f(x) { x.y = 1; x.z = 2; }",
-      "f(Foo)");
-    String output = lines(
-      "/** @constructor */ var Foo = function() {};",
-      "Foo.a = 0;",
-      "/** @param {!Function} x */ function f(x) { x.y = 1; x.z = 2; }",
-      "f(Foo)");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.x = 0;",
+            "/** @param {!Function} x */ function f(x) { x.y = 1; x.z = 2; }",
+            "f(Foo)");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.a = 0;",
+            "/** @param {!Function} x */ function f(x) { x.y = 1; x.z = 2; }",
+            "f(Foo)");
     test(js, output);
   }
 
   @Test
   public void testClassWithStaticsPassedToRelatedFunction() {
-    String js = lines(
-      "/** @constructor */ var Foo = function() {};",
-      "Foo.x = 0;",
-      "/** @param {!Function} x */ function f(x) { x.y = 1; x.x = 2;}",
-      "f(Foo)");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.x = 0;",
+            "/** @param {!Function} x */ function f(x) { x.y = 1; x.x = 2;}",
+            "f(Foo)");
     testSame(js);
   }
 
@@ -737,28 +753,31 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testTypeMismatch() {
     ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
-    testSame(lines(
-        "/** @constructor */var Foo = function(){};",
-        "/** @constructor */var Bar = function(){};",
-        "Foo.prototype.b = 0;",
-        "/** @type {Foo} */",
-        "var F = new Bar();"));
+    testSame(
+        lines(
+            "/** @constructor */var Foo = function(){};",
+            "/** @constructor */var Bar = function(){};",
+            "Foo.prototype.b = 0;",
+            "/** @type {Foo} */",
+            "var F = new Bar();"));
   }
 
   @Test
   public void testRenamingMap() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.z=0;",
-        "Foo.prototype.z=0;",
-        "Foo.prototype.x=0;",
-        "Foo.prototype.y=0;");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype.a=0;",
-        "Foo.prototype.a=0;",
-        "Foo.prototype.b=0;",
-        "Foo.prototype.c=0;");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.z=0;",
+            "Foo.prototype.z=0;",
+            "Foo.prototype.x=0;",
+            "Foo.prototype.y=0;");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype.a=0;",
+            "Foo.prototype.a=0;",
+            "Foo.prototype.b=0;",
+            "Foo.prototype.c=0;");
     test(js, output);
 
     Map<String, String> answerMap = new HashMap<>();
@@ -770,34 +789,36 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testInline() {
-    String js = lines(
-        "/** @interface */ function Foo(){}",
-        "Foo.prototype.x = function(){};",
-        "/**",
-        " * @constructor",
-        " * @implements {Foo}",
-        " */",
-        "function Bar(){}",
-        "Bar.prototype.y;",
-        "/** @override */",
-        "Bar.prototype.x = function() { return this.y; };",
-        "Bar.prototype.z = function() {};\n"
-        // Simulates inline getters.
-        + "/** @type {Foo} */ (new Bar).y;");
-    String output = lines(
-        "/** @interface */ function Foo(){}",
-        "Foo.prototype.b = function(){};",
-        "/**",
-        " * @constructor",
-        " * @implements {Foo}",
-        " */",
-        "function Bar(){}",
-        "Bar.prototype.a;",
-        "/** @override */",
-        "Bar.prototype.b = function() { return this.a; };",
-        "Bar.prototype.c = function() {};\n"
-        // Simulates inline getters.
-        + "(new Bar).a;");
+    String js =
+        lines(
+            "/** @interface */ function Foo(){}",
+            "Foo.prototype.x = function(){};",
+            "/**",
+            " * @constructor",
+            " * @implements {Foo}",
+            " */",
+            "function Bar(){}",
+            "Bar.prototype.y;",
+            "/** @override */",
+            "Bar.prototype.x = function() { return this.y; };",
+            "Bar.prototype.z = function() {};\n"
+                // Simulates inline getters.
+                + "/** @type {Foo} */ (new Bar).y;");
+    String output =
+        lines(
+            "/** @interface */ function Foo(){}",
+            "Foo.prototype.b = function(){};",
+            "/**",
+            " * @constructor",
+            " * @implements {Foo}",
+            " */",
+            "function Bar(){}",
+            "Bar.prototype.a;",
+            "/** @override */",
+            "Bar.prototype.b = function() { return this.a; };",
+            "Bar.prototype.c = function() {};\n"
+                // Simulates inline getters.
+                + "(new Bar).a;");
     test(js, output);
   }
 
@@ -976,98 +997,105 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testBug14291280() {
-    String js = lines(
-        "/** @constructor \n @template T */\n",
-        "function C() {\n",
-        "  this.aa = 1;\n",
-        "}\n",
-        "/** @return {C.<T>} */\n",
-        "C.prototype.method = function() {\n",
-        "  return this;\n",
-        "}\n",
-        "/** @type {C.<string>} */\n",
-        "var x = new C().method();\n",
-        "x.bb = 2;\n",
-        "x.cc = 3;");
-    String result = lines(
-        "/** @constructor \n @template T */\n",
-        "function C() {",
-        "  this.b = 1;",
-        "}",
-        "/** @return {C.<T>} */\n",
-        "C.prototype.a = function() {",
-        "  return this;",
-        "};",
-        "/** @type {C.<string>} */\n",
-        "var x = (new C).a();",
-        "x.c = 2;",
-        "x.d = 3;");
+    String js =
+        lines(
+            "/** @constructor \n @template T */\n",
+            "function C() {\n",
+            "  this.aa = 1;\n",
+            "}\n",
+            "/** @return {C.<T>} */\n",
+            "C.prototype.method = function() {\n",
+            "  return this;\n",
+            "}\n",
+            "/** @type {C.<string>} */\n",
+            "var x = new C().method();\n",
+            "x.bb = 2;\n",
+            "x.cc = 3;");
+    String result =
+        lines(
+            "/** @constructor \n @template T */\n",
+            "function C() {",
+            "  this.b = 1;",
+            "}",
+            "/** @return {C.<T>} */\n",
+            "C.prototype.a = function() {",
+            "  return this;",
+            "};",
+            "/** @type {C.<string>} */\n",
+            "var x = (new C).a();",
+            "x.c = 2;",
+            "x.d = 3;");
     test(js, result);
   }
 
   @Test
   public void testAmbiguateWithAnAlias() {
-    String js = lines(
-        "/** @constructor */ function Foo() { this.abc = 5; }\n",
-        "/** @const */ var alias = Foo;\n",
-        "/** @constructor @extends alias */\n",
-        "function Bar() {\n",
-        "  this.xyz = 7;\n",
-        "}");
-    String result = lines(
-        "/** @constructor */ function Foo() { this.a = 5; }\n",
-        "/** @const */ var alias = Foo;\n",
-        "/** @constructor @extends alias */\n",
-        "function Bar() {\n",
-        "  this.b = 7;\n",
-        "}");
+    String js =
+        lines(
+            "/** @constructor */ function Foo() { this.abc = 5; }\n",
+            "/** @const */ var alias = Foo;\n",
+            "/** @constructor @extends alias */\n",
+            "function Bar() {\n",
+            "  this.xyz = 7;\n",
+            "}");
+    String result =
+        lines(
+            "/** @constructor */ function Foo() { this.a = 5; }\n",
+            "/** @const */ var alias = Foo;\n",
+            "/** @constructor @extends alias */\n",
+            "function Bar() {\n",
+            "  this.b = 7;\n",
+            "}");
     test(js, result);
   }
 
   @Test
   public void testAmbiguateWithAliases() {
-    String js = lines(
-        "/** @constructor */ function Foo() { this.abc = 5; }\n",
-        "/** @const */ var alias = Foo;\n",
-        "/** @constructor @extends alias */\n",
-        "function Bar() {\n",
-        "  this.def = 7;\n",
-        "}\n",
-        "/** @constructor @extends alias */\n",
-        "function Baz() {\n",
-        "  this.xyz = 8;\n",
-        "}");
-    String result = lines(
-        "/** @constructor */ function Foo() { this.a = 5; }\n",
-        "/** @const */ var alias = Foo;\n",
-        "/** @constructor @extends alias */\n",
-        "function Bar() {\n",
-        "  this.b = 7;\n",
-        "}\n",
-        "/** @constructor @extends alias */\n",
-        "function Baz() {\n",
-        "  this.b = 8;\n",
-        "}");
+    String js =
+        lines(
+            "/** @constructor */ function Foo() { this.abc = 5; }\n",
+            "/** @const */ var alias = Foo;\n",
+            "/** @constructor @extends alias */\n",
+            "function Bar() {\n",
+            "  this.def = 7;\n",
+            "}\n",
+            "/** @constructor @extends alias */\n",
+            "function Baz() {\n",
+            "  this.xyz = 8;\n",
+            "}");
+    String result =
+        lines(
+            "/** @constructor */ function Foo() { this.a = 5; }\n",
+            "/** @const */ var alias = Foo;\n",
+            "/** @constructor @extends alias */\n",
+            "function Bar() {\n",
+            "  this.b = 7;\n",
+            "}\n",
+            "/** @constructor @extends alias */\n",
+            "function Baz() {\n",
+            "  this.b = 8;\n",
+            "}");
     test(js, result);
   }
 
   // See https://github.com/google/closure-compiler/issues/1358
   @Test
   public void testAmbiguateWithStructuralInterfaces() {
-    String js = lines(
-        "/** @record */",
-        "function Record() {}",
-        "/** @type {number|undefined} */",
-        "Record.prototype.recordProp;",
-        "",
-        "function f(/** !Record */ a) { use(a.recordProp); }",
-        "",
-        "/** @constructor */",
-        "function Type() {",
-        "  /** @const */",
-        "  this.classProp = 'a';",
-        "}",
-        "f(new Type)");
+    String js =
+        lines(
+            "/** @record */",
+            "function Record() {}",
+            "/** @type {number|undefined} */",
+            "Record.prototype.recordProp;",
+            "",
+            "function f(/** !Record */ a) { use(a.recordProp); }",
+            "",
+            "/** @constructor */",
+            "function Type() {",
+            "  /** @const */",
+            "  this.classProp = 'a';",
+            "}",
+            "f(new Type)");
 
     String expected =
         lines(
@@ -1127,119 +1155,126 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   // See https://github.com/google/closure-compiler/issues/2119
   @Test
   public void testUnrelatedObjectLiterals() {
-    testSame(lines(
-        "/** @constructor */ function Foo() {}",
-        "/** @constructor */ function Bar() {}",
-        "var lit1 = {a: new Foo()};",
-        "var lit2 = {b: new Bar()};"));
+    testSame(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "/** @constructor */ function Bar() {}",
+            "var lit1 = {a: new Foo()};",
+            "var lit2 = {b: new Bar()};"));
   }
 
   @Test
   public void testObjectLitTwoVar() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {z:0, z:1, x:0};");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {a:0, a:1, b:0};");
+    String js =
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {z:0, z:1, x:0};");
+    String output =
+        lines("/** @constructor */ var Foo = function(){};", "Foo.prototype = {a:0, a:1, b:0};");
     test(js, output);
   }
 
   @Test
   public void testObjectLitTwoIndependentVar() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {b: 0};",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype = {c: 0};");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {a: 0};",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype = {a: 0};");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype = {b: 0};",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype = {c: 0};");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype = {a: 0};",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype = {a: 0};");
     test(js, output);
   }
 
   @Test
   public void testObjectLitTwoTypesTwoVar() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {r: 0, g: 0};",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype = {c: 0, r: 0};");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {a: 0, b: 0};",
-        "/** @constructor */ var Bar = function(){};",
-        "Bar.prototype = {b: 0, a: 0};");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype = {r: 0, g: 0};",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype = {c: 0, r: 0};");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype = {a: 0, b: 0};",
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype = {b: 0, a: 0};");
     test(js, output);
   }
 
   @Test
   public void testObjectLitUnion() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "Foo.prototype = {foodoo: 0};",
-        "Bar.prototype = {bardoo: 0};",
-        "/** @type {Foo|Bar} */",
-        "var U = any();",
-        "U.joint;");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "Foo.prototype = {a: 0};",
-        "Bar.prototype = {a: 0};",
-        "/** @type {Foo|Bar} */",
-        "var U = any();",
-        "U.b;");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "Foo.prototype = {foodoo: 0};",
+            "Bar.prototype = {bardoo: 0};",
+            "/** @type {Foo|Bar} */",
+            "var U = any();",
+            "U.joint;");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "Foo.prototype = {a: 0};",
+            "Bar.prototype = {a: 0};",
+            "/** @type {Foo|Bar} */",
+            "var U = any();",
+            "U.b;");
     test(js, output);
   }
 
   @Test
   public void testObjectLitUnions() {
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "/** @constructor */ var Baz = function(){};",
-        "/** @constructor */ var Bat = function(){};",
-        "Foo.prototype = {lone1: 0};",
-        "Bar.prototype = {lone2: 0};",
-        "Baz.prototype = {lone3: 0};",
-        "Bat.prototype = {lone4: 0};",
-        "/** @type {Foo|Bar} */",
-        "var U1 = any();",
-        "U1.j1;",
-        "U1.j2;",
-        "/** @type {Baz|Bar} */",
-        "var U2 = any();",
-        "U2.j3;",
-        "U2.j4;",
-        "/** @type {Baz|Bat} */",
-        "var U3 = any();",
-        "U3.j5;",
-        "U3.j6");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "/** @constructor */ var Bar = function(){};",
-        "/** @constructor */ var Baz = function(){};",
-        "/** @constructor */ var Bat = function(){};",
-        "Foo.prototype = {c: 0};",
-        "Bar.prototype = {e: 0};",
-        "Baz.prototype = {e: 0};",
-        "Bat.prototype = {c: 0};",
-        "/** @type {Foo|Bar} */",
-        "var U1 = any();",
-        "U1.a;",
-        "U1.b;",
-        "/** @type {Baz|Bar} */",
-        "var U2 = any();",
-        "U2.c;",
-        "U2.d;",
-        "/** @type {Baz|Bat} */",
-        "var U3 = any();",
-        "U3.a;",
-        "U3.b");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "/** @constructor */ var Baz = function(){};",
+            "/** @constructor */ var Bat = function(){};",
+            "Foo.prototype = {lone1: 0};",
+            "Bar.prototype = {lone2: 0};",
+            "Baz.prototype = {lone3: 0};",
+            "Bat.prototype = {lone4: 0};",
+            "/** @type {Foo|Bar} */",
+            "var U1 = any();",
+            "U1.j1;",
+            "U1.j2;",
+            "/** @type {Baz|Bar} */",
+            "var U2 = any();",
+            "U2.j3;",
+            "U2.j4;",
+            "/** @type {Baz|Bat} */",
+            "var U3 = any();",
+            "U3.j5;",
+            "U3.j6");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "/** @constructor */ var Baz = function(){};",
+            "/** @constructor */ var Bat = function(){};",
+            "Foo.prototype = {c: 0};",
+            "Bar.prototype = {e: 0};",
+            "Baz.prototype = {e: 0};",
+            "Bat.prototype = {c: 0};",
+            "/** @type {Foo|Bar} */",
+            "var U1 = any();",
+            "U1.a;",
+            "U1.b;",
+            "/** @type {Baz|Bar} */",
+            "var U2 = any();",
+            "U2.c;",
+            "U2.d;",
+            "/** @type {Baz|Bat} */",
+            "var U3 = any();",
+            "U3.a;",
+            "U3.b");
     test(js, output);
   }
 
@@ -1247,24 +1282,26 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public void testObjectLitExtends() {
     this.enableClosurePass();
 
-    String js = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {x: 0};",
-        "/** @constructor \n @extends Foo */ var Bar = function(){};",
-        "goog.inherits(Bar, Foo);",
-        "Bar.prototype = {y: 0, z: 0};",
-        "/** @constructor */ var Baz = function(){};",
-        "Baz.prototype = {l: 0, m: 0, n: 0};",
-        "(new Baz).m\n");
-    String output = lines(
-        "/** @constructor */ var Foo = function(){};",
-        "Foo.prototype = {a: 0};",
-        "/** @constructor \n @extends Foo */ var Bar = function(){};",
-        "goog.inherits(Bar, Foo);",
-        "Bar.prototype = {b: 0, c: 0};",
-        "/** @constructor */ var Baz = function(){};",
-        "Baz.prototype = {b: 0, a: 0, c: 0};",
-        "(new Baz).a\n");
+    String js =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype = {x: 0};",
+            "/** @constructor \n @extends Foo */ var Bar = function(){};",
+            "goog.inherits(Bar, Foo);",
+            "Bar.prototype = {y: 0, z: 0};",
+            "/** @constructor */ var Baz = function(){};",
+            "Baz.prototype = {l: 0, m: 0, n: 0};",
+            "(new Baz).m\n");
+    String output =
+        lines(
+            "/** @constructor */ var Foo = function(){};",
+            "Foo.prototype = {a: 0};",
+            "/** @constructor \n @extends Foo */ var Bar = function(){};",
+            "goog.inherits(Bar, Foo);",
+            "Bar.prototype = {b: 0, c: 0};",
+            "/** @constructor */ var Baz = function(){};",
+            "Baz.prototype = {b: 0, a: 0, c: 0};",
+            "(new Baz).a\n");
     test(js, output);
   }
 
@@ -1283,18 +1320,20 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjectLitFunctionType() {
-    String js = lines(
-        "/** @constructor */ function Foo(){};",
-        "Foo.prototype = { /** @return {Bar} */ fun: function() { return new Bar(); } };",
-        "/** @constructor */ function Bar(){};",
-        "Bar.prototype.bazz;",
-        "(new Foo).fun().bazz();");
-    String output = lines(
-        "/** @constructor */ function Foo(){};",
-        "Foo.prototype = { /** @return {Bar} */ a: function() { return new Bar(); } };",
-        "/** @constructor */ function Bar(){};",
-        "Bar.prototype.a;",
-        "(new Foo).a().a();");
+    String js =
+        lines(
+            "/** @constructor */ function Foo(){};",
+            "Foo.prototype = { /** @return {Bar} */ fun: function() { return new Bar(); } };",
+            "/** @constructor */ function Bar(){};",
+            "Bar.prototype.bazz;",
+            "(new Foo).fun().bazz();");
+    String output =
+        lines(
+            "/** @constructor */ function Foo(){};",
+            "Foo.prototype = { /** @return {Bar} */ a: function() { return new Bar(); } };",
+            "/** @constructor */ function Bar(){};",
+            "Bar.prototype.a;",
+            "(new Foo).a().a();");
     test(js, output);
   }
 
@@ -1315,52 +1354,48 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnum() {
-    testSame(
-        lines(
-            "/** @enum {string} */ var Foo = {X: 'y'};",
-            "var x = Foo.X"));
+    testSame(lines("/** @enum {string} */ var Foo = {X: 'y'};", "var x = Foo.X"));
   }
 
   @Test
   public void testUnannotatedConstructorsDontCrash() {
-    testSame(lines(
-        "function Foo() {}",
-        "Foo.prototype.a;",
-        "function Bar() {}",
-        "Bar.prototype.a;"));
+    testSame(
+        lines("function Foo() {}", "Foo.prototype.a;", "function Bar() {}", "Bar.prototype.a;"));
   }
 
   @Test
   public void testGenericPrototypeObject() {
-    String js = lines(
-        "/**",
-        " * @constructor",
-        " * @template T",
-        " */",
-        "function Foo() {",
-        "  this.a = 1;",
-        "}",
-        "/** @constructor @extends {Foo<number>} */",
-        "function Bar() {}",
-        "/** @constructor */",
-        "function Baz() {",
-        "  this.b = 2;",
-        "}");
+    String js =
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {",
+            "  this.a = 1;",
+            "}",
+            "/** @constructor @extends {Foo<number>} */",
+            "function Bar() {}",
+            "/** @constructor */",
+            "function Baz() {",
+            "  this.b = 2;",
+            "}");
 
-    String output = lines(
-        "/**",
-        " * @constructor",
-        " * @template T",
-        " */",
-        "function Foo() {",
-        "  this.a = 1;",
-        "}",
-        "/** @constructor @extends {Foo<number>} */",
-        "function Bar() {}",
-        "/** @constructor */",
-        "function Baz() {",
-        "  this.a = 2;",
-        "}");
+    String output =
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {",
+            "  this.a = 1;",
+            "}",
+            "/** @constructor @extends {Foo<number>} */",
+            "function Bar() {}",
+            "/** @constructor */",
+            "function Baz() {",
+            "  this.a = 2;",
+            "}");
 
     test(js, output);
   }
@@ -1409,50 +1444,54 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPropertiesWithTypesThatHaveBeenNarrowed() {
-    String js = lines(
-        "/** @constructor */",
-        "function Foo() {",
-        "  /** @type {?Object} */",
-        "  this.prop1 = {};",
-        "  /** @type {?Object} */",
-        "  this.prop2;",
-        "  this.headerObserver_;",
-        "}",
-        "Foo.prototype.m = function() {",
-        "  this.prop2 = {};",
-        "  return this.headerObserver_;",
-        "};");
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {?Object} */",
+            "  this.prop1 = {};",
+            "  /** @type {?Object} */",
+            "  this.prop2;",
+            "  this.headerObserver_;",
+            "}",
+            "Foo.prototype.m = function() {",
+            "  this.prop2 = {};",
+            "  return this.headerObserver_;",
+            "};");
 
-    String output = lines(
-        "/** @constructor */",
-        "function Foo() {",
-        "  /** @type {?Object} */",
-        "  this.d = {};",
-        "  /** @type {?Object} */",
-        "  this.b;",
-        "  this.a;",
-        "}",
-        "Foo.prototype.c = function() {",
-        "  this.b = {};",
-        "  return this.a;",
-        "};");
+    String output =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {?Object} */",
+            "  this.d = {};",
+            "  /** @type {?Object} */",
+            "  this.b;",
+            "  this.a;",
+            "}",
+            "Foo.prototype.c = function() {",
+            "  this.b = {};",
+            "  return this.a;",
+            "};");
 
     test(js, output);
   }
 
   @Test
   public void testDontRenamePrototypeWithoutExterns() {
-    String js = lines(
-      "/** @interface */",
-      "function Foo() {}",
-      "/** @return {!Foo} */",
-      "Foo.prototype.foo = function() {};");
+    String js =
+        lines(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @return {!Foo} */",
+            "Foo.prototype.foo = function() {};");
 
-    String output = lines(
-      "/** @interface */",
-      "function Foo() {}",
-      "/** @return {!Foo} */",
-      "Foo.prototype.a = function() {};");
+    String output =
+        lines(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @return {!Foo} */",
+            "Foo.prototype.a = function() {};");
 
     test(externs(""), srcs(js), expected(output));
   }
@@ -1644,7 +1683,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "class Foo { static b() {} }", //
             "class Bar extends Foo { static a() {} }"));
   }
-
 
   @Test
   public void testEs6SubclassChain_withStaticMethods_notAmbiguated() {

@@ -55,8 +55,7 @@ public final class JsDocTokenStreamTest {
         ImmutableList.of(STAR, ANNOTATION, LEFT_CURLY, STRING, RIGHT_CURLY, EOL, STAR, ANNOTATION);
     ImmutableList<String> strings = ImmutableList.of("type", "string", "private");
     testJSDocTokenStream(" * @type {string}\n * @private", tokens, strings);
-    testJSDocTokenStream(" *    @type { string } \n * @private",
-        tokens, strings);
+    testJSDocTokenStream(" *    @type { string } \n * @private", tokens, strings);
     testJSDocTokenStream(" * @type   {  string}\n * @private", tokens, strings);
     testJSDocTokenStream(" * @type {string  }\n * @private", tokens, strings);
     testJSDocTokenStream(" * @type {string}\n *   @private", tokens, strings);
@@ -87,8 +86,7 @@ public final class JsDocTokenStreamTest {
     testJSDocTokenStream("@param {  Array.<string|null>}", tokens, strings);
     testJSDocTokenStream("@param {Array.<string|   null>}  ", tokens, strings);
     testJSDocTokenStream("@param {Array.<string|null>}", tokens, strings);
-    testJSDocTokenStream("     @param { Array .< string |null > } ",
-        tokens, strings);
+    testJSDocTokenStream("     @param { Array .< string |null > } ", tokens, strings);
   }
 
   @Test
@@ -110,13 +108,10 @@ public final class JsDocTokenStreamTest {
     ImmutableList<String> strings = ImmutableList.of("param", "Array", "string", "null");
     testJSDocTokenStream("@param {Array.<(string,null)>}", tokens, strings);
     testJSDocTokenStream("@param {Array  .<(string,null)> } ", tokens, strings);
-    testJSDocTokenStream(" @param {Array.<  (  string,null)>}",
-        tokens, strings);
+    testJSDocTokenStream(" @param {Array.<  (  string,null)>}", tokens, strings);
     testJSDocTokenStream("@param {Array.<(string  , null)>}", tokens, strings);
-    testJSDocTokenStream("@param {Array.<(string,   null)  > }  ",
-        tokens, strings);
-    testJSDocTokenStream("@param {  Array  .<  (string,null)>}   ",
-        tokens, strings);
+    testJSDocTokenStream("@param {Array.<(string,   null)  > }  ", tokens, strings);
+    testJSDocTokenStream("@param {  Array  .<  (string,null)>}   ", tokens, strings);
   }
 
   @Test
@@ -165,11 +160,9 @@ public final class JsDocTokenStreamTest {
     ImmutableList<String> strings =
         ImmutableList.of("param", "foo.Bar", "opt_name", "this", "parameter", "is", "a", "name");
     testJSDocTokenStream(
-        " * @param foo.Bar opt_name this parameter is a name\n" +
-        " */", tokens, strings);
+        " * @param foo.Bar opt_name this parameter is a name\n" + " */", tokens, strings);
     testJSDocTokenStream(
-        "  *  @param foo.Bar opt_name this parameter is a name \n" +
-        " */ ", tokens, strings);
+        "  *  @param foo.Bar opt_name this parameter is a name \n" + " */ ", tokens, strings);
   }
 
   @Test
@@ -181,8 +174,7 @@ public final class JsDocTokenStreamTest {
         ImmutableList.of(
             "param", "foo.Bar", "opt_name", "this", "parameter", "does", "media", "blah");
     testJSDocTokenStream(
-        " * @param foo.Bar opt_name this parameter does @media blah\n" +
-        " */", tokens, strings);
+        " * @param foo.Bar opt_name this parameter does @media blah\n" + " */", tokens, strings);
   }
 
   @Test

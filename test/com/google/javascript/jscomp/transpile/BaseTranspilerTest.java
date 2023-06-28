@@ -38,7 +38,9 @@ public final class BaseTranspilerTest {
 
   private Transpiler transpiler;
   private BaseTranspiler.CompilerSupplier compiler;
-  @Mock(answer = RETURNS_SMART_NULLS) BaseTranspiler.CompilerSupplier mockCompiler;
+
+  @Mock(answer = RETURNS_SMART_NULLS)
+  BaseTranspiler.CompilerSupplier mockCompiler;
 
   private static final URI FOO_JS;
   private static final URI SOURCE_JS;

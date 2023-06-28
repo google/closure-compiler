@@ -27,10 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for function and method arity checking in TypeCheck.
- *
- */
+/** Tests for function and method arity checking in TypeCheck. */
 @RunWith(JUnit4.class)
 public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
@@ -94,34 +91,24 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   @Test
   public void testWrongNumberOfArgs() {
-    assertWarning("a,b,opt_c", "1",
-        WRONG_ARGUMENT_COUNT);
-    assertWarning("a,b,opt_c", "1,2,3,4",
-        WRONG_ARGUMENT_COUNT);
-    assertWarning("a,b", "1, 2, 3",
-        WRONG_ARGUMENT_COUNT);
-    assertWarning("", "1, 2, 3",
-        WRONG_ARGUMENT_COUNT);
-    assertWarning("a,b,c,d", "1, 2, 3",
-        WRONG_ARGUMENT_COUNT);
-    assertWarning("a,b,var_args", "1",
-        WRONG_ARGUMENT_COUNT);
-    assertWarning("a,b,opt_c,var_args", "1",
-        WRONG_ARGUMENT_COUNT);
+    assertWarning("a,b,opt_c", "1", WRONG_ARGUMENT_COUNT);
+    assertWarning("a,b,opt_c", "1,2,3,4", WRONG_ARGUMENT_COUNT);
+    assertWarning("a,b", "1, 2, 3", WRONG_ARGUMENT_COUNT);
+    assertWarning("", "1, 2, 3", WRONG_ARGUMENT_COUNT);
+    assertWarning("a,b,c,d", "1, 2, 3", WRONG_ARGUMENT_COUNT);
+    assertWarning("a,b,var_args", "1", WRONG_ARGUMENT_COUNT);
+    assertWarning("a,b,opt_c,var_args", "1", WRONG_ARGUMENT_COUNT);
   }
 
   @Test
   public void testVarArgsLast() {
-    assertWarning("a,b,var_args,c", "1,2,3,4",
-        VAR_ARGS_MUST_BE_LAST);
+    assertWarning("a,b,var_args,c", "1,2,3,4", VAR_ARGS_MUST_BE_LAST);
   }
 
   @Test
   public void testOptArgsLast() {
-    assertWarning("a,b,opt_d,c", "1, 2, 3",
-        OPTIONAL_ARG_AT_END);
-    assertWarning("a,b,opt_d,c", "1, 2",
-        OPTIONAL_ARG_AT_END);
+    assertWarning("a,b,opt_d,c", "1, 2, 3", OPTIONAL_ARG_AT_END);
+    assertWarning("a,b,opt_d,c", "1, 2", OPTIONAL_ARG_AT_END);
   }
 
   @Test
@@ -136,8 +123,7 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   @Test
   public void testFunctionsWithJsDoc3() {
-    testSame("/** @param {*=} c \n * @param {*=} b */ " +
-             "function foo(a,b,c) {} foo(1);");
+    testSame("/** @param {*=} c \n * @param {*=} b */ " + "function foo(a,b,c) {} foo(1);");
   }
 
   @Test
@@ -152,8 +138,7 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   @Test
   public void testFunctionsWithJsDoc6() {
-    testWarning(
-        "/** @param {...*} b */ var foo = function(a, b) {}; foo();", WRONG_ARGUMENT_COUNT);
+    testWarning("/** @param {...*} b */ var foo = function(a, b) {}; foo();", WRONG_ARGUMENT_COUNT);
   }
 
   @Test
@@ -175,15 +160,17 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
   @Test
   public void testMethodCalls() {
     final String METHOD_DEFS =
-      "/** @constructor */\n" +
-      "function Foo() {}" +
-      // Methods defined in a separate functions and then added via assignment
-      "function twoArg(arg1, arg2) {};" +
-      "Foo.prototype.prototypeMethod = twoArg;" +
-      "Foo.staticMethod = twoArg;" +
-      // Constructor that specifies a return type
-      "/**\n * @constructor\n * @return {Bar}\n */\n" +
-      "function Bar() {}";
+        "/** @constructor */\n"
+            + "function Foo() {}"
+            +
+            // Methods defined in a separate functions and then added via assignment
+            "function twoArg(arg1, arg2) {};"
+            + "Foo.prototype.prototypeMethod = twoArg;"
+            + "Foo.staticMethod = twoArg;"
+            +
+            // Constructor that specifies a return type
+            "/**\n * @constructor\n * @return {Bar}\n */\n"
+            + "function Bar() {}";
 
     // Prototype method with too many arguments.
     testWarning(

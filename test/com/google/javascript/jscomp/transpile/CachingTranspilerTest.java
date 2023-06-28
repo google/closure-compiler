@@ -36,7 +36,9 @@ import org.mockito.MockitoAnnotations;
 public final class CachingTranspilerTest {
 
   private Transpiler transpiler;
-  @Mock(answer = RETURNS_SMART_NULLS) Transpiler delegate;
+
+  @Mock(answer = RETURNS_SMART_NULLS)
+  Transpiler delegate;
 
   private static final URI FOO_JS;
   private static final URI BAR_JS;

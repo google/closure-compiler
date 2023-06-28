@@ -242,12 +242,13 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
             "}"));
 
     test(
-        srcs(lines(
-            "if (true) {", // preserve newline
-            "  let x = 1;",
-            "} else {",
-            "  let x = 1;",
-            "}")),
+        srcs(
+            lines(
+                "if (true) {", // preserve newline
+                "  let x = 1;",
+                "} else {",
+                "  let x = 1;",
+                "}")),
         expected("if (true); else;"));
   }
 
@@ -535,10 +536,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testNoSideEffectAnnotation14() {
     String externs = "function c(){};" + "c.prototype.f = /**@nosideeffects*/function(){};";
-    test(
-        externs(externs),
-        srcs("var o = new c; var a = o.f()"),
-        expected("new c"));
+    test(externs(externs), srcs("var o = new c; var a = o.f()"), expected("new c"));
   }
 
   @Test
@@ -723,13 +721,17 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     test("class D {} class C extends D {}", "");
   }
 
-  /** @bug 67430253 */
+  /**
+   * @bug 67430253
+   */
   @Test
   public void testEs6ClassExtendsQualifiedName1() {
     testSame("var ns = {}; ns.Class1 = class {}; class Class2 extends ns.Class1 {}; use(Class2);");
   }
 
-  /** @bug 67430253 */
+  /**
+   * @bug 67430253
+   */
   @Test
   public void testEs6ClassExtendsQualifiedName2() {
     test(
@@ -1039,9 +1041,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     test(
         externs("function f(){} function g() {} function h() {}"),
         srcs(
-          "var i = 0; var j = 0;                      for (i = 1 + f() + g() + h(); i = 0; j++);"),
+            "var i = 0; var j = 0;                      for (i = 1 + f() + g() + h(); i = 0;"
+                + " j++);"),
         expected(
-          "           var j = 0; 1 + f() + g() + h(); for (                       ;     0; j++);"));
+            "           var j = 0; 1 + f() + g() + h(); for (                       ;     0;"
+                + " j++);"));
   }
 
   @Test
@@ -1057,8 +1061,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     test(
         externs("function f(){} function g() {} function h() {}"),
         srcs("var i = 0, j = 0, k = 0; for (i = f(), j = g(), k = h(); i = 0;);"),
-        expected(
-            "                         for (    f(),     g(),     h();     0;);"));
+        expected("                         for (    f(),     g(),     h();     0;);"));
   }
 
   @Test

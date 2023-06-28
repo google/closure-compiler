@@ -29,16 +29,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link CheckArrayWithGoogObject}.
- *
- */
+/** Test case for {@link CheckArrayWithGoogObject}. */
 @RunWith(JUnit4.class)
 public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
 
-  private static final String GOOG_OBJECT = lines(
-      "goog.object = {};",
-      "goog.object.forEach = function(obj, f, opt_this) {}");
+  private static final String GOOG_OBJECT =
+      lines("goog.object = {};", "goog.object.forEach = function(obj, f, opt_this) {}");
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -62,40 +58,41 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
 
   @Test
   public void testGoogObjectForEach1() {
-    testGoogObjectWarning(lines(
-        GOOG_OBJECT,
-        "var arr = [1, 2, 3];",
-        "goog.object.forEach(arr, alert);"));
+    testGoogObjectWarning(
+        lines(GOOG_OBJECT, "var arr = [1, 2, 3];", "goog.object.forEach(arr, alert);"));
   }
 
   @Test
   public void testGoogObjectForEach2() {
-    testGoogObjectWarning(lines(
-        GOOG_OBJECT,
-        "function f(/** Array<number>|number */ n) {",
-        "  if (typeof n == 'number')",
-        "    alert(n);",
-        "  else",
-        "    goog.object.forEach(n, alert);",
-        "}"));
+    testGoogObjectWarning(
+        lines(
+            GOOG_OBJECT,
+            "function f(/** Array<number>|number */ n) {",
+            "  if (typeof n == 'number')",
+            "    alert(n);",
+            "  else",
+            "    goog.object.forEach(n, alert);",
+            "}"));
   }
 
   @Test
   public void testGoogObjectForEach3() {
-    testGoogObjectWarning(lines(
-        GOOG_OBJECT,
-        "function f(/** !Array<number> */ arr) {",
-        "  goog.object.forEach(arr, alert);",
-        "}"));
+    testGoogObjectWarning(
+        lines(
+            GOOG_OBJECT,
+            "function f(/** !Array<number> */ arr) {",
+            "  goog.object.forEach(arr, alert);",
+            "}"));
   }
 
   @Test
   public void testGoogObjectForEach4() {
-    testNoGoogObjectWarning(lines(
-        GOOG_OBJECT,
-        "function f(/** Object<string, number> */ obj) {",
-        "  goog.object.forEach(obj, alert);",
-        "}"));
+    testNoGoogObjectWarning(
+        lines(
+            GOOG_OBJECT,
+            "function f(/** Object<string, number> */ obj) {",
+            "  goog.object.forEach(obj, alert);",
+            "}"));
   }
 
   private void testGoogObjectWarning(String js) {

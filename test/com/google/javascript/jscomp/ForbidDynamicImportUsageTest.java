@@ -31,7 +31,6 @@ public final class ForbidDynamicImportUsageTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-
     enableTypeInfoValidation();
     enableTypeCheck();
   }

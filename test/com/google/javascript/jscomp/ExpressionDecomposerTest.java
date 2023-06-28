@@ -50,6 +50,7 @@ public final class ExpressionDecomposerTest {
 
   /** The language out to set in the compiler options. If null, use the default. */
   private @Nullable LanguageMode languageOut;
+
   // Whether we should run type checking and test the type information in the output expression
   private boolean shouldTestTypes;
 

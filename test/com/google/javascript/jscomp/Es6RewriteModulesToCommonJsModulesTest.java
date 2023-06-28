@@ -244,7 +244,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
 
   @Test
   public void testExportDestructureDeclaration() {
-    test("export let {a, c:b} = obj;",
+    test(
+        "export let {a, c:b} = obj;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  Object.defineProperties($$exports, {",
@@ -264,7 +265,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "  let {a, c:b} = obj;",
             "}, 'testcode', []);"));
 
-    test("export let [a, b] = obj;",
+    test(
+        "export let [a, b] = obj;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  Object.defineProperties($$exports, {",
@@ -284,7 +286,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "  let [a, b] = obj;",
             "}, 'testcode', []);"));
 
-    test("export let {a, b:[c,d]}  = obj;",
+    test(
+        "export let {a, b:[c,d]}  = obj;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  Object.defineProperties($$exports, {",
@@ -521,7 +524,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
 
   @Test
   public void testExportStarFrom() {
-    test("export * from './other.js';",
+    test(
+        "export * from './other.js';",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  var module$other = $$require('other.js');",

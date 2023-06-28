@@ -27,10 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for error message filtering.
- *
- */
+/** Tests for error message filtering. */
 @RunWith(JUnit4.class)
 public final class RhinoErrorReporterTest {
   private boolean reportLintWarnings;
@@ -50,12 +47,12 @@ public final class RhinoErrorReporterTest {
 
     reportLintWarnings = true;
 
-    String message =
-        "Missing type declaration.";
-    JSError error = assertWarning(
-        "/** @return */ function f() {}",
-        RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
-        message);
+    String message = "Missing type declaration.";
+    JSError error =
+        assertWarning(
+            "/** @return */ function f() {}",
+            RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
+            message);
 
     assertThat(error.getLineNumber()).isEqualTo(1);
     assertThat(error.getCharno()).isEqualTo(4);
@@ -83,9 +80,7 @@ public final class RhinoErrorReporterTest {
             + "exponent operator (**).");
   }
 
-  /**
-   * Verifies that the compiler emits an error for the given code.
-   */
+  /** Verifies that the compiler emits an error for the given code. */
   private void assertNoWarningOrError(String code) {
     Compiler compiler = parseCode(code);
     assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(0);
@@ -119,16 +114,10 @@ public final class RhinoErrorReporterTest {
     CompilerOptions options = new CompilerOptions();
 
     if (!reportLintWarnings) {
-      options.setWarningLevel(
-          DiagnosticGroups.LINT_CHECKS,
-          CheckLevel.OFF);
+      options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.OFF);
     } else {
-      options.setWarningLevel(
-          DiagnosticGroups.LINT_CHECKS,
-          CheckLevel.WARNING);
-      options.setWarningLevel(
-          DiagnosticGroups.JSDOC_MISSING_TYPE,
-          CheckLevel.WARNING);
+      options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+      options.setWarningLevel(DiagnosticGroups.JSDOC_MISSING_TYPE, CheckLevel.WARNING);
     }
 
     options.setLanguageIn(languageIn);

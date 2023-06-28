@@ -19,10 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for ExportTestFunctions.
- *
- */
+/** Tests for ExportTestFunctions. */
 @RunWith(JUnit4.class)
 public final class ExportTestFunctionsTest extends CompilerTestCase {
 
@@ -165,8 +162,7 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
         "let testBar = function() {}; google_exportSymbol('testBar', testBar)");
     test(
         "let tearDown = function() {}",
-        lines(
-            "let tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
+        lines("let tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
   }
 
   @Test
@@ -177,20 +173,17 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
         lines("const setUp = function() {}; ", "google_exportSymbol('setUp', setUp)"));
     test(
         "const testBar = function() {}",
-        lines(
-            "const testBar = function() {}; ", "google_exportSymbol('testBar', testBar)"));
+        lines("const testBar = function() {}; ", "google_exportSymbol('testBar', testBar)"));
     test(
         "const tearDown = function() {}",
-        lines(
-            "const tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
+        lines("const tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
   }
 
   @Test
   public void testArrowFunctionExpressionsAreExported() {
     testSame("var Foo = ()=>{var testA = function() {}}");
     test(
-        "var setUp = ()=>{}",
-        lines("var setUp = ()=>{}; ", "google_exportSymbol('setUp', setUp)"));
+        "var setUp = ()=>{}", lines("var setUp = ()=>{}; ", "google_exportSymbol('setUp', setUp)"));
     test(
         "var testBar = ()=>{}",
         lines("var testBar = ()=>{}; ", "google_exportSymbol('testBar', testBar)"));

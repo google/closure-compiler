@@ -66,6 +66,7 @@ public class OptionalChainTypeCheckTest {
       abstract Builder assignedTo(String type);
 
       abstract Builder mustReport(String error);
+
       // Sets the return type of the function property, if any on this object type.
       abstract Builder withPropReturnType(String type);
 

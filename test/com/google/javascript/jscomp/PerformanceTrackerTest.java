@@ -31,10 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for PerformanceTracker.
- *
- */
+/** Unit tests for PerformanceTracker. */
 @RunWith(JUnit4.class)
 public final class PerformanceTrackerTest {
   private final Node emptyExternRoot = new Node(Token.BLOCK);

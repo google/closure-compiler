@@ -177,7 +177,7 @@ public final class ControlFlowAnalysisTest {
   private static void assertEdge(
       ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
     assertWithMessage("No up edge found.")
-        .that(getAllEdges(cfg, /*startToken=*/ startToken, /*endToken=*/ endToken, type))
+        .that(getAllEdges(cfg, /* startToken= */ startToken, /* endToken= */ endToken, type))
         .isNotEmpty();
   }
 
@@ -189,7 +189,7 @@ public final class ControlFlowAnalysisTest {
   private static void assertUpEdge(
       ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
     assertWithMessage("No up edge found.")
-        .that(getAllDownEdges(cfg, /*startToken=*/ endToken, /*endToken=*/ startToken, type))
+        .that(getAllDownEdges(cfg, /* startToken= */ endToken, /* endToken= */ startToken, type))
         .isNotEmpty();
   }
 

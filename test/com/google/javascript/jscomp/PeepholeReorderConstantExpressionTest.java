@@ -20,10 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit test for {@link ReorderConstantExpression}
- *
- */
+/** Unit test for {@link ReorderConstantExpression} */
 @RunWith(JUnit4.class)
 public final class PeepholeReorderConstantExpressionTest extends CompilerTestCase {
 
@@ -74,8 +71,8 @@ public final class PeepholeReorderConstantExpressionTest extends CompilerTestCas
   }
 
   /**
-   * This set has a mutable on the right and an Immutable on the left.
-   * Applies for relational and symmetric operations.
+   * This set has a mutable on the right and an Immutable on the left. Applies for relational and
+   * symmetric operations.
    */
   private void set1Tests(String op1, String op2) throws Exception {
     test("a " + op1 + " 0", "0 " + op2 + " a");
@@ -83,20 +80,20 @@ public final class PeepholeReorderConstantExpressionTest extends CompilerTestCas
     test("a " + op1 + " ''", "'' " + op2 + " a");
     test("a " + op1 + " -1.0", "-1.0 " + op2 + " a");
 
-    test("function f(a){a " + op1 + " 0}",
-         "function f(a){0 " + op2 + " a}");
+    test("function f(a){a " + op1 + " 0}", "function f(a){0 " + op2 + " a}");
     test("f() " + op1 + " 0", "0 " + op2 + " f()");
     test("(a + b) " + op1 + " 0", "0 " + op2 + " (a + b)");
     test("(a + 1) " + op1 + " 0", "0 " + op2 + " (a + 1)");
 
     test("x++ " + op1 + " 0", "0 " + op2 + " x++");
-    test("x = 0; function f(){x++; return x}; f() " + op1 + " 0",
-         "x = 0; function f(){x++; return x}; 0 " + op2 + " f()");
+    test(
+        "x = 0; function f(){x++; return x}; f() " + op1 + " 0",
+        "x = 0; function f(){x++; return x}; 0 " + op2 + " f()");
   }
 
   /**
-   * This set has a mutable on the right and an Immutable on the left.
-   * Applies only for symmetric operations.
+   * This set has a mutable on the right and an Immutable on the left. Applies only for symmetric
+   * operations.
    */
   private void set2Tests(String op) throws Exception {
     test("a " + op + " NaN", "NaN " + op + " a");
@@ -106,9 +103,7 @@ public final class PeepholeReorderConstantExpressionTest extends CompilerTestCas
     testSame("Infinity " + op + " a");
   }
 
-  /**
-   * This set has an the immutable on the left already, or both non-immutable.
-   */
+  /** This set has an the immutable on the left already, or both non-immutable. */
   private void set3Tests(String op) throws Exception {
     testSame("0 " + op + " a");
     testSame("'0' " + op + " a");

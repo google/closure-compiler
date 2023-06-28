@@ -126,51 +126,39 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   @Test
   public void testDynamicDescriptor() {
-    PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        lines(
-            "var A = Polymer({",
-            "  is: x,",
-            "});"));
+    PolymerClassDefinition def =
+        parseAndExtractClassDefFromCall(lines("var A = Polymer({", "  is: x,", "});"));
 
     assertThat(def.target.getString()).isEqualTo("A");
   }
 
   @Test
   public void testDynamicDescriptor1() {
-    PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        lines(
-            "Polymer({",
-            "  is: x,",
-            "});"));
+    PolymerClassDefinition def =
+        parseAndExtractClassDefFromCall(lines("Polymer({", "  is: x,", "});"));
 
     assertThat(def.target.getString()).isEqualTo("XElement");
   }
 
   @Test
   public void testDynamicDescriptor2() {
-    PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        lines(
-            "Polymer({",
-            "  is: foo.bar,",
-            "});"));
+    PolymerClassDefinition def =
+        parseAndExtractClassDefFromCall(lines("Polymer({", "  is: foo.bar,", "});"));
 
     assertThat(def.target.getString()).isEqualTo("Foo$barElement");
   }
 
   @Test
   public void testDynamicDescriptor3() {
-    PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        lines(
-            "Polymer({",
-            "  is: this.bar,",
-            "});"));
+    PolymerClassDefinition def =
+        parseAndExtractClassDefFromCall(lines("Polymer({", "  is: this.bar,", "});"));
 
     assertThat(def.target.getString()).isEqualTo("This$barElement");
   }
 
   private PolymerClassDefinition parseAndExtractClassDefFromCall(String code) {
     Node rootNode = compiler.parseTestCode(code);
-    GlobalNamespace globalNamespace =  new GlobalNamespace(compiler, rootNode);
+    GlobalNamespace globalNamespace = new GlobalNamespace(compiler, rootNode);
 
     NodeUtil.visitPostOrder(
         rootNode,

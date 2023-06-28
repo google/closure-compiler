@@ -21,10 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link DeadAssignmentsElimination}.
- *
- */
+/** Tests for {@link DeadAssignmentsElimination}. */
 @RunWith(JUnit4.class)
 public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
@@ -79,18 +76,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     inFunction("for(var a=0; a<10; a++) {}");
     inFunction("var x; for(var a=0; a<10; a++) {x=a}; a(x)");
-    inFunction("var x; for(var a=0; x=a<10; a++) {}",
-        "var x; for(var a=0; a<10; a++) {}");
-    inFunction("var x; for(var a=0; a<10; x=a) {}",
-        "var x; for(var a=0; a<10; a) {}");
-    inFunction("var x; for(var a=0; a<10; x=a,a++) {}",
-        "var x; for(var a=0; a<10; a,a++) {}");
-    inFunction("var x; for(var a=0; a<10; a++,x=a) {}",
-        "var x; for(var a=0; a<10; a++,a) {}");
-    inFunction("var x;for(var a=0; a<10; a++) {x=1}",
-        "var x;for(var a=0; a<10; a++) {1}");
-    inFunction("var x; x=1; do{x=2}while(0); x",
-        "var x; 1; do{x=2}while(0); x");
+    inFunction("var x; for(var a=0; x=a<10; a++) {}", "var x; for(var a=0; a<10; a++) {}");
+    inFunction("var x; for(var a=0; a<10; x=a) {}", "var x; for(var a=0; a<10; a) {}");
+    inFunction("var x; for(var a=0; a<10; x=a,a++) {}", "var x; for(var a=0; a<10; a,a++) {}");
+    inFunction("var x; for(var a=0; a<10; a++,x=a) {}", "var x; for(var a=0; a<10; a++,a) {}");
+    inFunction("var x;for(var a=0; a<10; a++) {x=1}", "var x;for(var a=0; a<10; a++) {1}");
+    inFunction("var x; x=1; do{x=2}while(0); x", "var x; 1; do{x=2}while(0); x");
     inFunction("var x; x=1; while(1){x=2}; x");
   }
 
@@ -101,8 +92,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x,y; if(x)y=1;", "var x,y; if(x)1;");
     inFunction("var x,y; if(x)y=1; y=2; x(y)", "var x,y; if(x)1; y=2; x(y)");
     inFunction("var x; switch(x) { case(1): x=1; break; } x");
-    inFunction("var x; switch(x) { case(1): x=1; break; }",
-        "var x; switch(x) { case(1): 1; break; }");
+    inFunction(
+        "var x; switch(x) { case(1): x=1; break; }", "var x; switch(x) { case(1): 1; break; }");
   }
 
   @Test
@@ -117,8 +108,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; if((x=2)&&(x=1)){}", "var x; if(2&&1){}");
     inFunction("var x; x=2; if(0&&(x=1)){}; x");
 
-    inFunction("var x,y; if( (x=1)+(y=2) > 3){}",
-        "var x,y; if( 1+2 > 3){}");
+    inFunction("var x,y; if( (x=1)+(y=2) > 3){}", "var x,y; if( 1+2 > 3){}");
   }
 
   @Test
@@ -139,15 +129,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction("var x; switch(x=1){}", "var x; switch(1){}");
-    inFunction("var x; switch(x){case(x=1):break;}",
-        "var x; switch(x){case(1):break;}");
+    inFunction("var x; switch(x){case(x=1):break;}", "var x; switch(x){case(1):break;}");
 
     inFunction("var x,y; switch(y) { case (x += 1): break; case (x): break;}");
 
-    inFunction("var x,y; switch(y) { case (x = 1): break; case (2): break;}",
-               "var x,y; switch(y) { case (1): break; case (2): break;}");
-    inFunction("var x,y; switch(y) { case (x+=1): break; case (x=2): break;}",
-               "var x,y; switch(y) { case (x+1): break; case (2): break;}");
+    inFunction(
+        "var x,y; switch(y) { case (x = 1): break; case (2): break;}",
+        "var x,y; switch(y) { case (1): break; case (2): break;}");
+    inFunction(
+        "var x,y; switch(y) { case (x+=1): break; case (x=2): break;}",
+        "var x,y; switch(y) { case (x+1): break; case (2): break;}");
   }
 
   @Test
@@ -177,14 +168,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction("var a, b; if ((a = 1) && (b = a)) {b}");
-    inFunction("var a, b; if ((b = a) && (a = 1)) {b}",
-               "var a, b; if ((b = a) && (1)) {b}");
+    inFunction("var a, b; if ((b = a) && (a = 1)) {b}", "var a, b; if ((b = a) && (1)) {b}");
   }
 
   @Test
   public void testParameters() {
-    inFunction("param1=1; param1=2; param2(param1)",
-        "1; param1=2; param2(param1)");
+    inFunction("param1=1; param1=2; param2(param1)", "1; param1=2; param2(param1)");
     inFunction("param1=param2()", "param2()");
   }
 
@@ -193,37 +182,28 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction("var x; try{ x=1 } catch(e){ x=2 }; x");
-    inFunction("var x; try{ x=1 } catch(e){ x=2 }",
-        "var x;try{ 1 } catch(e) { 2 }");
-    inFunction("var x; try{ x=1 } finally { x=2 }; x",
-        "var x;try{ 1 } finally{ x=2 }; x");
+    inFunction("var x; try{ x=1 } catch(e){ x=2 }", "var x;try{ 1 } catch(e) { 2 }");
+    inFunction("var x; try{ x=1 } finally { x=2 }; x", "var x;try{ 1 } finally{ x=2 }; x");
     inFunction("var x; while(1) { try{x=1;break}finally{x} }");
     inFunction("var x; try{throw 1} catch(e){x=2} finally{x}");
-    inFunction("var x; try{x=1;throw 1;x} finally{x=2}; x",
-        "var x; try{1;throw 1;x} finally{x=2}; x");
+    inFunction(
+        "var x; try{x=1;throw 1;x} finally{x=2}; x", "var x; try{1;throw 1;x} finally{x=2}; x");
   }
 
   @Test
   public void testErrorHandling2() {
-    inFunction(lines(
-        "try {",
-        "} catch (e) {",
-        "  e = 1; ",
-        "  let g = e;",
-        "  print(g)",
-        "}"
-    ));
+    inFunction(lines("try {", "} catch (e) {", "  e = 1; ", "  let g = e;", "  print(g)", "}"));
 
-    inFunction(lines(
-        "try {",
-        "} catch (e) {",
-        "    e = 1;",
-        "    {",
-        "      let g = e;",
-        "      print(g)",
-        "    }",
-        "}"
-    ));
+    inFunction(
+        lines(
+            "try {",
+            "} catch (e) {",
+            "    e = 1;",
+            "    {",
+            "      let g = e;",
+            "      print(g)",
+            "    }",
+            "}"));
   }
 
   @Test
@@ -261,8 +241,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testInnerFunctions() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction("var x = function() { var x; x=1; }",
-        "var x = function() { var x; 1; }");
+    inFunction("var x = function() { var x; x=1; }", "var x = function() { var x; 1; }");
   }
 
   @Test
@@ -291,8 +270,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testAssignmentOpUsedAsLhs() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction("var x,y; y = x += foo(); print(y)",
-               "var x,y; y = x +  foo(); print(y)");
+    inFunction("var x,y; y = x += foo(); print(y)", "var x,y; y = x +  foo(); print(y)");
     inFunction("var x,y; y = x += foo?.(); print(y)", "var x,y; y = x +  foo?.(); print(y)");
   }
 
@@ -300,12 +278,10 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testAssignmentOpUsedAsCondition() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction("var x; if(x += foo()) {}",
-               "var x; if(x +  foo()) {}");
+    inFunction("var x; if(x += foo()) {}", "var x; if(x +  foo()) {}");
     inFunction("var x; if(x += foo?.()) {}", "var x; if(x +  foo?.()) {}");
 
-    inFunction("var x; if((x += foo()) > 1) {}",
-               "var x; if((x +  foo()) > 1) {}");
+    inFunction("var x; if((x += foo()) > 1) {}", "var x; if((x +  foo()) > 1) {}");
 
     // Not in a while because this happens every loop.
     inFunction("var x; while((x += foo()) > 1) {}");
@@ -337,12 +313,13 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testDeadButAlivePartiallyWithinTheExpression() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction("var x; x = 100, print(x), x = 101;",
-               "var x; x = 100, print(x),     101;");
-    inFunction("var x; x = 100, print(x), print(x), x = 101;",
-               "var x; x = 100, print(x), print(x),     101;");
-    inFunction("var x; x = 100, print(x), x = 0, print(x), x = 101;",
-               "var x; x = 100, print(x), x = 0, print(x),     101;");
+    inFunction("var x; x = 100, print(x), x = 101;", "var x; x = 100, print(x),     101;");
+    inFunction(
+        "var x; x = 100, print(x), print(x), x = 101;",
+        "var x; x = 100, print(x), print(x),     101;");
+    inFunction(
+        "var x; x = 100, print(x), x = 0, print(x), x = 101;",
+        "var x; x = 100, print(x), x = 0, print(x),     101;");
 
     // Here, `a=C` is removed as it is dead. `X=a` is removed as it is dead.
     inFunction(
@@ -357,10 +334,9 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testMutipleDeadAssignmentsButAlivePartiallyWithinTheExpression() {
-    inFunction("var x; x = 1, x = 2, x = 3, x = 4, x = 5," +
-               "  print(x), x = 0, print(x), x = 101;",
-
-               "var x; 1, 2, 3, 4, x = 5, print(x), x = 0, print(x), 101;");
+    inFunction(
+        "var x; x = 1, x = 2, x = 3, x = 4, x = 5," + "  print(x), x = 0, print(x), x = 101;",
+        "var x; 1, 2, 3, 4, x = 5, print(x), x = 0, print(x), 101;");
   }
 
   @Test
@@ -374,16 +350,19 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testAssignmentChain() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction("var a,b,c,d,e; a = b = c = d = e = 1",
-               "var a,b,c,d,e; 1");
-    inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(c)",
-               "var a,b,c,d,e;         c = 1        ; print(c)");
-    inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(a + e)",
-               "var a,b,c,d,e; a =             e = 1; print(a + e)");
-    inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(b + d)",
-               "var a,b,c,d,e;     b =     d     = 1; print(b + d)");
-    inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(a + b + d + e)",
-               "var a,b,c,d,e; a = b =     d = e = 1; print(a + b + d + e)");
+    inFunction("var a,b,c,d,e; a = b = c = d = e = 1", "var a,b,c,d,e; 1");
+    inFunction(
+        "var a,b,c,d,e; a = b = c = d = e = 1; print(c)",
+        "var a,b,c,d,e;         c = 1        ; print(c)");
+    inFunction(
+        "var a,b,c,d,e; a = b = c = d = e = 1; print(a + e)",
+        "var a,b,c,d,e; a =             e = 1; print(a + e)");
+    inFunction(
+        "var a,b,c,d,e; a = b = c = d = e = 1; print(b + d)",
+        "var a,b,c,d,e;     b =     d     = 1; print(b + d)");
+    inFunction(
+        "var a,b,c,d,e; a = b = c = d = e = 1; print(a + b + d + e)",
+        "var a,b,c,d,e; a = b =     d = e = 1; print(a + b + d + e)");
     inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(a+b+c+d+e)");
   }
 
@@ -391,14 +370,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testAssignmentOpChain() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction("var a,b,c,d,e; a = b = c += d = e = 1",
-               "var a,b,c,d,e;         c + 1");
-    inFunction("var a,b,c,d,e; a = b = c += d = e = 1;  print(e)",
-               "var a,b,c,d,e;         c +     (e = 1); print(e)");
-    inFunction("var a,b,c,d,e; a = b = c += d = e = 1;  print(d)",
-               "var a,b,c,d,e;         c + (d = 1)  ;   print(d)");
-    inFunction("var a,b,c,d,e; a = b = c += d = e = 1;  print(a)",
-               "var a,b,c,d,e; a =     c +          1;  print(a)");
+    inFunction("var a,b,c,d,e; a = b = c += d = e = 1", "var a,b,c,d,e;         c + 1");
+    inFunction(
+        "var a,b,c,d,e; a = b = c += d = e = 1;  print(e)",
+        "var a,b,c,d,e;         c +     (e = 1); print(e)");
+    inFunction(
+        "var a,b,c,d,e; a = b = c += d = e = 1;  print(d)",
+        "var a,b,c,d,e;         c + (d = 1)  ;   print(d)");
+    inFunction(
+        "var a,b,c,d,e; a = b = c += d = e = 1;  print(a)",
+        "var a,b,c,d,e; a =     c +          1;  print(a)");
   }
 
   @Test
@@ -442,10 +423,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // Include b as local.
     inFunction("var a,b; a = (b = (a = 1))", "var a,b; 1");
     inFunction("var a,b; a = (b = (a *= 2))", "var a,b; a * 2");
-    inFunction("var a,b; a = (b = (a++))",
-               "var a,b; a++"); // Preferred: "var a,b"
-    inFunction("var a,b; a = (b = (++a))",
-               "var a,b; ++a"); // Preferred: "var a,b"
+    inFunction("var a,b; a = (b = (a++))", "var a,b; a++"); // Preferred: "var a,b"
+    inFunction("var a,b; a = (b = (++a))", "var a,b; ++a"); // Preferred: "var a,b"
 
     inFunction("var a; a += (a++)", "var a; a + a++");
     inFunction("var a; a += (++a)", "var a; a+ (++a)");
@@ -478,16 +457,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-        "  try {" +
-        "     var sortIndices = {};" +
-        "     sortIndices = bar();" +
-        "     for (var i = 0; i < 100; i++) {" +
-        "       var sortIndex = sortIndices[i];" +
-        "       bar(sortIndex);" +
-        "     }" +
-        "   } finally {" +
-        "     bar();" +
-        "   }" );
+        "  try {"
+            + "     var sortIndices = {};"
+            + "     sortIndices = bar();"
+            + "     for (var i = 0; i < 100; i++) {"
+            + "       var sortIndex = sortIndices[i];"
+            + "       bar(sortIndex);"
+            + "     }"
+            + "   } finally {"
+            + "     bar();"
+            + "   }");
   }
 
   @Test
@@ -497,90 +476,62 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIssue297a() {
-    testSame("function f(p) {" +
-         " var x;" +
-         " return ((x=p.id) && (x=parseInt(x.substr(1))) && x>0);" +
-         "}; f('');");
+    testSame(
+        "function f(p) {"
+            + " var x;"
+            + " return ((x=p.id) && (x=parseInt(x.substr(1))) && x>0);"
+            + "}; f('');");
   }
 
   @Test
   public void testIssue297b() {
-    test("function f() {" +
-         " var x;" +
-         " return (x='') && (x = x.substr(1));" +
-         "};",
-         "function f() {" +
-         " var x;" +
-         " return (x='') && (x.substr(1));" +
-         "};");
+    test(
+        "function f() {" + " var x;" + " return (x='') && (x = x.substr(1));" + "};",
+        "function f() {" + " var x;" + " return (x='') && (x.substr(1));" + "};");
   }
 
   @Test
   public void testIssue297c() {
-    test("function f() {" +
-         " var x;" +
-         " return (x=1) && (x = f(x));" +
-         "};",
-         "function f() {" +
-         " var x;" +
-         " return (x=1) && f(x);" +
-         "};");
+    test(
+        "function f() {" + " var x;" + " return (x=1) && (x = f(x));" + "};",
+        "function f() {" + " var x;" + " return (x=1) && f(x);" + "};");
   }
 
   @Test
   public void testIssue297d() {
-    test("function f(a) {" +
-         " return (a=1) && (a = f(a));" +
-         "};",
-         "function f(a) {" +
-         " return (a=1) && (f(a));" +
-         "};");
+    test(
+        "function f(a) {" + " return (a=1) && (a = f(a));" + "};",
+        "function f(a) {" + " return (a=1) && (f(a));" + "};");
   }
 
   @Test
   public void testIssue297e() {
-    test("function f(a) {" +
-         " return (a=1) - (a = g(a));" +
-         "};",
-         "function f(a) {" +
-         " return (a=1) - (g(a));" +
-         "};");
+    test(
+        "function f(a) {" + " return (a=1) - (a = g(a));" + "};",
+        "function f(a) {" + " return (a=1) - (g(a));" + "};");
   }
 
   @Test
   public void testIssue297f() {
-    test("function f(a) {" +
-         " h((a=1) - (a = g(a)));" +
-         "};",
-         "function f(a) {" +
-         " h((a=1) - (g(a)));" +
-         "};");
+    test(
+        "function f(a) {" + " h((a=1) - (a = g(a)));" + "};",
+        "function f(a) {" + " h((a=1) - (g(a)));" + "};");
   }
 
   @Test
   public void testIssue297g() {
-    test("function f(a) {" +
-         " var b = h((b=1) - (b = g(b)));" +
-         " return b;" +
-         "};",
-         // The last assignment in the initializer should be eliminated
-         "function f(a) {" +
-         " var b = h((b=1) - (b = g(b)));" +
-         " return b;" +
-         "};");
+    test(
+        "function f(a) {" + " var b = h((b=1) - (b = g(b)));" + " return b;" + "};",
+        // The last assignment in the initializer should be eliminated
+        "function f(a) {" + " var b = h((b=1) - (b = g(b)));" + " return b;" + "};");
   }
 
   @Test
   public void testIssue297h() {
-    test("function f(a) {" +
-         " var b = b=1;" +
-         " return b;" +
-         "};",
-         // The assignment in the initializer should be eliminated
-         "function f(a) {" +
-         " var b = b = 1;" +
-         " return b;" +
-         "};");
+    test(
+        "function f(a) {" + " var b = b=1;" + " return b;" + "};",
+        // The assignment in the initializer should be eliminated
+        "function f(a) {" + " var b = b = 1;" + " return b;" + "};");
   }
 
   @Test
@@ -599,27 +550,19 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testInExpression2() {
-    inFunction(
-        "var a; (a = 1) || (a = 2)",
-        "var a; 1 || 2");
+    inFunction("var a; (a = 1) || (a = 2)", "var a; 1 || 2");
 
     inFunction("var a; (a = 1) || (a = 2); return a");
 
-    inFunction(
-        "var a; a = 1; a ? a = 2 : a;",
-        "var a; a = 1; a ?     2 : a;");
+    inFunction("var a; a = 1; a ? a = 2 : a;", "var a; a = 1; a ?     2 : a;");
 
     inFunction("var a; a = 1; a ? a = 2 : a; return a");
 
-    inFunction(
-        "var a; a = 1; a ? a : a = 2;",
-        "var a; a = 1; a ? a : 2;");
+    inFunction("var a; a = 1; a ? a : a = 2;", "var a; a = 1; a ? a : 2;");
 
     inFunction("var a; a = 1; a ? a : a =2; return a");
 
-    inFunction(
-        "var a; (a = 1) ? a = 2 : a = 3;",
-        "var a;      1  ?     2 :     3;");
+    inFunction("var a; (a = 1) ? a = 2 : a = 3;", "var a;      1  ?     2 :     3;");
 
     // This can be improved.  "a = 1" is dead but "a" is read in the following
     // expression.
@@ -631,12 +574,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-            " var a, b;\n" +
-            " if (f(b = true) || f(b = false))\n" +
-            "   a = b;\n" +
-            " else\n" +
-            "   a = null;\n" +
-            " return a;");
+        " var a, b;\n"
+            + " if (f(b = true) || f(b = false))\n"
+            + "   a = b;\n"
+            + " else\n"
+            + "   a = null;\n"
+            + " return a;");
   }
 
   @Test
@@ -644,29 +587,21 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-            " var a, b;\n" +
-            " (f(b = true) || f(b = false)) ? (a = b) : (a = null);\n" +
-            " return a;");
+        " var a, b;\n" + " (f(b = true) || f(b = false)) ? (a = b) : (a = null);\n" + " return a;");
   }
 
   @Test
   public void testIssue384c() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction(
-            " var a, b;\n" +
-            " (a ? f(b = true) : f(b = false)) && (a = b);\n" +
-            " return a;");
+    inFunction(" var a, b;\n" + " (a ? f(b = true) : f(b = false)) && (a = b);\n" + " return a;");
   }
 
   @Test
   public void testIssue384d() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction(
-            " var a, b;\n" +
-            " (f(b = true) || f(b = false)) && (a = b);\n" +
-            " return a;");
+    inFunction(" var a, b;\n" + " (f(b = true) || f(b = false)) && (a = b);\n" + " return a;");
   }
 
   @Test
@@ -674,10 +609,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction("var x = {}; for (var y in x) { y() }");
-    inFunction("var x, y, z; x = {}; z = {}; for (y in x = z) { y() }",
-               "var x, y, z;   ({}); z = {}; for (y in z)     { y() }");
-    inFunction("var x, y, z; x = {}; z = {}; for (y[z=1] in z) { y() }",
-               "var x, y, z;   ({}); z = {}; for (y[z=1] in z) { y() }");
+    inFunction(
+        "var x, y, z; x = {}; z = {}; for (y in x = z) { y() }",
+        "var x, y, z;   ({}); z = {}; for (y in z)     { y() }");
+    inFunction(
+        "var x, y, z; x = {}; z = {}; for (y[z=1] in z) { y() }",
+        "var x, y, z;   ({}); z = {}; for (y[z=1] in z) { y() }");
 
     // "x in z" doesn't overwrite x if z is empty.
     // TODO(user): If you look outside of just liveness, x = {} is dead.
@@ -687,31 +624,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunction() {
-    test("() => {var x; x = 1}",
-        "() => {var x; 1}");
+    test("() => {var x; x = 1}", "() => {var x; 1}");
 
-    test("(a) => {a = foo()}",
-        "(a) => {foo()}");
+    test("(a) => {a = foo()}", "(a) => {foo()}");
   }
 
   @Test
   public void testClassMethods() {
     test(
-        lines(
-            "class C{",
-            "  func() {",
-            "    var x;",
-            "    x = 1;",
-            "  }",
-            "}"
-        ),
-        lines(
-            "class C{",
-            "  func() {",
-            "    var x;",
-            "    1;",
-            "  }",
-            "}"));
+        lines("class C{", "  func() {", "    var x;", "    x = 1;", "  }", "}"),
+        lines("class C{", "  func() {", "    var x;", "    1;", "  }", "}"));
 
     test(
         lines(
@@ -725,8 +647,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "    z = 1;",
             "    this.x = 3",
             "  }",
-            "}"
-        ),
+            "}"),
         lines(
             "class C{",
             "  constructor(x, y) {",
@@ -771,19 +692,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     test(
-        lines(
-            "function* f() {",
-            "  var x, y;",
-            "  x = 1; y = 2;",
-            "  yield y;",
-            "}"
-        ),
-        lines(
-            "function* f() {",
-            "  var x, y;",
-            "  1; y = 2;",
-            "  yield y;",
-            "}"));
+        lines("function* f() {", "  var x, y;", "  x = 1; y = 2;", "  yield y;", "}"),
+        lines("function* f() {", "  var x, y;", "  1; y = 2;", "  yield y;", "}"));
   }
 
   @Test
@@ -792,7 +702,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     inFunction("var x = {}; for (var y of x) { y() }");
 
-    inFunction("var x, y, z; x = {}; z = {}; for (y of x = z) {}",
+    inFunction(
+        "var x, y, z; x = {}; z = {}; for (y of x = z) {}",
         "var x, y, z;   ({}); z = {}; for (y of z)     {}");
   }
 
@@ -811,7 +722,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testTemplateStrings() {
     inFunction("var name; name = 'Foo'; `Hello ${name}`");
 
-    inFunction("var name; name = 'Foo'; name = 'Bar'; `Hello ${name}`",
+    inFunction(
+        "var name; name = 'Foo'; name = 'Bar'; `Hello ${name}`",
         "var name; 'Foo'; name = 'Bar'; `Hello ${name}`");
   }
 
@@ -890,11 +802,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "for ([y = x] of arr) { y; }",
             "y;"));
 
-    inFunction(
-        lines(
-            "let x;",
-            "x = [];",
-            "for (let [y = x] of arr) { y; }"));
+    inFunction(lines("let x;", "x = [];", "for (let [y = x] of arr) { y; }"));
 
     inFunction("for (let [key, value] of arr) {}");
     inFunction("for (let [key, value] of arr) { key; value; }");
@@ -906,18 +814,9 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testReferenceInDestructuringPatternDefaultValue() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction(
-        lines(
-            "let bar = [];",
-            "const {foo = bar} = obj;",
-            "foo;"));
+    inFunction(lines("let bar = [];", "const {foo = bar} = obj;", "foo;"));
 
-    inFunction(
-        lines(
-            "let bar;",
-            "bar = [];",
-            "const {foo = bar} = obj;",
-            "foo;"));
+    inFunction(lines("let bar;", "bar = [];", "const {foo = bar} = obj;", "foo;"));
 
     inFunction("let bar; bar = 3; const [foo = bar] = arr; foo;");
     inFunction("let foo, bar; bar = 3; [foo = bar] = arr; foo;");
@@ -941,37 +840,15 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testDefaultParameter() {
     test(
-        lines(
-            "function f(x, y = 12) {",
-            "  var z;",
-            "  z = y;",
-            "}"
-        ),
-        lines(
-            "function f(x, y = 12) {",
-            "  var z;",
-            "  y;",
-            "}"));
+        lines("function f(x, y = 12) {", "  var z;", "  z = y;", "}"),
+        lines("function f(x, y = 12) {", "  var z;", "  y;", "}"));
   }
 
   @Test
   public void testObjectLiterals() {
     test(
-        lines(
-            "var obj = {",
-            "  f() {",
-            "  var x;",
-            "  x = 2;",
-            "  }",
-            "}"
-        ),
-        lines(
-            "var obj = {",
-            "  f() {",
-            "  var x;",
-            "  2;",
-            "  }",
-            "}"));
+        lines("var obj = {", "  f() {", "  var x;", "  x = 2;", "  }", "}"),
+        lines("var obj = {", "  f() {", "  var x;", "  2;", "  }", "}"));
   }
 
   @Test
@@ -1072,11 +949,10 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testLet() {
-    inFunction("let a; a = 2;",
-        "let a; 2;");
+    inFunction("let a; a = 2;", "let a; 2;");
 
-    inFunction("let a; let b; a = foo(); b = 2; return b;",
-        "let a; let b; foo(); b = 2; return b;");
+    inFunction(
+        "let a; let b; a = foo(); b = 2; return b;", "let a; let b; foo(); b = 2; return b;");
 
     inFunction(
         "let a; let b; a = foo?.(); b = 2; return b;", //
@@ -1098,42 +974,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testBlockScoping() {
     inFunction(
-        lines(
-            "let x;",
-            "{",
-            "  let x;",
-            "  x = 1;",
-            "}",
-            "x = 2;",
-            "return x;"
-        ),
-        lines(
-            "let x;",
-            "{",
-            "  let x$jscomp$1;",
-            "  1;",
-            "}",
-            "x = 2;",
-            "return x;"));
+        lines("let x;", "{", "  let x;", "  x = 1;", "}", "x = 2;", "return x;"),
+        lines("let x;", "{", "  let x$jscomp$1;", "  1;", "}", "x = 2;", "return x;"));
 
     inFunction(
-        lines(
-            "let x;",
-            "x = 2",
-            "{",
-            "  let x;",
-            "  x = 1;",
-            "}",
-            "print(x);"
-        ),
-        lines(
-            "let x;",
-            "x = 2;",
-            "{",
-            "  let x$jscomp$1;",
-            "  1;",
-            "}",
-            "print(x);"));
+        lines("let x;", "x = 2", "{", "  let x;", "  x = 1;", "}", "print(x);"),
+        lines("let x;", "x = 2;", "{", "  let x$jscomp$1;", "  1;", "}", "print(x);"));
   }
 
   @Test

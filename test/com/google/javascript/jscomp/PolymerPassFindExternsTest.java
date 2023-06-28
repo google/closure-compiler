@@ -132,8 +132,8 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   @Test
   public void testFindsPolymerElementProps() {
     testSame("");
-    final ImmutableList<String> expectedProps = ImmutableList.of(
-        "$", "created", "ready", "attached", "domReady", "detached", "job");
+    final ImmutableList<String> expectedProps =
+        ImmutableList.of("$", "created", "ready", "attached", "domReady", "detached", "job");
     ImmutableList<Node> polymerElementProps = findExternsCallback.getPolymerElementProps();
 
     assertThat(polymerElementProps).isNotNull();

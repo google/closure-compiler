@@ -70,20 +70,17 @@ public final class CheckGoogJsImportTest extends CompilerTestCase {
 
   @Test
   public void testImportStarMustBeNamedGoog() {
-    testError("import * as closure from './goog.js';",
-        GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
+    testError("import * as closure from './goog.js';", GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
   }
 
   @Test
   public void testImportSpecIsError() {
-    testError("import {require} from './closure/goog.js';",
-        GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
+    testError("import {require} from './closure/goog.js';", GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
   }
 
   @Test
   public void testImportDefaultIsError() {
-    testError("import d from './closure/goog.js';",
-        GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
+    testError("import d from './closure/goog.js';", GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
   }
 
   @Test
@@ -94,29 +91,24 @@ public final class CheckGoogJsImportTest extends CompilerTestCase {
 
   @Test
   public void testPathOnlyImportIsError() {
-    testError("import './closure/goog.js';",
-        GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
+    testError("import './closure/goog.js';", GOOG_JS_IMPORT_MUST_BE_GOOG_STAR);
   }
 
   @Test
   public void testExportFromGoogJsIsError() {
+    testError("export {require} from './closure/goog.js';", GOOG_JS_REEXPORTED);
+
+    testError("export * from './closure/goog.js';", GOOG_JS_REEXPORTED);
+
     testError(
-        "export {require} from './closure/goog.js';",
+        lines("import * as goog from './closure/goog.js';", "export {goog};"), GOOG_JS_REEXPORTED);
+
+    testError(
+        lines("import * as goog from './closure/goog.js';", "export {goog as GOOG};"),
         GOOG_JS_REEXPORTED);
 
     testError(
-        "export * from './closure/goog.js';",
-        GOOG_JS_REEXPORTED);
-
-    testError(lines("import * as goog from './closure/goog.js';", "export {goog};"),
-        GOOG_JS_REEXPORTED);
-
-    testError(
-                lines("import * as goog from './closure/goog.js';", "export {goog as GOOG};"),
-        GOOG_JS_REEXPORTED);
-
-    testError(
-                lines("import * as goog from './closure/goog.js';", "export default goog;"),
+        lines("import * as goog from './closure/goog.js';", "export default goog;"),
         GOOG_JS_REEXPORTED);
   }
 

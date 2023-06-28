@@ -58,10 +58,11 @@ public final class DotFormatterTest {
   public void testToDotSimple() throws Exception {
     Node ast = new Node(Token.BITOR);
 
-    String expected = "digraph AST {\n" +
-        "  node [color=lightblue2, style=filled];\n" +
-        "  node0 [label=\"BITOR\"];\n" +
-        "}\n";
+    String expected =
+        "digraph AST {\n"
+            + "  node [color=lightblue2, style=filled];\n"
+            + "  node0 [label=\"BITOR\"];\n"
+            + "}\n";
     test(expected, ast);
   }
 

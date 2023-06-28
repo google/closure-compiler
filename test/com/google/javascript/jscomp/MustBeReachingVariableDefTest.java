@@ -128,8 +128,7 @@ public final class MustBeReachingVariableDefTest {
 
   @Test
   public void testMergesWithOneDefinition() {
-    assertNotMatch(
-        "var x,y; while(y) { if (y) { print(x) } else { D: x = 1 } } U:x");
+    assertNotMatch("var x,y; while(y) { if (y) { print(x) } else { D: x = 1 } } U:x");
   }
 
   @Test
@@ -219,9 +218,7 @@ public final class MustBeReachingVariableDefTest {
     assertMatch("var x; D: [x = x = 3] = []; U: x");
   }
 
-  /**
-   * Asserts that the use of x at U: is the definition of x at D:.
-   */
+  /** Asserts that the use of x at U: is the definition of x at D:. */
   private void assertMatch(String src) {
     ReachingUseDefTester tester = ReachingUseDefTester.create();
     tester.computeReachingDef(src);
@@ -229,9 +226,7 @@ public final class MustBeReachingVariableDefTest {
     assertThat(tester.getComputedDef()).isSameInstanceAs(tester.getExtractedDef());
   }
 
-  /**
-   * Asserts that the use of x at U: is not the definition of x at D:.
-   */
+  /** Asserts that the use of x at U: is not the definition of x at D:. */
   private void assertNotMatch(String src) {
     ReachingUseDefTester tester = ReachingUseDefTester.create();
     tester.computeReachingDef(src);

@@ -1462,7 +1462,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.default = module$test.default.default;"));
   }
 
-  /** @see https://github.com/google/closure-compiler/issues/2999 */
+  /**
+   * @see https://github.com/google/closure-compiler/issues/2999
+   */
   @Test
   public void testLodashModulesCheck() {
     testModules(
@@ -1486,7 +1488,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.default = true;"));
   }
 
-  /** @see https://github.com/google/closure-compiler/issues/3051 */
+  /**
+   * @see https://github.com/google/closure-compiler/issues/3051
+   */
   @Test
   public void testIssue3051() {
     testModules(

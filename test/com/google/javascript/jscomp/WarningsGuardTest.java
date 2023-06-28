@@ -38,27 +38,21 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Testcase for WarningsGuard and its implementations.
- *
- */
+/** Testcase for WarningsGuard and its implementations. */
 @RunWith(JUnit4.class)
 public final class WarningsGuardTest {
   private static final DiagnosticType BAR_WARNING =
       DiagnosticType.warning("BAR", "Bar description");
 
   private static final WarningsGuard visibilityOff =
-      new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
+      new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
 
   private static final WarningsGuard visibilityWarning =
-      new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING);
+      new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING);
 
   @Test
   public void testShowByPathGuard_Restrict() {
-    WarningsGuard includeGuard = new ShowByPathWarningsGuard("/foo/",
-        ShowType.INCLUDE);
+    WarningsGuard includeGuard = new ShowByPathWarningsGuard("/foo/", ShowType.INCLUDE);
 
     assertThat(includeGuard.level(makeError("asasasd/foo/hello.js", WARNING))).isNull();
     assertThat(includeGuard.level(makeError("asasasd/foo/hello.js", ERROR))).isNull();
@@ -73,8 +67,8 @@ public final class WarningsGuardTest {
 
   @Test
   public void testShowByPathGuard_Suppress() {
-    WarningsGuard excludeGuard = new ShowByPathWarningsGuard(
-        new String[] { "/foo/", "/bar/" }, ShowType.EXCLUDE);
+    WarningsGuard excludeGuard =
+        new ShowByPathWarningsGuard(new String[] {"/foo/", "/bar/"}, ShowType.EXCLUDE);
 
     assertThat(excludeGuard.level(makeError("asasasd/foo/hello.js", WARNING))).isEqualTo(OFF);
     assertThat(excludeGuard.level(makeError("asasasd/foo/bar/hello.js", WARNING))).isEqualTo(OFF);
@@ -103,8 +97,7 @@ public final class WarningsGuardTest {
 
   @Test
   public void testByPathGuard() {
-    WarningsGuard strictGuard = ByPathWarningsGuard
-        .forPath(ImmutableList.of("/foo/"), ERROR);
+    WarningsGuard strictGuard = ByPathWarningsGuard.forPath(ImmutableList.of("/foo/"), ERROR);
 
     assertThat(strictGuard.level(makeError("asasasd/foo/hello.js", WARNING))).isEqualTo(ERROR);
     assertThat(strictGuard.level(makeError("asasasd/foo/hello.js", ERROR))).isNull();
@@ -170,8 +163,8 @@ public final class WarningsGuardTest {
     // Confirm that explicit diagnostic groups override the promotion of
     // warnings to errors done by StrictWarningGuard.
 
-    WarningsGuard typeGuard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.DEPRECATED, WARNING);
+    WarningsGuard typeGuard =
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.DEPRECATED, WARNING);
     WarningsGuard strictGuard = new StrictWarningsGuard();
 
     WarningsGuard guard = new ComposeWarningsGuard(strictGuard, typeGuard);
@@ -189,16 +182,21 @@ public final class WarningsGuardTest {
     WarningsGuard pathGuard1 = new ShowByPathWarningsGuard("/foo/");
     WarningsGuard pathGuard2 = new ShowByPathWarningsGuard("/bar/");
     WarningsGuard strictGuard = new StrictWarningsGuard();
-    WarningsGuard diagnosticGuard1 = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
-    WarningsGuard diagnosticGuard2 = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
-    WarningsGuard diagnosticGuard3 = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
+    WarningsGuard diagnosticGuard1 =
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
+    WarningsGuard diagnosticGuard2 =
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
+    WarningsGuard diagnosticGuard3 =
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
 
-    ComposeWarningsGuard guard = new ComposeWarningsGuard(pathGuard1,
-        diagnosticGuard1, strictGuard, diagnosticGuard2, pathGuard2,
-        diagnosticGuard3);
+    ComposeWarningsGuard guard =
+        new ComposeWarningsGuard(
+            pathGuard1,
+            diagnosticGuard1,
+            strictGuard,
+            diagnosticGuard2,
+            pathGuard2,
+            diagnosticGuard3);
 
     SortedSet<WarningsGuard> guards = guard.getGuards();
     assertThat(guards).hasSize(6);
@@ -232,17 +230,13 @@ public final class WarningsGuardTest {
   public void testComposeGuardOrdering3() {
     ComposeWarningsGuard guardA = new ComposeWarningsGuard();
     guardA.addGuard(
-        new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
     guardA.addGuard(
-        new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
     guardA.addGuard(
-        new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
     guardA.addGuard(
-        new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
     guardA.addGuard(visibilityOff);
 
     assertThat(guardA.mustRunChecks(DiagnosticGroups.ACCESS_CONTROLS)).isEqualTo(Tri.FALSE);
@@ -264,8 +258,7 @@ public final class WarningsGuardTest {
 
   @Test
   public void testDiagnosticGuard1() {
-    WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.CHECK_TYPES, ERROR);
+    WarningsGuard guard = new DiagnosticGroupWarningsGuard(DiagnosticGroups.CHECK_TYPES, ERROR);
 
     assertThat(guard.level(makeError("foo", DETERMINISTIC_TEST))).isEqualTo(ERROR);
 
@@ -275,8 +268,7 @@ public final class WarningsGuardTest {
 
   @Test
   public void testDiagnosticGuard3() {
-    WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.CHECK_TYPES, OFF);
+    WarningsGuard guard = new DiagnosticGroupWarningsGuard(DiagnosticGroups.CHECK_TYPES, OFF);
 
     assertThat(guard.mustRunChecks(DiagnosticGroups.CHECK_TYPES)).isEqualTo(Tri.FALSE);
     assertThat(guard.mustRunChecks(DiagnosticGroups.MESSAGE_DESCRIPTIONS)).isEqualTo(Tri.UNKNOWN);
@@ -284,8 +276,7 @@ public final class WarningsGuardTest {
 
   @Test
   public void testDiagnosticGuard4() {
-    WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.DEPRECATED, OFF);
+    WarningsGuard guard = new DiagnosticGroupWarningsGuard(DiagnosticGroups.DEPRECATED, OFF);
 
     assertThat(guard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.FALSE);
     assertThat(guard.mustRunChecks(DiagnosticGroups.VISIBILITY)).isEqualTo(Tri.UNKNOWN);
@@ -300,9 +291,9 @@ public final class WarningsGuardTest {
     Compiler compiler = new Compiler();
     WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
 
-    Node code = compiler.parseTestCode(
-        "/** @suppress {deprecated} */ function f() { a; } "
-        + "function g() { b; }");
+    Node code =
+        compiler.parseTestCode(
+            "/** @suppress {deprecated} */ function f() { a; } " + "function g() { b; }");
     assertThat(guard.level(JSError.make(code, BAR_WARNING))).isNull();
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
     assertThat(guard.level(JSError.make(findNameNode(code, "b"), BAR_WARNING))).isNull();
@@ -315,9 +306,10 @@ public final class WarningsGuardTest {
     Compiler compiler = new Compiler();
     WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
 
-    Node code = compiler.parseTestCode(
-        "/** @fileoverview \n * @suppress {deprecated} */ function f() { a; } "
-        + "function g() { b; }");
+    Node code =
+        compiler.parseTestCode(
+            "/** @fileoverview \n * @suppress {deprecated} */ function f() { a; } "
+                + "function g() { b; }");
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
     assertThat(guard.level(JSError.make(findNameNode(code, "b"), BAR_WARNING))).isEqualTo(OFF);
   }
@@ -329,8 +321,7 @@ public final class WarningsGuardTest {
     Compiler compiler = new Compiler();
     WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
 
-    Node code = compiler.parseTestCode(
-        "/** @suppress {deprecated} */ var f = function() { a; }");
+    Node code = compiler.parseTestCode("/** @suppress {deprecated} */ var f = function() { a; }");
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
@@ -363,9 +354,9 @@ public final class WarningsGuardTest {
     Compiler compiler = new Compiler();
     WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
 
-    Node code = compiler.parseTestCode(
-        "var goog = {}; "
-        + "/** @suppress {deprecated} */ goog.f = function() { a; }");
+    Node code =
+        compiler.parseTestCode(
+            "var goog = {}; " + "/** @suppress {deprecated} */ goog.f = function() { a; }");
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
@@ -376,9 +367,9 @@ public final class WarningsGuardTest {
     Compiler compiler = new Compiler();
     WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
 
-    Node code = compiler.parseTestCode(
-        "var goog = {}; "
-        + "goog.f = function() { /** @suppress {deprecated} */ (a); }");
+    Node code =
+        compiler.parseTestCode(
+            "var goog = {}; " + "goog.f = function() { /** @suppress {deprecated} */ (a); }");
 
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
@@ -456,8 +447,7 @@ public final class WarningsGuardTest {
 
   @Test
   public void testComposeGuardCycle() {
-    ComposeWarningsGuard guard = new ComposeWarningsGuard(
-        visibilityOff, visibilityWarning);
+    ComposeWarningsGuard guard = new ComposeWarningsGuard(visibilityOff, visibilityWarning);
     guard.addGuard(guard);
     assertThat(guard.toString())
         .isEqualTo("DiagnosticGroup<visibility>(WARNING), DiagnosticGroup<visibility>(OFF)");

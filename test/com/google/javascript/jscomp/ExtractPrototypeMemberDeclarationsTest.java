@@ -73,10 +73,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   @Test
   public void testClassDefinedInBlock() {
     test(
-        lines(
-            "{",
-            generatePrototypeDeclarations("x", 7),
-            "}"),
+        lines("{", generatePrototypeDeclarations("x", 7), "}"),
         lines(
             "var " + TMP + ";",
             "{",
@@ -87,11 +84,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
 
   @Test
   public void testClassDefinedInFunction() {
-    testSame(
-        lines(
-            "function f() {",
-            generatePrototypeDeclarations("x", 7),
-            "}"));
+    testSame(lines("function f() {", generatePrototypeDeclarations("x", 7), "}"));
   }
 
   /** Currently, this does not run on classes defined in ES6 modules. */
@@ -166,13 +159,20 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype.y.f = 1;"
             + "x.prototype.y.g = 1;",
         loadPrototype("x")
-            + TMP + ".y.a = 1;"
-            + TMP + ".y.b = 1;"
-            + TMP + ".y.c = 1;"
-            + TMP + ".y.d = 1;"
-            + TMP + ".y.e = 1;"
-            + TMP + ".y.f = 1;"
-            + TMP + ".y.g = 1;");
+            + TMP
+            + ".y.a = 1;"
+            + TMP
+            + ".y.b = 1;"
+            + TMP
+            + ".y.c = 1;"
+            + TMP
+            + ".y.d = 1;"
+            + TMP
+            + ".y.e = 1;"
+            + TMP
+            + ".y.f = 1;"
+            + TMP
+            + ".y.g = 1;");
   }
 
   @Test
@@ -187,14 +187,21 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype.f = 1;"
             + "x.prototype.g = 1;",
         loadPrototype("x")
-            + TMP + ".a = 1;"
-            + TMP + ".b = 1;"
+            + TMP
+            + ".a = 1;"
+            + TMP
+            + ".b = 1;"
             + "function devirtualize1() { }"
-            + TMP + ".c = 1;"
-            + TMP + ".d = 1;"
-            + TMP + ".e = 1;"
-            + TMP + ".f = 1;"
-            + TMP + ".g = 1;");
+            + TMP
+            + ".c = 1;"
+            + TMP
+            + ".d = 1;"
+            + TMP
+            + ".e = 1;"
+            + TMP
+            + ".f = 1;"
+            + TMP
+            + ".g = 1;");
 
     extract(
         "x.prototype.a = 1;"
@@ -208,16 +215,23 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "function devirtualize3() { }"
             + "x.prototype.g = 1;",
         loadPrototype("x")
-            + TMP + ".a = 1;"
-            + TMP + ".b = 1;"
+            + TMP
+            + ".a = 1;"
+            + TMP
+            + ".b = 1;"
             + "function devirtualize1() { }"
-            + TMP + ".c = 1;"
-            + TMP + ".d = 1;"
+            + TMP
+            + ".c = 1;"
+            + TMP
+            + ".d = 1;"
             + "function devirtualize2() { }"
-            + TMP + ".e = 1;"
-            + TMP + ".f = 1;"
+            + TMP
+            + ".e = 1;"
+            + TMP
+            + ".f = 1;"
             + "function devirtualize3() { }"
-            + TMP + ".g = 1;");
+            + TMP
+            + ".g = 1;");
   }
 
   @Test
@@ -245,10 +259,15 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype.b = 1;"
             + "function devirtualize() { }"
             + "x.prototype.c = 1;",
-        "(function(" + TMP + ") {"
-            + TMP + ".a = 1;"
-            + TMP + ".b = 1;"
-            + TMP + ".c = 1;"
+        "(function("
+            + TMP
+            + ") {"
+            + TMP
+            + ".a = 1;"
+            + TMP
+            + ".b = 1;"
+            + TMP
+            + ".c = 1;"
             + loadPrototype("x")
             + "function devirtualize() { }");
 
@@ -259,10 +278,15 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "function devirtualize2() { }"
             + "x.prototype.c = 1;"
             + "function devirtualize3() { }",
-        "(function(" + TMP + ") {"
-            + TMP + ".a = 1;"
-            + TMP + ".b = 1;"
-            + TMP + ".c = 1;"
+        "(function("
+            + TMP
+            + ") {"
+            + TMP
+            + ".a = 1;"
+            + TMP
+            + ".b = 1;"
+            + TMP
+            + ".c = 1;"
             + loadPrototype("x")
             + "function devirtualize1() { }"
             + "function devirtualize2() { }"
@@ -352,7 +376,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < num; i++) {
       char member = (char) ('a' + i);
-      builder.append(generatePrototypeDeclaration(className, "" + member,  "" + member));
+      builder.append(generatePrototypeDeclaration(className, "" + member, "" + member));
     }
     return builder.toString();
   }

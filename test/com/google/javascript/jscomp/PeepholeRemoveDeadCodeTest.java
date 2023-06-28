@@ -153,8 +153,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold(
         "{var x; var y; var z; class Foo { constructor() { var a; { var b; } } } }",
         "var x;var y;var z;class Foo { constructor() { var a;var b} }");
-    fold("{var x; var y; var z; { { var a; { var b; } } } }",
-        "var x;var y;var z; var a;var b");
+    fold("{var x; var y; var z; { { var a; { var b; } } } }", "var x;var y;var z; var a;var b");
   }
 
   @Test
@@ -288,7 +287,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("do { for (;;) {foo(); continue;} } while(0)", "for (;;) {foo(); continue;}");
     foldSame("l1: do { for (;;) { foo() } } while(0)");
     fold("do { switch (1) { default: foo(); break} } while(0)", "foo();");
-    fold("do { switch (1) { default: foo(); continue} } while(0)",
+    fold(
+        "do { switch (1) { default: foo(); continue} } while(0)",
         "do { foo(); continue } while(0)");
 
     fold("l1: { do { x = 1; break l1; } while (0); x = 2; }", "l1: { x = 1; break l1; x = 2;}");
@@ -423,10 +423,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("switch(a){case 1: default:}", "");
     fold("switch(a){default: case 1:}", "");
     fold("switch(a){default: break; case 1:break;}", "");
-    fold("switch(a){default: var b; break; case 1: var c; break;}",
-        "var c; var b;");
-    fold("var x=1; switch(x) { case 1: var y; }",
-        "var y; var x=1;");
+    fold("switch(a){default: var b; break; case 1: var c; break;}", "var c; var b;");
+    fold("var x=1; switch(x) { case 1: var y; }", "var y; var x=1;");
 
     // Can't remove cases if a default exists and is not the last case.
     foldSame("function f() {switch(a){default: return; case 1: break;}}");
@@ -435,8 +433,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("function f() {switch(a){case 3: case 2: case 1: foo();}}");
 
     fold("function f() {switch(a){case 2: case 1: default: foo();}}", "function f() { foo(); }");
-    fold("switch(a){case 1: default:break; case 2: foo()}",
-         "switch(a){case 2: foo()}");
+    fold("switch(a){case 1: default:break; case 2: foo()}", "switch(a){case 2: foo()}");
     foldSame("switch(a){case 1: goo(); default:break; case 2: foo()}");
 
     // TODO(johnlenz): merge the useless "case 2"
@@ -444,14 +441,15 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // Can't remove unused code with a "var" in it.
     fold("switch(1){case 2: var x=0;}", "var x;");
-    fold("switch ('repeated') {\n" +
-        "case 'repeated':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 'repeated':\n" +
-        "  var x=0;\n" +
-        "  break;\n" +
-        "}",
+    fold(
+        "switch ('repeated') {\n"
+            + "case 'repeated':\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 'repeated':\n"
+            + "  var x=0;\n"
+            + "  break;\n"
+            + "}",
         "var x; foo();");
 
     // Can't remove cases if something useful is done.
@@ -459,23 +457,25 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("function f() {switch(a){case 1: return;}}");
     foldSame("x:switch(a){case 1: break x;}");
 
-    fold("switch ('foo') {\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}",
+    fold(
+        "switch ('foo') {\n"
+            + "case 'foo':\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 'bar':\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "}",
         "foo();");
-    fold("switch ('noMatch') {\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}",
+    fold(
+        "switch ('noMatch') {\n"
+            + "case 'foo':\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 'bar':\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "}",
         "");
     fold(
         lines(
@@ -507,9 +507,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "case 'bar':",
             "  bar();",
             "}"),
-        lines(
-            "foo();",
-            "bar();"));
+        lines("foo();", "bar();"));
     fold(
         lines(
             "switch ('hasDefaultCase') {",
@@ -521,76 +519,71 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "    break;",
             "}"),
         "bar();");
-    fold("switch ('repeated') {\n" +
-        "case 'repeated':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 'repeated':\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}",
-        "foo();");
-    fold("switch ('foo') {\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "case notConstant:\n" +
-        "  foobar();\n" +
-        "  break;\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "}",
-        "switch ('foo') {\n" +
-        "case notConstant:\n" +
-        "  foobar();\n" +
-        "  break;\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "}");
-    fold("switch (1) {\n" +
-        "case 1:\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 2:\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}",
-        "foo();");
-    fold("switch (1) {\n" +
-        "case 1.1:\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 2:\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}",
-        "");
-    fold("switch (0) {\n" +
-        "case NaN:\n" +
-        "  foobar();\n" +
-        "  break;\n" +
-        "case -0.0:\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "case 2:\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}",
-        "foo();");
-    foldSame("switch ('\\v') {\n" +
-        "case '\\u000B':\n" +
-        "  foo();\n" +
-        "}");
     fold(
-        lines(
-            "switch ('empty') {",
-            "case 'empty':",
-            "case 'foo':",
-            "  foo();",
-            "}"),
-        "foo()");
+        "switch ('repeated') {\n"
+            + "case 'repeated':\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 'repeated':\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "}",
+        "foo();");
+    fold(
+        "switch ('foo') {\n"
+            + "case 'bar':\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "case notConstant:\n"
+            + "  foobar();\n"
+            + "  break;\n"
+            + "case 'foo':\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "}",
+        "switch ('foo') {\n"
+            + "case notConstant:\n"
+            + "  foobar();\n"
+            + "  break;\n"
+            + "case 'foo':\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "}");
+    fold(
+        "switch (1) {\n"
+            + "case 1:\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 2:\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "}",
+        "foo();");
+    fold(
+        "switch (1) {\n"
+            + "case 1.1:\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 2:\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "}",
+        "");
+    fold(
+        "switch (0) {\n"
+            + "case NaN:\n"
+            + "  foobar();\n"
+            + "  break;\n"
+            + "case -0.0:\n"
+            + "  foo();\n"
+            + "  break;\n"
+            + "case 2:\n"
+            + "  bar();\n"
+            + "  break;\n"
+            + "}",
+        "foo();");
+    foldSame("switch ('\\v') {\n" + "case '\\u000B':\n" + "  foo();\n" + "}");
+    fold(lines("switch ('empty') {", "case 'empty':", "case 'foo':", "  foo();", "}"), "foo()");
 
     fold(
         lines(
@@ -628,13 +621,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testOptimizeSwitchBug11536863() {
     fold(
-        "outer: {" +
-        "  switch (2) {\n" +
-        "    case 2:\n" +
-        "      f();\n" +
-        "      break outer;\n" +
-        "  }" +
-        "}",
+        "outer: {"
+            + "  switch (2) {\n"
+            + "    case 2:\n"
+            + "      f();\n"
+            + "      break outer;\n"
+            + "  }"
+            + "}",
         "outer: {f(); break outer;}");
   }
 
@@ -650,11 +643,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testOptimizeSwitch2() {
     fold(
-        "outer: switch (2) {\n" +
-        "  case 2:\n" +
-        "    f();\n" +
-        "    break outer;\n" +
-        "}",
+        "outer: switch (2) {\n" + "  case 2:\n" + "    f();\n" + "    break outer;\n" + "}",
         "outer: {f(); break outer;}");
   }
 
@@ -675,7 +664,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "    fail('Should not get here');",
             "    break;",
             "}"),
-            "");
+        "");
   }
 
   @Test

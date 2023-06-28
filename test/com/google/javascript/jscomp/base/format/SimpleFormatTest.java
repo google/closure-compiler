@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Basic tests for {@code SimpleFormat}
- *
- */
+/** Basic tests for {@code SimpleFormat} */
 @RunWith(JUnit4.class)
 public final class SimpleFormatTest {
 

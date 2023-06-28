@@ -46,10 +46,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * An integration test for symbol table creation
- *
- */
+/** An integration test for symbol table creation */
 @RunWith(JUnit4.class)
 public final class SymbolTableTest {
 

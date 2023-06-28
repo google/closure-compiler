@@ -29,11 +29,12 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
-  private static final String EXTERNS = lines(
-      CompilerTypeTestCase.DEFAULT_EXTERNS,
-      "var Polymer = function(descriptor) {};",
-      "/** @constructor */",
-      "var PolymerElement = function() {};");
+  private static final String EXTERNS =
+      lines(
+          CompilerTypeTestCase.DEFAULT_EXTERNS,
+          "var Polymer = function(descriptor) {};",
+          "/** @constructor */",
+          "var PolymerElement = function() {};");
 
   public CheckAccessControlsPolymerTest() {
     super(EXTERNS);
@@ -65,14 +66,15 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
 
   @Test
   public void testPrivateMethodInElement() {
-    testNoWarning(lines(
-        "var AnElement = Polymer({",
-        "  is: 'an-element',",
-        "",
-        "  /** @private */",
-        "  foo_: function() {},",
-        "  bar: function() { this.foo_(); },",
-        "});"));
+    testNoWarning(
+        lines(
+            "var AnElement = Polymer({",
+            "  is: 'an-element',",
+            "",
+            "  /** @private */",
+            "  foo_: function() {},",
+            "  bar: function() { this.foo_(); },",
+            "});"));
   }
 
   @Test

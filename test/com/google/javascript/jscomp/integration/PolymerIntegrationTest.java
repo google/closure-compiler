@@ -68,10 +68,10 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
                 "var Polymer = function(descriptor) {};",
                 "",
                 "/** @constructor @extends {HTMLElement} */",
-                "var PolymerElement = function() {};",  // Polymer 1
+                "var PolymerElement = function() {};", // Polymer 1
                 "",
                 "/** @constructor @extends {HTMLElement} */",
-                "Polymer.Element = function() {};",  // Polymer 2
+                "Polymer.Element = function() {};", // Polymer 2
                 "",
                 "/** @typedef {Object} */",
                 "let PolymerElementProperties;",
@@ -482,7 +482,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
                 "function Polymer_ElementMixin() {}",
                 "/** @type {string} */",
                 "Polymer_ElementMixin.prototype._importPath;",
-
                 "",
                 "/**",
                 "* @interface",
@@ -491,16 +490,13 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
                 "function Polymer_LegacyElementMixin(){}",
                 "/** @type {boolean} */",
                 "Polymer_LegacyElementMixin.prototype.isAttached;",
-
                 "/**",
                 " * @constructor",
                 " * @extends {HTMLElement}",
                 " * @implements {Polymer_LegacyElementMixin}",
                 " */",
                 "var PolymerElement = function() {};",
-
-                ""
-                )));
+                "")));
 
     externsList.add(
         SourceFile.fromCode(
@@ -589,7 +585,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
               "})();",
               ""),
         },
-        (String []) null);
+        (String[]) null);
   }
 
   @Test
@@ -603,10 +599,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          lines(
-              "Polymer({",
-              "  is: 'paper-button'",
-              "});"),
+          lines("Polymer({", "  is: 'paper-button'", "});"),
           lines(
               "(function() {",
               "  /**",
@@ -628,7 +621,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
               "})();",
               ""),
         },
-        (String []) null);
+        (String[]) null);
   }
 
   @Test
@@ -639,13 +632,14 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    Compiler compiler = compile(
-        options,
-        lines(
-            "class XFoo extends Polymer.Element {",
-            "  get is() { return 'x-foo'; }",
-            "  static get properties() { return {}; }",
-            "}"));
+    Compiler compiler =
+        compile(
+            options,
+            lines(
+                "class XFoo extends Polymer.Element {",
+                "  get is() { return 'x-foo'; }",
+                "  static get properties() { return {}; }",
+                "}"));
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
   }
@@ -743,8 +737,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     addPolymerExterns();
 
-    options.setRenamingPolicy(
-        VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);

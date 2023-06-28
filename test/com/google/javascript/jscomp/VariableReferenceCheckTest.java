@@ -32,16 +32,13 @@ import org.junit.runners.JUnit4;
 /**
  * Test that warnings are generated in appropriate cases and appropriate cases only by
  * VariableReferenceCheck
- *
  */
 @RunWith(JUnit4.class)
 public final class VariableReferenceCheckTest extends CompilerTestCase {
 
-  private static final String LET_RUN =
-      "let a = 1; let b = 2; let c = a + b, d = c;";
+  private static final String LET_RUN = "let a = 1; let b = 2; let c = a + b, d = c;";
 
-  private static final String VARIABLE_RUN =
-      "var a = 1; var b = 2; var c = a + b, d = c;";
+  private static final String VARIABLE_RUN = "var a = 1; var b = 2; var c = a + b, d = c;";
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -128,8 +125,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testCorrectRedeclare() {
-    assertNoWarning(
-        "function f() { if (1) { var a = 2; } else { var a = 3; } }");
+    assertNoWarning("function f() { if (1) { var a = 2; } else { var a = 3; } }");
   }
 
   @Test
@@ -182,8 +178,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testIssue166a() {
-    assertRedeclareError(
-        "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }");
+    assertRedeclareError("try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }");
   }
 
   @Test
@@ -235,12 +230,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testIssue166f() {
-    testSame(
-        lines(
-            "function a() {",
-            "  var e = 2;",
-            "  try { throw 1 } catch(e) {}",
-            "}"));
+    testSame(lines("function a() {", "  var e = 2;", "  try { throw 1 } catch(e) {}", "}"));
   }
 
   @Test
@@ -497,12 +487,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testUndeclaredLet() {
     assertEarlyReferenceError("if (a) { x = 3; let x;}");
 
-    assertEarlyReferenceError(lines(
-        "var x = 1;",
-        "if (true) {",
-        "  x++;",
-        "  let x = 3;",
-        "}"));
+    assertEarlyReferenceError(lines("var x = 1;", "if (true) {", "  x++;", "  let x = 3;", "}"));
   }
 
   @Test
@@ -517,12 +502,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
     // For the following, IE 11 gives "Assignment to const", but technically
     // they are also undeclared references, which get caught in the first place.
-    assertEarlyReferenceError(lines(
-        "var x = 1;",
-        "if (true) {",
-        "  x++;",
-        "  const x = 3;",
-        "}"));
+    assertEarlyReferenceError(lines("var x = 1;", "if (true) {", "  x++;", "  const x = 3;", "}"));
 
     assertEarlyReferenceError("a = 1; const a = 0;");
     assertEarlyReferenceError("a++; const a = 0;");
@@ -534,19 +514,12 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
     assertRedeclareError("if (a) { let x; let x;}");
 
-    assertRedeclareError(lines(
-        "function f() {",
-        "  let x;",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "}"));
+    assertRedeclareError(
+        lines("function f() {", "  let x;", "  if (a) {", "    var x;", "  }", "}"));
 
-    assertNoWarning(
-        lines("function f() {", "  if (a) {", "    let x;", "  }", "  var x;", "}"));
+    assertNoWarning(lines("function f() {", "  if (a) {", "    let x;", "  }", "  var x;", "}"));
 
-    assertNoWarning(
-        lines("function f() {", "  if (a) { let x; }", "  if (b) { var x; }", "}"));
+    assertNoWarning(lines("function f() {", "  if (a) { let x; }", "  if (b) { var x; }", "}"));
 
     assertRedeclareError("let x; var x;");
     assertRedeclareError("var x; let x;");
@@ -556,12 +529,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Test
   public void testIllegalLetShadowing_withES6Modules() {
     assertRedeclareError(
-        lines(
-            "export function f() {", "  let x;", "  if (a) {", "    var x;", "  }", "}"));
+        lines("export function f() {", "  let x;", "  if (a) {", "    var x;", "  }", "}"));
 
     assertNoWarning(
-        lines(
-            "export function f() {", "  if (a) {", "    let x;", "  }", "  var x;", "}"));
+        lines("export function f() {", "  if (a) {", "    let x;", "  }", "  var x;", "}"));
 
     assertRedeclareError("export let x; var x;");
   }
@@ -594,20 +565,14 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testIllegalConstShadowing() {
     assertRedeclareError("if (a) { const x = 3; var x;}");
 
-    assertRedeclareError(lines(
-        "function f() {",
-        "  const x = 3;",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "}"));
+    assertRedeclareError(
+        lines("function f() {", "  const x = 3;", "  if (a) {", "    var x;", "  }", "}"));
   }
 
   @Test
   public void testIllegalConstShadowing_withES6Modules() {
     assertRedeclareError(
-        lines(
-            "export function f() {", "  const x = 3;", "  if (a) {", "    var x;", "  }", "}"));
+        lines("export function f() {", "  const x = 3;", "  if (a) {", "    var x;", "  }", "}"));
   }
 
   @Test
@@ -619,8 +584,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclareError("function f() { if (a) { var x; } let x;}");
     assertNoWarning("function f() { var x; if (a) { let x; }}");
 
-    assertNoWarning(
-        lines("function f() {", "  if (a) { var x; }", "  if (b) { let x; }", "}"));
+    assertNoWarning(lines("function f() {", "  if (a) { var x; }", "  if (b) { let x; }", "}"));
   }
 
   @Test
@@ -640,12 +604,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testVarShadowing_withES6Modules04() {
-    assertNoWarning(
-        lines(
-            "function f() {",
-            "  if (a) { var x; }",
-            "  if (b) { let x; }",
-            "}"));
+    assertNoWarning(lines("function f() {", "  if (a) { var x; }", "  if (b) { let x; }", "}"));
   }
 
   @Test
@@ -663,14 +622,9 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclare("function f(x=3) { function x() {} }");
     assertNoWarning("function f(x) { if (true) { let x; } }");
     assertNoWarning(
-        lines(
-            "function outer(x) {", "  function inner() {", "    let x = 1;", "  }", "}"));
-    assertNoWarning(lines(
-        "function outer(x) {",
-        "  function inner() {",
-        "    var x = 1;",
-        "  }",
-        "}"));
+        lines("function outer(x) {", "  function inner() {", "    let x = 1;", "  }", "}"));
+    assertNoWarning(
+        lines("function outer(x) {", "  function inner() {", "    var x = 1;", "  }", "}"));
 
     assertRedeclare("function f({a, b}) { var a = 2 }");
     assertRedeclare("function f({a, b}) { if (!a) var a = 6; }");
@@ -687,8 +641,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("export function f(...x) {}");
 
     assertNoWarning(
-        lines(
-            "export function outer(x) {", "  function inner() {", "    var x = 1;", "  }", "}"));
+        lines("export function outer(x) {", "  function inner() {", "    var x = 1;", "  }", "}"));
   }
 
   @Test
@@ -722,8 +675,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Test
   public void testFunctionHoistingRedeclaration1() {
     String[] js = {
-      "var x;",
-      "function x() {}",
+      "var x;", "function x() {}",
     };
     String message = "Variable x declared more than once. First occurrence: testcode0:1:4";
     testError(srcs(js), error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR).withMessage(message));
@@ -732,8 +684,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Test
   public void testFunctionHoistingRedeclaration2() {
     String[] js = {
-      "function x() {}",
-      "var x;",
+      "function x() {}", "var x;",
     };
     String message = "Variable x declared more than once. First occurrence: testcode0:1:9";
     testError(srcs(js), error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR).withMessage(message));
@@ -930,9 +881,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Test
   public void testDefaultParam() {
     assertEarlyReferenceError("function f(x=a) { let a; }");
-    assertEarlyReferenceError(lines(
-        "function f(x=a) { let a; }",
-        "function g(x=1) { var a; }"));
+    assertEarlyReferenceError(lines("function f(x=a) { let a; }", "function g(x=1) { var a; }"));
     assertEarlyReferenceError("function f(x=a) { var a; }");
     assertEarlyReferenceError("function f(x=a()) { function a() {} }");
     assertEarlyReferenceError("function f(x=[a]) { var a; }");
@@ -959,16 +908,8 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testDestructuring() {
-    testSame(lines(
-        "function f() { ",
-        "  var obj = {a:1, b:2}; ",
-        "  var {a:c, b:d} = obj; ",
-        "}"));
-    testSame(lines(
-        "function f() { ",
-        "  var obj = {a:1, b:2}; ",
-        "  var {a, b} = obj; ",
-        "}"));
+    testSame(lines("function f() { ", "  var obj = {a:1, b:2}; ", "  var {a:c, b:d} = obj; ", "}"));
+    testSame(lines("function f() { ", "  var obj = {a:1, b:2}; ", "  var {a, b} = obj; ", "}"));
 
     assertRedeclare(
         lines(
@@ -1102,9 +1043,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         EARLY_EXPORTS_REFERENCE);
   }
 
-  /**
-   * Expects the JS to generate one bad-read error.
-   */
+  /** Expects the JS to generate one bad-read error. */
   private void assertRedeclare(String js) {
     testWarning(js, REDECLARED_VARIABLE);
   }
@@ -1130,9 +1069,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testError(js, EARLY_REFERENCE_ERROR);
   }
 
-  /**
-   * Expects the JS to generate no errors or warnings.
-   */
+  /** Expects the JS to generate no errors or warnings. */
   private void assertNoWarning(String js) {
     testSame(js);
   }

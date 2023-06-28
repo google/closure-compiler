@@ -36,10 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Inline function tests.
- *
- */
+/** Inline function tests. */
 @RunWith(JUnit4.class)
 public final class FunctionInjectorTest {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
@@ -98,73 +95,75 @@ public final class FunctionInjectorTest {
 
   @Test
   public void testCanInlineReferenceToFunction1() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){}; foo();", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){}; foo();", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction2() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){}; foo();", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){}; foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction3() {
     // NOTE: FoldConstants will convert this to a empty function,
     // so there is no need to explicitly support it.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return;}; foo();", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(){return;}; foo();", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction4() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return;}; foo();", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return;}; foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction5() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; foo();", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return true;}; foo();", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction6() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; foo();", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return true;}; foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction7() {
     // In var initialization.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; var x=foo();", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return true;}; var x=foo();", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction8() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; var x=foo();", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return true;}; var x=foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction9() {
     // In assignment.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; var x; x=foo();", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return true;}; var x; x=foo();", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction10() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; var x; x=foo();", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(){return true;}; var x; x=foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction11() {
     // In expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; var x; x=x+foo();", "foo",
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(){return true;}; var x; x=x+foo();",
+        "foo",
         INLINE_DIRECT);
   }
 
@@ -172,8 +171,8 @@ public final class FunctionInjectorTest {
   public void testCanInlineReferenceToFunction12() {
     // "foo" is not known to be side-effect free, it might change the value
     // of "x", so it can't be inlined.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return true;}; var x; x=x+foo();", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(){return true;}; var x; x=x+foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
@@ -203,337 +202,383 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunction14() {
     // Simple call with parameters
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; foo(x);", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(a){return true;}; foo(x);", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction15() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; foo(x);", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(a){return true;}; foo(x);", "foo", INLINE_BLOCK);
   }
 
   // TODO(johnlenz): remove this constant once this has been proven in
   // production code.
-  static final CanInlineResult NEW_VARS_IN_GLOBAL_SCOPE =
-      CanInlineResult.YES;
+  static final CanInlineResult NEW_VARS_IN_GLOBAL_SCOPE = CanInlineResult.YES;
 
   @Test
   public void testCanInlineReferenceToFunction16() {
     // Function "foo" as it contains "var b" which
     // must be brought into the global scope.
-    helperCanInlineReferenceToFunction(NEW_VARS_IN_GLOBAL_SCOPE,
-        "function foo(a){var b;return a;}; foo(goo());", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        NEW_VARS_IN_GLOBAL_SCOPE,
+        "function foo(a){var b;return a;}; foo(goo());",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction17() {
     // This doesn't bring names into the global name space.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return a;}; " +
-        "function x() { foo(goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return a;}; " + "function x() { foo(goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction18() {
     // Parameter has side-effects.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return a;} foo(x++);", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES, "function foo(a){return a;} foo(x++);", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction18b() {
     // Parameter has side-effects.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a,b){return b,a;} foo(x++,use(x));", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a,b){return b,a;} foo(x++,use(x));",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction19() {
     // Parameter has mutable parameter referenced more than once.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return a+a} foo([]);", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(a){return a+a} foo([]);", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction20() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return a+a} foo({});", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(a){return a+a} foo({});", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction21() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return a+a} foo(new Date);", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(a){return a+a} foo(new Date);", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction22() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return a+a} foo(true && new Date);", "foo",
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return a+a} foo(true && new Date);",
+        "foo",
         INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction23() {
     // variables to global scope.
-    helperCanInlineReferenceToFunction(NEW_VARS_IN_GLOBAL_SCOPE,
-        "function foo(a){return a;}; foo(x++);", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        NEW_VARS_IN_GLOBAL_SCOPE, "function foo(a){return a;}; foo(x++);", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction24() {
     // ... this is OK, because it doesn't introduce a new global name.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return a;}; " +
-        "function x() { foo(x++); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return a;}; " + "function x() { foo(x++); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction25() {
     // Parameter has side-effects.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return a+a;}; foo(x++);", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(a){return a+a;}; foo(x++);", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction26() {
-    helperCanInlineReferenceToFunction(NEW_VARS_IN_GLOBAL_SCOPE,
-        "function foo(a){return a+a;}; foo(x++);", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        NEW_VARS_IN_GLOBAL_SCOPE, "function foo(a){return a+a;}; foo(x++);", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction27() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return a+a;}; " +
-        "function x() { foo(x++); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return a+a;}; " + "function x() { foo(x++); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction28() {
     // Parameter has side-effects.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; foo(goo());", "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, "function foo(a){return true;}; foo(goo());", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction29() {
-    helperCanInlineReferenceToFunction(NEW_VARS_IN_GLOBAL_SCOPE,
-        "function foo(a){return true;}; foo(goo());", "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        NEW_VARS_IN_GLOBAL_SCOPE,
+        "function foo(a){return true;}; foo(goo());",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction30() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo(goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo(goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction31() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a) {return true;}; " +
-        "function x() {foo.call(this, 1);}",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a) {return true;}; " + "function x() {foo.call(this, 1);}",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction32() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.apply(this, [1]); }",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.apply(this, [1]); }",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction33() {
     // No special handling is required for method calls passing this.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo.bar(this, 1); }",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo.bar(this, 1); }",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction34() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(this, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo.call(this, goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction35() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.apply(this, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.apply(this, goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction36() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo.bar(this, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo.bar(this, goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction37() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(null, 1); }",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.call(null, 1); }",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction38() {
     assumeStrictThis = false;
 
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(null, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.call(null, goo()); }",
+        "foo",
+        INLINE_BLOCK);
 
     assumeStrictThis = true;
 
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(null, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo.call(null, goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction39() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(bar, 1); }",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.call(bar, 1); }",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction40() {
     assumeStrictThis = false;
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(bar, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.call(bar, goo()); }",
+        "foo",
+        INLINE_BLOCK);
 
     assumeStrictThis = true;
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(bar, goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo.call(bar, goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction41() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(new bar(), 1); }",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.call(new bar(), 1); }",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction42() {
     assumeStrictThis = false;
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(new bar(), goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() { foo.call(new bar(), goo()); }",
+        "foo",
+        INLINE_BLOCK);
 
     assumeStrictThis = true;
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(new bar(), goo()); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(a){return true;}; " + "function x() { foo.call(new bar(), goo()); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction43() {
     // Handle the case of a missing 'this' value in a call.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return true;}; " +
-        "function x() { foo.call(); }",
-        "foo", INLINE_DIRECT);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){return true;}; " + "function x() { foo.call(); }",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction44() {
     assumeStrictThis = false;
     // Handle the case of a missing 'this' value in a call.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return true;}; " +
-        "function x() { foo.call(); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){return true;}; " + "function x() { foo.call(); }",
+        "foo",
+        INLINE_BLOCK);
 
     assumeStrictThis = true;
     // Handle the case of a missing 'this' value in a call.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
-        "function foo(){return true;}; " +
-        "function x() { foo.call(); }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(){return true;}; " + "function x() { foo.call(); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction45() {
     // Call with inner function expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
         "function foo(){return function() {return true;}}; foo();",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction46() {
     // Call with inner function expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
         "function foo(){return function() {return true;}}; foo();",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction47() {
     // Call with inner function expression and variable decl.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
         "function foo(){var a; return function() {return true;}}; foo();",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction48() {
     // Call with inner function expression and variable decl.
     // TODO(johnlenz): should we validate no values in scope?
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
         "function foo(){var a; return function() {return true;}}; foo();",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction49() {
     // Call with inner function expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
         "function foo(){return function() {var a; return true;}}; foo();",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testCanInlineReferenceToFunction50() {
     // Call with inner function expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
         "function foo(){return function() {var a; return true;}}; foo();",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineReferenceToFunction51() {
     // Call with inner function statement.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
         "function foo(){function x() {var a; return true;} return x}; foo();",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -542,8 +587,9 @@ public final class FunctionInjectorTest {
     helperCanInlineReferenceToFunction(
         CanInlineResult.NO,
         "function foo() { var a = 3; return a; }"
-        + "function bar() { function baz() {} if (true) { foo(); } }",
-        "foo", INLINE_BLOCK);
+            + "function bar() { function baz() {} if (true) { foo(); } }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -593,10 +639,11 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunctionInExpression5() {
     // Call in hook side-effect free condition
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() {true?foo(1):1 }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() {true?foo(1):1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -624,10 +671,11 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunctionInExpression7() {
     // Call in expression statement after side-effect free "condition"
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() {1 && foo(1) }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() {1 && foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -666,10 +714,11 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunctionInExpression10() {
     // Call in assignment expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() {var b; b += 1 + foo(1) }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return true;}; " + "function x() {var b; b += 1 + foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -718,14 +767,16 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunctionInExpression14() {
     // ... foo can not be inlined because of possible changes to "c".
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "var a = {}, b = {}, c;" +
-        "a.test = 'a';" +
-        "b.test = 'b';" +
-        "c = a;" +
-        "function foo(){c = b; return 'foo'};" +
-        "c.test=foo();",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "var a = {}, b = {}, c;"
+            + "a.test = 'a';"
+            + "b.test = 'b';"
+            + "c = a;"
+            + "function foo(){c = b; return 'foo'};"
+            + "c.test=foo();",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -811,10 +862,11 @@ public final class FunctionInjectorTest {
     // ... unless foo is known to be side-effect free, it might actually
     // change the value of "_g" which would unfortunately change the behavior,
     // so we can't inline here.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return a;}; " +
-        "function x() {1 + _g(foo()) }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){return a;}; " + "function x() {1 + _g(foo()) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -847,11 +899,13 @@ public final class FunctionInjectorTest {
     // as the object that is being referred to can change.
     // Note: This could be changed be inlined if we in some way make "z"
     // as not escaping from the local scope.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() { z.gack = foo(1) }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() { z.gack = foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -873,10 +927,11 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunctionInExpression22() {
     // ... foo() is after a side-effect
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return a;}; " +
-        "function x() {1 + _g(_a(), foo()) }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){return a;}; " + "function x() {1 + _g(_a(), foo()) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -893,10 +948,11 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReferenceToFunctionInExpression23() {
     // ... foo() is after a side-effect
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return a;}; " +
-        "function x() {1 + _g(_a(), foo.call(this)) }",
-        "foo", INLINE_BLOCK);
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){return a;}; " + "function x() {1 + _g(_a(), foo.call(this)) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -914,10 +970,7 @@ public final class FunctionInjectorTest {
   public void testCanInlineReferenceToFunctionInLoop1() {
     allowDecomposition = true;
     helperCanInlineReferenceToFunction(
-        CanInlineResult.YES,
-        "function foo(){return a;}; while(1) { foo(); }",
-        "foo",
-        INLINE_BLOCK);
+        CanInlineResult.YES, "function foo(){return a;}; while(1) { foo(); }", "foo", INLINE_BLOCK);
   }
 
   @Test
@@ -937,43 +990,31 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineFunctionWithInnerArrowFunction1() {
     helperCanInlineReferenceToFunction(
-        CanInlineResult.YES,
-        "function foo(){ () => { alert(1); }; } foo();",
-        "foo",
-        INLINE_BLOCK);
+        CanInlineResult.YES, "function foo(){ () => { alert(1); }; } foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testCanInlineFunctionWithInnerArrowFunction2() {
     helperCanInlineReferenceToFunction(
-        CanInlineResult.NO,
-        "function foo(){ () => { this; }; } foo();",
-        "foo",
-        INLINE_BLOCK);
+        CanInlineResult.NO, "function foo(){ () => { this; }; } foo();", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testInline1() {
     helperInlineReferenceToFunction(
-        "function foo(){}; foo();",
-        "function foo(){}; void 0",
-        "foo", INLINE_DIRECT);
+        "function foo(){}; foo();", "function foo(){}; void 0", "foo", INLINE_DIRECT);
   }
 
   @Test
   public void testInline2() {
     helperInlineReferenceToFunction(
-        "function foo(){}; foo();",
-        "function foo(){}; {}",
-        "foo", INLINE_BLOCK);
+        "function foo(){}; foo();", "function foo(){}; {}", "foo", INLINE_BLOCK);
   }
 
   @Test
   public void testInline3() {
     helperInlineReferenceToFunction(
-        "function foo(){return;}; foo();",
-        "function foo(){return;}; {}",
-        "foo", INLINE_BLOCK);
+        "function foo(){return;}; foo();", "function foo(){return;}; {}", "foo", INLINE_BLOCK);
   }
 
   @Test
@@ -981,7 +1022,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; foo();",
         "function foo(){return true;}; true;",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -989,7 +1031,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; foo();",
         "function foo(){return true;}; {true;}",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -998,16 +1041,17 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; var x=foo();",
         "function foo(){return true;}; var x=true;",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
   public void testInline7() {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; var x=foo();",
-        "function foo(){return true;}; var x;" +
-            "{x=true}",
-        "foo", INLINE_BLOCK);
+        "function foo(){return true;}; var x;" + "{x=true}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1016,7 +1060,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; var x; x=foo();",
         "function foo(){return true;}; var x; x=true;",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -1024,7 +1069,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; var x; x=foo();",
         "function foo(){return true;}; var x;{x=true}",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1033,7 +1079,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(){return true;}; var x; x=x+foo();",
         "function foo(){return true;}; var x; x=x+true;",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -1042,7 +1089,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(a){return true;}; foo(x);",
         "function foo(a){return true;}; true;",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -1050,18 +1098,18 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(a){return true;}; foo(x);",
         "function foo(a){return true;}; {true}",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testInline13() {
     // Parameter has side-effects.
     helperInlineReferenceToFunction(
-        "function foo(a){return a;}; " +
-        "function x() { foo(x++); }",
-        "function foo(a){return a;}; " +
-        "function x() {{x++;}}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){return a;}; " + "function x() { foo(x++); }",
+        "function foo(a){return a;}; " + "function x() {{x++;}}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1069,11 +1117,12 @@ public final class FunctionInjectorTest {
     // Parameter has side-effects.
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(x++);",
-        "function foo(a){return a+a;}; " +
-            "{var a$jscomp$inline_0=x++;" +
-            " a$jscomp$inline_0+" +
-            "a$jscomp$inline_0;}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){return a+a;}; "
+            + "{var a$jscomp$inline_0=x++;"
+            + " a$jscomp$inline_0+"
+            + "a$jscomp$inline_0;}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1081,11 +1130,12 @@ public final class FunctionInjectorTest {
     // Parameter has mutable, references more than once.
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(new Date());",
-        "function foo(a){return a+a;}; " +
-            "{var a$jscomp$inline_0=new Date();" +
-            " a$jscomp$inline_0+" +
-            "a$jscomp$inline_0;}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){return a+a;}; "
+            + "{var a$jscomp$inline_0=new Date();"
+            + " a$jscomp$inline_0+"
+            + "a$jscomp$inline_0;}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1093,11 +1143,12 @@ public final class FunctionInjectorTest {
     // Parameter is large, references more than once.
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(function(){});",
-        "function foo(a){return a+a;}; " +
-            "{var a$jscomp$inline_0=function(){};" +
-            " a$jscomp$inline_0+" +
-            "a$jscomp$inline_0;}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){return a+a;}; "
+            + "{var a$jscomp$inline_0=function(){};"
+            + " a$jscomp$inline_0+"
+            + "a$jscomp$inline_0;}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1105,9 +1156,9 @@ public final class FunctionInjectorTest {
     // Parameter has side-effects.
     helperInlineReferenceToFunction(
         "function foo(a){return true;}; foo(goo());",
-        "function foo(a){return true;};" +
-            "{var a$jscomp$inline_0=goo();true}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){return true;};" + "{var a$jscomp$inline_0=goo();true}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1135,33 +1186,35 @@ public final class FunctionInjectorTest {
   public void testInline19() {
     // Properly alias.
     helperInlineReferenceToFunction(
-        "var x = 1; var y = 2;" +
-        "function foo(a,b){x = b; y = a;}; " +
-        "function bar() { foo(x,y); }",
-        "var x = 1; var y = 2;" +
-        "function foo(a,b){x = b; y = a;}; " +
-        "function bar() {" +
-           "{var a$jscomp$inline_0=x;" +
-            "x = y;" +
-            "y = a$jscomp$inline_0;}" +
-        "}",
-        "foo", INLINE_BLOCK);
+        "var x = 1; var y = 2;"
+            + "function foo(a,b){x = b; y = a;}; "
+            + "function bar() { foo(x,y); }",
+        "var x = 1; var y = 2;"
+            + "function foo(a,b){x = b; y = a;}; "
+            + "function bar() {"
+            + "{var a$jscomp$inline_0=x;"
+            + "x = y;"
+            + "y = a$jscomp$inline_0;}"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testInline19b() {
     helperInlineReferenceToFunction(
-        "var x = 1; var y = 2;" +
-        "function foo(a,b){y = a; x = b;}; " +
-        "function bar() { foo(x,y); }",
-        "var x = 1; var y = 2;" +
-        "function foo(a,b){y = a; x = b;}; " +
-        "function bar() {" +
-           "{var b$jscomp$inline_1=y;" +
-            "y = x;" +
-            "x = b$jscomp$inline_1;}" +
-        "}",
-        "foo", INLINE_BLOCK);
+        "var x = 1; var y = 2;"
+            + "function foo(a,b){y = a; x = b;}; "
+            + "function bar() { foo(x,y); }",
+        "var x = 1; var y = 2;"
+            + "function foo(a,b){y = a; x = b;}; "
+            + "function bar() {"
+            + "{var b$jscomp$inline_1=y;"
+            + "y = x;"
+            + "x = b$jscomp$inline_1;}"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1170,7 +1223,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(a){return a}; foo(function(){});",
         "function foo(a){return a}; (function(){})",
-        "foo", INLINE_DIRECT);
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -1179,7 +1233,8 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(a){return a}; foo(function(){});",
         "function foo(a){return a}; {(function(){})}",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1191,22 +1246,20 @@ public final class FunctionInjectorTest {
         INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
-        "function foo(a){var b;return a;}; " +
-        "do{ foo(1); } while(1)",
-        "function foo(a){var b;return a;}; " +
-        "do{ {" +
-            "var b$jscomp$inline_1=void 0;1}}while(1)",
-        "foo", INLINE_BLOCK);
+        "function foo(a){var b;return a;}; " + "do{ foo(1); } while(1)",
+        "function foo(a){var b;return a;}; " + "do{ {" + "var b$jscomp$inline_1=void 0;1}}while(1)",
+        "foo",
+        INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
-        "function foo(a){for(var b in c)return a;}; " +
-        "for(;1;){ foo(1); }",
-        "function foo(a){var b;for(b in c)return a;}; " +
-        "for(;1;){ {JSCompiler_inline_label_foo_2:{" +
-            "var b$jscomp$inline_1=void 0;for(b$jscomp$inline_1 in c){" +
-              "1;break JSCompiler_inline_label_foo_2" +
-            "}}}}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){for(var b in c)return a;}; " + "for(;1;){ foo(1); }",
+        "function foo(a){var b;for(b in c)return a;}; "
+            + "for(;1;){ {JSCompiler_inline_label_foo_2:{"
+            + "var b$jscomp$inline_1=void 0;for(b$jscomp$inline_1 in c){"
+            + "1;break JSCompiler_inline_label_foo_2"
+            + "}}}}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1214,9 +1267,9 @@ public final class FunctionInjectorTest {
     // Call with inner function expression.
     helperInlineReferenceToFunction(
         "function foo(){return function() {return true;}}; foo();",
-        "function foo(){return function() {return true;}};" +
-            "(function() {return true;})",
-        "foo", INLINE_DIRECT);
+        "function foo(){return function() {return true;}};" + "(function() {return true;})",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -1224,9 +1277,9 @@ public final class FunctionInjectorTest {
     // Call with inner function expression.
     helperInlineReferenceToFunction(
         "function foo(){return function() {return true;}}; foo();",
-        "function foo(){return function() {return true;}};" +
-            "{(function() {return true;})}",
-        "foo", INLINE_BLOCK);
+        "function foo(){return function() {return true;}};" + "{(function() {return true;})}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1234,9 +1287,10 @@ public final class FunctionInjectorTest {
     // Call with inner function expression.
     helperInlineReferenceToFunction(
         "function foo(){return function() {var a; return true;}}; foo();",
-        "function foo(){return function() {var a; return true;}};" +
-            "(function() {var a; return true;});",
-        "foo", INLINE_DIRECT);
+        "function foo(){return function() {var a; return true;}};"
+            + "(function() {var a; return true;});",
+        "foo",
+        INLINE_DIRECT);
   }
 
   @Test
@@ -1247,7 +1301,8 @@ public final class FunctionInjectorTest {
         lines(
             "function foo(){return function() {var a; return true;}};",
             "{(function() {var a$jscomp$inline_0; return true;});}"),
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
@@ -1267,16 +1322,15 @@ public final class FunctionInjectorTest {
             "  };",
             "  x$jscomp$inline_0;",
             "}"),
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testInlineFunctionWithInnerArrowFunction1() {
     helperInlineReferenceToFunction(
         "function foo(){ () => { alert(1); }; } foo();",
-        lines(
-            "function foo(){ () => { alert(1); }; }",
-            "{ () => { alert(1); }; }"),
+        lines("function foo(){ () => { alert(1); }; }", "{ () => { alert(1); }; }"),
         "foo",
         INLINE_BLOCK);
   }
@@ -1683,31 +1737,37 @@ public final class FunctionInjectorTest {
     helperInlineReferenceToFunction(
         "function foo(a){}; foo(x())",
         "function foo(a){}; {var a$jscomp$inline_0=x()}",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a){bar()}; foo(x())",
         "function foo(a){bar()}; {var a$jscomp$inline_0=x();bar()}",
-        "foo", INLINE_BLOCK);
+        "foo",
+        INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a,b){bar()}; foo(x(),y())",
-        "function foo(a,b){bar()};" +
-        "{var a$jscomp$inline_0=x();var b$jscomp$inline_1=y();bar()}",
-        "foo", INLINE_BLOCK);
+        "function foo(a,b){bar()};" + "{var a$jscomp$inline_0=x();var b$jscomp$inline_1=y();bar()}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   @Test
   public void testIssue1101a() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return modifiyX() + a;} foo(x);", "foo",
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return modifiyX() + a;} foo(x);",
+        "foo",
         INLINE_DIRECT);
   }
 
   @Test
   public void testIssue1101b() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return (x.prop = 2),a;} foo(x.prop);", "foo",
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(a){return (x.prop = 2),a;} foo(x.prop);",
+        "foo",
         INLINE_DIRECT);
   }
 
@@ -1833,14 +1893,8 @@ public final class FunctionInjectorTest {
   /**
    * Test case
    *
-   * var a = {}, b = {}
-   * a.test = "a", b.test = "b"
-   * c = a;
-   * foo() { c=b; return "a" }
-   * c.teste
-   *
+   * <p>var a = {}, b = {} a.test = "a", b.test = "b" c = a; foo() { c=b; return "a" } c.teste
    */
-
   public void helperCanInlineReferenceToFunction(
       final CanInlineResult expectedResult,
       final String code,
@@ -1900,15 +1954,13 @@ public final class FunctionInjectorTest {
   }
 
   public void helperInlineReferenceToFunction(
-      String code, final String expectedResult,
-      final String fnName, final InliningMode mode) {
+      String code, final String expectedResult, final String fnName, final InliningMode mode) {
     final Compiler compiler = new Compiler();
     ImmutableList<SourceFile> externsInputs = ImmutableList.of(SourceFile.fromCode("externs", ""));
 
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
-    compiler.init(externsInputs, ImmutableList.of(
-        SourceFile.fromCode("code", code)), options);
+    compiler.init(externsInputs, ImmutableList.of(SourceFile.fromCode("code", code)), options);
 
     final FunctionArgumentInjector functionArgumentInjector =
         new FunctionArgumentInjector(compiler.getAstAnalyzer());
@@ -2028,8 +2080,7 @@ public final class FunctionInjectorTest {
     }
 
     @Override
-    public boolean shouldTraverse(
-        NodeTraversal nodeTraversal, Node n, Node parent) {
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return !complete;
     }
 
@@ -2098,5 +2149,4 @@ public final class FunctionInjectorTest {
   private static String toSource(Node n) {
     return new CodePrinter.Builder(n).setPrettyPrint(false).setLineBreak(false).build();
   }
-
 }

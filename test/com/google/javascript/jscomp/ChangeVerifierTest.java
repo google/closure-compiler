@@ -206,8 +206,7 @@ public final class ChangeVerifierTest {
 
     verifier.checkRecordedChanges(mainScript);
 
-    mainScript.addChildToFront(
-        IR.function(IR.name("A"), IR.paramList(), IR.block()));
+    mainScript.addChildToFront(IR.function(IR.name("A"), IR.paramList(), IR.block()));
     compiler.reportChangeToChangeScope(mainScript);
 
     IllegalStateException e =

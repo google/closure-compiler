@@ -21,10 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link Es6RewriteBlockScopedDeclaration}.
- *
- */
+/** Test case for {@link Es6RewriteBlockScopedDeclaration}. */
 @RunWith(JUnit4.class)
 public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
 
@@ -108,8 +105,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     test("const x = 1, y = 2;", "/** @const */ var x = 1; /** @const */ var y = 2;");
     test("const a = 0; a;", "/** @const */ var a = 0; a;");
     test("if (a) { let x; }", "if (a) { var x; }");
-    test("function f() { const x = 3; }",
-        "function f() { /** @const */ var x = 3; }");
+    test("function f() { const x = 3; }", "function f() { /** @const */ var x = 3; }");
   }
 
   @Test
@@ -135,13 +131,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
 
     test(
-        lines(
-            "function f() {",
-            "  const x = 3;",
-            "  if (true) {",
-            "    let x;",
-            "  }",
-            "}"),
+        lines("function f() {", "  const x = 3;", "  if (true) {", "    let x;", "  }", "}"),
         lines(
             "function f() {",
             "  /** @const */ var x = 3;",
@@ -172,13 +162,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test(
         lines(
-            "var x = 2;",
-            "function f() {",
-            "  x = 1;",
-            "  if (a) {",
-            "    let x = 2;",
-            "  }",
-            "}"),
+            "var x = 2;", "function f() {", "  x = 1;", "  if (a) {", "    let x = 2;", "  }", "}"),
         lines(
             "var x = 2;",
             "function f() {",
@@ -377,9 +361,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test("for (let i = 0;;) { let i; }", "for (var i = 0;;) { var i$0 = void 0; }");
 
-    test(
-        "for (let i = 0;;) {} let i;",
-        "for (var i$0 = 0;;) {} var i;");
+    test("for (let i = 0;;) {} let i;", "for (var i$0 = 0;;) {} var i;");
 
     test(
         lines("for (var x in y) {", "  /** @type {number} */", "  let i;", "}"),
@@ -1447,8 +1429,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
   @Test
   public void testTypeAnnotationsOnLetConst() {
-    Diagnostic mismatch =
-        warning(TypeValidator.TYPE_MISMATCH_WARNING);
+    Diagnostic mismatch = warning(TypeValidator.TYPE_MISMATCH_WARNING);
 
     test(srcs("/** @type {number} */ let x = 5; x = 'str';"), mismatch);
     test(srcs("let /** number */ x = 5; x = 'str';"), mismatch);
@@ -1541,25 +1522,27 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
   @Test
   public void testCatch() {
-    test("function f(e) { try {} catch (e) { throw e; } }",
-         "function f(e) { try {} catch (e$0) { throw e$0; } }");
+    test(
+        "function f(e) { try {} catch (e) { throw e; } }",
+        "function f(e) { try {} catch (e$0) { throw e$0; } }");
 
-    test(lines(
-        "function f(e) {",
-        "  try {",
-        "    let f = function(e) {",
-        "      try {} catch (e) { e++; }",
-        "    }",
-        "  } catch (e) { e--; }",
-        "}"),
+    test(
         lines(
-        "function f(e) {",
-        "  try {",
-        "    var f$1 = function(e) {",
-        "      try {} catch (e$0) { e$0++; }",
-        "    }",
-        "  } catch (e$2) { e$2--; }",
-        "}"));
+            "function f(e) {",
+            "  try {",
+            "    let f = function(e) {",
+            "      try {} catch (e) { e++; }",
+            "    }",
+            "  } catch (e) { e--; }",
+            "}"),
+        lines(
+            "function f(e) {",
+            "  try {",
+            "    var f$1 = function(e) {",
+            "      try {} catch (e$0) { e$0++; }",
+            "    }",
+            "  } catch (e$2) { e$2--; }",
+            "}"));
   }
 
   // Regression test for https://github.com/google/closure-compiler/issues/3599

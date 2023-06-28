@@ -29,10 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link VariableMap}.
- *
- */
+/** Tests for {@link VariableMap}. */
 @RunWith(JUnit4.class)
 public final class VariableMapTest {
 
@@ -43,16 +40,14 @@ public final class VariableMapTest {
     cycleTest(ImmutableMap.of("AAA", "a:a", "BBB", "b:b"));
   }
 
-  public void cycleTest(ImmutableMap<String, String> map)
-      throws ParseException {
+  public void cycleTest(ImmutableMap<String, String> map) throws ParseException {
     VariableMap in = new VariableMap(map);
     String serialized = new String(in.toBytes(), UTF_8);
     VariableMap out = VariableMap.fromBytes(serialized.getBytes(UTF_8));
     assertMapsEquals(in.toMap(), out.toMap());
   }
 
-  public void assertMapsEquals(
-      Map<String, String> expected, Map<String, String> result) {
+  public void assertMapsEquals(Map<String, String> expected, Map<String, String> result) {
     assertThat(result).hasSize(expected.size());
     for (String key : expected.keySet()) {
       assertThat(result).containsEntry(key, expected.get(key));

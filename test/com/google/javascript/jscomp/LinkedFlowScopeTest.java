@@ -28,10 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for LinkedFlowScope.
- *
- */
+/** Tests for LinkedFlowScope. */
 @RunWith(JUnit4.class)
 public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
@@ -43,6 +40,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   @SuppressWarnings("unused")
   private FlowScope globalEntry;
+
   private FlowScope localEntry;
 
   @Override

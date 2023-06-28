@@ -1118,7 +1118,6 @@ public final class NormalizeTest extends CompilerTestCase {
     }
   }
 
-
   @Test
   public void testPropertyIsConstantIfMatchesConstantName() {
     // verify that the /** @const */ 'other' doesn't accidentally cause the string key in

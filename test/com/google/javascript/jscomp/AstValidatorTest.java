@@ -1507,6 +1507,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testFeatureValidation_objectLiteralsWithSpread() {
     testFeatureValidation("var obj = {...something};", Feature.OBJECT_LITERALS_WITH_SPREAD);
   }
+
   @Test
   public void testValidFeatureInScript() {
     // Since we're building the AST by hand, there won't be any types on it.

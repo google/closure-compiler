@@ -26,7 +26,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author nicksantos@google.com (Nick Santos) */
+/**
+ * @author nicksantos@google.com (Nick Santos)
+ */
 @RunWith(JUnit4.class)
 public final class ProcessDefinesTest extends CompilerTestCase {
 
@@ -279,7 +281,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testMisspelledOverride() {
-    overrides.put("DEF_BAD_OVERIDE", new Node(Token.TRUE));  // NOTYPO: Intentional misspelling.
+    overrides.put("DEF_BAD_OVERIDE", new Node(Token.TRUE)); // NOTYPO: Intentional misspelling.
     test(
         "/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
         "/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
@@ -525,8 +527,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   @Test
   public void testNamespacedDefine2a() {
     overrides.put("a.B", new Node(Token.TRUE));
-    test("var a = {}; /** @define {boolean} */ a.B = false;",
-         "var a = {}; /** @define {boolean} */ a.B = true;");
+    test(
+        "var a = {}; /** @define {boolean} */ a.B = false;",
+        "var a = {}; /** @define {boolean} */ a.B = true;");
   }
 
   @Test
@@ -554,8 +557,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   @Test
   public void testNamespacedDefine4() {
     overrides.put("a.B", new Node(Token.TRUE));
-    test("var a = {}; /** @define {boolean} */ a.B = false;",
-         "var a = {}; /** @define {boolean} */ a.B = true;");
+    test(
+        "var a = {}; /** @define {boolean} */ a.B = false;",
+        "var a = {}; /** @define {boolean} */ a.B = true;");
   }
 
   @Test

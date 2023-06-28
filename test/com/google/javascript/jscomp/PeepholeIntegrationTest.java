@@ -74,62 +74,54 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   /** Check that removing blocks with 1 child works */
   @Test
   public void testFoldOneChildBlocksIntegration() {
-     test("function f(){switch(foo()){default:{break}}}",
-          "function f(){foo()}");
+    test("function f(){switch(foo()){default:{break}}}", "function f(){foo()}");
 
-     test("function f(){switch(x){default:{break}}}",
-          "function f(){}");
+    test("function f(){switch(x){default:{break}}}", "function f(){}");
 
-     test("function f(){switch(x){default:x;case 1:return 2}}",
-          "function f(){switch(x){default:case 1:return 2}}");
+    test(
+        "function f(){switch(x){default:x;case 1:return 2}}",
+        "function f(){switch(x){default:case 1:return 2}}");
 
-     // ensure that block folding does not break hook ifs
-     test("if(x){if(true){foo();foo()}else{bar();bar()}}",
-          "if(x){foo();foo()}");
+    // ensure that block folding does not break hook ifs
+    test("if(x){if(true){foo();foo()}else{bar();bar()}}", "if(x){foo();foo()}");
 
-     test("if(x){if(false){foo();foo()}else{bar();bar()}}",
-          "if(x){bar();bar()}");
+    test("if(x){if(false){foo();foo()}else{bar();bar()}}", "if(x){bar();bar()}");
 
-     // Cases where the then clause has no side effects.
-     test("if(x()){}", "x()");
+    // Cases where the then clause has no side effects.
+    test("if(x()){}", "x()");
 
-     test("if(x()){} else {x()}", "x()||x()");
-     test("if(x){}", ""); // Even the condition has no side effect.
-     test("if(a()){A()} else if (b()) {} else {C()}", "a()?A():b()||C()");
+    test("if(x()){} else {x()}", "x()||x()");
+    test("if(x){}", ""); // Even the condition has no side effect.
+    test("if(a()){A()} else if (b()) {} else {C()}", "a()?A():b()||C()");
 
-     test("if(a()){} else if (b()) {} else {C()}",
-          "a() || (b() || C())");
-     test("if(a()){A()} else if (b()) {} else if (c()) {} else{D()}",
-          "a() ? A() : b() || (c() || D())");
-     test("if(a()){} else if (b()) {} else if (c()) {} else{D()}",
-          "a() || (b() || (c() || D()))");
-     test("if(a()){A()} else if (b()) {} else if (c()) {} else{}",
-          "a()?A():b()||c()");
+    test("if(a()){} else if (b()) {} else {C()}", "a() || (b() || C())");
+    test(
+        "if(a()){A()} else if (b()) {} else if (c()) {} else{D()}",
+        "a() ? A() : b() || (c() || D())");
+    test("if(a()){} else if (b()) {} else if (c()) {} else{D()}", "a() || (b() || (c() || D()))");
+    test("if(a()){A()} else if (b()) {} else if (c()) {} else{}", "a()?A():b()||c()");
 
-     // Verify that non-global scope works.
-     test("function foo(){if(x()){}}", "function foo(){x()}");
+    // Verify that non-global scope works.
+    test("function foo(){if(x()){}}", "function foo(){x()}");
     test("function foo(){if(x?.()){}}", "function foo(){x?.()}");
   }
 
   @Test
   public void testFoldOneChildBlocksStringCompare() {
-    test("if (x) {if (y) { var x; } } else{ var z; }",
-         "if (x) { if (y) var x } else var z");
+    test("if (x) {if (y) { var x; } } else{ var z; }", "if (x) { if (y) var x } else var z");
   }
 
   /** Test a particularly hairy edge case. */
   @Test
   public void testNecessaryDanglingElse() {
-    test("if (x) if (y){ y(); z() } else; else x()",
-         "if (x) { if(y) { y(); z() } } else x()");
+    test("if (x) if (y){ y(); z() } else; else x()", "if (x) { if(y) { y(); z() } } else x()");
   }
 
   /** Try to minimize returns */
   @Test
   public void testFoldReturnsIntegration() {
     // if-then-else duplicate statement removal handles this case:
-    test("function f(){if(x)return;else return}",
-         "function f(){}");
+    test("function f(){if(x)return;else return}", "function f(){}");
   }
 
   /** Try to minimize returns */
@@ -147,17 +139,14 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     // ensure that folding blocks with a single var node doesn't explode
     test("if(x){var y=3;}var z=5", "if(x)var y=3;var z=5");
 
-    test("for(var i=0;i<10;i++){var y=3;}var z=5",
-         "for(var i=0;i<10;i++)var y=3;var z=5");
-    test("for(var i in x){var y=3;}var z=5",
-         "for(var i in x)var y=3;var z=5");
+    test("for(var i=0;i<10;i++){var y=3;}var z=5", "for(var i=0;i<10;i++)var y=3;var z=5");
+    test("for(var i in x){var y=3;}var z=5", "for(var i in x)var y=3;var z=5");
     test("do{var y=3;}while(x);var z=5", "do var y=3;while(x);var z=5");
   }
 
   @Test
   public void testHookIfIntegration() {
-    test("if (false){ x = 1; } else if (cond) { x = 2; } else { x = 3; }",
-         "x=cond?2:3");
+    test("if (false){ x = 1; } else if (cond) { x = 2; } else { x = 3; }", "x=cond?2:3");
 
     test("x?void 0:y()", "x||y()");
     test("!x?void 0:y()", "x&&y()");
@@ -273,11 +262,12 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testBugIssue3() {
-    testSame(lines(
-        "function foo() {",
-        "  if(sections.length != 1) children[i] = 0;",
-        "  else var selectedid = children[i]",
-        "}"));
+    testSame(
+        lines(
+            "function foo() {",
+            "  if(sections.length != 1) children[i] = 0;",
+            "  else var selectedid = children[i]",
+            "}"));
   }
 
   @Test
@@ -394,28 +384,27 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testFoldIfs1() {
-    test("function f() {if (x) return 1; else if (y) return 1;}",
-         "function f() {if (x||y) return 1;}");
-    test("function f() {if (x) return 1; else {if (y) return 1; else foo();}}",
-         "function f() {if (x||y) return 1; foo();}");
+    test(
+        "function f() {if (x) return 1; else if (y) return 1;}",
+        "function f() {if (x||y) return 1;}");
+    test(
+        "function f() {if (x) return 1; else {if (y) return 1; else foo();}}",
+        "function f() {if (x||y) return 1; foo();}");
   }
 
   @Test
   public void testFoldIfs2() {
-    test("function f() {if (x) { a(); } else if (y) { a() }}",
-         "function f() {x?a():y&&a();}");
+    test("function f() {if (x) { a(); } else if (y) { a() }}", "function f() {x?a():y&&a();}");
   }
 
   @Test
   public void testFoldHook2() {
-    test("function f(a) {if (!a) return a; else return a;}",
-         "function f(a) {return a}");
+    test("function f(a) {if (!a) return a; else return a;}", "function f(a) {return a}");
   }
 
   @Test
   public void disable_testFoldHook1() {
-    test("function f(a) {return (!a)?a:a;}",
-         "function f(a) {return a}");
+    test("function f(a) {return (!a)?a:a;}", "function f(a) {return a}");
   }
 
   @Test

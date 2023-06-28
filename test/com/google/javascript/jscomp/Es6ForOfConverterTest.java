@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -24,10 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test cases for {@link Es6ForOfConverter}
- *
- */
+/** Test cases for {@link Es6ForOfConverter} */
 @RunWith(JUnit4.class)
 public final class Es6ForOfConverterTest extends CompilerTestCase {
 
@@ -293,7 +289,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   }
 
   @Override
-  protected  NoninjectingCompiler getLastCompiler() {
+  protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

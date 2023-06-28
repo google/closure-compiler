@@ -39,26 +39,23 @@ public final class ClosureBundlerTest {
   private static final DependencyInfo MODULE =
       SimpleDependencyInfo.builder("", "").setGoogModule(true).build();
 
-  private static final DependencyInfo TRADITIONAL =
-      SimpleDependencyInfo.builder("", "").build();
+  private static final DependencyInfo TRADITIONAL = SimpleDependencyInfo.builder("", "").build();
 
   @Test
   public void testGoogModule() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler().appendTo(sb, MODULE, "\"a string\"");
     assertThat(sb.toString())
-        .isEqualTo("goog.loadModule(function(exports) {'use strict';"
-            + "\"a string\"\n"
-            + ";return exports;});\n");
+        .isEqualTo(
+            "goog.loadModule(function(exports) {'use strict';"
+                + "\"a string\"\n"
+                + ";return exports;});\n");
   }
 
   @Test
   public void testGoogModuleWithSourceURL() throws IOException {
     StringBuilder sb = new StringBuilder();
-    new ClosureBundler()
-        .useEval(true)
-        .withSourceUrl("URL")
-        .appendTo(sb, MODULE, "\"a string\"");
+    new ClosureBundler().useEval(true).withSourceUrl("URL").appendTo(sb, MODULE, "\"a string\"");
     assertThat(sb.toString())
         .isEqualTo("goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
@@ -66,19 +63,14 @@ public final class ClosureBundlerTest {
   @Test
   public void testGoogModuleWithEval() throws IOException {
     StringBuilder sb = new StringBuilder();
-    new ClosureBundler()
-        .useEval(true)
-        .appendTo(sb, MODULE, "\"a string\"");
+    new ClosureBundler().useEval(true).appendTo(sb, MODULE, "\"a string\"");
     assertThat(sb.toString()).isEqualTo("goog.loadModule(\"\\x22a string\\x22\");\n");
   }
 
   @Test
   public void testGoogModuleWithEvalWithURL() throws IOException {
     StringBuilder sb = new StringBuilder();
-    new ClosureBundler()
-        .useEval(true)
-        .withSourceUrl("URL")
-        .appendTo(sb, MODULE, "\"a string\"");
+    new ClosureBundler().useEval(true).withSourceUrl("URL").appendTo(sb, MODULE, "\"a string\"");
     assertThat(sb.toString())
         .isEqualTo("goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
@@ -93,20 +85,14 @@ public final class ClosureBundlerTest {
   @Test
   public void testTraditionalWithSourceURL() throws IOException {
     StringBuilder sb = new StringBuilder();
-    new ClosureBundler()
-        .withSourceUrl("URL")
-        .appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertThat(sb.toString())
-        .isEqualTo("\"a string\"\n"
-            + "//# sourceURL=URL\n");
+    new ClosureBundler().withSourceUrl("URL").appendTo(sb, TRADITIONAL, "\"a string\"");
+    assertThat(sb.toString()).isEqualTo("\"a string\"\n" + "//# sourceURL=URL\n");
   }
 
   @Test
   public void testTraditionalWithEval() throws IOException {
     StringBuilder sb = new StringBuilder();
-    new ClosureBundler()
-        .useEval(true)
-        .appendTo(sb, TRADITIONAL, "\"a string\"");
+    new ClosureBundler().useEval(true).appendTo(sb, TRADITIONAL, "\"a string\"");
     assertThat(sb.toString())
         .isEqualTo("eval(this.CLOSURE_EVAL_PREFILTER(\"\\x22a string\\x22\"));\n");
   }
@@ -142,15 +128,17 @@ public final class ClosureBundlerTest {
     assertThat(sb.toString()).startsWith("RUNTIME;");
     // Call endsWith because the ES6 module runtime is also injected.
     assertThat(sb.toString())
-        .endsWith("goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
-            + ";return exports;});\n");
+        .endsWith(
+            "goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
+                + ";return exports;});\n");
 
     // Without calling appendRuntimeTo(), the runtime is not included anymore.
     sb = new StringBuilder();
     bundler.appendTo(sb, MODULE, input);
     assertThat(sb.toString())
-        .isEqualTo("goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
-            + ";return exports;});\n");
+        .isEqualTo(
+            "goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
+                + ";return exports;});\n");
   }
 
   @Test
@@ -193,10 +181,7 @@ public final class ClosureBundlerTest {
     String input = "/** Hello Comments! */ const s = 0;\n  let intended;";
     ClosureBundler bundler = new ClosureBundler(BaseTranspiler.LATEST_TRANSPILER);
     StringBuilder sb = new StringBuilder();
-    bundler.appendTo(
-        sb,
-        SimpleDependencyInfo.builder("", "").build(),
-        input);
+    bundler.appendTo(sb, SimpleDependencyInfo.builder("", "").build(), input);
     assertThat(sb.toString()).isEqualTo(input);
   }
 
@@ -205,10 +190,7 @@ public final class ClosureBundlerTest {
     String input = "/** Hello Comments! */ const s = 0;\n  let intended;";
     ClosureBundler bundler = new ClosureBundler(BaseTranspiler.ES5_TRANSPILER);
     StringBuilder sb = new StringBuilder();
-    bundler.appendTo(
-        sb,
-        SimpleDependencyInfo.builder("", "").build(),
-        input);
+    bundler.appendTo(sb, SimpleDependencyInfo.builder("", "").build(), input);
     assertThat(sb.toString()).isEqualTo("var s = 0;\nvar intended;\n");
   }
 
@@ -218,10 +200,7 @@ public final class ClosureBundlerTest {
     String input = "var ａｅｓｔｈｅｔｉｃ＿";
     ClosureBundler bundler = new ClosureBundler();
     StringBuilder sb = new StringBuilder();
-    bundler.appendTo(
-        sb,
-        SimpleDependencyInfo.builder("", "").build(),
-        input);
+    bundler.appendTo(sb, SimpleDependencyInfo.builder("", "").build(), input);
     assertThat(sb.toString()).isEqualTo(input);
   }
 
