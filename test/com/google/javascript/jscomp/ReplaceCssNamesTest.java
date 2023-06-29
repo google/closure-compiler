@@ -476,6 +476,58 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMixedVariableAndStringReferences() {
+    SourceFile cssVarsDefinition =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': goog.getCssName('fooStylesBar'),",
+                "  'Baz': goog.getCssName('fooStylesBaz'),",
+                "}"));
+    SourceFile cssVarsExpected =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            lines(
+                "/**",
+                " * @fileoverview generated from foo/styles.css",
+                " * @sassGeneratedCssTs",
+                " */",
+                "goog.module('foo.styles$2ecss');",
+                "/** @type {{Bar: string, Baz: string}} */",
+                "exports.classes = {",
+                "  'Bar': 'fsr',",
+                "  'Baz': 'fsz',",
+                "}"));
+    SourceFile importer =
+        SourceFile.fromCode(
+            "foo/importer.closure.js",
+            lines(
+                "goog.module('foo.importer');",
+                "/** @type {string} */",
+                "const foo_styles_css = goog.require('foo.styles$2ecss');",
+                "var x = foo_styles_css.classes.Bar;",
+                "var y = goog.getCssName('active');"));
+    SourceFile importerExpected =
+        SourceFile.fromCode(
+            "foo/importer.closure.js",
+            lines(
+                "goog.module('foo.importer');",
+                "/** @type {string} */",
+                "const foo_styles_css = goog.require('foo.styles$2ecss');",
+                "var x = foo_styles_css.classes.Bar;",
+                "var y = 'a';"));
+    test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importerExpected));
+    assertThat(cssNames).containsExactly("fooStylesBar", 1, "active", 1);
+  }
+
+  @Test
   public void testIgnoreReferencesInCssTsFiles() {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(
