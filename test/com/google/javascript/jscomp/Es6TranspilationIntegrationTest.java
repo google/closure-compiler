@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
@@ -117,6 +118,18 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     return optimizer;
   }
 
+  private void rewriteUniqueIdAndTest(Sources srcs, Expected originalExpected) {
+    rewriteUniqueIdAndTest(externs(""), srcs, originalExpected);
+  }
+
+  private void rewriteUniqueIdAndTest(Externs externs, Sources srcs, Expected originalExpected) {
+    Expected modifiedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs, originalExpected, ImmutableMap.of("ID", "")));
+    test(externs, srcs, modifiedExpected);
+  }
+
   @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
@@ -186,21 +199,23 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.foo = function() { console.log(this.a); };",
             "C.prototype.bar = function() { alert(this.a); };"));
 
-    test(
-        lines(
-            "if (true) {", //
-            "   class Foo{}",
-            "} else {",
-            "   class Foo{}",
-            "}"),
-        lines(
-            "if (true) {",
-            "    /** @constructor */",
-            "    var Foo = function() {};",
-            "} else {",
-            "    /** @constructor */",
-            "    var Foo$0 = function() {};",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "if (true) {", //
+                "   class Foo{}",
+                "} else {",
+                "   class Foo{}",
+                "}")),
+        expected(
+            lines(
+                "if (true) {",
+                "    /** @constructor */",
+                "    var Foo = function() {};",
+                "} else {",
+                "    /** @constructor */",
+                "    var Foo$ID$0 = function() {};",
+                "}")));
   }
 
   @Test
@@ -1859,7 +1874,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testInitSymbol() {
-    // Include the extern for Symbol, because we're testing renaming of local varaibles with the
+    // Include the extern for Symbol, because we're testing renaming of local variables with the
     // same name.
     SourceFile externsFileWithSymbol =
         new TestExternsBuilder()
@@ -1892,8 +1907,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "  var x = 1;",
                 "  var y = Symbol('nimble');",
                 "}")));
-    test(
-        externs(externsFileWithSymbol),
+    Externs externs = externs(externsFileWithSymbol);
+    Sources srcs =
         srcs(
             lines(
                 "function f() {",
@@ -1901,19 +1916,21 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "     let Symbol = function() {};",
                 "  }",
                 "  alert(Symbol.ism)",
-                "}")),
+                "}"));
+    Expected expected =
         expected(
             lines(
                 "function f() {",
                 "  if (true) {",
                 // normalization renames the local Symbol to be different from the global Symbol
-                "     var Symbol$0 = function() {};",
+                "     var Symbol$ID$0 = function() {};",
                 "  }",
                 "  alert(Symbol.ism)",
-                "}")));
+                "}"));
+    rewriteUniqueIdAndTest(externs, srcs, expected);
 
-    test(
-        externs(externsFileWithSymbol),
+    externs = externs(externsFileWithSymbol);
+    srcs =
         srcs(
             lines(
                 "function f() {",
@@ -1921,16 +1938,18 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "    let Symbol = function() {};",
                 "    alert(Symbol.ism)",
                 "  }",
-                "}")),
+                "}"));
+    expected =
         expected(
             lines(
                 "function f() {",
                 "  if (true) {",
                 // normalization renames the local Symbol to be different from the global Symbol
-                "    var Symbol$0 = function() {};",
-                "    alert(Symbol$0.ism)",
+                "    var Symbol$ID$0 = function() {};",
+                "    alert(Symbol$ID$0.ism)",
                 "  }",
-                "}")));
+                "}"));
+    rewriteUniqueIdAndTest(externs, srcs, expected);
     // No $jscomp.initSymbol in externs
     testExternChanges(
         externs("alert(Symbol.thimble);"), srcs(""), expected("alert(Symbol.thimble)"));
@@ -1964,39 +1983,43 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   @Test
   public void testForOf() {
     // Iteration var shadows an outer var ()
-    test(
-        "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
-        lines(
-            "var i = 'outer';",
-            // Normalization extracts the variables from the loop.
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1, 2, 3]);",
-            "var $jscomp$key$i = $jscomp$iter$0.next();",
-            "for (; !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i$1 = $jscomp$key$i.value;",
-            "  {",
-            "    alert(i$1);",
-            "  }",
-            "}",
-            "alert(i);"));
+    Sources srcs = srcs("var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);");
+    Expected expected =
+        expected(
+            lines(
+                "var i = 'outer';",
+                // Normalization extracts the variables from the loop.
+                "var $jscomp$iter$0 = $jscomp.makeIterator([1, 2, 3]);",
+                "var $jscomp$key$i = $jscomp$iter$0.next();",
+                "for (; !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+                "  var i$ID$0 = $jscomp$key$i.value;",
+                "  {",
+                "    alert(i$ID$0);",
+                "  }",
+                "}",
+                "alert(i);"));
+    rewriteUniqueIdAndTest(srcs, expected);
   }
 
   @Test
   public void testForOfRedeclaredVar() {
-    test(
-        lines(
-            "for (let x of []) {", //
-            "  let x = 0;",
-            "}"),
-        lines(
-            // Normalization extracts the variables from the loop.
-            "var $jscomp$iter$0 = $jscomp.makeIterator([]);",
-            "var $jscomp$key$x = $jscomp$iter$0.next();",
-            "for (; !$jscomp$key$x.done; $jscomp$key$x = $jscomp$iter$0.next()) {",
-            "  var x = $jscomp$key$x.value;",
-            "  {",
-            "    var x$1 = 0;",
-            "  }",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "for (let x of []) {", //
+                "  let x = 0;",
+                "}")),
+        expected(
+            lines(
+                // Normalization extracts the variables from the loop.
+                "var $jscomp$iter$0 = $jscomp.makeIterator([]);",
+                "var $jscomp$key$x = $jscomp$iter$0.next();",
+                "for (; !$jscomp$key$x.done; $jscomp$key$x = $jscomp$iter$0.next()) {",
+                "  var x = $jscomp$key$x.value;",
+                "  {",
+                "    var x$ID$0 = 0;",
+                "  }",
+                "}")));
   }
 
   @Test
@@ -2210,46 +2233,50 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testObjectLiteralShorthand() {
-    test(
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    let x = 2;",
-            "    return {x};",
-            "  }",
-            "  return x;",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    var x$0 = 2;",
-            "    return {x: x$0};",
-            "  }",
-            "  return x;",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "function f() {",
+                "  var x = 1;",
+                "  if (a) {",
+                "    let x = 2;",
+                "    return {x};",
+                "  }",
+                "  return x;",
+                "}")),
+        expected(
+            lines(
+                "function f() {",
+                "  var x = 1;",
+                "  if (a) {",
+                "    var x$ID$0 = 2;",
+                "    return {x: x$ID$0};",
+                "  }",
+                "  return x;",
+                "}")));
 
-    test(
-        lines(
-            "function f(a) {",
-            "  var {x} = a;",
-            "  if (a) {",
-            "    let x = 2;",
-            "    return x;",
-            "  }",
-            "  return x;",
-            "}"),
-        lines(
-            "function f(a) {",
-            "  var $jscomp$destructuring$var0 = a;",
-            "  var x = $jscomp$destructuring$var0.x;",
-            "  if (a) {",
-            "    var x$0 = 2;",
-            "    return x$0;",
-            "  }",
-            "  return x;",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "function f(a) {",
+                "  var {x} = a;",
+                "  if (a) {",
+                "    let x = 2;",
+                "    return x;",
+                "  }",
+                "  return x;",
+                "}")),
+        expected(
+            lines(
+                "function f(a) {",
+                "  var $jscomp$destructuring$var0 = a;",
+                "  var x = $jscomp$destructuring$var0.x;",
+                "  if (a) {",
+                "    var x$ID$0 = 2;",
+                "    return x$ID$0;",
+                "  }",
+                "  return x;",
+                "}")));
 
     // Note: if the inner `let` declaration is defined as a destructuring assignment
     // then the test would fail because Es6RewriteBlockScopeDeclaration does not even

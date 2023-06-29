@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -60,12 +59,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private final Set<String> externNames = new LinkedHashSet<>();
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
-  private final Supplier<String> uniqueNameIdSupplier;
+  private final UniqueIdSupplier uniqueIdSupplier;
   private final boolean astMayHaveUndeclaredVariables;
 
   public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.uniqueNameIdSupplier = compiler.getUniqueNameIdSupplier();
+    this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
     this.astMayHaveUndeclaredVariables = compiler.getOptions().skipNonTranspilationPasses;
     this.astFactory = compiler.createAstFactory();
   }
@@ -136,7 +135,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           || undeclaredNames.contains(oldName)
           || externNames.contains(oldName)) {
         do {
-          newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
+          newName = oldName + "$" + uniqueIdSupplier.getUniqueId(t.getInput());
         } while (hoistScope.hasSlot(newName));
         nameNode.setString(newName);
         compiler.reportChangeToEnclosingScope(nameNode);
@@ -241,7 +240,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     private static final String LOOP_OBJECT_PROPERTY_NAME = "$jscomp$loop$prop$";
     private final Map<Node, LoopObject> loopObjectMap = new LinkedHashMap<>();
 
-    private final SetMultimap<Node, LoopObject> nodesRequiringloopObjectsClosureMap =
+    private final SetMultimap<Node, LoopObject> nodesRequiringLoopObjectsClosureMap =
         LinkedHashMultimap.create();
     private final SetMultimap<Node, String> nodesHandledForLoopObjectClosure =
         HashMultimap.create();
@@ -326,19 +325,25 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
         LoopObject object =
             loopObjectMap.computeIfAbsent(
-                loopNode,
-                (Node k) ->
-                    new LoopObject(
-                        LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
+                loopNode, (Node k) -> new LoopObject(createUniqueObjectName(t.getInput())));
         String newPropertyName = createUniquePropertyName(var);
         object.vars.add(var);
         propertyNameMap.put(var, newPropertyName);
-        nodesRequiringloopObjectsClosureMap.put(nodeToWrapInClosure, object);
+        nodesRequiringLoopObjectsClosureMap.put(nodeToWrapInClosure, object);
       }
     }
 
+    private String createUniqueObjectName(CompilerInput input) {
+      return LOOP_OBJECT_NAME + "$" + uniqueIdSupplier.getUniqueId(input);
+    }
+
+    // Normalization guarantees unique variable names so generating a unique ID is necessary
+    // because this pass runs after normalization.
     private String createUniquePropertyName(Var var) {
-      return LOOP_OBJECT_PROPERTY_NAME + var.getName() + "$" + uniqueNameIdSupplier.get();
+      return LOOP_OBJECT_PROPERTY_NAME
+          + var.getName()
+          + "$"
+          + uniqueIdSupplier.getUniqueId(var.getInput());
     }
 
     private void transformLoopClosure() {
@@ -499,15 +504,14 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
 
       // Create wrapper functions and call them.
-      for (Node functionOrObjectLit : nodesRequiringloopObjectsClosureMap.keySet()) {
+      for (Node functionOrObjectLit : nodesRequiringLoopObjectsClosureMap.keySet()) {
         Node returnNode = IR.returnNode();
-        Set<LoopObject> objects = nodesRequiringloopObjectsClosureMap.get(functionOrObjectLit);
+        Set<LoopObject> objects = nodesRequiringLoopObjectsClosureMap.get(functionOrObjectLit);
         Node[] objectNames = new Node[objects.size()];
         Node[] objectNamesForCall = new Node[objects.size()];
         int i = 0;
         for (LoopObject object : objects) {
-          Node paramObjectName = createLoopObjectNameNode(object);
-          objectNames[i] = paramObjectName;
+          objectNames[i] = createLoopObjectNameNode(object);
           objectNamesForCall[i] = createLoopObjectNameNode(object);
           i++;
         }

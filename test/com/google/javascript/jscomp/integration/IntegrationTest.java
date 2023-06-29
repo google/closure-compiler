@@ -310,7 +310,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  case 0:",
             "    { var x = 3; break; }",
             "  case 1:",
-            "    { var x$0 = 5; break; }",
+            // TODO(user): Create a utility method like
+            // UnitTestUtils.updateGenericVarNamesInExpectedFiles to remove magic strings
+            "    { var x$98447280$0 = 5; break; }",
             "}");
     test(options, before, after);
   }
@@ -3344,7 +3346,12 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(options, code, "if (true) { _.f = function() {}; } if (true) { _.f$0 = function() {}; }");
+    test(
+        options,
+        code,
+        // TODO(user): Create a utility method like
+        // UnitTestUtils.updateGenericVarNamesInExpectedFiles to remove magic strings
+        "if (true) { _.f = function() {}; } if (true) { _.f$98447280$0 = function() {}; }");
   }
 
   @Test
