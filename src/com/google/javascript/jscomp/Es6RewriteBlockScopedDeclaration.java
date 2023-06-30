@@ -359,14 +359,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // later.
         LoopObject loopObject = loopObjectMap.get(loopNode);
         Node objectLitNextIteration = astFactory.createObjectLit();
-        for (Var var : loopObject.vars) {
-          String newPropertyName = propertyNameMap.get(var);
-          objectLitNextIteration.addChildToBack(
-              astFactory.createStringKey(
-                  newPropertyName,
-                  createLoopVarReferenceReplacement(
-                      loopObject, var.getNameNode(), newPropertyName)));
-        }
+        renameVarsToProperties(loopObject, objectLitNextIteration);
 
         Node updateLoopObject =
             astFactory.createAssign(createLoopObjectNameNode(loopObject), objectLitNextIteration);
@@ -375,135 +368,23 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 .srcrefTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
         if (loopNode.isVanillaFor()) { // For
-          // The initializer is pulled out and placed prior to the loop.
-          Node initializer = loopNode.getFirstChild();
-          initializer.replaceWith(IR.empty());
-          if (!initializer.isEmpty()) {
-            if (!NodeUtil.isNameDeclaration(initializer)) {
-              initializer = IR.exprResult(initializer).srcref(initializer);
-            }
-            addNodeBeforeLoop(initializer, loopNode);
-          }
-
-          Node increment = loopNode.getChildAtIndex(2);
-          if (increment.isEmpty()) {
-            increment.replaceWith(updateLoopObject.srcrefTreeIfMissing(loopNode));
-          } else {
-            Node placeHolder = IR.empty();
-            increment.replaceWith(placeHolder);
-            placeHolder.replaceWith(
-                astFactory.createComma(updateLoopObject, increment).srcrefTreeIfMissing(loopNode));
-          }
+          changeVanillaForLoopHeader(loopNode, updateLoopObject);
         } else {
-          // We need to make sure the loop object update happens on every loop iteration.
-          // We want to keep it at the end of the loop, because that makes it easier to reason
-          // about the types.
-          //
-          // TODO(bradfordcsmith): Maybe move the update to the start of the loop when this pass
-          // is moved after the type checking passes.
-          //
-          // A finally block would do it, but would have more runtime cost, so instead, if we find
-          // that there are continue statements referring to the loop we will do this.
-          //
-          // originalLoopLabel: while (condition) {
-          //   $jscomp$loop$0: {
-          //      // original loop body here
-          //      // with continue statements converted to `break $jscomp$loop$0;`
-          //      // If originalLoopLabel exists, we'll also need to traverse into innner loops
-          //      // and convert `continue originalLoopLabel;`.
-          //   }
-          //   $jscomp$loop$0 = { var1: $jscomp$loop$0.var1, var2: $jscomp$loop$0.var2, ... };
-          // }
-          // We're intentionally using the same name for the inner loop label and the loop variable
-          // object. Label names and variables are different namespaces, so they do not conflict.
-          String innerBlockLabel = loopObject.name;
-          Node loopBody = NodeUtil.getLoopCodeBlock(loopNode);
-          if (maybeUpdateContinueStatements(loopNode, innerBlockLabel)) {
-            Node innerBlock = IR.block().srcref(loopBody);
-            innerBlock.addChildrenToFront(loopBody.removeChildren());
-            loopBody.addChildToFront(
-                IR.label(IR.labelName(innerBlockLabel).srcref(loopBody), innerBlock)
-                    .srcref(loopBody));
-          }
-          loopBody.addChildToBack(IR.exprResult(updateLoopObject).srcrefTreeIfMissing(loopNode));
+          placeUpdateWithinLoop(loopNode, loopObject, updateLoopObject);
         }
         compiler.reportChangeToEnclosingScope(loopNode);
 
-        // For captured variables, change declarations to assignments on the
-        // corresponding field of the introduced object. Rename all references
-        // accordingly.
-        for (Var var : loopObject.vars) {
-          String newPropertyName = propertyNameMap.get(var);
-          for (Node reference : referenceMap.get(var)) {
-            // for-of loops are transpiled away before this pass runs
-            checkState(!loopNode.isForOf(), loopNode);
-            // For-of and for-in declarations are not altered, since they are
-            // used as temporary variables for assignment.
-            if (loopNode.isForIn() && loopNode.getFirstChild() == reference.getParent()) {
-              // reference is the node loopVar in a for-in or for-of that looks like this:
-              // `for (const loopVar of list) {`
-              checkState(reference == var.getNameNode(), reference);
-              Node referenceParent = reference.getParent();
-              checkState(NodeUtil.isNameDeclaration(referenceParent), referenceParent);
-              checkState(reference.isName(), reference);
-              // Start transpiled form of
-              // `for (const p in obj) { ... }`
-              // with this statement to copy the loop variable into the corresponding loop object
-              // property.
-              // `$jscomp$loop$0.$jscomp$loop$prop$0$p = p;`
-              Node loopVarReference = reference.cloneNode();
-              loopNode
-                  .getLastChild()
-                  .addChildToFront(
-                      IR.exprResult(
-                              astFactory.createAssign(
-                                  createLoopVarReferenceReplacement(
-                                      loopObject, reference, newPropertyName),
-                                  loopVarReference))
-                          .srcrefTreeIfMissing(reference));
-            } else {
-              if (NodeUtil.isNameDeclaration(reference.getParent())) {
-                Node declaration = reference.getParent();
-                Node grandParent = declaration.getParent();
-                handleDeclarationList(declaration, grandParent);
-                declaration = reference.getParent(); // Might have changed after normalization.
-                // Change declaration to assignment, or just drop it if there's
-                // no initial value.
-                if (reference.hasChildren()) {
-                  Node newReference = cloneWithType(reference);
-                  Node assign = astFactory.createAssign(newReference, reference.removeFirstChild());
-                  extractInlineJSDoc(declaration, reference, declaration);
-                  maybeAddConstJSDoc(declaration, reference, declaration);
-                  assign.setJSDocInfo(declaration.getJSDocInfo());
-
-                  Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);
-                  declaration.replaceWith(replacement);
-                  reference = newReference;
-                } else {
-                  declaration.detach();
-                }
-                letConsts.remove(declaration);
-                compiler.reportChangeToEnclosingScope(grandParent);
-              }
-
-              if (reference.getParent().isCall()
-                  && reference.getParent().getFirstChild() == reference) {
-                reference.getParent().putBooleanProp(Node.FREE_CALL, false);
-              }
-              // Change reference to GETPROP.
-              Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
-              reference.replaceWith(
-                  createLoopVarReferenceReplacement(loopObject, reference, newPropertyName));
-              // TODO(johnlenz): Don't work on detached nodes.
-              if (changeScope != null) {
-                compiler.reportChangeToChangeScope(changeScope);
-              }
-            }
-          }
-        }
+        changeDeclarationsToAssignments(loopNode, loopObject);
       }
 
-      // Create wrapper functions and call them.
+      // TODO(user): Move the logic of creating the wrapper function to the top of this
+      // method to create a unique function name and assign properties with the right loop object
+      // name the first time instead of renaming it later
+      createWrapperFunctions();
+    }
+
+    /** Create wrapper functions and call them. */
+    private void createWrapperFunctions() {
       for (Node functionOrObjectLit : nodesRequiringLoopObjectsClosureMap.keySet()) {
         Node returnNode = IR.returnNode();
         Set<LoopObject> objects = nodesRequiringLoopObjectsClosureMap.get(functionOrObjectLit);
@@ -536,6 +417,170 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         functionOrObjectLit.replaceWith(replacement);
         returnNode.addChildToFront(functionOrObjectLit);
         compiler.reportChangeToEnclosingScope(replacement);
+      }
+    }
+
+    /**
+     * We need to make sure the loop object update happens on every loop iteration. We want to keep
+     * it at the end of the loop, because that makes it easier to reason about the types.
+     *
+     * <p>TODO(bradfordcsmith): Maybe move the update to the start of the loop when this pass is
+     * moved after the type checking passes.
+     *
+     * <p>A finally block would do it, but would have more runtime cost, so instead, if we find that
+     * there are continue statements referring to the loop we will do this.
+     *
+     * <pre>{@code
+     * originalLoopLabel: while (condition) {
+     *   $jscomp$loop$0: {
+     *     // original loop body here
+     *     // with continue statements converted to `break $jscomp$loop$0;`
+     *     // If originalLoopLabel exists, we'll also need to traverse into inner
+     *     // loops and convert `continue originalLoopLabel;`.
+     *    }
+     *    $jscomp$loop$0 = { var1: $jscomp$loop$0.var1, var2: $jscomp$loop$0.var2, ... };
+     *  }
+     * }</pre>
+     *
+     * We're intentionally using the same name for the inner loop label and the loop variable
+     * object. Label names and variables are different namespaces, so they do not conflict.
+     */
+    private void placeUpdateWithinLoop(
+        Node loopNode, LoopObject loopObject, Node updateLoopObject) {
+      String innerBlockLabel = loopObject.name;
+      Node loopBody = NodeUtil.getLoopCodeBlock(loopNode);
+      if (maybeUpdateContinueStatements(loopNode, innerBlockLabel)) {
+        Node innerBlock = IR.block().srcref(loopBody);
+        innerBlock.addChildrenToFront(loopBody.removeChildren());
+        loopBody.addChildToFront(
+            IR.label(IR.labelName(innerBlockLabel).srcref(loopBody), innerBlock).srcref(loopBody));
+      }
+      loopBody.addChildToBack(IR.exprResult(updateLoopObject).srcrefTreeIfMissing(loopNode));
+    }
+
+    /**
+     * The initializer is pulled out and placed prior to the loop. The increment is updated with the
+     * new loop object and property assignments
+     */
+    private void changeVanillaForLoopHeader(Node loopNode, Node updateLoopObject) {
+      Node initializer = loopNode.getFirstChild();
+      initializer.replaceWith(IR.empty());
+      if (!initializer.isEmpty()) {
+        if (!NodeUtil.isNameDeclaration(initializer)) {
+          initializer = IR.exprResult(initializer).srcref(initializer);
+        }
+        addNodeBeforeLoop(initializer, loopNode);
+      }
+
+      Node increment = loopNode.getChildAtIndex(2);
+      if (increment.isEmpty()) {
+        increment.replaceWith(updateLoopObject.srcrefTreeIfMissing(loopNode));
+      } else {
+        Node placeHolder = IR.empty();
+        increment.replaceWith(placeHolder);
+        placeHolder.replaceWith(
+            astFactory.createComma(updateLoopObject, increment).srcrefTreeIfMissing(loopNode));
+      }
+    }
+
+    /**
+     * For captured variables, change declarations to assignments on the corresponding field of the
+     * introduced object. Rename all references accordingly.
+     */
+    private void changeDeclarationsToAssignments(Node loopNode, LoopObject loopObject) {
+      for (Var var : loopObject.vars) {
+        String newPropertyName = propertyNameMap.get(var);
+        for (Node reference : referenceMap.get(var)) {
+          // for-of loops are transpiled away before this pass runs
+          checkState(!loopNode.isForOf(), loopNode);
+          // For-of and for-in declarations are not altered, since they are
+          // used as temporary variables for assignment.
+          if (loopNode.isForIn() && loopNode.getFirstChild() == reference.getParent()) {
+            assignLoopVarToLoopObjectProperty(
+                loopNode, loopObject, var, newPropertyName, reference);
+          } else {
+            replaceDeclarationWithProperty(loopObject, newPropertyName, reference);
+          }
+        }
+      }
+    }
+
+    /** Changes `for (let i = 0; ...)` into `for ($jscomp$loop$0.$jscomp$loop$prop$i$1 = 0; ...)` */
+    private void replaceDeclarationWithProperty(
+        LoopObject loopObject, String newPropertyName, Node reference) {
+      if (NodeUtil.isNameDeclaration(reference.getParent())) {
+        Node declaration = reference.getParent();
+        Node grandParent = declaration.getParent();
+        handleDeclarationList(declaration, grandParent);
+        declaration = reference.getParent(); // Might have changed after normalization.
+        // Change declaration to assignment, or just drop it if there's
+        // no initial value.
+        if (reference.hasChildren()) {
+          Node newReference = cloneWithType(reference);
+          Node assign = astFactory.createAssign(newReference, reference.removeFirstChild());
+          extractInlineJSDoc(declaration, reference, declaration);
+          maybeAddConstJSDoc(declaration, reference, declaration);
+          assign.setJSDocInfo(declaration.getJSDocInfo());
+
+          Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);
+          declaration.replaceWith(replacement);
+          reference = newReference;
+        } else {
+          declaration.detach();
+        }
+        letConsts.remove(declaration);
+        compiler.reportChangeToEnclosingScope(grandParent);
+      }
+
+      if (reference.getParent().isCall() && reference.getParent().getFirstChild() == reference) {
+        reference.getParent().putBooleanProp(Node.FREE_CALL, false);
+      }
+      // Change reference to GETPROP.
+      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
+      reference.replaceWith(
+          createLoopVarReferenceReplacement(loopObject, reference, newPropertyName));
+      // TODO(johnlenz): Don't work on detached nodes.
+      if (changeScope != null) {
+        compiler.reportChangeToChangeScope(changeScope);
+      }
+    }
+
+    /**
+     * Transforms `for (const p in obj) { ... }` into `for (const p in obj) {
+     * $jscomp$loop$0.$jscomp$loop$prop$0$p = p; ... }`
+     */
+    private void assignLoopVarToLoopObjectProperty(
+        Node loopNode, LoopObject loopObject, Var var, String newPropertyName, Node reference) {
+      // reference is the node loopVar in a for-in that looks like this:
+      // `for (const loopVar in list) {`
+      checkState(reference == var.getNameNode(), reference);
+      Node referenceParent = reference.getParent();
+      checkState(NodeUtil.isNameDeclaration(referenceParent), referenceParent);
+      checkState(reference.isName(), reference);
+      // Start transpiled form of
+      // `for (const p in obj) { ... }`
+      // with this statement to copy the loop variable into the corresponding loop object
+      // property.
+      // `$jscomp$loop$0.$jscomp$loop$prop$0$p = p;`
+      Node loopVarReference = reference.cloneNode();
+      loopNode
+          .getLastChild()
+          .addChildToFront(
+              IR.exprResult(
+                      astFactory.createAssign(
+                          createLoopVarReferenceReplacement(loopObject, reference, newPropertyName),
+                          loopVarReference))
+                  .srcrefTreeIfMissing(reference));
+    }
+
+    /** Rename all variables in the loop object to properties */
+    private void renameVarsToProperties(LoopObject loopObject, Node objectLitNextIteration) {
+      for (Var var : loopObject.vars) {
+        String newPropertyName = propertyNameMap.get(var);
+        objectLitNextIteration.addChildToBack(
+            astFactory.createStringKey(
+                newPropertyName,
+                createLoopVarReferenceReplacement(loopObject, var.getNameNode(), newPropertyName)));
       }
     }
 
