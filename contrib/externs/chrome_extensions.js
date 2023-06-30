@@ -7132,6 +7132,15 @@ chrome.system.display.Bounds;
 
 
 /**
+ * @enum {string}
+ * @see TODO(user): link to docs once published
+ */
+chrome.system.display.ActiveState = {
+  ACTIVE: '',
+  INACTIVE: '',
+};
+
+/**
  * @typedef {!{
  *   left: number,
  *   top: number,
@@ -7301,6 +7310,10 @@ chrome.system.display.DisplayUnitInfo.prototype.isInternal;
 
 /** @type {boolean} */
 chrome.system.display.DisplayUnitInfo.prototype.isEnabled;
+
+
+/** @type {?chrome.system.display.ActiveState} */
+chrome.system.display.DisplayUnitInfo.prototype.activeState;
 
 
 /** @type {number} */
