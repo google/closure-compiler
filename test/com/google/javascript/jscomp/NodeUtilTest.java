@@ -2482,6 +2482,31 @@ public final class NodeUtilTest {
       assertThat(functionIsRValueOfAssign("x = y ? x : function() {};")).isFalse();
     }
 
+    @Test
+    public void testGetRValueOfLValueInObjectLiteral() {
+      Node scriptNode = parse("var x = {[computedProp] : 5};");
+      Node computedProp =
+          scriptNode
+              .getFirstChild() // VAR
+              .getFirstChild() // x = {...}
+              .getFirstChild() // {...}
+              .getFirstChild(); // [computedProp] : 5
+      checkState(computedProp.isComputedProp(), computedProp);
+      assertNode(NodeUtil.getRValueOfLValue(computedProp)).hasType(Token.NUMBER);
+    }
+
+    @Test
+    public void testGetRValueOfLValueFromClass() {
+      Node scriptNode = parse("class Foo { ['computedField'] = 5}");
+      Node computedField =
+          scriptNode
+              .getFirstChild() // CLASS
+              .getLastChild() // CLASS_MEMBERS  { ['computedField'] = 5}
+              .getFirstChild(); // COMPUTED_FIELD_DEF  ['computedField'] = 5
+      checkState(computedField.isComputedFieldDef(), computedField);
+      assertNode(NodeUtil.getRValueOfLValue(computedField)).hasType(Token.NUMBER);
+    }
+
     /**
      * When the left side is a destructuring pattern, generally it's not possible to identify the
      * RHS for a specific name on the LHS.

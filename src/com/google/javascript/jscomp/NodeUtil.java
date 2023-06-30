@@ -5210,8 +5210,23 @@ public final class NodeUtil {
       case CONST:
         return n.getLastChild();
       case OBJECTLIT:
+        checkState(
+            n.isStringKey()
+                || n.isComputedProp()
+                || n.isMemberFunctionDef()
+                || n.isGetterDef()
+                || n.isSetterDef(),
+            n);
+        return n.getLastChild();
       case CLASS_MEMBERS:
-        return n.getOnlyChild();
+        checkState(
+            n.isMemberFunctionDef()
+                || n.isMemberFieldDef()
+                || n.isComputedFieldDef()
+                || n.isGetterDef()
+                || n.isSetterDef(),
+            n);
+        return n.getLastChild();
       case FUNCTION:
       case CLASS:
         return parent;
