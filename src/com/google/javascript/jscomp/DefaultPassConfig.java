@@ -482,9 +482,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(removeSyntheticScript);
     } else if (!options.checksOnly) {
       checks.maybeAdd(mergeSyntheticScript);
-      if (options.j2clPassMode.shouldAddJ2clPasses()) {
-        checks.maybeAdd(j2clPass);
-      }
       // At this point all checks have been done.
       if (options.exportTestFunctions) {
         checks.maybeAdd(exportTestFunctions);
@@ -558,6 +555,10 @@ public final class DefaultPassConfig extends PassConfig {
     // Remove synthetic extern declarations of names that are now defined in source
     // This is expected to do nothing when in a monolithic build
     passes.maybeAdd(removeUnnecessarySyntheticExterns);
+
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.maybeAdd(j2clPass);
+    }
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
@@ -1286,11 +1287,6 @@ public final class DefaultPassConfig extends PassConfig {
         gatherModuleMetadataPass,
         checkMissingRequires,
         "Need to gather module information before checking for missing requires.");
-
-    checks.assertPassOrder(
-        j2clPass,
-        TranspilationPasses.rewriteGenerators,
-        "J2CL normalization should be done before generator re-writing.");
   }
 
   /**
@@ -1301,6 +1297,11 @@ public final class DefaultPassConfig extends PassConfig {
    * @param optimizations The list of optimization passes
    */
   private void assertValidOrderForOptimizations(PassListBuilder optimizations) {
+    optimizations.assertPassOrder(
+        j2clPass,
+        TranspilationPasses.rewriteGenerators,
+        "J2CL normalization should be done before generator re-writing.");
+
     optimizations.assertPassOrder(
         TranspilationPasses.rewritePolyfills,
         processDefinesOptimize,
