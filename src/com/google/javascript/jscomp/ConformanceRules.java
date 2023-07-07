@@ -1069,8 +1069,14 @@ public final class ConformanceRules {
           }
           String name = node.getString();
           Var var = scope.getVar(name);
-          if (var == null || !var.isConst()) {
+          if (var == null) {
             return null;
+          }
+          if (!var.isConst()) {
+            JSDocInfo jsdocInfo = var.getJSDocInfo();
+            if (jsdocInfo == null || !jsdocInfo.isConstant()) {
+              return null;
+            }
           }
           Node initialValue = var.getInitialValue();
           return inferStringValue(var.getScope(), initialValue);
