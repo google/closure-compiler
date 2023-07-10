@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
 
 /**
  * Rewrite "let"s and "const"s as "var"s. Rename block-scoped declarations and their references when
@@ -370,7 +369,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         if (loopNode.isVanillaFor()) { // For
           changeVanillaForLoopHeader(loopNode, updateLoopObject);
         } else {
-          placeUpdateWithinLoop(loopNode, loopObject, updateLoopObject);
+          final Node loopBody = NodeUtil.getLoopCodeBlock(loopNode);
+          loopBody.addChildToFront(IR.exprResult(updateLoopObject).srcrefTreeIfMissing(loopNode));
         }
         compiler.reportChangeToEnclosingScope(loopNode);
 
@@ -418,44 +418,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         returnNode.addChildToFront(functionOrObjectLit);
         compiler.reportChangeToEnclosingScope(replacement);
       }
-    }
-
-    /**
-     * We need to make sure the loop object update happens on every loop iteration. We want to keep
-     * it at the end of the loop, because that makes it easier to reason about the types.
-     *
-     * <p>TODO(bradfordcsmith): Maybe move the update to the start of the loop when this pass is
-     * moved after the type checking passes.
-     *
-     * <p>A finally block would do it, but would have more runtime cost, so instead, if we find that
-     * there are continue statements referring to the loop we will do this.
-     *
-     * <pre>{@code
-     * originalLoopLabel: while (condition) {
-     *   $jscomp$loop$0: {
-     *     // original loop body here
-     *     // with continue statements converted to `break $jscomp$loop$0;`
-     *     // If originalLoopLabel exists, we'll also need to traverse into inner
-     *     // loops and convert `continue originalLoopLabel;`.
-     *    }
-     *    $jscomp$loop$0 = { var1: $jscomp$loop$0.var1, var2: $jscomp$loop$0.var2, ... };
-     *  }
-     * }</pre>
-     *
-     * We're intentionally using the same name for the inner loop label and the loop variable
-     * object. Label names and variables are different namespaces, so they do not conflict.
-     */
-    private void placeUpdateWithinLoop(
-        Node loopNode, LoopObject loopObject, Node updateLoopObject) {
-      String innerBlockLabel = loopObject.name;
-      Node loopBody = NodeUtil.getLoopCodeBlock(loopNode);
-      if (maybeUpdateContinueStatements(loopNode, innerBlockLabel)) {
-        Node innerBlock = IR.block().srcref(loopBody);
-        innerBlock.addChildrenToFront(loopBody.removeChildren());
-        loopBody.addChildToFront(
-            IR.label(IR.labelName(innerBlockLabel).srcref(loopBody), innerBlock).srcref(loopBody));
-      }
-      loopBody.addChildToBack(IR.exprResult(updateLoopObject).srcrefTreeIfMissing(loopNode));
     }
 
     /**
@@ -546,8 +508,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
 
     /**
-     * Transforms `for (const p in obj) { ... }` into `for (const p in obj) {
-     * $jscomp$loop$0.$jscomp$loop$prop$0$p = p; ... }`
+     * Transforms `for (const p in obj) { ... }`
+     *
+     * <p>into `for (const p in obj) { $jscomp$loop$0.$jscomp$loop$prop$0$p = p; ... }`
      */
     private void assignLoopVarToLoopObjectProperty(
         Node loopNode, LoopObject loopObject, Var var, String newPropertyName, Node reference) {
@@ -563,14 +526,26 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       // property.
       // `$jscomp$loop$0.$jscomp$loop$prop$0$p = p;`
       Node loopVarReference = reference.cloneNode();
-      loopNode
-          .getLastChild()
-          .addChildToFront(
-              IR.exprResult(
-                      astFactory.createAssign(
-                          createLoopVarReferenceReplacement(loopObject, reference, newPropertyName),
-                          loopVarReference))
-                  .srcrefTreeIfMissing(reference));
+      // `$jscomp$loop$0.$jscomp$loop$prop$0$p = p;`
+      final Node forInPropAssignmentStatemnt =
+          IR.exprResult(
+                  astFactory.createAssign(
+                      createLoopVarReferenceReplacement(loopObject, reference, newPropertyName),
+                      loopVarReference))
+              .srcrefTreeIfMissing(reference);
+      // The first statement in the body should be creating a new loop object value
+      // $jscomp$loop$0 = {
+      //    $jscomp$loop$prop$0$p: $jscomp$loop$0.$jscomp$loop$prop$0$p,
+      //    $jscomp$loop$prop$0$otherVar: $jscomp$loop$0.$jscomp$loop$prop$0$p,
+      //    // other property update assignments
+      // }
+      // We need to update the loop variable's value to it immediately after that
+      final Node loopUpdateStatement =
+          loopNode
+              .getLastChild() // loop body
+              .getFirstChild(); // first statement
+
+      forInPropAssignmentStatemnt.insertAfter(loopUpdateStatement);
     }
 
     /** Rename all variables in the loop object to properties */
@@ -599,89 +574,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
     private Node createLoopObjectNameNode(LoopObject loopObject) {
       return astFactory.createName(loopObject.name, type(StandardColors.TOP_OBJECT));
-    }
-
-    /**
-     * Converts all continue statements referring to the given loop to `break $jscomp$loop$0;` where
-     * `$jscomp$loop$0` is the label on the block containing the original loop body.
-     *
-     * <p>If this method returns {@code true}, then we must wrap the original loop body in a block
-     * labeled with the name from the loopObject.
-     *
-     * @return True if at least one continue statement was found and replaced.
-     */
-    private boolean maybeUpdateContinueStatements(Node loopNode, String breakLabel) {
-      Node loopParent = loopNode.getParent();
-      final String originalLoopLabel =
-          loopParent.isLabel() ? loopParent.getFirstChild().getString() : null;
-      ContinueStatementUpdater continueStatementUpdater =
-          new ContinueStatementUpdater(breakLabel, originalLoopLabel);
-      NodeTraversal.traverse(
-          compiler, NodeUtil.getLoopCodeBlock(loopNode), continueStatementUpdater);
-      return continueStatementUpdater.replacedAContinueStatement;
-    }
-
-    /**
-     * Converts all continue statements referring to the given loop to `break $jscomp$loop$0;` where
-     * `$jscomp$loop$0` is the label on the block containing the original loop body.
-     */
-    private class ContinueStatementUpdater implements NodeTraversal.Callback {
-
-      // label to put on break statements created that replace continue statements.
-      private final String breakLabel;
-      private final @Nullable String originalLoopLabel;
-      // Track how many levels of loops deep we go below this one.
-
-      int loopDepth = 0;
-      // Set to true if a continue statement is found
-      boolean replacedAContinueStatement = false;
-
-      public ContinueStatementUpdater(String breakLabel, @Nullable String originalLoopLabel) {
-        this.breakLabel = breakLabel;
-        this.originalLoopLabel = originalLoopLabel;
-      }
-
-      @Override
-      public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-        // NOTE: This pass runs after ES6 classes have already been transpiled away.
-        checkState(!n.isClass(), n);
-        if (n.isFunction()) {
-          return false;
-        } else if (NodeUtil.isLoopStructure(n)) {
-          if (originalLoopLabel == null) {
-            // If this loop has no label, there cannot be any continue statements referring to it
-            // in inner loops.
-            return false;
-          } else {
-            loopDepth++;
-            return true;
-          }
-        } else {
-          return true;
-        }
-      }
-
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (NodeUtil.isLoopStructure(n)) {
-          loopDepth--;
-        } else if (n.isContinue()) {
-          if (loopDepth == 0 && !n.hasChildren()) {
-            replaceWithBreak(n);
-          } else if (originalLoopLabel != null
-              && n.hasChildren()
-              && originalLoopLabel.equals(n.getOnlyChild().getString())) {
-            replaceWithBreak(n);
-          } // else continue belongs to some other loop
-        } // else nothing to do
-      }
-
-      private void replaceWithBreak(Node continueNode) {
-        Node labelName = IR.labelName(breakLabel).srcref(continueNode);
-        Node breakNode = IR.breakNode(labelName).srcref(continueNode);
-        continueNode.replaceWith(breakNode);
-        replacedAContinueStatement = true;
-      }
     }
 
     private class LoopObject {

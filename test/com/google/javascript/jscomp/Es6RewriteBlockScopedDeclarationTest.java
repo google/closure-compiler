@@ -506,12 +506,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$0 = {}",
                 "while (true) {",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$i$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1",
+                "  };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1 = 0;",
-                "  arr.push((function($jscomp$loop$ID$0) {",
-                "      return function() { return $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1; };",
-                "  })($jscomp$loop$ID$0));",
-                "  $jscomp$loop$ID$0 = {$jscomp$loop$prop$i$ID$1:",
-                "      $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1};",
+                "  arr.push(",
+                "      (function($jscomp$loop$ID$0) {",
+                "        return function() {",
+                "          return $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1;",
+                "        };",
+                "       })($jscomp$loop$ID$0));",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
 
@@ -869,21 +873,19 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$0 = {};",
                 "for (/** @const */ var p in obj) {",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$p$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1",
+                "  };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1 = p;",
-                "  $jscomp$loop$ID$0: {",
-                "    if ($jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1 == 'skipMe') {",
-                // continue becomes break to ensure loop var update
-                "      break $jscomp$loop$ID$0;",
-                "    }",
-                "    arr.push(",
-                "        (function($jscomp$loop$ID$0) {",
-                "          return function() { return"
-                    + " obj[$jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1];",
-                " };",
-                "        })($jscomp$loop$ID$0));",
+                "  if ($jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1 == 'skipMe') {",
+                "    continue;",
                 "  }",
-                "  $jscomp$loop$ID$0 = {$jscomp$loop$prop$p$ID$1:",
-                " $jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1};",
+                "  arr.push(",
+                "      (function($jscomp$loop$ID$0) {",
+                "        return function() {",
+                "          return obj[$jscomp$loop$ID$0.$jscomp$loop$prop$p$ID$1];",
+                "        };",
+                "      })($jscomp$loop$ID$0));",
                 "}",
                 ""));
     rewriteBlockScopedDeclarationTest(srcs, expected);
@@ -908,20 +910,19 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$0 = {};",
                 "while (values.length > 0) {",
-                "  $jscomp$loop$ID$0: {",
-                "    /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 = values.shift();",
-                "    if ($jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 == 'skipMe') {",
-                "      break $jscomp$loop$ID$0;", // continue becomes break to ensure loop var
-                // update
-                "    }",
-                "    arr.push(",
-                "      (function($jscomp$loop$ID$0) {",
-                "        return function() { return $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1;",
-                "            };",
-                "      })($jscomp$loop$ID$0));",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$v$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1",
+                "  };",
+                "  /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 = values.shift();",
+                "  if ($jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 == 'skipMe') {",
+                "    continue",
                 "  }",
-                "  $jscomp$loop$ID$0 = {$jscomp$loop$prop$v$ID$1:",
-                "      $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1};",
+                "  arr.push(",
+                "    (function($jscomp$loop$ID$0) {",
+                "      return function() {",
+                "        return $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1;",
+                "      };",
+                "    })($jscomp$loop$ID$0));",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
 
@@ -946,20 +947,19 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$0 = {};",
                 "do {",
-                "  $jscomp$loop$ID$0: {",
-                "    /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 = values.shift();",
-                "    if ($jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 == 'skipMe') {",
-                "      break $jscomp$loop$ID$0;", // continue becomes break to ensure loop var
-                // update
-                "    }",
-                "    arr.push(",
-                "        (function($jscomp$loop$ID$0) {",
-                "          return function() { return $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1;"
-                    + " };",
-                "        })($jscomp$loop$ID$0));",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$v$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1",
+                "  };",
+                "  /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 = values.shift();",
+                "  if ($jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 == 'skipMe') {",
+                "    continue",
                 "  }",
-                "  $jscomp$loop$ID$0 = {$jscomp$loop$prop$v$ID$1:"
-                    + " $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1};",
+                "  arr.push(",
+                "      (function($jscomp$loop$ID$0) {",
+                "        return function() {",
+                "          return $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1;",
+                "        };",
+                "      })($jscomp$loop$ID$0));",
                 "} while (values.length > 0);",
                 ""));
     rewriteBlockScopedDeclarationTest(srcs, expected);
@@ -985,11 +985,12 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$0 = {};",
                 "LOOP: while (values.length > 0) {",
-                "  $jscomp$loop$ID$0: {",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$v$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1",
+                "  };",
                 "  /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 = values.shift();",
                 "  if ($jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1 == 'skipMe') {",
-                "    break $jscomp$loop$ID$0;", // continue becomes break to ensure loop var
-                // update
+                "    continue LOOP;",
                 "  }",
                 "  arr.push(",
                 "      (function($jscomp$loop$ID$0) {",
@@ -997,9 +998,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "          return $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1;",
                 "        };",
                 "      })($jscomp$loop$ID$0));",
-                "  }",
-                "  $jscomp$loop$ID$0 = {$jscomp$loop$prop$v$ID$1:",
-                "      $jscomp$loop$ID$0.$jscomp$loop$prop$v$ID$1};",
                 "}",
                 ""));
     rewriteBlockScopedDeclarationTest(srcs, expected);
@@ -1037,41 +1035,39 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var letters = [];",
                 "var $jscomp$loop$ID$2 = {};",
                 "OUTER: while (values.length > 0) {",
-                "  $jscomp$loop$ID$2: {",
-                "    /** @const */ $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3 = values.shift();",
-                "    var i = 0;",
-                "    var $jscomp$loop$ID$0 = {};",
-                "    while (i < $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3.length) {",
-                "      $jscomp$loop$ID$0: {",
-                "        /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1 = ",
-                "            $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3.charAt(i);",
-                "        if ($jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1 == 'a') {",
-                "          i++;",
-                "          break $jscomp$loop$ID$0;", // continue becomes break to ensure loop var
-                // update
-                "        } else if ($jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1 == 'i') {",
-                "          break $jscomp$loop$ID$2;", // continue becomes break to ensure loop var
-                // update
-                "        } else {",
-                "          letters.push(",
-                "              (function($jscomp$loop$ID$0) {",
-                "                return function() { return"
-                    + " $jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1; };",
-                "              })($jscomp$loop$ID$0));",
-                "        }",
+                "  $jscomp$loop$ID$2 = {",
+                "    $jscomp$loop$prop$v$ID$3: $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3",
+                "  };",
+                "  /** @const */ $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3 = values.shift();",
+                "  var i = 0;",
+                "  var $jscomp$loop$ID$0 = {};",
+                "  while (i < $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3.length) {",
+                "      $jscomp$loop$ID$0 = {",
+                "        $jscomp$loop$prop$c$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1",
+                "      };",
+                "      /** @const */ $jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1 = ",
+                "          $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3.charAt(i);",
+                "      if ($jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1 == 'a') {",
                 "        i++;",
-                "      }",
-                "      $jscomp$loop$ID$0 = {$jscomp$loop$prop$c$ID$1:",
-                "          $jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1}",
-                "    }",
-                "    words.push(",
-                "        (function($jscomp$loop$ID$2) {",
-                "          return function() { return $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3;",
+                "        continue;",
+                "      } else if ($jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1 == 'i') {",
+                "        continue OUTER;",
+                "      } else {",
+                "        letters.push(",
+                "            (function($jscomp$loop$ID$0) {",
+                "              return function() {",
+                "                return $jscomp$loop$ID$0.$jscomp$loop$prop$c$ID$1;",
                 "              };",
-                "        })($jscomp$loop$ID$2));",
+                "            })($jscomp$loop$ID$0));",
+                "      }",
+                "      i++;",
                 "  }",
-                "  $jscomp$loop$ID$2 = {$jscomp$loop$prop$v$ID$3:",
-                "      $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3};",
+                "  words.push(",
+                "      (function($jscomp$loop$ID$2) {",
+                "        return function() {",
+                "          return $jscomp$loop$ID$2.$jscomp$loop$prop$v$ID$3;",
+                "        };",
+                "      })($jscomp$loop$ID$2));",
                 "}",
                 ""));
     rewriteBlockScopedDeclarationTest(srcs, expected);
@@ -1489,12 +1485,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$0 = {};",
                 "for (var i in [0, 1]) {",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$i$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1",
+                "  };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1 = i;",
                 "  arr.push((function($jscomp$loop$ID$0) {",
                 "      return function() { return $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1; };",
                 "  })($jscomp$loop$ID$0));",
-                "  $jscomp$loop$ID$0 = {$jscomp$loop$prop$i$ID$1:"
-                    + " $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$1};",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
 
@@ -1553,6 +1550,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var arr = [];",
                 "var $jscomp$loop$ID$3 = {};",
                 "do {",
+                "  $jscomp$loop$ID$3 = {",
+                "    $jscomp$loop$prop$special$ID$4:",
+                "        $jscomp$loop$ID$3.$jscomp$loop$prop$special$ID$4",
+                "  };",
                 "  $jscomp$loop$ID$3.$jscomp$loop$prop$special$ID$4 = 99;",
                 "  /** @const */",
                 "  var obj = ",
@@ -1560,6 +1561,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                     + " 5: 5 };",
                 "  var $jscomp$loop$ID$0 = {};",
                 "  for (var i in obj) {",
+                "    $jscomp$loop$ID$0 = {",
+                "      $jscomp$loop$prop$i$ID$2: $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$2",
+                "    };",
                 "    $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$2 = i",
                 "    $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$2",
                 "        = Number($jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$2);",
@@ -1572,12 +1576,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "           return $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$2 + ",
                 "               $jscomp$loop$ID$3.$jscomp$loop$prop$special$ID$4; };",
                 "    }($jscomp$loop$ID$0, $jscomp$loop$ID$3)));",
-                "    $jscomp$loop$ID$0 = {$jscomp$loop$prop$i$ID$2:"
-                    + " $jscomp$loop$ID$0.$jscomp$loop$prop$i$ID$2};",
                 "  }",
-                "  $jscomp$loop$ID$3 = ",
-                "    {$jscomp$loop$prop$special$ID$4:"
-                    + " $jscomp$loop$ID$3.$jscomp$loop$prop$special$ID$4};",
                 "} while (false);"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
   }
@@ -1599,14 +1598,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "var $jscomp$loop$ID$0 = {};",
                 "while (true) {",
+                "  $jscomp$loop$ID$0 =",
+                "      {",
+                "        $jscomp$loop$prop$x$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1",
+                "      };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = null;",
                 "  var f = function($jscomp$loop$ID$0) {",
                 "    return function() {",
                 "      ($jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
                 "    };",
                 "  }($jscomp$loop$ID$0);",
-                "  $jscomp$loop$ID$0 =",
-                "      {$jscomp$loop$prop$x$ID$1:$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1};",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
 
@@ -1624,14 +1625,14 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "var $jscomp$loop$ID$0 = {};",
                 "while (true) {",
+                "  $jscomp$loop$ID$0 =",
+                "      { $jscomp$loop$prop$x$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = null;",
                 "  var f = function($jscomp$loop$ID$0) {",
                 "    return function() {",
                 "      ($jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
                 "    };",
                 "  }($jscomp$loop$ID$0);",
-                "  $jscomp$loop$ID$0 =",
-                "      {$jscomp$loop$prop$x$ID$1:$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1};",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
 
@@ -1649,14 +1650,14 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "var $jscomp$loop$ID$0 = {};",
                 "while (true) {",
+                "  $jscomp$loop$ID$0 =",
+                "      { $jscomp$loop$prop$x$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = null;",
                 "  (function($jscomp$loop$ID$0) {",
                 "    return function() {",
                 "      ($jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
                 "    };",
                 "  })($jscomp$loop$ID$0)();",
-                "  $jscomp$loop$ID$0 =",
-                "      {$jscomp$loop$prop$x$ID$1:$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1};",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
   }
@@ -1679,6 +1680,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "var $jscomp$loop$ID$0 = {};",
                 "while (true) {",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$x$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1,",
+                "    $jscomp$loop$prop$y$ID$2: $jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$2",
+                "  };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = void 0;",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$2 = void 0;",
                 "  var f = function($jscomp$loop$ID$0) {",
@@ -1687,10 +1692,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "      $jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$2 = 2;",
                 "    }",
                 "  }($jscomp$loop$ID$0);",
-                "  $jscomp$loop$ID$0 = {",
-                "    $jscomp$loop$prop$x$ID$1:$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1,",
-                "    $jscomp$loop$prop$y$ID$2:$jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$2",
-                "  };",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
 
@@ -1709,6 +1710,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "var $jscomp$loop$ID$0 = {};",
                 "while (true) {",
+                "  $jscomp$loop$ID$0 = {",
+                "    $jscomp$loop$prop$y$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$1,",
+                "    $jscomp$loop$prop$x$ID$2: $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$2",
+                "  };",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$2 = void 0;",
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$1 = void 0;",
                 "  var f = function($jscomp$loop$ID$0) {",
@@ -1717,10 +1722,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "      $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$2 = 1;",
                 "    }",
                 "  }($jscomp$loop$ID$0);",
-                "  $jscomp$loop$ID$0 = {",
-                "    $jscomp$loop$prop$y$ID$1: $jscomp$loop$ID$0.$jscomp$loop$prop$y$ID$1,",
-                "    $jscomp$loop$prop$x$ID$2: $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$2",
-                "  };",
                 "}"));
     rewriteBlockScopedDeclarationTest(srcs, expected);
   }
