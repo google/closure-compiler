@@ -350,6 +350,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         return;
       }
 
+      createWrapperFunctions();
+
       for (Node loopNode : loopObjectMap.keySet()) {
         // Introduce objects to reflect the captured scope variables.
         // Fields are initially left as undefined to avoid cases like:
@@ -376,11 +378,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
         changeDeclarationsToAssignments(loopNode, loopObject);
       }
-
-      // TODO(user): Move the logic of creating the wrapper function to the top of this
-      // method to create a unique function name and assign properties with the right loop object
-      // name the first time instead of renaming it later
-      createWrapperFunctions();
     }
 
     /** Create wrapper functions and call them. */
