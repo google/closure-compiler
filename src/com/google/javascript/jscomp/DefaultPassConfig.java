@@ -123,7 +123,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getTranspileOnlyPasses() {
     PassListBuilder passes = new PassListBuilder(options);
 
-    passes.maybeAdd(markUntranspilableFeaturesAsRemoved);
+    passes.maybeAdd(reportUntranspilableFeatures);
 
     // Certain errors in block-scoped variable declarations will prevent correct transpilation
     passes.maybeAdd(checkVariableReferences);
@@ -263,7 +263,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.maybeAdd(addSyntheticScript);
 
     if (!options.checksOnly) {
-      checks.maybeAdd(markUntranspilableFeaturesAsRemoved);
+      checks.maybeAdd(reportUntranspilableFeatures);
     }
 
     checks.maybeAdd(gatherGettersAndSetters);
@@ -1551,12 +1551,12 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler, ImmutableSet.copyOf(compiler.getOptions().forceLibraryInjection)))
           .build();
 
-  private final PassFactory markUntranspilableFeaturesAsRemoved =
+  private final PassFactory reportUntranspilableFeatures =
       PassFactory.builder()
-          .setName("markUntranspilableFeaturesAsRemoved")
+          .setName("reportUntranspilableFeatures")
           .setInternalFactory(
               (compiler) ->
-                  new MarkUntranspilableFeaturesAsRemoved(compiler, options.getOutputFeatureSet()))
+                  new ReportUntranspilableFeatures(compiler, options.getOutputFeatureSet()))
           .build();
 
   private final PassFactory removeWeakSources =

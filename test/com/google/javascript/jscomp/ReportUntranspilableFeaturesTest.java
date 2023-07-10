@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
-import static com.google.javascript.jscomp.MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
+import static com.google.javascript.jscomp.ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
+public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
 
   private LanguageMode languageOut;
 
@@ -40,7 +40,7 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new MarkUntranspilableFeaturesAsRemoved(compiler, languageOut.toFeatureSet());
+    return new ReportUntranspilableFeatures(compiler, languageOut.toFeatureSet());
   }
 
   @Test

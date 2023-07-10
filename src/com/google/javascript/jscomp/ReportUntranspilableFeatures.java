@@ -36,7 +36,7 @@ import java.util.function.Predicate;
  * features). Reports errors for any features are present in the root and not present in the
  * targeted output language.
  */
-public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrderCallback
+public final class ReportUntranspilableFeatures extends AbstractPostOrderCallback
     implements CompilerPass {
 
   @VisibleForTesting
@@ -74,7 +74,7 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;
 
-  MarkUntranspilableFeaturesAsRemoved(AbstractCompiler compiler, FeatureSet outputFeatures) {
+  ReportUntranspilableFeatures(AbstractCompiler compiler, FeatureSet outputFeatures) {
     checkNotNull(compiler);
     checkNotNull(outputFeatures);
     this.compiler = compiler;
@@ -188,5 +188,4 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
     }
     return false;
   }
-
 }

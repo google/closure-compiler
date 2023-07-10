@@ -169,8 +169,7 @@ public class DiagnosticGroups {
   // right now because we don't have any language output level higher than ES5.
   public static final DiagnosticGroup UNSTRANSPILABLE_FEATURES =
       DiagnosticGroups.registerGroup(
-          "untranspilableFeatures",
-          MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT);
+          "untranspilableFeatures", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
 
   public static final DiagnosticGroup FEATURES_NOT_SUPPORTED_BY_PASS =
       DiagnosticGroups.registerDeprecatedGroup("featuresNotSupportedByPass");
