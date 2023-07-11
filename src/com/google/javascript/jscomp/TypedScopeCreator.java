@@ -1376,15 +1376,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (isGoogModuleExports(lvalue)) {
         return syntacticLvalueName.replace("exports", this.getModule().closureNamespace());
       }
-      if (compiler.getOptions().isCheckingMissingOverrideTypes()
-          && this.getModule() != null
-          && this.getModule().closureNamespace() != null) {
-        // When fixing missing override types, we want to generate a fully
-        // qualified type name for this `syntacticLValueName` in the JSDoc.
-        if (!syntacticLvalueName.contains(this.getModule().closureNamespace() + ".")) {
-          return this.getModule().closureNamespace() + "." + syntacticLvalueName;
-        }
-      }
       return syntacticLvalueName;
     }
 

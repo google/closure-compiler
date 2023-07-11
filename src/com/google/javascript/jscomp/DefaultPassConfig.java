@@ -403,10 +403,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(analyzerChecks);
     }
 
-    if (options.isTypecheckingEnabled() && options.isCheckingMissingOverrideTypes()) {
-      checks.maybeAdd(checkMissingOverrideTypes);
-    }
-
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
     if (!options.preservesDetailedSourceInfo()) {
@@ -1862,12 +1858,6 @@ public final class DefaultPassConfig extends PassConfig {
                   }))
           .build();
 
-  private final PassFactory checkMissingOverrideTypes =
-      PassFactory.builder()
-          .setName("checkMissingOverrideTypes")
-          .setInternalFactory(CheckMissingOverrideTypes::new)
-          .build();
-
   private final PassFactory inferJsDocInfo =
       PassFactory.builder()
           .setName("inferJsDocInfo")
@@ -2071,6 +2061,7 @@ public final class DefaultPassConfig extends PassConfig {
           // TODO(johnlenz): StripCode may be fooled by some newer features, like destructuring,
           // an).build();
           .build();
+
   /** Checks that all constants are not modified */
   private final PassFactory checkConsts =
       PassFactory.builder().setName("checkConsts").setInternalFactory(ConstCheck::new).build();

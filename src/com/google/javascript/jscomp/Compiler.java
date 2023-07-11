@@ -67,7 +67,6 @@ import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
-import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.RunMode;
 import com.google.javascript.jscomp.parsing.Config.StrictMode;
@@ -456,11 +455,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setPrintConfig(true);
     }
 
-    if (options.isCheckingMissingOverrideTypes()) {
-      // this allows us to generate syntactically better replacement JSDoc that preserves existing
-      // description.
-      options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
-    }
     // If pruning many unused inputs, it's possible that it's faster to regex-parse everything and
     // AST-parse only the non-pruned inputs, rather than just AST-parse everything once.
     this.preferRegexParser = this.preferRegexParser || options.getDependencyOptions().shouldPrune();

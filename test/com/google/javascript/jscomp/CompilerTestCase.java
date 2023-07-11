@@ -218,9 +218,6 @@ public abstract class CompilerTestCase {
    */
   private boolean typeInfoValidationEnabled;
 
-  /** Whether we should verify that all type annotations are present on override methods. */
-  private boolean checkMissingOverrideTypes;
-
   /**
    * Whether we should verify that for every SCRIPT node, all features present in its AST are also
    * present in its FeatureSet property.
@@ -685,7 +682,6 @@ public abstract class CompilerTestCase {
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
     this.typeInfoValidationEnabled = false;
-    this.checkMissingOverrideTypes = false;
     this.scriptFeatureValidationEnabled = true;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
@@ -760,9 +756,6 @@ public abstract class CompilerTestCase {
     if (!ignoredWarnings.isEmpty()) {
       options.setWarningLevel(
           new DiagnosticGroup(ignoredWarnings.toArray(new DiagnosticType[0])), CheckLevel.OFF);
-    }
-    if (checkMissingOverrideTypes) {
-      options.setCheckMissingOverrideTypes(true);
     }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
@@ -1123,12 +1116,6 @@ public abstract class CompilerTestCase {
   protected final void disableTypeInfoValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeInfoValidationEnabled = false;
-  }
-
-  /** Enable fixing missing override types */
-  protected final void enableFixMissingOverrideTypes() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    checkMissingOverrideTypes = true;
   }
 
   /** Enable validating script featuresets after each run of the pass. */
