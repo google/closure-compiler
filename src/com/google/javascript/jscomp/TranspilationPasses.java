@@ -96,6 +96,10 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteOptionalChainingOperator);
     }
 
+    if (options.needsTranspilationOf(Feature.BIGINT)) {
+      passes.maybeAdd(reportBigIntLiteralTranspilationUnsupported);
+    }
+
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
       passes.maybeAdd(rewriteNullishCoalesceOperator);
     }
@@ -252,6 +256,12 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("rewriteNewDotTarget")
           .setInternalFactory(RewriteNewDotTarget::new)
+          .build();
+
+  private static final PassFactory reportBigIntLiteralTranspilationUnsupported =
+      PassFactory.builder()
+          .setName("reportBigIntTranspilationUnsupported")
+          .setInternalFactory(ReportBigIntLiteralTranspilationUnsupported::new)
           .build();
 
   private static final PassFactory rewriteExponentialOperator =

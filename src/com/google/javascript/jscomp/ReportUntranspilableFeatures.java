@@ -33,8 +33,8 @@ import java.util.function.Predicate;
 
 /**
  * Looks for presence of features that are not supported for transpilation (mostly new RegExp
- * features and bigint literal). Reports errors for any features are present in the root and not
- * present in the targeted output language.
+ * features). Reports errors for any features are present in the root and not present in the
+ * targeted output language.
  */
 public final class ReportUntranspilableFeatures extends AbstractPostOrderCallback
     implements CompilerPass {
@@ -46,9 +46,6 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
           // TODO(b/123768968) suggest users raise their language level once we support language
           // output higher than ES5.
           "Cannot convert {0} feature \"{1}\" to targeted output language.");
-
-  static final DiagnosticType BIGINT_TRANSPILATION =
-      DiagnosticType.error("JSC_BIGINT_TRANSPILATION", "transpilation of BigInt is not supported");
 
   private static final FeatureSet UNTRANSPILABLE_2018_FEATURES =
       FeatureSet.BARE_MINIMUM.with(
@@ -65,9 +62,6 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
           // transpiled below.
           Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
-  private static final FeatureSet UNTRANSPILABLE_2020_FEATURES =
-      FeatureSet.BARE_MINIMUM.with(Feature.BIGINT);
-
   private static final FeatureSet UNTRANSPILABLE_2022_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_D);
 
@@ -75,8 +69,7 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
       FeatureSet.BARE_MINIMUM
           .union(UNTRANSPILABLE_2018_FEATURES)
           .union(UNTRANSPILABLE_2019_FEATURES)
-          .union(UNTRANSPILABLE_2022_FEATURES)
-          .union(UNTRANSPILABLE_2020_FEATURES);
+          .union(UNTRANSPILABLE_2022_FEATURES);
 
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;
@@ -141,14 +134,7 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
           }
           break;
         }
-      case BIGINT:
-        {
-          // Transpilation of BigInt is not supported
-          if (untranspilableFeaturesToRemove.contains(Feature.BIGINT)) {
-            t.report(n, BIGINT_TRANSPILATION);
-          }
-          break;
-        }
+
       default:
         break;
     }
