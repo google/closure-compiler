@@ -26,6 +26,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -233,7 +234,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   /** Transforms let/const declarations captured by loop closures. */
-  private class LoopClosureTransformer extends AbstractPostOrderCallback {
+  private class LoopClosureTransformer extends AbstractPreOrderCallback {
 
     private static final String LOOP_OBJECT_NAME = "$jscomp$loop";
     private static final String LOOP_OBJECT_PROPERTY_NAME = "$jscomp$loop$prop$";
@@ -249,20 +250,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     private final Map<Var, String> propertyNameMap = new LinkedHashMap<>();
 
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (!NodeUtil.isReferenceName(n)) {
-        return;
+        return true;
       }
 
       String name = n.getString();
       Scope referencedIn = t.getScope();
       Var var = referencedIn.getVar(name);
       if (var == null) {
-        return;
+        return true;
       }
 
       if (!var.isLet() && !var.isConst()) {
-        return;
+        return true;
       }
 
       if (n.getParent().isLet() || n.getParent().isConst()) {
@@ -283,7 +284,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           loopNode = scopeRoot.getParent();
           break;
         } else if (s.isFunctionBlockScope() || s.isGlobal()) {
-          return;
+          return true;
         }
       }
 
@@ -318,7 +319,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           nodeToWrapInClosure = enclosingFunction;
         }
         if (nodesHandledForLoopObjectClosure.containsEntry(nodeToWrapInClosure, name)) {
-          return;
+          return true;
         }
         nodesHandledForLoopObjectClosure.put(nodeToWrapInClosure, name);
 
@@ -330,6 +331,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         propertyNameMap.put(var, newPropertyName);
         nodesRequiringLoopObjectsClosureMap.put(nodeToWrapInClosure, object);
       }
+      return true;
     }
 
     private String createUniqueObjectName(CompilerInput input) {
