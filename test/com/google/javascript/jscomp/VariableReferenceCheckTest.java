@@ -795,6 +795,21 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("export class A {} class C extends A {} C = class extends A {}");
   }
 
+  /** Variable reference before declaration error should not appear for non-static public fields */
+  @Test
+  public void testNonStaticPublicFields() {
+    assertNoWarning("class Foo { x = bar;} let bar = 1;");
+    assertNoWarning("class Foo { x = Enum.X; } const Enum = { X: 1 }");
+    assertNoWarning("class Foo { x = new Bar(); } class Bar {}");
+  }
+
+  @Test
+  public void testStaticPublicFields() {
+    assertEarlyReferenceError("class Bar { static x = y; } const y = 3;");
+    assertEarlyReferenceError("class Foo { static x = new Bar(); } class Bar {}");
+    assertEarlyReferenceError("class Bar { static x = Enum.A; } let Enum = { A: 'str' }");
+  }
+
   @Test
   public void testArrayPattern() {
     assertNoWarning("var [a] = [1];");

@@ -403,6 +403,12 @@ class VariableReferenceCheck implements CompilerPass {
       }
     }
 
+    // RHS of public fields are not early references
+    Node referenceScopeRoot = reference.getScope().getRootNode();
+    if (referenceScopeRoot.isMemberFieldDef() && !referenceScopeRoot.isStaticMember()) {
+      return false;
+    }
+
     // Only generate warnings for early references in the same function scope/global scope in
     // order to deal with possible forward declarations and recursion
     // e.g. don't warn on:
