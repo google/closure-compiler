@@ -489,9 +489,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         compiler.reportChangeToEnclosingScope(grandParent);
       }
 
-      if (reference.getParent().isCall() && reference.getParent().getFirstChild() == reference) {
-        reference.getParent().putBooleanProp(Node.FREE_CALL, false);
-      }
       // Change reference to GETPROP.
       Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
       reference.replaceWith(

@@ -1605,7 +1605,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = null;",
                 "  var f = function($jscomp$loop$ID$0) {",
                 "    return function() {",
-                "      ($jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
+                "      (0,$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
                 "    };",
                 "  }($jscomp$loop$ID$0);",
                 "}"));
@@ -1630,7 +1630,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = null;",
                 "  var f = function($jscomp$loop$ID$0) {",
                 "    return function() {",
-                "      ($jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
+                "      (0,$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
                 "    };",
                 "  }($jscomp$loop$ID$0);",
                 "}"));
@@ -1655,7 +1655,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  $jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1 = null;",
                 "  (function($jscomp$loop$ID$0) {",
                 "    return function() {",
-                "      ($jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
+                "      (0,$jscomp$loop$ID$0.$jscomp$loop$prop$x$ID$1)();",
                 "    };",
                 "  })($jscomp$loop$ID$0)();",
                 "}"));
