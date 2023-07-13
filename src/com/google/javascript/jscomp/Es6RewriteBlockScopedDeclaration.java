@@ -266,10 +266,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         return true;
       }
 
-      if (n.getParent().isLet() || n.getParent().isConst()) {
-        letConsts.add(n.getParent());
-      }
-
       // Traverse nodes up from let/const declaration:
       // If we hit a function or the root before a loop - Not a loop closure.
       // if we hit a loop first - maybe loop closure.
