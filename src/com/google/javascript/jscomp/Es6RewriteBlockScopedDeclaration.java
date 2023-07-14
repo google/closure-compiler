@@ -374,7 +374,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
         compiler.reportChangeToEnclosingScope(loopNode);
 
-        changeDeclarationsToAssignments(loopNode, loopObject);
+        changeLoopLocalVariablesToProperties(loopNode, loopObject);
       }
     }
 
@@ -444,7 +444,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
      * For captured variables, change declarations to assignments on the corresponding field of the
      * introduced object. Rename all references accordingly.
      */
-    private void changeDeclarationsToAssignments(Node loopNode, LoopObject loopObject) {
+    private void changeLoopLocalVariablesToProperties(Node loopNode, LoopObject loopObject) {
       for (Var var : loopObject.vars) {
         String newPropertyName = propertyNameMap.get(var);
         for (Node reference : referenceMap.get(var)) {
@@ -456,47 +456,55 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             assignLoopVarToLoopObjectProperty(
                 loopNode, loopObject, var, newPropertyName, reference);
           } else {
-            replaceDeclarationWithProperty(loopObject, newPropertyName, reference);
+            if (NodeUtil.isNameDeclaration(reference.getParent())) {
+              replaceDeclarationWithProperty(loopObject, newPropertyName, reference);
+            } else {
+              replaceReferenceWithProperty(loopObject, newPropertyName, reference);
+            }
           }
         }
       }
     }
 
-    /** Changes `for (let i = 0; ...)` into `for ($jscomp$loop$0.$jscomp$loop$prop$i$1 = 0; ...)` */
     private void replaceDeclarationWithProperty(
         LoopObject loopObject, String newPropertyName, Node reference) {
-      if (NodeUtil.isNameDeclaration(reference.getParent())) {
-        Node declaration = reference.getParent();
-        Node grandParent = declaration.getParent();
-        handleDeclarationList(declaration, grandParent);
-        declaration = reference.getParent(); // Might have changed after normalization.
-        // Change declaration to assignment, or just drop it if there's
-        // no initial value.
-        if (reference.hasChildren()) {
-          Node newReference = cloneWithType(reference);
-          Node assign = astFactory.createAssign(newReference, reference.removeFirstChild());
-          extractInlineJSDoc(declaration, reference, declaration);
-          maybeAddConstJSDoc(declaration, reference, declaration);
-          assign.setJSDocInfo(declaration.getJSDocInfo());
+      Node declaration = reference.getParent();
+      Node grandParent = declaration.getParent();
+      // If the declaration contains multiple declared variables, split it apart.
+      handleDeclarationList(declaration, grandParent);
+      declaration = reference.getParent(); // Might have changed due to splitting.
+      if (reference.hasChildren()) {
+        // Change declaration to assignment
+        Node newReference =
+            createLoopVarReferenceReplacement(loopObject, reference, newPropertyName);
+        Node assign = astFactory.createAssign(newReference, reference.removeFirstChild());
+        extractInlineJSDoc(declaration, reference, declaration);
+        maybeAddConstJSDoc(declaration, reference, declaration);
+        assign.setJSDocInfo(declaration.getJSDocInfo());
 
-          Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);
-          declaration.replaceWith(replacement);
-          reference = newReference;
-        } else {
-          declaration.detach();
-        }
-        letConsts.remove(declaration);
-        compiler.reportChangeToEnclosingScope(grandParent);
+        Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);
+        declaration.replaceWith(replacement);
+      } else {
+        // No value is assigned, so just drop the let/const statement entirely
+        declaration.detach();
       }
+      // Record that this var has been dealt with.
+      // If the declaration was split above by handleDeclarationList, this might
+      // actually be attempting to remove a new VAR node which isn't there,
+      // but it wouldn't be safe to remove the LET/CONST pre-split.
+      // It could be that the variable that ends up being left behind on the
+      // LET/CONST node is one not used in any closure and so not handled through
+      // this code path.
+      letConsts.remove(declaration);
+      compiler.reportChangeToEnclosingScope(grandParent);
+    }
 
-      // Change reference to GETPROP.
-      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
+    private void replaceReferenceWithProperty(
+        LoopObject loopObject, String newPropertyName, Node reference) {
+      Node referenceParent = reference.getParent();
       reference.replaceWith(
           createLoopVarReferenceReplacement(loopObject, reference, newPropertyName));
-      // TODO(johnlenz): Don't work on detached nodes.
-      if (changeScope != null) {
-        compiler.reportChangeToChangeScope(changeScope);
-      }
+      compiler.reportChangeToEnclosingScope(referenceParent);
     }
 
     /**
@@ -582,13 +590,5 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         this.name = name;
       }
     }
-  }
-
-  private Node cloneWithType(Node node) {
-    Node clone = node.cloneNode();
-    if (astFactory.isAddingColors()) {
-      clone.setColor(node.getColor());
-    }
-    return clone;
   }
 }
