@@ -402,13 +402,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         Node call = astFactory.createCall(iife, type(functionOrObjectLit), objectNamesForCall);
         call.putBooleanProp(Node.FREE_CALL, true);
         Node replacement;
-        if (NodeUtil.isFunctionDeclaration(functionOrObjectLit)) {
-          replacement =
-              IR.var(IR.name(functionOrObjectLit.getFirstChild().getString()), call)
-                  .srcrefTreeIfMissing(functionOrObjectLit);
-        } else {
-          replacement = call.srcrefTreeIfMissing(functionOrObjectLit);
-        }
+        // Es6RewriteBlockScopedFunctionDeclaration must run before this pass.
+        checkState(
+            !NodeUtil.isFunctionDeclaration(functionOrObjectLit),
+            "block-scoped function declarations should not exist now: %s",
+            functionOrObjectLit);
+        replacement = call.srcrefTreeIfMissing(functionOrObjectLit);
         functionOrObjectLit.replaceWith(replacement);
         returnNode.addChildToFront(functionOrObjectLit);
         compiler.reportChangeToEnclosingScope(replacement);
@@ -472,7 +471,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node grandParent = declaration.getParent();
       // If the declaration contains multiple declared variables, split it apart.
       handleDeclarationList(declaration, grandParent);
-      declaration = reference.getParent(); // Might have changed due to splitting.
+      // Record that the let / const declaration statement has been turned into one or more
+      // var statements by handleDeclarationList(), so we won't try to change it again later.
+      letConsts.remove(declaration);
+      // The variable we're working with may have been moved to a new var statement.
+      declaration = reference.getParent();
       if (reference.hasChildren()) {
         // Change declaration to assignment
         Node newReference =
@@ -488,14 +491,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // No value is assigned, so just drop the let/const statement entirely
         declaration.detach();
       }
-      // Record that this var has been dealt with.
-      // If the declaration was split above by handleDeclarationList, this might
-      // actually be attempting to remove a new VAR node which isn't there,
-      // but it wouldn't be safe to remove the LET/CONST pre-split.
-      // It could be that the variable that ends up being left behind on the
-      // LET/CONST node is one not used in any closure and so not handled through
-      // this code path.
-      letConsts.remove(declaration);
       compiler.reportChangeToEnclosingScope(grandParent);
     }
 
