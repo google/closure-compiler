@@ -231,7 +231,6 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
 
   @Test
   public void internalImportDifferentChunksWithoutAlias_used() {
-    disableAstValidation();
     this.dynamicImportAlias = null;
     JSChunk actualChunk0 = new JSChunk("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
@@ -260,7 +259,6 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
 
   @Test
   public void internalImportDifferentChunksWithAlias_used() {
-    disableAstValidation();
     JSChunk actualChunk0 = new JSChunk("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
 
@@ -430,7 +428,6 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   @Test
   public void outputModulesInternalImportDifferentChunks_used() {
     allowExternsChanges();
-    disableAstValidation();
     this.chunkOutputType = ChunkOutputType.ES_MODULES;
     this.dynamicImportAlias = null;
     JSChunk actualChunk0 = new JSChunk("chunk0");

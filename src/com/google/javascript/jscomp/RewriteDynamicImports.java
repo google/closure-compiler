@@ -81,7 +81,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   private final boolean requiresAliasing;
   private final boolean shouldWrapDynamicImportCallbacks;
   private boolean dynamicImportsRemoved = false;
-  private boolean arrowFunctionsAdded = false;
   private boolean wrappedDynamicImportCallback = false;
 
   /** @param compiler The compiler */
@@ -117,9 +116,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       if (this.requiresAliasing && aliasIsValid()) {
         NodeTraversal.traverse(compiler, externs, new AliasInjectingTraversal());
       }
-    }
-    if (arrowFunctionsAdded) {
-      compiler.setFeatureSet(compiler.getFeatureSet().with(Feature.ARROW_FUNCTIONS));
     }
   }
 
@@ -162,7 +158,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
           // the import to reference the rewritten global module namespace variable.
           retargetImportSpecifier(t, n, targetModule);
           if (NodeUtil.isExpressionResultUsed(n)) {
-            addChainedThen(n, targetModuleNS);
+            addChainedThen(t, n, targetModuleNS);
           }
         }
       }
@@ -289,7 +285,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    *   import('./foo.js').then(() => module$foo);
    * </pre>
    */
-  private void addChainedThen(Node dynamicImport, Var targetModuleNs) {
+  private void addChainedThen(NodeTraversal t, Node dynamicImport, Var targetModuleNs) {
     JSTypeRegistry registry = compiler.getTypeRegistry();
     final Node importParent = dynamicImport.getParent();
     final Node placeholder = IR.empty();
@@ -321,9 +317,9 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       importThenCall.copyTypeFrom(dynamicImport);
     }
     placeholder.replaceWith(importThenCall);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
     compiler.reportChangeToChangeScope(callbackFn);
     compiler.reportChangeToEnclosingScope(importParent);
-    arrowFunctionsAdded = true;
   }
 
   /**
