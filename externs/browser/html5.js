@@ -4394,6 +4394,12 @@ HTMLSelectElement.prototype.reportValidity = function() {};
  */
 HTMLSelectElement.prototype.setCustomValidity = function(message) {};
 
+/**
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLSpanElement() {}
+
 /** @type {boolean} */
 HTMLTextAreaElement.prototype.autofocus;
 
@@ -4412,6 +4418,12 @@ HTMLTextAreaElement.prototype.minLength;
 
 /** @type {string} */
 HTMLTextAreaElement.prototype.placeholder;
+
+/** @type {number} */
+HTMLTextAreaElement.prototype.selectionStart;
+
+/** @type {number} */
+HTMLTextAreaElement.prototype.selectionEnd;
 
 /** @type {number} */
 HTMLTextAreaElement.prototype.textLength;
@@ -4438,6 +4450,28 @@ HTMLTextAreaElement.prototype.reportValidity = function() {};
  * @return {undefined}
  */
 HTMLTextAreaElement.prototype.setCustomValidity = function(message) {};
+
+/**
+ * @param {number} selectionStart
+ * @param {number} selectionEnd
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/editing.html#dom-textarea/input-setselectionrange
+ * @return {undefined}
+ */
+HTMLTextAreaElement.prototype.setSelectionRange =
+    function(selectionStart, selectionEnd) {};
+
+/**
+ * @param {string} replacement
+ * @param {number=} start
+ * @param {number=} end
+ * @param {string=} selectionMode
+ * @see https://html.spec.whatwg.org/#dom-textarea/input-setrangetext
+ * @return {undefined}
+ */
+HTMLTextAreaElement.prototype.setRangeText =
+    function(replacement, start, end, selectionMode) {};
+
+
 
 /**
  * @constructor
@@ -4488,6 +4522,36 @@ FullscreenOptions.prototype.navigationUI;
  * @return {!Promise<undefined>}
  */
 Element.prototype.requestFullscreen = function(options) {};
+
+/**
+ * @type {string}
+ * @see https://dom.spec.whatwg.org/#dom-document-characterset
+ */
+Document.prototype.characterSet;
+
+/**
+ * @type {string}
+ * @see https://dom.spec.whatwg.org/#dom-document-contenttype
+ */
+Document.prototype.contentType;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.compatMode
+ * @type {string}
+ */
+Document.prototype.compatMode;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView
+ * @type {?Window}
+ */
+Document.prototype.defaultView;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.designMode
+ * @type {string}
+ */
+Document.prototype.designMode;
 
 /**
  * @type {boolean}
@@ -5496,6 +5560,12 @@ Navigator.prototype.taintEnabled = function() {};
  * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-language
  */
 Navigator.prototype.language;
+
+/**
+ * @type {!Array<string>|undefined}
+ * @see https://developer.mozilla.org/en/Navigator.languages
+ */
+Navigator.prototype.languages;
 
 /**
  * @type {boolean}

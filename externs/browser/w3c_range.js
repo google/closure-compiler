@@ -232,10 +232,40 @@ Range.prototype.surroundContents = function(newParent) {};
 Range.prototype.cloneRange = function() {};
 
 /**
+ * @param {Node} parent
+ * @param {number} offset
+ * @return {number}
+ * @nosideeffects
+ */
+Range.prototype.comparePoint;
+
+/**
  * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-method-detach
  */
 Range.prototype.detach = function() {};
+
+/**
+ * @param {!TrustedHTML|string} tag
+ * @return {DocumentFragment}
+ */
+Range.prototype.createContextualFragment;
+
+/**
+ * @param {Node} n
+ * @return {boolean}
+ * @nosideeffects
+ */
+Range.prototype.intersectsNode;
+
+/**
+ * @param {Node} parent
+ * @param {number} offset
+ * @return {boolean}
+ * @nosideeffects
+ */
+Range.prototype.isPointInRange;
+
 
 // Introduced in DOM Level 2:
 /**
