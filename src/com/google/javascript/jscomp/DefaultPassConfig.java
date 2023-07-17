@@ -223,8 +223,6 @@ public final class DefaultPassConfig extends PassConfig {
         "options.skipNonTranspilationPasses cannot be mixed with PassConfig::getChecks. Call"
             + " PassConfig::getTranspileOnlyPasses instead.");
 
-    checks.maybeAdd(syncCompilerFeatures);
-
     if (options.isPropertyRenamingOnlyCompilationMode()) {
       checks.maybeAdd(addSyntheticScript);
       checks.maybeAdd(gatherGettersAndSetters);
@@ -1161,15 +1159,6 @@ public final class DefaultPassConfig extends PassConfig {
         || options.isRemoveUnusedClassProperties()
         || options.rewritePolyfills;
   }
-
-  /** Set feature set of compiler to only features used in the externs and sources */
-  private final PassFactory syncCompilerFeatures =
-      PassFactory.builder()
-          .setName("syncCompilerFeatures")
-          .setInternalFactory(SyncCompilerFeatures::new)
-          // This pass just records which features actually appear in the input code.
-          // It needs to work no matter what those features are.
-          .build();
 
   private final PassFactory checkSideEffects =
       PassFactory.builder()
