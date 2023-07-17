@@ -78,6 +78,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     checkState(parent == null || !parent.isForOf(), parent);
 
     if (n.isLet() || n.isConst()) {
+      Node script = t.getCurrentScript();
+      script.putBooleanProp(Node.TRANSPILED, true);
       letConsts.add(n);
     }
     if (NodeUtil.isNameDeclaration(n)) {

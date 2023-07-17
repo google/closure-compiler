@@ -43,7 +43,13 @@ public final class RewriteLogicalAssignmentOperatorsPass
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-      return scriptFeatures == null || scriptFeatures.contains(Feature.LOGICAL_ASSIGNMENT);
+      boolean shouldTraverse =
+          scriptFeatures == null || scriptFeatures.contains(Feature.LOGICAL_ASSIGNMENT);
+      if (shouldTraverse) {
+        // if we've decided to transpile this script, mark the script as transpiled
+        n.putBooleanProp(Node.TRANSPILED, true);
+      }
+      return shouldTraverse;
     }
     return true;
   }

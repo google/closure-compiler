@@ -56,9 +56,15 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     switch (n.getToken()) {
       case SCRIPT:
         FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-        return scriptFeatures == null
-            || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
-            || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
+        boolean shouldTraverse =
+            scriptFeatures == null
+                || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
+                || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
+        if (shouldTraverse) {
+          // if we've decided to transpile this script, mark the script as transpiled
+          n.putBooleanProp(Node.TRANSPILED, true);
+        }
+        return shouldTraverse;
       case CLASS:
         Node classNameNode = NodeUtil.getNameNode(n);
 
