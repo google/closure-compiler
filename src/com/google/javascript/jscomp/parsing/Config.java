@@ -88,7 +88,7 @@ public abstract class Config {
     }
 
     public static LanguageMode latestEcmaScript() {
-      return ECMASCRIPT_2020;
+      return ECMASCRIPT_2021;
     }
   }
 
