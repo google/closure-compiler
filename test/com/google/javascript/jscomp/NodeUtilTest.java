@@ -4407,12 +4407,13 @@ public final class NodeUtilTest {
     public void addFeatureToScriptUpdatesCompilerFeatureSet() {
       Node scriptNode = parse("");
       Compiler compiler = new Compiler();
-      compiler.setFeatureSet(FeatureSet.BARE_MINIMUM);
+      compiler.setAllowableFeatures(FeatureSet.BARE_MINIMUM);
       NodeUtil.addFeatureToScript(scriptNode, Feature.MODULES, compiler);
 
       assertThat(NodeUtil.getFeatureSetOfScript(scriptNode))
           .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
-      assertFS(compiler.getFeatureSet()).equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
+      assertFS(compiler.getAllowableFeatures())
+          .equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
     }
 
     /**

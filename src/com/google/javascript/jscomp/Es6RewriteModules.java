@@ -190,7 +190,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
     NodeTraversal.traverseRoots(compiler, this, externs, root);
-    compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
+    compiler.markFeatureNotAllowed(MODULES);
     // This pass may add getters properties on module objects.
     GatherGetterAndSetterProperties.update(compiler, externs, root);
   }

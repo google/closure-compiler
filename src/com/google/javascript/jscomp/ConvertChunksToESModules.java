@@ -123,7 +123,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     addImportStatements();
     rewriteDynamicImportCallbacks();
 
-    compiler.setFeatureSet(compiler.getFeatureSet().with(FeatureSet.Feature.MODULES));
+    compiler.setAllowableFeatures(compiler.getAllowableFeatures().with(FeatureSet.Feature.MODULES));
   }
 
   /**

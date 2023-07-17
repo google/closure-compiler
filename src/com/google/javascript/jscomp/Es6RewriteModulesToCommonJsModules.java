@@ -57,7 +57,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         script.putBooleanProp(Node.TRANSPILED, true);
       }
     }
-    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
+    compiler.markFeatureNotAllowed(Feature.MODULES);
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
 

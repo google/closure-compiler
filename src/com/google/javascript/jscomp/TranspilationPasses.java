@@ -461,15 +461,15 @@ public class TranspilationPasses {
     // We don't bother to do this if the compiler has halting errors, which avoids unnecessary
     // warnings from AstValidator warning that the features are still there.
     if (!compiler.hasHaltingErrors()) {
-      compiler.setFeatureSet(compiler.getFeatureSet().without(transpiledFeatures));
+      compiler.markFeatureSetNotAllowed(transpiledFeatures);
     }
   }
 
   static void maybeMarkFeaturesAsTranspiledAway(
       AbstractCompiler compiler, Feature transpiledFeature, Feature... moreTranspiledFeatures) {
     if (!compiler.hasHaltingErrors()) {
-      compiler.setFeatureSet(
-          compiler.getFeatureSet().without(transpiledFeature, moreTranspiledFeatures));
+      compiler.markFeatureSetNotAllowed(
+          FeatureSet.BARE_MINIMUM.with(transpiledFeature).with(moreTranspiledFeatures));
     }
   }
 

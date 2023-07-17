@@ -77,7 +77,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
 
   @Override
   public void process(Node externs, Node root) {
-    if (compiler.getFeatureSet().contains(Feature.ARROW_FUNCTIONS)) {
+    if (compiler.getAllowableFeatures().contains(Feature.ARROW_FUNCTIONS)) {
       // Normalize hasn't run yet if class transpilation is forced. Normalize arrows here to make
       // sure class extraction generates legitimate code (b/262387538).
       // TODO(b/197349249): Remove once b/197349249 is fixed.

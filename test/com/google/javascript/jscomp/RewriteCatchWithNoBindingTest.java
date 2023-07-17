@@ -83,7 +83,7 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
                 "  onError();",
                 "}"));
     rewriteCatchTest(srcs, originalExpected);
-    assertThat(getLastCompiler().getFeatureSet().contains(Feature.OPTIONAL_CATCH_BINDING))
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.OPTIONAL_CATCH_BINDING))
         .isFalse();
   }
 

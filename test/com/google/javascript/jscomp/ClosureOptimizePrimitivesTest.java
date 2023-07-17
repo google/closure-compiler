@@ -104,7 +104,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
         "var a = goog.object.create('a', 1, 2, 3, foo, bar);", //
         "var a = {'a': 1, 2: 3, [foo]: bar};");
 
-    assertFS(getLastCompiler().getFeatureSet()).has(Feature.COMPUTED_PROPERTIES);
+    assertFS(getLastCompiler().getAllowableFeatures()).has(Feature.COMPUTED_PROPERTIES);
   }
 
   @Test

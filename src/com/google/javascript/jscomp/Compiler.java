@@ -193,7 +193,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Used for debugging; to see the compiled code between passes
   private @Nullable String lastJsSource = null;
 
-  private FeatureSet featureSet;
+  // Used to track the invariant about what language features may be in the AST at the given point
+  // in compilation.
+  private FeatureSet allowableFeatures;
 
   private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
@@ -396,7 +398,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public void initOptions(CompilerOptions options) {
     this.options = options;
-    this.setFeatureSet(options.getLanguageIn().toFeatureSet());
+    this.allowableFeatures = options.getLanguageIn().toFeatureSet();
     initExperimentalForceTranspileOptions(options);
     if (errorManager == null) {
       if (this.outStream == null) {
@@ -1561,13 +1563,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  FeatureSet getFeatureSet() {
-    return featureSet;
+  FeatureSet getAllowableFeatures() {
+    return this.allowableFeatures;
   }
 
   @Override
-  void setFeatureSet(FeatureSet fs) {
-    featureSet = fs;
+  void setAllowableFeatures(FeatureSet allowableFeatures) {
+    this.allowableFeatures = allowableFeatures;
+  }
+
+  @Override
+  void markFeatureNotAllowed(FeatureSet.Feature feature) {
+    this.allowableFeatures = this.allowableFeatures.without(feature);
+  }
+
+  @Override
+  void markFeatureSetNotAllowed(FeatureSet featureSet) {
+    this.allowableFeatures = this.allowableFeatures.without(featureSet);
   }
 
   @Override
@@ -3921,7 +3933,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   protected static class CompilerState implements Serializable {
 
-    private final FeatureSet featureSet;
+    private final FeatureSet allowableFeatures;
     private final boolean typeCheckingHasRun;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
@@ -3943,7 +3955,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final VariableMap instrumentationMappping;
 
     CompilerState(Compiler compiler) {
-      this.featureSet = checkNotNull(compiler.featureSet);
+      this.allowableFeatures = checkNotNull(compiler.allowableFeatures);
       this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.lifeCycleStage = compiler.getLifeCycleStage();
@@ -3972,7 +3984,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Restore the portions of the compiler state that don't require access to the serialized AST. */
   protected void restoreFromState(CompilerState compilerState) {
-    featureSet = compilerState.featureSet;
+    allowableFeatures = compilerState.allowableFeatures;
     scriptNodeByFilename.clear();
     typeCheckingHasRun = compilerState.typeCheckingHasRun;
     injectedLibraries.clear();

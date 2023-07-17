@@ -135,7 +135,7 @@ abstract class CompilerTypeTestCase {
   protected void initializeNewCompiler(CompilerOptions options) {
     compiler = new Compiler();
     compiler.initOptions(options);
-    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
+    compiler.markFeatureNotAllowed(Feature.MODULES);
     registry = compiler.getTypeRegistry();
   }
 

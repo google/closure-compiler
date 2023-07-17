@@ -97,7 +97,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   private final boolean aliasIsValid() {
     return alias != null
         && (alias.equals("import")
-            || NodeUtil.isValidQualifiedName(compiler.getFeatureSet(), alias));
+            || NodeUtil.isValidQualifiedName(compiler.getAllowableFeatures(), alias));
   }
 
   @Override
@@ -112,7 +112,8 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     }
     if (dynamicImportsRemoved) {
       // This pass removes dynamic import, but adds arrow functions.
-      compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.DYNAMIC_IMPORT));
+      // TODO(lharker): marking the feature not allowed should be unconditional
+      compiler.markFeatureNotAllowed(Feature.DYNAMIC_IMPORT);
       if (this.requiresAliasing && aliasIsValid()) {
         NodeTraversal.traverse(compiler, externs, new AliasInjectingTraversal());
       }

@@ -451,23 +451,31 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract CompilerOptions getOptions();
 
   /**
-   * The set of features defined by the input language mode that have not (yet) been transpiled
-   * away.
+   * Returns the set of language features currently allowed to exist in the AST
    *
-   * <p>This is **not** the exact set of all features currently in the AST, but rather an improper
-   * super set. This set starts out as the set of features from the language input mode specified by
-   * the options, which is verified to be a super set of what appears in the input code (if the
-   * input code contains a feature outside the language input mode it is an error). As the compiler
-   * transpiles code any features that are transpiled away from the AST are removed from this set.
+   * <p>At the start of compilation, all features in the languageIn are allowed. At the end of
+   * compilation, only features in the languageOut should be allowed.
    *
-   * <p>The feature set is computed this way, rather than using the detected features in the AST, so
-   * that the set of passes that run is determined purely by input flags. Otherwise, introducing a
-   * previously unused feature in any of the transitive deps of compilation target could effect the
-   * build behaviour.
+   * <p>Transpilation passes should mark the transpiled features as "not allowed" to prevent future
+   * passes from accidentally introducing new uses of those features. For example, if transpiling
+   * away ES2017 features, the {@link RewriteAsyncFunctions} pass will mark async functions as no
+   * longer allowed.
    */
-  abstract FeatureSet getFeatureSet();
+  abstract FeatureSet getAllowableFeatures();
 
-  abstract void setFeatureSet(FeatureSet fs);
+  /**
+   * Sets the feature set allowed in the AST. See {@link #getAllowableFeatures()}
+   *
+   * <p>In most cases, callers of this method should only be shrinking the allowable feature set and
+   * not adding to it. One known exception is the ConvertChunksToESModules pass.
+   */
+  abstract void setAllowableFeatures(FeatureSet featureSet);
+
+  /** Marks feature as no longer allowed in the AST. See {@link #getAllowableFeatures()} */
+  abstract void markFeatureNotAllowed(FeatureSet.Feature feature);
+
+  /** Marks features as no longer allowed in the AST. See {@link #getAllowableFeatures()} */
+  abstract void markFeatureSetNotAllowed(FeatureSet featureSet);
 
   /**
    * @return a CompilerInput that can be modified to add additional extern definitions to the

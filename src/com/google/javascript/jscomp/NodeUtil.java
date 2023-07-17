@@ -6001,7 +6001,8 @@ public final class NodeUtil {
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
     scriptNode.putProp(Node.FEATURE_SET, newFeatures);
-    compiler.setFeatureSet(compiler.getFeatureSet().with(feature));
+    // TODO(lharker): remove this and instead validate that `feature` is already allowed.
+    compiler.setAllowableFeatures(compiler.getAllowableFeatures().with(feature));
   }
 
   /**

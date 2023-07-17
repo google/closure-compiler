@@ -2208,7 +2208,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (!n.isFromExterns() && !compiler.getFeatureSet().has(feature)) {
+    if (!n.isFromExterns() && !compiler.getAllowableFeatures().has(feature)) {
       // Skip this check for externs because we don't need to complete transpilation on externs,
       // and currently only transpile externs so that we can typecheck ES6+ features in externs.
       violation("AST should not contain " + feature, n);

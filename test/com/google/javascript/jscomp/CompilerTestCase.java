@@ -2075,7 +2075,7 @@ public abstract class CompilerTestCase {
 
   protected Compiler createCompiler() {
     Compiler compiler = new Compiler();
-    compiler.setFeatureSet(acceptedLanguage.toFeatureSet());
+    compiler.setAllowableFeatures(acceptedLanguage.toFeatureSet());
     if (!webpackModulesById.isEmpty()) {
       compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     }
