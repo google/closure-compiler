@@ -518,6 +518,39 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
+  public void testGoogRequireForDeclareModuleId_inGoogLoadModule() {
+    test(
+        srcs(
+            CLOSURE_BASE,
+            SourceFile.fromCode("es6.js", "export var x; goog.declareModuleId('my.es6');"),
+            SourceFile.fromCode(
+                "goog.js",
+                lines(
+                    "goog.loadModule(function(exports) {",
+                    "goog.module('closure.module');",
+                    "const es6 = goog.require('my.es6');",
+                    "use(es6, es6.x);",
+                    "return exports;",
+                    "});"))),
+        expected(
+            CLOSURE_BASE,
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "var x$$module$es6;/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x=x$$module$es6;")),
+            SourceFile.fromCode(
+                "goog.js",
+                lines(
+                    "goog.loadModule(function(exports) {",
+                    "goog.module('closure.module');",
+                    "const es6 = module$es6;",
+                    "use(es6, es6.x);",
+                    "return exports;",
+                    "});"))));
+  }
+
+  @Test
   public void testGoogRequireTypeForDeclareModuleId() {
     test(
         srcs(
@@ -546,6 +579,43 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
                     " * @param {module$es6.x} a",
                     " */",
                     "function f(a) {}"))));
+  }
+
+  @Test
+  public void testGoogRequireTypeForDeclareModuleId_inLoadModule() {
+    test(
+        srcs(
+            CLOSURE_BASE,
+            SourceFile.fromCode("es6.js", "export class x {}; goog.declareModuleId('my.es6');"),
+            SourceFile.fromCode(
+                "goog.js",
+                lines(
+                    "goog.loadModule(function(exports) {",
+                    "goog.module('bar')",
+                    "const es6 = goog.requireType('my.es6');",
+                    "/** @param {es6.x} a */",
+                    "function f(a) {}",
+                    "return exports;",
+                    "});"))),
+        expected(
+            CLOSURE_BASE,
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "class x$$module$es6 {}",
+                    "/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x = x$$module$es6;")),
+            SourceFile.fromCode(
+                "goog.js",
+                lines(
+                    "goog.loadModule(function(exports) {",
+                    "goog.module('bar')",
+                    "/**",
+                    " * @param {module$es6.x} a",
+                    " */",
+                    "function f(a) {}",
+                    "return exports;",
+                    "});"))));
   }
 
   @Test

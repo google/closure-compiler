@@ -94,20 +94,24 @@ final class Es6RenameTypeReferences extends AbstractPostOrderCallback {
     //
     // Es6RewriteModules (the only client for this class) actually deletes the module-level
     // declaration for the old name but still uses the scope rooted at the MODULE_BODY (for
-    // goog.module() files) or SCRIPT in the rename map.
+    // goog.module() files), SCRIPT, or function body (for wrapped goog.loadModule() goog.module()s)
+    // in the rename map.
     //
     // If we're in some local scope where there's a shadowing local variable, we don't want to do
     // the renaming.
     //
-    // Otherwise, we need to use the MODULE_BODY or SCRIPT scope to look up the new name.
+    // Otherwise, we need to use the MODULE_BODY or SCRIPT or goog.loadModule body scope to look up
+    // the new name.
     // - bradfordcsmith@google.com
     while (current != null) {
       Node currentRootNode = current.getRootNode();
       String newName = renameTable.get(currentRootNode, oldName);
       if (newName != null) {
         checkState(
-            currentRootNode.isModuleBody() || currentRootNode.isScript(),
-            "Not a MODULE_BODY or SCRIPT: %s",
+            currentRootNode.isModuleBody()
+                || currentRootNode.isScript()
+                || NodeUtil.isFunctionBlock(currentRootNode),
+            "Not a MODULE_BODY or SCRIPT or goog.loadModule root: %s",
             currentRootNode);
         String newFullName = rest == null ? newName : newName + rest;
         n.setString(newFullName);
