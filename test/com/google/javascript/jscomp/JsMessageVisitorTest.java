@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_HAS_NO_VALUE;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALIZED_CORRECTLY;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
@@ -296,14 +297,89 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testJsMessageOnProperty() {
-    extractMessagesSafely(
-        "/** @desc a */ " + "pint.sub.MSG_MENU_MARK_AS_UNREAD = goog.getMsg('a')");
+    extractMessagesSafely("/** @desc a */ pint.sub.MSG_MENU_MARK_AS_UNREAD = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_MENU_MARK_AS_UNREAD");
     assertThat(msg.getDesc()).isEqualTo("a");
+  }
+
+  @Test
+  public void testJsMessageOnPublicField() {
+    extractMessages(
+        lines(
+            "class Foo {",
+            "  /** @desc overflow menu */",
+            "  MSG_OVERFLOW_MENU = goog.getMsg('More options');",
+            "}"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getKey()).isEqualTo("MSG_OVERFLOW_MENU");
+    assertThat(msg.asJsMessageString()).isEqualTo("More options");
+
+    // Anonymous class
+    extractMessages(
+        lines(
+            "foo(class {", "  /** @desc hi */", "  MSG_HELLO = goog.getMsg('Greetings');", "});"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(2);
+    msg = messages.get(1);
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.asJsMessageString()).isEqualTo("Greetings");
+  }
+
+  @Test
+  public void testErrorOnPublicFields() {
+    extractMessages(
+        lines(
+            "class Foo {", //
+            "  /** @desc */",
+            "  MSG_WITH_NO_RHS;",
+            "}"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertOneError(MESSAGE_HAS_NO_VALUE);
+  }
+
+  @Test
+  public void testErrorOnStaticField() {
+    extractMessages(
+        lines(
+            "class Bar {", //
+            "  /** @desc */",
+            "  static MSG_STATIC_FIELD_WITH_NO_RHS;",
+            "}"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertOneError(MESSAGE_HAS_NO_VALUE);
+  }
+
+  @Test
+  public void testJsMessageOnPublicStaticField() {
+    extractMessages(
+        lines(
+            "class Bar {",
+            "  /** @desc menu */",
+            "  static MSG_MENU = goog.getMsg('Options');",
+            "}"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getKey()).isEqualTo("MSG_MENU");
+    assertThat(msg.asJsMessageString()).isEqualTo("Options");
+
+    extractMessages(
+        lines(
+            "let G = class {",
+            "  /** @desc apples */",
+            "  static MSG_FRUIT = goog.getMsg('Apples');",
+            "}"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(2);
+    msg = messages.get(1);
+    assertThat(msg.getKey()).isEqualTo("MSG_FRUIT");
+    assertThat(msg.asJsMessageString()).isEqualTo("Apples");
   }
 
   @Test
@@ -354,7 +430,7 @@ public final class JsMessageVisitorTest {
   @Test
   public void testJsMessageOnObjLit() {
     extractMessagesSafely(
-        "" + "pint.sub = {" + "/** @desc a */ MSG_MENU_MARK_AS_UNREAD: goog.getMsg('a')}");
+        "pint.sub = {" + "/** @desc a */ MSG_MENU_MARK_AS_UNREAD: goog.getMsg('a')}");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 

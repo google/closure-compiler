@@ -250,6 +250,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         jsDocInfo = node.getJSDocInfo();
         break;
 
+      case MEMBER_FIELD_DEF:
+        // Case: `class Foo { MSG_HELLO = 'Message'; }`
+        possiblyObfuscatedMessageKey = node.getString();
+        originalMessageKey = node.getOriginalName();
+        msgNode = node.getFirstChild();
+        jsDocInfo = node.getJSDocInfo();
+        break;
+
       default:
         return;
     }
