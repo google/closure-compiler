@@ -174,9 +174,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
     this.chunkOutputType = chunkOutputType;
   }
 
-  /**
-   * Return whether or not the given script node represents an ES6 module file.
-   */
+  /** Return whether or not the given script node represents an ES6 module file. */
   public static boolean isEs6ModuleRoot(Node scriptNode) {
     checkArgument(scriptNode.isScript(), scriptNode);
     if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
@@ -228,8 +226,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       }
 
       if (!renameTable.isEmpty()) {
-        NodeTraversal.traverse(
-            compiler, scriptNode, new Es6RenameReferences(renameTable, /* typesOnly= */ true));
+        NodeTraversal.traverse(compiler, scriptNode, new Es6RenameTypeReferences(renameTable));
       }
     }
 
