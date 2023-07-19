@@ -160,6 +160,9 @@ public final class JSDocSerializer {
     if (jsdoc.getSuppressions().contains("messageConventions")) {
       builder.addKind(JsdocTag.JSDOC_SUPPRESS_MESSAGE_CONVENTION);
     }
+    if (jsdoc.getSuppressions().contains("untranspilableFeatures")) {
+      builder.addKind(JsdocTag.JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES);
+    }
 
     OptimizationJsdoc result = builder.build();
     if (OptimizationJsdoc.getDefaultInstance().equals(result)) {
@@ -318,6 +321,15 @@ public final class JSDocSerializer {
         case JSDOC_SUPPRESS_MESSAGE_CONVENTION:
           suppressions = (suppressions != null ? suppressions : new TreeSet<>());
           suppressions.add("messageConventions");
+          continue;
+
+          // ReportUntranspilableFeatures pass will run in stage2 since it uses languageOut
+          // information. It reports diagnostic {@code UNTRANSPILABLE_FEATURE_PRESENT} that can be
+          // supppressed using `untranspilableFeatures` suppression tag.
+          // Hence we must propagate it.
+        case JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES:
+          suppressions = (suppressions != null ? suppressions : new TreeSet<>());
+          suppressions.add("untranspilableFeatures");
           continue;
 
         case JSDOC_FILEOVERVIEW:

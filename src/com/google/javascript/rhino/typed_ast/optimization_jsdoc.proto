@@ -73,4 +73,7 @@ enum JsdocTag {
 
   // Used to identify Sass generated css (.css.closure.js) files.
   JSDOC_SASS_GENERATED_CSS_TS = 34;
+
+  // Used to suppress warnings by ReportUntranspilableFeatures pass in stage2
+  JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES = 36;
 }
