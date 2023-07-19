@@ -45,6 +45,7 @@ import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
@@ -6440,9 +6441,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testLegacyGoogModule_isDeclaredPropertyOnParentNamespace() {
     processClosurePrimitives = true;
-    testSame(srcs("goog.module('a.b.c'); goog.module.declareLegacyNamespace(); MOD: 0;"));
+    testSame(srcs("goog.module('a.b.c'); goog.module.declareLegacyNamespace();"));
 
     assertThat(globalScope.getVar("a.b")).hasJSTypeThat().hasDeclaredProperty("c");
+  }
+
+  @Test
+  public void testLegacyGoogModule_addsJSDocToPropertyOnParentNamespace() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            lines(
+                "goog.module('a.b.c');",
+                "goog.module.declareLegacyNamespace();",
+                "/** @package */ exports = 0;")));
+
+    assertThat(globalScope.getVar("a.b")).hasJSTypeThat().hasDeclaredProperty("c");
+    ObjectType abType = globalScope.getVar("a.b").getType().toMaybeObjectType();
+    assertThat(abType.getPropertyJSDocInfo("c")).isNotNull();
+    assertThat(abType.getPropertyJSDocInfo("c").getVisibility())
+        .isEqualTo(JSDocInfo.Visibility.PACKAGE);
   }
 
   @Test

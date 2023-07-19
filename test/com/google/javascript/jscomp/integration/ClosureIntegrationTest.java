@@ -1487,4 +1487,53 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     checkUnexpectedErrorsOrWarnings(lastCompiler, 0);
   }
+
+  @Test
+  public void testFileoverviewVisibility_overridenOnLegacyGoogModuleExport() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setClosurePass(true);
+    options.setChecksOnly(true);
+    options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.ERROR);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(new TestExternsBuilder().addConsole().buildExternsFile("console.js"))
+            .build();
+
+    compile(
+        options,
+        ImmutableList.copyOf(
+            JSChunkGraphBuilder.forChain()
+                .setFilenameFormat("dir%s/f.js")
+                .addChunk(
+                    lines(
+                        "/**",
+                        " * @fileoverview",
+                        " * @package",
+                        " */",
+                        "goog.module('fileoverview.package.visibility.PublicFoo');",
+                        "goog.module.declareLegacyNamespace();",
+                        "",
+                        "class PublicFoo {",
+                        "  static protectedMethod() {}",
+                        "}",
+                        // Override the @protected @fileoverview visibility
+                        "/** @public */",
+                        "exports = PublicFoo;"))
+                .addChunk(
+                    lines(
+                        "goog.module('client');",
+                        "const PublicFoo ="
+                            + " goog.require('fileoverview.package.visibility.PublicFoo');",
+                        "console.log(PublicFoo); // this should be okay",
+                        "console.log(PublicFoo.protectedMethod()); // violates package visibility"))
+                .build()));
+
+    assertThat(lastCompiler.getWarnings()).isEmpty();
+    assertThat(lastCompiler.getErrors()).hasSize(1);
+    assertThat(lastCompiler.getErrors().get(0).getDescription())
+        .contains("Access to package-private property protectedMethod");
+  }
 }

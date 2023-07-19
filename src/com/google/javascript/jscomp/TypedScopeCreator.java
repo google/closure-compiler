@@ -871,6 +871,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /**
      * Declares goog.module.declareLegacyNamespace() names in the global scope and annotates the AST
      * with type information about module exports.
+     *
+     * <p>For example, given <code>
+     *   goog.module('a.b.Foo');
+     *   goog.module.declareLegacyNamespace();
+     *
+     *   exports = class Foo {};
+     *   </code> This function is responsible for declaring a global name `a.b.Foo` and giving it
+     * the type from `exports = class Foo {};`
      */
     private void finishDeclaringGoogModule() {
       if (this.getModule() == null || !this.getModule().metadata().isGoogModule()) {
@@ -894,12 +902,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           JSType parentType =
               currentScope.getGlobalScope().lookupQualifiedName(moduleNamespace.getOwner());
           if (parentType != null && parentType.toMaybeObjectType() != null) {
+            // Declare the namespace on the parent name, propagating any JSDoc annotations
+            // on "exports = Foo".
+            JSDocInfo typeDoc = NodeUtil.getBestJSDocInfo(exportsVar.getNameNode());
             declarePropertyIfNamespaceType(
                 parentType.toMaybeObjectType(),
                 exportsVar.getNameNode(),
                 moduleNamespace.getComponent(),
                 exportsVar.getType(),
-                exportsVar.getNameNode());
+                exportsVar.getNameNode(),
+                typeDoc);
           }
         }
         declareAliasTypeIfRvalueIsAliasable(
@@ -2828,7 +2840,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (!inferred) {
         ObjectType ownerType = getObjectSlot(ownerName);
         if (ownerType != null) {
-          declarePropertyIfNamespaceType(ownerType, ownerNode, propName, valueType, n);
+          declarePropertyIfNamespaceType(
+              ownerType, ownerNode, propName, valueType, n, /* jsdocInfo= */ null);
         }
 
         // this is a memory optimization: we don't need to declare .prototype props in the scope.
@@ -3095,7 +3108,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Node ownerNode,
         String propName,
         JSType valueType,
-        Node declarationNode) {
+        Node declarationNode,
+        @Nullable JSDocInfo jsdocInfo) {
       // Only declare this as an official property if it has not been
       // declared yet.
       if (ownerType.hasOwnProperty(propName) && !ownerType.isPropertyTypeInferred(propName)) {
@@ -3116,6 +3130,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (isNonNativeExtern || !ownerType.isInstanceType() || ownerNode.isThis()) {
         // If the property is undeclared or inferred, declare it now.
         ownerType.defineDeclaredProperty(propName, valueType, declarationNode);
+        ownerType.setPropertyJSDocInfo(propName, jsdocInfo);
       }
     }
   } // end AbstractScopeBuilder

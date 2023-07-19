@@ -23,6 +23,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -325,6 +326,7 @@ abstract class IntegrationTestCase {
                 .build()));
   }
 
+  @CanIgnoreReturnValue
   protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> modules) {
     Compiler compiler =
         useNoninjectingCompiler
