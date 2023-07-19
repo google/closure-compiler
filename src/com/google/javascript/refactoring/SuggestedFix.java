@@ -683,7 +683,13 @@ public final class SuggestedFix {
 
         // Add an alias to a naked require if allowed in this file.
         if (existingNode.isExprResult() && alias != null) {
-          Node newNode = IR.constNode(IR.name(alias), existingNode.getFirstChild().cloneTree());
+          Node newNode;
+          // Replace goog.forwardDeclare with the appropriate alternative
+          if (NodeUtil.isCallTo(existingNode.getFirstChild(), "goog.forwardDeclare")) {
+            newNode = createImportNode(importType, alias, namespace);
+          } else {
+            newNode = IR.constNode(IR.name(alias), existingNode.getFirstChild().cloneTree());
+          }
           replace(existingNode, newNode, m.getMetadata().getCompiler());
           scriptMetadata.addAlias(namespace, alias);
         }

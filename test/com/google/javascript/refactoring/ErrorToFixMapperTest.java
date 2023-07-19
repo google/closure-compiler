@@ -1801,6 +1801,42 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testGoogForwardDeclare_fixedToRequire() {
+    preexistingCode = "goog.provide('goog.dom.DomHelper');";
+    assertChanges(
+        lines(
+            "goog.module('module');",
+            "",
+            "goog.forwardDeclare('goog.dom.DomHelper');",
+            "",
+            "new goog.dom.DomHelper();"),
+        lines(
+            "goog.module('module');",
+            "",
+            "const DomHelper = goog.require('goog.dom.DomHelper');",
+            "",
+            "new DomHelper();"));
+  }
+
+  @Test
+  public void testGoogForwardDeclare_fixedToRequireType() {
+    preexistingCode = "goog.provide('goog.dom.DomHelper');";
+    assertChanges(
+        lines(
+            "goog.module('module');",
+            "",
+            "goog.forwardDeclare('goog.dom.DomHelper');",
+            "",
+            "function f(/** !goog.dom.DomHelper */ x) {}"),
+        lines(
+            "goog.module('module');",
+            "",
+            "const DomHelper = goog.requireType('goog.dom.DomHelper');",
+            "",
+            "function f(/** !DomHelper */ x) {}"));
+  }
+
+  @Test
   public void testShortRequireInGoogModule1() {
     assertChanges(
         lines(
