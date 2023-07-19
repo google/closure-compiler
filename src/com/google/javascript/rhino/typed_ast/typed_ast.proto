@@ -365,6 +365,7 @@ enum NodeProperty {
   // goog.module is desugared.
   GOOG_MODULE = 30;
   // Indicates that a SCRIPT represents a transpiled file
+  // TODO: b/279241038 Delete this prop as it's no longer used.
   TRANSPILED = 34;
   // For passes that work only on deleted funs.
   DELETED = 35;

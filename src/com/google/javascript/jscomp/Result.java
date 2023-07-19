@@ -20,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
 /** Compilation results */
@@ -38,7 +37,7 @@ public class Result {
   public final Map<String, Integer> cssNames;
   public final String externExport;
   public final String idGeneratorMap;
-  public final Set<SourceFile> transpiledFiles;
+  public final boolean transpiledFiles;
 
   Result(
       ImmutableList<JSError> errors,
@@ -52,7 +51,7 @@ public class Result {
       String externExport,
       @Nullable Map<String, Integer> cssNames,
       @Nullable String idGeneratorMap,
-      @Nullable Set<SourceFile> transpiledFiles) {
+      boolean transpiledFiles) {
     this.success = errors.isEmpty();
     this.errors = errors;
     this.warnings = warnings;
@@ -90,7 +89,7 @@ public class Result {
         externExport,
         /* cssNames= */ null,
         /* idGeneratorMap= */ null,
-        /* transpiledFiles= */ null);
+        /* transpiledFiles= */ false);
   }
 
   /**
@@ -115,6 +114,6 @@ public class Result {
         /* externExport= */ "",
         /* cssNames= */ null,
         /* idGeneratorMap= */ null,
-        /* transpiledFiles= */ null);
+        /* transpiledFiles= */ false);
   }
 }

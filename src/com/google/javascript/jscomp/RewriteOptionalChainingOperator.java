@@ -71,14 +71,7 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
         // Set the TmpVarNameCreator to be used when rewriting optional chains in this script.
         rewriterBuilder.setTmpVarNameCreator(getTmpVarNameCreatorForInput.apply(t.getInput()));
         FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-
-        if (scriptFeatures == null || scriptFeatures.contains(Feature.OPTIONAL_CHAINING)) {
-          // if we've decided to transpile this script, mark the script as transpiled
-          n.putBooleanProp(Node.TRANSPILED, true);
-          return true;
-        } else {
-          return false;
-        }
+        return scriptFeatures == null || scriptFeatures.contains(Feature.OPTIONAL_CHAINING);
       }
       return true;
     }

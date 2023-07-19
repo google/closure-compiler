@@ -49,13 +49,7 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-      if (scriptFeatures == null || scriptFeatures.contains(Feature.NULL_COALESCE_OP)) {
-        // if we've decided to transpile this script, mark the script as transpiled
-        n.putBooleanProp(Node.TRANSPILED, true);
-        return true;
-      } else {
-        return false;
-      }
+      return scriptFeatures == null || scriptFeatures.contains(Feature.NULL_COALESCE_OP);
     }
     return true;
   }

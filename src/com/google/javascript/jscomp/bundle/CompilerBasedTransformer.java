@@ -112,7 +112,7 @@ public abstract class CompilerBasedTransformer implements Source.Transformer {
     }
 
     public boolean transformed(Result result) {
-      return !result.transpiledFiles.isEmpty();
+      return result.transpiledFiles;
     }
 
     public String runtime(String library) {

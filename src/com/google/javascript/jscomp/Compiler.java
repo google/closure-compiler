@@ -1253,8 +1253,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  private void markTranspiledFiles() {
+    // note whether any script will get transpiled
+    for (Node child = jsRoot.getFirstChild(); child != null; child = child.getNext()) {
+      checkState(child.isScript());
+      FeatureSet featureSet = NodeUtil.getFeatureSetOfScript(child);
+      if (!this.options.getOutputFeatureSet().contains(featureSet)) {
+        this.setTranspiledFiles(true);
+        return; // marked atleast 1 script that needs tranpile
+      }
+    }
+  }
+
   public void transpileAndDontCheck() {
     Tracer t = newTracer("runTranspileOnlyPasses");
+    markTranspiledFiles();
     try {
       for (PassFactory pf : getPassConfig().getTranspileOnlyPasses().build()) {
         if (hasErrors()) {
@@ -1522,16 +1535,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Returns the result of the compilation. */
   public Result getResult() {
-    Set<SourceFile> transpiledFiles = new HashSet<>();
-    if (jsRoot != null) {
-      for (Node scriptNode = jsRoot.getFirstChild();
-          scriptNode != null;
-          scriptNode = scriptNode.getNext()) {
-        if (scriptNode.getBooleanProp(Node.TRANSPILED)) {
-          transpiledFiles.add(getSourceFileByName(scriptNode.getSourceFileName()));
-        }
-      }
-    }
     return new Result(
         getErrors(),
         getWarnings(),
@@ -1544,7 +1547,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         this.externExports,
         this.cssNames,
         this.idGeneratorMap,
-        transpiledFiles);
+        this.transpiledFiles);
   }
 
   /** Returns the list of errors (never null). */
@@ -2956,6 +2959,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
+    // note whether any script gets transpiled
+    markTranspiledFiles();
+
     phaseOptimizer = createPhaseOptimizer();
     phaseOptimizer.consume(optimizations);
     phaseOptimizer.process(externsRoot, jsRoot);
@@ -3522,6 +3528,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Id generator map */
   private @Nullable String idGeneratorMap = null;
 
+  /** Did any source file need any feature transpiled */
+  private boolean transpiledFiles = false;
+
   /** Names exported by goog.exportSymbol. */
   private final LinkedHashSet<String> exportedNames = new LinkedHashSet<>();
 
@@ -3556,6 +3565,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void setIdGeneratorMap(String serializedIdMappings) {
     this.idGeneratorMap = serializedIdMappings;
+  }
+
+  @Override
+  public boolean getTranspiledFiles() {
+    return this.transpiledFiles;
+  }
+
+  public void setTranspiledFiles(boolean transpiledFiles) {
+    this.transpiledFiles = transpiledFiles;
   }
 
   @Override
@@ -3944,6 +3962,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final LinkedHashSet<String> exportedNames;
     private final LinkedHashMap<String, Integer> cssNames;
     private final String idGeneratorMap;
+    private final boolean transpiledFiles;
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
     private final ImmutableList<InputId> externs;
@@ -3966,6 +3985,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.exportedNames = compiler.exportedNames;
       this.cssNames = compiler.cssNames;
       this.idGeneratorMap = compiler.idGeneratorMap;
+      this.transpiledFiles = compiler.transpiledFiles;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.runJ2clPasses = compiler.runJ2clPasses;
       this.externs =
@@ -4008,6 +4028,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     propertyMap = null;
     stringMap = compilerState.stringMap;
     idGeneratorMap = compilerState.idGeneratorMap;
+    transpiledFiles = compilerState.transpiledFiles;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
 

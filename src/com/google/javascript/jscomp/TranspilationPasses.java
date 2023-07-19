@@ -449,7 +449,6 @@ public class TranspilationPasses {
       // added to that file by other transpilation passes.
       if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
         for (NodeTraversal.Callback callback : callbacks) {
-          singleRoot.putBooleanProp(Node.TRANSPILED, true);
           NodeTraversal.traverse(compiler, singleRoot, callback);
         }
       }

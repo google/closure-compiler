@@ -137,6 +137,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Sets the id generator for cross-module motion. */
   public abstract void setIdGeneratorMap(String serializedIdMappings);
 
+  /** Gets whether any file needed to transpile any feature */
+  public abstract boolean getTranspiledFiles();
+
   /** Gets the id generator for cross-module motion. */
   public abstract IdGenerator getCrossModuleIdGenerator();
 

@@ -54,8 +54,6 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       if (Es6RewriteModules.isEs6ModuleRoot(script)) {
         NodeTraversal.traverse(compiler, script, new Rewriter(compiler, script));
-        // if we've decided to transpile this script, mark the script as transpiled
-        script.putBooleanProp(Node.TRANSPILED, true);
       }
     }
     compiler.markFeatureNotAllowed(Feature.MODULES);

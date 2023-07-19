@@ -142,7 +142,7 @@ public final class BaseTranspiler implements Transpiler {
           // impossible, and not a big deal even if it did happen.
         }
       }
-      boolean transpiled = !result.transpiledFiles.isEmpty();
+      boolean transpiled = result.transpiledFiles;
       if (!result.errors.isEmpty()) {
         throw new TranspilationException(compiler, result.errors, result.warnings);
       }

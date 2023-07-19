@@ -61,10 +61,6 @@ public final class Es7RewriteExponentialOperator implements NodeTraversal.Callba
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
       boolean shouldTraverse =
           scriptFeatures == null || scriptFeatures.contains(Feature.EXPONENT_OP);
-      if (shouldTraverse) {
-        // if we've decided to transpile this script, mark the script as transpiled
-        n.putBooleanProp(Node.TRANSPILED, true);
-      }
       return shouldTraverse;
     }
     return true;

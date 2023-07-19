@@ -210,20 +210,14 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
    * are meant to import ES6 modules and rewrites them.
    */
   private class RewriteRequiresForEs6Modules extends AbstractPostOrderCallback {
-    private boolean transpiled = false;
     // An (s, old, new) entry indicates that occurrences of `old` in scope `s` should be rewritten
     // as `new`. This is used to rewrite namespaces that appear in calls to goog.requireType and
     // goog.forwardDeclare.
     private Table<Node, String, String> renameTable;
 
     void rewrite(Node scriptNode) {
-      transpiled = false;
       renameTable = HashBasedTable.create();
       NodeTraversal.traverse(compiler, scriptNode, this);
-
-      if (transpiled) {
-        scriptNode.putBooleanProp(Node.TRANSPILED, true);
-      }
 
       if (!renameTable.isEmpty()) {
         NodeTraversal.traverse(compiler, scriptNode, new Es6RenameTypeReferences(renameTable));
@@ -380,8 +374,6 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         }
         t.reportCodeChange();
       }
-
-      transpiled = true;
     }
   }
 
@@ -393,7 +385,6 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       new RewriteRequiresForEs6Modules().rewrite(n);
       if (isEs6ModuleRoot(n)) {
         clearPerFileState();
-        n.putBooleanProp(Node.TRANSPILED, true);
       } else {
         return false;
       }
