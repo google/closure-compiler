@@ -35,7 +35,11 @@ AbortSignal.prototype.aborted;
 /** @type {?function(!Event)} */
 AbortSignal.prototype.onabort;
 
+/** @type {*} */
+AbortSignal.prototype.reason;
 
+/** @return {void} */
+AbortSignal.prototype.throwIfAborted = function() {};
 
 /**
  * @constructor
@@ -46,5 +50,8 @@ function AbortController() {}
 /** @const {!AbortSignal} */
 AbortController.prototype.signal;
 
-/** @return {void} */
-AbortController.prototype.abort = function() {};
+/**
+ * @param {*=} reason
+ * @return {void}
+ */
+AbortController.prototype.abort = function(reason) {};
