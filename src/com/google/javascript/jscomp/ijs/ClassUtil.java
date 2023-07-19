@@ -35,13 +35,21 @@ final class ClassUtil {
 
   private static final QualifiedName GOOG_DEFINECLASS = QualifiedName.of("goog.defineClass");
 
-  static boolean isThisProp(Node getprop) {
-    return getClassNameOfThisProp(getprop) != null;
+  /**
+   * Return whether the given node represents a GETPROP with a first child THIS inside a named
+   * class.
+   */
+  static boolean isThisPropInsideClassWithName(Node maybeGetProp) {
+    return getClassNameOfThisProp(maybeGetProp) != null;
   }
 
-  static String getPrototypeNameOfThisProp(Node getprop) {
-    String className = checkNotNull(getClassNameOfThisProp(getprop));
-    return className + ".prototype." + getprop.getString();
+  /**
+   * Return the fully qualified name of a this.property inside a constructor. This method called
+   * should only be called if `isThisPropInsideClassWithName` returns true.
+   */
+  static String getFullyQualifiedNameOfThisProp(Node getProp) {
+    String className = checkNotNull(getClassNameOfThisProp(getProp));
+    return className + ".prototype." + getProp.getString();
   }
 
   private static @Nullable String getClassNameOfThisProp(Node getprop) {

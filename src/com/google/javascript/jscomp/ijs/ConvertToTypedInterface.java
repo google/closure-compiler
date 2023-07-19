@@ -176,7 +176,7 @@ public class ConvertToTypedInterface implements CompilerPass {
               Node lhs = expr.getFirstChild();
               if (!lhs.isQualifiedName()
                   || (lhs.isName() && !t.inGlobalScope() && !t.inModuleScope())
-                  || (!ClassUtil.isThisProp(lhs)
+                  || (!ClassUtil.isThisPropInsideClassWithName(lhs)
                       && !t.inGlobalHoistScope()
                       && !t.inModuleHoistScope())) {
                 NodeUtil.deleteNode(n, t.getCompiler());
@@ -360,7 +360,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       JSDocInfo originalJsdoc = jsdocNode.getJSDocInfo();
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
       JSDocInfo newJsdoc = JsdocUtil.getJSDocForRhs(rhs, originalJsdoc);
-      if (newJsdoc == null && ClassUtil.isThisProp(nameNode)) {
+      if (newJsdoc == null && ClassUtil.isThisPropInsideClassWithName(nameNode)) {
         Var decl = findNameDeclaration(t.getScope(), rhs);
         newJsdoc = JsdocUtil.getJSDocForName(decl, originalJsdoc);
       }

@@ -58,8 +58,8 @@ abstract class PotentialDeclaration {
   static PotentialDeclaration fromName(Node nameNode) {
     checkArgument(nameNode.isQualifiedName(), nameNode);
     Node rhs = NodeUtil.getRValueOfLValue(nameNode);
-    if (ClassUtil.isThisProp(nameNode)) {
-      String name = ClassUtil.getPrototypeNameOfThisProp(nameNode);
+    if (ClassUtil.isThisPropInsideClassWithName(nameNode)) {
+      String name = ClassUtil.getFullyQualifiedNameOfThisProp(nameNode);
       return new ThisPropDeclaration(name, nameNode, rhs);
     }
     return new NameDeclaration(nameNode.getQualifiedName(), nameNode, rhs);
@@ -678,7 +678,7 @@ abstract class PotentialDeclaration {
   }
 
   static boolean isAliasDeclaration(Node lhs, @Nullable Node rhs) {
-    return !ClassUtil.isThisProp(lhs)
+    return !ClassUtil.isThisPropInsideClassWithName(lhs)
         && isConstToBeInferred(lhs)
         && rhs != null
         && isQualifiedAliasExpression(rhs);
