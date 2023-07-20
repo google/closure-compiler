@@ -29,7 +29,7 @@ import org.jspecify.nullness.Nullable;
  * declaration for which there is no declared type and an RHS is present. This is useful for giving
  * warnings like the CONSTANT_WITHOUT_EXPLICIT_TYPE diagnostic.
  *
- * As a side effect, this callback also populates the given FileInfo (assumed empty) with all of
+ * <p>As a side effect, this callback also populates the given FileInfo (assumed empty) with all of
  * the declarations found throughout the compilation.
  */
 abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrderCallback {
@@ -52,6 +52,12 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
         if (NodeUtil.isStatementParent(parent)) {
           currentFile.recordNameDeclaration(n.getFirstChild());
         }
+        break;
+      case MEMBER_FIELD_DEF:
+        if (NodeUtil.getRValueOfLValue(n) != null) {
+          processDeclarationWithRhs(t, n);
+        }
+        currentFile.recordMemberFieldDef(n);
         break;
       case FUNCTION:
         if (NodeUtil.isStatementParent(parent)) {
@@ -130,7 +136,7 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
   }
 
   private void processDeclarationWithRhs(NodeTraversal t, Node lhs) {
-    checkArgument(lhs.isQualifiedName() || lhs.isStringKey(), lhs);
+    checkArgument(lhs.isQualifiedName() || lhs.isStringKey() || lhs.isMemberFieldDef(), lhs);
     checkState(NodeUtil.getRValueOfLValue(lhs) != null, lhs);
     if (PotentialDeclaration.isConstToBeInferred(lhs)) {
       processConstWithRhs(t, lhs);

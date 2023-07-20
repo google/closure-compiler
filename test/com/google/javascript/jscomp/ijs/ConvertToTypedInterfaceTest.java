@@ -69,6 +69,307 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEmptyClass() {
+    test("class x {;}", "class x {}");
+  }
+
+  @Test
+  public void testSuperClassFields() {
+    test(
+        lines(
+            "class First{", //
+            "  /** @const {number} */ fromFirst;",
+            "  constructor() {",
+            "    this.fromFirst = 1;",
+            "  };",
+            "};",
+            "class Second extends First {", //
+            "   /** @const {number} */ fromSecond;",
+            "  constructor() {",
+            "    super();",
+            "    /** @override */this.fromFirst = 7;",
+            "    this.fromSecond = 5;",
+            "  };",
+            "};"),
+        lines(
+            "class First {", //
+            "  /** @const {number} */ fromFirst;",
+            "  constructor() {",
+            "  }",
+            "}",
+            "class Second extends First {", //
+            "   /** @const {number} */ fromSecond;",
+            "  constructor() {",
+            "  }",
+            "}",
+            " /** @override */ Second.prototype.fromFirst;"));
+  }
+
+  @Test
+  public void testThisAssignment() {
+    // When a public field is created and assigned with a constructor, we only care about the
+    // declaration.
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ unique;",
+            "  constructor() {",
+            "    this.unique = 5;",
+            "   }",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  /** @const {number}*/ unique;",
+            "  constructor() {",
+            "  }",
+            "}"));
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ fieldOne;",
+            "  /** @const {boolean} */ fieldTwo;",
+            "  /** @const {string} */ fieldThree;",
+            "  constructor() {",
+            "    this.fieldOne = 1;",
+            "    this.fieldTwo = true",
+            "    this.fieldThree = 'three'",
+            "   }",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ fieldOne;",
+            "  /** @const {boolean} */ fieldTwo;",
+            "  /** @const {string} */ fieldThree;",
+            "  constructor() {",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ fieldOne;",
+            "  /** @const {boolean} */ fieldTwo;",
+            "  /** @const {string} */ fieldThree;",
+            "  constructor(x,y,z) {",
+            "    this.fieldOne = x;",
+            "    this.fieldTwo = y",
+            "    this.fieldThree = z",
+            "   }",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ fieldOne;",
+            "  /** @const {boolean} */ fieldTwo;",
+            "  /** @const {string} */ fieldThree;",
+            "  constructor(x,y,z) {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testPrototypeDeclared() {
+    // When the prototype is declared, we only care about the initial declaration for public fields.
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */sameField = 10;",
+            "}",
+            "Foo.prototype.sameField = 8;"),
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ sameField;",
+            "}"));
+  }
+
+  @Test
+  public void testThisAndPrototype() {
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const @type {number} */sameField = 10;",
+            "  constructor() {",
+            "    this.sameField = 5;",
+            "   }",
+            "}",
+            "Foo.prototype.sameField = 8;"),
+        lines(
+            "class Foo {", //
+            "  /** @const @type {number} */ sameField;",
+            "  constructor() {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testComputedFieldDef() {
+    // Computed Field Def's are unanalyzable to the compiler so they will be dropped.
+    test(
+        lines(
+            "const PREFIX = 'prefix';", //
+            "/** @unrestricted*/ class Foo {",
+            "  [`${PREFIX}Field`] = 'prefixed field';",
+            "}"),
+        lines(
+            " /** @const @type {string} */", //
+            "var PREFIX;",
+            "/** @unrestricted*/ class Foo {",
+            "}"));
+    test(
+        lines(
+            "/** @unrestricted*/ class Foo {", //
+            "  [Math.random()] = 'gone';",
+            "}"),
+        lines(
+            "/** @unrestricted*/ class Foo {", //
+            "}"));
+  }
+
+  @Test
+  public void testJSDocMemberFieldDef() {
+    // Add type if not present
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const  */ myField = 5;",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  /** @const {number} */ myField;",
+            "}"));
+    // If no JSdoc present, set to UnusableType
+    test(
+        lines(
+            "class Foo {", //
+            "  myField = 5;",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  /** @const @type {UnusableType} */ myField;",
+            "}"));
+  }
+
+  @Test
+  public void testStaticMemberFieldDef() {
+    // check that static remains in the declaration even when the assignment is removed
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const @type {number}*/ static myField = 5;",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  /** @const @type {number}*/ static myField;",
+            "}"));
+  }
+
+  @Test
+  public void testUpdatingStaticField() {
+    // Updating the static field should not be included in i.js
+    test(
+        lines(
+            "class Foo {", //
+            "  /** @const {number}*/static myField = 1;",
+            "}",
+            "Foo.myField = 2;"),
+        lines(
+            "class Foo {", //
+            "  /** @const {number}*/static myField;",
+            "}"));
+  }
+
+  @Test
+  public void testThisInFieldInitializer() {
+    test(
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ baseField = 'base field';",
+            "  /** @const @type {string}*/anotherBaseField = this.baseField;",
+            "}"),
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ baseField;",
+            "  /** @const @type {string}*/ anotherBaseField;",
+            "}"));
+    test(
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ static fieldOne = 'I am static';",
+            "  /** @const @type {string}*/ static fieldTwo = this.fieldOne;",
+            "}"),
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ static fieldOne;",
+            "  /** @const @type {string}*/ static fieldTwo;",
+            "}"));
+
+    test(
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ static fieldStatic = 'I am static';",
+            "  /** @const @type {string}*/ instanceField = this.fieldStatic;",
+            "}"),
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ static fieldStatic;",
+            "  /** @const @type {string}*/ instanceField;",
+            "}"));
+  }
+
+  @Test
+  public void testSameFieldNameInDifferentClass() {
+    test(
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ sameField;",
+            "}",
+            "class Foo {",
+            "  constructor() {", //
+            "    /** @const {number}*/ this.sameField;",
+            "  }",
+            "}"),
+        lines(
+            "class Base {", //
+            "   /** @const @type {string}*/ sameField;", //
+            "}",
+            "class Foo {",
+            "  constructor(){",
+            "  }",
+            "}",
+            "/** @const {number}*/ Foo.prototype.sameField"));
+  }
+
+  @Test
+  public void testSameFieldDeclared() {
+    // If the one of the duplicated fields contains type annotation, we will keep that one.
+    test(
+        lines(
+            "class Base {", //
+            "  sameField;",
+            "  /** @const @type {string}*/ sameField = 'first';",
+            "}"),
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ sameField",
+            "}"));
+
+    test(
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ sameField = 'first';",
+            "}",
+            "class Foo {",
+            "  /** @const {number}*/ sameField = 3;",
+            "}"),
+        lines(
+            "class Base {", //
+            "  /** @const @type {string}*/ sameField",
+            "}",
+            "class Foo {", //
+            " /** @const @type {number}*/ sameField",
+            "}"));
+  }
+
+  @Test
   public void testSimpleConstJsdocPropagation() {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = 5n;", "/** @const {bigint} */ var x;");
@@ -144,7 +445,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testThisPropertiesInConstructors() {
     test(
         "/** @constructor */ function Foo() { /** @const {number} */ this.x; }",
-        "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
+        "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x");
 
     test(
         "/** @constructor */ function Foo() { this.x = undefined; }",
@@ -1811,6 +2112,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   @Test
   public void testAnonymousClassDoesntCrash() {
+    test("fooFactory(class { x = 5; });", "");
+
+    test("fooFactory(class { x; constructor() { this.x = 5} });", "");
+
+    test(
+        "let Foo = fooFactory(class { x; constructor() { this.x = 5;} });", //
+        "/** @const {UnusableType} */ var Foo;");
+
     test(
         "let Foo = fooFactory(class { constructor() {} });",
         "/** @const {UnusableType} */ var Foo;");

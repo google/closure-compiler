@@ -161,6 +161,13 @@ public class ConvertToTypedInterface implements CompilerPass {
             }
           }
           return true;
+        case MEMBER_FIELD_DEF:
+          if (ClassUtil.isMemberFieldDefInsideClassWithName(n)) {
+            return true;
+          }
+          // We will remove fields in anonymous classes
+          NodeUtil.deleteNode(n, t.getCompiler());
+          return false;
         case EXPR_RESULT:
           Node expr = n.getFirstChild();
           switch (expr.getToken()) {
@@ -194,6 +201,7 @@ public class ConvertToTypedInterface implements CompilerPass {
               return false;
           }
         case COMPUTED_PROP:
+        case COMPUTED_FIELD_DEF:
           if (!NodeUtil.isLhsByDestructuring(n.getSecondChild())) {
             NodeUtil.deleteNode(n, t.getCompiler());
           }
@@ -354,7 +362,10 @@ public class ConvertToTypedInterface implements CompilerPass {
     @Override
     protected void processConstWithRhs(NodeTraversal t, Node nameNode) {
       checkArgument(
-          nameNode.isQualifiedName() || nameNode.isStringKey() || nameNode.isDestructuringLhs(),
+          nameNode.isQualifiedName()
+              || nameNode.isStringKey()
+              || nameNode.isDestructuringLhs()
+              || nameNode.isMemberFieldDef(),
           nameNode);
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo originalJsdoc = jsdocNode.getJSDocInfo();
@@ -466,10 +477,27 @@ public class ConvertToTypedInterface implements CompilerPass {
       checkArgument(isClass(n));
       for (Node member = n.getLastChild().getFirstChild(); member != null; ) {
         Node next = member.getNext();
-        if (member.isEmpty()) {
-          NodeUtil.deleteNode(member, compiler);
-        } else {
-          processFunction(member.getLastChild());
+        switch (member.getToken()) {
+            // MEMBER_FIELD_DEF's are handled in ProcessConstJsdocCallback which is called in the
+            // traversal by its subclass PropogateConstJsdoc.
+            // If no jsdoc is present on the MEMBER_FIELD_DEF, we will be add a Jsdoc in
+            // `setUndeclaredToUnusableType()`.
+            // No further simplification is needed for MEMBER_FIELD_DEF's when we call
+            // `simplifyAll()` so we will break.
+          case MEMBER_FIELD_DEF:
+            break;
+          case EMPTY:
+            // a lonely `;` in a class body can just be deleted.
+            NodeUtil.deleteNode(member, compiler);
+            break;
+          case MEMBER_FUNCTION_DEF:
+          case STRING_KEY: // inside goog.defineClass
+          case GETTER_DEF:
+          case SETTER_DEF:
+            processFunction(member.getLastChild());
+            break;
+          default:
+            throw new AssertionError(member.getToken() + " should not be handled by processClass");
         }
         member = next;
       }
@@ -519,6 +547,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       // This looks like an update rather than a declaration in this file.
       return !name.startsWith("this.")
           && !decl.isDefiniteDeclaration(compiler)
+          && !decl.getLhs().isMemberFieldDef()
           && !currentFile.isPrefixProvided(name)
           && !currentFile.isStrictPrefixDeclared(name);
     }

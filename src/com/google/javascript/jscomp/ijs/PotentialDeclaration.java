@@ -65,6 +65,14 @@ abstract class PotentialDeclaration {
     return new NameDeclaration(nameNode.getQualifiedName(), nameNode, rhs);
   }
 
+  static PotentialDeclaration fromMemberFieldDef(Node fieldNode) {
+    checkArgument(fieldNode.isMemberFieldDef());
+    Node rhs = NodeUtil.getRValueOfLValue(fieldNode);
+    String name = ClassUtil.getFullyQualifiedNameOfMemberFieldDef(fieldNode);
+    // lhs is MEMBER_FIELD_DEF  rhs is the value assigned to the field if any.
+    return new MemberFieldDeclaration(name, fieldNode, rhs);
+  }
+
   static PotentialDeclaration fromMethod(Node functionNode) {
     checkArgument(ClassUtil.isClassMethod(functionNode));
     String name = ClassUtil.getFullyQualifiedNameOfMethod(functionNode);
@@ -102,13 +110,11 @@ abstract class PotentialDeclaration {
     return lhs;
   }
 
-  @Nullable
-  Node getRhs() {
+  @Nullable Node getRhs() {
     return rhs;
   }
 
-  @Nullable
-  JSDocInfo getJsDoc() {
+  @Nullable JSDocInfo getJsDoc() {
     return NodeUtil.getBestJSDocInfo(lhs);
   }
 
@@ -406,6 +412,25 @@ abstract class PotentialDeclaration {
 
     @Override
     void simplify(AbstractCompiler compiler) {}
+
+    @Override
+    Node getRemovableNode() {
+      return getLhs();
+    }
+  }
+
+  private static class MemberFieldDeclaration extends PotentialDeclaration {
+    MemberFieldDeclaration(@Nullable String name, Node lhs, Node rhs) {
+      super(name, lhs, rhs);
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      Node rhs = getRhs();
+      if (rhs != null) {
+        NodeUtil.deleteNode(rhs, compiler);
+      }
+    }
 
     @Override
     Node getRemovableNode() {

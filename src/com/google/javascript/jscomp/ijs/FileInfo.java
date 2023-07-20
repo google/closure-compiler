@@ -23,9 +23,7 @@ import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Class to keep track of what has been seen so far in a given file.
- */
+/** Class to keep track of what has been seen so far in a given file. */
 final class FileInfo {
   private final Set<String> providedNamespaces = new HashSet<>();
   private final Set<String> requiredLocalNames = new HashSet<>();
@@ -34,6 +32,10 @@ final class FileInfo {
 
   void recordNameDeclaration(Node qualifiedNameNode) {
     recordDeclaration(PotentialDeclaration.fromName(qualifiedNameNode));
+  }
+
+  void recordMemberFieldDef(Node fieldNode) {
+    recordDeclaration(PotentialDeclaration.fromMemberFieldDef(fieldNode));
   }
 
   void recordMethod(Node functionNode) {
