@@ -3540,10 +3540,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void defineMemberField(Node n) {
       Node rhs = n.getLastChild();
       JSType declaredType = getDeclaredType(n.getJSDocInfo(), n, rhs, null);
+      // When there's no JSDoc type declaration for a field:
+      // If we can infer a type other than UNKNOWN for an initial value, use that as the field type
+      // Otherwise, set the field's type to the ALL type ('*')
       if (declaredType == null) {
         JSType rhsType = rhs == null ? null : super.getDeclaredRValueType(null, rhs);
-        checkState(rhsType == null || !rhsType.isUnknownType());
-        declaredType = rhsType != null ? rhsType : getNativeType(JSTypeNative.ALL_TYPE);
+        declaredType =
+            rhsType != null && !rhsType.isUnknownType()
+                ? rhsType
+                : getNativeType(JSTypeNative.ALL_TYPE);
       }
 
       ObjectType ownerType = determineOwnerTypeForClassMember(n);

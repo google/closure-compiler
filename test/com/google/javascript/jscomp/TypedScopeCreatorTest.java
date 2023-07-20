@@ -3245,9 +3245,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  /** @type {symbol|undefined} */",
             "  b;",
             "  c = 0;",
-            "  d;",
             "  /** @type {string|null} */",
-            "  e = null;",
+            "  d = null;",
             "}"));
 
     FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
@@ -3263,10 +3262,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(fooInstance.getPropertyType("c")).isNumber();
 
     assertThat(fooInstance.hasOwnDeclaredProperty("d")).isTrue();
-    assertType(fooInstance.getPropertyType("d")).toStringIsEqualTo("*");
-
-    assertThat(fooInstance.hasOwnDeclaredProperty("e")).isTrue();
-    assertType(fooInstance.getPropertyType("e")).toStringIsEqualTo("(null|string)");
+    assertType(fooInstance.getPropertyType("d")).toStringIsEqualTo("(null|string)");
   }
 
   @Test
@@ -3300,6 +3296,35 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(fooInstance.hasOwnDeclaredProperty("c")).isFalse();
     assertThat(barInstance.hasOwnDeclaredProperty("c")).isTrue();
     assertType(barInstance.getPropertyType("c")).isNumber();
+  }
+
+  // When there is no JSDoc type declaration for a field, and the RHS is uninferrable or unknown,
+  // the field's type is set to the ALL type ('*')
+  @Test
+  public void testPublicFieldWithUnknownTypeCast() {
+    testSame(
+        lines(
+            "class Bar {", //
+            "  x = /** @type {?} */ ({});",
+            "}"));
+    FunctionType barCtor = globalScope.getVar("Bar").getType().assertFunctionType();
+    ObjectType barInstance = barCtor.getInstanceType();
+    assertThat(barInstance.hasOwnDeclaredProperty("x")).isTrue();
+    assertType(barInstance.getPropertyType("x")).toStringIsEqualTo("*");
+
+    testSame("class Foo { x; }");
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    ObjectType fooInstance = fooCtor.getInstanceType();
+    assertThat(fooInstance.hasOwnDeclaredProperty("x")).isTrue();
+    assertType(fooInstance.getPropertyType("x")).toStringIsEqualTo("*");
+  }
+
+  @Test
+  public void testStaticFieldWithUnknownTypeCast() {
+    testSame("class Drum { static y = /** @type {?} */ (5); }");
+    FunctionType drumCtor = globalScope.getVar("Drum").getType().assertFunctionType();
+    assertThat(drumCtor.hasOwnDeclaredProperty("y")).isTrue();
+    assertType(drumCtor.getPropertyType("y")).toStringIsEqualTo("*");
   }
 
   @Test
