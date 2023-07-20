@@ -260,10 +260,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Run this pass before any pass tries to inject new runtime libraries
     checks.maybeAdd(addSyntheticScript);
 
-    if (!options.checksOnly) {
-      checks.maybeAdd(reportUntranspilableFeatures);
-    }
-
     checks.maybeAdd(gatherGettersAndSetters);
 
     if (options.getLanguageIn().toFeatureSet().contains(Feature.DYNAMIC_IMPORT)
@@ -511,6 +507,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
     if (options.isPropertyRenamingOnlyCompilationMode()) {
+      passes.maybeAdd(reportUntranspilableFeatures);
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
       passes.maybeAdd(closureProvidesRequires);
       passes.maybeAdd(processDefinesOptimize);
@@ -553,6 +550,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clPass);
     }
+
+    passes.maybeAdd(reportUntranspilableFeatures);
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
