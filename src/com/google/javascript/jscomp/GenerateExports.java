@@ -234,7 +234,8 @@ public class GenerateExports implements CompilerPass {
     boolean isEs5StylePrototypeAssignment = false; // If this is a prototype property
     String propertyName = null;
 
-    if (context.getFirstChild().isGetProp()) { // e.g. `/** @export */ a.prototype.b = obj;`
+    Node child = context.getFirstChild();
+    if (child != null && child.isGetProp()) { // e.g. `/** @export */ a.prototype.b = obj;`
       Node node = context.getFirstChild(); // e.g. get `a.prototype.b`
       Node ownerNode = node.getFirstChild(); // e.g. get `a.prototype`
       methodOwnerName = ownerNode.getQualifiedName(); // e.g. get the string "a.prototype"
@@ -262,7 +263,7 @@ public class GenerateExports implements CompilerPass {
 
   private void addExportPropertyCall(
       String methodOwnerName, Node context, String export, String propertyName) {
-    // exportProperty(object, publicName, symbol);
+    // JS output: exportProperty(object, publicName, symbol);
     checkNotNull(methodOwnerName);
     Node call =
         IR.call(
@@ -283,7 +284,7 @@ public class GenerateExports implements CompilerPass {
   }
 
   private void addExportSymbolCall(String export, Node context) {
-    // exportSymbol(publicPath, object);
+    // JS output: exportSymbol(publicPath, object);
     recordExportSymbol(export);
 
     Node call =

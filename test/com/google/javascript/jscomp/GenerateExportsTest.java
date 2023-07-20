@@ -135,6 +135,52 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExportPublicField() {
+    allowExternsChanges();
+    String code = "class Foo { /** @export */ FIELD; }";
+    testSame(code);
+    testExternChanges(srcs(code), expected("Object.prototype.FIELD"));
+
+    code = "class Bar { /** @export */ MSG = 'str'; }";
+    testSame(code);
+    testExternChanges(srcs(code), expected("Object.prototype.MSG"));
+  }
+
+  @Test
+  public void testExportAnonymousClassPublicField() {
+    allowExternsChanges();
+    String code = "foo(class { /** @export */ x = 4; });";
+    testSame(code);
+    testExternChanges(srcs(code), expected("Object.prototype.x"));
+  }
+
+  @Test
+  public void testExportDeclaredClassPrototypeProperty() {
+    test(
+        "class Foo {} /** @export */ Foo.prototype.x = 3;",
+        lines(
+            "class Foo {}",
+            "/** @export */",
+            "Foo.prototype.x = 3;",
+            "goog.exportProperty(Foo.prototype, 'x', Foo.prototype.x);"));
+  }
+
+  @Test
+  public void testExportConstructorProperty() {
+    allowExternsChanges();
+    String code =
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @export */",
+            "    this.x = 3;",
+            "  }",
+            "}");
+    testSame(code);
+    testExternChanges(srcs(code), expected("Object.prototype.x;"));
+  }
+
+  @Test
   public void testNoExport() {
     test("var FOO = 5", "var FOO=5");
   }
@@ -225,7 +271,9 @@ public final class GenerateExportsTest extends CompilerTestCase {
   @Test
   public void testExportEs6ClassProperty() {
     test(
-        lines("/** @export */ G = class {};", "/** @export */ G.foo = class {};"),
+        lines(
+            "/** @export */ G = class {};", //
+            "/** @export */ G.foo = class {};"),
         lines(
             "/** @export */ G = class {};",
             "goog.exportSymbol('G', G);",
@@ -377,6 +425,86 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExportPublicStaticField() {
+    test(
+        lines(
+            "class G {", //
+            "  /** @export */ static x = 3;",
+            "}"),
+        "class G { /** @export */ static x = 3; } goog.exportSymbol('G.x', G.x);");
+
+    test(
+        lines(
+            "const G = class {", //
+            "  /** @export */ static x;",
+            "};"),
+        "const G = class { /** @export */ static x; }; goog.exportSymbol('G.x', G.x);");
+
+    test(
+        lines(
+            "const G = class localOnlyName {", //
+            "  /** @export */ static x;",
+            "};"),
+        lines(
+            "const G = class localOnlyName {",
+            "  /** @export */ static x;",
+            "};",
+            "goog.exportSymbol('G.x', G.x);"));
+
+    test(
+        lines(
+            "let ns = {};", //
+            "ns = class Bar {",
+            "  /** @export */ static x;",
+            "};"),
+        lines(
+            "let ns = {};",
+            "ns = class Bar {",
+            "  /** @export */ static x;",
+            "};",
+            "goog.exportSymbol('ns.x', ns.x);"));
+
+    test(
+        lines(
+            "const ns = {};", //
+            "ns.G = class {",
+            "  /** @export */ static x;",
+            "};"),
+        lines(
+            "const ns = {};",
+            "ns.G = class {",
+            "  /** @export */ static x;",
+            "};",
+            "goog.exportSymbol('ns.G.x', ns.G.x);"));
+
+    test(
+        lines(
+            "class G {", //
+            "  /** @export */ static getRand = Math.random;",
+            "}"),
+        lines(
+            "class G {",
+            "  /** @export */",
+            "  static getRand = Math.random;",
+            "}",
+            "goog.exportSymbol('G.getRand', G.getRand);"));
+  }
+
+  @Test
+  public void testCannotExportStaticFieldInAnonymousClass() {
+    testError(
+        "foo(class { /** @export */ static x = 4; });",
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+  }
+
+  @Test
+  public void testOldStyleStaticField() {
+    test(
+        "class Foo {} /** @export */ Foo.x = 3;",
+        "class Foo {} /** @export */ Foo.x = 3; goog.exportSymbol('Foo.x', Foo.x);");
+  }
+
+  @Test
   public void testExportClassMemberInStaticBlock() {
     allowExternsChanges();
     String code = "class G { static { /** @export */ this.foo = 1;} }";
@@ -406,7 +534,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "  }",
             "goog.exportSymbol('G', G);");
     test(code, result);
-    testExternChanges(srcs(code), expected("Object.prototype.foo;var goog;"));
+    testExternChanges(srcs(code), expected("Object.prototype.foo; var goog;"));
   }
 
   @Test
@@ -508,7 +636,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "goog.exportSymbol('foo.method', foo.method);");
     test(code, result);
     disableCompareAsTree();
-    testExternChanges(srcs(code), expected("Object.prototype.foo;var goog;"));
+    testExternChanges(srcs(code), expected("Object.prototype.foo; var goog;"));
   }
 
   @Test
