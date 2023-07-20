@@ -836,6 +836,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         }
         if (lValObj != null && lValObj == 0) {
           // 0 - x -> -x
+          // NOTE: this optimization has the subtle side effect of changing `0` to `-0` because
+          // `0-0 -> 0` but `-0 -> -0`.
           return IR.neg(right.cloneTree(true));
         } else if (rValObj != null && rValObj == 0) {
           // x - 0 -> x
