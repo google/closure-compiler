@@ -879,4 +879,41 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "  x = alert();",
             "}"));
   }
+
+  @Test
+  public void testPureOrBreakMyCode() {
+    test(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "   /** @const */this.used = /** @pureOrBreakMyCode */(alert());",
+            "   /** @const */this.unused = /** @pureOrBreakMyCode */(alert());",
+            "  }",
+            "};",
+            "/** @const */C.used = /** @pureOrBreakMyCode */(alert());",
+            "/** @const */C.unused = /** @pureOrBreakMyCode */(alert());",
+            "function foo() {",
+            "  return C.used;",
+            "}",
+            "foo();",
+            "function bar() {",
+            "  return new C().used;",
+            "}",
+            "bar();"),
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @const */this.used = /** @pureOrBreakMyCode */(alert());",
+            "  }",
+            "};",
+            "/** @const */C.used = /** @pureOrBreakMyCode */(alert());",
+            "function foo() {",
+            "  return C.used;",
+            "}",
+            "foo();",
+            "function bar() {",
+            "  return new C().used;",
+            "}",
+            "bar();"));
+  }
 }

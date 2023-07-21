@@ -1119,4 +1119,26 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "goog.reflect.objectProperty();",
             "alert(new Foo());"));
   }
+
+  @Test
+  public void testPureOrBreakMyCode() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.used = /** @pureOrBreakMyCode */(alert());",
+            "Foo.prototype.unused = /** @pureOrBreakMyCode */(alert());",
+            "function foo() {",
+            "  return new Foo().used;",
+            "}",
+            "foo();"),
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.used = /** @pureOrBreakMyCode */(alert());",
+            "function foo() {",
+            "  return new Foo().used;",
+            "}",
+            "foo();"));
+  }
 }

@@ -81,7 +81,7 @@ public class AstAnalyzer {
   /**
    * Returns true if the node may create new mutable state, or change existing state.
    *
-   * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
+   * @see <a href="http://www.xkcd.com/326/">XKCD Cartoon</a>
    */
   boolean mayEffectMutableState(Node n) {
     return checkForStateChangeHelper(n, /* checkForNewObjects= */ true);
