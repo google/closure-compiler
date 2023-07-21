@@ -33,8 +33,8 @@ import java.util.function.Predicate;
 
 /**
  * Looks for presence of features that are not supported for transpilation (mostly new RegExp
- * features). Reports errors for any features are present in the root and not present in the
- * targeted output language.
+ * features and bigint literal). Reports errors for any features are present in the root and not
+ * present in the targeted output language.
  */
 public final class ReportUntranspilableFeatures extends AbstractPostOrderCallback
     implements CompilerPass {
@@ -65,11 +65,15 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
   private static final FeatureSet UNTRANSPILABLE_2022_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_D);
 
+  private static final FeatureSet UNTRANSPILABLE_2020_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(Feature.BIGINT);
+
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
       FeatureSet.BARE_MINIMUM
           .union(UNTRANSPILABLE_2018_FEATURES)
           .union(UNTRANSPILABLE_2019_FEATURES)
-          .union(UNTRANSPILABLE_2022_FEATURES);
+          .union(UNTRANSPILABLE_2022_FEATURES)
+          .union(UNTRANSPILABLE_2020_FEATURES);
 
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;
@@ -134,7 +138,14 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
           }
           break;
         }
-
+      case BIGINT:
+        {
+          // Transpilation of BigInt is not supported
+          if (untranspilableFeaturesToRemove.contains(Feature.BIGINT)) {
+            reportUntranspilable(Feature.BIGINT, n);
+          }
+          break;
+        }
       default:
         break;
     }

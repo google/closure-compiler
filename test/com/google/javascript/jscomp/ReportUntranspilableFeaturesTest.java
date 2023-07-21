@@ -155,4 +155,17 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
         "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
             + "to targeted output language.");
   }
+
+  @Test
+  public void reportErrorWithBigIntLiteralTranspilation() {
+    languageOut = LanguageMode.ECMASCRIPT3;
+    testError("1234n", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+  }
+
+  @Test
+  public void noErrorWithBigIntConstructorTranspilation() {
+    // Do not report an error for use of the `BigInt()` method, just the literal form.
+    languageOut = LanguageMode.ECMASCRIPT3;
+    testSame("BigInt(1234)");
+  }
 }

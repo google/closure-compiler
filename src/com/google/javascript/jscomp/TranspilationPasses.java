@@ -97,7 +97,7 @@ public class TranspilationPasses {
     }
 
     if (options.needsTranspilationOf(Feature.BIGINT)) {
-      passes.maybeAdd(reportBigIntLiteralTranspilationUnsupported);
+      passes.maybeAdd(createFeatureRemovalPass("markBigintsRemoved", Feature.BIGINT));
     }
 
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
@@ -256,12 +256,6 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("rewriteNewDotTarget")
           .setInternalFactory(RewriteNewDotTarget::new)
-          .build();
-
-  private static final PassFactory reportBigIntLiteralTranspilationUnsupported =
-      PassFactory.builder()
-          .setName("reportBigIntTranspilationUnsupported")
-          .setInternalFactory(ReportBigIntLiteralTranspilationUnsupported::new)
           .build();
 
   private static final PassFactory rewriteExponentialOperator =
