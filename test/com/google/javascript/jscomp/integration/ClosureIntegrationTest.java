@@ -44,6 +44,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -65,6 +66,56 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
       "/** @define {boolean} */ var COMPILED = true;";
 
   private static final String CLOSURE_COLLAPSED = lines("var COMPILED = true;");
+
+  @Test
+  public void testReferencingMangledModuleNames_rewriteModulesBeforeTypechecking() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+    compile(
+        options,
+        new String[] {
+          lines(
+              "goog.module('foo.bar');",
+              "class Inner {}",
+              "class Outer extends Inner {}",
+              "exports.Outer = Outer;"),
+          lines(
+              "/** @type {!module$exports$foo$bar} */ let err1;",
+              "/** @type {!module$contents$foo$bar_Inner} */ let err2;")
+        });
+    assertThat(lastCompiler.getWarnings())
+        .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "Bad type annotation. Unknown type UnrecognizedType_module$exports$foo$bar",
+            "Bad type annotation. Unknown type UnrecognizedType_module$contents$foo$bar_Inner");
+  }
+
+  @Test
+  public void testReferencingMangledModuleNames_rewriteModulesAfterTypechecking() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    compile(
+        options,
+        new String[] {
+          lines(
+              "goog.module('foo.bar');",
+              "class Inner {}",
+              "class Outer extends Inner {}",
+              "exports.Outer = Outer;"),
+          lines(
+              "/** @type {!module$exports$foo$bar} */ let err1;",
+              "/** @type {!module$contents$foo$bar_Inner} */ let err2;")
+        });
+    assertThat(lastCompiler.getWarnings())
+        .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "Bad type annotation. Unknown type module$exports$foo$bar",
+            "Bad type annotation. Unknown type module$contents$foo$bar_Inner");
+  }
 
   @Test
   public void testProcessDefinesInModule() {
