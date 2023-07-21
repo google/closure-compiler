@@ -285,33 +285,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMangleModuleExportsContents() {
-    testWarning(
-        "/** @type {!module$exports$foo$bar} */ let x;",
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
-    testWarning(
-        srcs(
-            "goog.module('foo.bar'); exports = class {};",
-            "/** @type {!module$exports$foo$bar} */ let x;"),
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
-    testWarning(
-        srcs(
-            "goog.module('foo.bar'); exports = class {};",
-            "/** @type {!module$exports$foo$bar.A.B} */ let x;"),
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
-    testWarning(
-        srcs(
-            "goog.module('foo.bar'); exports = class {};",
-            "/** @type {!module$contents$foo$bar_local} */ let x;"),
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
-    testWarning(
-        srcs(
-            "goog.module('foo.bar'); exports = class {};",
-            "/** @type {!Array<module$exports$foo$bar>} */ let x;"),
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
-  }
-
-  @Test
   public void testNamedExportInliningJSDoc_semanticConstWithInlineJSDoc() {
     test(
         srcs(

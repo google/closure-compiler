@@ -553,18 +553,6 @@ final class ClosureRewriteModule implements CompilerPass {
       int dot = typeName.indexOf('.');
       String rootOfType = dot == -1 ? typeName : typeName.substring(0, dot);
 
-      // Handle the case where handwritten JS/some earlier pass tries to reference a module export
-      // or module content variable synthesized by this pass. This shouldn't work, so prefix the
-      // JSDoc references with "UnrecognizedType_". Then, if typechecking is enabled and runs after
-      // this pass, leave it up to the typechecker to report a JSC_UNRECOGNIZED_TYPE_ERROR.
-      // (For references in code, instead of just JSDoc, this is already covered by ordinary
-      // checks for undefined variables.)
-      if (ClosureRewriteModule.isModuleExport(rootOfType)
-          || ClosureRewriteModule.isModuleContent(rootOfType)) {
-        typeRefNode.setString("UnrecognizedType_" + typeName);
-        return;
-      }
-
       Var rootVar = this.scope.getVar(rootOfType);
       if (rootVar != null
           && !rootVar.getScope().getClosestHoistScope().isGlobal()
