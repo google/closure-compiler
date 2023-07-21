@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
+import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -79,7 +80,10 @@ class ReplaceToggles implements CompilerPass {
           && n.getFirstChild().matchesName(ORDINAL_VAR_NAME)) {
         Node rhs = n.getFirstFirstChild();
 
-        if (rhs == null || !rhs.isObjectLit()) {
+        if (rhs == null && n.getToken() == Token.VAR) {
+          // An empty var is a type definition, which is OK.
+          return;
+        } else if (!rhs.isObjectLit()) {
           compiler.report(JSError.make(n, INVALID_ORDINAL_MAPPING, "not an object literal"));
           return;
         }

@@ -38,14 +38,15 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBootstrapOrdinals_uninitialized() {
+    check = true;
+    testSame(srcs("var _F_toggleOrdinals;"), expectOrdinals(null));
+  }
+
+  @Test
   public void testBootstrapOrdinals_empty() {
     check = true;
-    testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': 1};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", 1)));
-    testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': 1, qux: 2};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", 1, "qux", 2)));
+    testSame(srcs("var _F_toggleOrdinals = {};"), expectOrdinals(ImmutableMap.of()));
   }
 
   @Test
@@ -60,6 +61,23 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBootstrapOrdinals_ignoresExtraUninitializedDefinitions() {
+    check = true;
+    testSame(
+        srcs(
+            lines(
+                "var _F_toggleOrdinals = {'foo': 1};", //
+                "var _F_toggleOrdinals;")),
+        expectOrdinals(ImmutableMap.of("foo", 1)));
+    testSame(
+        srcs(
+            lines(
+                "var _F_toggleOrdinals;", //
+                "var _F_toggleOrdinals = {'foo': 1};")),
+        expectOrdinals(ImmutableMap.of("foo", 1)));
+  }
+
+  @Test
   public void testBootstrapOrdinals_notAnObject() {
     check = true;
     test(
@@ -68,10 +86,6 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
             .withMessageContaining("not an object literal"));
     test(
         srcs("var _F_toggleOrdinals = [];"),
-        error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("not an object literal"));
-    test(
-        srcs("var _F_toggleOrdinals;"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("not an object literal"));
   }
