@@ -4765,6 +4765,18 @@ Document.prototype.webkitHidden;
 Document.prototype.msHidden;
 
 /**
+ * @type {!Location}
+ * @implicitCast
+ */
+Document.prototype.location;
+
+/**
+ * @type {HTMLCollection<!HTMLEmbedElement>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/plugins
+ */
+Document.prototype.plugins;
+
+/**
  * @see http://www.w3.org/TR/components-intro/
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type

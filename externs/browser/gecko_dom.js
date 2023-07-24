@@ -175,6 +175,9 @@ Document.prototype.applets;
  */
 Document.prototype.bgColor;
 
+/** @type {HTMLBodyElement} */ Document.prototype.body;
+/** @type {string} */ Document.prototype.cookie;
+
 /** @deprecated */
 Document.prototype.documentURIObject;
 
@@ -227,15 +230,11 @@ Document.prototype.linkColor;
  */
 Document.prototype.links;
 
-/**
- * @type {!Location}
- * @implicitCast
- */
-Document.prototype.location;
-
+/** @deprecated */
 Document.prototype.namespaceURI;
+/** @deprecated */
 Document.prototype.nodePrincipal;
-Document.prototype.plugins;
+/** @deprecated */
 Document.prototype.popupNode;
 
 /**
@@ -377,6 +376,7 @@ Element.prototype.firebugIgnore;
  */
 Element.prototype.name;
 
+/** @deprecated */
 Element.prototype.nodePrincipal;
 
 /**
