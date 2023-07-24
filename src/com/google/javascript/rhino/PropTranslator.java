@@ -143,9 +143,6 @@ final class PropTranslator {
         return NodeProperty.COMPUTED_PROP_VARIABLE;
       case GOOG_MODULE:
         return NodeProperty.GOOG_MODULE;
-      case TRANSPILED:
-        // TODO: b/279241038 Delete this prop as it's no longer used.
-        return NodeProperty.TRANSPILED;
       case MODULE_ALIAS:
         return NodeProperty.MODULE_ALIAS;
       case MODULE_EXPORT:

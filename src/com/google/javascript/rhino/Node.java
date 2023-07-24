@@ -173,9 +173,6 @@ public class Node {
     FEATURE_SET,
     // Indicates a TypeScript abstract method or class, for use in Migrants
     IS_TYPESCRIPT_ABSTRACT,
-    // TODO: b/279241038 Delete this prop as it's no longer used.
-    // Indicates that a SCRIPT represents a transpiled file
-    TRANSPILED,
     // For passes that work only on deleted funs.
     DELETED,
     // Indicates that the node is an alias or a name from goog.require'd module or ES6
