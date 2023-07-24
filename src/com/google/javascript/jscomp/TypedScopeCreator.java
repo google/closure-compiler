@@ -789,8 +789,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       return compiler.getInput(inputId);
     }
 
-    @Nullable
-    Module getModule() {
+    @Nullable Module getModule() {
       return this.currentScope.getModule();
     }
 
@@ -2358,8 +2357,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param declaredRValueTypeSupplier A supplier for the declared type of the rvalue, used for
      *     destructuring declarations where we have to do additional work on the rvalue.
      */
-    @Nullable
-    JSType getDeclaredType(
+    @Nullable JSType getDeclaredType(
         JSDocInfo info,
         Node lValue,
         @Nullable Node rValue,
@@ -3244,7 +3242,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   /**
    * Scope builder subclass for function scopes, which only contain bleeding function names and
-   * parameter names. The main function body is handled by the a NormalScopeBuilder on the function
+   * parameter names. The main function body is handled by the NormalScopeBuilder on the function
    * block.
    */
   private final class FunctionScopeBuilder extends AbstractScopeBuilder {
@@ -3523,11 +3521,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .defineSlot();
       } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
         // Ignore "constructor" since it has special handling in `createClassTypeFromNodes()`.
-      } else if (n.isMemberFunctionDef()) {
+      } else if (n.isMemberFunctionDef() && parent.isClassMembers()) {
         defineMemberFunction(n);
       } else if (n.isMemberFieldDef()) {
+        // public fields are roots of their own scope so the parent doesn't get passed into
+        // visitPostorder
         defineMemberField(n);
-      } else if (n.isGetterDef() || n.isSetterDef()) {
+      } else if ((n.isGetterDef() || n.isSetterDef()) && parent.isClassMembers()) {
         defineGetterSetter(n);
       }
     }
@@ -3594,8 +3594,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * nonstatic member.
      */
     private ObjectType determineOwnerTypeForClassMember(Node member) {
-      // MEMBER_FUNCTION_DEF -> CLASS_MEMBERS -> CLASS  or
-      // GETTER_DEF -> CLASS_MEMBERS -> CLASS
+      // MEMBER_FUNCTION_DEF -> CLASS_MEMBERS -> CLASS or
+      // MEMBER_FIELD_DEF -> CLASS_MEMBERS -> CLASS or
+      // GETTER_DEF -> CLASS_MEMBERS -> CLASS or
+      // SETTER_DEF -> CLASS_MEMBERS -> CLASS
       Node ownerNode = member.getGrandparent();
       checkState(ownerNode.isClass());
       FunctionType ownerType = ownerNode.getJSType().toMaybeFunctionType();

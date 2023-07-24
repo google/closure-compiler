@@ -3273,11 +3273,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  /** @type {number} */",
             "  a = 2;",
             "  /** @type {number} */",
-            "  b = this.b;",
+            "  b = this.a;",
             "}",
             "class Bar extends Foo {",
             "  /** @type {number} */",
-            "  c = super.a + 1;",
+            "  c = this.a + 1;", // Must use `this` and not `super` to access field of parent class
             "}"));
 
     FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
@@ -3368,11 +3368,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  /** @type {number} */",
             "  static a = 2;",
             "  /** @type {number} */",
-            "  static b = this.b;",
+            "  static b = this.a;",
             "}",
             "class Bar extends Foo {",
             "  /** @type {number} */",
-            "  static c = super.a + 1;",
+            "  static c = this.a + 1;", // Must use `this` and not `super` to access field of parent
+            // class
             "}"));
 
     FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
@@ -3389,6 +3390,104 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(fooCtor.hasOwnDeclaredProperty("c")).isFalse();
     assertThat(barCtor.hasOwnDeclaredProperty("c")).isTrue();
     assertType(barCtor.getPropertyType("c")).isNumber();
+  }
+
+  @Test
+  public void testTypeOfThisInObjectLitInPublicField() {
+    // Make sure the `this` on the RHS of a class field declaration has the appropriate type, even
+    // when it appears within an object literal
+    testSame(
+        lines(
+            "class Foo {", //
+            "  x = 3;",
+            "  bar = {",
+            "    b: this.x",
+            "  };",
+            "}"));
+
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    ObjectType fooInstance = fooCtor.getInstanceType();
+    Node getProp =
+        fooInstance
+            .getPropertyNode("bar")
+            .getOnlyChild() // OBJECTLIT
+            .getOnlyChild() // STRING_KEY
+            .getOnlyChild(); // GETPROP
+    assertNode(getProp).hasJSTypeThat().isNumber();
+    Node thisNode = getProp.getOnlyChild();
+    assertNode(thisNode).hasJSTypeThat().isEqualTo(fooInstance);
+
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static baz = {",
+            "    e: this",
+            "  };",
+            "}"));
+
+    fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    thisNode =
+        fooCtor
+            .getPropertyNode("baz")
+            .getOnlyChild() // OBJECTLIT
+            .getOnlyChild() // STRING_KEY
+            .getOnlyChild(); // THIS
+    assertNode(thisNode).hasJSTypeThat().isEqualTo(fooCtor);
+  }
+
+  @Test
+  public void testGetterInObjectLitInPublicField() {
+    // Previously a bug caused getters & setters in object literals on the RHS of a field
+    // declaration to be treated as if they belonged to the class.
+    //
+    // Make sure that `this` in an object literal getter or setter has the unknown type.
+    testSame(
+        lines(
+            "class Foo {", //
+            "  bar = {",
+            "    get baz() {",
+            "      X: this;",
+            "    }",
+            "  };",
+            "}"));
+    Node thisNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    // We don't create unique types for object literals, so even though we know
+    // the getter will (probably) only be called on this object, we just
+    // use unknown for the type of `this`.
+    assertNode(thisNode).hasJSTypeThat().isUnknown();
+
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static bar = {",
+            "    /** @this {string} */",
+            "    get baz() { Y: this; }",
+            "  };",
+            "}"));
+
+    thisNode = getLabeledStatement("Y").statementNode.getOnlyChild();
+    assertNode(thisNode).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testMemberFunctionInObjectLitInPublicField() {
+    // Previously a bug caused methods in object literals on the RHS of a field declaration to be
+    // treated as if they were methods on the class.
+    //
+    // Make sure that `this` in an object literal method has the unknown type.
+    testSame(
+        lines(
+            "class Foo {", //
+            "  bar = {",
+            "    /** @this {number} */",
+            "    member() {",
+            "      X: this;",
+            "    }",
+            "  };",
+            "}"));
+
+    Node thisNode = getLabeledStatement("X").statementNode.getOnlyChild();
+    assertNode(thisNode).hasJSTypeThat().isNumber();
   }
 
   @Test
