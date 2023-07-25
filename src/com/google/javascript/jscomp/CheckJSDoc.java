@@ -159,6 +159,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateClosurePrimitive(n, info);
     validateReturnJsDoc(n, info);
     validateTsType(n, info);
+    validateJsDocTypeNames(info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -766,5 +767,48 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
 
   private static boolean isFromTs(Node n) {
     return n.getSourceFileName().endsWith(".closure.js");
+  }
+
+  private final CheckJsdocTypes checkJsDocTypesVisitor = new CheckJsdocTypes();
+
+  private void validateJsDocTypeNames(JSDocInfo info) {
+    if (info == null) {
+      return;
+    }
+    for (Node typeNode : info.getTypeNodes()) {
+      NodeUtil.visitPreOrder(typeNode, checkJsDocTypesVisitor);
+    }
+  }
+
+  /** Ban any references to compiler internal implementation details */
+  private static final class CheckJsdocTypes implements NodeUtil.Visitor {
+
+    @Override
+    public void visit(Node typeRefNode) {
+      if (!typeRefNode.isStringLit()) {
+        return;
+      }
+      // A type name that might be simple like "Foo" or qualified like "foo.Bar".
+      final String typeName = typeRefNode.getString();
+      int dot = typeName.indexOf('.');
+      String rootOfType = dot == -1 ? typeName : typeName.substring(0, dot);
+
+      // Prevent handwritten JS from referencing a module export or module content name that's
+      // synthesized by ClosureRewriteModule. Prefix the JSDoc references with
+      // "UnrecognizedType_" and leave it to the typechecker to report a JSC_UNRECOGNIZED_TYPE_ERROR
+      //  * why not report an error here? even if we did report an error, we
+      //    should still add the prefix to ensure the typechecker doesn't resolve this type. Some
+      //    builds and/or files suppress type errors.
+      //    TODO(lharker): consider reporting an unsuppressible error instead of doing this
+      //    rewriting, if we can clean up all existing violations of this error.
+      //  * why do this here instead of in the ClosureRewriteModule pass? the Es6RewriteModule runs
+      //    before ClosureRewriteModule and may add references to these module export names.
+      //  * note: for references in code, not JSDoc, undefined variable checks will handle this.
+      // TODO(b/144593112): remove this when ClosureRewriteModule always runs after typechecking
+      if (ClosureRewriteModule.isModuleExport(rootOfType)
+          || ClosureRewriteModule.isModuleContent(rootOfType)) {
+        typeRefNode.setString("UnrecognizedType_" + typeName);
+      }
+    }
   }
 }
