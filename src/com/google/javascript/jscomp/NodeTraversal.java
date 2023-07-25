@@ -1100,11 +1100,7 @@ public class NodeTraversal {
           popScope();
           break;
         case MEMBER_FIELD_DEF:
-          pushScope(child);
-
-          traverseBranch(child, n);
-
-          popScope();
+          handleMemberFieldDef(n, child);
           break;
         case BLOCK:
         case MEMBER_FUNCTION_DEF:
@@ -1121,6 +1117,15 @@ public class NodeTraversal {
 
     this.currentNode = n;
     callback.visit(this, n, parent);
+  }
+
+  private void handleMemberFieldDef(Node n, Node child) {
+    Node previousHoistScopeRoot = currentHoistScopeRoot;
+    currentHoistScopeRoot = n;
+    pushScope(child);
+    traverseBranch(child, n);
+    popScope();
+    currentHoistScopeRoot = previousHoistScopeRoot;
   }
 
   private void traverseChildren(Node n) {

@@ -67,6 +67,43 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModuleThisInSubclass() {
+    testSame(
+        lines(
+            "goog.module('xyz');",
+            "class Foo {", //
+            "  x = 5;",
+            "}",
+            "class Bar extends Foo {", //
+            "   z = this.x;",
+            "}"));
+  }
+
+  @Test
+  public void testGoogModuleThisOnFields() {
+    // Ensure `this.property` is allowed as an assignment on public fields.
+    testSame(
+        lines(
+            "goog.module('xyz');",
+            "class Foo {", //
+            "  x = 5;",
+            "  y = this.x",
+            "}"));
+  }
+
+  @Test
+  public void testStaticGoogModuleThisOnStaticFields() {
+    // Allow this to be allowed when a field is already declared
+    testSame(
+        lines(
+            "goog.module('math')", //
+            "class Foo {",
+            "  static x = 5;",
+            "  static y = this.x",
+            "}"));
+  }
+
+  @Test
   public void testGoogModuleReferencesThis() {
     testError("goog.module('xyz');\nfoo.call(this, 1, 2, 3);", GOOG_MODULE_REFERENCES_THIS);
 
