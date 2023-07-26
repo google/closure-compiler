@@ -88,6 +88,26 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDoubleAssignmentField() {
+    test(
+        lines(
+            "let Snackbar = Snackbar1 = class Snackbar {", //
+            "  x = 5",
+            "}"),
+        "/** @const @type {UnusableType} */ var Snackbar;");
+  }
+
+  @Test
+  public void testDoubleAssignmentStaticField() {
+    test(
+        lines(
+            "let A = B = class C {", //
+            "  static y = true",
+            "}"),
+        "/** @const @type {UnusableType} */ var A;");
+  }
+
+  @Test
   public void testSuperClassFields() {
     test(
         lines(

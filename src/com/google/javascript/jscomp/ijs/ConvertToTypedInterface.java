@@ -534,10 +534,10 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     private boolean shouldRemove(String name, PotentialDeclaration decl) {
+      if (decl.isDetached()) {
+        return true;
+      }
       if (rootName(name).startsWith("$jscomp")) {
-        if (decl.isDetached()) {
-          return true;
-        }
         // These are created by goog.scope processing, but clash with each other
         // and should not be depended on.
         if ((decl.getRhs() != null && decl.getRhs().isClass())
