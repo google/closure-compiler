@@ -123,8 +123,6 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getTranspileOnlyPasses() {
     PassListBuilder passes = new PassListBuilder(options);
 
-    passes.maybeAdd(reportUntranspilableFeatures);
-
     // Certain errors in block-scoped variable declarations will prevent correct transpilation
     passes.maybeAdd(checkVariableReferences);
     passes.maybeAdd(checkVars);
@@ -166,6 +164,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(injectRuntimeLibraries);
 
+    // NOTE: Any new transpiler passes added outside of
+    // {@code addEarlyOptimizationTranspilationPasses} also need to update
+    // {@code CompilerTestCase.transpileToEs5}
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     // Passes below this point may rely on normalization and must maintain normalization.
@@ -507,7 +508,6 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
     if (options.isPropertyRenamingOnlyCompilationMode()) {
-      passes.maybeAdd(reportUntranspilableFeatures);
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
       passes.maybeAdd(closureProvidesRequires);
       passes.maybeAdd(processDefinesOptimize);
@@ -550,8 +550,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clPass);
     }
-
-    passes.maybeAdd(reportUntranspilableFeatures);
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
@@ -1533,14 +1531,6 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new InjectRuntimeLibraries(
                       compiler, ImmutableSet.copyOf(compiler.getOptions().forceLibraryInjection)))
-          .build();
-
-  private final PassFactory reportUntranspilableFeatures =
-      PassFactory.builder()
-          .setName("reportUntranspilableFeatures")
-          .setInternalFactory(
-              (compiler) ->
-                  new ReportUntranspilableFeatures(compiler, options.getOutputFeatureSet()))
           .build();
 
   private final PassFactory removeWeakSources =

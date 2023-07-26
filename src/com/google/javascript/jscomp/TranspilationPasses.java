@@ -64,6 +64,8 @@ public class TranspilationPasses {
   public static void addEarlyOptimizationTranspilationPasses(
       PassListBuilder passes, CompilerOptions options) {
 
+    passes.maybeAdd(reportUntranspilableFeatures);
+
     // Note that we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
     // However, RegExp features are not transpiled, and this does not imply that we allow arbitrary
@@ -414,6 +416,15 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
+          .build();
+
+  static final PassFactory reportUntranspilableFeatures =
+      PassFactory.builder()
+          .setName("reportUntranspilableFeatures")
+          .setInternalFactory(
+              (compiler) ->
+                  new ReportUntranspilableFeatures(
+                      compiler, compiler.getOptions().getOutputFeatureSet()))
           .build();
 
   /**
