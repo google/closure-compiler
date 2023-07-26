@@ -74,6 +74,20 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testComputedFieldNoRHS() {
+    test(
+        lines(
+            "const s = Symbol();", //
+            "class Foo { ",
+            "  [s]",
+            "}"),
+        lines(
+            "const s = Symbol();", //
+            "class Foo {",
+            "}"));
+  }
+
+  @Test
   public void testSuperClassFields() {
     test(
         lines(

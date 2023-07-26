@@ -201,10 +201,12 @@ public class ConvertToTypedInterface implements CompilerPass {
               return false;
           }
         case COMPUTED_PROP:
-        case COMPUTED_FIELD_DEF:
           if (!NodeUtil.isLhsByDestructuring(n.getSecondChild())) {
             NodeUtil.deleteNode(n, t.getCompiler());
           }
+          return false;
+        case COMPUTED_FIELD_DEF:
+          NodeUtil.deleteNode(n, t.getCompiler());
           return false;
         case THROW:
         case RETURN:
