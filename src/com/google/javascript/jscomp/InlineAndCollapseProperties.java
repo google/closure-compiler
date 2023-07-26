@@ -237,12 +237,25 @@ class InlineAndCollapseProperties implements CompilerPass {
     // and reuse that one instead.
     namespace = new GlobalNamespace(decisionsLog, compiler, root);
     new CollapseProperties().process(externs, root);
+
+    namespace = null; // free up memory before PropagateConstantPropertyOverVars
+    // This shouldn't be necessary, this pass should already be setting new constants as
+    // constant.
+    // TODO(b/64256754): Investigate.
+    new PropagateConstantPropertyOverVars(compiler, false).process(externs, root);
   }
 
   private void performAggressiveInliningAndCollapsing(Node externs, Node root) {
     new ConcretizeStaticInheritanceForInlining(compiler).process(externs, root);
     new AggressiveInlineAliases().process(externs, root);
+
     new CollapseProperties().process(externs, root);
+
+    namespace = null; // free up memory before PropagateConstantPropertyOverVars
+    // This shouldn't be necessary, this pass should already be setting new constants as
+    // constant.
+    // TODO(b/64256754): Investigate.
+    new PropagateConstantPropertyOverVars(compiler, false).process(externs, root);
   }
 
   private void performAggressiveInliningForTest(Node externs, Node root) {
@@ -1297,11 +1310,6 @@ class InlineAndCollapseProperties implements CompilerPass {
         // invalidating the node ancestry stored with each reference.
         collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
       }
-
-      // This shouldn't be necessary, this pass should already be setting new constants as
-      // constant.
-      // TODO(b/64256754): Investigate.
-      new PropagateConstantPropertyOverVars(compiler, false).process(externs, root);
     }
 
     private boolean canCollapse(Name name) {
