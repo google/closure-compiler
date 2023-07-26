@@ -39,8 +39,8 @@ import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
 /**
- *  Find all Functions, VARs, and Exception names and make them
- *  unique.  Specifically, it will not modify object properties.
+ * Find all Functions, VARs, and Exception names and make them unique. Specifically, it will not
+ * modify object properties.
  */
 class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
@@ -109,7 +109,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   }
 
   static CompilerPass getContextualRenameInverter(AbstractCompiler compiler) {
-    return new ContextualRenameInverter(compiler, true);
+    return new ContextualRenameInverter(compiler);
   }
 
   @Override
@@ -210,21 +210,19 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
   }
 
-  /**
-   * Declared names renaming policy interface.
-   */
+  /** Declared names renaming policy interface. */
   interface Renamer {
 
     /**
      * Called when a declared name is found in the local current scope.
+     *
      * @param hoisted Whether this name should be declared in the nearest enclosing "hoist scope"
      *     instead of the scope represented by this Renamer.
      */
     void addDeclaredName(String name, boolean hoisted);
 
     /**
-     * @return A replacement name, null if oldName is unknown or should not
-     * be replaced.
+     * @return A replacement name, null if oldName is unknown or should not be replaced.
      */
     String getReplacementName(String oldName);
 
@@ -245,9 +243,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     Renamer getHoistRenamer();
   }
 
-  /**
-   * Inverts the transformation by {@link ContextualRenamer}, when possible.
-   */
+  /** Inverts the transformation by {@link ContextualRenamer}, when possible. */
   static class ContextualRenameInverter implements ScopedCallback, CompilerPass {
     private final AbstractCompiler compiler;
 
@@ -261,12 +257,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     private final ListMultimap<String, Node> nameMap =
         MultimapBuilder.hashKeys().arrayListValues().build();
 
-    // Whether to report changes to the compiler.
-    private final boolean markChanges;
-
-    private ContextualRenameInverter(AbstractCompiler compiler, boolean markChanges) {
+    private ContextualRenameInverter(AbstractCompiler compiler) {
       this.compiler = compiler;
-      this.markChanges = markChanges;
     }
 
     @Override
@@ -287,9 +279,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       return name.contains(ContextualRenamer.UNIQUE_ID_SEPARATOR);
     }
 
-    /**
-     * Prepare a set for the new scope.
-     */
+    /** Prepare a set for the new scope. */
     @Override
     public void enterScope(NodeTraversal t) {
       if (t.inGlobalScope()) {
@@ -301,8 +291,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
 
     /**
-     * Rename vars for the current scope, and merge any referenced
-     * names into the parent scope reference set.
+     * Rename vars for the current scope, and merge any referenced names into the parent scope
+     * reference set.
      */
     @Override
     public void exitScope(NodeTraversal t) {
@@ -327,9 +317,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
 
     /**
-     * For the Var declared in the current scope determine if it is possible
-     * to revert the name to its original form without conflicting with other
-     * values.
+     * For the Var declared in the current scope determine if it is possible to revert the name to
+     * its original form without conflicting with other values.
      */
     void handleScopeVar(Var v) {
       String name = v.getName();
@@ -343,23 +332,19 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
         for (Node n : references) {
           checkState(n.isName() || n.isImportStar(), n);
           n.setString(newName);
-          if (markChanges) {
-            compiler.reportChangeToEnclosingScope(n);
-            Node parent = n.getParent();
-            // If we are renaming a function declaration, make sure the containing scope
-            // has the opportunity to act on the change.
-            if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-              compiler.reportChangeToEnclosingScope(parent);
-            }
+          compiler.reportChangeToEnclosingScope(n);
+          Node parent = n.getParent();
+          // If we are renaming a function declaration, make sure the containing scope
+          // has the opportunity to act on the change.
+          if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+            compiler.reportChangeToEnclosingScope(parent);
           }
         }
         nameMap.removeAll(name);
       }
     }
 
-    /**
-     * Find a name usable in the local scope.
-     */
+    /** Find a name usable in the local scope. */
     private String findReplacementName(String name) {
       String original = getOriginalName(name);
       String newName = original;
@@ -374,7 +359,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
      * @return Whether the name is valid to use in the local scope.
      */
     private boolean isValidName(String name) {
-      return TokenStream.isJSIdentifier(name) && !referencedNames.contains(name)
+      return TokenStream.isJSIdentifier(name)
+          && !referencedNames.contains(name)
           && !name.equals(ARGUMENTS);
     }
 
@@ -508,9 +494,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       return declarations.get(oldName);
     }
 
-    /**
-     * Given a name and the associated id, create a new unique name.
-     */
+    /** Given a name and the associated id, create a new unique name. */
     private static String getUniqueName(String name, int id) {
       return name + UNIQUE_ID_SEPARATOR + id;
     }
@@ -534,13 +518,12 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
   }
 
-
   /**
-   * Rename every declared name to be unique. Typically this would be used
-   * when injecting code to insure that names do not conflict with existing
-   * names.
+   * Rename every declared name to be unique. Typically, this would be used when injecting code to
+   * ensure that names do not conflict with existing names.
    *
-   * Used by the FunctionInjector
+   * <p>Used by the FunctionInjector
+   *
    * @see FunctionInjector
    */
   static class InlineRenamer implements Renamer {
@@ -590,8 +573,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       }
 
       if (name.contains(ContextualRenamer.UNIQUE_ID_SEPARATOR)) {
-          name = name.substring(
-              0, name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
+        name = name.substring(0, name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
       }
 
       if (convention.isExported(name)) {
@@ -629,8 +611,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   }
 
   /**
-   * For injecting boilerplate libraries. Leaves global names alone
-   * and renames local names like InlineRenamer.
+   * For injecting boilerplate libraries. Leaves global names alone and renames local names like
+   * InlineRenamer.
    */
   static class BoilerplateRenamer extends ContextualRenamer {
     private final Supplier<String> uniqueIdSupplier;
@@ -638,9 +620,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     private final CodingConvention convention;
 
     BoilerplateRenamer(
-        CodingConvention convention,
-        Supplier<String> uniqueIdSupplier,
-        String idPrefix) {
+        CodingConvention convention, Supplier<String> uniqueIdSupplier, String idPrefix) {
       this.convention = convention;
       this.uniqueIdSupplier = uniqueIdSupplier;
       this.idPrefix = idPrefix;
@@ -690,5 +670,4 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       return delegate.getHoistRenamer();
     }
   }
-
 }
