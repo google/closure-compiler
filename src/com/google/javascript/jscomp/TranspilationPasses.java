@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -106,6 +107,18 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.maybeAdd(rewriteCatchWithNoBinding);
+    }
+
+    if (options.getChunkOutputType() != ChunkOutputType.ES_MODULES) {
+      // Default output mode of JSCompiler is a script, unless chunkOutputType is set to
+      // `ES_MODULES` where each output chunk is an ES module.
+      passes.maybeAdd(createFeatureRemovalPass("markModulesRemoved", Feature.MODULES));
+      // Since import.meta cannot be transpiled, it is passed-through when the output format
+      // is a module. Otherwise it must be marked removed.
+      passes.maybeAdd(createFeatureRemovalPass("markImportMetaRemoved", Feature.IMPORT_META));
+      // Dynamic imports are preserved for open source output only when the chunk output type is
+      // ES_MODULES
+      passes.maybeAdd(createFeatureRemovalPass("markDynamicImportRemoved", Feature.DYNAMIC_IMPORT));
     }
 
     if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
