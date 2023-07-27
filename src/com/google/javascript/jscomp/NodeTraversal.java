@@ -1292,6 +1292,27 @@ public class NodeTraversal {
     }
   }
 
+  /** Returns the closest scope binding the `this` or `super` keyword */
+  public @Nullable Node getClosestScopeRootNodeBindingThisOrSuper() {
+    for (int i = scopes.size() - 1; i >= 0; i--) {
+      Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
+      switch (rootNode.getToken()) {
+        case FUNCTION:
+          if (rootNode.isArrowFunction()) {
+            continue;
+          }
+          return rootNode;
+        case MEMBER_FIELD_DEF:
+        case CLASS:
+        case MODULE_BODY:
+        case ROOT:
+          return rootNode;
+        default:
+          continue;
+      }
+    }
+    return null;
+  }
 
   public ScopeCreator getScopeCreator() {
     return scopeCreator;
@@ -1360,8 +1381,7 @@ public class NodeTraversal {
    *
    * <p>e.g. returns null if {@link #traverseInnerNode(Node, Node, AbstractScope)} was used
    */
-  @Nullable
-  Node getCurrentScript() {
+  @Nullable Node getCurrentScript() {
     return currentScript;
   }
 

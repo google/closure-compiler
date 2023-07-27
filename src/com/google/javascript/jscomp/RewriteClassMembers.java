@@ -95,11 +95,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         return false;
       case MEMBER_FIELD_DEF:
         checkState(!classStack.isEmpty());
-        if (NodeUtil.referencesEnclosingReceiver(n)) {
-          t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Member references this or super");
-          classStack.peek().cannotConvert = true;
-          break;
-        }
         classStack.peek().enterField(n);
         break;
       case BLOCK:
@@ -123,7 +118,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           //    constructor(x) {}
           // }
           // Either using scopes to be more precise or just doing renaming for all conflicting
-          // constructor declarations would addresss this issue.
+          // constructor declarations would address this issue.
           record.potentiallyRecordNameInRhs(n);
         }
         break;
@@ -152,6 +147,22 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         return;
       case MEMBER_FIELD_DEF:
         classStack.peek().exitField();
+        return;
+      case THIS:
+        Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
+        if (rootNode.isMemberFieldDef() && rootNode.isStaticMember()) {
+          Node className = rootNode.getGrandparent().getFirstChild().cloneNode();
+          n.replaceWith(className);
+          t.reportCodeChange(className);
+        }
+        return;
+      case SUPER:
+        rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
+        if (rootNode.isMemberFieldDef() && rootNode.isStaticMember()) {
+          Node superclassName = rootNode.getGrandparent().getChildAtIndex(1).cloneNode();
+          n.replaceWith(superclassName);
+          t.reportCodeChange(superclassName);
+        }
         return;
       default:
         return;

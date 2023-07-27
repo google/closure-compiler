@@ -91,7 +91,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "class C extends B{", //
+            "class C extends B {", //
             "  static {",
             "    let x = super.y",
             "  }",
@@ -167,14 +167,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "class C {", //
-            "  static x = 1;",
-            "  static y = this.x;",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // `this` in static field
-
-    testError(
-        lines(
             "let c = class C {", //
             "  static y = 2;",
             "  static x = C.y",
@@ -195,14 +187,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static x = 1",
             "})"),
         TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "class C {", //
-            "  x = 1;",
-            "  y = this.x;",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // `this` in public field
 
     testError(
         lines(
@@ -288,8 +272,167 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "}" // testing that the correct number of diagnostics are thrown
                 )),
         error(TranspilationUtil.CANNOT_CONVERT_YET),
-        error(TranspilationUtil.CANNOT_CONVERT_YET),
         error(TranspilationUtil.CANNOT_CONVERT_YET));
+  }
+
+  @Test
+  public void testThisInNonStaticPublicField() {
+    test(
+        lines(
+            "class A {", //
+            "  b = 'word';",
+            "  c = this.b;",
+            "}"),
+        lines(
+            "class A {",
+            "  constructor() {",
+            "    this.b = 'word';",
+            "    this.c = this.b;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "let obj = { bar() { return 9; } };", //
+            "class D {",
+            "  e = obj;",
+            "  f = this.e.bar() * 4;",
+            "}"),
+        lines(
+            "let obj = { bar() { return 9; } };",
+            "class D {",
+            "  constructor() {",
+            "    this.e = obj;",
+            "    this.f = this.e.bar() * 4;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class Foo {", //
+            "  y = 'apple';",
+            "  x = () => { return this.y + ' and banana'; };",
+            "}"),
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    this.y = 'apple';",
+            "    this.x = () => { return this.y + ' and banana'; };",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class Bar {", //
+            "  x = () => { this.method(); };",
+            "  method() {}",
+            "}"),
+        lines(
+            "class Bar {",
+            "  constructor() {",
+            "    this.x = () => { this.method(); };",
+            "  }",
+            "  method() {}",
+            "}"));
+  }
+
+  @Test
+  public void testSuperInNonStaticPublicField() {
+    test(
+        lines(
+            "class Foo {",
+            "  x() {",
+            "    return 3;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  y = 1 + super.x();",
+            "}"),
+        lines(
+            "class Foo {",
+            "  x() {",
+            "    return 3;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    super(...arguments);",
+            "    this.y = 1 + super.x();",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testThisInStaticField() {
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2;",
+            "  static y = () => this.x;",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "C.y = () => C.x;"));
+
+    test(
+        lines(
+            "class F {", //
+            "  static a = 'there';",
+            "  static b = this.c() + this.a;",
+            "  static c() { return 'hi'; }",
+            "}"),
+        lines(
+            "class F {", //
+            "  static c() { return 'hi'; }",
+            "}",
+            "F.a = 'there';",
+            "F.b = F.c() + F.a;"));
+  }
+
+  @Test
+  public void testSuperInStaticField() {
+    test(
+        lines(
+            "class Foo {",
+            "  static x() {",
+            "    return 5;",
+            "  }",
+            "  static y() {",
+            "    return 20;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  static z = () => super.x() + 12 + super.y();",
+            "}"),
+        lines(
+            "class Foo {",
+            "  static x() {",
+            "    return 5;",
+            "  }",
+            "  static y() {",
+            "    return 20;",
+            "  }",
+            "}",
+            "class Bar extends Foo {}",
+            "Bar.z = () => Foo.x() + 12 + Foo.y();"));
+
+    test(
+        lines(
+            "class Bar {",
+            "  static a = { method1() {} };",
+            "  static b = { method2() { super.method1(); } };",
+            "}",
+            "Object.setPrototypeOf = function(c, d) {}",
+            "Object.setPrototypeOf(Foo.b, Foo.a);",
+            "Foo.b.method2();"),
+        lines(
+            "class Bar {}",
+            "Bar.a = { method1() {} };",
+            "Bar.b = { method2() { super.method1(); } };",
+            "Object.setPrototypeOf = function(c, d) {}",
+            "Object.setPrototypeOf(Foo.b, Foo.a);",
+            "Foo.b.method2();"));
   }
 
   @Test
@@ -1243,9 +1386,19 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   @Test
   public void testInstanceFieldInitializersDontBleedOut() {
     test(
-        lines("class C {", "  y = z", "  method() { x; }", "  constructor(x) {}", "}"),
         lines(
-            "class C {", "  method() { x; }", "  constructor(x) {", "    this.y = z;", "  }", "}"));
+            "class C {", //
+            "  y = z",
+            "  method() { x; }",
+            "  constructor(x) {}",
+            "}"),
+        lines(
+            "class C {", //
+            "  method() { x; }",
+            "  constructor(x) {",
+            "    this.y = z;",
+            "  }",
+            "}"));
   }
 
   @Test
