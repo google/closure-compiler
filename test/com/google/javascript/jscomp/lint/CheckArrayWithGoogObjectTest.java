@@ -53,6 +53,10 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableTranspile();
+    // Transpilation runs normalization, which does renaming on the externs.
+    // It also runs a pass that reverts the renaming, but it ignores the externs, leaving them
+    // changed.
+    allowExternsChanges();
     enableTypeCheck();
   }
 

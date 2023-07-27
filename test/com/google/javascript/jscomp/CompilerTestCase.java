@@ -1734,9 +1734,9 @@ public abstract class CompilerTestCase {
 
       // Generally, externs should not be changed by the compiler passes.
       if (externsChange && !allowExternsChanges) {
-        assertNode(externsRootClone)
+        assertNode(externsRoot)
             .usingSerializer(createPrettyPrinter(compiler))
-            .isEqualTo(externsRoot);
+            .isEqualTo(externsRootClone);
       }
 
       if (checkAstChangeMarking) {
@@ -1867,18 +1867,21 @@ public abstract class CompilerTestCase {
     TranspilationPasses.addTranspilationRuntimeLibraries(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
-    // Transpilation requires most of normalization.
+    // Transpilation requires normalization.
     factories.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
-            .setInternalFactory(
-                abstractCompiler ->
-                    Normalize.builder(abstractCompiler)
-                        // Only do unique variable renaming if normalize is explicitly enabled.
-                        .makeDeclaredNamesUnique(normalizeEnabled)
-                        .build())
+            .setInternalFactory(abstractCompiler -> Normalize.builder(abstractCompiler).build())
             .build());
     TranspilationPasses.addPostNormalizationTranspilationPasses(factories, options);
+    // We need to put back the original variable names where possible once transpilation is
+    // complete. This matches the behavior in DefaultPassConfig. See comments there for further
+    // explanation.
+    factories.maybeAdd(
+        PassFactory.builder()
+            .setName("invertContextualRenaming")
+            .setInternalFactory(MakeDeclaredNamesUnique::getContextualRenameInverter)
+            .build());
     for (PassFactory factory : factories.build()) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }

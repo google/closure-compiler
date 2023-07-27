@@ -78,6 +78,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     disableNormalize();
     disableTypeCheck();
     disableCompareJsDoc(); // optimization passes see simplified JSDoc.
+    // Normalization does renaming on the externs (parameter names and maybe other things) and the
+    // pass that inverts renaming ignores the externs, leaving them changed.
+    allowExternsChanges();
+    // Our getProcessor() returns a fake "pass" that actually runs several passes,
+    // including one that undoes some of the changes that were made.
+    // this confuses the logic for validating AST change marking.
+    // That logic is really only valid when testing a single, real pass.
+    disableValidateAstChangeMarking();
   }
 
   @Override
@@ -105,14 +113,17 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     passes.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
-            .setInternalFactory(
-                // Disable creation of unique names to make the test cases less confusing and
-                // brittle. We're not trying to test whether Normalize will rename variables
-                // to be unique or not.
-                (abstractCompiler) ->
-                    Normalize.builder(abstractCompiler).makeDeclaredNamesUnique(false).build())
+            .setInternalFactory((abstractCompiler) -> Normalize.builder(abstractCompiler).build())
             .build());
     TranspilationPasses.addPostNormalizationTranspilationPasses(passes, compilerOptions);
+    // Since we're testing the transpile-only case, we need to put back the original variable names
+    // where possible once transpilation is complete. This matches the behavior in
+    // DefaultPassConfig. See comments there for further explanation.
+    passes.maybeAdd(
+        PassFactory.builder()
+            .setName("invertContextualRenaming")
+            .setInternalFactory(MakeDeclaredNamesUnique::getContextualRenameInverter)
+            .build());
     optimizer.consume(passes.build());
 
     return optimizer;

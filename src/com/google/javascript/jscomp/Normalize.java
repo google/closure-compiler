@@ -62,12 +62,10 @@ final class Normalize implements CompilerPass {
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final boolean assertOnChange;
-  private final boolean makeDeclaredNamesUnique;
 
   Normalize(Builder builder) {
     this.compiler = builder.compiler;
     this.assertOnChange = builder.assertOnChange;
-    makeDeclaredNamesUnique = builder.makeDeclaredNamesUnique;
     this.astFactory = builder.compiler.createAstFactory();
   }
 
@@ -84,7 +82,6 @@ final class Normalize implements CompilerPass {
   static class Builder {
     private final AbstractCompiler compiler;
     private boolean assertOnChange = false;
-    private boolean makeDeclaredNamesUnique = true;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -99,20 +96,6 @@ final class Normalize implements CompilerPass {
      */
     Builder assertOnChange(boolean assertOnChange) {
       this.assertOnChange = assertOnChange;
-      return this;
-    }
-
-    /**
-     * Rename variables as needed to enforce that every unique variable has a unique name.
-     *
-     * <p>This option should be disabled only for cases where no optimization is to be performed.
-     * Many optimizations rely on all variables having unique names in order to avoid having to
-     * worry about variable scoping.
-     *
-     * <p>This option is {@code true} by default.
-     */
-    public Builder makeDeclaredNamesUnique(boolean makeDeclaredNamesUnique) {
-      this.makeDeclaredNamesUnique = makeDeclaredNamesUnique;
       return this;
     }
 
@@ -148,11 +131,9 @@ final class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (makeDeclaredNamesUnique) {
-      MakeDeclaredNamesUnique renamer =
-          MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange).build();
-      NodeTraversal.traverseRoots(compiler, renamer, externs, root);
-    }
+    MakeDeclaredNamesUnique renamer =
+        MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange).build();
+    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
 
     NodeTraversal.traverseRoots(
         compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);

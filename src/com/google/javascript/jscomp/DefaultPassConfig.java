@@ -170,18 +170,18 @@ public final class DefaultPassConfig extends PassConfig {
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     // Passes below this point may rely on normalization and must maintain normalization.
-    passes.maybeAdd(
-        PassFactory.builder()
-            .setName(PassNames.NORMALIZE)
-            .setInternalFactory(
-                // Since we're doing only transpilation
-                // we want to avoid renaming all variables to be unique.
-                // Doing that would break Angular runtime behavior
-                // that injects function parameters based on their names.
-                (compiler) -> Normalize.builder(compiler).makeDeclaredNamesUnique(false).build())
-            .build());
-
+    passes.maybeAdd(normalize);
     TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
+    // The transpilation passes may rely on normalize making all variables unique,
+    // but we're doing only transpilation, so we want to put back the original variable names
+    // wherever we can to meet user expectations.
+    //
+    // Also, if we don't do this, we could end up breaking runtime behavior that depends on specific
+    // variable names.
+    //
+    // The primary concern is function parameter names, because some frameworks, like Angular,
+    // do runtime injection of function call arguments based on the function parameter names.
+    passes.maybeAdd(invertContextualRenaming);
 
     passes.assertAllOneTimePasses();
     assertValidOrderForChecks(passes);
