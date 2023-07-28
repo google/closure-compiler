@@ -76,9 +76,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -1612,18 +1612,20 @@ public final class DefaultPassConfig extends PassConfig {
                   new CompilerPass() {
                     @Override
                     public void process(Node externs, Node jsRoot) {
-                      LinkedHashMap<String, Integer> newCssNames = null;
-                      if (options.gatherCssNames) {
-                        newCssNames = new LinkedHashMap<>();
-                      }
+                      Optional<ImmutableSet.Builder<String>> cssNames =
+                          options.gatherCssNames
+                              ? Optional.of(ImmutableSet.builder())
+                              : Optional.empty();
+
                       ReplaceCssNames pass =
                           new ReplaceCssNames(
                               compiler,
                               options.cssRenamingMap,
-                              newCssNames,
+                              cssName -> cssNames.ifPresent(builder -> builder.add(cssName)),
                               options.cssRenamingSkiplist);
                       pass.process(externs, jsRoot);
-                      compiler.setCssNames(newCssNames);
+
+                      compiler.setCssNames(cssNames.isPresent() ? cssNames.get().build() : null);
                     }
                   })
           .build();

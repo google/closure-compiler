@@ -3507,11 +3507,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Ids for cross-module method stubbing, so that each method has a unique id. */
   private IdGenerator crossModuleIdGenerator = new IdGenerator();
 
-  /**
-   * Keys are arguments passed to getCssName() found during compilation; values are the number of
-   * times the key appeared as an argument to getCssName().
-   */
-  private @Nullable LinkedHashMap<String, Integer> cssNames = null;
+  /** Arguments passed to getCssName() found during compilation. */
+  private @Nullable Set<String> cssNames = null;
 
   /** The variable renaming map */
   private @Nullable VariableMap variableMap = null;
@@ -3558,7 +3555,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public void setCssNames(LinkedHashMap<String, Integer> cssNames) {
+  public void setCssNames(Set<String> cssNames) {
     this.cssNames = cssNames;
   }
 
@@ -3960,7 +3957,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
     private final LinkedHashSet<String> exportedNames;
-    private final LinkedHashMap<String, Integer> cssNames;
+    private final Set<String> cssNames;
     private final String idGeneratorMap;
     private final boolean transpiledFiles;
     private final IdGenerator crossModuleIdGenerator;

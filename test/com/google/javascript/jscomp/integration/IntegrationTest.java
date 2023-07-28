@@ -1239,7 +1239,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "}",
         "var COMPILED = true;\n" + "function getCss() {\n" + "  return 'bar';" + "}");
 
-    assertThat(lastCompiler.getResult().cssNames).containsExactly("foo", 1);
+    assertThat(lastCompiler.getResult().cssNames).containsExactly("foo");
   }
 
   @Test

@@ -140,7 +140,7 @@ class ReplaceCssNames implements CompilerPass {
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
 
-  private final Map<String, Integer> cssNames;
+  private final CssNameCollector cssNameCollector;
 
   private final Map<String, String> cssNamesBySymbol;
 
@@ -150,15 +150,21 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Set<String> skiplist;
 
+  /** Called for each class name seen when replacing. */
+  @FunctionalInterface
+  public interface CssNameCollector {
+    void add(String className);
+  }
+
   ReplaceCssNames(
       AbstractCompiler compiler,
       @Nullable CssRenamingMap symbolMap,
-      @Nullable Map<String, Integer> cssNames,
+      CssNameCollector cssNameCollector,
       @Nullable Set<String> skiplist) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.symbolMap = symbolMap;
-    this.cssNames = cssNames;
+    this.cssNameCollector = cssNameCollector;
     this.skiplist = skiplist;
     this.cssNamesBySymbol = new LinkedHashMap<>();
     this.classesObjectsQualifiedNames = new LinkedHashSet<>();
@@ -322,12 +328,9 @@ class ReplaceCssNames implements CompilerPass {
    * goog.getCssName('myComponent-highlight') will also work.
    */
   private void updateCssNamesCount(String cssClassName) {
-    if (cssNames != null) {
-      String[] parts = cssClassName.split("-", -1);
-      for (String element : parts) {
-        int count = cssNames.getOrDefault(element, 0);
-        cssNames.put(element, count + 1);
-      }
+    String[] parts = cssClassName.split("-", -1);
+    for (String element : parts) {
+      cssNameCollector.add(element);
     }
   }
 

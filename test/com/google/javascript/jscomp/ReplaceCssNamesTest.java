@@ -26,8 +26,8 @@ import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNIN
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
@@ -68,7 +68,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   CssRenamingMap renamingMap;
   Set<String> skiplist;
 
-  Map<String, Integer> cssNames;
+  Set<String> cssNames;
 
   public ReplaceCssNamesTest() {
     super(
@@ -82,7 +82,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ReplaceCssNames(
-        compiler, useReplacementMap ? renamingMap : null, cssNames, skiplist);
+        compiler, useReplacementMap ? renamingMap : null, cssNames::add, skiplist);
   }
 
   CssRenamingMap getPartialMap() {
@@ -109,7 +109,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     enableRewriteClosureCode();
-    cssNames = new HashMap<>();
+    cssNames = Sets.newHashSet();
     useReplacementMap = true;
     renamingMap = getPartialMap();
   }
@@ -179,16 +179,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     test(
         "setClass(goog.getCssName('active-buttonbar'))", //
         "setClass('active-buttonbar')");
-    ImmutableMap<String, Integer> expected =
-        new ImmutableMap.Builder<String, Integer>()
-            .put("goog", 2)
-            .put("footer", 1)
-            .put("active", 2)
-            .put("colorswatch", 1)
-            .put("disabled", 1)
-            .put("buttonbar", 1)
-            .buildOrThrow();
-    assertThat(cssNames).isEqualTo(expected);
+    assertThat(cssNames)
+        .containsExactly("goog", "footer", "active", "colorswatch", "disabled", "buttonbar");
   }
 
   @Test
@@ -217,13 +209,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     test(
         "setClass(goog.getCssName('elephant'))", //
         "setClass('e')");
-    ImmutableMap<String, Integer> expected =
-        new ImmutableMap.Builder<String, Integer>()
-            .put("buttonbar", 1)
-            .put("colorswatch", 1)
-            .put("elephant", 1)
-            .buildOrThrow();
-    assertThat(cssNames).isEqualTo(expected);
+    assertThat(cssNames).containsExactly("buttonbar", "colorswatch", "elephant");
   }
 
   @Test
@@ -241,16 +227,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     test(
         "setClass(goog.getCssName('active-buttonbar'))", //
         "setClass('a-b')");
-    ImmutableMap<String, Integer> expected =
-        new ImmutableMap.Builder<String, Integer>()
-            .put("goog", 2)
-            .put("footer", 1)
-            .put("active", 2)
-            .put("colorswatch", 1)
-            .put("disabled", 1)
-            .put("buttonbar", 1)
-            .buildOrThrow();
-    assertThat(cssNames).isEqualTo(expected);
+    assertThat(cssNames)
+        .containsExactly("goog", "footer", "active", "colorswatch", "disabled", "buttonbar");
   }
 
   @Test
@@ -382,7 +360,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     compiler.setErrorManager(errorMan);
     Node root = compiler.parseTestCode(input);
     useReplacementMap = false;
-    ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, null, null);
+    ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, unused -> {}, null);
     replacer.process(null, root);
     assertThat(compiler.toSource(root)).isEqualTo("[\"test\",base+\"-active\"]");
     assertWithMessage("There should be no errors").that(errorMan.getErrorCount()).isEqualTo(0);
@@ -472,7 +450,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
                 // name like this rather than creating an alias variable named `foo`.
                 "var x = foo_styles_css.classes.Bar"));
     test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importer));
-    assertThat(cssNames).containsExactly("fooStylesBar", 1);
+    assertThat(cssNames).containsExactly("fooStylesBar");
   }
 
   @Test
@@ -524,7 +502,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
                 "var x = foo_styles_css.classes.Bar;",
                 "var y = 'a';"));
     test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importerExpected));
-    assertThat(cssNames).containsExactly("fooStylesBar", 1, "active", 1);
+    assertThat(cssNames).containsExactly("fooStylesBar", "active");
   }
 
   @Test

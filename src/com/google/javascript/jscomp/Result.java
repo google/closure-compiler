@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
+import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
 /** Compilation results */
@@ -34,7 +34,7 @@ public class Result {
   public final VariableMap stringMap;
   public final VariableMap instrumentationMappings;
   public final SourceMap sourceMap;
-  public final Map<String, Integer> cssNames;
+  public final Set<String> cssNames;
   public final String externExport;
   public final String idGeneratorMap;
   public final boolean transpiledFiles;
@@ -49,7 +49,7 @@ public class Result {
       @Nullable VariableMap instrumentationMappings,
       @Nullable SourceMap sourceMap,
       String externExport,
-      @Nullable Map<String, Integer> cssNames,
+      @Nullable Set<String> cssNames,
       @Nullable String idGeneratorMap,
       boolean transpiledFiles) {
     this.success = errors.isEmpty();
