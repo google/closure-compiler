@@ -180,7 +180,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         "setClass(goog.getCssName('active-buttonbar'))", //
         "setClass('active-buttonbar')");
     assertThat(cssNames)
-        .containsExactly("goog", "footer", "active", "colorswatch", "disabled", "buttonbar");
+        .containsExactly("goog-footer-active", "goog-colorswatch-disabled", "active-buttonbar");
   }
 
   @Test
@@ -228,7 +228,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         "setClass(goog.getCssName('active-buttonbar'))", //
         "setClass('a-b')");
     assertThat(cssNames)
-        .containsExactly("goog", "footer", "active", "colorswatch", "disabled", "buttonbar");
+        .containsExactly("goog-footer-active", "goog-colorswatch-disabled", "active-buttonbar");
   }
 
   @Test

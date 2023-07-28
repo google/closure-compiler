@@ -180,7 +180,7 @@ class ReplaceCssNames implements CompilerPass {
         cssNamesBySymbol.put(getCssNameInstance.getCssClosureClassesMemberName(), cssClassName);
         classesObjectsQualifiedNames.add(getCssNameInstance.getCssClosureClassesQualifiedName());
       } else {
-        updateCssNamesCount(cssClassName);
+        cssNameCollector.add(cssClassName);
       }
       getCssNameInstance.replaceWithExpression();
     }
@@ -313,24 +313,6 @@ class ReplaceCssNames implements CompilerPass {
     private class TraversalState {
       public boolean inSassGeneratedCssTsScript;
       public String cssClosureClassesQualifiedName;
-    }
-  }
-
-  /**
-   * Update the count of CSS class names.
-   *
-   * <p>We maintain a count of references to CSS classes, so that unused classes can be flagged.
-   *
-   * <p>Unused class matching is always done by-part: if a CSS class definition or reference
-   * contains hyphens, each hyphenated section is checked separately. For example, if the CSS class
-   * contains .myComponent-highlight, it can be satisfied by separate calls to
-   * goog.getCssName('myComponent') and goog.getCssName('highlight'). A single call to
-   * goog.getCssName('myComponent-highlight') will also work.
-   */
-  private void updateCssNamesCount(String cssClassName) {
-    String[] parts = cssClassName.split("-", -1);
-    for (String element : parts) {
-      cssNameCollector.add(element);
     }
   }
 
@@ -585,7 +567,7 @@ class ReplaceCssNames implements CompilerPass {
         return;
       }
       String className = cssNamesBySymbol.get(classQualifiedName);
-      updateCssNamesCount(className);
+      cssNameCollector.add(className);
     }
   }
 }
