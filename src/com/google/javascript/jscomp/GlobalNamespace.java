@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
@@ -203,7 +204,9 @@ class GlobalNamespace
     Var v = s.getVar(name);
     if (v == null) {
       Name providedName = nameMap.get(name);
-      return providedName != null && providedName.isProvided ? globalRoot : null;
+      return providedName != null && providedName.getBooleanProperty(NameProp.IS_PROVIDED)
+          ? globalRoot
+          : null;
     }
     return v.isLocal() ? v.getScopeRoot() : globalRoot;
   }
@@ -458,7 +461,7 @@ class GlobalNamespace
 
       String name;
       boolean isSet = false;
-      NameType type = NameType.OTHER;
+      NameProp type = NameProp.OTHER_OBJECT;
 
       switch (n.getToken()) {
         case GETTER_DEF:
@@ -469,7 +472,7 @@ class GlobalNamespace
           }
           name = NodeUtil.getBestLValueName(n);
           isSet = true;
-          type = n.isMemberFunctionDef() ? NameType.FUNCTION : NameType.GET_SET;
+          type = n.isMemberFunctionDef() ? NameProp.FUNCTION : NameProp.GET_SET;
           break;
         case STRING_KEY:
           name = null;
@@ -497,7 +500,7 @@ class GlobalNamespace
             case CONST:
               isSet = true;
               Node rvalue = n.getFirstChild();
-              type = (rvalue == null) ? NameType.OTHER : getValueType(rvalue);
+              type = (rvalue == null) ? NameProp.OTHER_OBJECT : getValueType(rvalue);
               break;
             case ASSIGN:
               if (parent.getFirstChild() == n) {
@@ -515,19 +518,19 @@ class GlobalNamespace
                 return;
               }
               isSet = true;
-              type = NameType.FUNCTION;
+              type = NameProp.FUNCTION;
               break;
             case CATCH:
             case INC:
             case DEC:
               isSet = true;
-              type = NameType.OTHER;
+              type = NameProp.OTHER_OBJECT;
               break;
             case CLASS:
               // The first child is the class name, and the second child is the superclass name.
               if (parent.getFirstChild() == n) {
                 isSet = true;
-                type = NameType.CLASS;
+                type = NameProp.CLASS;
               }
               break;
             case STRING_KEY:
@@ -541,7 +544,7 @@ class GlobalNamespace
               // so causes invalid output. Covered in CollapsePropertiesTest
               if (n.isName() && NodeUtil.isLhsByDestructuring(n)) {
                 isSet = true;
-                type = NameType.OTHER;
+                type = NameProp.OTHER_OBJECT;
               }
               break;
             case ITER_SPREAD:
@@ -551,13 +554,13 @@ class GlobalNamespace
               if (n.isFirstChildOf(parent) && isObjectHasOwnPropertyCall(parent)) {
                 String qname = n.getFirstChild().getQualifiedName();
                 Name globalName = getOrCreateName(qname, curMetadata);
-                globalName.usedHasOwnProperty = true;
+                globalName.setBooleanProperty(NameProp.IS_USED_HAS_OWN_PROPERTY);
               }
               break;
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
                 isSet = true;
-                type = NameType.OTHER;
+                type = NameProp.OTHER_OBJECT;
               }
           }
           if (!n.isQualifiedName()) {
@@ -645,11 +648,11 @@ class GlobalNamespace
         String subNamespace = dot < 0 ? namespace : namespace.substring(0, dot);
         checkState(!subNamespace.isEmpty());
         name = getOrCreateName(subNamespace, null);
-        name.isProvided = true;
+        name.setBooleanProperty(NameProp.IS_PROVIDED);
       }
 
       Name newName = getOrCreateName(namespace, null);
-      newName.isProvided = true;
+      newName.setBooleanProperty(NameProp.IS_PROVIDED);
     }
 
     /**
@@ -707,14 +710,14 @@ class GlobalNamespace
      *
      * @param n An r-value in an assignment or variable declaration (not null)
      */
-    NameType getValueType(Node n) {
+    NameProp getValueType(Node n) {
       switch (n.getToken()) {
         case CLASS:
-          return NameType.CLASS;
+          return NameProp.CLASS;
         case OBJECTLIT:
-          return NameType.OBJECTLIT;
+          return NameProp.OBJECTLIT;
         case FUNCTION:
-          return NameType.FUNCTION;
+          return NameProp.FUNCTION;
         case OR:
           // Recurse on the second value. If the first value were an object
           // literal or function, then the OR would be meaningless and the
@@ -725,8 +728,8 @@ class GlobalNamespace
         case HOOK:
           // The same line of reasoning used for the OR case applies here.
           Node second = n.getSecondChild();
-          NameType t = getValueType(second);
-          if (t != NameType.OTHER) {
+          NameProp t = getValueType(second);
+          if (t != NameProp.OTHER_OBJECT) {
             return t;
           }
           Node third = second.getNext();
@@ -734,7 +737,7 @@ class GlobalNamespace
         default:
           break;
       }
-      return NameType.OTHER;
+      return NameProp.OTHER_OBJECT;
     }
 
     /**
@@ -748,7 +751,7 @@ class GlobalNamespace
      * @param type The type of the value that the name is being assigned
      */
     void handleSetFromGlobal(
-        Scope scope, Node n, String name, NameType type, ModuleMetadata metadata) {
+        Scope scope, Node n, String name, NameProp type, ModuleMetadata metadata) {
       if (maybeHandlePrototypePrefix(scope, n, name, metadata)) {
         return;
       }
@@ -761,10 +764,10 @@ class GlobalNamespace
         // the 'type' of a.b to Type.CLASS.
         // TODO(lharker): for non-setter cases, do we really want to just treat the last set of
         // a name as canonical? e.g. what if a name is first set to a class, then an object literal?
-        nameObj.type = type;
+        nameObj.setNameType(type);
       }
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
-        nameObj.isModuleProp = true;
+        nameObj.setBooleanProperty(NameProp.IS_MODULE_PROP);
       }
 
       if (isNestedAssign(n.getParent())) {
@@ -773,7 +776,7 @@ class GlobalNamespace
         addOrConfirmRef(nameObj, n, refType, scope);
       } else {
         addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_GLOBAL, scope);
-        nameObj.setDeclaredType(getDeclaredTypeKind(n));
+        nameObj.setDeclaredTypeKind(getDeclaredTypeKind(n));
       }
     }
 
@@ -784,28 +787,28 @@ class GlobalNamespace
      *
      * @param n The node that represents the name being set
      */
-    private DeclaredTypeKind getDeclaredTypeKind(Node n) {
+    private NameProp getDeclaredTypeKind(Node n) {
       Node valueNode = NodeUtil.getRValueOfLValue(n);
-      final DeclaredTypeKind kind;
+      final NameProp kind;
       if (valueNode == null) {
-        kind = DeclaredTypeKind.NOT_A_TYPE;
+        kind = NameProp.NOT_A_TYPE;
       } else if (valueNode.isClass()) {
         // Always treat classes as having a declared type. (Transpiled classes are annotated
         // @constructor)
-        kind = DeclaredTypeKind.CLASS;
+        kind = NameProp.CONSTRUCTOR_TYPE;
       } else {
         JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
         // Heed the annotations only if they're sensibly used.
         if (info == null) {
-          kind = DeclaredTypeKind.NOT_A_TYPE;
+          kind = NameProp.NOT_A_TYPE;
         } else if (info.isConstructor() && valueNode.isFunction()) {
-          kind = DeclaredTypeKind.CLASS;
+          kind = NameProp.CONSTRUCTOR_TYPE;
         } else if (info.isInterface() && valueNode.isFunction()) {
-          kind = DeclaredTypeKind.INTERFACE;
+          kind = NameProp.INTERFACE_TYPE;
         } else if (info.hasEnumParameterType() && valueNode.isObjectLit()) {
-          kind = DeclaredTypeKind.ENUM;
+          kind = NameProp.ENUM_TYPE;
         } else {
-          kind = DeclaredTypeKind.NOT_A_TYPE;
+          kind = NameProp.NOT_A_TYPE;
         }
       }
       return kind;
@@ -826,7 +829,7 @@ class GlobalNamespace
 
       Name nameObj = getOrCreateName(name, metadata);
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
-        nameObj.isModuleProp = true;
+        nameObj.setBooleanProperty(NameProp.IS_MODULE_PROP);
       }
 
       if (isNestedAssign(n.getParent())) {
@@ -1147,23 +1150,6 @@ class GlobalNamespace
     return new Name(name, null, SourceKind.CODE);
   }
 
-  enum NameType {
-    CLASS, // class C {}
-    OBJECTLIT, // var x = {};
-    FUNCTION, // function f() {}
-    SUBCLASSING_GET, // class C extends SuperClass {
-    GET_SET, // a getter, setter, or both; e.g. `obj.b` in `const obj = {set b(x) {}};`
-    OTHER; // anything else, including `var x = 1;`, var x = new Something();`, etc.
-  }
-
-  /** Indicates whether the name represents a declared type and, if so, what kind of type. */
-  private enum DeclaredTypeKind {
-    CLASS,
-    INTERFACE,
-    ENUM,
-    NOT_A_TYPE;
-  }
-
   /**
    * How much to inline a {@link Name}.
    *
@@ -1233,15 +1219,18 @@ class GlobalNamespace
     /** The first global assignment to a name. */
     private @Nullable Ref declaration;
 
-    /** Keep track of which Nodes are Refs for this Name */
-    private final Map<Node, Ref> refsForNodeMap = new LinkedHashMap<>();
+    /**
+     * Keep track of which Nodes are Refs for this Name.
+     *
+     * <p>This is either null, a {@code Map<Node, Ref>} refsForNodeMap or a singleton Ref.
+     *
+     * <p>This makes the code using refsForNode more complex but greatly decreases the memory usage
+     * of this class. For example, one project had more than 5 million Names, and more than 80% of
+     * those Names had exactly 1 Ref, their declaration. So specializing this field to sometimes be
+     * a single Ref, not a map, saves on creating > 4 million Map instances.
+     */
+    private Object refsForNode = null;
 
-    private NameType type; // not final to handle forward references to names
-    private DeclaredTypeKind declaredType = DeclaredTypeKind.NOT_A_TYPE;
-    private boolean isDeclared = false;
-    private boolean isModuleProp = false;
-    private boolean isProvided = false; // If this name was in any goog.provide() calls.
-    private boolean usedHasOwnProperty = false;
     private int globalSets = 0;
     private int localSets = 0;
     private int localSetsWithNoCollapse = 0;
@@ -1250,7 +1239,14 @@ class GlobalNamespace
     private int callGets = 0;
     private int deleteProps = 0;
     private int subclassingGets = 0;
-    private final SourceKind sourceKind;
+
+    /**
+     * Bitset containing {@link NameProp}s
+     *
+     * <p>Using a bit set over boolean fields is a memory optimization. Large projects can have
+     * millions of Name objects, so saving a few bytes per Name is useful.
+     */
+    private int propertyBitSet = 0;
 
     // Will be set to the JSDocInfo associated with the first SET_FROM_GLOBAL reference added
     // that has JSDocInfo.
@@ -1269,8 +1265,11 @@ class GlobalNamespace
     private Name(String name, Name parent, SourceKind sourceKind) {
       this.baseName = name;
       this.parent = parent;
-      this.type = NameType.OTHER;
-      this.sourceKind = sourceKind;
+      this.setBooleanProperty(NameProp.NOT_A_TYPE);
+      this.setBooleanProperty(NameProp.OTHER_OBJECT);
+      if (sourceKind.equals(SourceKind.EXTERN)) {
+        this.setBooleanProperty(NameProp.IS_EXTERN);
+      }
     }
 
     Name addProperty(String name, SourceKind sourceKind) {
@@ -1287,11 +1286,7 @@ class GlobalNamespace
     }
 
     boolean inExterns() {
-      return this.sourceKind == SourceKind.EXTERN;
-    }
-
-    SourceKind getSourceKind() {
-      return this.sourceKind;
+      return this.getBooleanProperty(NameProp.IS_EXTERN);
     }
 
     int subclassingGetCount() {
@@ -1308,7 +1303,7 @@ class GlobalNamespace
     }
 
     boolean usesHasOwnProperty() {
-      return usedHasOwnProperty;
+      return getBooleanProperty(NameProp.IS_USED_HAS_OWN_PROPERTY);
     }
 
     @Override
@@ -1317,15 +1312,15 @@ class GlobalNamespace
     }
 
     boolean isFunction() {
-      return this.type == NameType.FUNCTION;
+      return getBooleanProperty(NameProp.FUNCTION);
     }
 
     boolean isClass() {
-      return this.type == NameType.CLASS;
+      return getBooleanProperty(NameProp.CLASS);
     }
 
     boolean isObjectLiteral() {
-      return this.type == NameType.OBJECTLIT;
+      return getBooleanProperty(NameProp.OBJECTLIT);
     }
 
     int getAliasingGets() {
@@ -1369,29 +1364,64 @@ class GlobalNamespace
       throw new UnsupportedOperationException();
     }
 
+    private void setBooleanProperty(NameProp property) {
+      this.propertyBitSet = this.propertyBitSet | property.bit;
+    }
+
+    private boolean getBooleanProperty(NameProp property) {
+      return (this.propertyBitSet & property.bit) != 0;
+    }
+
     private void addRef(Scope scope, Node node, Ref.Type type) {
       checkNoExistingRefsForNode(node);
       Ref ref = createNewRef(scope, node, type);
-      refsForNodeMap.put(node, ref);
+      putRef(node, ref);
       updateStateForAddedRef(ref);
     }
 
     private void checkNoExistingRefsForNode(Node node) {
-      Ref refForNode = refsForNodeMap.get(node);
+      if (this.refsForNode == null) {
+        return;
+      }
+      if (this.refsForNode instanceof Ref) {
+        checkState(
+            ((Ref) this.refsForNode).node != node, "Ref already exists for node: %s", refsForNode);
+        return;
+      }
+      Ref refForNode = castRefsForNodeMap().get(node);
       checkState(refForNode == null, "Ref already exists for node: %s", refForNode);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Node, Ref> castRefsForNodeMap() {
+      return (Map<Node, Ref>) refsForNode;
     }
 
     private Ref createNewRef(Scope scope, Node node, Ref.Type type) {
       return new Ref(
           checkNotNull(scope),
           checkNotNull(node), // may be null later, but not on creation
-          this,
           type);
     }
 
+    private void putRef(Node node, Ref ref) {
+      if (this.refsForNode == null) {
+        this.refsForNode = ref;
+        return;
+      }
+      if (refsForNode instanceof Ref) {
+        // Convert the singleton Ref object into a map, so that we can store a second Ref.
+        Map<Node, Ref> refsForNodeMap = new LinkedHashMap<>();
+        Ref existingRef = (Ref) this.refsForNode;
+        refsForNodeMap.put(existingRef.node, existingRef);
+        this.refsForNode = refsForNodeMap;
+      }
+      castRefsForNodeMap().put(node, ref);
+    }
+
     Ref addSingleRefForTesting(Node node, Ref.Type type) {
-      Ref ref = new Ref(/* scope= */ null, /* node= */ node, this, type);
-      refsForNodeMap.put(node, ref);
+      Ref ref = new Ref(/* scope= */ null, /* node= */ node, type);
+      putRef(node, ref);
       updateStateForAddedRef(ref);
       return ref;
     }
@@ -1497,13 +1527,20 @@ class GlobalNamespace
       checkState(oldNode != null, "Ref's node is already null: %s", ref);
       ref.node = newNode;
 
-      refsForNodeMap.remove(oldNode);
-
-      if (newNode != null) {
-        Ref existingRefForNewNode = refsForNodeMap.get(newNode);
-        checkArgument(
-            existingRefForNewNode == null, "refs already exist: %s", existingRefForNewNode);
-        refsForNodeMap.put(newNode, ref);
+      if (refsForNode == null) {
+        refsForNode = ref;
+      } else if (refsForNode instanceof Ref) {
+        // No update needed, since refsForNode is a singleton.
+        checkState(refsForNode == ref);
+      } else {
+        Map<Node, Ref> refsForNodeMap = castRefsForNodeMap();
+        refsForNodeMap.remove(oldNode);
+        if (newNode != null) {
+          Ref existingRefForNewNode = refsForNodeMap.get(newNode);
+          checkArgument(
+              existingRefForNewNode == null, "refs already exist: %s", existingRefForNewNode);
+          refsForNodeMap.put(newNode, ref);
+        }
       }
     }
 
@@ -1514,12 +1551,17 @@ class GlobalNamespace
      * get and the set.
      */
     void removeRef(Ref ref) {
-      checkState(
-          ref.name == this, "removeRef(%s): node does not belong to this name: %s", ref, this);
-      checkState(refsForNodeMap.containsKey(ref.getNode()), "removeRef(%s): unknown ref", ref);
-      Node refNode = ref.getNode();
-      if (refNode != null) {
-        removeRefFromNodeMap(ref);
+      checkNotNull(refsForNode, "removeRef(%s): unknown ref", ref);
+      if (refsForNode instanceof Ref) {
+        checkState(refsForNode == ref, "removeRef(%s): unknown ref", ref);
+        refsForNode = null;
+      } else {
+        checkState(
+            castRefsForNodeMap().containsKey(ref.getNode()), "removeRef(%s): unknown ref", ref);
+        Node refNode = ref.getNode();
+        if (refNode != null) {
+          removeRefFromNodeMap(ref);
+        }
       }
       removeRefAndUpdateState(ref);
     }
@@ -1528,7 +1570,7 @@ class GlobalNamespace
     private void removeRefAndUpdateState(Ref ref) {
       if (ref == declaration) {
         declaration = null;
-        for (Ref maybeNewDecl : refsForNodeMap.values()) {
+        for (Ref maybeNewDecl : getRefs()) {
           if (maybeNewDecl.type == Ref.Type.SET_FROM_GLOBAL) {
             declaration = maybeNewDecl;
             break;
@@ -1583,32 +1625,54 @@ class GlobalNamespace
 
     private void removeRefFromNodeMap(Ref ref) {
       Node refNode = checkNotNull(ref.getNode(), ref);
-      Ref refsForNode = refsForNodeMap.get(refNode);
-      checkState(
-          refsForNode == ref,
-          "Unexpected Refs for Node: %s: when removing Ref: %s",
-          refsForNode,
-          ref);
-      refsForNodeMap.remove(refNode);
+      checkNotNull(refsForNode, "Missing ref when trying to remove it: %s", ref);
+      if (refsForNode instanceof Ref) {
+        refsForNode = null;
+      } else {
+        Ref refsForNode = castRefsForNodeMap().get(refNode);
+        checkState(
+            refsForNode == ref,
+            "Unexpected Refs for Node: %s: when removing Ref: %s",
+            refsForNode,
+            ref);
+        castRefsForNodeMap().remove(refNode);
+      }
     }
 
     Collection<Ref> getRefs() {
-      return this.refsForNodeMap.values();
+      if (refsForNode == null) {
+        return ImmutableSet.of();
+      }
+      if (refsForNode instanceof Ref) {
+        return ImmutableSet.of((Ref) refsForNode);
+      }
+      return castRefsForNodeMap().values();
     }
 
     /**
      * Get the Ref for this name that belongs to the given node.
      *
-     * <p>Returns null if there are no Refs.
+     * <p>Returns null if there are no Refs corresponding to the node.
      */
     @VisibleForTesting
-    Ref getRefForNode(Node node) {
-      return refsForNodeMap.get(checkNotNull(node));
+    @Nullable Ref getRefForNode(Node node) {
+      checkNotNull(node);
+      if (refsForNode == null) {
+        return null;
+      }
+      if (refsForNode instanceof Ref) {
+        Ref ref = (Ref) refsForNode;
+        return ref.getNode() == node ? ref : null;
+      }
+      return castRefsForNodeMap().get(node);
     }
 
     Ref getFirstRef() {
-      checkState(!refsForNodeMap.isEmpty(), "no first Ref to get");
-      return refsForNodeMap.values().iterator().next();
+      checkNotNull(refsForNode, "no first Ref to get");
+      if (refsForNode instanceof Ref) {
+        return (Ref) refsForNode;
+      }
+      return castRefsForNodeMap().values().iterator().next();
     }
 
     boolean canEliminate() {
@@ -1849,18 +1913,17 @@ class GlobalNamespace
     }
 
     private Inlinability getUnsafeInlinabilityBasedOnDeclaredType() {
-      switch (declaredType) {
-        case CLASS:
+      if (this.getBooleanProperty(NameProp.CONSTRUCTOR_TYPE)) {
           return Inlinability.INLINE_BUT_KEEP_DECLARATION_CLASS;
-        case INTERFACE:
+      } else if (this.getBooleanProperty(NameProp.INTERFACE_TYPE)) {
           return Inlinability.INLINE_BUT_KEEP_DECLARATION_INTERFACE;
-        case ENUM:
+      } else if (this.getBooleanProperty(NameProp.ENUM_TYPE)) {
           return Inlinability.INLINE_BUT_KEEP_DECLARATION_ENUM;
-        case NOT_A_TYPE:
+      } else if (this.getBooleanProperty(NameProp.NOT_A_TYPE)) {
           return Inlinability.DO_NOT_INLINE;
       }
       throw new IllegalStateException(
-          SimpleFormat.format("unexpected declaredType value: %s", declaredType));
+          SimpleFormat.format("name missing declaredType value: %s", this));
     }
 
     /**
@@ -1906,7 +1969,7 @@ class GlobalNamespace
     }
 
     boolean isGetOrSetDefinition() {
-      return this.type == NameType.GET_SET;
+      return getBooleanProperty(NameProp.GET_SET);
     }
 
     boolean canCollapseUnannotatedChildNames() {
@@ -1947,8 +2010,8 @@ class GlobalNamespace
      */
     Inlinability canCollapseOrInlineChildNames() {
       // condition (a) and (b)
-      if (type == NameType.OTHER) {
-        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "NameType.OTHER");
+      if (getBooleanProperty(NameProp.OTHER_OBJECT)) {
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "NameProp.OTHER_OBJECT");
         return Inlinability.DO_NOT_INLINE;
       } else if (isGetOrSetDefinition()) {
         logChildNamesDecision(Inlinability.DO_NOT_INLINE, "getter/setter");
@@ -1991,7 +2054,7 @@ class GlobalNamespace
         return Inlinability.DO_NOT_INLINE;
       }
 
-      if (usedHasOwnProperty) {
+      if (this.usesHasOwnProperty()) {
         // condition (b)
         logChildNamesDecision(Inlinability.DO_NOT_INLINE, "hasOwnProperty() call exists");
         return Inlinability.DO_NOT_INLINE;
@@ -2065,24 +2128,23 @@ class GlobalNamespace
         return false;
       }
 
-      switch (type) {
-        case CLASS:
-          // Properties on classes may be referenced via `this` in static methods.
-          return true;
-        case FUNCTION:
+      if (getBooleanProperty(NameProp.CLASS)) {
+        // Properties on classes may be referenced via `this` in static methods.
+        return true;
+      }
+      if (getBooleanProperty(NameProp.FUNCTION)) {
           // We want ES5 ctors/interfaces to behave consistently with ES6 because:
           // - transpilation should not change behaviour
           // - updating code shouldn't be hindered by behaviour changes
           @Nullable JSDocInfo jsdoc = getJSDocInfo();
           return jsdoc != null && jsdoc.isConstructorOrInterface();
-        default:
-          return false;
       }
+      return false;
     }
 
     /** Whether this is an object literal that needs to keep its keys. */
     boolean shouldKeepKeys() {
-      return type == NameType.OBJECTLIT && (aliasingGets > 0 || isCollapsingExplicitlyDenied());
+      return isObjectLiteral() && (aliasingGets > 0 || isCollapsingExplicitlyDenied());
     }
 
     boolean needsToBeStubbed() {
@@ -2092,17 +2154,30 @@ class GlobalNamespace
           && !isCollapsingExplicitlyDenied();
     }
 
-    void setDeclaredType(DeclaredTypeKind kind) {
-      declaredType = kind;
-      if (kind != DeclaredTypeKind.NOT_A_TYPE) {
+    private void setDeclaredTypeKind(NameProp declaredType) {
+      checkArgument(
+          (declaredType.bit & NameProp.DECLARED_TYPE_KIND_MASK) != 0,
+          "Unexpected NameProp for declaredType %s",
+          declaredType);
+      this.propertyBitSet =
+          (this.propertyBitSet & ~NameProp.DECLARED_TYPE_KIND_MASK) | declaredType.bit;
+      if (declaredType != NameProp.NOT_A_TYPE) {
         for (Name ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-          ancestor.isDeclared = true;
+          ancestor.setBooleanProperty(NameProp.IS_DECLARED);
         }
       }
     }
 
+    private void setNameType(NameProp type) {
+      checkArgument(
+          (type.bit & NameProp.NAME_KIND_MASK) != 0, "Unexpected NameProp for nameType %s", type);
+      propertyBitSet = (this.propertyBitSet & ~NameProp.NAME_KIND_MASK) | type.bit;
+    }
+
     boolean isDeclaredType() {
-      return declaredType != DeclaredTypeKind.NOT_A_TYPE;
+      checkState(
+          (this.propertyBitSet & NameProp.DECLARED_TYPE_KIND_MASK) != 0, this.propertyBitSet);
+      return !getBooleanProperty(NameProp.NOT_A_TYPE);
     }
 
     boolean isConstructor() {
@@ -2124,7 +2199,7 @@ class GlobalNamespace
      * namespaces.
      */
     boolean isNamespaceObjectLit() {
-      return isDeclared && type == NameType.OBJECTLIT;
+      return getBooleanProperty(NameProp.IS_DECLARED) && isObjectLiteral();
     }
 
     /** Determines whether this is a simple name (as opposed to a qualified name). */
@@ -2132,11 +2207,26 @@ class GlobalNamespace
       return parent == null;
     }
 
+    String getTypeDebugString() {
+      if (this.isClass()) {
+        return "CLASS";
+      } else if (this.isFunction()) {
+        return "FUNCTION";
+      } else if (this.isObjectLiteral()) {
+        return "OBJECTLIT";
+      } else if (this.isGetOrSetDefinition()) {
+        return "GET_SET";
+      } else if (this.getBooleanProperty(NameProp.OTHER_OBJECT)) {
+        return "OTHER";
+      }
+      throw new AssertionError("Missing NameProp for name kind in " + this.propertyBitSet);
+    }
+
     @Override
     public String toString() {
       return getFullName()
           + " ("
-          + type
+          + getTypeDebugString()
           + "): "
           + Joiner.on(", ")
               .join(
@@ -2189,7 +2279,7 @@ class GlobalNamespace
     }
 
     boolean isModuleExport() {
-      return isModuleProp;
+      return getBooleanProperty(NameProp.IS_MODULE_PROP);
     }
   }
 
@@ -2281,8 +2371,8 @@ class GlobalNamespace
 
     // Not final because CollapseProperties needs to update the namespace in-place.
     private Node node;
-    final Name name;
     private final Type type;
+
     /**
      * The scope in which the reference is resolved. Note that for ALIASING_GETS like "var x = ns;"
      * this scope may not be the correct hoist scope of the aliasing VAR.
@@ -2296,9 +2386,8 @@ class GlobalNamespace
      * created just for testing. However, all Refs for real use must be created by methods on the
      * Name class, which does do argument checking.
      */
-    private Ref(@Nullable Scope scope, @Nullable Node node, Name name, Type type) {
+    private Ref(@Nullable Scope scope, @Nullable Node node, Type type) {
       this.node = node;
-      this.name = name;
       this.type = type;
       this.scope = scope;
     }
@@ -2315,7 +2404,7 @@ class GlobalNamespace
 
     @Override
     public StaticSlot getSymbol() {
-      return name;
+      throw new UnsupportedOperationException();
     }
 
     boolean isDeleteProp() {
@@ -2387,7 +2476,6 @@ class GlobalNamespace
     public String toString() {
       return MoreObjects.toStringHelper(this)
           .omitNullValues()
-          .add("name", name)
           .add("type", type)
           .add("node", node)
           .add("scope", scope)
@@ -2395,11 +2483,51 @@ class GlobalNamespace
     }
   }
 
+  /**
+   * Enum of boolean properties of a {@link Name}, to be stored in one bit set per name.
+   *
+   * <p>Non-private for @AutoValue. Code outside this class shouldn't need this enum though.
+   */
+  enum NameProp {
+    // Increment the "index" passed to the constructor by 1 for each enum member
+    IS_DECLARED(0),
+    IS_MODULE_PROP(1),
+    IS_PROVIDED(2), // If this name was in any goog.provide() calls.
+    IS_USED_HAS_OWN_PROPERTY(3),
+    IS_EXTERN(4), // corresponds to SourceKind.EXTERN
+
+    // Mutually exclusive properties indicating what kind of Closure type this Name is, if any.
+    // Corresponds to DECLARED_TYPE_KIND_MASK.
+    CONSTRUCTOR_TYPE(5), // a non-interface class {} or a `/** @constructor */ function`
+    INTERFACE_TYPE(6), // a `/** @interface */` or `/** @record */`
+    ENUM_TYPE(7), // an `/** @enum */`
+    NOT_A_TYPE(8),
+
+    // Mutually exclusive properties indicating what kind of JavaScript entity this Name is.
+    // Corresponds to NAME_KIND_MASK.
+    CLASS(9), // class C {}
+    OBJECTLIT(10), // var x = {};
+    FUNCTION(11), // function f() {}
+    GET_SET(12), // a getter, setter, or both; e.g. `obj.b` in `const obj = {set b(x) {}};`
+    OTHER_OBJECT(13); // anything else, including `var x = 1;`, var x = new Something();`, etc.
+
+    private static final int DECLARED_TYPE_KIND_MASK =
+        (CONSTRUCTOR_TYPE.bit | INTERFACE_TYPE.bit | ENUM_TYPE.bit | NOT_A_TYPE.bit);
+    private static final int NAME_KIND_MASK =
+        (CLASS.bit | OBJECTLIT.bit | FUNCTION.bit | GET_SET.bit | OTHER_OBJECT.bit);
+
+    private final int bit; // some power of 2
+
+    NameProp(int index) {
+      this.bit = 1 << index;
+    }
+  }
+
   @AutoValue
   abstract static class ObjLitStringKeyAnalysis {
     public abstract @Nullable String getNameString();
 
-    public abstract @Nullable NameType getNameType();
+    public abstract @Nullable NameProp getNameType();
 
     /**
      * The object literal key is used to define a property. <code>
@@ -2410,11 +2538,11 @@ class GlobalNamespace
       // always pretend it does, because we cannot inline and collapse properties defined this
       // way.
       return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
-          checkNotNull(nameString), NameType.GET_SET);
+          checkNotNull(nameString), NameProp.GET_SET);
     }
 
     /** The object literal key represents `parent.qname = { strKeyName: value }` */
-    static ObjLitStringKeyAnalysis forObjLitAssignment(String nameString, NameType nameType) {
+    static ObjLitStringKeyAnalysis forObjLitAssignment(String nameString, NameProp nameType) {
       return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
           checkNotNull(nameString), nameType);
     }
@@ -2422,7 +2550,7 @@ class GlobalNamespace
     /** The object literal key does not represent a qualified name assignment. */
     static ObjLitStringKeyAnalysis forNonReference() {
       return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
-          /* nameString= */ null, NameType.OTHER);
+          /* nameString= */ null, NameProp.OTHER_OBJECT);
     }
   }
 }

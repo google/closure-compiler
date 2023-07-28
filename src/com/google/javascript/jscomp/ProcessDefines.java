@@ -711,7 +711,6 @@ class ProcessDefines implements CompilerPass {
         @Nullable Node value) {
       checkState(valueParent == null || value == null || value.getParent() == valueParent);
       checkState(declaration.isSet());
-      checkState(declaration.name.equals(name));
 
       this.defineName = defineName;
       this.name = name;

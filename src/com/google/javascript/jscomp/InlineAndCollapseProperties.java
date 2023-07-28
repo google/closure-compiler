@@ -638,7 +638,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           }
 
           // just set the original alias to null.
-          tryReplacingAliasingAssignment(alias, aliasLhsNode);
+          tryReplacingAliasingAssignment(alias, name, aliasLhsNode);
 
           // Inlining the variable may have introduced new references
           // to descendants of {@code name}. So those need to be collected now.
@@ -651,7 +651,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           // generators introduces some constructor aliases that weren't getting inlined.
           // If we find another (safer) way to avoid aliasing in method decomposition, consider
           // removing this.
-          if (!partiallyInlineAlias(alias, namespace, aliasRefs, aliasLhsNode)) {
+          if (!partiallyInlineAlias(alias, name, namespace, aliasRefs, aliasLhsNode)) {
             // If we can't inline all alias references, make sure there are no unsafe property
             // accesses.
             if (referencesCollapsibleProperty(aliasRefs, name, namespace)) {
@@ -674,7 +674,11 @@ class InlineAndCollapseProperties implements CompilerPass {
      * @return Whether all references to the alias were inlined
      */
     private boolean partiallyInlineAlias(
-        Ref alias, GlobalNamespace namespace, ReferenceCollection aliasRefs, Node aliasLhsNode) {
+        Ref alias,
+        Name aliasingName,
+        GlobalNamespace namespace,
+        ReferenceCollection aliasRefs,
+        Node aliasLhsNode) {
       BasicBlock aliasBlock = null;
       // This initial iteration through all the alias references does two things:
       // a) Find the control flow block in which the alias is assigned.
@@ -723,7 +727,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
       // We removed all references to the alias, so remove the original aliasing assignment.
       if (!foundNonReplaceableAlias) {
-        tryReplacingAliasingAssignment(alias, aliasLhsNode);
+        tryReplacingAliasingAssignment(alias, aliasingName, aliasLhsNode);
       }
 
       if (codeChanged) {
@@ -738,7 +742,8 @@ class InlineAndCollapseProperties implements CompilerPass {
      * Replaces the rhs of an aliasing assignment with null, unless the assignment result is used in
      * a complex expression.
      */
-    private boolean tryReplacingAliasingAssignment(Ref alias, Node aliasLhsNode) {
+    @CanIgnoreReturnValue
+    private boolean tryReplacingAliasingAssignment(Ref alias, Name aliasName, Node aliasLhsNode) {
       // either VAR/CONST/LET or ASSIGN.
       Node assignment = aliasLhsNode.getParent();
       if (!NodeUtil.isNameDeclaration(assignment) && NodeUtil.isExpressionResultUsed(assignment)) {
@@ -749,7 +754,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
       Node aliasParent = alias.getNode().getParent();
       alias.getNode().replaceWith(IR.nullNode());
-      alias.name.removeRef(alias);
+      aliasName.removeRef(alias);
       codeChanged = true;
       compiler.reportChangeToEnclosingScope(aliasParent);
       return true;
@@ -1831,7 +1836,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       Ref ref = n.getDeclaration();
       Node rvalue = ref.getNode().getNext();
       if (ref.isTwin()) {
-        updateTwinnedDeclaration(alias, ref.name, ref);
+        updateTwinnedDeclaration(alias, n, ref);
         return;
       }
       Node varNode = new Node(Token.VAR);
