@@ -3699,6 +3699,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(
         externs(externs),
         srcs(
+            lines(
+                "goog.provide('test.Attribute');",
+                "/** @const */",
+                "test.Attribute.foo = 'safe';",
+                "(new HTMLScriptElement).setAttribute(test.Attribute.foo, 'xxx');")));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
             new String[] {
               lines(
                   "goog.provide('test.Attribute');",

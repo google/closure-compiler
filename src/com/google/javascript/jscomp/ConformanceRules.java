@@ -61,6 +61,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.jspecify.nullness.Nullable;
@@ -1052,7 +1053,26 @@ public final class ConformanceRules {
       return specName.substring(index + 1);
     }
 
-    private static @Nullable String inferStringValue(@Nullable Scope scope, Node node) {
+    private static boolean isAnnotatedAsConst(JSDocInfo jsdoc) {
+      return jsdoc != null && jsdoc.isConstant();
+    }
+
+    private static @Nullable String getValueFromGlobalName(
+        @Nullable Scope scope, GlobalNamespace gns, String qualifiedName) {
+      GlobalNamespace.Name gn = gns.getOwnSlot(qualifiedName);
+      if (gn == null
+          || gn.getGlobalSets() != 1
+          || gn.getTotalSets() != 1
+          || !isAnnotatedAsConst(gn.getJSDocInfo())) {
+        return null;
+      }
+
+      return inferStringValue(
+          scope, NodeUtil.getRValueOfLValue(gn.getDeclaration().getNode()), () -> gns);
+    }
+
+    private static @Nullable String inferStringValue(
+        @Nullable Scope scope, Node node, Supplier<GlobalNamespace> globalNamespaceSupplier) {
       if (node == null) {
         return null;
       }
@@ -1072,35 +1092,43 @@ public final class ConformanceRules {
           if (var == null) {
             return null;
           }
-          if (!var.isConst()) {
-            JSDocInfo jsdocInfo = var.getJSDocInfo();
-            if (jsdocInfo == null || !jsdocInfo.isConstant()) {
-              return null;
-            }
+          if (!var.isConst() && !isAnnotatedAsConst(var.getJSDocInfo())) {
+            return null;
           }
           Node initialValue = var.getInitialValue();
-          return inferStringValue(var.getScope(), initialValue);
+          return inferStringValue(var.getScope(), initialValue, globalNamespaceSupplier);
         case GETPROP:
           JSType type = node.getJSType();
-          if (type == null || !type.isEnumElementType()) {
-            // For simplicity, only support enums. The JS style guide requires enums to be
-            // effectively immutable and all enum items should be statically known.
-            // See go/js-style#features-objects-enums.
+          if (type == null) {
             return null;
           }
 
-          Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
-          if (enumSource == null) {
-            return null;
+          // The JS style guide requires enums to be effectively immutable and all enum items should
+          // be statically known. See go/js-style#features-objects-enums.
+          if (type.isEnumElementType()) {
+            Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
+            if (enumSource == null) {
+              return null;
+            }
+            if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
+              return null;
+            }
+            return inferStringValue(
+                null,
+                NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()),
+                globalNamespaceSupplier);
+          } else if (type.isString()) {
+            GlobalNamespace gns = globalNamespaceSupplier.get();
+            if (gns == null) {
+              return null;
+            }
+            return getValueFromGlobalName(scope, gns, node.getQualifiedName());
           }
-          if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
-            return null;
-          }
-          return inferStringValue(
-              null, NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()));
-        default:
           return null;
+        default:
+          // Do nothing
       }
+      return null;
     }
 
     private static boolean isXid(JSType type) {
@@ -2316,14 +2344,25 @@ public final class ConformanceRules {
             "data");
 
     private final ImmutableSet<String> bannedAtrrs;
+    private final Supplier<GlobalNamespace> globalNamespaceSupplier;
 
     public SecuritySensitiveAttributes() {
-      this.bannedAtrrs = ALL_BANNED_ATTRS;
+      this(ALL_BANNED_ATTRS, () -> null);
+    }
+
+    public SecuritySensitiveAttributes(Supplier<GlobalNamespace> globalNamespaceSupplier) {
+      this(ALL_BANNED_ATTRS, globalNamespaceSupplier);
     }
 
     public SecuritySensitiveAttributes(Collection<String> bannedAtrrs) {
+      this(bannedAtrrs, () -> null);
+    }
+
+    public SecuritySensitiveAttributes(
+        Collection<String> bannedAtrrs, Supplier<GlobalNamespace> globalNamespaceSupplier) {
       this.bannedAtrrs =
           bannedAtrrs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toImmutableSet());
+      this.globalNamespaceSupplier = globalNamespaceSupplier;
     }
 
     /**
@@ -2343,7 +2382,8 @@ public final class ConformanceRules {
      */
     public ConformanceResult checkConformanceForAttributeName(
         NodeTraversal traversal, Node attrName) {
-      String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
+      String literalName =
+          ConformanceUtil.inferStringValue(traversal.getScope(), attrName, globalNamespaceSupplier);
       if (literalName == null) {
         // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
         return ConformanceUtil.isXid(attrName.getJSType())
@@ -2368,7 +2408,8 @@ public final class ConformanceRules {
      */
     public ConformanceResult checkConformanceForAttributeNameWithHighConfidence(
         NodeTraversal traversal, Node attrName) {
-      String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
+      String literalName =
+          ConformanceUtil.inferStringValue(traversal.getScope(), attrName, globalNamespaceSupplier);
       if (literalName == null) {
         return ConformanceResult.CONFORMANCE;
       }
@@ -2396,6 +2437,15 @@ public final class ConformanceRules {
     private static final ImmutableSet<String> BANNED_PROPERTIES =
         ImmutableSet.of(SET_ATTRIBUTE, SET_ATTRIBUTE_NS, SET_ATTRIBUTE_NODE, SET_ATTRIBUTE_NODE_NS);
 
+    private boolean performGlobalNamespaceAnalysis = true;
+    private GlobalNamespace globalNamespace;
+
+    /**
+     * The cap for script size, beyond which we give up performing global namespace analysis due to
+     * exccessive performance cost. The value is purely herustic and subject to future regulation.
+     */
+    private static final int GLOBAL_NAMESPACE_ANALYSIS_LIMIT = 10000;
+
     private final JSType elementType;
     private final SecuritySensitiveAttributes securitySensitiveAttributes;
     private final ConformanceResult defaultDecisionForUncertainCases;
@@ -2409,12 +2459,29 @@ public final class ConformanceRules {
     public BanElementSetAttribute(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      securitySensitiveAttributes = new SecuritySensitiveAttributes(requirement.getValueList());
+      securitySensitiveAttributes =
+          new SecuritySensitiveAttributes(requirement.getValueList(), this::getGlobalNamespace);
       defaultDecisionForUncertainCases =
           requirement.getReportLooseTypeViolations()
               ? ConformanceResult.VIOLATION
               : ConformanceResult.CONFORMANCE;
       elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
+    }
+
+    /**
+     * Build GlobalNamespace starting from the Root node of the input, excluding externs. Skip the
+     * build if the input AST is too large.
+     */
+    @Nullable GlobalNamespace getGlobalNamespace() {
+      if (performGlobalNamespaceAnalysis && globalNamespace == null) {
+        if (NodeUtil.countAstSizeUpToLimit(compiler.getJsRoot(), GLOBAL_NAMESPACE_ANALYSIS_LIMIT)
+            >= GLOBAL_NAMESPACE_ANALYSIS_LIMIT) {
+          performGlobalNamespaceAnalysis = false;
+        } else {
+          globalNamespace = new GlobalNamespace(compiler, compiler.getJsRoot());
+        }
+      }
+      return globalNamespace;
     }
 
     @Override
@@ -2502,7 +2569,8 @@ public final class ConformanceRules {
     private ConformanceResult checkConformanceOnGetElement(
         NodeTraversal traversal, Node getElementNode) {
       Node key = getElementNode.getSecondChild();
-      String keyName = ConformanceUtil.inferStringValue(traversal.getScope(), key);
+      String keyName =
+          ConformanceUtil.inferStringValue(traversal.getScope(), key, this::getGlobalNamespace);
       if (keyName != null) {
         if (securitySensitiveAttributes.contains(keyName.toLowerCase(Locale.ROOT))
             || (requirement.getReportLooseTypeViolations()
