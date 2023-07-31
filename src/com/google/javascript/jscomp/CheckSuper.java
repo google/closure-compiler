@@ -111,14 +111,14 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
           }
         }
         break;
-
+      case MEMBER_FIELD_DEF:
+        Context fieldContext = createMemberFieldDefContext(n);
+        this.contextStack.push(fieldContext);
+        break;
       case BLOCK: // For class static blocks
         if (NodeUtil.isClassStaticBlock(n)) {
-          Context currentContext = contextStack.peek();
-          Context newContext = new StaticBlockContext(n);
-          if (newContext != currentContext) {
-            this.contextStack.push(newContext);
-          }
+          Context newContext = createStaticBlockContext(n);
+          this.contextStack.push(newContext);
         }
         break;
 
@@ -239,6 +239,36 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
       // Called when visiting the root node of this context after all of its children have been
       // visited.
     }
+  }
+
+  private static class SuperPropertyAccessAllowedContext extends Context {
+    SuperPropertyAccessAllowedContext(Node contextNode) {
+      super(contextNode);
+    }
+
+    @Override
+    void visitSuperPropertyAccess(NodeTraversal t, Node superNode) {
+      // Super property should be allowed on a public field and inside static blocks.
+    }
+
+    @Override
+    void visitSuperConstructorCall(NodeTraversal t, Node superNode) {
+      // Super constructor calls are only allowed in constructor() methods.
+      t.report(superNode, INVALID_SUPER_CALL);
+    }
+
+    @Override
+    Context getContextForArrowFunctionNode(Node arrowFn) {
+      return this;
+    }
+  }
+
+  private Context createMemberFieldDefContext(Node fieldNode) {
+    return new SuperPropertyAccessAllowedContext(fieldNode);
+  }
+
+  private Context createStaticBlockContext(Node staticBlock) {
+    return new SuperPropertyAccessAllowedContext(staticBlock);
   }
 
   /** Lexical context when not within a method, class, or object literal. */
@@ -456,32 +486,6 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
       // This behavior is consistent with TypeScript.
       // In general there's no good reason to declare such arrow functions before calling `super()`.
       constructorContext.visitSuperPropertyAccess(t, superNode);
-    }
-  }
-
-  /** Lexical context within a static initialization block in a class. */
-  private static class StaticBlockContext extends Context {
-
-    StaticBlockContext(Node contextNode) {
-      super(contextNode);
-      checkArgument(NodeUtil.isClassStaticBlock(contextNode), contextNode);
-    }
-
-    @Override
-    Context getContextForArrowFunctionNode(Node arrowFn) {
-      // Arrow functions still use the same context as the class static block
-      return this;
-    }
-
-    @Override
-    void visitSuperConstructorCall(NodeTraversal t, Node superNode) {
-      // We're not inside a constructor.
-      t.report(superNode, INVALID_SUPER_CALL);
-    }
-
-    @Override
-    void visitSuperPropertyAccess(NodeTraversal t, Node superNode) {
-      // perfectly valid, nothing to do here
     }
   }
 }

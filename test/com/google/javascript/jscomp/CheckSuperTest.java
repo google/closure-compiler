@@ -63,6 +63,51 @@ public final class CheckSuperTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFieldSuperCall() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  x() {",
+            "    return 5;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  y = () => super.x()",
+            "}"));
+
+    testError(
+        lines(
+            "class A {}", //
+            "class B extends A { ",
+            "  x = super();",
+            "}"),
+        INVALID_SUPER_CALL);
+  }
+
+  @Test
+  public void testComputedSuperFields() {
+    testError(
+        lines(
+            "class A {", //
+            "  x = 'fieldOne'",
+            "}",
+            "class B extends A { ",
+            "  [super.x] = 2;",
+            "}"),
+        INVALID_SUPER_ACCESS);
+
+    testError(
+        lines(
+            "class A {", //
+            "  x = 'fieldOne'",
+            "}",
+            "class B extends A { ",
+            "  static [super.x] = 2;",
+            "}"),
+        INVALID_SUPER_ACCESS);
+  }
+
+  @Test
   public void testMissingSuper_nestedClass() {
     // Note that super is only called for anonymous class "E", not C.
     testError(
