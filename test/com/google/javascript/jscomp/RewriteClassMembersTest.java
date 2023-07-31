@@ -1086,21 +1086,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "}",
             "JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =",
             "testcode$classdecl$var0);"));
-
-    test(
-        lines(
-            "foo(class {", //
-            "  static {",
-            "    let x = 1",
-            "  }",
-            "})"),
-        lines(
-            "var JSCompiler_temp_const$jscomp$0 = foo;",
-            "const testcode$classdecl$var0 = class {};",
-            "{",
-            "  let x = 1;",
-            "}",
-            "JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);"));
   }
 
   @Test
@@ -1207,16 +1192,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     test(
         lines(
-            "foo(class {", //
-            "  static x = 1;",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.x = 1;",
-            "foo(testcode$classdecl$var0);"));
-
-    test(
-        lines(
             "foo(class C {", //
             "  static y = 2;",
             "  x = C.y",
@@ -1285,19 +1260,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "};",
             "A[1] = testcode$classdecl$var0;"));
-
-    test(
-        lines(
-            "foo(class {", //
-            "  y = 2;",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "foo(testcode$classdecl$var0);"));
 
     test(
         lines(
@@ -1554,5 +1516,50 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  testcode$classdecl$var0.x;",
             "  return testcode$classdecl$var0;",
             "})()) {}"));
+  }
+
+  @Test
+  public void testAnonymousClassExpression() {
+    test(
+        lines(
+            "function foo() {", //
+            "  return class {",
+            "    y;",
+            "    static x;",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {",
+            "  const testcode$classdecl$var0 = class {",
+            "    constructor() {",
+            "      this.y;",
+            "    }",
+            "  };",
+            "  testcode$classdecl$var0.x;",
+            "  return testcode$classdecl$var0;",
+            "}"));
+
+    test(
+        lines(
+            "foo(class {", //
+            "  y = 2;",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "foo(testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "foo(class {", //
+            "  static x = 1;",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x = 1;",
+            "foo(testcode$classdecl$var0);"));
   }
 }
