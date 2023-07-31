@@ -79,6 +79,16 @@ public class TranspilationPasses {
     }
 
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
+        || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)
+        || options.needsTranspilationOf(Feature.CLASSES)) {
+      // Make sure that a variable is created to hold every class definition.
+      // This allows us to add static properties and methods by adding properties
+      // to that variable.
+      passes.maybeAdd(es6RewriteClassExtends);
+      passes.maybeAdd(es6ExtractClasses);
+    }
+
+    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
         || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)) {
       passes.maybeAdd(rewriteClassMembers);
     }
@@ -173,7 +183,6 @@ public class TranspilationPasses {
       passes.maybeAdd(es6NormalizeShorthandProperties);
     }
     if (options.needsTranspilationOf(Feature.CLASSES)) {
-      passes.maybeAdd(es6RewriteClassExtends);
       passes.maybeAdd(es6ConvertSuper);
     }
     if (options.needsTranspilationFrom(
@@ -190,7 +199,6 @@ public class TranspilationPasses {
       passes.maybeAdd(es6RewriteArrowFunction);
     }
     if (options.needsTranspilationOf(Feature.CLASSES)) {
-      passes.maybeAdd(es6ExtractClasses);
       passes.maybeAdd(es6RewriteClass);
     }
     if (options.needsTranspilationFrom(

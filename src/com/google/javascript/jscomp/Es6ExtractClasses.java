@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.deps.ModuleNames;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -67,7 +66,6 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
   private final AstFactory astFactory;
   private final ExpressionDecomposer expressionDecomposer;
   private int classDeclVarCounter = 0;
-  private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -83,10 +81,8 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
       // TODO(b/197349249): Remove once b/197349249 is fixed.
       NodeTraversal.traverse(compiler, root, new NormalizeArrows());
     }
-    TranspilationPasses.processTranspile(
-        compiler, externs, features, this, new SelfReferenceRewriter());
-    TranspilationPasses.processTranspile(
-        compiler, root, features, this, new SelfReferenceRewriter());
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, new SelfReferenceRewriter(), externs, root);
   }
 
   @Override
