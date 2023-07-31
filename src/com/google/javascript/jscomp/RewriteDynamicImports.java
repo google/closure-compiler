@@ -45,7 +45,7 @@ import org.jspecify.nullness.Nullable;
 /**
  * Rewrite dynamic import expressions to account for bundling and module rewriting. Since dynamic
  * imports cannot be fully polyfilled, optionally support replacing the expression with a function
- * call which indicates an external polyfill is utilized.
+ * call (alias function) which indicates an external polyfill is utilized.
  *
  * <p>If the import specifier is a string literal and the module resolver recognizes the target, the
  * pass retargets the specifier to the correct output chunk.
@@ -61,6 +61,26 @@ import org.jspecify.nullness.Nullable;
  * <pre>
  *   imprt_('./output-chunk0.js').then(function() { return module$output$chunk0; });
  * </pre>
+ *
+ * <p>Unlike other "rewrite" passes for which the DefaultPassConfig checks the output language level
+ * using {@code options.needsTranspilationOf(feature)} before adding a pass, it does not check the
+ * language level before adding this particular pass. Even when supported by the output level, we
+ * still invoke this pass if {@code options.shouldAllowDynamicImport()} is set. The only difference
+ * is that for {@code ES2020}, the dynamic imports syntax can pass through if aliasing is not
+ * requested, while for {@code < ES2020} they must get rewritten using the alias call.
+ *
+ * <pre>
+ * <p>{@code
+ * options.shouldAllowDynamicImport() === false?
+ *     ForbidDynamicImportUsage :
+ *     (output >= ES2020) ?
+ *         don't *really* rewrite it unless aliasing is requested :
+ *         rewrite it using the alias call
+ * }
+ * </pre>
+ *
+ * <p>TODO: b/291319705 For the above reason, the pass should be better named as
+ * MaybeRewriteDynamicImports.
  */
 public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
@@ -68,7 +88,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   static final DiagnosticType DYNAMIC_IMPORT_ALIASING_REQUIRED =
       DiagnosticType.warning(
           "JSC_DYNAMIC_IMPORT_ALIASING_REQUIRED",
-          "Dynamic import expressions should be aliased for for language level. "
+          "Dynamic import expressions should be aliased for language level. "
               + "Use the --dynamic_import_alias flag.");
 
   static final DiagnosticType DYNAMIC_IMPORT_INVALID_ALIAS =
@@ -110,10 +130,11 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     if (wrappedDynamicImportCallback) {
       injectWrappingFunctionExtern();
     }
+
     if (dynamicImportsRemoved) {
-      // This pass removes dynamic import, but adds arrow functions.
-      // TODO(lharker): marking the feature not allowed should be unconditional
       compiler.markFeatureNotAllowed(Feature.DYNAMIC_IMPORT);
+
+      // This pass removes dynamic import, but adds arrow functions.
       if (this.requiresAliasing && aliasIsValid()) {
         NodeTraversal.traverse(compiler, externs, new AliasInjectingTraversal());
       }
