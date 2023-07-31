@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 
 /** Provides a single place to manage transpilation passes. */
 public class TranspilationPasses {
+
   private TranspilationPasses() {}
 
   public static void addEs6ModulePass(
@@ -230,6 +231,9 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.GENERATORS)) {
       passes.maybeAdd(rewriteGenerators);
     }
+    passes.maybeAdd(
+        TranspilationPasses.createPostTranspileUnsupportedFeaturesRemovedCheck(
+            "postTranspileUnsupportedFeaturesRemovedCheck"));
   }
 
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */
@@ -498,6 +502,33 @@ public class TranspilationPasses {
     }
   }
 
+  static void postTranspileCheckUnsupportedFeaturesRemoved(AbstractCompiler compiler) {
+    FeatureSet outputFeatures = compiler.getOptions().getOutputFeatureSet();
+    FeatureSet currentFeatures = compiler.getAllowableFeatures();
+    // features modules, importMeta and Dynamic module import may exist in the output even though
+    // unsupported
+    if (compiler.getOptions().getChunkOutputType() == ChunkOutputType.ES_MODULES) {
+      currentFeatures =
+          currentFeatures
+              .without(Feature.MODULES)
+              .without(Feature.IMPORT_META)
+              .without(Feature.DYNAMIC_IMPORT);
+    }
+
+    if (outputFeatures.getFeatures().isEmpty()) {
+      // In some cases (e.g. targets built using `gen_closurized_js`), the outputFeatures is not
+      // set. Only when set, confirm that the output featureSet is respected by JSCompiler.
+      return;
+    }
+
+    if (!outputFeatures.contains(currentFeatures)) {
+      // Confirm that the output featureSet is respected by JSCompiler.
+      FeatureSet diff = currentFeatures.without(outputFeatures);
+      throw new IllegalStateException(
+          "Unsupported feature(s) leaked to output code:" + diff.getFeatures());
+    }
+  }
+
   /**
    * Returns a pass that just removes features from the AST FeatureSet.
    *
@@ -513,6 +544,19 @@ public class TranspilationPasses {
                 ((Node externs, Node root) ->
                     maybeMarkFeaturesAsTranspiledAway(
                         compiler, featureToRemove, moreFeaturesToRemove)))
+        .build();
+  }
+
+  /**
+   * Returns a pass that just checks that post-transpile only supported features exist in the code.
+   */
+  private static PassFactory createPostTranspileUnsupportedFeaturesRemovedCheck(String passName) {
+    return PassFactory.builder()
+        .setName(passName)
+        .setInternalFactory(
+            (compiler) ->
+                ((Node externs, Node root) ->
+                    postTranspileCheckUnsupportedFeaturesRemoved(compiler)))
         .build();
   }
 }
