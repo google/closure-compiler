@@ -20,11 +20,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -45,27 +43,20 @@ import java.util.Set;
  *
  * <p>Note that this must run after Es6RewriteDestructuring, since it does not process destructuring
  * let/const declarations at all.
- *
- * <p>TODO(moz): Try to use MakeDeclaredNamesUnique
  */
 public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCallback
     implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
-  private final Table<Node, String, String> renameTable = HashBasedTable.create();
   private final Set<Node> letConsts = new LinkedHashSet<>();
-  private final Set<String> undeclaredNames = new LinkedHashSet<>();
-  private final Set<String> externNames = new LinkedHashSet<>();
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
   private final UniqueIdSupplier uniqueIdSupplier;
-  private final boolean astMayHaveUndeclaredVariables;
 
   public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
-    this.astMayHaveUndeclaredVariables = compiler.getOptions().skipNonTranspilationPasses;
     this.astFactory = compiler.createAstFactory();
   }
 
@@ -82,25 +73,24 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
     if (NodeUtil.isNameDeclaration(n)) {
       for (Node nameNode = n.getFirstChild(); nameNode != null; nameNode = nameNode.getNext()) {
-        visitBlockScopedName(t, n, nameNode);
+        visitBlockScopedNameDeclaration(n, nameNode);
       }
     } else {
       // NOTE: This pass depends on class declarations having been transpiled away
       checkState(n.isFunction() || n.isCatch(), "Unexpected declaration node: %s", n);
-      visitBlockScopedName(t, n, n.getFirstChild());
+      visitBlockScopedNameDeclaration(n, n.getFirstChild());
     }
   }
 
   @Override
   public void process(Node externs, Node root) {
-    if (this.astMayHaveUndeclaredVariables) {
-      // If we are only transpiling, we may have undefined variables in the code.
-      NodeTraversal.traverse(compiler, root, new CollectUndeclaredNames());
-    }
-    // Record names declared in externs to prevent collisions when declaring vars from let/const.
-    this.externNames.addAll(NodeUtil.collectExternVariableNames(compiler, externs));
+    // Make all declared names unique, so we can safely just switch 'let' or 'const' to 'var' in all
+    // non-loop cases.
+    MakeDeclaredNamesUnique renamer = MakeDeclaredNamesUnique.builder().build();
+    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
+    // - Gather a list of let & const variables
+    // - Also add `= void 0` to any that are not initialized.
     NodeTraversal.traverse(compiler, root, this);
-    NodeTraversal.traverse(compiler, root, new Es6RenameReferences(renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, root, transformer);
     transformer.transformLoopClosure();
@@ -113,8 +103,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
    *
    * <p>Also normalizes declarations with no initializer in a loop to be initialized to undefined.
    */
-  private void visitBlockScopedName(NodeTraversal t, Node decl, Node nameNode) {
-    Scope scope = t.getScope();
+  private void visitBlockScopedNameDeclaration(Node decl, Node nameNode) {
     Node parent = decl.getParent();
     // Normalize "let x;" to "let x = undefined;" if in a loop, since we later convert x
     // to be $jscomp$loop$0.x and want to reset the property to undefined every loop iteration.
@@ -125,26 +114,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node undefined = astFactory.createUndefinedValue().srcrefTree(nameNode);
       nameNode.addChildToFront(undefined);
       compiler.reportChangeToEnclosingScope(undefined);
-    }
-
-    String oldName = nameNode.getString();
-    Scope hoistScope = scope.getClosestHoistScope();
-    if (scope != hoistScope) {
-      String newName = oldName;
-      if (hoistScope.hasSlot(oldName)
-          || undeclaredNames.contains(oldName)
-          || externNames.contains(oldName)) {
-        do {
-          newName = oldName + "$" + uniqueIdSupplier.getUniqueId(t.getInput());
-        } while (hoistScope.hasSlot(newName));
-        nameNode.setString(newName);
-        compiler.reportChangeToEnclosingScope(nameNode);
-        Node scopeRoot = scope.getRootNode();
-        renameTable.put(scopeRoot, oldName, newName);
-      }
-      Var oldVar = scope.getVar(oldName);
-      scope.undeclare(oldVar);
-      hoistScope.declare(newName, nameNode, oldVar.getInput());
     }
   }
 
@@ -219,25 +188,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
   }
 
-  /**
-   * Records undeclared names and aggressively rename possible references to them. Eg: In "{ let
-   * inner; } use(inner);", we rename the let declared variable.
-   */
-  private class CollectUndeclaredNames extends AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName() && !t.getScope().hasSlot(n.getString())) {
-        undeclaredNames.add(n.getString());
-      }
-    }
-  }
-
   /** Transforms let/const declarations captured by loop closures. */
   private class LoopClosureTransformer extends AbstractPreOrderCallback {
 
     private static final String LOOP_OBJECT_NAME = "$jscomp$loop";
-    private static final String LOOP_OBJECT_PROPERTY_NAME = "$jscomp$loop$prop$";
     private final Map<Node, LoopObject> loopObjectMap = new LinkedHashMap<>();
 
     private final SetMultimap<Node, LoopObject> nodesRequiringLoopObjectsClosureMap =
@@ -245,9 +199,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     private final SetMultimap<Node, String> nodesHandledForLoopObjectClosure =
         HashMultimap.create();
     private final SetMultimap<Var, Node> referenceMap = LinkedHashMultimap.create();
-    // Maps from a var to a unique property name for that var
-    // e.g. 'i' -> '$jscomp$loop$prop$i$0'
-    private final Map<Var, String> propertyNameMap = new LinkedHashMap<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -322,9 +273,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         LoopObject object =
             loopObjectMap.computeIfAbsent(
                 loopNode, (Node k) -> new LoopObject(createUniqueObjectName(t.getInput())));
-        String newPropertyName = createUniquePropertyName(var);
         object.vars.add(var);
-        propertyNameMap.put(var, newPropertyName);
         nodesRequiringLoopObjectsClosureMap.put(nodeToWrapInClosure, object);
       }
       return true;
@@ -334,13 +283,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       return LOOP_OBJECT_NAME + "$" + uniqueIdSupplier.getUniqueId(input);
     }
 
-    // Normalization guarantees unique variable names so generating a unique ID is necessary
-    // because this pass runs after normalization.
-    private String createUniquePropertyName(Var var) {
-      return LOOP_OBJECT_PROPERTY_NAME
-          + var.getName()
-          + "$"
-          + uniqueIdSupplier.getUniqueId(var.getInput());
+    private String getLoopObjPropName(Var var) {
+      // NOTE: var.getName() would be wrong here, because it will still contain the original
+      // and possibly non-unique name for the variable. However, the name node itself will already
+      // have the new and guaranteed-globally-unique name.
+      return var.getNameNode().getString();
     }
 
     private void transformLoopClosure() {
@@ -445,7 +392,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
      */
     private void changeLoopLocalVariablesToProperties(Node loopNode, LoopObject loopObject) {
       for (Var var : loopObject.vars) {
-        String newPropertyName = propertyNameMap.get(var);
+        String newPropertyName = getLoopObjPropName(var);
         for (Node reference : referenceMap.get(var)) {
           // for-of loops are transpiled away before this pass runs
           checkState(!loopNode.isForOf(), loopNode);
@@ -546,7 +493,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     /** Rename all variables in the loop object to properties */
     private void renameVarsToProperties(LoopObject loopObject, Node objectLitNextIteration) {
       for (Var var : loopObject.vars) {
-        String newPropertyName = propertyNameMap.get(var);
+        String newPropertyName = getLoopObjPropName(var);
         objectLitNextIteration.addChildToBack(
             astFactory.createStringKey(
                 newPropertyName,

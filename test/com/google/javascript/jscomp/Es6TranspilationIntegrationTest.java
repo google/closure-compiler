@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
@@ -130,15 +129,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   private void rewriteUniqueIdAndTest(Sources srcs, Expected originalExpected) {
-    rewriteUniqueIdAndTest(externs(""), srcs, originalExpected);
-  }
-
-  private void rewriteUniqueIdAndTest(Externs externs, Sources srcs, Expected originalExpected) {
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs, originalExpected, ImmutableMap.of("ID", "")));
-    test(externs, srcs, modifiedExpected);
+    Externs externs = externs("");
+    test(externs, srcs, originalExpected);
   }
 
   @Test
@@ -225,7 +217,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "    var Foo = function() {};",
                 "} else {",
                 "    /** @constructor */",
-                "    var Foo$ID$0 = function() {};",
+                "    var Foo$jscomp$1 = function() {};",
                 "}")));
   }
 
@@ -1926,6 +1918,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "  if (true) {",
                 "     let Symbol = function() {};",
                 "  }",
+                // This Symbol is the global one
                 "  alert(Symbol.ism)",
                 "}"));
     Expected expected =
@@ -1934,11 +1927,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "function f() {",
                 "  if (true) {",
                 // normalization renames the local Symbol to be different from the global Symbol
-                "     var Symbol$ID$0 = function() {};",
+                "     var Symbol$jscomp$0 = function() {};",
                 "  }",
                 "  alert(Symbol.ism)",
                 "}"));
-    rewriteUniqueIdAndTest(externs, srcs, expected);
+    test(externs, srcs, expected);
 
     externs = externs(externsFileWithSymbol);
     srcs =
@@ -1947,6 +1940,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "function f() {",
                 "  if (true) {",
                 "    let Symbol = function() {};",
+                // This Symbol is the local definition. There's no use of the global Symbol in
+                // this function.
                 "    alert(Symbol.ism)",
                 "  }",
                 "}"));
@@ -1955,12 +1950,13 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             lines(
                 "function f() {",
                 "  if (true) {",
-                // normalization renames the local Symbol to be different from the global Symbol
-                "    var Symbol$ID$0 = function() {};",
-                "    alert(Symbol$ID$0.ism)",
+                // The local definition of Symbol doesn't have to be renamed, because there's
+                // no usage of the global Symbol to conflict with it.
+                "    var Symbol = function() {};",
+                "    alert(Symbol.ism)",
                 "  }",
                 "}"));
-    rewriteUniqueIdAndTest(externs, srcs, expected);
+    test(externs, srcs, expected);
     // No $jscomp.initSymbol in externs
     testExternChanges(
         externs("alert(Symbol.thimble);"), srcs(""), expected("alert(Symbol.thimble)"));
@@ -2003,13 +1999,13 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "var $jscomp$iter$0 = $jscomp.makeIterator([1, 2, 3]);",
                 "var $jscomp$key$i = $jscomp$iter$0.next();",
                 "for (; !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-                "  var i$ID$0 = $jscomp$key$i.value;",
+                "  var i$jscomp$1 = $jscomp$key$i.value;",
                 "  {",
-                "    alert(i$ID$0);",
+                "    alert(i$jscomp$1);",
                 "  }",
                 "}",
                 "alert(i);"));
-    rewriteUniqueIdAndTest(srcs, expected);
+    test(srcs, expected);
   }
 
   @Test
@@ -2028,7 +2024,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "for (; !$jscomp$key$x.done; $jscomp$key$x = $jscomp$iter$0.next()) {",
                 "  var x = $jscomp$key$x.value;",
                 "  {",
-                "    var x$ID$0 = 0;",
+                "    var x$jscomp$1 = 0;",
                 "  }",
                 "}")));
   }
@@ -2260,8 +2256,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "function f() {",
                 "  var x = 1;",
                 "  if (a) {",
-                "    var x$ID$0 = 2;",
-                "    return {x: x$ID$0};",
+                "    var x$jscomp$0 = 2;",
+                "    return {x: x$jscomp$0};",
                 "  }",
                 "  return x;",
                 "}")));
@@ -2283,8 +2279,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "  var $jscomp$destructuring$var0 = a;",
                 "  var x = $jscomp$destructuring$var0.x;",
                 "  if (a) {",
-                "    var x$ID$0 = 2;",
-                "    return x$ID$0;",
+                "    var x$jscomp$0 = 2;",
+                "    return x$jscomp$0;",
                 "  }",
                 "  return x;",
                 "}")));
