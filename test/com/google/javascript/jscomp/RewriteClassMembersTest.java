@@ -52,7 +52,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteClassMembers(compiler);
+    return (externs, root) -> {
+      new Es6ExtractClasses(compiler).process(externs, root);
+      new RewriteClassMembers(compiler).process(externs, root);
+    };
   }
 
   @Test
@@ -87,7 +90,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  let x = 2;",
         "  C.y = x", // TODO(b/235871861): Need to correct references to `this`
         "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET); // uses `this`
+        TranspilationUtil.CANNOT_CONVERT_YET); // uses `this` in static block
 
     testError(
         lines(
@@ -97,46 +100,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "}"),
         TranspilationUtil.CANNOT_CONVERT_YET); // uses `super`
-
-    testError(
-        lines(
-            "let c = class C {", //
-            "  static {",
-            "    C.y = 2;",
-            "    let x = C.y",
-            "  }",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "foo(class C {", //
-            "  static {",
-            "    C.y = 2;",
-            "    let x = C.y",
-            "  }",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "class A {}",
-            "foo(A.b.c = class C {", //
-            "  static {",
-            "    C.y = 2;",
-            "    let x = C.y",
-            "  }",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "foo(class {", //
-            "  static {",
-            "    let x = 1",
-            "  }",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -152,7 +115,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  C.x = 2;",
         "  const y = C.x",
         "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // uses `this` in static block
 
     testError(
         lines(
@@ -165,37 +128,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "}"),
         TranspilationUtil.CANNOT_CONVERT_YET); // `var` in static block
 
-    testError(
-        lines(
-            "let c = class C {", //
-            "  static y = 2;",
-            "  static x = C.y",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "foo(class C {", //
-            "  static y = 2;",
-            "  static x = C.y",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "foo(class {", //
-            "  static x = 1",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
-            "foo(class C {", //
-            "  static y = 2;",
-            "  x = C.y",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
     test(
         srcs(
             lines(
@@ -203,8 +135,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  static [1] = 1;",
                 "  static [2] = this[1];",
                 "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET),
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // use of `this`
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
 
     test(
         srcs(
@@ -213,7 +145,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  static [1] = 2;",
                 "  static [2] = C[1]",
                 "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
 
     test(
         srcs(
@@ -222,14 +155,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  static [1] = 2;",
                 "  static [2] = C[1]",
                 "})")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
 
     testError(
         lines(
             "foo(class {", //
             "  static [1] = 1",
             "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // computed prop
 
     test(
         srcs(
@@ -238,8 +172,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  [1] = 1;",
                 "  [2] = this[1];",
                 "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET),
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // use of `this`
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
 
     test(
         srcs(
@@ -248,7 +182,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  static [1] = 2;",
                 "  [2] = C[1]",
                 "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
 
     test(
         srcs(
@@ -257,7 +192,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  static [1] = 2;",
                 "  [2] = C[1]",
                 "})")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
 
     test(
         srcs(
@@ -271,8 +207,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  [2] = this[1]",
                 "}" // testing that the correct number of diagnostics are thrown
                 )),
-        error(TranspilationUtil.CANNOT_CONVERT_YET),
-        error(TranspilationUtil.CANNOT_CONVERT_YET));
+        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
   }
 
   @Test
@@ -373,7 +309,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         lines(
             "class C {}", //
             "C.x = 2;",
-            "C.y = () => C.x;"));
+            "C.y = () => { return C.x; }"));
 
     test(
         lines(
@@ -415,7 +351,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "}",
             "class Bar extends Foo {}",
-            "Bar.z = () => Foo.x() + 12 + Foo.y();"));
+            "Bar.z = () => { return Foo.x() + 12 + Foo.y(); }"));
 
     test(
         lines(
@@ -1094,6 +1030,80 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassExpressionsStaticBlocks() {
+    test(
+        lines(
+            "let c = class C {", //
+            "  static {",
+            "    C.y = 2;",
+            "    let x = C.y",
+            "  }",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  testcode$classdecl$var0.y = 2;",
+            "  let x = testcode$classdecl$var0.y;",
+            "}",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
+
+    test(
+        lines(
+            "foo(class C {", //
+            "  static {",
+            "    C.y = 2;",
+            "    let x = C.y",
+            "  }",
+            "})"),
+        lines(
+            "var JSCompiler_temp_const$jscomp$0 = foo;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  testcode$classdecl$var0.y = 2;",
+            "  let x = testcode$classdecl$var0.y;",
+            "}",
+            "JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "class A { static b; }",
+            "foo(A.b.c = class C {", //
+            "  static {",
+            "    C.y = 2;",
+            "    let x = C.y",
+            "  }",
+            "})"),
+        lines(
+            "class A {}",
+            "A.b;",
+            "var JSCompiler_temp_const$jscomp$1 = foo;",
+            "var JSCompiler_temp_const$jscomp$0 = A.b;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  testcode$classdecl$var0.y = 2;",
+            "  let x = testcode$classdecl$var0.y;",
+            "}",
+            "JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =",
+            "testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "foo(class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "})"),
+        lines(
+            "var JSCompiler_temp_const$jscomp$0 = foo;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  let x = 1;",
+            "}",
+            "JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);"));
+  }
+
+  @Test
   public void testNonClassDeclarationsStaticBlocks() {
     test(
         lines(
@@ -1102,7 +1112,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "}"),
-        lines("let c = class {}", "{", "  let x = 1", "}"));
+        lines(
+            "let c = class {}", //
+            "{",
+            "  let x = 1",
+            "}"));
 
     test(
         lines(
@@ -1112,9 +1126,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "}"),
-        lines("class A {}", "A.c = class {}", "{", "  let x = 1", "}"));
+        lines(
+            "class A {}", //
+            "A.c = class {}",
+            "{",
+            "  let x = 1",
+            "}"));
 
-    testError(
+    test(
         lines(
             "class A {}",
             "A[1] = class {", //
@@ -1122,9 +1141,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "}"),
-        // lines("class A {}", "A[1] = class {}", "{", "  let x = 1", "}")
-        // TODO(b/189993301): transpile computed prop = class
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "class A {}",
+            "var JSCompiler_temp_const$jscomp$0 = A;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  let x = 1;",
+            "}",
+            "JSCompiler_temp_const$jscomp$0[1] = testcode$classdecl$var0;"));
   }
 
   @Test
@@ -1144,14 +1168,67 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "}"),
         lines("class A {}", "A.c = class {}", "A.c.x = 1"));
 
-    testError(
+    test(
         lines(
             "class A {}",
             "A[1] = class {", //
             "  static x = 1",
             "}"),
-        // lines("class A {}", "A[1] = class {}", "A[1].x = 1")
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "class A {}",
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x = 1;",
+            "A[1] = testcode$classdecl$var0;"));
+
+    test(
+        lines(
+            "let c = class C {", //
+            "  static y = 2;",
+            "  static x = C.y",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.y = 2;",
+            "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
+
+    test(
+        lines(
+            "foo(class C {", //
+            "  static y = 2;",
+            "  static x = C.y",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.y = 2;",
+            "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
+            "foo(testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "foo(class {", //
+            "  static x = 1;",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x = 1;",
+            "foo(testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "foo(class C {", //
+            "  static y = 2;",
+            "  x = C.y",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.x = testcode$classdecl$var0.y;",
+            "  }",
+            "};",
+            "testcode$classdecl$var0.y = 2;",
+            "foo(testcode$classdecl$var0);"));
   }
 
   @Test
@@ -1168,18 +1245,19 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    testError(
+    test(
         lines(
             "let c = class C {", //
             "  y = 2;",
             "}"),
-        /*lines(
-        "let c = class C {", //
-        "  constructor() {",
-        "    this.y = 2;",
-        "  }",
-        "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
 
     test(
         lines(
@@ -1195,75 +1273,87 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    testError(
+    test(
         lines(
             "A[1] = class {", //
             "  y = 2;",
             "}"),
-        /*lines(
-        "A[1] = class {", //
-        "  constructor() {",
-        "    this.y = 2;",
-        "  }",
-        "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "A[1] = testcode$classdecl$var0;"));
 
-    testError(
+    test(
         lines(
             "foo(class {", //
             "  y = 2;",
             "})"),
-        /*lines("foo(class {", "  constructor() {", "    this.y = 2;", "  }", "})")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "foo(testcode$classdecl$var0);"));
 
-    testError(
+    test(
         lines(
             "let c = class C {", //
             "  y = 2;",
             "}"),
-        /*lines(
-        "let c = class C {", //
-        "  constructor() {",
-        "    this.y = 2;",
-        "  }",
-        "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
 
-    testError(
+    test(
         lines(
             "class A {}",
             "A.c = class C {", //
             "  y = 2;",
             "}"),
-        /*lines(
-        "class A {}",
-        "A.c = class C {", //
-        "  constructor() {",
-        "    this.y = 2;",
-        "  }",
-        "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "class A {}",
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "/** @constructor */ ",
+            "A.c = testcode$classdecl$var0;"));
 
-    testError(
+    test(
         lines(
             "A[1] = class C {", //
             "  y = 2;",
             "}"),
-        /*lines(
-        "A[1] = class C {", //
-        "  constructor() {",
-        "    this.y = 2;",
-        "  }",
-        "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "A[1] = testcode$classdecl$var0;"));
 
-    testError(
+    test(
         lines(
             "foo(class C {", //
             "  y = 2;",
             "})"),
-        /*lines("foo(class C {", "  constructor() {", "    this.y = 2;", "  }", "})")*/
-        TranspilationUtil.CANNOT_CONVERT_YET);
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "foo(testcode$classdecl$var0);"));
   }
 
   @Test
@@ -1378,7 +1468,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  constructor() {",
             "    this.y = x;",
-            "    (x) => 3;",
+            "    (x) => { return 3; };",
             "  }",
             "}"));
   }
@@ -1415,17 +1505,54 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
+  // Added when fixing transpilation of real-world code that passed a class expression to a
+  // constructor call.
+  @Test
+  public void testPublicFieldsInClassExpressionInNew() {
+    test(
+        lines(
+            "let foo = new (", //
+            "    class Bar {",
+            "      x;",
+            "      static y;",
+            "    }",
+            ")();"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.x;",
+            "  }",
+            "};",
+            "testcode$classdecl$var0.y;",
+            "let foo = new testcode$classdecl$var0();"));
+  }
+
   @Test
   public void testNonClassDeclarationsFunctionArgs() {
-    testError(
+    test(
         "A[foo()] = class {static x;}",
-        TranspilationUtil.CANNOT_CONVERT_YET); // impure computed prop
+        lines(
+            "var JSCompiler_temp_const$jscomp$1 = A;",
+            "var JSCompiler_temp_const$jscomp$0 = foo();",
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x;",
+            "JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] =",
+            "    testcode$classdecl$var0;"));
 
-    testError(
-        "foo(c = class {static x;})", TranspilationUtil.CANNOT_CONVERT_YET); // named function param
+    test(
+        "foo(c = class {static x;})",
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x;",
+            "foo(c = testcode$classdecl$var0);"));
 
-    testError(
+    test(
         "function foo(c = class {static x;}) {}",
-        TranspilationUtil.CANNOT_CONVERT_YET); // default function param
+        lines(
+            "function foo(c = (() => {",
+            "  const testcode$classdecl$var0 = class {};",
+            "  testcode$classdecl$var0.x;",
+            "  return testcode$classdecl$var0;",
+            "})()) {}"));
   }
 }
