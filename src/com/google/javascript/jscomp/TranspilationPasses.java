@@ -573,10 +573,9 @@ public class TranspilationPasses {
         .setName(passName)
         .setInternalFactory(
             (compiler) ->
-                ((Node externs, Node root) -> {
-                  maybeMarkFeaturesAsTranspiledAway(
-                      compiler, root, featureToRemove, moreFeaturesToRemove);
-                }))
+                ((Node externs, Node root) ->
+                    maybeMarkFeaturesAsTranspiledAway(
+                        compiler, root, featureToRemove, moreFeaturesToRemove)))
         .build();
   }
 
