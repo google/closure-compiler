@@ -69,6 +69,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     enableTypeCheck();
     this.typesToForwardDeclare = ImmutableSet.of();
     enableSourceInformationAnnotator();
+    enableDebugLogging(true);
   }
 
   @Override

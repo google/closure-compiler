@@ -73,6 +73,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     this.enableTypeCheck();
     replaceTypesWithColors();
     disableCompareJsDoc();
+    enableDebugLogging(true);
   }
 
   @Override

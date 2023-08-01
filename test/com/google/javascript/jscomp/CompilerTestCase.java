@@ -726,6 +726,13 @@ public abstract class CompilerTestCase {
    */
   protected abstract CompilerPass getProcessor(Compiler compiler);
 
+  /** Enable debug logging for this test run */
+  private boolean debugLoggingEnabled = false;
+
+  public void enableDebugLogging(boolean debugLoggingEnabled) {
+    this.debugLoggingEnabled = debugLoggingEnabled;
+  }
+
   /**
    * Gets the compiler options to use for this test. Use getProcessor to determine what passes
    * should be run.
@@ -759,7 +766,9 @@ public abstract class CompilerTestCase {
     }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
-    CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
+    if (debugLoggingEnabled) {
+      CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
+    }
 
     return options;
   }

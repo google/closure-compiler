@@ -1301,10 +1301,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     externs = null;
     sources = null;
 
-    if (options.printConfig) {
-      compiler.printConfig();
-    }
-
     Result result;
     // We won't want to process results for cases where compilation is only partially done.
     boolean shouldProcessResults = true;

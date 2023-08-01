@@ -758,6 +758,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     initAST();
 
+    if (isDebugLoggingEnabled() || options.printConfig) {
+      // Always print configuration logs when debug logging is enabled.
+      // NOTE: initModules() is called by every execution path through the compiler code that
+      // actually performs a compilation action. That's what makes this a good place to put this
+      // logging.
+      printConfig();
+    }
+
     // If debug logging is enabled, write out the module / chunk graph in GraphViz format.
     // This graph is often too big to reasonably render.
     // Using gvpr(1) is recommended to extract the parts of the graph that are of interest.
@@ -892,9 +900,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       init(externs, inputs, options);
-      if (options.printConfig) {
-        printConfig();
-      }
       if (!hasErrors()) {
         parseForCompilation();
       }
@@ -951,9 +956,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       initModules(externs, modules, options);
-      if (options.printConfig) {
-        printConfig();
-      }
       if (!hasErrors()) {
         parseForCompilation();
       }
