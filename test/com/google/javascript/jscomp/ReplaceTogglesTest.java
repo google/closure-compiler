@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.ReplaceToggles.FALSE_VALUE;
+import static com.google.javascript.jscomp.ReplaceToggles.TRUE_VALUE;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
@@ -78,6 +80,25 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBootstrapOrdinals_booleanAllowed() {
+    check = true;
+    testSame(
+        srcs("var _F_toggleOrdinals = {'foo_bar': false, 'baz': true};"),
+        expectOrdinals(ImmutableMap.of("foo_bar", FALSE_VALUE, "baz", TRUE_VALUE)));
+  }
+
+  @Test
+  public void testBootstrapOrdinals_booleanAllowsDuplicates() {
+    check = true;
+    testSame(
+        srcs("var _F_toggleOrdinals = {'foo_bar': false, 'baz': false, 'qux': 0};"),
+        expectOrdinals(ImmutableMap.of("foo_bar", FALSE_VALUE, "baz", FALSE_VALUE, "qux", 0)));
+    testSame(
+        srcs("var _F_toggleOrdinals = {'foo_bar': true, 'baz': true, 'qux': 0};"),
+        expectOrdinals(ImmutableMap.of("foo_bar", TRUE_VALUE, "baz", TRUE_VALUE, "qux", 0)));
+  }
+
+  @Test
   public void testBootstrapOrdinals_notAnObject() {
     check = true;
     test(
@@ -116,41 +137,37 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_badValue() {
     check = true;
     test(
-        srcs("var _F_toggleOrdinals = {x: null};"),
-        error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
-    test(
         srcs("var _F_toggleOrdinals = {x: 'y'};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
     test(
         srcs("var _F_toggleOrdinals = {x};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
-    test(
-        srcs("var _F_toggleOrdinals = {x: true};"),
-        error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
     test(
         srcs("var _F_toggleOrdinals = {x: 1 + 2};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
     test(
         srcs("var _F_toggleOrdinals = {x: NaN};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
     test(
         srcs("var _F_toggleOrdinals = {x: Infinity};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
     test(
         srcs("var _F_toggleOrdinals = {x: -1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
     test(
         srcs("var _F_toggleOrdinals = {x: 1.2};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
-            .withMessageContaining("value not a whole number literal"));
+            .withMessageContaining("value not a boolean or whole number literal"));
+    test(
+        srcs("var _F_toggleOrdinals = {x: null};"),
+        error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
+            .withMessageContaining("value not a boolean or whole number literal"));
   }
 
   @Test
@@ -181,6 +198,16 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
             "const foo = !!(goog.TOGGLES_[0] & 2);",
             "const bar = !!(goog.TOGGLES_[1] & 1);",
             "const baz = !!(goog.TOGGLES_[1] >> 29 & 1);"));
+  }
+
+  @Test
+  public void testUnsetToggles() {
+    toggles = ImmutableMap.of("foo", FALSE_VALUE, "bar", TRUE_VALUE);
+    test(
+        lines(
+            "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
+            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');"),
+        lines("const foo = false;", "const bar = true;"));
   }
 
   @Test

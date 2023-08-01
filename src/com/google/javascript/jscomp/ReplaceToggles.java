@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -40,14 +41,21 @@ class ReplaceToggles implements CompilerPass {
   static final DiagnosticType INVALID_ORDINAL_MAPPING =
       DiagnosticType.error(
           "JSC_INVALID_ORDINAL_MAPPING",
-          "_F_toggleOrdinals must be initialized with an object literal mapping strings to unique"
-              + " integers: {0}");
+          "_F_toggleOrdinals must be initialized with an object literal mapping strings to booleans"
+              + " or unique whole numbers: {0}");
 
   static final DiagnosticType UNKNOWN_TOGGLE =
       DiagnosticType.error(
           "JSC_UNKNOWN_TOGGLE",
           "goog.readToggleInternalDoNotCallDirectly called with an unknown toggle. If a toggle"
               + " list is given, it must be exhaustive.");
+
+  // NOTE: These values are chosen as negative integers because actual toggle ordinals must always
+  // be non-negative (at least zero).  Any negative integers would do to distinguish them from real
+  // toggle ordinals, but -1 and -2 are the simplest.
+  @VisibleForTesting static final int TRUE_VALUE = -2;
+
+  @VisibleForTesting static final int FALSE_VALUE = -1;
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -100,17 +108,15 @@ class ReplaceToggles implements CompilerPass {
             compiler.report(JSError.make(c, INVALID_ORDINAL_MAPPING, "duplicate key: " + key));
             return;
           }
-          Node value = c.getFirstChild();
-          if (value == null || !value.isNumber()) {
+          Node child = c.getFirstChild();
+          Double doubleValue = NodeUtil.getNumberValue(child);
+          int intValue = doubleValue != null ? doubleValue.intValue() : -1;
+          if (child.isTrue() || child.isFalse()) {
+            intValue = child.isTrue() ? TRUE_VALUE : FALSE_VALUE;
+          } else if (!child.isNumber() || intValue < 0 || intValue != doubleValue) {
             compiler.report(
-                JSError.make(c, INVALID_ORDINAL_MAPPING, "value not a whole number literal"));
-            return;
-          }
-          double doubleValue = value.getDouble();
-          int intValue = (int) doubleValue;
-          if (doubleValue != intValue) {
-            compiler.report(
-                JSError.make(c, INVALID_ORDINAL_MAPPING, "value not a whole number literal"));
+                JSError.make(
+                    c, INVALID_ORDINAL_MAPPING, "value not a boolean or whole number literal"));
             return;
           } else if (ordinals.contains(intValue)) {
             compiler.report(
@@ -150,9 +156,12 @@ class ReplaceToggles implements CompilerPass {
       }
 
       Integer ordinal = toggles != null ? toggles.get(arg.getString()) : null;
-      if (ordinal == null) {
-        // No ordinals given: hard-code `false` for all toggles
-        n.replaceWith(astFactory.createBoolean(false).srcrefTreeIfMissing(n));
+      if (ordinal == null || ordinal < 0) {
+        // No ordinals given: hard-code `true` if explicitly set as true, or `false` otherwise.
+        n.replaceWith(
+            astFactory
+                .createBoolean(ordinal != null && ordinal == TRUE_VALUE)
+                .srcrefTreeIfMissing(n));
         t.reportCodeChange();
         return;
       }
