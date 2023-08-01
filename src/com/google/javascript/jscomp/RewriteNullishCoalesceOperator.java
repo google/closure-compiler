@@ -42,7 +42,7 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
   public void process(Node externs, Node root) {
     NodeTraversal.traverseRoots(compiler, new ArrowRewriteCallBack(), externs, root);
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.NULL_COALESCE_OP);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(compiler, root, Feature.NULL_COALESCE_OP);
   }
 
   @Override

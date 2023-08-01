@@ -63,7 +63,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
   @Override
   public void process(Node externs, Node root) {
-    // TODO(b/171853310): This tranpilation should be turned off in externs
+    // TODO(b/171853310): This transpilation should be turned off in externs
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
     // Super constructor calls are done all at once as a separate step largely for historical
@@ -73,7 +73,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     //     constructor rewriting logic into this class.
     convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
     TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, features);
   }
 
   @Override

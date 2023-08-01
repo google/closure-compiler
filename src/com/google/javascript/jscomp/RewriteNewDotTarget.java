@@ -68,6 +68,6 @@ final class RewriteNewDotTarget implements CompilerPass {
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(
         compiler, root, TRANSPILED_FEATURES, new RewriteNewDotTargetCallback());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, TRANSPILED_FEATURES);
   }
 }

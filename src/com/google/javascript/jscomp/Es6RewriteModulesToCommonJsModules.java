@@ -56,7 +56,12 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         NodeTraversal.traverse(compiler, script, new Rewriter(compiler, script));
       }
     }
-    compiler.markFeatureNotAllowed(Feature.MODULES);
+    // It is unusual to call this NodeUtil method instead of the TranspilationPasses one. This
+    // pass is included in the {@code dependency_resolution} BUILD target and does not have access
+    // to {@code TranspilationPasses}. Adding that dep produces a cycle in the BUILD dep graph.
+    // Regular transpiler passes must use the {@code
+    // TranspilationPasses.maybeMarkFeaturesAsTranspiledAway}
+    NodeUtil.removeFeatureFromAllScripts(root, Feature.MODULES, compiler);
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
 

@@ -95,7 +95,8 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
   private void checkForUntranspilable(Node root) {
     // Non-flag RegExp features are not attached to nodes, so we must force traversal.
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, untranspilableFeaturesToRemove);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
+        compiler, root, untranspilableFeaturesToRemove);
   }
 
   private void reportUntranspilable(Feature feature, Node node) {

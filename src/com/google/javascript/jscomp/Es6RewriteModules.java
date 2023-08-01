@@ -26,7 +26,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MODULES;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
@@ -188,7 +187,12 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
     NodeTraversal.traverseRoots(compiler, this, externs, root);
-    compiler.markFeatureNotAllowed(MODULES);
+    // It is unusual to call this NodeUtil method instead of the TranspilationPasses one. This
+    // pass is included in the {@code dependency_resolution} BUILD target and does not have access
+    // to {@code TranspilationPasses}. Adding that dep produces a cycle in the BUILD dep graph.
+    // Regular transpiler passes must use the {@code
+    // TranspilationPasses.maybeMarkFeaturesAsTranspiledAway}
+    NodeUtil.removeFeatureFromAllScripts(root, Feature.MODULES, compiler);
     // This pass may add getters properties on module objects.
     GatherGetterAndSetterProperties.update(compiler, externs, root);
   }

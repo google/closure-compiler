@@ -48,7 +48,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
-        compiler, Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK);
+        compiler, root, Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK);
   }
 
   @Override

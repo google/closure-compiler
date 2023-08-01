@@ -52,7 +52,7 @@ public final class Es7RewriteExponentialOperator implements NodeTraversal.Callba
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.EXPONENT_OP);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(compiler, root, Feature.EXPONENT_OP);
   }
 
   @Override

@@ -148,7 +148,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   public void process(Node externs, Node root) {
     checkState(patternNestingStack.isEmpty());
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, featuresToMarkAsRemoved);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, featuresToMarkAsRemoved);
     checkState(patternNestingStack.isEmpty());
   }
 

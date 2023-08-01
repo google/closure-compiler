@@ -128,7 +128,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     checkState(compiler.getLifeCycleStage().isNormalized());
     TranspilationPasses.processTranspile(
         compiler, root, transpiledFeatures, new GeneratorFunctionsTranspiler());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
   }
 
   /**

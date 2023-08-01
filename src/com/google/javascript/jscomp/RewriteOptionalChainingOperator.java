@@ -56,7 +56,7 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
   public void process(Node externs, Node root) {
     NodeTraversal.traverseRoots(compiler, new ArrowRewriteCallBack(), externs, root);
     NodeTraversal.traverseRoots(compiler, new TranspilationCallback(), externs, root);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.OPTIONAL_CHAINING);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(compiler, root, Feature.OPTIONAL_CHAINING);
   }
 
   /** Locates and transpiles all optional chains. */

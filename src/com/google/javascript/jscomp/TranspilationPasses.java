@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -485,20 +486,50 @@ public class TranspilationPasses {
     }
   }
 
-  static void maybeMarkFeaturesAsTranspiledAway(
-      AbstractCompiler compiler, FeatureSet transpiledFeatures) {
+  /**
+   * Removes the given features from the FEATURE_SET prop of all scripts under root. Also removes
+   * from the compiler's featureset.
+   */
+  static void maybeMarkFeatureAsTranspiledAway(
+      AbstractCompiler compiler, Node root, Feature feature) {
     // We don't bother to do this if the compiler has halting errors, which avoids unnecessary
     // warnings from AstValidator warning that the features are still there.
     if (!compiler.hasHaltingErrors()) {
-      compiler.markFeatureSetNotAllowed(transpiledFeatures);
+      compiler.markFeatureNotAllowed(feature);
+      NodeUtil.removeFeatureFromAllScripts(root, feature, compiler);
     }
   }
 
+  /**
+   * Removes the given features from the FEATURE_SET prop of all scripts under root. Also removes
+   * from the compiler's featureset.
+   */
   static void maybeMarkFeaturesAsTranspiledAway(
-      AbstractCompiler compiler, Feature transpiledFeature, Feature... moreTranspiledFeatures) {
+      AbstractCompiler compiler,
+      Node root,
+      Feature transpiledFeature,
+      Feature... moreTranspiledFeatures) {
     if (!compiler.hasHaltingErrors()) {
-      compiler.markFeatureSetNotAllowed(
-          FeatureSet.BARE_MINIMUM.with(transpiledFeature).with(moreTranspiledFeatures));
+      maybeMarkFeatureAsTranspiledAway(compiler, root, transpiledFeature);
+      for (Feature feature : moreTranspiledFeatures) {
+        maybeMarkFeatureAsTranspiledAway(compiler, root, feature);
+      }
+    }
+  }
+
+  /**
+   * Removes the given features from the FEATURE_SET prop of all scripts under root. Also removes
+   * from the compiler's featureset.
+   */
+  // TODO: b/293467820 - Potentially have a single method that accepts a Collection<Feature>
+  static void maybeMarkFeaturesAsTranspiledAway(
+      AbstractCompiler compiler, Node root, FeatureSet transpiledFeatures) {
+    // We don't bother to do this if the compiler has halting errors, which avoids unnecessary
+    // warnings from AstValidator warning that the features are still there.
+    if (!compiler.hasHaltingErrors()) {
+      for (Feature feature : transpiledFeatures.getFeatures()) {
+        maybeMarkFeatureAsTranspiledAway(compiler, root, feature);
+      }
     }
   }
 
@@ -530,7 +561,8 @@ public class TranspilationPasses {
   }
 
   /**
-   * Returns a pass that just removes features from the AST FeatureSet.
+   * Returns a pass that just removes features from the source scripts' FeatureSet and the
+   * compiler's featureset.
    *
    * <p>Doing this indicates that the AST no longer contains uses of the features, or that they are
    * no longer of concern for some other reason.
@@ -541,9 +573,10 @@ public class TranspilationPasses {
         .setName(passName)
         .setInternalFactory(
             (compiler) ->
-                ((Node externs, Node root) ->
-                    maybeMarkFeaturesAsTranspiledAway(
-                        compiler, featureToRemove, moreFeaturesToRemove)))
+                ((Node externs, Node root) -> {
+                  maybeMarkFeaturesAsTranspiledAway(
+                      compiler, root, featureToRemove, moreFeaturesToRemove);
+                }))
         .build();
   }
 

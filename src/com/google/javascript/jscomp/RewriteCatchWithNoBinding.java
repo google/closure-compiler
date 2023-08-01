@@ -74,6 +74,6 @@ final class RewriteCatchWithNoBinding implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, new AddBindings());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, TRANSPILED_FEATURES);
   }
 }

@@ -4416,6 +4416,19 @@ public final class NodeUtilTest {
           .equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
     }
 
+    @Test
+    public void removeFeatureFromAllScriptUpdatesCompilerFeatureSet() {
+      Node rootNode = IR.root();
+      rootNode.addChildToFront(parse(""));
+      Compiler compiler = new Compiler();
+      compiler.setAllowableFeatures(FeatureSet.ES2020);
+      assertFS(compiler.getAllowableFeatures()).equals(FeatureSet.ES2020);
+
+      NodeUtil.removeFeatureFromAllScripts(rootNode, Feature.LET_DECLARATIONS, compiler);
+      assertFS(compiler.getAllowableFeatures())
+          .equals(FeatureSet.ES2020.without(Feature.LET_DECLARATIONS));
+    }
+
     /**
      * Builds a node tree of string {@link com.google.javascript.rhino.Node} with string labels that
      * can be used to verify order in tests.

@@ -135,6 +135,12 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       compiler.markFeatureNotAllowed(Feature.DYNAMIC_IMPORT);
 
       // This pass removes dynamic import, but adds arrow functions.
+      // It is unusual to call this NodeUtil method instead of the TranspilationPasses one. This
+      // pass runs as a stage1 checks pass and does not have access to {@code TranspilationPasses}.
+      // Adding that dep produces a cycle in the BUILD dep graph.
+      // Regular transpiler passes must use the {@code
+      // TranspilationPassses.maybeMarkFeaturesAsTranspiledAway}.
+      NodeUtil.removeFeatureFromAllScripts(root, Feature.DYNAMIC_IMPORT, compiler);
       if (this.requiresAliasing && aliasIsValid()) {
         NodeTraversal.traverse(compiler, externs, new AliasInjectingTraversal());
       }

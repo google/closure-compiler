@@ -36,7 +36,8 @@ public final class RewriteLogicalAssignmentOperatorsPass
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.LOGICAL_ASSIGNMENT);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(
+        compiler, root, Feature.LOGICAL_ASSIGNMENT);
   }
 
   @Override

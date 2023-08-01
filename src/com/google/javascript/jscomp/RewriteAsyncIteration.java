@@ -204,7 +204,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     checkState(contextStack.isEmpty());
     contextStack.push(LexicalContext.newGlobalContext(root));
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
     checkState(contextStack.element().function == null);
     contextStack.remove();
     checkState(contextStack.isEmpty());
