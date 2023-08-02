@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -142,6 +143,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   // Allocated & cleaned up by process()
   private @Nullable LogFile removalLog;
+  private @Nullable LogFile unremovableLog;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -342,11 +344,15 @@ class RemoveUnusedCode implements CompilerPass {
     pinnedPropertyNames.addAll(compiler.getExternProperties());
 
     try (LogFile removalLogFile =
-        compiler.createOrReopenIndexedLog(this.getClass(), "removals.log")) {
+            compiler.createOrReopenIndexedLog(this.getClass(), "removals.log");
+        LogFile keepLogFile =
+            compiler.createOrReopenIndexedLog(this.getClass(), "unremovable.log")) {
       removalLog = removalLogFile; // avoid passing the log file through a bunch of methods
+      unremovableLog = keepLogFile;
       traverseAndRemoveUnusedReferences(root);
     } finally {
       removalLog = null;
+      unremovableLog = null;
     }
   }
 
@@ -420,7 +426,7 @@ class RemoveUnusedCode implements CompilerPass {
                     .buildFunctionDeclaration(n);
             varInfo.addRemovable(functionDeclaration);
             if (parent.isExport()) {
-              varInfo.setIsExplicitlyNotRemovable();
+              varInfo.setIsExplicitlyNotRemovable(() -> "exported class");
             }
           } else {
             traverseFunction(n, scope);
@@ -526,7 +532,9 @@ class RemoveUnusedCode implements CompilerPass {
           // class name() {}
           // handled at a higher level
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
-          traverseNameNode(n, scope).setIsExplicitlyNotRemovable();
+          traverseNameNode(n, scope)
+              .setIsExplicitlyNotRemovable(
+                  () -> SimpleFormat.format("reference found: %s", n.getLocation()));
         }
         break;
 
@@ -925,7 +933,7 @@ class RemoveUnusedCode implements CompilerPass {
     if (exceptionNameNode.isName()) {
       // exceptionNameNode can be an empty node if not using a binding in 2019.
       VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
-      exceptionVarInfo.setIsExplicitlyNotRemovable();
+      exceptionVarInfo.setIsExplicitlyNotRemovable(() -> "catch variable");
     }
     traverseNode(block, scope);
   }
@@ -940,7 +948,7 @@ class RemoveUnusedCode implements CompilerPass {
       // using previously-declared loop variable. e.g.
       // `for (varName of collection) {}`
       VarInfo varInfo = traverseNameNode(iterationTarget, forScope);
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "for-of or for-in loop variable");
     } else if (NodeUtil.isNameDeclaration(iterationTarget)) {
       // loop has const/var/let declaration
       Node declNode = iterationTarget.getOnlyChild();
@@ -962,7 +970,7 @@ class RemoveUnusedCode implements CompilerPass {
         // We can never remove the loop variable of a for-in or for-of loop, because it's
         // essential to loop syntax.
         VarInfo varInfo = traverseNameNode(declNode, forScope);
-        varInfo.setIsExplicitlyNotRemovable();
+        varInfo.setIsExplicitlyNotRemovable(() -> "for-of or for-in loop variable");
       }
     } else {
       // using some general LHS value e.g.
@@ -1005,7 +1013,8 @@ class RemoveUnusedCode implements CompilerPass {
         } else if (mayHaveSideEffects(valueNode)) {
           // TODO(bradfordcsmith): Actually allow for removing the variable while keeping the
           // valueNode for its side-effects.
-          varInfo.setIsExplicitlyNotRemovable();
+          varInfo.setIsExplicitlyNotRemovable(
+              () -> "for-loop variable initialization has side-effects");
           traverseNode(valueNode, scope);
         } else {
           VanillaForNameDeclaration vanillaForNameDeclaration =
@@ -1277,18 +1286,18 @@ class RemoveUnusedCode implements CompilerPass {
     VarInfo varInfo = traverseNameNode(classNameNode, scope);
     if (classNode.getParent().isExport()) {
       // Cannot remove an exported class.
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "exported class");
       traverseNode(baseClassExpression, scope);
       // Use traverseChildren() here, because we should not consider any properties on the exported
       // class to be removable.
       traverseChildren(classBodyNode, classScope);
     } else if (mayHaveSideEffects(baseClassExpression)) {
       // TODO(bradfordcsmith): implement removal without losing side-effects for this case
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "base class expression has side-effects");
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
     } else if (mayHaveSideEffects(classBodyNode)) {
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "class body has side-effects");
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
     } else {
@@ -1620,7 +1629,8 @@ class RemoveUnusedCode implements CompilerPass {
           continue;
         }
 
-        getVarInfo(getVarForNameNode(lValue, functionScope)).setIsExplicitlyNotRemovable();
+        getVarInfo(getVarForNameNode(lValue, functionScope))
+            .setIsExplicitlyNotRemovable(() -> "parameter in function using arguments");
       }
       // `arguments` is never removable.
       return canonicalUnremovableVarInfo;
@@ -1661,10 +1671,13 @@ class RemoveUnusedCode implements CompilerPass {
     checkNotNull(var);
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
+      unremovableLog.log(() -> SimpleFormat.format("%s: extern", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), /* local= */ !isGlobal)) {
+      unremovableLog.log(() -> SimpleFormat.format("%s: exported by convention", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
+      // No point in logging that we cannot remove "arguments"
       return canonicalUnremovableVarInfo;
     } else {
       VarInfo varInfo = varInfoMap.get(var);
@@ -1677,9 +1690,9 @@ class RemoveUnusedCode implements CompilerPass {
         // varInfo needs to track what value is assigned to it for the purpose of correctly allowing
         // or preventing removal of properties set on it.
         if (!removeGlobals && isGlobal) {
-          varInfo.setIsExplicitlyNotRemovable();
+          varInfo.setIsExplicitlyNotRemovable(() -> "not removing globals");
         } else if (!removeLocalVars && !isGlobal) {
-          varInfo.setIsExplicitlyNotRemovable();
+          varInfo.setIsExplicitlyNotRemovable(() -> "not removing locals");
         }
         varInfoMap.put(var, varInfo);
       }
@@ -1851,8 +1864,7 @@ class RemoveUnusedCode implements CompilerPass {
      * @return the Node representing the local value that is being assigned or `null` if the value
      *     is non-local or cannot be determined.
      */
-    @Nullable
-    Node getLocalAssignedValue() {
+    @Nullable Node getLocalAssignedValue() {
       return null;
     }
 
@@ -2852,7 +2864,7 @@ class RemoveUnusedCode implements CompilerPass {
      * all of the `Removable` objects associated with this variable and either apply their
      * continuations or consider them for independent removal.
      */
-    void setIsExplicitlyNotRemovable();
+    void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier);
 
     /**
      * Record that at least one value assigned to the variable is non-local (comes from or escapes
@@ -2891,7 +2903,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public void setIsExplicitlyNotRemovable() {
+    public void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier) {
       // nothing to do
     }
 
@@ -2917,6 +2929,7 @@ class RemoveUnusedCode implements CompilerPass {
   /** Tracks the removable code and other state related to variables we may be able to remove. */
   private final class RealVarInfo implements VarInfo {
     final String varName;
+
     /**
      * Objects that represent variable declarations, assignments, or class setup calls that can be
      * removed.
@@ -2975,7 +2988,8 @@ class RemoveUnusedCode implements CompilerPass {
         requiresLocalLiteralValueForRemoval = true;
       }
       if (hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval) {
-        setIsExplicitlyNotRemovable();
+        setIsExplicitlyNotRemovable(
+            () -> "hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval");
       }
 
       if (isEntirelyRemovable) {
@@ -2992,9 +3006,10 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public void setIsExplicitlyNotRemovable() {
+    public void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier) {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
+        unremovableLog.log(SimpleFormat.format("%s: %s", varName, reasonSupplier.get()));
         for (Removable r : removables) {
           considerForIndependentRemoval(r);
         }
@@ -3097,8 +3112,10 @@ class RemoveUnusedCode implements CompilerPass {
   private abstract class PolyfillInfo {
     /** The {@link Polyfill} instance corresponding to the polyfill's definition. */
     final Polyfill removable;
+
     /** The rightmost component of the polyfill's qualified name (does not contain a dot). */
     final String key;
+
     /** Whether the polyfill is unreferenced and this can be removed safely. */
     boolean isRemovable = true;
 
