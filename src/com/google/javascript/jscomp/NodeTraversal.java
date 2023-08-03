@@ -651,6 +651,7 @@ public class NodeTraversal {
         }
         break;
       case BLOCK:
+      case SWITCH:
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -695,16 +696,6 @@ public class NodeTraversal {
           traverseBranch(forAssignmentParam, n);
           traverseBranch(forIterableParam, n);
           traverseBranch(forBodyScope, n);
-
-          popScope();
-          callback.visit(this, n, null);
-        }
-        break;
-      case SWITCH:
-        if (callback.shouldTraverse(this, n, null)) {
-          pushScope(s);
-
-          traverseChildren(n);
 
           popScope();
           callback.visit(this, n, null);
@@ -1303,6 +1294,7 @@ public class NodeTraversal {
           }
           return rootNode;
         case MEMBER_FIELD_DEF:
+        case COMPUTED_FIELD_DEF:
         case CLASS:
         case MODULE_BODY:
         case ROOT:

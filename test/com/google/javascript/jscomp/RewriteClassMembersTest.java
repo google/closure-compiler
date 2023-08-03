@@ -62,22 +62,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   public void testCannotConvertYet() {
     testError(
         lines(
-            "/** @unrestricted */", //
-            "class C {",
-            "  ['x'] = 2;",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // computed prop
-
-    testError(
-        lines(
-            "/** @unrestricted */", //
-            "class C {",
-            "  static ['x'] = 2;",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // computed prop
-
-    testError(
-        lines(
             "class C {", //
             "  static {",
             "    let x = 2",
@@ -90,7 +74,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  let x = 2;",
         "  C.y = x", // TODO(b/235871861): Need to correct references to `this`
         "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET); // uses `this` in static block
+        CANNOT_CONVERT_YET); // uses `this` in static block
 
     testError(
         lines(
@@ -99,7 +83,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = super.y",
             "  }",
             "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // uses `super`
+        CANNOT_CONVERT_YET); // uses `super`
 
     testError(
         lines(
@@ -115,7 +99,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  C.x = 2;",
         "  const y = C.x",
         "}")*/
-        TranspilationUtil.CANNOT_CONVERT_YET); // uses `this` in static block
+        CANNOT_CONVERT_YET); // uses `this` in static block
 
     testError(
         lines(
@@ -126,89 +110,133 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    var z = 3;",
             "  }",
             "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // `var` in static block
-
-    test(
-        srcs(
-            lines(
-                "class C {", //
-                "  static [1] = 1;",
-                "  static [2] = this[1];",
-                "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
-
-    test(
-        srcs(
-            lines(
-                "let c = class C {", //
-                "  static [1] = 2;",
-                "  static [2] = C[1]",
-                "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
-
-    test(
-        srcs(
-            lines(
-                "foo(class C {", //
-                "  static [1] = 2;",
-                "  static [2] = C[1]",
-                "})")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
+        CANNOT_CONVERT_YET); // `var` in static block
 
     testError(
         lines(
-            "foo(class {", //
-            "  static [1] = 1",
-            "})"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // computed prop
+            "function bar(num) {}",
+            "/** @unrestricted */",
+            "class Foo {",
+            "  ['f' + bar(1)] = 5;",
+            "  static y = bar(3);",
+            "  ['m' + bar(2)]() {}",
+            "}"),
+        CANNOT_CONVERT_YET
+        /*
+        TODO(user): Need to correctly transpile computed fields with side effects
+
+        lines(
+        "class Foo {",
+        "  constructor() {",
+        "    this[$jscomp$compfield0] = 5;",
+        "  }",
+        "  [($jscomp$compfield0 = bar(1), bar(2))]() {}",
+        "}",
+        "Foo.y = bar(3);") */
+        );
 
     test(
         srcs(
             lines(
-                "class C {", //
-                "  [1] = 1;",
-                "  [2] = this[1];",
+                "function bar(num) {}",
+                "/** @unrestricted */",
+                "class Foo {",
+                "  [bar(1)] = 'a';",
+                "  static b = bar(3);",
+                "  static [bar(2)] = bar(4);",
                 "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
+        error(CANNOT_CONVERT_YET),
+        error(CANNOT_CONVERT_YET));
+    /* expected(
+    lines(
+        "function bar(num) {}",
+        "var COMPFIELD$0;",
+        "var COMPFIELD$1;",
+        "class Foo {",
+        "  constructor() {",
+        "    this[COMPFIELD$0] = 'a'",
+        "  }",
+        "}",
+        "COMPFIELD$0 = bar(1);",
+        "COMPFIELD$1 = bar(2);",
+        "Foo.b = bar(3);",
+        "Foo[COMPFIELD$1] = bar(4);"))); */
 
-    test(
+    testError(
         srcs(
             lines(
-                "let c = class C {", //
-                "  static [1] = 2;",
-                "  [2] = C[1]",
+                "let x = 'hello';",
+                "/** @unrestricted */ class Foo {",
+                "  static n = (x=5);",
+                "  static [x] = 'world';",
                 "}")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
+        CANNOT_CONVERT_YET);
+    /* expected(
+    lines(
+        "let x = 'hello';",
+        "var COMPFIELD$0;",
+        "class Foo {}",
+        "COMPFIELD$0 = x;",
+        "Foo.n = x = 5;",
+        "Foo[COMPFIELD$0] = 'world';"))); */
 
-    test(
+    testError(
         srcs(
             lines(
-                "foo(class C {", //
-                "  static [1] = 2;",
-                "  [2] = C[1]",
-                "})")),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
+                "function bar() {",
+                "  this.x = 3;", //
+                "  /** @unrestricted */",
+                "  class Foo {",
+                "    y;",
+                "    [this.x] = 2;",
+                "  }",
+                "}")),
+        CANNOT_CONVERT_YET);
+    /* expected(
+    lines(
+        "function bar() {",
+        "  this.x = 3;",
+        "  var COMPFIELD$0;",
+        "  class Foo {",
+        "    constructor() {",
+        "      this.y;",
+        "      this[COMPFIELD$0] = 2;",
+        "    }",
+        "  }",
+        "  COMPFIELD$0 = this.x;",
+        "}"))); */
 
-    test(
+    testError(
         srcs(
             lines(
-                "let c = class {", //
-                "  x = 1",
-                "  y = this.x",
+                "class E {",
+                "  y() { return 1; }",
                 "}",
-                "class B {",
-                "  [1] = 2;",
-                "  [2] = this[1]",
-                "}" // testing that the correct number of diagnostics are thrown
-                )),
-        error(TranspilationUtil.CANNOT_CONVERT_YET), // computed prop
-        error(TranspilationUtil.CANNOT_CONVERT_YET)); // computed prop
+                "class F extends E {",
+                "  x() {",
+                "    return /** @unrestricted */ class {",
+                "      [super.y()] = 4;",
+                "    }",
+                "  }",
+                "}")),
+        CANNOT_CONVERT_YET);
+    /* expected(
+    lines(
+        "class E {",
+        "  y() { return 1; }",
+        "}",
+        "class F extends E {",
+        "  x() {",
+        "    var COMPFIELD$0;",
+        "    const testcode$classdecl$var0 = class {",
+        "      constructor() {",
+        "        this[COMPFIELD$0] = 4;",
+        "      }",
+        "    };",
+        "    COMPFIELD$0 = super.y();",
+        "    return testcode$classdecl$var0;",
+        "  }",
+        "}"))); */
   }
 
   @Test
@@ -369,6 +397,157 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "Object.setPrototypeOf = function(c, d) {}",
             "Object.setPrototypeOf(Foo.b, Foo.a);",
             "Foo.b.method2();"));
+  }
+
+  @Test
+  public void testComputedPropInNonStaticField() {
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  ['x'];",
+            "  ['y'] = 3;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this['x'];",
+            "    this['y'] = 3;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  [1] = 1;",
+            "  [2] = this[1];",
+            "}"),
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    this[1] = 1;",
+            "    this[2] = this[1];",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "/** @unrestricted */",
+            "let c = class C {", //
+            "  static [1] = 2;",
+            "  [2] = C[1]",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this[2] = testcode$classdecl$var0[1];",
+            "  }",
+            "};",
+            "testcode$classdecl$var0[1] = 2;",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
+
+    test(
+        lines(
+            "foo(/** @unrestricted */ class C {", //
+            "  static [1] = 2;",
+            "  [2] = C[1]",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this[2] = testcode$classdecl$var0[1];",
+            "  }",
+            "};",
+            "testcode$classdecl$var0[1] = 2;",
+            "foo(testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "let c = class {", //
+            "  x = 1",
+            "  y = this.x",
+            "}",
+            "/** @unrestricted */",
+            "class B {",
+            "  [1] = 2;",
+            "  [2] = this[1]",
+            "}"),
+        lines(
+            "let c = class {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = this.x;",
+            "  }",
+            "};",
+            "class B {",
+            "  constructor() {",
+            "    this[1] = 2;",
+            "    this[2] = this[1];",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testComputedPropInStaticField() {
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  static ['x'];",
+            "  static ['y'] = 2;",
+            "}"),
+        lines(
+            "class C {}", //
+            "C['x'];",
+            "C['y'] = 2;"));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  static [1] = 1;",
+            "  static [2] = this[1];",
+            "}"),
+        lines(
+            "class C {}", //
+            "C[1] = 1;",
+            "C[2] = C[1];"));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "let c = class C {", //
+            "  static [1] = 2;",
+            "  static [2] = C[1]",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0[1] = 2;",
+            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
+
+    test(
+        lines(
+            "foo(/** @unrestricted */ class C {", //
+            "  static [1] = 2;",
+            "  static [2] = C[1]",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0[1] = 2;",
+            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
+            "foo(testcode$classdecl$var0);"));
+
+    test(
+        lines(
+            "foo(/** @unrestricted */ class {", //
+            "  static [1] = 1",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0[1] = 1;",
+            "foo(testcode$classdecl$var0);"));
   }
 
   @Test

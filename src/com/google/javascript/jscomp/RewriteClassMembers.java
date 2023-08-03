@@ -89,10 +89,16 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         classStack.push(new ClassRecord(n, classNameNode.getQualifiedName(), classInsertionPoint));
         break;
       case COMPUTED_FIELD_DEF:
+        if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
+          t.report(
+              n,
+              TranspilationUtil.CANNOT_CONVERT_YET,
+              "Class contains computed field with possible side effects");
+          return false;
+        }
         checkState(!classStack.isEmpty());
-        t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Computed fields");
-        classStack.peek().cannotConvert = true;
-        return false;
+        classStack.peek().enterField(n);
+        break;
       case MEMBER_FIELD_DEF:
         checkState(!classStack.isEmpty());
         classStack.peek().enterField(n);
@@ -145,12 +151,14 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       case CLASS:
         visitClass(t);
         return;
+      case COMPUTED_FIELD_DEF:
       case MEMBER_FIELD_DEF:
         classStack.peek().exitField();
         return;
       case THIS:
         Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
-        if (rootNode.isMemberFieldDef() && rootNode.isStaticMember()) {
+        if (rootNode.isStaticMember()
+            && (rootNode.isMemberFieldDef() || rootNode.isComputedFieldDef())) {
           Node className = rootNode.getGrandparent().getFirstChild().cloneNode();
           n.replaceWith(className);
           t.reportCodeChange(className);
@@ -195,7 +203,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
     while (!instanceMembers.isEmpty()) {
       Node instanceMember = instanceMembers.pop();
-      checkState(instanceMember.isMemberFieldDef());
+      checkState(
+          instanceMember.isMemberFieldDef() || instanceMember.isComputedFieldDef(), instanceMember);
 
       for (Node nameInRhs : record.referencedNamesByMember.get(instanceMember)) {
         String name = nameInRhs.getString();
@@ -209,8 +218,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       }
 
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
-
-      Node transpiledNode = convNonCompFieldToGetProp(thisNode, instanceMember.detach());
+      Node transpiledNode =
+          instanceMember.isMemberFieldDef()
+              ? convNonCompFieldToGetProp(thisNode, instanceMember.detach())
+              : convCompFieldToGetElem(thisNode, instanceMember.detach());
       if (insertionPoint == ctorBlock) { // insert the field at the beginning of the block, no super
         ctorBlock.addChildToFront(transpiledNode);
       } else {
@@ -244,6 +255,9 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         case MEMBER_FIELD_DEF:
           transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
           break;
+        case COMPUTED_FIELD_DEF:
+          transpiledNode = convCompFieldToGetElem(nameToUse, staticMember.detach());
+          break;
         default:
           throw new IllegalStateException(String.valueOf(staticMember));
       }
@@ -269,6 +283,24 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             ? astFactory.createAssignStatement(getProp, fieldValue.detach())
             : astFactory.exprResult(getProp);
     result.srcrefTreeIfMissing(noncomputedField);
+    return result;
+  }
+
+  /**
+   * Creates a node that represents receiver[key] = value; where the key and value comes from the
+   * computed field
+   */
+  private Node convCompFieldToGetElem(Node receiver, Node computedField) {
+    checkArgument(computedField.isComputedFieldDef(), computedField);
+    checkArgument(computedField.getParent() == null, computedField);
+    checkArgument(receiver.getParent() == null, receiver);
+    Node getElem = astFactory.createGetElem(receiver, computedField.getFirstChild().detach());
+    Node fieldValue = computedField.getLastChild();
+    Node result =
+        (fieldValue != null)
+            ? astFactory.createAssignStatement(getElem, fieldValue.detach())
+            : astFactory.exprResult(getElem);
+    result.srcrefTreeIfMissing(computedField);
     return result;
   }
 
@@ -378,7 +410,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       if (currentMember == null) {
         return;
       }
-      checkState(currentMember.isMemberFieldDef());
+      checkState(
+          currentMember.isMemberFieldDef() || currentMember.isComputedFieldDef(), currentMember);
       referencedNamesByMember.put(currentMember, nameNode);
     }
 
