@@ -7257,6 +7257,11 @@ google.maps.PlacesLibrary.prototype.AddressComponent;
 google.maps.PlacesLibrary.prototype.Attribution;
 
 /**
+ * @type {typeof google.maps.places.AuthorAttribution}
+ */
+google.maps.PlacesLibrary.prototype.AuthorAttribution;
+
+/**
  * @type {typeof google.maps.places.Autocomplete}
  */
 google.maps.PlacesLibrary.prototype.Autocomplete;
@@ -7295,11 +7300,6 @@ google.maps.PlacesLibrary.prototype.OpeningHoursPoint;
  * @type {typeof google.maps.places.Photo}
  */
 google.maps.PlacesLibrary.prototype.Photo;
-
-/**
- * @type {typeof google.maps.places.PhotoAttribution}
- */
-google.maps.PlacesLibrary.prototype.PhotoAttribution;
 
 /**
  * @type {typeof google.maps.places.Place}
@@ -11281,7 +11281,7 @@ google.maps.journeySharing.FleetEngineFleetLocationProviderOptions.prototype
 /**
  * A filter query to apply when fetching vehicles. This filter is passed
  * directly to Fleet Engine. <br><br>See <a
- * href="https://developers.google.com/maps/documentation/transportation-logistics/on-demand-rides-deliveries-solution/reference/fleet-engine/rpc/maps.fleetengine.v1#listvehiclesrequest">ListVehiclesRequest.filter</a>
+ * href="https://goo.gle/ListVehiclesRequest-filter">ListVehiclesRequest.filter</a>
  * for supported formats.<br><br>Note that valid filters for attributes must
  * have the &quot;attributes&quot; prefix. For example, <code>attributes.x =
  * &quot;y&quot;</code> or <code>attributes.&quot;x y&quot; =
@@ -14254,6 +14254,35 @@ google.maps.places.Attribution.prototype.provider;
 google.maps.places.Attribution.prototype.providerURI;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ *
+ * Access by calling `const {AuthorAttribution} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.AuthorAttribution = function() {};
+
+/**
+ * Author&#39;s name for this result.
+ * @type {string}
+ */
+google.maps.places.AuthorAttribution.prototype.displayName;
+
+/**
+ * Author&#39;s photo URI for this result. This may not always be available.
+ * @type {?string}
+ */
+google.maps.places.AuthorAttribution.prototype.photoURI;
+
+/**
+ * Author&#39;s profile URI for this result.
+ * @type {?string}
+ */
+google.maps.places.AuthorAttribution.prototype.uri;
+
+/**
  * A widget that provides Place predictions based on a user&#39;s text input. It
  * attaches to an input element of type <code>text</code>, and listens for text
  * entry in that field. The list of predictions is presented as a drop-down
@@ -14902,9 +14931,9 @@ google.maps.places.Photo = function() {};
 
 /**
  * Attribution text to be displayed for this photo.
- * @type {!Array<!google.maps.places.PhotoAttribution>}
+ * @type {!Array<!google.maps.places.AuthorAttribution>}
  */
-google.maps.places.Photo.prototype.attributions;
+google.maps.places.Photo.prototype.authorAttributions;
 
 /**
  * The height of the photo in pixels.
@@ -14924,28 +14953,6 @@ google.maps.places.Photo.prototype.widthPx;
  * @return {string}
  */
 google.maps.places.Photo.prototype.getURI = function(options) {};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- *
- * Access by calling `const {PhotoAttribution} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @constructor
- */
-google.maps.places.PhotoAttribution = function() {};
-
-/**
- * Attribution text to be displayed for this Photo result.
- * @type {string}
- */
-google.maps.places.PhotoAttribution.prototype.author;
-
-/**
- * @type {?string}
- */
-google.maps.places.PhotoAttribution.prototype.authorURI;
 
 /**
  * Defines photo-requesting options.
@@ -16494,22 +16501,10 @@ google.maps.places.RankBy = {
 google.maps.places.Review = function() {};
 
 /**
- * The name of the reviewer.
- * @type {?string}
+ * The reviewer.
+ * @type {?google.maps.places.AuthorAttribution}
  */
-google.maps.places.Review.prototype.author;
-
-/**
- * A URL to the reviwer&#39;s profile image.
- * @type {?string}
- */
-google.maps.places.Review.prototype.authorPhotoURI;
-
-/**
- * A URL to the reviewer&#39;s profile.
- * @type {?string}
- */
-google.maps.places.Review.prototype.authorURI;
+google.maps.places.Review.prototype.authorAttribution;
 
 /**
  * @type {?Date}
