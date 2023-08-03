@@ -975,6 +975,12 @@ class InlineAndCollapseProperties implements CompilerPass {
           continue;
         }
 
+        if (target.isMemberFunctionDef()) {
+          // In the case of a method reference, the reference to the alias is not fully qualified,
+          // so we should not touch it, see b/293184904.
+          continue;
+        }
+
         for (int i = 0; i <= depth; i++) {
           if (target.isGetProp()) {
             target = target.getFirstChild();

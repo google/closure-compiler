@@ -4797,4 +4797,43 @@ public final class IntegrationTest extends IntegrationTestCase {
         // to hide side-effects.
         "");
   }
+
+  @Test
+  public void testDeclareLegacyNamespaceSubModuleCrash() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2016);
+
+    options.setRemoveDeadCode(false);
+    options.setRemoveUnusedVariables(Reach.NONE);
+    options.setRemoveUnusedClassProperties(false);
+
+    // Ensures that references to aliases that occur within member function defs do not crash the
+    // compiler (see b/293184904). In this example, the name 'method' in 'static method() {...}'
+    // is a reference to a.b.Foo.method, but since the reference is not fully qualified, the
+    // compiler should not try to touch it.
+    //
+    // This test case contains a use of a computed property to ensure that the fix for the above
+    // problem does not affect computed properties.
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.module('a.b');",
+              "goog.module.declareLegacyNamespace();",
+              "var b = {};",
+              "exports = b;\n"),
+          lines(
+              "goog.provide('a.b.Foo');",
+              "a.b.Foo = class {",
+              "  static method() {}",
+              "  static getVarName() { return 'someVar'; }",
+              "};",
+              "var x = {[a.b.Foo.getVarName()]: '4'};",
+              "alert(x['someVar']);")
+        },
+        new String[] {
+          lines(""), lines("alert(\"4\");"),
+        });
+  }
 }
