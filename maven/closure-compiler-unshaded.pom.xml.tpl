@@ -43,6 +43,16 @@
     <version>1.0-SNAPSHOT</version>
     <relativePath>closure-compiler-main.pom.xml</relativePath>
   </parent>
+
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
   <dependencies>
 {dependencies}
   </dependencies>
