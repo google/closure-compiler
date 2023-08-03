@@ -1368,7 +1368,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               builder
                   .setName(sourceNode.getString())
                   .setReceiverType(typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE))
-                  .setMutation(true)
+                  .setMutation(!(sourceNode.isMemberFieldDef() && !sourceNode.hasChildren()))
                   .setDeclaration(true)
                   // TODO(b/113704668): This definition is way too loose. It was used to prevent
                   // breakages during refactoring and should be tightened.

@@ -80,6 +80,68 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOverrideAllowed() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  /** @final*/ x;",
+            "  constructor() {",
+            "    this.x = 5;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testMultipleFieldsOverrideAllowed() {
+    testSame(
+        lines(
+            "class Bar {", //
+            "  /** @final*/ a;",
+            "  /** @final */ b;",
+            "  constructor() {",
+            "    this.a = 1;",
+            "    this.b = 2;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testFieldOverrideNotAllowed() {
+    testError(
+        lines(
+            "class Bar {", //
+            "  /** @final*/ a;",
+            "  constructor() {",
+            "    this.a = 1;",
+            "    this.a = 2;",
+            "  }",
+            "}"),
+        FINAL_PROPERTY_OVERRIDDEN);
+
+    testError(
+        lines(
+            "class Bar {", //
+            "  /** @final*/ a = 5;",
+            "  constructor() {",
+            "    this.a = 1;",
+            "  }",
+            "}"),
+        FINAL_PROPERTY_OVERRIDDEN);
+  }
+
+  @Test
+  public void testThisAssignmentInConstructor() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @const {number} */ this.x;",
+            "    this.x = 4;",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testWarningInNormalClass() {
     test(
         srcs(
