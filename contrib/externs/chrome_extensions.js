@@ -3712,6 +3712,32 @@ chrome.windows = {};
 
 
 /**
+ * Specifies what type of browser window to create.
+ * @see https://developer.chrome.com/docs/extensions/reference/windows/#type-CreateType
+ * @enum {string}
+ */
+chrome.windows.CreateType = {
+  NORMAL: '',
+  PANEL: '',
+  POPUP: '',
+};
+
+
+/**
+ * The type of browser window this is.
+ * @see https://developer.chrome.com/docs/extensions/reference/windows/#type-WindowType
+ * @enum {string}
+ */
+chrome.windows.WindowType = {
+  APP: '',
+  DEVTOOLS: '',
+  NORMAL: '',
+  PANEL: '',
+  POPUP: '',
+};
+
+
+/**
  * @param {Object=} opt_createData May have many keys to specify parameters.
  *     Or the callback.
  * @param {function(ChromeWindow): void=} opt_callback Callback.
