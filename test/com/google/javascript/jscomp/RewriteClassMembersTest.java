@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +57,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
       new Es6ExtractClasses(compiler).process(externs, root);
       new RewriteClassMembers(compiler).process(externs, root);
     };
+  }
+
+  private void computedFieldTest(Sources srcs, Expected originalExpected) {
+    Expected modifiedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs,
+                originalExpected,
+                ImmutableMap.of("COMPFIELD", "$jscomp$compfield$")));
+    test(srcs, modifiedExpected);
   }
 
   @Test
@@ -112,131 +123,39 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "}"),
         CANNOT_CONVERT_YET); // `var` in static block
 
-    testError(
-        lines(
-            "function bar(num) {}",
-            "/** @unrestricted */",
-            "class Foo {",
-            "  ['f' + bar(1)] = 5;",
-            "  static y = bar(3);",
-            "  ['m' + bar(2)]() {}",
-            "}"),
-        CANNOT_CONVERT_YET
-        /*
-        TODO(user): Need to correctly transpile computed fields with side effects
-
-        lines(
-        "class Foo {",
-        "  constructor() {",
-        "    this[$jscomp$compfield0] = 5;",
-        "  }",
-        "  [($jscomp$compfield0 = bar(1), bar(2))]() {}",
-        "}",
-        "Foo.y = bar(3);") */
-        );
-
     test(
         srcs(
             lines(
-                "function bar(num) {}",
+                "function foo(num) {}",
                 "/** @unrestricted */",
-                "class Foo {",
-                "  [bar(1)] = 'a';",
-                "  static b = bar(3);",
-                "  static [bar(2)] = bar(4);",
+                "class Baz {",
+                "  ['f' + foo(1)] = 5;",
+                "  static x = foo(6);",
+                "  ['m' + foo(2)]() {};",
+                "  static [foo(3)] = foo(7);",
+                "  [foo(4)] = 2;",
+                "  get [foo(5)]() {}",
                 "}")),
-        error(CANNOT_CONVERT_YET),
-        error(CANNOT_CONVERT_YET));
-    /* expected(
+        error(CANNOT_CONVERT_YET), // Comp field with side effect and computed function
+        error(CANNOT_CONVERT_YET)); // Comp field with side effect and computed function
+    /* TODO(user): Move computed fields with side effects into computed functions if
+       present
+    expected(
     lines(
-        "function bar(num) {}",
+        "function foo(num) {}",
         "var COMPFIELD$0;",
         "var COMPFIELD$1;",
-        "class Foo {",
+        "var COMPFIELD$2;",
+        "class Baz {",
         "  constructor() {",
-        "    this[COMPFIELD$0] = 'a'",
+        "    this[COMPFIELD$2] = 5;",
+        "    this[COMPFIELD$0] = 2;",
         "  }",
+        "  [(COMPFIELD$2 = 'f' + foo(1), 'm' + foo(2))]() {}",
+        "  get [(COMPFIELD$1 = foo(3), COMPFIELD$0 = foo(4), foo(5))]() {}",
         "}",
-        "COMPFIELD$0 = bar(1);",
-        "COMPFIELD$1 = bar(2);",
-        "Foo.b = bar(3);",
-        "Foo[COMPFIELD$1] = bar(4);"))); */
-
-    testError(
-        srcs(
-            lines(
-                "let x = 'hello';",
-                "/** @unrestricted */ class Foo {",
-                "  static n = (x=5);",
-                "  static [x] = 'world';",
-                "}")),
-        CANNOT_CONVERT_YET);
-    /* expected(
-    lines(
-        "let x = 'hello';",
-        "var COMPFIELD$0;",
-        "class Foo {}",
-        "COMPFIELD$0 = x;",
-        "Foo.n = x = 5;",
-        "Foo[COMPFIELD$0] = 'world';"))); */
-
-    testError(
-        srcs(
-            lines(
-                "function bar() {",
-                "  this.x = 3;", //
-                "  /** @unrestricted */",
-                "  class Foo {",
-                "    y;",
-                "    [this.x] = 2;",
-                "  }",
-                "}")),
-        CANNOT_CONVERT_YET);
-    /* expected(
-    lines(
-        "function bar() {",
-        "  this.x = 3;",
-        "  var COMPFIELD$0;",
-        "  class Foo {",
-        "    constructor() {",
-        "      this.y;",
-        "      this[COMPFIELD$0] = 2;",
-        "    }",
-        "  }",
-        "  COMPFIELD$0 = this.x;",
-        "}"))); */
-
-    testError(
-        srcs(
-            lines(
-                "class E {",
-                "  y() { return 1; }",
-                "}",
-                "class F extends E {",
-                "  x() {",
-                "    return /** @unrestricted */ class {",
-                "      [super.y()] = 4;",
-                "    }",
-                "  }",
-                "}")),
-        CANNOT_CONVERT_YET);
-    /* expected(
-    lines(
-        "class E {",
-        "  y() { return 1; }",
-        "}",
-        "class F extends E {",
-        "  x() {",
-        "    var COMPFIELD$0;",
-        "    const testcode$classdecl$var0 = class {",
-        "      constructor() {",
-        "        this[COMPFIELD$0] = 4;",
-        "      }",
-        "    };",
-        "    COMPFIELD$0 = super.y();",
-        "    return testcode$classdecl$var0;",
-        "  }",
-        "}"))); */
+        "Baz.x = foo(6);",
+        "Baz[COMPFIELD$1] = foo(7);"))); */
   }
 
   @Test
@@ -502,6 +421,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {}", //
             "C['x'];",
             "C['y'] = 2;"));
+
     test(
         lines(
             "/** @unrestricted */",
@@ -513,6 +433,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {}", //
             "C[1] = 1;",
             "C[2] = C[1];"));
+
     test(
         lines(
             "/** @unrestricted */",
@@ -548,6 +469,107 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "const testcode$classdecl$var0 = class {};",
             "testcode$classdecl$var0[1] = 1;",
             "foo(testcode$classdecl$var0);"));
+  }
+
+  @Test
+  public void testSideEffectsInComputedField() {
+    computedFieldTest(
+        srcs(
+            lines(
+                "function bar() {",
+                "  this.x = 3;", //
+                "  /** @unrestricted */",
+                "  class Foo {",
+                "    y;",
+                "    [this.x] = 2;",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "function bar() {",
+                "  this.x = 3;",
+                "  var COMPFIELD$0;",
+                "  class Foo {",
+                "    constructor() {",
+                "      this.y;",
+                "      this[COMPFIELD$0] = 2;",
+                "    }",
+                "  }",
+                "  COMPFIELD$0 = this.x;",
+                "}")));
+
+    computedFieldTest(
+        srcs(
+            lines(
+                "class E {",
+                "  y() { return 1; }",
+                "}",
+                "class F extends E {",
+                "  x() {",
+                "    return /** @unrestricted */ class {",
+                "      [super.y()] = 4;",
+                "    }",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "class E {",
+                "  y() { return 1; }",
+                "}",
+                "class F extends E {",
+                "  x() {",
+                "    var COMPFIELD$0;",
+                "    const testcode$classdecl$var0 = class {",
+                "      constructor() {",
+                "        this[COMPFIELD$0] = 4;",
+                "      }",
+                "    };",
+                "    COMPFIELD$0 = super.y();",
+                "    return testcode$classdecl$var0;",
+                "  }",
+                "}")));
+
+    computedFieldTest(
+        srcs(
+            lines(
+                "function bar(num) {}",
+                "/** @unrestricted */",
+                "class Foo {",
+                "  [bar(1)] = 'a';",
+                "  static b = bar(3);",
+                "  static [bar(2)] = bar(4);",
+                "}")),
+        expected(
+            lines(
+                "function bar(num) {}",
+                "var COMPFIELD$0;",
+                "var COMPFIELD$1;",
+                "class Foo {",
+                "  constructor() {",
+                "    this[COMPFIELD$0] = 'a'",
+                "  }",
+                "}",
+                "COMPFIELD$0 = bar(1);",
+                "COMPFIELD$1 = bar(2);",
+                "Foo.b = bar(3);",
+                "Foo[COMPFIELD$1] = bar(4);")));
+
+    computedFieldTest(
+        srcs(
+            lines(
+                "let x = 'hello';",
+                "/** @unrestricted */ class Foo {",
+                "  static n = (x=5);",
+                "  static [x] = 'world';",
+                "}")),
+        expected(
+            lines(
+                "let x = 'hello';",
+                "var COMPFIELD$0;",
+                "class Foo {}",
+                "COMPFIELD$0 = x;",
+                "Foo.n = x = 5;",
+                "Foo[COMPFIELD$0] = 'world';")));
   }
 
   @Test

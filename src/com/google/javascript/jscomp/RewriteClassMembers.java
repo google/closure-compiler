@@ -37,6 +37,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private final SynthesizeExplicitConstructors ctorCreator;
   private final Deque<ClassRecord> classStack;
 
+  private static final String COMP_FIELD_VAR = "$jscomp$compfield$";
+
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
@@ -61,22 +63,9 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
       case CLASS:
         Node classNameNode = NodeUtil.getNameNode(n);
-
-        if (classNameNode == null) {
-          t.report(
-              n, TranspilationUtil.CANNOT_CONVERT_YET, "Anonymous classes with ES2022 features");
-          return false;
-        }
-
-        @Nullable Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
-
-        if (classInsertionPoint == null) {
-          t.report(
-              n,
-              TranspilationUtil.CANNOT_CONVERT_YET,
-              "Class in a non-extractable location with ES2022 features");
-          return false;
-        }
+        checkState(classNameNode != null, "Class missing a name: %s", n);
+        Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
+        checkState(classInsertionPoint != null, "Class was not extracted: %s", n);
 
         if (!n.getFirstChild().isEmpty()
             && !classNameNode.matchesQualifiedName(n.getFirstChild())) {
@@ -89,14 +78,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         classStack.push(new ClassRecord(n, classNameNode.getQualifiedName(), classInsertionPoint));
         break;
       case COMPUTED_FIELD_DEF:
-        if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
-          t.report(
-              n,
-              TranspilationUtil.CANNOT_CONVERT_YET,
-              "Class contains computed field with possible side effects");
-          return false;
-        }
         checkState(!classStack.isEmpty());
+        if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
+          classStack.peek().hasCompFieldWithSideEffect = true;
+        }
         classStack.peek().enterField(n);
         break;
       case MEMBER_FIELD_DEF:
@@ -126,6 +111,17 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           // Either using scopes to be more precise or just doing renaming for all conflicting
           // constructor declarations would address this issue.
           record.potentiallyRecordNameInRhs(n);
+        }
+        break;
+      case COMPUTED_PROP:
+        checkState(!classStack.isEmpty());
+        if (classStack.peek().hasCompFieldWithSideEffect) {
+          t.report(
+              n,
+              TranspilationUtil.CANNOT_CONVERT_YET,
+              "Class contains computed field with side effect and computed function");
+          classStack.peek().cannotConvert = true;
+          break;
         }
         break;
       default:
@@ -183,9 +179,52 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     if (currClassRecord.cannotConvert) {
       return;
     }
-
     rewriteInstanceMembers(t, currClassRecord);
     rewriteStaticMembers(t, currClassRecord);
+  }
+
+  /**
+   * Extracts the expression in the LHS of a computed field to not disturb possible side effects and
+   * allow for this and super to be used in the LHS of a computed field in certain cases
+   *
+   * <p>E.g.
+   *
+   * <pre>
+   * class Foo {
+   *   [bar('str')] = 4;
+   * }
+   * </pre>
+   *
+   * becomes
+   *
+   * <pre>
+   * var $jscomp$computedfield$0;
+   * class Foo {
+   *   [$jscomp$computedfield$0] = 4;
+   * }
+   * $jscomp$computedfield$0 = bar('str');
+   * </pre>
+   */
+  private void extractExpressionFromCompField(
+      NodeTraversal t, ClassRecord record, Node memberField) {
+    checkArgument(memberField.isComputedFieldDef(), memberField);
+    checkState(
+        !memberField.getFirstChild().isName()
+            || !memberField.getFirstChild().getString().startsWith(COMP_FIELD_VAR),
+        memberField);
+    Node compExpression = memberField.getFirstChild().detach();
+    Node compFieldVar =
+        astFactory.createSingleVarNameDeclaration(
+            COMP_FIELD_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput()));
+    Node compFieldName = compFieldVar.getFirstChild();
+    memberField.addChildToFront(compFieldName.cloneNode());
+    compFieldVar.insertBefore(record.insertionPointBeforeClass);
+    compFieldVar.srcrefTreeIfMissing(record.classNode);
+    Node exprResult =
+        astFactory.exprResult(astFactory.createAssign(compFieldName.cloneNode(), compExpression));
+    exprResult.insertAfter(record.insertionPointAfterClass);
+    record.insertionPointAfterClass = exprResult;
+    exprResult.srcrefTreeIfMissing(record.classNode);
   }
 
   /** Rewrites and moves all instance fields */
@@ -218,6 +257,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       }
 
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
+      if (instanceMember.isComputedFieldDef()
+          && NodeUtil.canBeSideEffected(instanceMember.getFirstChild())) {
+        extractExpressionFromCompField(t, record, instanceMember);
+      }
       Node transpiledNode =
           instanceMember.isMemberFieldDef()
               ? convNonCompFieldToGetProp(thisNode, instanceMember.detach())
@@ -256,12 +299,15 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
           break;
         case COMPUTED_FIELD_DEF:
+          if (NodeUtil.canBeSideEffected(staticMember.getFirstChild())) {
+            extractExpressionFromCompField(t, record, staticMember);
+          }
           transpiledNode = convCompFieldToGetElem(nameToUse, staticMember.detach());
           break;
         default:
           throw new IllegalStateException(String.valueOf(staticMember));
       }
-      transpiledNode.insertAfter(record.classInsertionPoint);
+      transpiledNode.insertAfter(record.insertionPointAfterClass);
       t.reportCodeChange();
     }
   }
@@ -361,6 +407,11 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    * Accumulates information about different classes while going down the AST in shouldTraverse()
    */
   private static final class ClassRecord {
+
+    // Keeps track of if there are any computed fields with side effects in the class to throw
+    // an error if any computed functions are encountered because it requires a unique way to
+    // transpile to preserve the behavior of the side effects
+    boolean hasCompFieldWithSideEffect;
     // During traversal, contains the current member being traversed. After traversal, always null
     @Nullable Node currentMember;
     boolean cannotConvert;
@@ -378,12 +429,18 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
     final Node classNode;
     final String classNameString;
-    final Node classInsertionPoint;
+
+    // Keeps track of the statement declaring the class
+    final Node insertionPointBeforeClass;
+
+    // Keeps track of the last statement inserted after the class
+    Node insertionPointAfterClass;
 
     ClassRecord(Node classNode, String classNameString, Node classInsertionPoint) {
       this.classNode = classNode;
       this.classNameString = classNameString;
-      this.classInsertionPoint = classInsertionPoint;
+      this.insertionPointBeforeClass = classInsertionPoint;
+      this.insertionPointAfterClass = classInsertionPoint;
     }
 
     void enterField(Node field) {
