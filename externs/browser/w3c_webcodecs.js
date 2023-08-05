@@ -227,3 +227,217 @@ VideoFrame.prototype.copyTo = function(destination, options) {};
 VideoFrame.prototype.clone = function() {};
 
 VideoFrame.prototype.close = function() {};
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs-avc-codec-registration/#avc-encoder-config
+ */
+function AvcEncoderConfig() {}
+
+/** @type {(undefined|string)} */
+AvcEncoderConfig.prototype.format;
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-encodedvideochunkinit
+ */
+function EncodedVideoChunkInit() {}
+
+/** @type {(!ArrayBuffer|!ArrayBufferView)} */
+EncodedVideoChunkInit.prototype.data;
+
+/** @type {(undefined|number)} */
+EncodedVideoChunkInit.prototype.duration;
+
+/** @type {number} */
+EncodedVideoChunkInit.prototype.timestamp;
+
+/** @type {string} */
+EncodedVideoChunkInit.prototype.type;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#callbackdef-encodedvideochunkoutputcallback
+ */
+function EncodedVideoChunkOutputCallback() {}
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#encoded-video-chunk-metadata
+ */
+function EncodedVideoChunkMetadata() {}
+
+/** @type {(undefined|!VideoDecoderConfig)} */
+EncodedVideoChunkMetadata.prototype.decoderConfig;
+
+/** @type {(undefined|number)} */
+EncodedVideoChunkMetadata.prototype.temporalLayerId;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-videodecoderconfig
+ */
+function VideoDecoderConfig() {}
+/** @type {string} */
+VideoDecoderConfig.prototype.codec;
+
+/** @type {(undefined|number)} */
+VideoDecoderConfig.prototype.codedHeight;
+
+/** @type {(undefined|number)} */
+VideoDecoderConfig.prototype.codedWidth;
+
+/** @type {(undefined|!VideoColorSpaceInit)} */
+VideoDecoderConfig.prototype.colorSpace;
+
+/** @type {(undefined|!ArrayBuffer|!ArrayBufferView)} */
+VideoDecoderConfig.prototype.description;
+
+/** @type {(undefined|number)} */
+VideoDecoderConfig.prototype.displayAspectHeight;
+
+/** @type {(undefined|number)} */
+VideoDecoderConfig.prototype.displayAspectWidth;
+
+/** @type {(undefined|string)} */
+VideoDecoderConfig.prototype.hardwareAcceleration;
+
+/** @type {(undefined|boolean)} */
+VideoDecoderConfig.prototype.optimizeForLatency;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-videodecoderinit
+ */
+function VideoDecoderInit() {}
+
+/** @type {!WebCodecsErrorCallback} */
+VideoDecoderInit.prototype.error;
+
+/** @type {!VideoFrameOutputCallback} */
+VideoDecoderInit.prototype.output;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-videodecodersupport
+ */
+function VideoDecoderSupport() {}
+
+/** @type {!VideoDecoderConfig} */
+VideoDecoderSupport.prototype.config;
+
+/** @type {boolean} */
+VideoDecoderSupport.prototype.supported;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-videoencoderconfig
+ */
+function VideoEncoderConfig() {}
+
+/** @type {(undefined|string)} */
+VideoEncoderConfig.prototype.alpha;
+
+/** @type {(undefined|!AvcEncoderConfig)} */
+VideoEncoderConfig.prototype.avc;
+
+/** @type {(undefined|number)} */
+VideoEncoderConfig.prototype.bitrate;
+
+/** @type {(undefined|string)} */
+VideoEncoderConfig.prototype.bitrateMode;
+
+/** @type {string} */
+VideoEncoderConfig.prototype.codec;
+
+/** @type {(undefined|number)} */
+VideoEncoderConfig.prototype.displayHeight;
+
+/** @type {(undefined|number)} */
+VideoEncoderConfig.prototype.displayWidth;
+
+/** @type {(undefined|number)} */
+VideoEncoderConfig.prototype.framerate;
+
+/** @type {(undefined|string)} */
+VideoEncoderConfig.prototype.hardwareAcceleration;
+
+/** @type {number} */
+VideoEncoderConfig.prototype.height;
+
+/** @type {(undefined|string)} */
+VideoEncoderConfig.prototype.latencyMode;
+
+/** @type {(undefined|string)} */
+VideoEncoderConfig.prototype.scalabilityMode;
+
+/** @type {number} */
+VideoEncoderConfig.prototype.width;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#video-encoder-options
+ */
+function VideoEncoderEncodeOptions() {}
+
+/** @type {(undefined|null|boolean)} */
+VideoEncoderEncodeOptions.prototype.keyFrame;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-videoencoderinit
+ */
+function VideoEncoderInit() {}
+
+/** @type {!WebCodecsErrorCallback} */
+VideoEncoderInit.prototype.error;
+
+/** @type {!EncodedVideoChunkOutputCallback} */
+VideoEncoderInit.prototype.output;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#video-encoder-support
+ */
+function VideoEncoderSupport() {}
+
+/** @type {!VideoEncoderConfig} */
+VideoEncoderSupport.prototype.config;
+
+/** @type {boolean} */
+VideoEncoderSupport.prototype.supported;
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#callbackdef-videoframeoutputcallback
+ */
+function VideoFrameOutputCallback() {}
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#callbackdef-webcodecserrorcallback
+ */
+function WebCodecsErrorCallback() {}
