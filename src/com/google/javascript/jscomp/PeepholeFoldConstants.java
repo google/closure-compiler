@@ -1643,6 +1643,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node parent = spread.getParent();
     Node child = spread.getOnlyChild();
     if (child.isArrayLit()) {
+      for (Node n = child.getFirstChild(); n != null; n = n.getNext()) {
+        if (n.getToken().equals(Token.EMPTY)) {
+          // Do not fold if the array literal has any holes as it's a syntax error to have holes
+          // (empty arg) if the spread happens to be a call arg
+          return spread;
+        }
+      }
       parent.addChildrenAfter(child.removeChildren(), spread);
       spread.detach();
       reportChangeToEnclosingScope(parent);

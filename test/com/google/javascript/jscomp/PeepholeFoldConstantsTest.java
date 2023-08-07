@@ -1412,6 +1412,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testFoldArrayLitSpreadInArg() {
     test("foo(...[0], 1)", "foo(0, 1)");
+    testSame("foo(...[,,,,\"foo\"], 1)");
     testSame("foo(...(false ? [0] : [1]))"); // other opts need to fold the ternery first
   }
 
