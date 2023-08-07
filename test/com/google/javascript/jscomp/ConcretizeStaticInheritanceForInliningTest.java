@@ -628,8 +628,9 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
 
   @Test
   public void testNonQnameConstructor_doesntPolluteListOfAssignments() {
-    // Reproduce a pretty bad bug caused by accidentally reading/writing 'null' keys from a map.
-    test(
+    // Reproduce a bug that once created a nonsensical assignment:
+    //   Subclass.staticMethod = Example.staticMethod;
+    testSame(
         lines(
             "const ns = {};",
             "/** @constructor */",
@@ -641,21 +642,6 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.inherits(Subclass, Example);"),
-        lines(
-            "const ns = {};",
-            "/** @constructor */",
-            "ns['NOT_A_NAME'] = function() {};",
-            "ns['NOT_A_NAME'].staticMethod = function() { alert(1); }",
-            "",
-            "/** @constructor */",
-            "const Example = function() {}",
-            "",
-            "/** @constructor @extends {Example} */",
-            "function Subclass() {}",
-            "$jscomp.inherits(Subclass, Example);",
-            // TODO(b/293320792) - stop producing this assignment, there's no
-            // actual Example.staticMethod.
-            "Subclass.staticMethod = Example.staticMethod;"));
+            "$jscomp.inherits(Subclass, Example);"));
   }
 }

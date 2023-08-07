@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -325,6 +326,9 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(n);
       if (classInfo != null && classInfo.isConstructor()) {
         String name = NodeUtil.getName(n);
+        if (name == null) {
+          return;
+        }
         if (classByAlias.containsKey(name)) {
           duplicateClassNames.add(name);
         } else {
@@ -334,6 +338,8 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     }
 
     private void setAlias(String original, String alias) {
+      Preconditions.checkNotNull(original, "original is null");
+      Preconditions.checkNotNull(alias, "alias is null");
       checkArgument(classByAlias.containsKey(original));
       classByAlias.put(alias, classByAlias.get(original));
     }
@@ -369,7 +375,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
         return;
       }
       String maybeOriginalName = child.getFirstChild().getQualifiedName();
-      if (classByAlias.containsKey(maybeOriginalName)) {
+      if (maybeOriginalName != null && classByAlias.containsKey(maybeOriginalName)) {
         String maybeAlias = child.getQualifiedName();
         if (maybeAlias != null) {
           setAlias(maybeOriginalName, maybeAlias);
