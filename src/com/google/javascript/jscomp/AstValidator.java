@@ -139,6 +139,41 @@ public final class AstValidator implements CompilerPass {
     } else {
       validateStatements(n.getFirstChild());
     }
+    if (isScriptFeatureValidationEnabled) {
+      validateScriptFeatureSet(n);
+    }
+  }
+
+  /**
+   * Confirm that every SCRIPT node’s FEATURE_SET <= compiler's allowable featureSet. This is
+   * possbile because with go/accurately-maintain-script-node-featureSet, each transpiler pass
+   * updates script features anytime it updates the compiler's allowable features.
+   */
+  private void validateScriptFeatureSet(Node scriptNode) {
+    if (!scriptNode.isScript()) {
+      violation("Not a script node", scriptNode);
+      // unit tests for this pass perform "Negaive Testing" (i.e pass non-script nodes to {@code
+      // validateScript}) and expect a violation {@code expectInvalid(n, Check.SCRIPT);}
+      // report violation and return here instead of crashing below in {@code
+      // NodeUtil.getFeatureSetofScript}
+      // for test to complete
+      return;
+    }
+    FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(currentScript);
+    FeatureSet allowableFeatures = compiler.getAllowableFeatures();
+    if (scriptFeatures == null || allowableFeatures == null) {
+      return;
+    }
+    if (!allowableFeatures.contains(scriptFeatures)) {
+      if (!scriptNode.isFromExterns()) {
+        // Skip this check for externs because we don't need to complete transpilation on externs,
+        // and currently only transpile externs so that we can typecheck ES6+ features in externs.
+        FeatureSet differentFeatures = scriptFeatures.without(allowableFeatures);
+        violation(
+            "SCRIPT node contains these unallowable features:" + differentFeatures.getFeatures(),
+            currentScript);
+      }
+    }
   }
 
   public void validateModuleContents(Node n) {
@@ -2208,7 +2243,8 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (!n.isFromExterns() && !compiler.getAllowableFeatures().has(feature)) {
+    FeatureSet allowbleFeatures = compiler.getAllowableFeatures();
+    if (!n.isFromExterns() && !allowbleFeatures.has(feature)) {
       // Skip this check for externs because we don't need to complete transpilation on externs,
       // and currently only transpile externs so that we can typecheck ES6+ features in externs.
       violation("AST should not contain " + feature, n);

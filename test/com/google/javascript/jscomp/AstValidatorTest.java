@@ -1526,6 +1526,16 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     n.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS));
     expectValid(n, Check.SCRIPT);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3); // resets compiler's allowable featureSet
+    expectInvalid(n, Check.SCRIPT);
+    // violation reported from {@code validateFeature} call of LET because
+    // `!allowbleFeatures.has(feature)`
+    assertThat(lastCheckViolationMessages).contains("AST should not contain let declaration");
+    // violation reported from {@code validateScript} call because script's `FEATURE_SET` is not
+    // a subset of compiler's allowable featureSet.
+    assertThat(lastCheckViolationMessages)
+        .contains("SCRIPT node contains these unallowable features:[let declaration]");
   }
 
   @Test
