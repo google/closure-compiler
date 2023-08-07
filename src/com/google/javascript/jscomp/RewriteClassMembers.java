@@ -48,6 +48,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
   @Override
   public void process(Node externs, Node root) {
+    // Make all declared names unique to ensure that name shadowing can't occur in classes and
+    // public fields don't share names with constructor parameters
+    MakeDeclaredNamesUnique renamer = MakeDeclaredNamesUnique.builder().build();
+    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
     NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
         compiler, root, Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK);
@@ -66,15 +70,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         checkState(classNameNode != null, "Class missing a name: %s", n);
         Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
         checkState(classInsertionPoint != null, "Class was not extracted: %s", n);
-
-        if (!n.getFirstChild().isEmpty()
-            && !classNameNode.matchesQualifiedName(n.getFirstChild())) {
-          // we do not allow `let x = class C {}` where the names inside the class can be shadowed
-          // at this time
-          t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Classes with possible name shadowing");
-          return false;
-        }
-
+        checkState(
+            n.getFirstChild().isEmpty() || classNameNode.matchesQualifiedName(n.getFirstChild()),
+            "Class name shadows variable declaring the class: %s",
+            n);
         classStack.push(new ClassRecord(n, classNameNode.getQualifiedName(), classInsertionPoint));
         break;
       case COMPUTED_FIELD_DEF:
@@ -247,13 +246,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
       for (Node nameInRhs : record.referencedNamesByMember.get(instanceMember)) {
         String name = nameInRhs.getString();
-        if (ctorDefinedNames.contains(name)) {
-          t.report(
-              nameInRhs,
-              TranspilationUtil.CANNOT_CONVERT_YET,
-              "Initializer referencing identifier '" + name + "' declared in constructor");
-          return;
-        }
+        checkState(
+            !ctorDefinedNames.contains(name),
+            "Rhs of public field cannot use the same name as a constructor parameter: %s",
+            name);
       }
 
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);

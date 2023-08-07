@@ -114,6 +114,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
+            "let C = class {",
+            "  static prop = 5;",
+            "},",
+            "D = class extends C {",
+            "  static {",
+            "    console.log(this.prop);",
+            "  }",
+            "}"),
+        CANNOT_CONVERT_YET); // uses `this` in static block
+
+    testError(
+        lines(
             "var z = 1", //
             "class C {",
             "  static {",
@@ -722,7 +734,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "{",
             "  let x = 5;",
             "  class Bar {}",
-            "  {let x = 'str';}",
+            "  {let x$jscomp$1 = 'str';}",
             "}"));
   }
 
@@ -1531,58 +1543,113 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         lines(
             "let x = 2;", //
             "class C {",
-            "  constructor(x) {}",
+            "  constructor(x$jscomp$1) {}",
             "}",
             "C.y = x"));
   }
 
   @Test
   public void testInstanceInitializerShadowsConstructorDeclaration() {
-    testError(
+    test(
         lines(
             "let x = 2;", //
             "class C {",
             "  y = x",
             "  constructor(x) {}",
             "}"),
-        CANNOT_CONVERT_YET);
-
-    testError(
         lines(
             "let x = 2;", //
             "class C {",
-            "  y = x",
-            "  constructor() { let x;}",
-            "}"),
-        CANNOT_CONVERT_YET);
+            "  constructor(x$jscomp$1) {",
+            "    this.y = x;",
+            "  }",
+            "}"));
 
-    testError(
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x;",
+            "  constructor() { let x; }",
+            "}"),
+        lines(
+            "let x = 2;",
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    let x$jscomp$1;",
+            "  }",
+            "}"));
+
+    test(
         lines(
             "let x = 2;", //
             "class C {",
             "  y = x",
             "  constructor() { {var x;} }",
             "}"),
-        CANNOT_CONVERT_YET);
-
-    testError(
         lines(
-            "function f() { return 4; };", //
+            "let x = 2;",
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    {",
+            "     var x$jscomp$1;",
+            "    }",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "function f() { return 4; }", //
             "class C {",
             "  y = f();",
             "  constructor() {function f() { return 'str'; }}",
             "}"),
-        CANNOT_CONVERT_YET);
+        lines(
+            "function f() {",
+            "  return 4;",
+            "}",
+            "class C {",
+            "  constructor() {",
+            "    this.y = f();",
+            "    function f$jscomp$1() {",
+            "      return 'str';",
+            "    }",
+            "  }",
+            "}"));
 
-    // TODO(b/189993301): Technically this has no shadowing, so we could inline without renaming
-    testError(
+    test(
+        lines(
+            "class Foo {", //
+            "  constructor(x) {}",
+            "  y = (x) => x;",
+            "}"),
+        lines(
+            "class Foo {",
+            "  constructor(x) {",
+            "    this.y = x$jscomp$1 => {",
+            "      return x$jscomp$1;",
+            "    };",
+            "  }",
+            "}"));
+
+    test(
         lines(
             "let x = 2;", //
             "class C {",
             "  y = (x) => x;",
             "  constructor(x) {}",
             "}"),
-        CANNOT_CONVERT_YET);
+        lines(
+            "let x = 2;",
+            "class C {",
+            "  constructor(x$jscomp$2) {",
+            "    this.y = x$jscomp$1 => {",
+            "      return x$jscomp$1;",
+            "    };",
+            "  }",
+            "}"));
   }
 
   @Test
@@ -1591,7 +1658,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         lines(
             "let x = 2;", //
             "class C {",
-            "  y = x",
+            "  y = x;",
             "  constructor() { {let x;} }",
             "}"),
         lines(
@@ -1599,7 +1666,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  constructor() {",
             "    this.y = x;",
-            "    {let x;}",
+            "    {let x$jscomp$1;}",
             "  }",
             "}"));
 
@@ -1615,7 +1682,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  constructor() {",
             "    this.y = x;",
-            "    () => { let x; };",
+            "    () => { let x$jscomp$1; };",
             "  }",
             "}"));
 
@@ -1631,7 +1698,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  constructor() {",
             "    this.y = x;",
-            "    (x) => { return 3; };",
+            "    (x$jscomp$1) => { return 3; };",
             "  }",
             "}"));
   }
@@ -1656,16 +1723,28 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testNestedClassesWithShadowingInstanceFields() {
-    testError(
+    test(
         lines(
-            "let x = 2;", //
+            "let x = 2;",
             "class C {",
             "  y = () => {",
-            "    class Foo { z = x };",
+            "    class Foo { z = x }",
             "  };",
             "  constructor(x) {}",
             "}"),
-        CANNOT_CONVERT_YET);
+        lines(
+            "let x = 2;",
+            "class C {",
+            "  constructor(x$jscomp$1) {",
+            "    this.y = () => {",
+            "      class Foo {",
+            "        constructor() {",
+            "          this.z = x;",
+            "        }",
+            "      }",
+            "    };",
+            "  }",
+            "}"));
   }
 
   // Added when fixing transpilation of real-world code that passed a class expression to a
