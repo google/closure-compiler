@@ -420,14 +420,23 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     }
     if (NodeUtil.isPrototypePropertyDeclaration(n.getParent())
         || (n.getParent().isClassMembers() && !n.isStaticMember())) {
-      reportMisplaced(n, "nocollapse", "This JSDoc has no effect on prototype properties.");
+      reportMisplaced(
+          n,
+          "nocollapse",
+          "This JSDoc has no effect on prototype properties and non-static fields.");
+    }
+    if (n.isAssign()) {
+      final Node assignee = n.getFirstChild();
+      if (assignee.isQualifiedName()) {
+        final Node rootOfQname = NodeUtil.getRootOfQualifiedName(assignee);
+        if (!rootOfQname.isName()) {
+          reportMisplaced(n, "nocollapse", "This JSDoc has no effect.");
+        }
+      }
     }
   }
 
-  /**
-   * Checks that JSDoc intended for a function is actually attached to a
-   * function.
-   */
+  /** Checks that JSDoc intended for a function is actually attached to a function. */
   private void validateFunctionJsDoc(Node n, JSDocInfo info) {
     if (info == null) {
       return;

@@ -123,6 +123,52 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFieldMisplacedAnnotation() {
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  /** @nocollapse */",
+            "  x = 5;",
+            "}"),
+        CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testStaticFieldNoCollapse() {
+    testSame(
+        lines(
+            "class Bar {", //
+            "  /** @nocollapse */",
+            "  static y = 1",
+            "}"));
+  }
+
+  @Test
+  public void testThisPropertyMisplacedAnnotation() {
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @nocollapse */",
+            "    this.x = 4;",
+            "  }",
+            "}"),
+        CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testThisInFunctionMisplacedAnnotation() {
+    testWarning(
+        lines(
+            "/** @constructor */", //
+            "function Bar() {",
+            " /** @nocollapse */",
+            " this.x = 4;",
+            "}"),
+        CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
   public void testInvalidJsDocOnDestructuringDeclaration() {
     // Type annotations are not allowed on any declaration containing >=1 destructuring pattern.
     testWarning("/** @type {number} */ const [a] = arr;", CheckJSDoc.MISPLACED_ANNOTATION);
