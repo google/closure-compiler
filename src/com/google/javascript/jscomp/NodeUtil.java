@@ -6001,8 +6001,13 @@ public final class NodeUtil {
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
     scriptNode.putProp(Node.FEATURE_SET, newFeatures);
-    // TODO(lharker): remove this and instead validate that `feature` is already allowed.
-    compiler.setAllowableFeatures(compiler.getAllowableFeatures().with(feature));
+    if (feature != Feature.MODULES) {
+      // Except MODULES (which can get reintroduced later in ConvertChunksToEsModules pass),
+      // prohibit passes from reintroducing any feature that already got transpiled.
+      checkState(compiler.getAllowableFeatures().contains(feature));
+    } else {
+      compiler.setAllowableFeatures(compiler.getAllowableFeatures().with(feature));
+    }
   }
 
   /**
