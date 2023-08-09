@@ -134,40 +134,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "}"),
         CANNOT_CONVERT_YET); // `var` in static block
-
-    test(
-        srcs(
-            lines(
-                "function foo(num) {}",
-                "/** @unrestricted */",
-                "class Baz {",
-                "  ['f' + foo(1)] = 5;",
-                "  static x = foo(6);",
-                "  ['m' + foo(2)]() {};",
-                "  static [foo(3)] = foo(7);",
-                "  [foo(4)] = 2;",
-                "  get [foo(5)]() {}",
-                "}")),
-        error(CANNOT_CONVERT_YET), // Comp field with side effect and computed function
-        error(CANNOT_CONVERT_YET)); // Comp field with side effect and computed function
-    /* TODO(user): Move computed fields with side effects into computed functions if
-       present
-    expected(
-    lines(
-        "function foo(num) {}",
-        "var COMPFIELD$0;",
-        "var COMPFIELD$1;",
-        "var COMPFIELD$2;",
-        "class Baz {",
-        "  constructor() {",
-        "    this[COMPFIELD$2] = 5;",
-        "    this[COMPFIELD$0] = 2;",
-        "  }",
-        "  [(COMPFIELD$2 = 'f' + foo(1), 'm' + foo(2))]() {}",
-        "  get [(COMPFIELD$1 = foo(3), COMPFIELD$0 = foo(4), foo(5))]() {}",
-        "}",
-        "Baz.x = foo(6);",
-        "Baz[COMPFIELD$1] = foo(7);"))); */
   }
 
   @Test
@@ -582,6 +548,36 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "COMPFIELD$0 = x;",
                 "Foo.n = x = 5;",
                 "Foo[COMPFIELD$0] = 'world';")));
+
+    computedFieldTest(
+        srcs(
+            lines(
+                "function foo(num) {}",
+                "/** @unrestricted */",
+                "class Baz {",
+                "  ['f' + foo(1)];",
+                "  static x = foo(6);",
+                "  ['m' + foo(2)]() {};",
+                "  static [foo(3)] = foo(7);",
+                "  [foo(4)] = 2;",
+                "  get [foo(5)]() {}",
+                "}")),
+        expected(
+            lines(
+                "function foo(num) {}",
+                "var COMPFIELD$0;",
+                "var COMPFIELD$1;",
+                "var COMPFIELD$2;",
+                "class Baz {",
+                "  constructor() {",
+                "    this[COMPFIELD$0];",
+                "    this[COMPFIELD$1] = 2;",
+                "  }",
+                "  [(COMPFIELD$0 = 'f' + foo(1), 'm' + foo(2))]() {}",
+                "  get [(COMPFIELD$2 = foo(3), (COMPFIELD$1 = foo(4), foo(5)))]() {}",
+                "}",
+                "Baz.x = foo(6);",
+                "Baz[COMPFIELD$2] = foo(7);")));
   }
 
   @Test
