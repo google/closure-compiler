@@ -4404,16 +4404,22 @@ public final class NodeUtilTest {
     }
 
     @Test
-    public void addFeatureToScriptUpdatesCompilerFeatureSet() {
+    public void prohibitAddingNonAllowableFeatureToScriptExceptModules() {
       Node scriptNode = parse("");
       Compiler compiler = new Compiler();
       compiler.setAllowableFeatures(FeatureSet.BARE_MINIMUM);
       NodeUtil.addFeatureToScript(scriptNode, Feature.MODULES, compiler);
 
+      // Adding MODULES to the script featureSet is okay, any other feature isn't
       assertThat(NodeUtil.getFeatureSetOfScript(scriptNode))
           .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
       assertFS(compiler.getAllowableFeatures())
           .equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
+
+      compiler.setAllowableFeatures(FeatureSet.BARE_MINIMUM); // reset
+      assertThrows(
+          IllegalStateException.class,
+          () -> NodeUtil.addFeatureToScript(scriptNode, Feature.LET_DECLARATIONS, compiler));
     }
 
     @Test
