@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
@@ -62,7 +63,12 @@ public class TranspilationPasses {
     passes.maybeAdd(es6RelativizeImportPaths);
   }
 
-  /** Adds transpilation passes that should run at the beginning of the optimization phase */
+  /**
+   * Adds transpilation passes that should run at the beginning of the optimization phase. Passes
+   * added in this method either use {@code TranspilationPasses.processTranspile} or early-exit by
+   * checking their feature in the script's featureset. So they will only get run if the feature
+   * they're responsible for removing exists in the script.
+   */
   public static void addEarlyOptimizationTranspilationPasses(
       PassListBuilder passes, CompilerOptions options) {
 
@@ -224,7 +230,12 @@ public class TranspilationPasses {
     }
   }
 
-  /** Adds transpilation passes that should not be run until after normalization has been done. */
+  /**
+   * Adds transpilation passes that should not be run until after normalization has been done.
+   * Passes added in this method either use {@code TranspilationPasses.processTranspile} or
+   * early-exit by checking their feature in the script's featureset. So they will only get run if
+   * the feature they're responsible for removing exists in the script.
+   */
   public static void addPostNormalizationTranspilationPasses(
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
@@ -232,6 +243,8 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.GENERATORS)) {
       passes.maybeAdd(rewriteGenerators);
     }
+    // This pass must run at the end of all transpiler passes. It validates that only supported
+    // features remain in the compiler's featureSet
     passes.maybeAdd(
         TranspilationPasses.createPostTranspileUnsupportedFeaturesRemovedCheck(
             "postTranspileUnsupportedFeaturesRemovedCheck"));
@@ -441,22 +454,25 @@ public class TranspilationPasses {
           .build();
 
   /**
-   * @param script The SCRIPT node representing a JS file
-   * @return If the file has any features not in {@code supportedFeatures}
+   * Returns true if the script's featureSet contains any feature from the given featureSet.
+   *
+   * <p>The script's featureSet gets accurately maintained during transpile. It can be relied upon
+   * to check if a feature exists in the AST or not.
    */
-  static boolean doesScriptHaveUnsupportedFeatures(Node script, FeatureSet supportedFeatures) {
+  static boolean doesScriptHaveAnyOfTheseFeatures(Node script, FeatureSet featureSet) {
     FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
-    return features != null && !supportedFeatures.contains(features);
+    return features != null && features.containsAtLeastOneOf(featureSet);
   }
 
   /**
-   * Process transpilations if the input language needs transpilation from certain features, on any
-   * JS file that has features not present in the compiler's output language mode.
+   * Runs the given transpilation callbacks on every source script if the given {@code
+   * featuresToRunFor} are unsupported in the output language and exist in that script.
    *
    * @param compiler An AbstractCompiler
-   * @param combinedRoot The combined root for all JS files.
-   * @param featureSet Ignored
-   * @param callbacks The callbacks that should be invoked if a file has ES2015 features.
+   * @param combinedRoot The combined root for all JS files
+   * @param featuresToRunFor features for which these callbacks run
+   * @param callbacks The callbacks that should be invoked if a file has output-unsupported
+   *     features.
    * @deprecated Please use a regular NodeTraversal object directly, using `shouldTraverse` to skip
    *     SCRIPT node if desired.
    */
@@ -464,21 +480,20 @@ public class TranspilationPasses {
   static void processTranspile(
       AbstractCompiler compiler,
       Node combinedRoot,
-      FeatureSet featureSet,
+      FeatureSet featuresToRunFor,
       NodeTraversal.Callback... callbacks) {
     FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
+    if (languageOutFeatures.contains(featuresToRunFor)) {
+      // all featuresToRunFor are supported by languageOut and don't need to get transpiled.
+      return;
+    }
+
     for (Node singleRoot = combinedRoot.getFirstChild();
         singleRoot != null;
         singleRoot = singleRoot.getNext()) {
-
-      // Only run the transpilation if this file has features not in the compiler's target output
-      // language. For example, if this file is purely ES6 and the output language is ES6, don't
-      // run any transpilation passes on it.
-      // TODO(lharker): We could save time by being more selective about what files we transpile.
-      // e.g. if a file has async functions but not `**`, don't run `**` transpilation on it.
-      // Right now we know what features were in a file at parse time, but not what features were
-      // added to that file by other transpilation passes.
-      if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
+      checkState(singleRoot.isScript());
+      // only run the callbacks if any feature from the given featureSet exists in the script
+      if (doesScriptHaveAnyOfTheseFeatures(singleRoot, featuresToRunFor)) {
         for (NodeTraversal.Callback callback : callbacks) {
           NodeTraversal.traverse(compiler, singleRoot, callback);
         }

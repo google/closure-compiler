@@ -35,7 +35,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final SynthesizeExplicitConstructors constructorSynthesizer;
-  private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
+  private static final FeatureSet FEATURES_TO_RUN_FOR =
+      FeatureSet.BARE_MINIMUM.with(Feature.SUPER, Feature.CLASSES);
 
   public Es6ConvertSuper(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -223,8 +224,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
   @Override
   public void process(Node externs, Node root) {
     // Might need to synthesize constructors for ambient classes in .d.ts externs
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, externs, FEATURES_TO_RUN_FOR, this);
+    TranspilationPasses.processTranspile(compiler, root, FEATURES_TO_RUN_FOR, this);
+    // TODO(rishipal): mark super feature as transpiled away
   }
-
 }

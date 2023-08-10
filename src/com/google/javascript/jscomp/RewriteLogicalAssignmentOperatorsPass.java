@@ -44,6 +44,7 @@ public final class RewriteLogicalAssignmentOperatorsPass
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      // runs only if logical assignment present
       return scriptFeatures == null || scriptFeatures.contains(Feature.LOGICAL_ASSIGNMENT);
     }
     return true;

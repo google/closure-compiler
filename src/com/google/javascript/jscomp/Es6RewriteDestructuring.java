@@ -156,6 +156,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      // This will ensure that we run this only when features exist in the script
       return scriptFeatures.containsAtLeastOneOf(featuresToTriggerRunningPass);
     }
     switch (n.getToken()) {

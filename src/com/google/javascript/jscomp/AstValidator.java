@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableSet;
@@ -307,6 +308,14 @@ public final class AstValidator implements CompilerPass {
         violation("Expected statement but was " + n.getToken() + ".", n);
         return;
       default:
+        if (n.isModuleBody() && compiler.getOptions().skipNonTranspilationPasses) {
+          checkState(
+              !compiler.getOptions().wrapGoogModulesForWhitespaceOnly,
+              "Modules can exist in transpiler only if setWrapGoogModulesForWhitespaceOnly is"
+                  + " false");
+          validateModuleContents(n);
+          return;
+        }
         violation("Expected statement but was " + n.getToken() + ".", n);
     }
   }
@@ -2259,6 +2268,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateFeature(Feature feature, Node n) {
     FeatureSet allowbleFeatures = compiler.getAllowableFeatures();
+    // Checks that feature present in the AST is recorded in the compiler's featureSet.
     if (!n.isFromExterns() && !allowbleFeatures.has(feature)) {
       // Skip this check for externs because we don't need to complete transpilation on externs,
       // and currently only transpile externs so that we can typecheck ES6+ features in externs.
@@ -2269,6 +2279,7 @@ public final class AstValidator implements CompilerPass {
       return;
     }
     FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(currentScript);
+    // Checks that feature present in the AST is recorded in the SCRIPT node's featureSet.
     if (scriptFeatures == null || !NodeUtil.getFeatureSetOfScript(currentScript).has(feature)) {
       violation("SCRIPT node should be marked as containing feature " + feature, currentScript);
     }
