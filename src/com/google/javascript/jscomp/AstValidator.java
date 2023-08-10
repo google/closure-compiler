@@ -291,6 +291,21 @@ public final class AstValidator implements CompilerPass {
       case NAMESPACE:
         validateNamespace(n, isAmbient);
         return;
+      case MODULE_BODY:
+        // Uncommon case where a module body is not the first child of a script. This may happen in
+        // a specific circumstance where the {@code LateEs6ToEs3Rewriter} pass injects code above a
+        // module body. Valid only when skipNonTranspilationPasses=true and
+        // setWrapGoogModulesForWhitespaceOnly=false
+        // TODO: b/294420383 Ideally the LateEs6ToEs3Rewriter pass should not inject code above the
+        // module body node
+        if (compiler.getOptions().skipNonTranspilationPasses) {
+          if (!compiler.getOptions().wrapGoogModulesForWhitespaceOnly) {
+            validateModuleContents(n);
+            return;
+          }
+        }
+        violation("Expected statement but was " + n.getToken() + ".", n);
+        return;
       default:
         violation("Expected statement but was " + n.getToken() + ".", n);
     }

@@ -15,8 +15,13 @@
  */
 package com.google.javascript.jscomp.integration;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+import static org.junit.Assert.assertThrows;
 
+import com.google.javascript.jscomp.AstValidator;
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.jspecify.nullness.Nullable;
@@ -41,6 +46,55 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
     options.setSkipNonTranspilationPasses(true);
     options.setEmitUseStrict(false);
+  }
+
+  /**
+   * Tests an uncommon case where a module body is not the first child of a script. This may happen
+   * in a specific circumstance where the {@code LateEs6ToEs3Rewriter} pass injects code above a
+   * module body. Valid only when skipNonTranspilationPasses=true and
+   * setWrapGoogModulesForWhitespaceOnly=false
+   */
+  @Test
+  public void testASTValidator_transpileOnly_withModuleNotFirstChildOfScript() {
+    // to ensure tagged template literals transpiled
+    this.options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    // to preserve modules during transpilation
+    this.options.setWrapGoogModulesForWhitespaceOnly(false);
+    this.options.setSkipNonTranspilationPasses(true);
+
+    String source =
+        lines(
+            "goog.module('x');", //
+            "function tag(x) {",
+            "  console.log(x);",
+            "}",
+            " tag``");
+
+    String expected =
+        "var $jscomp$templatelit$98447280$0=$jscomp.createTemplateTagFirstArg([\"\"]);"
+            + //
+            "goog.module(\"x\");"
+            + "function tag(x){"
+            + "console.log(x)"
+            + "}"
+            + "tag($jscomp$templatelit$98447280$0)";
+
+    Compiler compiler = compile(options, source);
+
+    // Verify that there are no compiler errors
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.toSource(compiler.getRoot().getLastChild())).isEqualTo(expected);
+    // Create an astValidator and validate the script
+    AstValidator astValidator = new AstValidator(compiler);
+    checkState(compiler.getRoot().getLastChild().getOnlyChild().isScript());
+    astValidator.validateScript(compiler.getRoot().getLastChild().getOnlyChild());
+
+    // In regular (non transpile-only) compilation this is reported
+    compiler.getOptions().setSkipNonTranspilationPasses(false);
+    assertThrows(
+        IllegalStateException.class,
+        () -> astValidator.validateScript(compiler.getRoot().getLastChild().getOnlyChild()));
   }
 
   @Test
