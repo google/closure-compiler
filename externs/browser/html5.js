@@ -365,6 +365,17 @@ Path2D.prototype.rect = function(x, y, w, h) {};
 /**
  * @param {number} x
  * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {(number|DOMPointInit|Array<DOMPointInit>)=} radii
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.roundRect = function(x, y, w, h, radii) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
  * @param {number} radius
  * @param {number} startAngle
  * @param {number} endAngle
@@ -659,6 +670,16 @@ BaseRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
  * @override
  */
 BaseRenderingContext2D.prototype.rect = function(x, y, w, h) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {number|DOMPointInit|Array<DOMPointInit>} radii
+ * @return {undefined}
+ */
+BaseRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {};
 
 /**
  * @param {number} x
