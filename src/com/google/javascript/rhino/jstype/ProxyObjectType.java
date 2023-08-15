@@ -306,11 +306,6 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final boolean removeProperty(String name) {
-    return referencedObjType == null ? false : referencedObjType.removeProperty(name);
-  }
-
-  @Override
   protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     return referencedType.findPropertyType(propertyName);
   }

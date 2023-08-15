@@ -126,11 +126,6 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public final boolean removeProperty(String name) {
-    return false;
-  }
-
-  @Override
   public final void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     // Do nothing, specific properties do not have JSDocInfo.
   }

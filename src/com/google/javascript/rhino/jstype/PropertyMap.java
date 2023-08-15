@@ -130,37 +130,6 @@ final class PropertyMap {
   }
 
   @Nullable
-  OwnedProperty findTopMost(String name) {
-    // Check primary parents which always has precendence over secondary.
-    OwnedProperty found = null;
-    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
-      Property prop = map.properties.get(name);
-      if (prop != null) {
-        found = new OwnedProperty(map.parentSource, prop);
-      }
-    }
-    if (found != null) {
-      return found;
-    }
-
-    // Recurse into secondary parents. Note that there is no single top most definition with
-    // interfaces so we simple return the first result.
-    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
-      for (ObjectType o : map.getSecondaryParentObjects()) {
-        PropertyMap parent = o.getPropertyMap();
-        if (parent != null) {
-          OwnedProperty e = parent.findTopMost(name);
-          if (e != null) {
-            return e;
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
-  @Nullable
   OwnedProperty findClosest(String name) {
     // Check primary parents which always has precendence over secondary.
     for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
@@ -254,15 +223,6 @@ final class PropertyMap {
         parentMap.collectAllAncestors(ancestors);
       }
     }
-  }
-
-  boolean removeProperty(String name) {
-    if (properties.remove(name) == null) {
-      return false;
-    }
-
-    this.incrementCachedKeySetCounter();
-    return true;
   }
 
   void putProperty(String name, Property newProp) {

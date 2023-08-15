@@ -208,11 +208,6 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public boolean removeProperty(String name) {
-    return properties.removeProperty(name);
-  }
-
-  @Override
   public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     if (info != null) {
       if (properties.getOwnProperty(propertyName) == null) {
