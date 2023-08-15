@@ -53,7 +53,6 @@ import com.google.javascript.rhino.jstype.SimpleReference;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -361,10 +360,9 @@ public final class SymbolTable {
       return ImmutableList.of();
     }
 
-    UnionType unionType = type.toMaybeUnionType();
-    if (unionType != null) {
+    if (type.isUnionType()) {
       ImmutableList.Builder<Symbol> result = ImmutableList.builder();
-      for (JSType alt : unionType.getAlternates()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         // Our type system never has nested unions.
         Symbol altSym = getSymbolForTypeHelper(alt, true);
         if (altSym != null) {
@@ -831,7 +829,7 @@ public final class SymbolTable {
           if (namespace == null && root.scope.isGlobalScope()) {
             // Originally UNKNOWN_TYPE has been always used for namespace symbols even though
             // compiler does have type information attached to a node. Unclear why. Changing code to
-            // propery type mostly works. It only fails on Foo.prototype cases for some reason.
+            // property type mostly works. It only fails on Foo.prototype cases for some reason.
             // It's pretty rare case when Foo.prototype defined in global scope though so for now
             // just carve it out.
             JSType nodeType = currentNode.getJSType();
@@ -1890,9 +1888,25 @@ public final class SymbolTable {
     }
 
     private boolean maybeDefineReference(Node n, String propName, Symbol ownerSymbol) {
-      // getPropertyScope() will be null in some rare cases where there
-      // are no extern declarations for built-in types (like Function).
-      if (ownerSymbol != null && ownerSymbol.getPropertyScope() != null) {
+      if (ownerSymbol == null) {
+        return false;
+      }
+      // If current symbol is ObjectType - try using ObjectType.getPropertyNode to find a node.
+      // That function searches for property in all extended classes and interfaces, which supports
+      // multiple extended interfaces.
+      JSType owner = ownerSymbol.getType();
+      if (owner != null && owner.isObjectType()) {
+        Node propNode = owner.toObjectType().getPropertyNode(propName);
+        Symbol propSymbol = symbols.get(propNode, propName);
+        if (propSymbol != null) {
+          propSymbol.defineReferenceAt(n);
+          return true;
+        }
+      }
+      // Use PropertyScope to find property. PropertyScope doesn't support multiple parents so all
+      // cases where multiple parents can occur (e.g. class implementing 2+ interfaces) must be
+      // handled above.
+      if (ownerSymbol.getPropertyScope() != null) {
         Symbol prop = ownerSymbol.getPropertyScope().getSlot(propName);
         if (prop != null) {
           prop.defineReferenceAt(n);

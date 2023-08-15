@@ -751,6 +751,100 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testMethodReferencesNullableClass() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "class DomHelper { method() {} }",
+                "let /** ?DomHelper */ helper;",
+                "helper.method();"));
+
+    Symbol method = getGlobalVar(table, "DomHelper.prototype.method");
+    assertThat(table.getReferences(method)).hasSize(2);
+  }
+
+  @Test
+  public void testMethodReferencesNullableInterface() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @interface */ class DomHelper { method() {} }",
+                "let /** ?DomHelper */ helper;",
+                "helper.method();"));
+
+    Symbol method = getGlobalVar(table, "DomHelper.prototype.method");
+    assertThat(table.getReferences(method)).hasSize(2);
+  }
+
+  @Test
+  public void testMethodReferencesNullableRecord() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @record */ function DomHelper() {}",
+                "DomHelper.prototype.method = function() {};",
+                "let /** ?DomHelper */ helper;",
+                "helper.method();"));
+
+    Symbol method = getGlobalVar(table, "DomHelper.prototype.method");
+    assertThat(table.getReferences(method)).hasSize(2);
+  }
+
+  @Test
+  public void testRecordInheritance() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @record */ function DomHelper() {}",
+                "DomHelper.prototype.method = function() {};",
+                "",
+                "/** @record @extends {DomHelper} */ function DomHelper2() {}",
+                "DomHelper2.prototype.method2 = function() {};",
+                "",
+                "let /** ?DomHelper2 */ helper;",
+                "helper.method();"));
+
+    Symbol method = getGlobalVar(table, "DomHelper.prototype.method");
+    assertThat(table.getReferences(method)).hasSize(2);
+  }
+
+  @Test
+  public void testUnionType() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "class First { method() {} }",
+                "class Second { method() {} }",
+                "let /** !Second|!First */ obj;",
+                "obj.method();"));
+
+    assertThat(table.getReferences(getGlobalVar(table, "First.prototype.method"))).hasSize(2);
+    assertThat(table.getReferences(getGlobalVar(table, "Second.prototype.method"))).hasSize(2);
+  }
+
+  @Test
+  public void testMultipleInterfaceInheritance() {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @interface */",
+                "class First { doFirst() {} }",
+                "",
+                "/** @interface */",
+                "class Second { doSecond() {} }",
+                "",
+                "/** @interface @extends {First} @extends {Second} */",
+                "class Third {}",
+                "",
+                "let /** !Third */ obj;",
+                "obj.doFirst();",
+                "obj.doSecond();"));
+
+    assertThat(table.getReferences(getGlobalVar(table, "First.prototype.doFirst"))).hasSize(2);
+    assertThat(table.getReferences(getGlobalVar(table, "Second.prototype.doSecond"))).hasSize(2);
+  }
+
+  @Test
   public void testSuperClassMethodReferences() {
     SymbolTable table =
         createSymbolTable(
@@ -1737,7 +1831,7 @@ public final class SymbolTableTest {
     }
     assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
   }
-
+  
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertThat(ordering.compare(first, first)).isEqualTo(0);
     assertThat(ordering.compare(second, second)).isEqualTo(0);
