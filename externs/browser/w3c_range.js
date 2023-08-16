@@ -232,10 +232,43 @@ Range.prototype.surroundContents = function(newParent) {};
 Range.prototype.cloneRange = function() {};
 
 /**
+ * @param {Node} parent
+ * @param {number} offset
+ * @return {number}
+ * @nosideeffects
+ * @see https://dom.spec.whatwg.org/#ref-for-dom-range-comparepoint%E2%91%A0
+ */
+Range.prototype.comparePoint;
+
+/**
  * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-method-detach
  */
 Range.prototype.detach = function() {};
+
+/**
+ * @param {!TrustedHTML|string} tag
+ * @return {DocumentFragment}
+ * @see https://w3c.github.io/DOM-Parsing/#ref-for-dom-range-createcontextualfragment-2
+ */
+Range.prototype.createContextualFragment;
+
+/**
+ * @param {Node} n
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://dom.spec.whatwg.org/#ref-for-dom-range-intersectsnode%E2%91%A0
+ */
+Range.prototype.intersectsNode;
+
+/**
+ * @param {Node} parent
+ * @param {number} offset
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://dom.spec.whatwg.org/#dom-range-ispointinrange
+ */
+Range.prototype.isPointInRange;
 
 // Introduced in DOM Level 2:
 /**
