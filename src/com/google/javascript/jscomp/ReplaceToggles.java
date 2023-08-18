@@ -41,8 +41,8 @@ class ReplaceToggles implements CompilerPass {
   static final DiagnosticType INVALID_ORDINAL_MAPPING =
       DiagnosticType.error(
           "JSC_INVALID_ORDINAL_MAPPING",
-          "_F_toggleOrdinals must be initialized with an object literal mapping strings to booleans"
-              + " or unique whole numbers: {0}");
+          "CLOSURE_TOGGLE_ORDINALS must be initialized with an object literal mapping strings to"
+              + " booleans or unique whole numbers: {0}");
 
   static final DiagnosticType UNKNOWN_TOGGLE =
       DiagnosticType.error(
@@ -72,7 +72,7 @@ class ReplaceToggles implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new Traversal());
   }
 
-  private static final String ORDINAL_VAR_NAME = "_F_toggleOrdinals";
+  private static final String ORDINAL_VAR_NAME = "CLOSURE_TOGGLE_ORDINALS";
   private static final QualifiedName readToggleFunctionName =
       QualifiedName.of("goog.readToggleInternalDoNotCallDirectly");
 
@@ -80,7 +80,7 @@ class ReplaceToggles implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      // Look for `var _F_toggleOrdinals = {...};`.  Note that we only do this in check mode.
+      // Look for `var CLOSURE_TOGGLE_ORDINALS = {...};`.  Note that we only do this in check mode.
       // It's not our responsibility to delete the unused variable in optimized mode - if all
       // the calls to readToggle are deleted, then the bootstrap will be unused and deleted, too.
       if (check

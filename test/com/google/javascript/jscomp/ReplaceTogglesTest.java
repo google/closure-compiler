@@ -42,23 +42,23 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   @Test
   public void testBootstrapOrdinals_uninitialized() {
     check = true;
-    testSame(srcs("var _F_toggleOrdinals;"), expectOrdinals(null));
+    testSame(srcs("var CLOSURE_TOGGLE_ORDINALS;"), expectOrdinals(null));
   }
 
   @Test
   public void testBootstrapOrdinals_empty() {
     check = true;
-    testSame(srcs("var _F_toggleOrdinals = {};"), expectOrdinals(ImmutableMap.of()));
+    testSame(srcs("var CLOSURE_TOGGLE_ORDINALS = {};"), expectOrdinals(ImmutableMap.of()));
   }
 
   @Test
   public void testBootstrapOrdinals_simple() {
     check = true;
     testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': 1};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': 1};"),
         expectOrdinals(ImmutableMap.of("foo_bar", 1)));
     testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': 1, qux: 2};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': 1, qux: 2};"),
         expectOrdinals(ImmutableMap.of("foo_bar", 1, "qux", 2)));
   }
 
@@ -68,14 +68,14 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
     testSame(
         srcs(
             lines(
-                "var _F_toggleOrdinals = {'foo': 1};", //
-                "var _F_toggleOrdinals;")),
+                "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1};", //
+                "var CLOSURE_TOGGLE_ORDINALS;")),
         expectOrdinals(ImmutableMap.of("foo", 1)));
     testSame(
         srcs(
             lines(
-                "var _F_toggleOrdinals;", //
-                "var _F_toggleOrdinals = {'foo': 1};")),
+                "var CLOSURE_TOGGLE_ORDINALS;", //
+                "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1};")),
         expectOrdinals(ImmutableMap.of("foo", 1)));
   }
 
@@ -83,7 +83,7 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_booleanAllowed() {
     check = true;
     testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': false, 'baz': true};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': false, 'baz': true};"),
         expectOrdinals(ImmutableMap.of("foo_bar", FALSE_VALUE, "baz", TRUE_VALUE)));
   }
 
@@ -91,10 +91,10 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_booleanAllowsDuplicates() {
     check = true;
     testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': false, 'baz': false, 'qux': 0};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': false, 'baz': false, 'qux': 0};"),
         expectOrdinals(ImmutableMap.of("foo_bar", FALSE_VALUE, "baz", FALSE_VALUE, "qux", 0)));
     testSame(
-        srcs("var _F_toggleOrdinals = {'foo_bar': true, 'baz': true, 'qux': 0};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': true, 'baz': true, 'qux': 0};"),
         expectOrdinals(ImmutableMap.of("foo_bar", TRUE_VALUE, "baz", TRUE_VALUE, "qux", 0)));
   }
 
@@ -102,11 +102,11 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_notAnObject() {
     check = true;
     test(
-        srcs("var _F_toggleOrdinals = 1;"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = 1;"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("not an object literal"));
     test(
-        srcs("var _F_toggleOrdinals = [];"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = [];"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("not an object literal"));
   }
@@ -115,13 +115,13 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_badKey() {
     check = true;
     test(
-        srcs("var _F_toggleOrdinals = {[x]: 1};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {[x]: 1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING).withMessageContaining("non-string key"));
     test(
-        srcs("var _F_toggleOrdinals = {['x']: 1};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {['x']: 1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING).withMessageContaining("non-string key"));
     test(
-        srcs("var _F_toggleOrdinals = {x() { return 1; }};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x() { return 1; }};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING).withMessageContaining("non-string key"));
   }
 
@@ -129,7 +129,7 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_duplicateKey() {
     check = true;
     test(
-        srcs("var _F_toggleOrdinals = {x: 1, y: 2, x: 3};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2, x: 3};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING).withMessageContaining("duplicate key: x"));
   }
 
@@ -137,35 +137,35 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_badValue() {
     check = true;
     test(
-        srcs("var _F_toggleOrdinals = {x: 'y'};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 'y'};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x: 1 + 2};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 1 + 2};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x: NaN};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: NaN};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x: Infinity};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: Infinity};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x: -1};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: -1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x: 1.2};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 1.2};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
     test(
-        srcs("var _F_toggleOrdinals = {x: null};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: null};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("value not a boolean or whole number literal"));
   }
@@ -174,7 +174,7 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_duplicateOrdinal() {
     check = true;
     test(
-        srcs("var _F_toggleOrdinals = {x: 1, y: 2, z: 1};"),
+        srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2, z: 1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("duplicate ordinal: 1"));
   }
