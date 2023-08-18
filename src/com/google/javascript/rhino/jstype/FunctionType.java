@@ -282,22 +282,26 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * annotation, if B's constructor is not explicitly annotated.
    */
   public final boolean makesStructs() {
-    if (!hasInstanceType()) {
+    if (!hasInstanceType() || this.propAccess == null) {
       return false;
     }
-    if (propAccess == PropAccess.STRUCT) {
-      return true;
+    switch (this.propAccess) {
+      case STRUCT:
+        return true;
+      case DICT:
+        return false;
+      case ANY_EXPLICIT:
+        // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+        return false;
+      case ANY:
+        FunctionType superc = getSuperClassConstructor();
+        if (superc != null && superc.makesStructs()) {
+          setStruct();
+          return true;
+        }
+        return false;
     }
-    if (propAccess == PropAccess.ANY_EXPLICIT) {
-      // For anything EXPLICITLY marked as @unresticted do not look to the super type.
-      return false;
-    }
-    FunctionType superc = getSuperClassConstructor();
-    if (superc != null && superc.makesStructs()) {
-      setStruct();
-      return true;
-    }
-    return false;
+    throw new AssertionError();
   }
 
   /**
@@ -305,22 +309,26 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * annotation, if B's constructor is not explicitly annotated.
    */
   public final boolean makesDicts() {
-    if (!isConstructor()) {
+    if (!isConstructor() || this.propAccess == null) {
       return false;
     }
-    if (propAccess == PropAccess.DICT) {
-      return true;
+    switch (this.propAccess) {
+      case DICT:
+        return true;
+      case STRUCT:
+        return false;
+      case ANY_EXPLICIT:
+        // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+        return false;
+      case ANY:
+        FunctionType superc = getSuperClassConstructor();
+        if (superc != null && superc.makesDicts()) {
+          setDict();
+          return true;
+        }
+        return false;
     }
-    if (propAccess == PropAccess.ANY_EXPLICIT) {
-      // For anything EXPLICITLY marked as @unresticted do not look to the super type.
-      return false;
-    }
-    FunctionType superc = getSuperClassConstructor();
-    if (superc != null && superc.makesDicts()) {
-      setDict();
-      return true;
-    }
-    return false;
+    throw new AssertionError();
   }
 
   public final void setStruct() {

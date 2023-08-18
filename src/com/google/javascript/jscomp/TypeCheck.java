@@ -197,6 +197,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_ES5_CLASS_EXTENDING_ES6_CLASS", "ES5 class {0} cannot extend ES6 class {1}");
 
+  static final DiagnosticType DICT_EXTEND_STRUCT_TYPE =
+      DiagnosticType.warning(
+          "JSC_DICT_EXTEND_STRUCT_TYPE", "@dict class {0} cannot extend @struct class {1}");
+
+  static final DiagnosticType STRUCT_EXTEND_DICT_TYPE =
+      DiagnosticType.warning(
+          "JSC_DICT_EXTEND_STRUCT_TYPE", "@struct class {0} cannot extend @dict class {1}");
+
   static final DiagnosticType ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS =
       DiagnosticType.warning(
           "JSC_ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS",
@@ -359,6 +367,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           NON_STRINGIFIABLE_OBJECT_KEY,
           NOT_A_CONSTRUCTOR,
           NOT_CALLABLE,
+          STRUCT_EXTEND_DICT_TYPE,
+          DICT_EXTEND_STRUCT_TYPE,
           POSSIBLE_INEXISTENT_PROPERTY,
           PROPERTY_ASSIGNMENT_TO_READONLY_VALUE,
           RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
@@ -2564,6 +2574,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 functionType.getDisplayName(),
                 baseConstructor.getDisplayName()));
       }
+      if (baseConstructor != null) {
+        checkStructDictSubtyping(n, functionType, baseConstructor);
+      }
 
       // Warn if any @implemented types are not interfaces or if there are any duplicates
       Set<JSType> alreadySeenInterfaces = new LinkedHashSet<>();
@@ -2602,6 +2615,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return maybeTemplatizedType;
     }
     return maybeTemplatizedType.toMaybeTemplatizedType().getRawType();
+  }
+
+  private void checkStructDictSubtyping(Node n, FunctionType subtype, FunctionType supertype) {
+    if (subtype.makesDicts() && supertype.makesStructs()) {
+      compiler.report(
+          JSError.make(
+              n, DICT_EXTEND_STRUCT_TYPE, subtype.getDisplayName(), supertype.getDisplayName()));
+    } else if (subtype.makesStructs() && supertype.makesDicts()) {
+      compiler.report(
+          JSError.make(
+              n, STRUCT_EXTEND_DICT_TYPE, subtype.getDisplayName(), supertype.getDisplayName()));
+    }
   }
 
   /** Checks an interface, which may be either an ES5-style FUNCTION node, or a CLASS node. */

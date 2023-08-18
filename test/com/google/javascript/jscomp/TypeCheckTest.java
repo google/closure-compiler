@@ -7870,6 +7870,67 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testDictEs5ClassCannotExtendStruct() {
+    newTest()
+        .addSource(
+            lines(
+                "/** @struct @constructor*/",
+                "function StructParent() {}",
+                "/** @constructor @dict @extends {StructParent} */",
+                "function DictChild() {}",
+                "DictChild.prototype['prop'] = function() {};"))
+        .addDiagnostic("@dict class DictChild cannot extend @struct class StructParent")
+        .run();
+  }
+
+  @Test
+  public void testDictEs6ClassCannotExtendStruct() {
+    newTest()
+        .addSource(
+            lines(
+                "class StructParent {}",
+                "/** @dict */",
+                "class DictChild extends StructParent {",
+                "  ['prop']() {}",
+                "}"))
+        .addDiagnostic("@dict class DictChild cannot extend @struct class StructParent")
+        .run();
+  }
+
+  @Test
+  public void testStructEs6ClassCannotExtendDict() {
+    newTest()
+        .addSource(
+            lines(
+                "/** @dict */",
+                "class DictParent {}",
+                "/** @struct */",
+                "class StructChild extends DictParent {",
+                "  ['prop']() {}",
+                "}"))
+        .addDiagnostic("@struct class StructChild cannot extend @dict class DictParent")
+        .addDiagnostic("Cannot do '[]' access on a struct")
+        .run();
+  }
+
+  @Test
+  public void testStructEs6ClassCanExtendDict_transitive() {
+    newTest()
+        .addSource(
+            lines(
+                "/** @dict */",
+                "class DictParent {}",
+                "/** @unrestricted */",
+                "class UnannotatedMiddleClass extends DictParent {}",
+                "/** @struct */",
+                "class StructChild extends UnannotatedMiddleClass {",
+                "  ['prop']() {}",
+                "}"))
+        .addDiagnostic("Cannot do '[]' access on a struct")
+        .run();
+  }
+
+  @Test
   public void testGetelemStruct1() {
     newTest()
         .addSource(
