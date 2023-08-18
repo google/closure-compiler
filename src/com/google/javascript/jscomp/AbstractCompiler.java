@@ -22,7 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,6 +51,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -81,7 +81,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
 
-  abstract java.util.function.Supplier<Node> getTypedAstDeserializer(SourceFile file);
+  abstract Supplier<Node> getTypedAstDeserializer(SourceFile file);
 
   /** Looks up an input (possibly an externs input) by input id. May return null. */
   @Override

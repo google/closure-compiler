@@ -17,11 +17,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.AstFactory.type;
 
-import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.util.function.Supplier;
 
 /** Replaces the ES2020 `??` operator with conditional (?:). */
 public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callback, CompilerPass {

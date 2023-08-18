@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
@@ -30,10 +29,11 @@ import com.google.javascript.rhino.Token;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
- * A nifty set of functions to deal with the issues of replacing function
- * parameters with a set of call argument expressions.
+ * A nifty set of functions to deal with the issues of replacing function parameters with a set of
+ * call argument expressions.
  */
 class FunctionArgumentInjector {
 
@@ -174,11 +174,8 @@ class FunctionArgumentInjector {
     return argMap.buildOrThrow();
   }
 
-  /**
-   * Parameter names will be name unique when at a later time.
-   */
-  private static String getUniqueAnonymousParameterName(
-      Supplier<String> safeNameIdSupplier) {
+  /** Parameter names will be name unique when at a later time. */
+  private static String getUniqueAnonymousParameterName(Supplier<String> safeNameIdSupplier) {
     return "JSCompiler_inline_anon_param_" + safeNameIdSupplier.get();
   }
 
@@ -202,16 +199,12 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * Check for uses of the named value that imply a pass-by-value
-   * parameter is expected.  This is used to prevent cases like:
+   * Check for uses of the named value that imply a pass-by-value parameter is expected. This is
+   * used to prevent cases like:
    *
-   *   function (x) {
-   *     x=2;
-   *     return x;
-   *   }
+   * <p>function (x) { x=2; return x; }
    *
-   * We don't want "undefined" to be substituted for "x", and get
-   *   undefined=2
+   * <p>We don't want "undefined" to be substituted for "x", and get undefined=2
    *
    * @param n The node in question.
    * @param names The set of names to check.
@@ -242,12 +235,11 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * This is similar to NodeUtil.isLValue except that object properties and
-   * array member modification aren't important ("o" in "o.a = 2" is still "o"
-   * after assignment, where in as "o = x", "o" is now "x").
+   * This is similar to NodeUtil.isLValue except that object properties and array member
+   * modification aren't important ("o" in "o.a = 2" is still "o" after assignment, where in as "o =
+   * x", "o" is now "x").
    *
-   * This also looks for the redefinition of a name.
-   *   function (x) {var x;}
+   * <p>This also looks for the redefinition of a name. function (x) {var x;}
    *
    * @param n The NAME node in question.
    */
@@ -282,14 +274,15 @@ class FunctionArgumentInjector {
     int argCount = argMap.size();
     // We limit the "trivial" bodies to those where there is a single expression or
     // return, the expression is
-    boolean isTrivialBody = (!block.hasChildren()
-        || (block.hasOneChild() && !bodyMayHaveConditionalCode(block.getLastChild())));
-    boolean hasMinimalParameters = NodeUtil.isUndefined(argMap.get(THIS_MARKER))
-        && argCount <= 2; // this + one parameter
+    boolean isTrivialBody =
+        (!block.hasChildren()
+            || (block.hasOneChild() && !bodyMayHaveConditionalCode(block.getLastChild())));
+    boolean hasMinimalParameters =
+        NodeUtil.isUndefined(argMap.get(THIS_MARKER)) && argCount <= 2; // this + one parameter
 
     // Get the list of parameters that may need temporaries due to side-effects.
-    ImmutableSet<String> namesAfterSideEffects = findParametersReferencedAfterSideEffect(
-        argMap.keySet(), block);
+    ImmutableSet<String> namesAfterSideEffects =
+        findParametersReferencedAfterSideEffect(argMap.keySet(), block);
 
     // Check for arguments that are evaluated more than once.
     for (Map.Entry<String, Node> entry : argMap.entrySet()) {
@@ -304,7 +297,8 @@ class FunctionArgumentInjector {
       boolean argSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(cArg);
       if (!argSideEffects && references == 0) {
         safe = true;
-      } else if (isTrivialBody && hasMinimalParameters
+      } else if (isTrivialBody
+          && hasMinimalParameters
           && references == 1
           && !(NodeUtil.canBeSideEffected(cArg) && namesAfterSideEffects.contains(argName))) {
         // For functions with a trivial body, and where the parameter evaluation order
@@ -323,7 +317,7 @@ class FunctionArgumentInjector {
         //   x( [] );
         //
         //   The parameter in the call to foo should not become "[]".
-          safe = false;
+        safe = false;
       } else if (argSideEffects) {
         // Even if there are no references, we still need to evaluate the
         // expression if it has side-effects.
@@ -409,12 +403,9 @@ class FunctionArgumentInjector {
     Set<String> locals = new LinkedHashSet<>(parameters);
     gatherLocalNames(root, locals);
 
-    ReferencedAfterSideEffect collector = new ReferencedAfterSideEffect(
-        parameters, ImmutableSet.copyOf(locals));
-    NodeUtil.visitPostOrder(
-        root,
-        collector,
-        collector);
+    ReferencedAfterSideEffect collector =
+        new ReferencedAfterSideEffect(parameters, ImmutableSet.copyOf(locals));
+    NodeUtil.visitPostOrder(root, collector, collector);
     return collector.getResults();
   }
 
@@ -513,9 +504,7 @@ class FunctionArgumentInjector {
       Token type = n.getToken();
       // Note: Only care about changes to non-local names, specifically
       // ignore VAR declaration assignments.
-      if (NodeUtil.isAssignmentOp(n)
-          || type == Token.INC
-          || type == Token.DEC) {
+      if (NodeUtil.isAssignmentOp(n) || type == Token.INC || type == Token.DEC) {
         Node lhs = n.getFirstChild();
         // Ignore changes to local names.
         if (!isLocalName(lhs)) {
@@ -544,9 +533,7 @@ class FunctionArgumentInjector {
     }
   }
 
-  /**
-   * Gather any names declared in the local scope.
-   */
+  /** Gather any names declared in the local scope. */
   private static void gatherLocalNames(Node n, Set<String> names) {
     if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
@@ -572,15 +559,13 @@ class FunctionArgumentInjector {
     }
   }
 
-  /**
-   * Get a set of function parameter names.
-   */
+  /** Get a set of function parameter names. */
   private static ImmutableSet<String> getFunctionParameterSet(Node fnNode) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     for (Node n = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
         n != null;
         n = n.getNext()) {
-      if (n.isRest()){
+      if (n.isRest()) {
         builder.add(REST_MARKER);
       } else if (n.isDefaultValue() || n.isObjectPattern() || n.isArrayPattern()) {
         throw new IllegalStateException("Not supported: " + n);
@@ -590,5 +575,4 @@ class FunctionArgumentInjector {
     }
     return builder.build();
   }
-
 }

@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -34,6 +33,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -44,6 +44,7 @@ class FunctionInjector {
 
   /** Sentinel value indicating that the key contains no functions. */
   private static final Node NO_FUNCTIONS = new Node(Token.FUNCTION);
+
   /** Sentinel value indicating that the key contains multiple distinct functions. */
   private static final Node MULTIPLE_FUNCTIONS = new Node(Token.FUNCTION);
 
@@ -960,7 +961,9 @@ class FunctionInjector {
         isRemovable);
   }
 
-  /** @return Whether inlining will lower cost. */
+  /**
+   * @return Whether inlining will lower cost.
+   */
   private static boolean doesLowerCost(
       Node fnNode,
       int callCost,
@@ -1014,7 +1017,9 @@ class FunctionInjector {
     return callCost;
   }
 
-  /** @return The difference between the function definition cost and inline cost. */
+  /**
+   * @return The difference between the function definition cost and inline cost.
+   */
   private static int inlineCostDelta(Node fnNode, Set<String> namesToAlias, InliningMode mode) {
     // The part of the function that is never inlined:
     //    "function xx(xx,xx){}" (15 + (param count * 3) -1;

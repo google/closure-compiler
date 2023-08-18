@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
@@ -34,20 +33,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
 
-/**
- * A class to transform the body of a function into a generic block suitable
- * for inlining.
- */
+/** A class to transform the body of a function into a generic block suitable for inlining. */
 class FunctionToBlockMutator {
 
   private final AbstractCompiler compiler;
   private final Supplier<String> safeNameIdSupplier;
   private final FunctionArgumentInjector functionArgumentInjector;
 
-  FunctionToBlockMutator(
-      AbstractCompiler compiler, Supplier<String> safeNameIdSupplier) {
+  FunctionToBlockMutator(AbstractCompiler compiler, Supplier<String> safeNameIdSupplier) {
     this.compiler = checkNotNull(compiler);
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.functionArgumentInjector = new FunctionArgumentInjector(compiler.getAstAnalyzer());
@@ -59,13 +55,18 @@ class FunctionToBlockMutator {
    * @param callNode The call node that will be replaced.
    * @param resultName Function results should be assigned to this name.
    * @param needsDefaultResult Whether the result value must be set.
-   * @param isCallInLoop Whether the function body must be prepared to be
-   *   injected into the body of a loop.
-   * @return A clone of the function body mutated to be suitable for injection
-   *   as a statement into another code block.
+   * @param isCallInLoop Whether the function body must be prepared to be injected into the body of
+   *     a loop.
+   * @return A clone of the function body mutated to be suitable for injection as a statement into
+   *     another code block.
    */
-  Node mutate(String fnName, Node fnNode, Node callNode,
-      String resultName, boolean needsDefaultResult, boolean isCallInLoop) {
+  Node mutate(
+      String fnName,
+      Node fnNode,
+      Node callNode,
+      String resultName,
+      boolean needsDefaultResult,
+      boolean isCallInLoop) {
     return mutateInternal(
         fnName,
         fnNode,
@@ -174,8 +175,7 @@ class FunctionToBlockMutator {
     }
 
     String labelName = getLabelNameForFunction(fnName);
-    Node injectableBlock = replaceReturns(
-        newBlock, resultName, labelName, needsDefaultResult);
+    Node injectableBlock = replaceReturns(newBlock, resultName, labelName, needsDefaultResult);
     checkState(injectableBlock != null);
 
     return injectableBlock;
@@ -225,10 +225,7 @@ class FunctionToBlockMutator {
     return null;
   }
 
-  /**
-   *  For all VAR node with uninitialized declarations, set
-   *  the values to be "undefined".
-   */
+  /** For all VAR node with uninitialized declarations, set the values to be "undefined". */
   private static void fixUninitializedVarDeclarations(Node n, Node containingBlock) {
     // Inner loop structure must already have logic to initialize its
     // variables.  In particular FOR-IN structures must not be modified.
@@ -254,6 +251,7 @@ class FunctionToBlockMutator {
 
   /**
    * Fix-up all local names to be unique for this subtree.
+   *
    * @param fnNode A mutable instance of the function to be inlined.
    */
   private void makeLocalNamesUnique(Node fnNode, boolean isCallInLoop) {
@@ -289,32 +287,27 @@ class FunctionToBlockMutator {
 
     @Override
     public String get() {
-        return "JSCompiler_inline_label_" + idSupplier.get();
+      return "JSCompiler_inline_label_" + idSupplier.get();
     }
   }
 
-  /**
-   * Create a unique label name.
-   */
+  /** Create a unique label name. */
   private String getLabelNameForFunction(String fnName) {
     String name = (isNullOrEmpty(fnName)) ? "anon" : fnName;
     return "JSCompiler_inline_label_" + name + "_" + safeNameIdSupplier.get();
   }
 
-  /**
-   * Create a unique "this" name.
-   */
+  /** Create a unique "this" name. */
   private String getUniqueThisName() {
     return "JSCompiler_inline_this_" + safeNameIdSupplier.get();
   }
 
   /**
-   * Inlines the arguments within the node tree using the given argument map,
-   * replaces "unsafe" names with local aliases.
+   * Inlines the arguments within the node tree using the given argument map, replaces "unsafe"
+   * names with local aliases.
    *
-   * The aliases for unsafe require new VAR declarations, so this function
-   * can not be used in for direct CALL node replacement as VAR nodes can not be
-   * created there.
+   * <p>The aliases for unsafe require new VAR declarations, so this function can not be used in for
+   * direct CALL node replacement as VAR nodes can not be created there.
    *
    * @return The node or its replacement.
    */
@@ -383,37 +376,24 @@ class FunctionToBlockMutator {
   }
 
   /**
-   *  Convert returns to assignments and breaks, as needed.
-   *  For example, with a labelName of 'foo':
-   *    {
-   *      return a;
-   *    }
-   *  becomes:
-   *    foo: {
-   *      a;
-   *      break foo;
-   *    }
-   *  or
-   *    foo: {
-   *      resultName = a;
-   *      break foo;
-   *    }
+   * Convert returns to assignments and breaks, as needed. For example, with a labelName of 'foo': {
+   * return a; } becomes: foo: { a; break foo; } or foo: { resultName = a; break foo; }
    *
    * @param resultMustBeSet Whether the result must always be set to a value.
-   * @return The node containing the transformed block, this may be different
-   *     than the passed in node 'block'.
+   * @return The node containing the transformed block, this may be different than the passed in
+   *     node 'block'.
    */
   private static Node replaceReturns(
-      Node block, String resultName, String labelName,
-      boolean resultMustBeSet) {
+      Node block, String resultName, String labelName, boolean resultMustBeSet) {
     checkNotNull(block);
     checkNotNull(labelName);
 
     Node root = block;
 
     boolean hasReturnAtExit = false;
-    int returnCount = NodeUtil.getNodeTypeReferenceCount(
-        block, Token.RETURN, new NodeUtil.MatchShallowStatement());
+    int returnCount =
+        NodeUtil.getNodeTypeReferenceCount(
+            block, Token.RETURN, new NodeUtil.MatchShallowStatement());
     if (returnCount > 0) {
       hasReturnAtExit = hasReturnAtExit(block);
       // TODO(johnlenz): Simpler not to special case this,
@@ -436,7 +416,6 @@ class FunctionToBlockMutator {
         Node newRoot = IR.block().srcref(block);
         newRoot.addChildToBack(label);
 
-
         // The label is now the root.
         root = newRoot;
       }
@@ -455,10 +434,7 @@ class FunctionToBlockMutator {
    *  Functions following here are general node transformation functions
    **********************************************************************/
 
-  /**
-   * Example:
-   *   a = (void) 0;
-   */
+  /** Example: a = (void) 0; */
   private static void addDummyAssignment(Node node, String resultName) {
     checkArgument(node.isBlock());
 
@@ -488,10 +464,7 @@ class FunctionToBlockMutator {
     }
   }
 
-  /**
-   * Create a valid statement Node containing an assignment to name of the
-   * given expression.
-   */
+  /** Create a valid statement Node containing an assignment to name of the given expression. */
   private static Node createAssignStatementNode(String name, Node expression) {
     // Create 'name = result-expression;' statement.
     // EXPR (ASSIGN (NAME, EXPRESSION))
@@ -501,16 +474,11 @@ class FunctionToBlockMutator {
   }
 
   /**
-   * Replace the 'return' statement with its child expression.
-   * If the result is needed (resultName != null):
-   *   "return foo()" becomes "resultName = foo()"
-   *   "return" becomes "resultName = void 0".
-   * Otherwise:
-   *   "return foo()" becomes "foo()"
-   *   "return", null is returned.
+   * Replace the 'return' statement with its child expression. If the result is needed (resultName
+   * != null): "return foo()" becomes "resultName = foo()" "return" becomes "resultName = void 0".
+   * Otherwise: "return foo()" becomes "foo()" "return", null is returned.
    */
-  private static Node getReplacementReturnStatement(
-      Node node, String resultName) {
+  private static Node getReplacementReturnStatement(Node node, String resultName) {
     Node resultNode = null;
 
     Node retVal = null;
@@ -554,8 +522,7 @@ class FunctionToBlockMutator {
   private static Node replaceReturnWithBreak(
       Node current, @Nullable Node parent, String resultName, String labelName) {
 
-    if (current.isFunction()
-        || current.isExprResult()) {
+    if (current.isFunction() || current.isExprResult()) {
       // Don't recurse into functions definitions, and expressions can't
       // contain RETURN nodes.
       return current;

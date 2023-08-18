@@ -22,7 +22,6 @@ import static com.google.common.base.Predicates.alwaysTrue;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -40,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -392,7 +392,9 @@ class InlineFunctions implements CompilerPass {
     return injector.doesFunctionMeetMinimumRequirements(fnName, fnNode);
   }
 
-  /** @see CallVisitor */
+  /**
+   * @see CallVisitor
+   */
   private interface CallVisitorCallback {
     public void visitCallSite(NodeTraversal t, Node callNode, FunctionState functionState);
   }
@@ -451,7 +453,9 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** @return Whether the name is used in a way that might be a candidate for inlining. */
+  /**
+   * @return Whether the name is used in a way that might be a candidate for inlining.
+   */
   static boolean isCandidateUsage(Node name) {
     Node parent = name.getParent();
     checkState(name.isName());
@@ -689,7 +693,9 @@ class InlineFunctions implements CompilerPass {
     return true;
   }
 
-  /** @return Whether inlining the function reduces code size. */
+  /**
+   * @return Whether inlining the function reduces code size.
+   */
   private boolean inliningLowersCost(FunctionState functionState) {
     return injector.inliningLowersCost(
         functionState.getModule(),
@@ -731,7 +737,9 @@ class InlineFunctions implements CompilerPass {
     return NodeUtil.has(node, pred, alwaysTrue());
   }
 
-  /** @see #resolveInlineConflicts */
+  /**
+   * @see #resolveInlineConflicts
+   */
   private void resolveInlineConflictsForFunction(FunctionState functionState) {
     // Functions that aren't referenced don't cause conflicts.
     if (!functionState.hasReferences() || !functionState.canInline()) {
@@ -767,7 +775,9 @@ class InlineFunctions implements CompilerPass {
     return changed;
   }
 
-  /** @see #findCalledFunctions(Node) */
+  /**
+   * @see #findCalledFunctions(Node)
+   */
   private static void findCalledFunctions(Node node, Set<String> changed) {
     checkArgument(changed != null);
     // For each referenced function, add a new reference
