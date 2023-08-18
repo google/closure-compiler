@@ -3138,6 +3138,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  public void reportDisambiguatePropertiesSummary(Supplier<String> summarySupplier) {
+    if (tracker != null) {
+      tracker.setDisambiguatePropertiesSummary(summarySupplier.get());
+    }
+  }
+
+  @Override
+  public void reportAmbiguatePropertiesSummary(Supplier<String> summarySupplier) {
+    if (tracker != null) {
+      tracker.setAmbiguatePropertiesSummary(summarySupplier.get());
+    }
+  }
+
+  @Override
   public void reportChangeToEnclosingScope(Node n) {
     recordChange(getChangeScopeForNode(n));
     notifyChangeHandlers();

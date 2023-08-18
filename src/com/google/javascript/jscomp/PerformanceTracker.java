@@ -349,6 +349,18 @@ public final class PerformanceTracker {
     this.astManifest = builder.build();
   }
 
+  private String disambiguatePropertiesSummary = "not executed";
+
+  public void setDisambiguatePropertiesSummary(String summary) {
+    this.disambiguatePropertiesSummary = summary;
+  }
+
+  private String ambiguatePropertiesSummary = "not executed";
+
+  public void setAmbiguatePropertiesSummary(String summary) {
+    this.ambiguatePropertiesSummary = summary;
+  }
+
   /**
    * Prints a summary, which contains aggregate stats for all runs of each pass and a log, which
    * contains stats for each individual run.
@@ -375,7 +387,10 @@ public final class PerformanceTracker {
             "Estimated GzReduction(bytes): " + this.gzDiff,
             "Estimated AST size(#nodes): " + this.astSize,
             "Estimated Size(bytes): " + this.codeSize,
-            "Estimated GzSize(bytes): " + this.gzCodeSize));
+            "Estimated GzSize(bytes): " + this.gzCodeSize,
+            "",
+            "DisambiguateProperties: " + this.disambiguatePropertiesSummary,
+            "AmbiguateProperties: " + this.ambiguatePropertiesSummary));
 
     output.println(
         lines(

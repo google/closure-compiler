@@ -40,10 +40,12 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.disambiguate.ColorGraphNode.PropAssociation;
+import com.google.javascript.jscomp.disambiguate.UseSiteRenamer.RenameUsesResult;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -89,8 +91,7 @@ public final class DisambiguateProperties implements CompilerPass {
         new ColorGraphBuilder(flattener, LowestCommonAncestorFinder::new, this.registry);
     ClusterPropagator propagator = new ClusterPropagator();
     UseSiteRenamer renamer =
-        new UseSiteRenamer(
-            /* mutationCb= */ this.compiler::reportChangeToEnclosingScope);
+        new UseSiteRenamer(/* mutationCb= */ this.compiler::reportChangeToEnclosingScope);
 
     NodeTraversal.traverse(this.compiler, externs.getParent(), findRefs);
     LinkedHashMap<String, PropertyClustering> propIndex = findRefs.getPropertyIndex();
@@ -147,17 +148,49 @@ public final class DisambiguateProperties implements CompilerPass {
 
     FixedPointGraphTraversal.newTraversal(propagator).computeFixedPoint(graph);
 
+    TrackerSummaryGenerator trackerSummaryGenerator = new TrackerSummaryGenerator();
     for (PropertyClustering prop : propIndex.values()) {
-      renamer.renameUses(prop);
+      RenameUsesResult renameUsesResult = renamer.renameUses(prop);
+      trackerSummaryGenerator.addRenameUsesResult(renameUsesResult);
       if (prop.isInvalidated() && this.propertiesThatMustDisambiguate.contains(prop.getName())) {
         this.compiler.report(this.createInvalidationError(prop));
       }
     }
+    compiler.reportDisambiguatePropertiesSummary(trackerSummaryGenerator::buildSummaryString);
 
     this.logForDiagnostics("renaming_index", () -> buildRenamingIndex(propIndex, renamer));
     this.logForDiagnostics("mismatches", this.registry.getMismatchLocationsForDebugging()::inverse);
 
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
+  }
+
+  /** No-op class to use when tracer mode is not enabled. */
+  private static class TrackerSummaryGenerator {
+    int total = 0;
+    int numInvalidated = 0;
+    int numDisambiguated = 0;
+    int numOnlyOneCluster = 0;
+
+    void addRenameUsesResult(RenameUsesResult renameUsesResult) {
+      total++;
+      switch (renameUsesResult) {
+        case INVALIDATED:
+          numInvalidated++;
+          break;
+        case ONLY_ONE_CLUSTER:
+          numOnlyOneCluster++;
+          break;
+        case DISAMBIGUATED:
+          numDisambiguated++;
+          break;
+      }
+    }
+
+    private String buildSummaryString() {
+      return SimpleFormat.format(
+          "%d property names, %d disambiguated, %d invalidated, %d had a single cluster",
+          total, numDisambiguated, numInvalidated, numOnlyOneCluster);
+    }
   }
 
   private JSError createInvalidationError(PropertyClustering prop) {
@@ -404,5 +437,4 @@ public final class DisambiguateProperties implements CompilerPass {
       return this.dest - x.dest;
     }
   }
-
 }

@@ -21,6 +21,7 @@ import static java.util.function.Function.identity;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
 import java.util.Objects;
@@ -45,10 +46,11 @@ final class UseSiteRenamer {
    *
    * <p>If {@code prop} is invalid or should otherwise not be renamed, the AST will not be changed.
    */
-  void renameUses(PropertyClustering prop) {
+  @CanIgnoreReturnValue
+  RenameUsesResult renameUses(PropertyClustering prop) {
     if (prop.isInvalidated()) {
       this.renamingIndex.put(prop.getName(), INVALIDATED_NAME_VALUE);
-      return;
+      return RenameUsesResult.INVALIDATED;
     }
 
     ImmutableMap<ColorGraphNode, String> clusterNames = createAllClusterNames(prop);
@@ -59,7 +61,7 @@ final class UseSiteRenamer {
        * anything in this case, so skip the work.
        */
       this.renamingIndex.put(prop.getName(), prop.getName());
-      return;
+      return RenameUsesResult.ONLY_ONE_CLUSTER;
     }
 
     this.renamingIndex.putAll(prop.getName(), clusterNames.values());
@@ -72,6 +74,13 @@ final class UseSiteRenamer {
         this.mutationCb.accept(site);
       }
     }
+    return RenameUsesResult.DISAMBIGUATED;
+  }
+
+  public enum RenameUsesResult {
+    INVALIDATED,
+    ONLY_ONE_CLUSTER,
+    DISAMBIGUATED;
   }
 
   ImmutableSetMultimap<String, String> getRenamingIndex() {

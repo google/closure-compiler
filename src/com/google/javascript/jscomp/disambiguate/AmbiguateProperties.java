@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -52,6 +53,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jspecify.nullness.Nullable;
@@ -74,8 +76,7 @@ import org.jspecify.nullness.Nullable;
  * </code>
  */
 public class AmbiguateProperties implements CompilerPass {
-  private static final Logger logger = Logger.getLogger(
-      AmbiguateProperties.class.getName());
+  private static final Logger logger = Logger.getLogger(AmbiguateProperties.class.getName());
 
   private final AbstractCompiler compiler;
 
@@ -196,9 +197,8 @@ public class AmbiguateProperties implements CompilerPass {
       prop.relatedColorsSeeds = null;
     }
 
-    ImmutableSet.Builder<String> reservedNames = ImmutableSet.<String>builder()
-        .addAll(externedNames)
-        .addAll(quotedNames);
+    ImmutableSet.Builder<String> reservedNames =
+        ImmutableSet.<String>builder().addAll(externedNames).addAll(quotedNames);
     int numRenamedPropertyNames = 0;
     int numSkippedPropertyNames = 0;
     ArrayList<PropertyGraphNode> nodes = new ArrayList<>(propertyMap.size());
@@ -211,6 +211,8 @@ public class AmbiguateProperties implements CompilerPass {
         nodes.add(new PropertyGraphNode(prop));
       }
     }
+    final int finalNumRenamedPropertyNames = numRenamedPropertyNames;
+    final int finalNumSkippedPropertyNames = numSkippedPropertyNames;
 
     PropertyGraph propertyGraph = new PropertyGraph(nodes);
     GraphColoring<Property, Void> coloring =
@@ -251,11 +253,20 @@ public class AmbiguateProperties implements CompilerPass {
     // TODO(b/161947315): this shouldn't be the responsibility of AmbiguateProperties
     GatherGetterAndSetterProperties.update(compiler, externs, root);
 
+    Supplier<String> summarySupplier =
+        Suppliers.memoize(
+            () ->
+                "Collapsed "
+                    + finalNumRenamedPropertyNames
+                    + " properties into "
+                    + numNewPropertyNames
+                    + " and skipped renaming "
+                    + finalNumSkippedPropertyNames
+                    + " properties.");
     if (logger.isLoggable(Level.FINE)) {
-      logger.fine("Collapsed " + numRenamedPropertyNames + " properties into "
-                  + numNewPropertyNames + " and skipped renaming "
-                  + numSkippedPropertyNames + " properties.");
+      logger.fine(summarySupplier.get());
     }
+    compiler.reportAmbiguatePropertiesSummary(summarySupplier);
   }
 
   static class PropertyGraph implements AdjacencyGraph<Property, Void> {
@@ -307,9 +318,8 @@ public class AmbiguateProperties implements CompilerPass {
     final BitSet relatedTypes = new BitSet();
 
     /**
-     * Returns true if prop is in an independent set from all properties in this
-     * sub graph.  That is, if none of its related types intersects with the
-     * related types for this sub graph.
+     * Returns true if prop is in an independent set from all properties in this sub graph. That is,
+     * if none of its related types intersects with the related types for this sub graph.
      */
     @Override
     public boolean isIndependentOf(Property prop) {
@@ -317,8 +327,8 @@ public class AmbiguateProperties implements CompilerPass {
     }
 
     /**
-     * Adds the node to the sub graph, adding all its related types to the
-     * related types for the sub graph.
+     * Adds the node to the sub graph, adding all its related types to the related types for the sub
+     * graph.
      */
     @Override
     public void addNode(Property prop) {

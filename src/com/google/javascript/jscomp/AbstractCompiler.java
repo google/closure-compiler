@@ -223,6 +223,21 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract void reportFunctionDeleted(Node node);
 
   /**
+   * Used by `DisambiguateProperties` to record a one-line summary of the work it accomplished, if
+   * any.
+   *
+   * <p>This information will be included in the tracer mode output, if that is enabled.
+   */
+  public abstract void reportDisambiguatePropertiesSummary(Supplier<String> summarySupplier);
+
+  /**
+   * Used by `AmbiguateProperties` to record a one-line summary of the work it accomplished, if any.
+   *
+   * <p>This information will be included in the tracer mode output, if that is enabled.
+   */
+  public abstract void reportAmbiguatePropertiesSummary(Supplier<String> summarySupplier);
+
+  /**
    * Gets a suitable SCRIPT node to serve as a parent for code insertion. If {@code module} contains
    * any inputs, the returned node will be the SCRIPT node corresponding to its first input. If
    * {@code module} is empty, on the other hand, then the returned node will be the first SCRIPT
