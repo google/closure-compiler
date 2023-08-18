@@ -1996,24 +1996,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
 
         // We validated that this is a valid "provided name" above so it is ok to look it up by
         // properties.
-        return getTypeThroughNamespace(otherModuleScope, moduleId);
+        return otherModuleScope.getTypeThroughNamespace(moduleId);
       }
     }
 
     return unknownType;
-  }
-
-  private JSType getTypeThroughNamespace(TypedScope globalScope, String moduleId) {
-    int split = moduleId.lastIndexOf('.');
-    if (split >= 0) {
-      String parentName = moduleId.substring(0, split);
-      String prop = moduleId.substring(split + 1);
-      return getTypeThroughNamespace(globalScope, parentName)
-          .assertObjectType()
-          .getPropertyType(prop);
-    } else {
-      return globalScope.getSlot(moduleId).getType();
-    }
   }
 
   private FlowScope tightenTypesAfterAssertions(FlowScope scope, Node callNode) {

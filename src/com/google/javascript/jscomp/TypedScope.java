@@ -309,6 +309,22 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     }
   }
 
+  final @Nullable JSType getTypeThroughNamespace(String moduleId) {
+    int split = moduleId.lastIndexOf('.');
+    if (split >= 0) {
+      String parentName = moduleId.substring(0, split);
+      String prop = moduleId.substring(split + 1);
+      JSType parentType = getTypeThroughNamespace(parentName);
+      if (parentType == null || parentType.toMaybeObjectType() == null) {
+        return null;
+      }
+      return parentType.assertObjectType().getPropertyType(prop);
+    } else {
+      TypedVar var = this.getSlot(moduleId);
+      return var != null ? var.getType() : null;
+    }
+  }
+
   @Override
   public @Nullable StaticScope getTopmostScopeOfEventualDeclaration(String name) {
     if (getOwnSlot(name) != null || reservedNames.contains(name)) {

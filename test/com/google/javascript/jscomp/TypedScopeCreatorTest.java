@@ -7893,6 +7893,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnorderedGoogProvideAndModule_doesntCrash() {
+    testSame(
+        srcs(
+            "goog.provide('ns.boo');",
+            lines("goog.module('test');", "const boo = goog.require('ns.boo');", ""),
+            lines("ns = ns || {};", "ns.boo = ns.boo || {};")));
+  }
+
+  @Test
   public void testLegacyGoogModule_redeclaredAsVar_reportsError() {
     // This is a bad pattern but should not crash the compiler.
     test(

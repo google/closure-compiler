@@ -248,7 +248,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       } else if (resolvedScope != null) {
         // Some imports might not exist as fully qualified names in the given scope, but are still
         // resolvable via properties. This is always true for "provideAlreadyProvided" names.
-        JSType nsType = getTypeThroughNamespace(resolvedScope, scopedImport.getName());
+        JSType nsType = resolvedScope.getTypeThroughNamespace(scopedImport.getName());
         type = nsType != null ? nsType : unknownType;
         isInferred = (nsType == null);
       } else {
@@ -270,22 +270,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         moduleLocalNode.setTypedefTypeProp(typedefType);
         typeRegistry.declareType(localModuleScope, moduleLocalNode.getString(), typedefType);
       }
-    }
-  }
-
-  private static @Nullable JSType getTypeThroughNamespace(TypedScope scope, String moduleId) {
-    int split = moduleId.lastIndexOf('.');
-    if (split >= 0) {
-      String parentName = moduleId.substring(0, split);
-      String prop = moduleId.substring(split + 1);
-      JSType parentType = getTypeThroughNamespace(scope, parentName);
-      if (parentType.toMaybeObjectType() != null) {
-        return parentType.assertObjectType().getPropertyType(prop);
-      }
-      return null;
-    } else {
-      TypedVar var = scope.getSlot(moduleId);
-      return var != null ? var.getType() : null;
     }
   }
 
