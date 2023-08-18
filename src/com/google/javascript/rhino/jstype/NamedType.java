@@ -401,6 +401,8 @@ public final class NamedType extends ProxyObjectType {
       if (localVariableShadowsGlobalNamespace(root)) {
         msg += "\nIt's possible that a local variable called '" + root
             + "' is shadowing the intended global namespace.";
+      } else if (resolutionScope.getSlot(root) != null) {
+        msg += "\nIt's possible that '" + reference + "' refers to a value, not a type.";
       }
       warning(reporter, msg);
     } else {

@@ -922,7 +922,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         .addDiagnostic( // TODO(sdh): Should parse correctly and give an initializing variable
             // error.
             // It looks like this is a result of the `const` being ignored.
-            "Bad type annotation. Unknown type alias.ns.MyNumber")
+            lines(
+                "Bad type annotation. Unknown type alias.ns.MyNumber",
+                "It's possible that 'alias.ns.MyNumber' refers to a value, not a type."))
         .run();
   }
 
@@ -1042,7 +1044,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Sub extends Base {}",
             "/** @type {Sub.MyNumber} */ let x;",
             "")
-        .addDiagnostic("Bad type annotation. Unknown type Sub.MyNumber")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type Sub.MyNumber",
+                "It's possible that 'Sub.MyNumber' refers to a value, not a type."))
         .run();
   }
 
@@ -8273,7 +8278,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "",
             "var /** !Foo.Bar */ x;",
             "")
-        .addDiagnostic("Bad type annotation. Unknown type Foo.Bar")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type Foo.Bar",
+                "It's possible that 'Foo.Bar' refers to a value, not a type."))
         .run();
   }
 
@@ -8288,7 +8296,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "",
             "var /** !ns.Bar */ x;",
             "")
-        .addDiagnostic("Bad type annotation. Unknown type ns.Bar")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type ns.Bar",
+                "It's possible that 'ns.Bar' refers to a value, not a type."))
         .run();
   }
 
@@ -8303,7 +8314,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "",
             "var /** !Foo.Bar */ x;",
             "")
-        .addDiagnostic("Bad type annotation. Unknown type Foo.Bar")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type Foo.Bar",
+                "It's possible that 'Foo.Bar' refers to a value, not a type."))
         .run();
   }
 
@@ -8318,7 +8332,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "",
             "var /** !Foo.Bar */ x;",
             "")
-        .addDiagnostic("Bad type annotation. Unknown type Foo.Bar")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type Foo.Bar",
+                "It's possible that 'Foo.Bar' refers to a value, not a type."))
         .run();
   }
 

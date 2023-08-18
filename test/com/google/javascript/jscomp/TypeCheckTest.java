@@ -9185,7 +9185,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {string} */ var notTypeName;",
             "/** @const */ var alias = notTypeName;",
             "/** @type {alias} */ var x;")
-        .addDiagnostic("Bad type annotation. Unknown type alias")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type alias",
+                "It's possible that 'alias' refers to a value, not a type."))
         .run();
   }
 
@@ -12357,7 +12360,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCast9() {
     newTest()
         .addSource("var foo = {};" + "function f() { return /** @type {foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type foo",
+                "It's possible that 'foo' refers to a value, not a type."))
         .run();
   }
 
@@ -12367,7 +12373,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "var foo = function() {};"
                 + "function f() { return /** @type {foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type foo",
+                "It's possible that 'foo' refers to a value, not a type."))
         .run();
   }
 
@@ -12377,7 +12386,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "var goog = {}; goog.foo = {};"
                 + "function f() { return /** @type {goog.foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type goog.foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type goog.foo",
+                "It's possible that 'goog.foo' refers to a value, not a type."))
         .run();
   }
 
@@ -12387,7 +12399,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "var goog = {}; goog.foo = function() {};"
                 + "function f() { return /** @type {goog.foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type goog.foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type goog.foo",
+                "It's possible that 'goog.foo' refers to a value, not a type."))
         .run();
   }
 
@@ -13850,7 +13865,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var goog = {};\n"
                 + "/** @constructor\n @extends {goog.Missing} */function Sub() {};"
                 + "/** @override */Sub.prototype.foo = function() {};")
-        .addDiagnostic("Bad type annotation. Unknown type goog.Missing")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type goog.Missing",
+                "It's possible that 'goog.Missing' refers to a value, not a type."))
         .run();
   }
 
@@ -13862,7 +13880,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "goog.Super = function() {};",
             "/** @constructor\n @extends {goog.Super} */function Sub() {};",
             "/** @override */ Sub.prototype.foo = function() {};"),
-        "Bad type annotation. Unknown type goog.Missing");
+        lines(
+            "Bad type annotation. Unknown type goog.Missing",
+            "It's possible that 'goog.Missing' refers to a value, not a type."));
   }
 
   @Test
@@ -21534,7 +21554,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             MIXIN_DEFINITIONS,
             "var MyElementWithToggle = addToggle(MyElement);",
             "/** @type {MyElementWithToggle} */ var x = 123;")
-        .addDiagnostic("Bad type annotation. Unknown type MyElementWithToggle")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type MyElementWithToggle",
+                "It's possible that 'MyElementWithToggle' refers to a value, not a type."))
         .run();
   }
 
@@ -22514,7 +22537,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  'y.A': function() {},",
             "};",
             "var /** x.y.A */ a;")
-        .addDiagnostic("Bad type annotation. Unknown type x.y.A")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type x.y.A",
+                "It's possible that 'x.y.A' refers to a value, not a type."))
         .run();
   }
 
@@ -23047,6 +23073,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 "Bad type annotation. Unknown type service.Service",
                 "It's possible that a local variable called 'service' is shadowing "
                     + "the intended global namespace."))
+        .run();
+  }
+
+  @Test
+  public void testValueUsedAsType() {
+    newTest()
+        .addSource("/** @type {?} */ var Foo = 'Foo';", "/** @type {!Foo} */ var foo = 'foo';")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type Foo",
+                "It's possible that 'Foo' refers to a value, not a type."))
         .run();
   }
 
