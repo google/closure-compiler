@@ -107,9 +107,8 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
                 "  'browser': 'browser/foo.js'",
                 "};")));
 
-    assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries()).hasSize(1);
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries())
-        .containsEntry("/package.json", "/browser/foo.js");
+        .containsExactly("/package.json", "/browser/foo.js");
   }
 
   @Test

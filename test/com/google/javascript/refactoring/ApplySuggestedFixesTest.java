@@ -113,8 +113,7 @@ public class ApplySuggestedFixesTest {
     ImmutableMap<String, String> codeMap = ImmutableMap.of("test", code);
     ImmutableMap<String, String> newCodeMap =
         ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap);
-    assertThat(newCodeMap).hasSize(1);
-    assertThat(newCodeMap).containsEntry("test", "");
+    assertThat(newCodeMap).containsExactly("test", "");
   }
 
   @Test
@@ -132,8 +131,7 @@ public class ApplySuggestedFixesTest {
     ImmutableMap<String, String> codeMap = ImmutableMap.of("test", code);
     ImmutableMap<String, String> newCodeMap =
         ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap);
-    assertThat(newCodeMap).hasSize(1);
-    assertThat(newCodeMap).containsEntry("test", "/** @type {!Foo} */\nvar foo = new Foo()");
+    assertThat(newCodeMap).containsExactly("test", "/** @type {!Foo} */\nvar foo = new Foo()");
   }
 
   @Test
@@ -155,9 +153,8 @@ public class ApplySuggestedFixesTest {
     ImmutableMap<String, String> codeMap = ImmutableMap.of("test", code);
     ImmutableMap<String, String> newCodeMap =
         ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap);
-    assertThat(newCodeMap).hasSize(1);
     assertThat(newCodeMap)
-        .containsEntry("test", "/** @type {!Array<!Foo>} */\nvar arr = [new Foo()];");
+        .containsExactly("test", "/** @type {!Array<!Foo>} */\nvar arr = [new Foo()];");
   }
 
   @Test

@@ -2923,9 +2923,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         lines("@suppress {x} Some description.", " * @suppress {x} Another description.", "*/");
     JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
-    assertThat(info.getSuppressionsAndTheirDescription()).hasSize(1);
     assertThat(info.getSuppressionsAndTheirDescription())
-        .containsEntry(ImmutableSet.of("x"), "Some description.");
+        .containsExactly(ImmutableSet.of("x"), "Some description.");
   }
 
   // A different @suppress annotation containing a non-repeated warning, we store both annotations.
