@@ -482,7 +482,12 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
   @Test
   public void testBigIntConstructorWithNew() {
     // BigInt object function type cannot be called with "new" keyword
-    newTest().addSource("new BigInt(1)").addDiagnostic("cannot instantiate non-constructor").run();
+    newTest()
+        .addSource("new BigInt(1)")
+        .addDiagnostic(
+            "cannot instantiate non-constructor, found type: function(new:BigInt,"
+                + " (bigint|number|string)): bigint")
+        .run();
   }
 
   @Test

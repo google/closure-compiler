@@ -8921,7 +8921,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testHigherOrderFunctions3() {
     newTest()
         .addSource("/** @type {function(this:Array):Date} */var f; new f")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic(
+            "cannot instantiate non-constructor, found type: function(this:Array): (Date|null)")
         .run();
   }
 
@@ -8929,7 +8930,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testHigherOrderFunctions4() {
     newTest()
         .addSource("/** @type {function(this:Array, ...number):Date} */var f; new f")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic(
+            "cannot instantiate non-constructor, found type: function(this:Array, ...number):"
+                + " (Date|null)")
         .run();
   }
 
@@ -11535,14 +11538,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNew1() {
-    newTest().addSource("new 4").addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR).run();
+    newTest()
+        .addSource("new 4")
+        .addDiagnostic("cannot instantiate non-constructor, found type: number")
+        .run();
+    newTest()
+        .addSource("new 4")
+        .addDiagnostic("cannot instantiate non-constructor, found type: number")
+        .run();
   }
 
   @Test
   public void testNew2() {
     newTest()
         .addSource("var Math = {}; new Math()")
-        .addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR)
+        .addDiagnostic("cannot instantiate non-constructor, found type: {}")
         .run();
   }
 
@@ -11560,7 +11570,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNew5() {
     newTest()
         .addSource("function A(){}; new A();")
-        .addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR)
+        .addDiagnostic("cannot instantiate non-constructor, found type: function(): undefined")
         .run();
   }
 
@@ -11629,7 +11639,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  var c2 = function(){};"
                 + "  c1.prototype = new c2;"
                 + "}")
-        .addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR)
+        .addDiagnostic("cannot instantiate non-constructor, found type: function(): undefined")
         .run();
   }
 
@@ -11697,7 +11707,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNew17() {
     newTest()
         .addSource("var goog = {}; goog.x = 3; new goog.x")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic("cannot instantiate non-constructor, found type: number")
         .run();
   }
 
@@ -14908,7 +14918,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInterfaceInstantiation() {
     newTest()
         .addSource("/** @interface */var f = function(){}; new f")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic("cannot instantiate non-constructor, found type: (typeof f)")
         .run();
   }
 
@@ -16935,7 +16945,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
     assertThat(compiler.getWarningCount()).isEqualTo(1);
     assertThat(compiler.getWarnings().get(0).getDescription())
-        .isEqualTo("cannot instantiate non-constructor");
+        .isEqualTo("cannot instantiate non-constructor, found type: function(): undefined");
   }
 
   @Test
@@ -21447,7 +21457,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @const */", //
             "var o = new Symbol();")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic("cannot instantiate non-constructor, found type: (typeof Symbol)")
         .includeDefaultExterns()
         .run();
   }
