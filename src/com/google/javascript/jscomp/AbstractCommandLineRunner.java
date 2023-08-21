@@ -75,10 +75,9 @@ import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -453,7 +452,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     if (!config.outputManifests.isEmpty()) {
-      Set<String> uniqueNames = new HashSet<>();
+      Set<String> uniqueNames = new LinkedHashSet<>();
       for (String filename : config.outputManifests) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException(
@@ -463,7 +462,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     if (!config.outputBundles.isEmpty()) {
-      Set<String> uniqueNames = new HashSet<>();
+      Set<String> uniqueNames = new LinkedHashSet<>();
       for (String filename : config.outputBundles) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException(
@@ -510,7 +509,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     try (InputStream input = getExternsInput()) {
       ZipInputStream zip = new ZipInputStream(input);
       String envPrefix = Ascii.toLowerCase(env.toString()) + "/";
-      Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
+      Map<String, SourceFile> mapFromExternsZip = new LinkedHashMap<>();
       for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
         String filename = entry.getName();
 
@@ -744,7 +743,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     ImmutableList.Builder<JSError> errors = ImmutableList.builder();
 
     // First pass: collect the (module root relative) names of --js and --weakdep files.
-    Map<String, String> relativeToAbsoluteName = new HashMap<>();
+    Map<String, String> relativeToAbsoluteName = new LinkedHashMap<>();
     for (FlagEntry<JsSourceType> file : files) {
       // TODO(tjgq): Handle zip files.
       if (file.flag == JsSourceType.JS || file.flag == JsSourceType.WEAKDEP) {
@@ -964,7 +963,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       List<String> specs, Iterable<JSChunk> chunks) {
     checkState(specs != null);
 
-    Map<String, String> wrappers = new HashMap<>();
+    Map<String, String> wrappers = new LinkedHashMap<>();
 
     // Prepopulate the map with module names.
     for (JSChunk c : chunks) {
@@ -2729,7 +2728,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private Map<String, String> sourceMapInputFiles = new HashMap<>();
+    private Map<String, String> sourceMapInputFiles = new LinkedHashMap<>();
 
     @CanIgnoreReturnValue
     public CommandLineConfig setSourceMapInputFiles(Map<String, String> sourceMapInputFiles) {

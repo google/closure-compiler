@@ -56,10 +56,9 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -444,7 +443,7 @@ public final class SymbolTable {
 
     // All objects/classes have property scopes. They usually don't have parents. These scopes
     // confusingly are not included in "getAllScopes()" pass above.
-    HashSet<SymbolScope> visitedScopes = new HashSet<>(getAllScopes());
+    LinkedHashSet<SymbolScope> visitedScopes = new LinkedHashSet<>(getAllScopes());
     for (Symbol symbol : getAllSymbols()) {
       if (symbol.propertyScope == null || visitedScopes.contains(symbol.propertyScope)) {
         continue;
@@ -1346,10 +1345,10 @@ public final class SymbolTable {
   void fillGoogProvideModuleRequires(Node externs, Node root) {
     // small optimization to keep symbols created within this function for fast access instead of
     // going through SymbolTable.getSymbolForName() every time.
-    Map<String, Symbol> declaredNamespaces = new HashMap<>();
+    Map<String, Symbol> declaredNamespaces = new LinkedHashMap<>();
     // Map containind goog.module names to Scope object representing them. For goog.provide
     // namespaces there is no scope as elements of goog.provide are global.
-    Map<String, SymbolScope> moduleScopes = new HashMap<>();
+    Map<String, SymbolScope> moduleScopes = new LinkedHashMap<>();
     Predicate<Node> looksLikeGoogCall =
         (Node n) -> {
           if (!n.isCall()) {

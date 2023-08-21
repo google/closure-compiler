@@ -74,8 +74,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -2205,7 +2205,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ParenthesizeFunctionsInChunks(
-                      compiler, new HashSet<>(options.parenthesizeFunctionsInChunks)))
+                      compiler, new LinkedHashSet<>(options.parenthesizeFunctionsInChunks)))
           .build();
 
   /** Rewrite instance methods as static methods, to make them easier to inline. */
@@ -2603,7 +2603,7 @@ public final class DefaultPassConfig extends PassConfig {
   private VariableMap runVariableRenaming(
       AbstractCompiler compiler, VariableMap prevVariableMap, Node externs, Node root) {
     char[] reservedChars = null;
-    Set<String> reservedNames = new HashSet<>();
+    Set<String> reservedNames = new LinkedHashSet<>();
     if (options.renamePrefixNamespace != null) {
       // don't use the prefix name as a global symbol.
       reservedNames.add(options.renamePrefixNamespace);
@@ -2702,7 +2702,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   @VisibleForTesting
   static Map<String, Node> getAdditionalReplacements(CompilerOptions options) {
-    Map<String, Node> additionalReplacements = new HashMap<>();
+    Map<String, Node> additionalReplacements = new LinkedHashMap<>();
 
     if (options.markAsCompiled || options.closurePass) {
       additionalReplacements.put(COMPILED_CONSTANT_NAME, IR.trueNode());
