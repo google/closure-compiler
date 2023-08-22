@@ -142,8 +142,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Property {0} never defined on {1}. Did you mean {2}?");
 
   static final DiagnosticType NOT_A_CONSTRUCTOR =
-      DiagnosticType.warning(
-          "JSC_NOT_A_CONSTRUCTOR", "cannot instantiate non-constructor, found type: {0}");
+      DiagnosticType.warning("JSC_NOT_A_CONSTRUCTOR", "cannot instantiate non-constructor");
 
   static final DiagnosticType INSTANTIATE_ABSTRACT_CLASS =
       DiagnosticType.warning("JSC_INSTANTIATE_ABSTRACT_CLASS", "cannot instantiate abstract class");
@@ -2411,7 +2410,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (!couldBeAConstructor(type)
         || type.equals(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))
         || type.equals(typeRegistry.getNativeType(BIGINT_OBJECT_FUNCTION_TYPE))) {
-      report(n, NOT_A_CONSTRUCTOR, type.toString());
+      report(n, NOT_A_CONSTRUCTOR);
       ensureTyped(n);
       return;
     }

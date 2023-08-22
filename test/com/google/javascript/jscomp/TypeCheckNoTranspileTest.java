@@ -1978,8 +1978,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  yield 1;",
             "}",
             "var g = new gen;")
-        .addDiagnostic(
-            "cannot instantiate non-constructor, found type: function(): Generator<number,?,?>")
+        .addDiagnostic("cannot instantiate non-constructor")
         .run();
   }
 
@@ -2148,7 +2147,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMemberFunctionDef3() {
     newTest()
         .addSource("var obj = { method() {} }; new obj.method();")
-        .addDiagnostic("cannot instantiate non-constructor, found type: function(): undefined")
+        .addDiagnostic("cannot instantiate non-constructor")
         .run();
   }
 
