@@ -30,13 +30,6 @@
 // Gecko DOM;
 
 /**
- * Mozilla only???
- * @constructor
- * @extends {HTMLElement}
- */
-function HTMLSpanElement() {}
-
-/**
  * @see https://developer.mozilla.org/en/Components_object
  */
 Window.prototype.Components;
@@ -69,13 +62,17 @@ Window.prototype.directories;
 /**
  * @type {boolean}
  * @see https://developer.mozilla.org/en/DOM/window.fullScreen
+ * @deprecated
  */
 Window.prototype.fullScreen;
 
 /** @see https://developer.mozilla.org/en/DOM/window.pkcs11 */
 Window.prototype.pkcs11;
 
-/** @see https://developer.mozilla.org/en/DOM/window */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window
+ * @deprecated
+ */
 Window.prototype.returnValue;
 
 /**
@@ -96,6 +93,7 @@ Window.prototype.sidebar;
 /**
  * @see https://developer.mozilla.org/en/DOM/window.back
  * @return {undefined}
+ * @deprecated
  */
 Window.prototype.back = function() {};
 
@@ -108,22 +106,27 @@ Window.prototype.find;
 /**
  * @see https://developer.mozilla.org/en/DOM/window.forward
  * @return {undefined}
+ * @deprecated
  */
 Window.prototype.forward = function() {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.getAttention
  * @return {undefined}
+ * @deprecated
  */
 Window.prototype.getAttention = function() {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.home
  * @return {undefined}
+ * @deprecated
  */
 Window.prototype.home = function() {};
 
+/** @deprecated */
 Window.prototype.openDialog;
+/** @deprecated */
 Window.prototype.releaseEvents;
 Window.prototype.scrollByLines;
 Window.prototype.scrollByPages;
@@ -133,6 +136,7 @@ Window.prototype.scrollByPages;
  * @param {?=} opt_arguments
  * @param {string=} opt_options
  * @see https://developer.mozilla.org/en/DOM/window.showModalDialog
+ * @deprecated
  */
 Window.prototype.showModalDialog;
 
@@ -145,18 +149,21 @@ Window.prototype.updateCommands;
 /**
  * @see https://developer.mozilla.org/en/DOM/document.alinkColor
  * @type {string}
+ * @deprecated
  */
 Document.prototype.alinkColor;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.anchors
  * @type {HTMLCollection<!HTMLAnchorElement>}
+ * @deprecated
  */
 Document.prototype.anchors;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.applets
  * @type {HTMLCollection<!HTMLAppletElement>}
+ * @deprecated
  */
 Document.prototype.applets;
 /** @type {?string} */ Document.prototype.baseURI;
@@ -164,38 +171,21 @@ Document.prototype.applets;
 /**
  * @see https://developer.mozilla.org/en/DOM/document.bgColor
  * @type {string}
+ * @deprecated
  */
 Document.prototype.bgColor;
 
 /** @type {HTMLBodyElement} */ Document.prototype.body;
-Document.prototype.characterSet;
 
-/**
- * @see https://developer.mozilla.org/en/DOM/document.compatMode
- * @type {string}
- */
-Document.prototype.compatMode;
-
-Document.prototype.contentType;
 /** @type {string} */ Document.prototype.cookie;
 
-/**
- * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView
- * @type {?Window}
- */
-Document.prototype.defaultView;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/document.designMode
- * @type {string}
- */
-Document.prototype.designMode;
-
+/** @deprecated */
 Document.prototype.documentURIObject;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.domain
  * @type {string}
+ * @deprecated
  */
 Document.prototype.domain;
 
@@ -231,6 +221,7 @@ Document.prototype.lastModified;
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/DOM/document.linkColor
+ * @deprecated
  */
 Document.prototype.linkColor;
 
@@ -270,6 +261,7 @@ Document.prototype.tooltipNode;
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/DOM/document.vlinkColor
+ * @deprecated
  */
 Document.prototype.vlinkColor;
 
@@ -279,6 +271,7 @@ Document.prototype.vlinkColor;
 /**
  * @see https://developer.mozilla.org/en/DOM/document.clear
  * @return {undefined}
+ * @deprecated
  */
 Document.prototype.clear = function() {};
 
@@ -298,26 +291,31 @@ Document.prototype.evaluate;
  * @param {?boolean=} opt_showUi
  * @param {*=} opt_value
  * @see https://developer.mozilla.org/en/Rich-Text_Editing_in_Mozilla#Executing_Commands
+ * @deprecated
  */
 Document.prototype.execCommand;
 
+/** @deprecated */
 Document.prototype.loadOverlay;
 
 /**
  * @see https://developer.mozilla.org/en/Midas
  * @see http://msdn.microsoft.com/en-us/library/ms536676(VS.85).aspx
+ * @deprecated
  */
 Document.prototype.queryCommandEnabled;
 
 /**
  * @see https://developer.mozilla.org/en/Midas
  * @see http://msdn.microsoft.com/en-us/library/ms536678(VS.85).aspx
+ * @deprecated
  */
 Document.prototype.queryCommandIndeterm;
 
 /**
  * @see https://developer.mozilla.org/en/Midas
  * @see http://msdn.microsoft.com/en-us/library/ms536679(VS.85).aspx
+ * @deprecated
  */
 Document.prototype.queryCommandState;
 
@@ -326,16 +324,21 @@ Document.prototype.queryCommandState;
  * @see http://msdn.microsoft.com/en-us/library/ms536681(VS.85).aspx
  * @param {string} command
  * @return {?} Implementation-specific.
+ * @deprecated
  */
 Document.prototype.queryCommandSupported;
 
 /**
  * @see https://developer.mozilla.org/en/Midas
  * @see http://msdn.microsoft.com/en-us/library/ms536683(VS.85).aspx
+ * @deprecated
  */
 Document.prototype.queryCommandValue;
 
+// online and offline handlers belong to window, not document
+/** @deprecated */
 Document.prototype.ononline;
+/** @deprecated */
 Document.prototype.onoffline;
 
 // XUL
@@ -343,6 +346,7 @@ Document.prototype.onoffline;
  * @see http://developer.mozilla.org/en/DOM/document.getBoxObjectFor
  * @return {BoxObject}
  * @nosideeffects
+ * @deprecated
  */
 Document.prototype.getBoxObjectFor = function(element) {};
 
@@ -350,38 +354,10 @@ Document.prototype.getBoxObjectFor = function(element) {};
 // http://lxr.mozilla.org/mozilla1.8/source/dom/public/idl/range/nsIDOMNSRange.idl
 
 /**
- * @param {!TrustedHTML|string} tag
- * @return {DocumentFragment}
- */
-Range.prototype.createContextualFragment;
-
-/**
- * @param {Node} parent
- * @param {number} offset
- * @return {boolean}
- * @nosideeffects
- */
-Range.prototype.isPointInRange;
-
-/**
- * @param {Node} parent
- * @param {number} offset
- * @return {number}
- * @nosideeffects
- */
-Range.prototype.comparePoint;
-
-/**
- * @param {Node} n
- * @return {boolean}
- * @nosideeffects
- */
-Range.prototype.intersectsNode;
-
-/**
  * @param {Node} n
  * @return {number}
  * @nosideeffects
+ * @deprecated
  */
 Range.prototype.compareNode;
 
@@ -418,32 +394,6 @@ Element.prototype.style;
 /** @return {undefined} */
 Element.prototype.click = function() {};
 
-/** @type {number} */
-HTMLTextAreaElement.prototype.selectionStart;
-
-/** @type {number} */
-HTMLTextAreaElement.prototype.selectionEnd;
-
-/**
- * @param {number} selectionStart
- * @param {number} selectionEnd
- * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/editing.html#dom-textarea/input-setselectionrange
- * @return {undefined}
- */
-HTMLTextAreaElement.prototype.setSelectionRange =
-    function(selectionStart, selectionEnd) {};
-
-/**
- * @param {string} replacement
- * @param {number=} start
- * @param {number=} end
- * @param {string=} selectionMode
- * @see https://html.spec.whatwg.org/#dom-textarea/input-setrangetext
- * @return {undefined}
- */
-HTMLTextAreaElement.prototype.setRangeText =
-    function(replacement, start, end, selectionMode) {};
-
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.buildID
@@ -451,26 +401,23 @@ HTMLTextAreaElement.prototype.setRangeText =
 Navigator.prototype.buildID;
 
 /**
- * @type {!Array<string>|undefined}
- * @see https://developer.mozilla.org/en/Navigator.languages
- */
-Navigator.prototype.languages;
-
-/**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.oscpu
+ * @deprecated
  */
 Navigator.prototype.oscpu;
 
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.productSub
+ * @deprecated
  */
 Navigator.prototype.productSub;
 
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.securityPolicy
+ * @deprecated
  */
 Navigator.prototype.securityPolicy;
 
@@ -485,17 +432,22 @@ Navigator.prototype.sendBeacon = function(url, opt_data) {};
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.vendor
+ * @deprecated
  */
 Navigator.prototype.vendor;
 
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.vendorSub
+ * @deprecated
  */
 Navigator.prototype.vendorSub;
 
 
-/** @constructor */
+/**
+ * @constructor
+ * @deprecated
+ */
 function BoxObject() {}
 
 /** @type {Element} */
