@@ -1027,7 +1027,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * Returns the output file name for a chunk.
    *
    * <p>For chunks with predeclared output file names specified using {@code --chunk_output_file},
-   * the the output file name is {@code <outputPathPrefix>/<output_file>}
+   * the output file name is {@code <outputPathPrefix>/<output_file>}
    *
    * <p>Otherwise, the output file name is {@code <outputPathPrefix>/<chunkName>.js}
    */
@@ -1624,7 +1624,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         return 1;
       } else {
         Appendable jsOutput = createDefaultOutput();
-        compiler.getRoot().appendStringTree(jsOutput);
+        compiler.getJsRoot().appendStringTree(jsOutput);
         jsOutput.append("\n");
         closeAppendable(jsOutput);
         return 0;
@@ -1637,7 +1637,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         return 1;
       } else {
         Appendable jsOutput = createDefaultOutput();
-        compiler.getRoot().appendJsonTree(jsOutput);
+        compiler.getJsRoot().appendJsonTree(jsOutput);
         closeAppendable(jsOutput);
         return 0;
       }
