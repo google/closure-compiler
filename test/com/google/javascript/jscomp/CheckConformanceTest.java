@@ -2910,8 +2910,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
                 "}")),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
-                // TODO(lharker): instead of 'Foo' could we print something like 'Foo|Bar'?
-                "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved."));
+                "Violation: BanUnresolvedType Message\n"
+                    + "Reference to type 'Foo|Bar' never resolved."));
 
     testNoWarning(
         lines(
@@ -2974,10 +2974,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
                     + "Reference to type 'Foo' never resolved."),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
-                // TODO(lharker): instead of 'NoResolvedType', could we print something like
-                // 'Foo|Bar' ? We'd need to modify anything calling JSType.filterNoResolvedType.
                 "Violation: StrictBanUnresolvedType Message\n"
-                    + "Reference to type 'NoResolvedType' never resolved."),
+                    + "Reference to type 'Bar|Foo' never resolved."),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
                 "Violation: StrictBanUnresolvedType Message\n"

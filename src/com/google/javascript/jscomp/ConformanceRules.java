@@ -1812,21 +1812,21 @@ public final class ConformanceRules {
       if (type.isUnionType()) {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
+        ArrayList<String> nonConformingParts = null;
         for (JSType part : type.getUnionMembers()) {
           String nonConformingPart = getNonConformingPart(part);
           if (nonConformingPart != null) {
-            return nonConformingPart;
+            nonConformingParts =
+                nonConformingParts != null ? nonConformingParts : new ArrayList<>();
+            nonConformingParts.add(nonConformingPart);
           }
+        }
+        if (nonConformingParts != null) {
+          return Joiner.on('|').join(nonConformingParts);
         }
       } else if (type.isNoResolvedType()) {
         ObjectType noResolvedType = type.toObjectType();
-        // Whenever possible, return the 'reference name' of the NoResolvedType (i.e. the exact
-        // forward declared name). Some NoResolvedTypes do not have reference names because they
-        // were created as the product of an operation on NoResolvedTypes, e.g. consider
-        // 'noResolvedTypeA.getGreatestSubtype(noResolvedTypeB)'
-        return noResolvedType.getReferenceName() != null
-            ? noResolvedType.getReferenceName()
-            : "NoResolvedType";
+        return noResolvedType.getReferenceName();
       }
       return null;
     }

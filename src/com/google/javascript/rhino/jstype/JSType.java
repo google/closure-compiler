@@ -1060,7 +1060,6 @@ public abstract class JSType {
       return this;
     }
 
-    that = filterNoResolvedType(that);
     if (that.isUnionType()) {
       // Union types have their own implementation of getLeastSupertype.
       return that.toMaybeUnionType().getLeastSupertype(this);
@@ -1075,9 +1074,7 @@ public abstract class JSType {
   @SuppressWarnings("AmbiguousMethodReference")
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
     boolean areEquivalent = thisType.equals(thatType);
-    return areEquivalent ? thisType :
-        filterNoResolvedType(
-            thisType.registry.createUnionType(thisType, thatType));
+    return areEquivalent ? thisType : thisType.registry.createUnionType(thisType, thatType);
   }
 
   /**
@@ -1139,10 +1136,18 @@ public abstract class JSType {
     }  else if (thatType.isTemplatizedType()) {
       return thatType.toMaybeTemplatizedType().getGreatestSubtypeHelper(
           thisType);
+    } else if (thisType.isNoResolvedType() && thatType.isNoResolvedType()) {
+      // NoResolvedType has some strange semantics: "isSubtypeOf(otherType)" always returns true,
+      // to avoid type mismatch errors on assignments, but registry.createUnionType() also preserves
+      // all NoResolvedTypes in unions with other types instead of dropping them as irrelevant, so
+      // that Clutz & conformance checks can see all NoResolvedTypes later on.
+      // For the purposes of computing the "greatest common subtype" of two types, use the
+      // registry.createUnionType semantics rather than the .isSubtypeOf semantics.
+      return thisType.registry.createUnionType(thisType, thatType);
     } else if (thisType.isSubtypeOf(thatType)) {
-      return filterNoResolvedType(thisType);
+      return thisType;
     } else if (thatType.isSubtypeOf(thisType)) {
-      return filterNoResolvedType(thatType);
+      return thatType;
     } else if (thisType.isRecordType()) {
       return thisType.toMaybeRecordType().getGreatestSubtypeHelper(thatType);
     } else if (thatType.isRecordType()) {
@@ -1165,50 +1170,6 @@ public abstract class JSType {
       return thisType.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
     }
     return thisType.getNativeType(JSTypeNative.NO_TYPE);
-  }
-
-  /**
-   * When computing infima, we may get a situation like inf(Type1, Type2) where both types are
-   * unresolved, so they're technically subtypes of one another.
-   *
-   * <p>If this happens, filter them down to NoResolvedType.
-   *
-   * <p>TODO(lharker): this filtering sometimes leads to conformance errors with unhelpful error
-   * messages: "Unfulfilled forward declaration 'NoResolvedType'". Is there something else we could
-   * do to preserve both type names, e.g. a NoResolvedType with the string name "Type1|Type2"?
-   * Related issue: b/112425334.
-   */
-  static JSType filterNoResolvedType(JSType type) {
-    if (type.isNoResolvedType()) {
-      // inf(UnresolvedType1, UnresolvedType2) needs to resolve
-      // to the base unresolved type, so that the relation is symmetric.
-      return type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE);
-    } else if (type.isUnionType()) {
-      UnionType unionType = type.toMaybeUnionType();
-      boolean needsFiltering = false;
-      ImmutableList<JSType> alternatesList = unionType.getAlternates();
-      for (int i = 0; i < alternatesList.size(); i++) {
-        JSType alt = alternatesList.get(i);
-        if (alt.isNoResolvedType()) {
-          needsFiltering = true;
-          break;
-        }
-      }
-
-      if (needsFiltering) {
-        UnionType.Builder builder =
-            UnionType.builder(type.registry)
-                .addAlternate(type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE));
-        for (int i = 0; i < alternatesList.size(); i++) {
-          JSType alt = alternatesList.get(i);
-          if (!alt.isNoResolvedType()) {
-            builder.addAlternate(alt);
-          }
-        }
-        return builder.build();
-      }
-    }
-    return type;
   }
 
   /**

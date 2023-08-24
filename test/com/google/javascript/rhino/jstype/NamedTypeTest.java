@@ -139,14 +139,14 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
     NamedType.Builder namedFooBuilder = namedTypeBuilder("Foo");
     NamedType namedFooUnsuccessfullyResolved =
-        forceResolutionWith(NO_RESOLVED_TYPE, namedFooBuilder);
+        forceResolutionWith(new NoResolvedType(registry, "Foo", null), namedFooBuilder);
     NamedType namedFooResolvedToFoo = forceResolutionWith(fooType, namedFooBuilder);
     NamedType namedFooResolvedToAnon = forceResolutionWith(anonType, namedFooBuilder);
     NamedType namedFooResolvedToBar = forceResolutionWith(barType, namedFooBuilder);
 
     NamedType.Builder namedBarBuilder = namedTypeBuilder("Bar");
     NamedType namedBarUnsuccessfullyResolved =
-        forceResolutionWith(NO_RESOLVED_TYPE, namedBarBuilder);
+        forceResolutionWith(new NoResolvedType(registry, "Bar", null), namedBarBuilder);
     NamedType namedBarResolvedToFoo = forceResolutionWith(fooType, namedBarBuilder);
     NamedType namedBarResolvedToAnon = forceResolutionWith(anonType, namedBarBuilder);
     NamedType namedBarResolvedToBar = forceResolutionWith(barType, namedBarBuilder);
@@ -178,7 +178,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
     NamedType.Builder namedFooBuilder = NamedType.builder(registry, "Foo");
     NamedType namedFooUnsuccessfullyResolved =
-        forceResolutionWith(NO_RESOLVED_TYPE, namedFooBuilder);
+        forceResolutionWith(new NoResolvedType(registry, "Foo", null), namedFooBuilder);
     NamedType namedFooResolvedToFoo = forceResolutionWith(fooType, namedFooBuilder);
     NamedType namedFooResolvedToAnon = forceResolutionWith(anonType, namedFooBuilder);
     NamedType namedFooResolvedToBarA = forceResolutionWith(barTypeA, namedFooBuilder);
@@ -188,7 +188,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
     NamedType.Builder namedBarBuilder = NamedType.builder(registry, "Bar");
     NamedType namedBarUnsuccessfullyResolved =
-        forceResolutionWith(NO_RESOLVED_TYPE, namedBarBuilder);
+        forceResolutionWith(new NoResolvedType(registry, "Bar", null), namedBarBuilder);
     NamedType namedBarResolvedToFoo = forceResolutionWith(fooType, namedBarBuilder);
     NamedType namedBarResolvedToAnon = forceResolutionWith(anonType, namedBarBuilder);
     NamedType namedBarResolvedToBarA = forceResolutionWith(barTypeA, namedBarBuilder);

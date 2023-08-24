@@ -173,13 +173,9 @@ final class EqualityChecker {
     }
 
     if (left.isNoResolvedType() && right.isNoResolvedType()) {
-      if (left.isNamedType() && right.isNamedType()) {
-        return Objects.equals(
-            left.toMaybeNamedType().getReferenceName(), //
-            right.toMaybeNamedType().getReferenceName());
-      } else {
-        return true;
-      }
+      return Objects.equals(
+          left.toObjectType().getReferenceName(), //
+          right.toObjectType().getReferenceName());
     }
 
     boolean leftUnknown = left.isUnknownType();

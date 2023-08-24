@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableList;
 import org.jspecify.nullness.Nullable;
 
@@ -55,22 +57,19 @@ import org.jspecify.nullness.Nullable;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class NoResolvedType extends NoType {
-  /** The name originally used to reference this type, or {@code null} if none. */
-  private @Nullable String referenceName;
+  /** The name originally used to reference this type. */
+  private final String referenceName;
+
   /**
    * Any template arguments to this type, or {@code null} if none. This field is not used for
    * JSCompiler's type checking; it is only needed by Clutz.
    */
   private @Nullable ImmutableList<JSType> templateTypes;
 
-  NoResolvedType(JSTypeRegistry registry) {
-    super(registry);
-  }
-
   NoResolvedType(
       JSTypeRegistry registry, String referenceName, ImmutableList<JSType> templateTypes) {
-    this(registry);
-    this.referenceName = referenceName;
+    super(registry);
+    this.referenceName = checkNotNull(referenceName);
     this.templateTypes = templateTypes;
   }
 
@@ -101,6 +100,6 @@ public final class NoResolvedType extends NoType {
 
   @Override
   void appendTo(TypeStringBuilder sb) {
-   sb.append(sb.isForAnnotations() ? "?" : "NoResolvedType");
+    sb.append(sb.isForAnnotations() ? "?" : "NoResolvedType<" + referenceName + ">");
   }
 }

@@ -20773,7 +20773,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testFilterNoResolvedType() {
+  public void testNoResolvedTypeAndGreatestSubtypeInference() {
     testClosureTypes(
         lines(
             "goog.forwardDeclare('Foo');",
@@ -20790,10 +20790,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "  var /** number */ z = y;",
             "}"),
-        // Tests that the type of y is (NoResolvedType|null) and not (Foo|null)
         lines(
             "initializing variable", //
-            "found   : (NoResolvedType|null)",
+            "found   : (Foo|null)",
             "required: number"));
   }
 

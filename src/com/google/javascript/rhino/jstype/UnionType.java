@@ -321,7 +321,7 @@ public final class UnionType extends JSType {
     if (!that.isUnknownType() && !that.isUnionType()) {
       for (int i = 0; i < alternates.size(); i++) {
         JSType alternate = alternates.get(i);
-        if (!alternate.isUnknownType() && that.isSubtypeOf(alternate)) {
+        if (!alternate.isUnknownType() && !that.isNoResolvedType() && that.isSubtypeOf(alternate)) {
           return this;
         }
       }
