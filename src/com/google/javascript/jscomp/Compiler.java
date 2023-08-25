@@ -3504,8 +3504,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         throw new IllegalStateException("No inputs");
       }
       CompilerInput firstInput = Iterables.getFirst(moduleGraph.getAllInputs(), null);
-      // TODO(lharker): add `checkNotModule(`.
-      return firstInput.getAstRoot(this);
+      return checkNotModule(firstInput.getAstRoot(this), "Cannot insert code into a module");
     }
 
     ImmutableList<CompilerInput> moduleInputs = module.getInputs();
