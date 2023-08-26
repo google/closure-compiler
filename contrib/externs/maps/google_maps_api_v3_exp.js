@@ -14595,13 +14595,13 @@ google.maps.places.AutocompletionRequest.prototype.language;
 
 /**
  * A soft boundary or hint to use when searching for places.
- * @type {google.maps.places.LocationBias|null|undefined}
+ * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.AutocompletionRequest.prototype.locationBias;
 
 /**
  * Bounds to constrain search results.
- * @type {google.maps.places.LocationRestriction|null|undefined}
+ * @type {!google.maps.places.LocationRestriction|null|undefined}
  */
 google.maps.places.AutocompletionRequest.prototype.locationRestriction;
 
