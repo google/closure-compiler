@@ -1445,6 +1445,12 @@ CSSProperties.prototype.gridAutoColumns;
 
 /**
  * @type {string}
+ * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-flow
+ */
+CSSProperties.prototype.gridAutoFlow;
+
+/**
+ * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-rows
  */
 CSSProperties.prototype.gridAutoRows;
