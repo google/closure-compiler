@@ -2120,6 +2120,12 @@ HTMLInputElement.prototype.stepDown = function(opt_n) {};
  */
 HTMLInputElement.prototype.stepUp = function(opt_n) {};
 
+/**
+ * Displays the browser picker for an input element.
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/showPicker
+ */
+HTMLInputElement.prototype.showPicker = function() {};
 
 
 /**
