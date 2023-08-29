@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -26,6 +25,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Replaces calls to id generators with ids.
@@ -33,6 +33,13 @@ import java.util.Set;
  * <p>Use this to get unique and short ids.
  */
 class ReplaceToggles implements CompilerPass {
+
+  // NOTE: These diagnostics are only checked in Stage 2 (optimization), since none of this
+  // code should ever be hand-written: the `CLOSURE_TOGGLE_ORDINALS` bootstrap and the calls to
+  // `goog.readToggleInternalDoNotCallDirectly` are all generated automatically by the build
+  // system, so it's unexpected that anyone should ever run into these diagnostics when doing
+  // ordinary development.
+
   static final DiagnosticType INVALID_TOGGLE_PARAMETER =
       DiagnosticType.error(
           "JSC_INVALID_TOGGLE_PARAMETER",
@@ -53,18 +60,17 @@ class ReplaceToggles implements CompilerPass {
   // NOTE: These values are chosen as negative integers because actual toggle ordinals must always
   // be non-negative (at least zero).  Any negative integers would do to distinguish them from real
   // toggle ordinals, but -1 and -2 are the simplest.
-  @VisibleForTesting static final int TRUE_VALUE = -2;
-
-  @VisibleForTesting static final int FALSE_VALUE = -1;
+  private static final int TRUE_VALUE = -2;
+  private static final int FALSE_VALUE = -1;
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
-  private final boolean check;
 
-  ReplaceToggles(AbstractCompiler compiler, boolean check) {
+  private @Nullable ImmutableMap<String, Integer> ordinalMapping = null;
+
+  ReplaceToggles(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
-    this.check = check;
   }
 
   @Override
@@ -80,19 +86,20 @@ class ReplaceToggles implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      // Look for `var CLOSURE_TOGGLE_ORDINALS = {...};`.  Note that we only do this in check mode.
-      // It's not our responsibility to delete the unused variable in optimized mode - if all
-      // the calls to readToggle are deleted, then the bootstrap will be unused and deleted, too.
-      if (check
-          && NodeUtil.isNameDeclaration(n)
-          && n.getFirstChild().matchesName(ORDINAL_VAR_NAME)) {
+      // Look for `var CLOSURE_TOGGLE_ORDINALS = {...};`, record the mapping, and then delete the
+      // declaration from the AST since we should no longer need it (and the optimizer won't
+      // delete it in case the global assignment was an intended side effect).
+      if (NodeUtil.isNameDeclaration(n) && n.getFirstChild().matchesName(ORDINAL_VAR_NAME)) {
         Node rhs = n.getFirstFirstChild();
 
         if (rhs == null && n.getToken() == Token.VAR) {
-          // An empty var is a type definition, which is OK.
+          // An empty var is fine; it should get deleted later.
           return;
         } else if (!rhs.isObjectLit()) {
           compiler.report(JSError.make(n, INVALID_ORDINAL_MAPPING, "not an object literal"));
+          return;
+        } else if (ordinalMapping != null) {
+          compiler.report(JSError.make(n, INVALID_ORDINAL_MAPPING, "multiple initialized copies"));
           return;
         }
 
@@ -126,10 +133,10 @@ class ReplaceToggles implements CompilerPass {
           mapping.put(key, intValue);
           ordinals.add(intValue);
         }
-        compiler.setToggleOrdinalMapping(ImmutableMap.copyOf(mapping));
+        ReplaceToggles.this.ordinalMapping = ImmutableMap.copyOf(mapping);
 
         // NOTE: We do not support a simple assignment without `var` since reassignment or later
-        // augmentation is not allowed.
+        // augmentation (i.e. `CLOSURE_TOGGLE_ORDINALS['foo'] = true`) is not allowed.
         return;
       }
 
@@ -147,15 +154,11 @@ class ReplaceToggles implements CompilerPass {
         return;
       }
 
-      ImmutableMap<String, Integer> toggles = compiler.getToggleOrdinalMapping();
-      if (check) {
-        if (toggles != null && !toggles.containsKey(arg.getString())) {
-          compiler.report(JSError.make(n, UNKNOWN_TOGGLE));
-        }
-        return;
+      if (ordinalMapping != null && !ordinalMapping.containsKey(arg.getString())) {
+        compiler.report(JSError.make(n, UNKNOWN_TOGGLE));
       }
 
-      Integer ordinal = toggles != null ? toggles.get(arg.getString()) : null;
+      Integer ordinal = ordinalMapping != null ? ordinalMapping.get(arg.getString()) : null;
       if (ordinal == null || ordinal < 0) {
         // No ordinals given: hard-code `true` if explicitly set as true, or `false` otherwise.
         n.replaceWith(

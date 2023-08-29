@@ -16,12 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.ReplaceToggles.FALSE_VALUE;
-import static com.google.javascript.jscomp.ReplaceToggles.TRUE_VALUE;
 
-import com.google.common.collect.ImmutableMap;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,77 +25,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ReplaceTogglesTest extends CompilerTestCase {
 
-  private ImmutableMap<String, Integer> toggles;
-  private boolean check;
-
-  @Before
-  public void resetPassParameters() throws Exception {
-    toggles = null;
-    check = false;
-  }
-
-  @Test
-  public void testBootstrapOrdinals_uninitialized() {
-    check = true;
-    testSame(srcs("var CLOSURE_TOGGLE_ORDINALS;"), expectOrdinals(null));
-  }
-
-  @Test
-  public void testBootstrapOrdinals_empty() {
-    check = true;
-    testSame(srcs("var CLOSURE_TOGGLE_ORDINALS = {};"), expectOrdinals(ImmutableMap.of()));
-  }
-
-  @Test
-  public void testBootstrapOrdinals_simple() {
-    check = true;
-    testSame(
-        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': 1};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", 1)));
-    testSame(
-        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': 1, qux: 2};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", 1, "qux", 2)));
-  }
-
-  @Test
-  public void testBootstrapOrdinals_ignoresExtraUninitializedDefinitions() {
-    check = true;
-    testSame(
-        srcs(
-            lines(
-                "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1};", //
-                "var CLOSURE_TOGGLE_ORDINALS;")),
-        expectOrdinals(ImmutableMap.of("foo", 1)));
-    testSame(
-        srcs(
-            lines(
-                "var CLOSURE_TOGGLE_ORDINALS;", //
-                "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1};")),
-        expectOrdinals(ImmutableMap.of("foo", 1)));
-  }
-
-  @Test
-  public void testBootstrapOrdinals_booleanAllowed() {
-    check = true;
-    testSame(
-        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': false, 'baz': true};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", FALSE_VALUE, "baz", TRUE_VALUE)));
-  }
-
-  @Test
-  public void testBootstrapOrdinals_booleanAllowsDuplicates() {
-    check = true;
-    testSame(
-        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': false, 'baz': false, 'qux': 0};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", FALSE_VALUE, "baz", FALSE_VALUE, "qux", 0)));
-    testSame(
-        srcs("var CLOSURE_TOGGLE_ORDINALS = {'foo_bar': true, 'baz': true, 'qux': 0};"),
-        expectOrdinals(ImmutableMap.of("foo_bar", TRUE_VALUE, "baz", TRUE_VALUE, "qux", 0)));
-  }
-
   @Test
   public void testBootstrapOrdinals_notAnObject() {
-    check = true;
     test(
         srcs("var CLOSURE_TOGGLE_ORDINALS = 1;"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
@@ -113,7 +39,6 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
 
   @Test
   public void testBootstrapOrdinals_badKey() {
-    check = true;
     test(
         srcs("var CLOSURE_TOGGLE_ORDINALS = {[x]: 1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING).withMessageContaining("non-string key"));
@@ -127,7 +52,6 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
 
   @Test
   public void testBootstrapOrdinals_duplicateKey() {
-    check = true;
     test(
         srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2, x: 3};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING).withMessageContaining("duplicate key: x"));
@@ -135,7 +59,6 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
 
   @Test
   public void testBootstrapOrdinals_badValue() {
-    check = true;
     test(
         srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 'y'};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
@@ -172,11 +95,21 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
 
   @Test
   public void testBootstrapOrdinals_duplicateOrdinal() {
-    check = true;
     test(
         srcs("var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2, z: 1};"),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("duplicate ordinal: 1"));
+  }
+
+  @Test
+  public void testBootstrapOrdinals_twoInitializers() {
+    test(
+        srcs(
+            lines(
+                "var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2};", //
+                "var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2};")),
+        error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
+            .withMessageContaining("multiple initialized copies"));
   }
 
   @Test
@@ -188,46 +121,81 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
 
   @Test
   public void testSimpleToggles() {
-    toggles = ImmutableMap.of("foo", 1, "bar", 30, "baz", 59);
     test(
         lines(
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
             "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
             "const bar = goog.readToggleInternalDoNotCallDirectly('bar');",
             "const baz = goog.readToggleInternalDoNotCallDirectly('baz');"),
         lines(
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
             "const foo = !!(goog.TOGGLES_[0] & 2);",
             "const bar = !!(goog.TOGGLES_[1] & 1);",
             "const baz = !!(goog.TOGGLES_[1] >> 29 & 1);"));
   }
 
   @Test
-  public void testUnsetToggles() {
-    toggles = ImmutableMap.of("foo", FALSE_VALUE, "bar", TRUE_VALUE);
+  public void testHardcodedToggles() {
     test(
         lines(
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': false, 'bar': true};",
             "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
             "const bar = goog.readToggleInternalDoNotCallDirectly('bar');"),
-        lines("const foo = false;", "const bar = true;"));
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': false, 'bar': true};",
+            "const foo = false;",
+            "const bar = true;"));
   }
 
   @Test
-  public void testCheckMode() {
-    check = true;
-    testSame("const foo = goog.readToggleInternalDoNotCallDirectly('foo');");
+  public void testBootstrapOrdinals_ignoresExtraUninitializedDefinitions() {
+    test(
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS;", // ignored
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
+            "var CLOSURE_TOGGLE_ORDINALS;", // ignored
+            "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
+            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');",
+            "const baz = goog.readToggleInternalDoNotCallDirectly('baz');"),
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS;",
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
+            "var CLOSURE_TOGGLE_ORDINALS;",
+            "const foo = !!(goog.TOGGLES_[0] & 2);",
+            "const bar = !!(goog.TOGGLES_[1] & 1);",
+            "const baz = !!(goog.TOGGLES_[1] >> 29 & 1);"));
+  }
+
+  @Test
+  public void testBootstrapOrdinals_booleanAllowsDuplicates() {
+    test(
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS = ",
+            "    {'foo_bar': false, 'baz': false, 'qux': true, 'corge': true};",
+            "const fooBar = goog.readToggleInternalDoNotCallDirectly('foo_bar');",
+            "const baz = goog.readToggleInternalDoNotCallDirectly('baz');",
+            "const qux = goog.readToggleInternalDoNotCallDirectly('qux');",
+            "const corge = goog.readToggleInternalDoNotCallDirectly('corge');"),
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS = ",
+            "    {'foo_bar': false, 'baz': false, 'qux': true, 'corge': true};",
+            "const fooBar = false;",
+            "const baz = false;",
+            "const qux = true;",
+            "const corge = true;"));
   }
 
   @Test
   public void testUnknownToggle() {
-    check = true;
-    toggles = ImmutableMap.of("foo", 0);
     testError(
-        "const bar = goog.readToggleInternalDoNotCallDirectly('bar');", //
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};",
+            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');"),
         ReplaceToggles.UNKNOWN_TOGGLE);
   }
 
   @Test
   public void testBadArgument() {
-    check = true;
     testError(
         lines(
             "const fooString = 'foo';", //
@@ -241,13 +209,8 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
         ReplaceToggles.INVALID_TOGGLE_PARAMETER);
   }
 
-  private Postcondition expectOrdinals(ImmutableMap<String, Integer> expected) {
-    return (Compiler c) -> assertThat(c.getToggleOrdinalMapping()).isEqualTo(expected);
-  }
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    compiler.setToggleOrdinalMapping(toggles);
-    return new ReplaceToggles(compiler, check);
+    return new ReplaceToggles(compiler);
   }
 }
