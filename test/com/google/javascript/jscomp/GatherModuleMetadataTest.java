@@ -737,11 +737,91 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testReadToggle() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo$2etoggles.js",
+                lines(
+                    "goog.module('foo$2etoggles');",
+                    "exports.TOGGLE_foo = goog.readToggleInternalDoNotCallDirectly('foo');",
+                    "exports.TOGGLE_bar = goog.readToggleInternalDoNotCallDirectly('bar');",
+                    "exports.TOGGLE_b_a_z = goog.readToggleInternalDoNotCallDirectly('b_a_z');"))));
+    ModuleMetadata m = metadataMap().getModulesByPath().get("foo$2etoggles.js");
+    assertThat(m.readToggles()).isEmpty();
+  }
+
+  @Test
+  public void testToggleModuleImportDestructured() {
+    testSame("const {TOGGLE_foo, TOGGLE_b_a_z} = goog.require('foo$2etoggles');");
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.readToggles()).containsExactly("foo", "b_a_z");
+  }
+
+  @Test
+  public void testToggleModuleImportDestructuredAliased() {
+    testSame("const {TOGGLE_bar: baz} = goog.require('foo$2etoggles');");
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.readToggles()).containsExactly("bar");
+  }
+
+  @Test
+  public void testToggleModuleImportAsModule() {
     testSame(
         lines(
-            "goog.readToggleInternalDoNotCallDirectly('foo_bar');",
-            "goog.readToggleInternalDoNotCallDirectly('baz');"));
+            "const toggles = goog.require('foo$2etoggles');",
+            "function foo() {",
+            "  console.log(toggles.TOGGLE_foo);",
+            "  console.log(toggles.TOGGLE_b_a_z);",
+            "}"));
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
-    assertThat(m.readToggles()).containsExactly("foo_bar", "baz");
+    assertThat(m.readToggles()).containsExactly("foo", "b_a_z");
+  }
+
+  @Test
+  public void testToggleModuleImportAsSideEffect() {
+    test(
+        srcs("goog.require('foo$2etoggles');"), //
+        error(GatherModuleMetadata.INVALID_TOGGLE_USAGE));
+  }
+
+  @Test
+  public void testToggleModuleImportDestructuredWithInvalidName() {
+    test(
+        srcs("const {foo} = goog.require('foo$2etoggles');"),
+        error(GatherModuleMetadata.INVALID_TOGGLE_USAGE));
+  }
+
+  @Test
+  public void testToggleModuleImportAsModuleWithInvalidPropertyName() {
+    test(
+        srcs(
+            lines(
+                "const foo = goog.require('foo$2etoggles');", //
+                "console.log(foo.bar);")),
+        error(GatherModuleMetadata.INVALID_TOGGLE_USAGE));
+  }
+
+  @Test
+  public void testToggleModuleInvalidModuleUsage() {
+    test(
+        srcs(
+            lines(
+                "const foo = goog.require('foo$2etoggles');", //
+                "console.log(foo);")),
+        error(GatherModuleMetadata.INVALID_TOGGLE_USAGE));
+  }
+
+  @Test
+  public void testToggleModuleIgnoreShadowedUsage() {
+    testSame(
+        lines(
+            "const toggles = goog.require('foo$2etoggles');",
+            "function foo() {",
+            "  const toggles = {};",
+            "  console.log(toggles.foo)",
+            "  console.log(toggles.TOGGLE_bar)",
+            "}"));
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.readToggles()).isEmpty();
   }
 }

@@ -32,7 +32,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.jspecify.nullness.Nullable;
 
@@ -81,10 +83,8 @@ public final class GatherModuleMetadata implements CompilerPass {
   static final DiagnosticType INVALID_NESTED_LOAD_MODULE =
       DiagnosticType.error("JSC_INVALID_NESTED_LOAD_MODULE", "goog.loadModule cannot be nested.");
 
-  static final DiagnosticType INVALID_READ_TOGGLE =
-      DiagnosticType.error(
-          "JSC_INVALID_READ_TOGGLE",
-          "Argument to goog.readToggleInternalDoNotCallDirectly must be a string.");
+  static final DiagnosticType INVALID_TOGGLE_USAGE =
+      DiagnosticType.error("JSC_INVALID_TOGGLE_USAGE", "Invalid toggle usage: {0}");
 
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
@@ -95,12 +95,12 @@ public final class GatherModuleMetadata implements CompilerPass {
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
       IR.getprop(GOOG_MODULE.cloneTree(), "declareLegacyNamespace");
   private static final Node GOOG_DECLARE_MODULE_ID = IR.getprop(IR.name("goog"), "declareModuleId");
-  private static final Node GOOG_READ_TOGGLE =
-      IR.getprop(IR.name("goog"), "readToggleInternalDoNotCallDirectly");
 
   // TODO(johnplaisted): Remove once clients have migrated to declareModuleId
   private static final Node GOOG_MODULE_DECLARNAMESPACE =
       IR.getprop(GOOG_MODULE.cloneTree(), "declareNamespace");
+
+  private static final String TOGGLE_NAME_PREFIX = "TOGGLE_";
 
   /**
    * Map from module path to module. These modules represent files and thus will contain all goog
@@ -216,6 +216,14 @@ public final class GatherModuleMetadata implements CompilerPass {
 
   /** Traverses the AST and build a sets of {@link ModuleMetadata}s. */
   private final class Finder implements NodeTraversal.Callback {
+
+    // Store both names and vars. Strings alone is insufficient to determine whether a name is
+    // actually a toggle module (since it could have been shadowed, or may have been defined in a
+    // different file), but looking up by only vars is much slower. This way we can do a fast name
+    // lookup, followed by a slower var lookup only if the name is known to be a toggle module name.
+    final Set<String> toggleModuleNames = new HashSet<>();
+    final Set<Var> toggleModules = new HashSet<>();
+
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -337,7 +345,22 @@ public final class GatherModuleMetadata implements CompilerPass {
     }
 
     private void visitName(NodeTraversal t, Node n) {
-      if (!"goog".equals(n.getString())) {
+      String name = n.getString();
+      if (toggleModuleNames.contains(name)) {
+        Var nameVar = t.getScope().getVar(name);
+        if (toggleModules.contains(nameVar)) {
+          Node parent = n.getParent();
+          if (parent.isGetProp()) {
+            addToggle(t, n, parent.getString());
+          } else if (!NodeUtil.isNameDeclaration(parent)) {
+            t.report(
+                n,
+                INVALID_TOGGLE_USAGE,
+                "toggle modules may not be used other than looking up properties");
+          }
+        }
+      }
+      if (!"goog".equals(name)) {
         return;
       }
 
@@ -421,10 +444,31 @@ public final class GatherModuleMetadata implements CompilerPass {
         }
       } else if (getprop.matchesQualifiedName(GOOG_REQUIRE)) {
         if (n.hasTwoChildren() && n.getLastChild().isStringLit()) {
-          currentModule
-              .metadataBuilder
-              .stronglyRequiredGoogNamespacesBuilder()
-              .add(n.getLastChild().getString());
+          String namespace = n.getLastChild().getString();
+          currentModule.metadataBuilder.stronglyRequiredGoogNamespacesBuilder().add(namespace);
+          if (namespace.endsWith("$2etoggles")) {
+            // Track imports of *.toggles.ts, which are rewritten to $2etoggles.
+            Node callParent = n.getParent();
+            Node lhs = callParent.getFirstChild();
+            if (callParent.isDestructuringLhs()) {
+              // const {TOGGLE_foo} = goog.require('foo$2etoggles');
+              for (Node key : lhs.children()) {
+                if (key.isStringKey()) {
+                  addToggle(t, n, key.getString());
+                } else {
+                  t.report(n, INVALID_TOGGLE_USAGE, "must be destructured with string keys");
+                }
+              }
+            } else if (callParent.isName()) {
+              // const fooToggles = goog.require('foo$2etoggles');
+              String name = callParent.getString();
+              Var nameVar = t.getScope().getVar(name);
+              toggleModules.add(nameVar);
+              toggleModuleNames.add(name);
+            } else {
+              t.report(n, INVALID_TOGGLE_USAGE, "import must be assigned");
+            }
+          }
         } else {
           t.report(n, INVALID_REQUIRE_NAMESPACE);
         }
@@ -452,12 +496,16 @@ public final class GatherModuleMetadata implements CompilerPass {
         } else {
           t.report(n, INVALID_REQUIRE_DYNAMIC);
         }
-      } else if (getprop.matchesQualifiedName(GOOG_READ_TOGGLE)) {
-        if (n.hasTwoChildren() && n.getLastChild().isStringLit()) {
-          currentModule.metadataBuilder.readTogglesBuilder().add(n.getLastChild().getString());
-        } else {
-          t.report(n, INVALID_READ_TOGGLE);
-        }
+      }
+    }
+
+    /** Record a toggle usage (either a destructured import or a property lookup on a module). */
+    private void addToggle(NodeTraversal t, Node n, String name) {
+      if (name.startsWith(TOGGLE_NAME_PREFIX)) {
+        String toggleName = name.substring(TOGGLE_NAME_PREFIX.length());
+        currentModule.metadataBuilder.readTogglesBuilder().add(toggleName);
+      } else {
+        t.report(n, INVALID_TOGGLE_USAGE, "all toggle names must start with `TOGGLE_`");
       }
     }
 

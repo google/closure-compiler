@@ -219,7 +219,7 @@ public final class JsFileFullParserTest {
 
   @Test
   public void testReadToggle() {
-    FileInfo info = parse("goog.readToggleInternalDoNotCallDirectly('foo_bar');");
+    FileInfo info = parse("const {TOGGLE_foo_bar} = goog.require('foo$2etoggles');");
     assertThat(info.readToggles).containsExactly("foo_bar");
   }
 
