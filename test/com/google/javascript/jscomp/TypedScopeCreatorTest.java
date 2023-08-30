@@ -2737,6 +2737,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAbstractClassDeclarationWithExtends_nameDeclAndAssign() {
+    testSame(
+        lines(
+            "var Bar_1;", //
+            "/** @abstract */",
+            "let Bar = Bar_1 = class Bar {}",
+            "class Foo extends Bar {}"));
+
+    FunctionType bar1 = (FunctionType) findNameType("Bar_1", globalScope);
+    FunctionType bar = (FunctionType) findNameType("Bar", globalScope);
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    assertThat(bar.isAbstract()).isTrue();
+    assertThat(bar).isEqualTo(bar1);
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
+    assertScope(globalScope).declares("Bar").withTypeThat().isEqualTo(bar);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
+  }
+
+  @Test
   public void testClassDeclarationWithExtendsFromNamespace() {
     testSame(
         lines(

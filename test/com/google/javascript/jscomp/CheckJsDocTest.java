@@ -1287,4 +1287,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "/** @type {!Array<module$exports$foo$bar>} */ let x;",
         "/** @type {!Array<UnrecognizedType_module$exports$foo$bar>} */ let x;");
   }
+
+  @Test
+  public void testNameDeclarationAndAssignForAbstractClass() {
+    testSame(lines("/** @abstract */", "let A = A_1 = class A {}"));
+  }
+
+  @Test
+  public void testNameDeclarationAndAssignForTemplatedClass() {
+    testSame(lines("/** @template T */", "let A = A_1 = class A {}"));
+  }
 }

@@ -308,7 +308,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   private boolean isNameInitializeWithClass(Node n) {
-    return n != null && n.isName() && n.hasChildren() && isClass(n.getFirstChild());
+    return n != null && n.isName() && n.hasChildren() && isClassDecl(n.getFirstChild());
   }
 
   private boolean isClass(Node n) {

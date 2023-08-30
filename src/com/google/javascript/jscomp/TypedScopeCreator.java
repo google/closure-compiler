@@ -2397,6 +2397,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
+      if (rValue != null && rValue.isAssign()) {
+        // Handle nested assignments. For example, TypeScript generates code like this:
+        //   var Foo_1;
+        //   let Foo = Foo_1 = class Foo {}
+        //   Foo = Foo_1 = tslib_1.decorate(..., Foo);
+        return getDeclaredType(info, lValue, rValue.getSecondChild(), null);
+      }
+
       if (info != null && FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
         String fnName = lValue.getQualifiedName();
         return createFunctionTypeFromNodes(null, fnName, info, lValue);
@@ -2404,12 +2412,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       if (isValidTypedefDeclaration(lValue, info)) {
         return getNativeType(JSTypeNative.NO_TYPE);
-      }
-
-      if (rValue != null && rValue.isAssign()) {
-        // Handle nested assignments. For example, tsickle generates code like this:
-        //   let Foo = Foo_1 = tslib_1.decorate(...)
-        return getDeclaredType(info, lValue, rValue.getSecondChild(), null);
       }
 
       return null;

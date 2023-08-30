@@ -3589,6 +3589,9 @@ public final class NodeUtilTest {
 
       classNode = parseFirst(CLASS, "/** @export */ var Foo = class Bar {}");
       assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
+
+      classNode = parseFirst(CLASS, "var Foo_1; /** @export */ let Foo = Foo_1 = class Foo {}");
+      assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
     }
 
     @Test

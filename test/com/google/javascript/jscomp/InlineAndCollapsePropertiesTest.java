@@ -2526,6 +2526,53 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTypeScriptDecoratedClass() {
+    // TypeScript 5.1 emits this for decorated classes.
+    test(
+        lines(
+            "let A = class A { static getId() { return A.ID; } };", //
+            "A.ID = \"a\";",
+            "A = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const {string} */ A.ID;",
+            "}",
+            "console.log(A.getId());"),
+        lines(
+            "let A = class A$jscomp$1 { static getId() { return A$jscomp$1.ID; } };",
+            "A.ID = \"a\";",
+            "A = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const */ A.ID;",
+            "}",
+            "console.log(A.getId());"));
+  }
+
+  @Test
+  public void testTypeScriptDecoratedClass_withExtraVarAssignment() {
+    // TypeScript 5.2 emits this for decorated classes, which reference static properties on
+    // themselves.
+    test(
+        lines(
+            "var A_1;", //
+            "let A = A_1 = class A { static getId() { return A_1.ID; } };",
+            "A.ID = \"a\";",
+            "A = A_1 = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const {string} */ A.ID;",
+            "}",
+            "console.log(A.getId());"),
+        lines(
+            "var A_1;", //
+            "let A = A_1 = class A$jscomp$1 { static getId() { return A_1.ID; } };",
+            "A.ID = \"a\";",
+            "A = A_1 = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const */ A.ID;",
+            "}",
+            "console.log(A.getId());"));
+  }
+
+  @Test
   public void testAliasForSuperclassNamespace() {
     test(
         lines(
