@@ -55,6 +55,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // This pass doesn't need the AST to be normalized as it runs both before and after
+    // `denormalize`. Since it runs PureFunctionsIdentifier pass which expects the AST to be
+    // normalized, we're doing `enableNormalize` for these tests.
     enableNormalize();
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
