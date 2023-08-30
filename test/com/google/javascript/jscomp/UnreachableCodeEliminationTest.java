@@ -35,79 +35,326 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-    enableNormalize();
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
+    enableNormalize(); // this pass requires normalization
     enableComputeSideEffects();
   }
 
   @Test
   public void testDontRemoveExport() {
-    test("export function foo() { return 1; alert(2); }", "export function foo() { return 1; }");
+    test(
+        lines(
+            "function foo() {", //
+            "  return 1;",
+            "  alert(2);",
+            "}",
+            "export { foo as foo };"),
+        lines(
+            "function foo() {", //
+            "  return 1;",
+            "}",
+            "export { foo as foo };"));
   }
 
   @Test
   public void testRemoveUnreachableCode() {
     // switch statement with stuff after "return"
     test(
-        "function foo(){switch(foo){case 1:x=1;return;break;"
-            + "case 2:{x=2;return;break}default:}}",
-        "function foo(){switch(foo){case 1:x=1;return;" + "case 2:{x=2}default:}}");
+        lines(
+            "function foo(){", //
+            "  switch (foo) {",
+            "    case 1:",
+            "      x=1;",
+            "      return;",
+            "      break;",
+            "    case 2: {",
+            "      x=2;",
+            "      return;",
+            "      break;",
+            "    }",
+            "    default:",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  switch (foo) {",
+            "    case 1:",
+            "      x=1;",
+            "      return;",
+            "    case 2: {",
+            "      x=2;",
+            "    }",
+            "    default:",
+            "  }",
+            "}"));
 
     // if/else statements with returns
     test(
-        "function bar(){if(foo)x=1;else if(bar){return;x=2}" + "else{x=3;return;x=4}return 5;x=5}",
-        "function bar(){if(foo)x=1;else if(bar){return}" + "else{x=3;return}return 5}");
+        lines(
+            "function bar(){", //
+            "  if (foo)",
+            "    x=1;",
+            "  else if(bar) {",
+            "    return;",
+            "    x=2;",
+            "  } else {",
+            "    x=3;",
+            "    return;",
+            "    x=4;",
+            "  }",
+            "  return 5;",
+            "  x=5;",
+            "}"),
+        lines(
+            "function bar() {", //
+            "  if (foo)",
+            "    x=1;",
+            "  else if(bar) {",
+            "    return;",
+            "  } else {",
+            "    x=3;",
+            "    return;",
+            "  }",
+            "  return 5;",
+            "}"));
 
     // if statements without blocks
+    // NOTE: This pass should never see while-loops, because normalization replaces them all with
+    // for-loops.
     test(
-        "function foo(){if(x==3)return;x=4;y++;while(y==4){return;x=3}}",
-        "function foo(){if(x==3)return;x=4;y++;while(y==4){return}}");
+        lines(
+            "function foo() {", //
+            "  if (x == 3) return;",
+            "  x = 4;",
+            "  y++;",
+            "  for (; y == 4; ) {",
+            "    return;",
+            "    x = 3",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  if (x == 3) return;",
+            "  x = 4;",
+            "  y++;",
+            "  for (; y == 4; ) {",
+            "    return",
+            "  }",
+            "}"));
 
     // for/do/while loops
     test(
-        "function baz(){for(i=0;i<n;i++){x=3;break;x=4}"
-            + "do{x=2;break;x=4}while(x==4);"
-            + "while(i<4){x=3;return;x=6}}",
-        "function baz(){for(i=0;i<n;){x=3;break}"
-            + "do{x=2;break}while(x==4);"
-            + "while(i<4){x=3;return}}");
+        lines(
+            "function baz() {", //
+            // Normalize always moves the for-loop initializer out of the loop.
+            "  i = 0;",
+            "  for (; i < n; i++) {",
+            "    x = 3;",
+            "    break;",
+            "    x = 4",
+            "  }",
+            "  do {",
+            "    x = 2;",
+            "    break;",
+            "    x = 4",
+            "  } while (x == 4);",
+            "  for (; i < 4; ) {",
+            "    x = 3;",
+            "    return;",
+            "    x = 6",
+            "  }",
+            "}"),
+        lines(
+            "function baz() {", //
+            "  i = 0;",
+            "  for (; i < n;) {",
+            "    x = 3;",
+            "    break",
+            "  }",
+            "  do {",
+            "    x = 2;",
+            "    break",
+            "  } while (x == 4);",
+            "  for (; i < 4; ) {",
+            "    x = 3;",
+            "    return",
+            "  }",
+            "}"));
 
     // return statements on the same level as conditionals
     test(
-        "function foo(){if(x==3){return}return 5;while(y==4){x++;return;x=4}}",
-        "function foo(){if(x==3){return}return 5}");
+        lines(
+            "function foo() {", //
+            "  if (x == 3) {",
+            "    return",
+            "  }",
+            "  return 5;",
+            "  while (y == 4) {",
+            "    x++;",
+            "    return;",
+            "    x = 4",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  if (x == 3) {",
+            "    return",
+            "  }",
+            "  return 5",
+            "}"));
 
     // return statements on the same level as conditionals
-    test("function foo(){return 3;for(;y==4;){x++;return;x=4}}", "function foo(){return 3}");
+    test(
+        lines(
+            "function foo() {", //
+            "  return 3;",
+            "  for (; y == 4;) {",
+            "    x++;",
+            "    return;",
+            "    x = 4",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  return 3",
+            "}"));
 
     // try/catch statements
     test(
-        "function foo(){try{x=3;return x+1;x=5}catch(e){x=4;return 5;x=5}}",
-        "function foo(){try{x=3;return x+1}catch(e){x=4;return 5}}");
+        lines(
+            "function foo() {", //
+            "  try {",
+            "    x = 3;",
+            "    return x + 1;",
+            "    x = 5",
+            "  } catch (e) {",
+            "    x = 4;",
+            "    return 5;",
+            "    x = 5",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  try {",
+            "    x = 3;",
+            "    return x + 1",
+            "  } catch (e) {",
+            "    x = 4;",
+            "    return 5",
+            "  }",
+            "}"));
 
     // try/finally statements
     test(
-        "function foo(){try{x=3;return x+1;x=5}finally{x=4;return 5;x=5}}",
-        "function foo(){try{x=3;return x+1}finally{x=4;return 5}}");
+        lines(
+            "function foo() {", //
+            "  try {",
+            "    x = 3;",
+            "    return x + 1;",
+            "    x = 5",
+            "  } finally {",
+            "    x = 4;",
+            "    return 5;",
+            "    x = 5",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  try {",
+            "    x = 3;",
+            "    return x + 1",
+            "  } finally {",
+            "    x = 4;",
+            "    return 5",
+            "  }",
+            "}"));
 
     // try/catch/finally statements
     test(
-        "function foo(){try{x=3;return x+1;x=5}catch(e){x=3;return;x=2}"
-            + "finally{x=4;return 5;x=5}}",
-        "function foo(){try{x=3;return x+1}catch(e){x=3;return}" + "finally{x=4;return 5}}");
+        lines(
+            "function foo() {", //
+            "  try {",
+            "    x = 3;",
+            "    return x + 1;",
+            "    x = 5",
+            "  } catch (e) {",
+            "    x = 3;",
+            "    return;",
+            "    x = 2",
+            "  } finally {",
+            "    x = 4;",
+            "    return 5;",
+            "    x = 5",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  try {",
+            "    x = 3;",
+            "    return x + 1",
+            "  } catch (e) {",
+            "    x = 3;",
+            "    return",
+            "  } finally {",
+            "    x = 4;",
+            "    return 5",
+            "  }",
+            "}"));
 
     // test a combination of blocks
     test(
-        "function foo(){x=3;if(x==4){x=5;return;x=6}else{x=7}return 5;x=3}",
-        "function foo(){x=3;if(x==4){x=5;return}else{x=7}return 5}");
+        lines(
+            "function foo() {", //
+            "  x = 3;",
+            "  if (x == 4) {",
+            "    x = 5;",
+            "    return;",
+            "    x = 6",
+            "  } else {",
+            "    x = 7",
+            "  }",
+            "  return 5;",
+            "  x = 3",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  x = 3;",
+            "  if (x == 4) {",
+            "    x = 5;",
+            "    return",
+            "  } else {",
+            "    x = 7",
+            "  }",
+            "  return 5",
+            "}"));
 
     // test removing multiple statements
     test(
-        "function foo() { return 1; var x = 2; var y = 10; return 2;}",
-        "function foo() { var y; var x; return 1}");
+        lines(
+            "function foo() {", //
+            "  return 1;",
+            "  var x = 2;",
+            "  var y = 10;",
+            "  return 2;",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  var y;",
+            "  var x;",
+            "  return 1",
+            "}"));
 
-    test("function foo() { return 1; x = 2; y = 10; return 2;}", "function foo(){ return 1}");
+    test(
+        lines(
+            "function foo() {", //
+            "  return 1;",
+            "  x = 2;",
+            "  y = 10;",
+            "  return 2;",
+            "}"),
+        lines(
+            "function foo() {", //
+            "  return 1",
+            "}"));
   }
 
   @Test
@@ -130,9 +377,11 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   @Test
   public void testRemoveDo() {
     testSame("do { print(1); break } while(1)");
+    // NOTE: This pass should never see while-loops, because normalization replaces them all with
+    // for-loops.
     test(
-        "while(1) { break; do { print(1); break } while(1) }",
-        "while(1) { break; do {} while(1) }");
+        "for (; 1;) { break; do { print(1); break } while(1) }",
+        "for (; 1;) { break; do {} while(1) }");
   }
 
   @Test
@@ -140,7 +389,9 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("true;", "");
     test("'hi';", "");
     test("if (x) 1;", "");
-    test("while (x) 1;", "while (x);");
+    // NOTE: This pass should never see while-loops, because normalization replaces them all with
+    // for-loops.
+    test("for (; x;) 1;", "for (; x;);");
     test("do 1; while (x);", "do ; while (x);");
     test("for (;;) 1;", "for (;;);");
     test("switch(x){case 1:true;case 2:'hi';default:true}", "switch(x){case 1:case 2:default:}");
@@ -180,8 +431,32 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   @Test
   public void testRemovalRequiresRedeclaration() {
-    test("while(1) { break; var x = 1}", "var x; while(1) { break } ");
-    test("while(1) { break; var x=1; var y=1}", "var y; var x; while(1) { break } ");
+    // NOTE: This pass should never see while-loops, because normalization replaces them all with
+    // for-loops.
+    test(
+        lines(
+            "for (; 1;) {", //
+            "  break;",
+            "  var x = 1",
+            "}"),
+        lines(
+            "var x;", //
+            "for (; 1;) {",
+            "  break;",
+            "}"));
+    test(
+        lines(
+            "for (; 1;) {", //
+            "  break;",
+            "  var x=1;",
+            "  var y=1;",
+            "}"),
+        lines(
+            "var y;", //
+            "var x;",
+            "for (; 1;) {",
+            "  break;",
+            "}"));
   }
 
   @Test
@@ -314,134 +589,138 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   @Test
   public void testIssue4177428a() {
     testSame(
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      break a\n"
-            + // Keep this...
-            "    }\n"
-            + "  }\n"
-            + "  alert(action)\n"
-            + // and this.
-            "};");
+        lines(
+            "f = function() {",
+            "  var action;",
+            "  a: {",
+            "    var proto = null;",
+            "    try {",
+            "      proto = new Proto",
+            "    } finally {",
+            "      action = proto;",
+            "      break a", // Keep this...
+            "    }",
+            "  }",
+            "  alert(action)", // and this.
+            "};"));
   }
 
   @Test
   public void testIssue4177428b() {
     testSame(
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      break a\n"
-            + // Keep this...
-            "    }\n"
-            + "    } finally {\n"
-            + "    }\n"
-            + "  }\n"
-            + "  alert(action)\n"
-            + // and this.
-            "};");
+        lines(
+            "f = function() {",
+            "  var action;",
+            "  a: {",
+            "    var proto = null;",
+            "    try {",
+            "    try {",
+            "      proto = new Proto",
+            "    } finally {",
+            "      action = proto;",
+            "      break a",
+            // Keep this...
+            "    }",
+            "    } finally {",
+            "    }",
+            "  }",
+            "  alert(action)",
+            // and this.
+            "};"));
   }
 
   @Test
   public void testIssue4177428c() {
     testSame(
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "    } finally {\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      break a\n"
-            + // Keep this...
-            "    }\n"
-            + "    }\n"
-            + "  }\n"
-            + "  alert(action)\n"
-            + // and this.
-            "};");
+        lines(
+            "f = function() {",
+            "  var action;",
+            "  a: {",
+            "    var proto = null;",
+            "    try {",
+            "    } finally {",
+            "    try {",
+            "      proto = new Proto",
+            "    } finally {",
+            "      action = proto;",
+            "      break a", // Keep this...
+            "    }",
+            "    }",
+            "  }",
+            "  alert(action)",
+            // and this.
+            "};"));
   }
 
   @Test
   public void testIssue4177428_continue() {
     testSame(
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: do {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      continue a\n"
-            + // Keep this...
-            "    }\n"
-            + "  } while(false)\n"
-            + "  alert(action)\n"
-            + // and this.
-            "};");
+        lines(
+            "f = function() {", //
+            "  var action;",
+            "  a: do {",
+            "    var proto = null;",
+            "    try {",
+            "      proto = new Proto",
+            "    } finally {",
+            "      action = proto;",
+            "      continue a",
+            // Keep this...
+            "    }",
+            "  } while(false)",
+            "  alert(action)",
+            // and this.
+            "};"));
   }
 
   @Test
   public void testIssue4177428_return() {
     test(
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      return\n"
-            + // Keep this...
-            "    }\n"
-            + "  }\n"
-            + "  alert(action)\n"
-            + // and remove this.
-            "};",
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      return\n"
-            + "    }\n"
-            + "  }\n"
-            + "};");
+        lines(
+            "f = function() {", //
+            "  var action;",
+            "  a: {",
+            "    var proto = null;",
+            "    try {",
+            "      proto = new Proto",
+            "    } finally {",
+            "      action = proto;",
+            "      return;",
+            // Keep this...
+            "    }",
+            "  }",
+            "  alert(action)",
+            // and remove this.
+            "};"),
+        lines(
+            "f = function() {",
+            "  var action;",
+            "  a: {",
+            "    var proto = null;",
+            "    try {",
+            "      proto = new Proto",
+            "    } finally {",
+            "      action = proto;",
+            "      return;",
+            "    }",
+            "  }",
+            "};"));
   }
 
   @Test
   public void testIssue4177428_multifinally() {
     testSame(
-        "a: {\n"
-            + " try {\n"
-            + " try {\n"
-            + " } finally {\n"
-            + "   break a;\n"
-            + " }\n"
-            + " } finally {\n"
-            + "   x = 1;\n"
-            + " }\n"
-            + "}");
+        lines(
+            "a: {",
+            " try {",
+            "   try {",
+            "   } finally {",
+            "     break a;",
+            "   }",
+            " } finally {",
+            "   x = 1;",
+            " }",
+            "}"));
   }
 
   @Test
@@ -449,39 +728,74 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     testSame("throw 1; var x");
     testSame("throw 1; function x() {}");
     testSame("throw 1; var x; var y;");
-    test("throw 1; var x = foo", "var x; throw 1");
+    test(
+        "       throw 1; var x = foo", //
+        "var x; throw 1");
   }
 
   @Test
   public void testForInLoop() {
-    testSame("for(var x in y) {}");
+    testSame("var x; for(x in y) {}");
   }
 
   @Test
   public void testDontRemoveBreakInTryFinally() {
-    testSame("function f() {b:try{throw 9} finally {break b} return 1;}");
+    testSame(
+        lines(
+            "function f() {", //
+            "  b: {",
+            "    try {",
+            "      throw 9;",
+            "    } finally {",
+            "      break b;",
+            "    }",
+            "  }",
+            "  return 1;",
+            "}"));
   }
 
   @Test
   public void testDontRemoveBreakInTryFinallySwitch() {
-    testSame("function f() {b:try{throw 9} finally { switch(x) {case 1: break b} } return 1; }");
+    testSame(
+        lines(
+            "function f() {", //
+            "  b: {",
+            "    try {",
+            "      throw 9;",
+            "    } finally {",
+            "      switch (x) {",
+            "        case 1:",
+            "          break b;",
+            "      }",
+            "    }",
+            "  }",
+            "  return 1;",
+            "}"));
   }
 
   @Test
   public void testIssue1001() {
-    test("function f(x) { x.property = 3; } f({})", "function f(x) { x.property = 3; }");
-    test("function f(x) { x.property = 3; } new f({})", "function f(x) { x.property = 3; }");
+    test(
+        "function f(x) { x.property = 3; } f({})", //
+        "function f(x) { x.property = 3; }");
+    test(
+        "function f(x) { x.property = 3; } new f({})", //
+        "function f(x) { x.property = 3; }");
   }
 
   @Test
   public void testLetConstBlocks() {
-    test("function f() {return 1; let a; }", "function f() {return 1;}");
-
-    test("function f() {return 1; const a = 1; }", "function f() {return 1;}");
+    test(
+        "function f() {return 1; let a; }", //
+        "function f() {return 1;        }");
 
     test(
-        "function f() { x = 1; {let g; return x} let y}",
-        "function f() { x = 1; {let g; return x;}} ");
+        "function f() { return 1; const a = 1; }", //
+        "function f() { return 1;              }");
+
+    test(
+        "function f() { x = 1; { let g; return x; } let y}",
+        "function f() { x = 1; { let g; return x; }      } ");
   }
 
   @Test
@@ -566,14 +880,51 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   @Test
   public void testLetConstBlocks_inFunction_exportedFromEs6Module() {
     test(
-        "export function f() {return 1; let a; }", //
-        "export function f() {return 1;};");
-
-    test("export function f() {return 1; const a = 1; }", "export function f() {return 1;}");
+        lines(
+            "function f() {", //
+            "  return 1;",
+            "  let a;",
+            "}",
+            "export { f as f };"),
+        lines(
+            "function f() {", //
+            "  return 1;",
+            "}",
+            "export { f as f };"));
 
     test(
-        "export function f() { x = 1; {let g; return x} let y}",
-        "export function f() { x = 1; {let g; return x;}} ");
+        lines(
+            "function f() {", //
+            "  return 1;",
+            "  const a = 1;",
+            "}",
+            "export { f as f };"),
+        lines(
+            "function f() {", //
+            "  return 1;",
+            "}",
+            "export { f as f };"));
+
+    test(
+        lines(
+            "function f() {", //
+            "  x = 1;",
+            "  {",
+            "    let g;",
+            "    return x",
+            "  }",
+            "  let y",
+            "}",
+            "export { f as f };"),
+        lines(
+            "function f() {", //
+            "  x = 1;",
+            "  {",
+            "    let g;",
+            "    return x;",
+            "  }",
+            "}",
+            "export { f as f };"));
   }
 
   // Currently leaves an empty module.
@@ -590,16 +941,67 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   public void testRemoveUnreachableCode_withES6Modules() {
     // Switch statements
     test(
-        "export function foo() { switch (foo) { case 1:x = 1; return; break;"
-            + "case 2:{ x = 2; return; break } default:}}",
-        "export function foo() { switch (foo) { case 1:x = 1; return;"
-            + "case 2:{ x = 2 } default:}}");
+        lines(
+            "function foo() {",
+            "  switch (foo) {",
+            "    case 1:",
+            "      x = 1;",
+            "      return;",
+            "      break;",
+            "    case 2: {",
+            "      x = 2;",
+            "      return;",
+            "      break;",
+            "    }",
+            "    default:",
+            "  }",
+            "}",
+            "export { foo as foo };"),
+        lines(
+            "function foo() {",
+            "  switch (foo) {",
+            "    case 1:",
+            "      x = 1;",
+            "      return;",
+            "    case 2: {",
+            "      x = 2;",
+            "    }",
+            "    default:",
+            "  }",
+            "}",
+            "export { foo as foo };"));
 
     // if/else statements with returns
     test(
-        "export function bar(){if(foo)x=1;else if(bar){return;x=2}"
-            + "else{x=3;return;x=4}return 5;x=5}",
-        "export function bar(){if(foo)x=1;else if(bar){return}" + "else{x=3;return}return 5}");
+        lines(
+            "function bar() {",
+            "  if (foo)",
+            "    x=1;",
+            "  else if(bar) {",
+            "    return;",
+            "    x=2;",
+            "  } else {",
+            "    x=3;",
+            "    return;",
+            "    x=4;",
+            "  }",
+            "  return 5;",
+            "  x=5;",
+            "}",
+            "export { bar as bar };"),
+        lines(
+            "function bar() {",
+            "  if (foo)",
+            "    x = 1;",
+            "  else if (bar) {",
+            "    return;",
+            "  } else {",
+            "    x=3;",
+            "    return;",
+            "  }",
+            "  return 5;",
+            "}",
+            "export { bar as bar };"));
   }
 
   @Test
@@ -619,8 +1021,17 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   public void testRemoveUnreachableCodeInComputedPropertIife() {
     test(
         lines(
-            "class Foo {", "  [function() {", "    1; return 'x';", "  }()]() { return 1; }", "}"),
-        lines("class Foo {", "  [function() {", "    return 'x';", "  }()]() { return 1; }", "}"));
+            "class Foo {", //
+            "  [function() {",
+            "    1; return 'x';",
+            "  }()]() { return 1; }",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  [function() {",
+            "    return 'x';",
+            "  }()]() { return 1; }",
+            "}"));
   }
 
   @Test

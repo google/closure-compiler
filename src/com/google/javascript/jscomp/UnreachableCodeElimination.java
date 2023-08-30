@@ -28,15 +28,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Removes dead code from a parse tree. The kinds of dead code that this pass
- * removes are:
- *  - Any code following a return statement, such as the <code>alert</code>
- *    call in: <code>if (x) { return; alert('unreachable'); }</code>.
- *  - Statements that have no side effects, such as:
- *    <code>a.b.MyClass.prototype.propertyName;</code> or <code>true;</code>.
- *    That first kind of statement sometimes appears intentionally, so that
- *    prototype properties can be annotated using JSDoc without actually
- *    being initialized.
+ * Removes dead code from a parse tree.
+ *
+ * <p>The kinds of dead code that this pass removes are:
+ *
+ * <ul>
+ *   <li>Any code following a return statement, such as the {@code alert} call in:<br>
+ *       {@code if (x) { return; alert('unreachable'); }}.
+ *   <li>Statements that have no side effects, such as:<br>
+ *       {@code a.b.MyClass.prototype.propertyName;} or {@code true;}.<br>
+ *       That first kind of statement sometimes appears intentionally, so that prototype properties
+ *       can be annotated using JSDoc without actually being initialized.
+ * </ul>
  */
 
 // TODO(dimvar): Besides dead code after returns, this pass removes useless live
@@ -45,8 +48,7 @@ import java.util.logging.Logger;
 // pass or putting them in some other, more related pass.
 
 class UnreachableCodeElimination implements CompilerPass {
-  private static final Logger logger =
-    Logger.getLogger(UnreachableCodeElimination.class.getName());
+  private static final Logger logger = Logger.getLogger(UnreachableCodeElimination.class.getName());
   private final AbstractCompiler compiler;
   private boolean codeChanged;
 
@@ -120,19 +122,19 @@ class UnreachableCodeElimination implements CompilerPass {
     }
 
     /**
-     * Tries to remove n if it is an unconditional branch node (break, continue,
-     * or return) and the target of n is the same as the follow of n.
-     * That is, if removing n preserves the control flow. Also if n targets
-     * another unconditional branch, this function will recursively try to
-     * remove the target branch as well. The reason why we want to cascade this
-     * removal is because we only run this pass once. If we have code such as
+     * Tries to remove n if it is an unconditional branch node (break, continue, or return) and the
+     * target of n is the same as the follow of n.
      *
-     * break -> break -> break
+     * <p>That is, if removing n preserves the control flow. Also if n targets another unconditional
+     * branch, this function will recursively try to remove the target branch as well. The reason
+     * why we want to cascade this removal is because we only run this pass once. If we have code
+     * such as
      *
-     * where all 3 breaks are useless, then the order of removal matters. When
-     * we first look at the first break, we see that it branches to the 2nd
-     * break. However, if we remove the last break, the 2nd break becomes
-     * useless and finally the first break becomes useless as well.
+     * <p>break -> break -> break
+     *
+     * <p>where all 3 breaks are useless, then the order of removal matters. When we first look at
+     * the first break, we see that it branches to the 2nd break. However, if we remove the last
+     * break, the 2nd break becomes useless and finally the first break becomes useless as well.
      */
     @SuppressWarnings("fallthrough")
     private void tryRemoveUnconditionalBranching(Node n) {
@@ -148,7 +150,7 @@ class UnreachableCodeElimination implements CompilerPass {
 
       // If n is null the target is the end of the function, nothing to do.
       if (n == null) {
-         return;
+        return;
       }
 
       DiGraphNode<Node, Branch> gNode = cfg.getNode(n);
