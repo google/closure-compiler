@@ -525,4 +525,27 @@ public final class AngularPassTest extends CompilerTestCase {
             "/** @public */ fn['$inject'] = ['a', 'b'];",
             "});"));
   }
+
+  @Test
+  public void testNameDeclarationAndAssign() {
+    test(
+        lines(
+            "let A = A_1 = class A {",
+            "  /**",
+            "   * @ngInject",
+            "   * @param {?} foo",
+            "   */",
+            "  constructor(foo) {}",
+            "};"),
+        lines(
+            "let A = A_1 = class A {",
+            "  /**",
+            "   * @ngInject",
+            "   * @param {?} foo",
+            "   */",
+            "  constructor(foo) {}",
+            "};",
+            "/** @public */",
+            "A_1[\"$inject\"] = [\"foo\"];"));
+  }
 }

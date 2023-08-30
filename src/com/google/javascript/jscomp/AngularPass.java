@@ -271,11 +271,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
             name = NodeUtil.getName(classNode);
           }
           fn = n.getFirstChild();
-          if (classNode.getParent().isAssign() || classNode.getParent().isName()) {
-            injectAfter = classNode.getGrandparent();
-          } else {
-            injectAfter = classNode;
-          }
+          injectAfter = NodeUtil.getEnclosingStatement(classNode);
         }
         break;
       default:
