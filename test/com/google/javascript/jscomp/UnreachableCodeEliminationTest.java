@@ -40,6 +40,28 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDoNotRemoveDeclarationOfUsedVariable() {
+    test(
+        lines(
+            "var f = function() {", //
+            "  return 1;",
+            "  let b = 5;",
+            "  do {",
+            "    b--;",
+            "  } while (b);",
+            "  return 3;",
+            "};"),
+        lines(
+            "var f = function() {", //
+            "  return 1;",
+            "  do {",
+            // TODO: b/297246830 - This is broken behavior.
+            // Either delete all references to `b` or keep its declaration
+            "  } while (b);",
+            "};"));
+  }
+
+  @Test
   public void testDontRemoveExport() {
     test(
         lines(
