@@ -2,14 +2,14 @@ workspace(name = "com_google_javascript_jscomp")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-RULES_JVM_EXTERNAL_TAG = "4.5"
-RULES_JVM_EXTERNAL_SHA = "b17d7388feb9bfa7f2fa09031b32707df529f26c91ab9e5d909eb1676badd9a6"
+RULES_JVM_EXTERNAL_TAG = "5.3"
+RULES_JVM_EXTERNAL_SHA = "d31e369b854322ca5098ea12c69d7175ded971435e55c18dd9dd5f29cc5249ac"
 
 http_archive(
     name = "rules_jvm_external",
     strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
     sha256 = RULES_JVM_EXTERNAL_SHA,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+    url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/%s/rules_jvm_external-%s.tar.gz" % (RULES_JVM_EXTERNAL_TAG, RULES_JVM_EXTERNAL_TAG)
 )
 
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
@@ -35,99 +35,9 @@ http_archive(
     ],
 )
 
-load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules", "maven_import")
+load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules")
 
 google_common_workspace_rules()
-
-maven_import(
-    # http://args4j.kohsuke.org/index.html
-    group_id = "args4j",
-    artifact_id = "args4j",
-    version = "2.33",
-    sha256 = "91ddeaba0b24adce72291c618c00bbdce1c884755f6c4dba9c5c46e871c69ed6",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://github.com/java-diff-utils/java-diff-utils
-    group_id = "io.github.java-diff-utils",
-    artifact_id = "java-diff-utils",
-    version = "4.0",
-    sha256 = "810232374e76a954949f0e2185cd7d9515addb918cf3da3481f77e07c356b49a",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://github.com/google/gson
-    group_id = "com.google.code.gson",
-    artifact_id = "gson",
-    version = "2.9.1",
-    sha256 = "378534e339e6e6d50b1736fb3abb76f1c15d1be3f4c13cec6d536412e23da603",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://github.com/google/re2j
-    group_id ="com.google.re2j",
-    artifact_id = "re2j",
-    version ="1.3",
-    sha256 = "d8040fa1c54c1ce208199015b6e599ec2ef37b7780f8f55a8b4b4b4299bade19",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://ant.apache.org/
-    group_id ="org.apache.ant",
-    artifact_id = "ant",
-    version ="1.10.11",
-    sha256 = "88c0b89bbbaae01e0d9fcae93be792f5abbe3409106f8eee858fdf365dbc0754",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://github.com/jspecify/jspecify/
-    group_id ="org.jspecify",
-    artifact_id = "jspecify",
-    version ="0.2.0",
-    sha256 = "7da399e8d2be9474406fe7c06904012880e8aa96833adab126119c8d10b7c0ae",
-    licenses = ["notice"],
-)
-
-maven_import(
-  # annotations from https://github.com/google/error-prone
-  group_id = "com.google.errorprone",
-  artifact_id = "error_prone_annotations",
-  version = "2.15.0",
-  sha256 = "067047714349e7789a5bdbfad9d1c0af9f3a1eb28c55a0ee3f68e682f905c4eb",
-  licenses = ["notice"],
-)
-
-maven_import(
-    # https://truth.dev/protobufs
-    group_id = "com.google.truth.extensions",
-    artifact_id = "truth-liteproto-extension",
-    version = "1.1",
-    sha256 = "f637de4743194a870316a55a1c50c89638355a2323d96b6ced363a22d6ced316",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://truth.dev/protobufs
-    group_id = "com.google.truth.extensions",
-    artifact_id = "truth-proto-extension",
-    version = "1.1",
-    sha256 = "d2fa8736dcb541813f8f4090ecc0d634b85cb82bd6d486f1af975458d0238afe",
-    licenses = ["notice"],
-)
-
-maven_import(
-    # https://github.com/google/jimfs
-    group_id = "com.google.jimfs",
-    artifact_id = "jimfs",
-    version = "1.2",
-    sha256 = "de16d5c8489729a8512f1a02fbd81f58f89249b72066987da4cc5c87ecb9f72d",
-    licenses = ["notice"],
-)
 
 http_archive(
     name = "protobuf_proto_rules",
@@ -171,14 +81,27 @@ load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
 
 jar_jar_repositories()
 
-# Declare protobuf-java from maven central, so the unshaded maven jar can recognize external dependencies
 load("@rules_jvm_external//:defs.bzl", "maven_install")
+
 maven_install(
     artifacts = [
+        "args4j:args4j:2.33",
+        "com.google.code.gson:gson:2.9.1",
+        "com.google.errorprone:error_prone_annotations:2.15.0",
+        "com.google.guava:failureaccess:1.0.1",
+        "com.google.guava:guava:32.1.2-jre",
+        "com.google.guava:guava-testlib:32.1.2-jre",
+        "com.google.jimfs:jimfs:1.2",
         "com.google.protobuf:protobuf-java:3.21.12",
+        "com.google.re2j:re2j:1.3",
+        "com.google.truth.extensions:truth-liteproto-extension:1.1",
+        "com.google.truth.extensions:truth-proto-extension:1.1",
+        "io.github.java-diff-utils:java-diff-utils:4.0",
+        "org.apache.ant:ant:1.10.11",
+        "org.jspecify:jspecify:0.2.0",
     ],
     repositories = [
+        "https://maven.google.com",
         "https://repo1.maven.org/maven2",
     ],
-    strict_visibility = True,
 )
