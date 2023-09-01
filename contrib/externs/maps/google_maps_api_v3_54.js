@@ -2124,6 +2124,12 @@ google.maps.DirectionsResult.prototype.available_travel_modes;
 google.maps.DirectionsResult.prototype.geocoded_waypoints;
 
 /**
+ * The DirectionsRequest that yielded this result.
+ * @type {!google.maps.DirectionsRequest}
+ */
+google.maps.DirectionsResult.prototype.request;
+
+/**
  * An array of <code>DirectionsRoute</code>s, each of which contains information
  * about the legs and steps of which it is composed. There will only be one
  * route unless the <code>DirectionsRequest</code> was made with
@@ -14722,7 +14728,7 @@ google.maps.places.ComponentRestrictions = function() {};
  * code, case insensitive). For example, <code>'us'</code>, <code>'br'</code>,
  * or <code>'au'</code>. You can provide a single one, or an array of up to five
  * country code strings.
- * @type {string|Array<string>|null}
+ * @type {string|!Array<string>|null}
  */
 google.maps.places.ComponentRestrictions.prototype.country;
 
