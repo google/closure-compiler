@@ -12347,6 +12347,13 @@ chrome.declarativeContent.PageStateMatcher = function(literalValue) {};
 
 /**
  * @constructor
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-ShowAction
+ */
+chrome.declarativeContent.ShowAction = function() {};
+
+
+/**
+ * @constructor
  * @see https://developer.chrome.com/extensions/declarativeContent#type-ShowPageAction
  */
 chrome.declarativeContent.ShowPageAction = function() {};
