@@ -71,7 +71,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             n.getFirstChild().isEmpty() || classNameNode.matchesQualifiedName(n.getFirstChild()),
             "Class name shadows variable declaring the class: %s",
             n);
-        classStack.push(new ClassRecord(n, classNameNode.getQualifiedName(), classInsertionPoint));
+        classStack.push(new ClassRecord(n, classNameNode, classInsertionPoint));
         break;
       case COMPUTED_FIELD_DEF:
         checkState(!classStack.isEmpty());
@@ -125,38 +125,54 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case CLASS:
-        visitClass(t);
-        return;
+        visitClass(t, n);
+        break;
       case THIS:
-        Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
-        if (rootNode.isStaticMember()
-            && (rootNode.isMemberFieldDef() || rootNode.isComputedFieldDef())) {
-          Node className = rootNode.getGrandparent().getFirstChild().cloneNode();
-          n.replaceWith(className);
-          t.reportCodeChange(className);
-        }
-        return;
+        visitThis(t, n);
+        break;
       case SUPER:
-        rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
-        if (rootNode.isMemberFieldDef() && rootNode.isStaticMember()) {
-          Node superclassName = rootNode.getGrandparent().getChildAtIndex(1).cloneNode();
-          n.replaceWith(superclassName);
-          t.reportCodeChange(superclassName);
-        }
-        return;
+        visitSuper(t, n);
+        break;
       default:
-        return;
+        break;
     }
   }
 
   /** Transpile the actual class members themselves */
-  private void visitClass(NodeTraversal t) {
+  private void visitClass(NodeTraversal t, Node classNode) {
     ClassRecord currClassRecord = classStack.pop();
+    checkState(currClassRecord.classNode == classNode, "unexpected node: %s", classNode);
     if (currClassRecord.cannotConvert) {
       return;
     }
     rewriteInstanceMembers(t, currClassRecord);
     rewriteStaticMembers(t, currClassRecord);
+  }
+
+  private void visitThis(NodeTraversal t, Node thisNode) {
+    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
+    if (rootNode.isStaticMember()
+        && (rootNode.isMemberFieldDef() || rootNode.isComputedFieldDef())) {
+      final Node classNode = rootNode.getGrandparent();
+      final ClassRecord classRecord = classStack.peek();
+      checkState(
+          classRecord.classNode == classNode,
+          "wrong class node: %s != %s",
+          classRecord.classNode,
+          classNode);
+      Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
+      thisNode.replaceWith(className);
+      t.reportCodeChange(className);
+    }
+  }
+
+  private void visitSuper(NodeTraversal t, Node n) {
+    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
+    if (rootNode.isMemberFieldDef() && rootNode.isStaticMember()) {
+      Node superclassName = rootNode.getGrandparent().getChildAtIndex(1).cloneNode();
+      n.replaceWith(superclassName);
+      t.reportCodeChange(superclassName);
+    }
   }
 
   /**
@@ -316,8 +332,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       Node staticMember = staticMembers.pop();
       // if the name is a property access, we want the whole chain of accesses, while for other
       // cases we only want the name node
-      Node nameToUse =
-          astFactory.createQNameWithUnknownType(record.classNameString).srcrefTree(staticMember);
+      Node nameToUse = record.createNewNameReferenceNode().srcrefTree(staticMember);
 
       Node transpiledNode;
 
@@ -454,7 +469,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     ImmutableSet<Var> constructorVars = ImmutableSet.of();
 
     final Node classNode;
-    final String classNameString;
+    final Node classNameNode;
 
     // Keeps track of the statement declaring the class
     final Node insertionPointBeforeClass;
@@ -462,9 +477,9 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     // Keeps track of the last statement inserted after the class
     Node insertionPointAfterClass;
 
-    ClassRecord(Node classNode, String classNameString, Node classInsertionPoint) {
+    ClassRecord(Node classNode, Node classNameNode, Node classInsertionPoint) {
       this.classNode = classNode;
-      this.classNameString = classNameString;
+      this.classNameNode = classNameNode;
       this.insertionPointBeforeClass = classInsertionPoint;
       this.insertionPointAfterClass = classInsertionPoint;
     }
@@ -491,6 +506,16 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       Scope argsScope = s.getParent();
       builder.addAll(argsScope.getAllSymbols());
       constructorVars = builder.build();
+    }
+
+    Node createNewNameReferenceNode() {
+      if (classNameNode.isName()) {
+        // Don't cloneTree() here, because the name may have a child node, the class itself.
+        return classNameNode.cloneNode();
+      } else {
+        // Must cloneTree() for a qualified name.
+        return classNameNode.cloneTree();
+      }
     }
   }
 }

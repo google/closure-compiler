@@ -415,6 +415,32 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         lines(
             "/** @unrestricted */",
+            "const C = class {", //
+            "  static [1] = 1;",
+            "  static [2] = this[1];",
+            "}"),
+        lines(
+            "const C = class {}", //
+            "C[1] = 1;",
+            "C[2] = C[1];"));
+
+    test(
+        lines(
+            "/** @unrestricted */",
+            "const C = class InnerC {", //
+            "  static [1] = 1;",
+            "  static [2] = this[1];",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {}", //
+            "testcode$classdecl$var0[1] = 1;",
+            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
+            "/** @constructor */",
+            "const C = testcode$classdecl$var0;"));
+
+    test(
+        lines(
+            "/** @unrestricted */",
             "let c = class C {", //
             "  static [1] = 2;",
             "  static [2] = C[1]",
