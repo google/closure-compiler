@@ -169,9 +169,9 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     return true;
   }
 
-  private TopLevelStatementDraft initializeDraftStatement(JSChunk module, Node statementNode) {
+  private TopLevelStatementDraft initializeDraftStatement(JSChunk chunk, Node statementNode) {
     TopLevelStatementDraft draft =
-        new TopLevelStatementDraft(statementCounter++, module, statementNode);
+        new TopLevelStatementDraft(statementCounter++, chunk, statementNode);
     // Determine whether this statement declares a name or not.
     // If so, save its name node and value node, if any.
     if (NodeUtil.isNameDeclaration(statementNode)) {
@@ -452,7 +452,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     /** 0-based index indicating original order of this statement in the source. */
     private final int originalOrder;
 
-    private final JSChunk module;
+    private final JSChunk chunk;
     private final Node statementNode;
     private final List<Reference> nonDeclarationReferences;
     private final Reference declaredNameReference;
@@ -460,7 +460,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
 
     TopLevelStatement(TopLevelStatementDraft draft) {
       this.originalOrder = draft.originalOrder;
-      this.module = draft.module;
+      this.chunk = draft.chunk;
       this.statementNode = draft.statementNode;
       this.nonDeclarationReferences = Collections.unmodifiableList(draft.nonDeclarationReferences);
       this.declaredNameReference = draft.declaredNameReference;
@@ -471,8 +471,8 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
       return originalOrder;
     }
 
-    JSChunk getModule() {
-      return module;
+    JSChunk getChunk() {
+      return chunk;
     }
 
     Node getStatementNode() {
@@ -508,16 +508,16 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     /** 0-based index indicating original order of this statement in the source. */
     final int originalOrder;
 
-    final JSChunk module;
+    final JSChunk chunk;
     final Node statementNode;
     final List<Reference> nonDeclarationReferences = new ArrayList<>();
     @Nullable Node declaredValueNode = null;
     @Nullable Node declaredNameNode = null;
     @Nullable Reference declaredNameReference = null;
 
-    TopLevelStatementDraft(int originalOrder, JSChunk module, Node statementNode) {
+    TopLevelStatementDraft(int originalOrder, JSChunk chunk, Node statementNode) {
       this.originalOrder = originalOrder;
-      this.module = module;
+      this.chunk = chunk;
       this.statementNode = statementNode;
     }
   }

@@ -110,7 +110,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     // Force every output chunk to parse as an ES Module. If a chunk has no imports and
     // no exports, add an empty export list to generate an empty export statement:
     // example: export {};
-    for (JSChunk chunk : compiler.getModuleGraph().getAllChunks()) {
+    for (JSChunk chunk : compiler.getChunkGraph().getAllChunks()) {
       if (!crossChunkExports.containsKey(chunk)
           && !crossChunkImports.containsKey(chunk)
           && !chunk.getInputs().isEmpty()) {
@@ -131,7 +131,7 @@ final class ConvertChunksToESModules implements CompilerPass {
    * compilation, all input files should be scripts.
    */
   private void convertChunkSourcesToModules() {
-    for (JSChunk chunk : compiler.getModuleGraph().getAllChunks()) {
+    for (JSChunk chunk : compiler.getChunkGraph().getAllChunks()) {
       if (chunk.getInputs().isEmpty()) {
         continue;
       }

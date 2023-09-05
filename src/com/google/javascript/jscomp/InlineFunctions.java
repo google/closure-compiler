@@ -259,7 +259,7 @@ class InlineFunctions implements CompilerPass {
    * Updates the FunctionState object for the given function. Checks if the given function matches
    * the criteria for an inlinable function.
    */
-  void maybeAddFunction(Function fn, JSChunk module) {
+  void maybeAddFunction(Function fn, JSChunk chunk) {
     String name = fn.getName();
     FunctionState functionState = getOrCreateFunctionState(name);
 
@@ -306,7 +306,7 @@ class InlineFunctions implements CompilerPass {
 
       // Set the module and gather names that need temporaries.
       if (functionState.canInline()) {
-        functionState.setModule(module);
+        functionState.setChunk(chunk);
 
         Set<String> namesToAlias = functionArgumentInjector.findModifiedParameters(fnNode);
         if (!namesToAlias.isEmpty()) {
@@ -513,19 +513,19 @@ class InlineFunctions implements CompilerPass {
     }
 
     void maybeAddReference(
-        NodeTraversal t, FunctionState functionState, Node callNode, JSChunk module) {
+        NodeTraversal t, FunctionState functionState, Node callNode, JSChunk chunk) {
       if (!functionState.canInline()) {
         return;
       }
 
       InliningMode mode =
           functionState.canInlineDirectly() ? InliningMode.DIRECT : InliningMode.BLOCK;
-      boolean referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, module, mode);
+      boolean referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, chunk, mode);
       if (!referenceAdded && mode == InliningMode.DIRECT) {
         // This reference can not be directly inlined, see if
         // block replacement inlining is possible.
         mode = InliningMode.BLOCK;
-        referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, module, mode);
+        referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, chunk, mode);
       }
 
       if (!referenceAdded) {
@@ -539,7 +539,7 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal t,
         FunctionState functionState,
         Node callNode,
-        JSChunk module,
+        JSChunk chunk,
         InliningMode mode) {
 
       // If many functions are inlined into the same function F in the same
@@ -552,7 +552,7 @@ class InlineFunctions implements CompilerPass {
         return false;
       }
 
-      Reference candidate = new Reference(callNode, t.getScope(), module, mode);
+      Reference candidate = new Reference(callNode, t.getScope(), chunk, mode);
       CanInlineResult result =
           injector.canInlineReferenceToFunction(
               candidate,
@@ -698,7 +698,7 @@ class InlineFunctions implements CompilerPass {
    */
   private boolean inliningLowersCost(FunctionState functionState) {
     return injector.inliningLowersCost(
-        functionState.getModule(),
+        functionState.getChunk(),
         functionState.getFn().getFunctionNode(),
         functionState.getReferences(),
         functionState.getNamesToAlias(),
@@ -848,7 +848,7 @@ class InlineFunctions implements CompilerPass {
     private boolean referencesThis = false;
     private boolean hasInnerFunctions = false;
     private @Nullable Map<Node, Reference> references = null;
-    private @Nullable JSChunk module = null;
+    private @Nullable JSChunk chunk = null;
     private @Nullable Set<String> namesToAlias = null;
 
     boolean hasExistingFunctionDefinition() {
@@ -973,12 +973,12 @@ class InlineFunctions implements CompilerPass {
       namesToAlias = names;
     }
 
-    public void setModule(JSChunk module) {
-      this.module = module;
+    public void setChunk(JSChunk chunk) {
+      this.chunk = chunk;
     }
 
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
   }
 
@@ -1115,8 +1115,8 @@ class InlineFunctions implements CompilerPass {
     boolean requiresDecomposition = false;
     boolean inlined = false;
 
-    Reference(Node callNode, Scope scope, JSChunk module, InliningMode mode) {
-      super(callNode, scope, module, mode);
+    Reference(Node callNode, Scope scope, JSChunk chunk, InliningMode mode) {
+      super(callNode, scope, chunk, mode);
     }
 
     void setRequiresDecomposition(boolean newVal) {

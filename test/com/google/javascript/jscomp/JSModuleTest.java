@@ -95,7 +95,7 @@ public final class JSModuleTest {
       throws Exception {
     JSChunk mod = new JSChunk("mod");
     for (CompilerInput input : shuffled) {
-      input.setModule(null);
+      input.setChunk(null);
       mod.add(input);
     }
     Compiler compiler = new Compiler(System.err);

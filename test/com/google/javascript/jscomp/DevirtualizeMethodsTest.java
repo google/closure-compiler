@@ -1424,7 +1424,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule1() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE))
@@ -1433,7 +1433,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE),
@@ -1443,7 +1443,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule2() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk("")
@@ -1452,7 +1452,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             "",
@@ -1462,7 +1462,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule3() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(semicolonJoin(ModuleTestInput.USE, ModuleTestInput.DEFINITION))
@@ -1471,7 +1471,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             semicolonJoin(ModuleTestInput.REWRITTEN_USE, ModuleTestInput.REWRITTEN_DEFINITION),
@@ -1481,7 +1481,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewrite_definitionModule_beforeUseModule() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(ModuleTestInput.DEFINITION)
@@ -1490,7 +1490,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             ModuleTestInput.REWRITTEN_DEFINITION,
@@ -1500,13 +1500,13 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_definitionModule_afterUseModule() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             .addChunk(ModuleTestInput.USE)
             .addChunk(ModuleTestInput.DEFINITION)
             .build();
 
-    testSame(srcs(modules));
+    testSame(srcs(chunks));
   }
 
   @Override

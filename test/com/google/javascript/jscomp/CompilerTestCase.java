@@ -1354,7 +1354,7 @@ public abstract class CompilerTestCase {
       options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
       compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
     } else {
-      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
+      compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
     return compiler;
   }
@@ -2007,7 +2007,7 @@ public abstract class CompilerTestCase {
     if (inputs instanceof FlatSources) {
       compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
     } else {
-      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
+      compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
     testExternChangesInternal(compiler, expectedExtern, warnings);
   }
@@ -2177,7 +2177,7 @@ public abstract class CompilerTestCase {
   }
 
   protected static Sources srcs(JSChunk... modules) {
-    return new ModuleSources(modules);
+    return new ChunkSources(modules);
   }
 
   protected static Expected expected(String srcText) {
@@ -2196,10 +2196,10 @@ public abstract class CompilerTestCase {
     return new Expected(Arrays.asList(files));
   }
 
-  protected static Expected expected(JSChunk[] modules) {
+  protected static Expected expected(JSChunk[] chunks) {
     List<String> expectedSrcs = new ArrayList<>();
-    for (JSChunk module : modules) {
-      for (CompilerInput input : module.getInputs()) {
+    for (JSChunk chunk : chunks) {
+      for (CompilerInput input : chunk.getInputs()) {
         try {
           expectedSrcs.add(input.getSourceFile().getCode());
         } catch (IOException e) {
@@ -2294,9 +2294,9 @@ public abstract class CompilerTestCase {
   private static Expected fromSources(Sources srcs) {
     if (srcs instanceof FlatSources) {
       return expected(((FlatSources) srcs).sources);
-    } else if (srcs instanceof ModuleSources) {
-      ModuleSources modules = ((ModuleSources) srcs);
-      return expected(modules.modules.toArray(new JSChunk[0]));
+    } else if (srcs instanceof ChunkSources) {
+      ChunkSources modules = ((ChunkSources) srcs);
+      return expected(modules.chunks.toArray(new JSChunk[0]));
     } else {
       throw new IllegalStateException("unexpected");
     }
@@ -2339,11 +2339,11 @@ public abstract class CompilerTestCase {
     }
   }
 
-  protected static final class ModuleSources extends Sources {
-    final ImmutableList<JSChunk> modules;
+  protected static final class ChunkSources extends Sources {
+    final ImmutableList<JSChunk> chunks;
 
-    ModuleSources(JSChunk[] modules) {
-      this.modules = ImmutableList.copyOf(modules);
+    ChunkSources(JSChunk[] chunks) {
+      this.chunks = ImmutableList.copyOf(chunks);
     }
   }
 

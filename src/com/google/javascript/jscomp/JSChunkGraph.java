@@ -613,10 +613,10 @@ public final class JSChunkGraph implements Serializable {
         }
         JSChunk oldChunk = input.getChunk();
         if (oldChunk == null) {
-          input.setModule(chunk);
+          input.setChunk(chunk);
         } else {
-          input.setModule(null);
-          input.setModule(getDeepestCommonDependencyInclusive(oldChunk, chunk));
+          input.setChunk(null);
+          input.setChunk(getDeepestCommonDependencyInclusive(oldChunk, chunk));
         }
       }
     }
@@ -635,7 +635,7 @@ public final class JSChunkGraph implements Serializable {
         // in command line flag order.
         checkState(i.getChunk() == null);
         i.getSourceFile().setKind(SourceKind.WEAK);
-        i.setModule(weakChunk);
+        i.setChunk(weakChunk);
         weakChunk.add(i);
       }
     } else {

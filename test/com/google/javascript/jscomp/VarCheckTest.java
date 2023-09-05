@@ -1101,18 +1101,18 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakVar_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
-    weakModule.addDependency(strongModule);
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
+    weakChunk.addDependency(strongChunk);
 
-    weakModule.add(SourceFile.fromCode("weak.js", lines("var weakVar = 0;"), SourceKind.WEAK));
+    weakChunk.add(SourceFile.fromCode("weak.js", lines("var weakVar = 0;"), SourceKind.WEAK));
 
-    strongModule.add(SourceFile.fromCode("strong.js", lines("weakVar();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong.js", lines("weakVar();"), SourceKind.STRONG));
 
     test(
         srcs(
             new JSChunk[] {
-              strongModule, weakModule,
+              strongChunk, weakChunk,
             }),
         error(VarCheck.VIOLATED_MODULE_DEP_ERROR),
         error(VarCheck.UNDEFINED_VAR_ERROR));
@@ -1120,8 +1120,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakVar_fromWeakFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
-    weakModule.add(
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
             lines(
@@ -1129,16 +1129,16 @@ public final class VarCheckTest extends CompilerTestCase {
                 "weakVar();"),
             SourceKind.WEAK));
 
-    testSame(srcs(weakModule));
+    testSame(srcs(weakChunk));
   }
 
   @Test
   public void testReferenceToWeakNamespaceRoot_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
-    weakModule.addDependency(strongModule);
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
+    weakChunk.addDependency(strongChunk);
 
-    weakModule.add(
+    weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
             lines(
@@ -1146,23 +1146,23 @@ public final class VarCheckTest extends CompilerTestCase {
                 "goog.provide('foo.bar');"),
             SourceKind.WEAK));
 
-    strongModule.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
 
     test(
         srcs(
             new JSChunk[] {
-              strongModule, weakModule,
+              strongChunk, weakChunk,
             }),
         error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   @Test
   public void testReferenceToWeakNamespaceRoot_fromStrongFile_synthesizesExtern() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
-    weakModule.addDependency(strongModule);
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
+    weakChunk.addDependency(strongChunk);
 
-    weakModule.add(
+    weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
             lines(
@@ -1170,21 +1170,21 @@ public final class VarCheckTest extends CompilerTestCase {
                 "goog.provide('foo.bar');"),
             SourceKind.WEAK));
 
-    strongModule.add(
+    strongChunk.add(
         SourceFile.fromCode(
             "strong.js", lines("/** @suppress {undefinedVars} */", "foo();"), SourceKind.STRONG));
 
     testExternChanges(
-        externs(""), srcs(strongModule, weakModule), expected("var foo;" + VAR_CHECK_EXTERNS));
+        externs(""), srcs(strongChunk, weakChunk), expected("var foo;" + VAR_CHECK_EXTERNS));
   }
 
   @Test
-  public void testReferenceToWeakModuleNamespaceRoot_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
-    weakModule.addDependency(strongModule);
+  public void testReferenceToweakChunkNamespaceRoot_fromStrongFile() {
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
+    weakChunk.addDependency(strongChunk);
 
-    weakModule.add(
+    weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
             lines(
@@ -1192,31 +1192,31 @@ public final class VarCheckTest extends CompilerTestCase {
                 "goog.module('foo.bar'); goog.module.declareLegacyNamespace();"),
             SourceKind.WEAK));
 
-    strongModule.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
 
-    test(srcs(strongModule, weakModule), error(VarCheck.UNDEFINED_VAR_ERROR));
+    test(srcs(strongChunk, weakChunk), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   @Test
   public void testReferenceToStrongNamespaceRoot_withAdditionalWeakProvide_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
-    weakModule.addDependency(strongModule);
+    JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
+    weakChunk.addDependency(strongChunk);
 
-    weakModule.add(
+    weakChunk.add(
         SourceFile.fromCode("weak.js", lines("goog.provide('foo.bar');"), SourceKind.WEAK));
 
-    strongModule.add(
+    strongChunk.add(
         SourceFile.fromCode(
             "strong0.js",
             lines(TestExternsBuilder.getClosureExternsAsSource(), "goog.provide('foo.qux');"),
             SourceKind.STRONG));
-    strongModule.add(SourceFile.fromCode("strong1.js", lines("foo();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong1.js", lines("foo();"), SourceKind.STRONG));
 
     testSame(
         srcs(
             new JSChunk[] {
-              strongModule, weakModule,
+              strongChunk, weakChunk,
             }));
   }
 

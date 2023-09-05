@@ -232,17 +232,17 @@ class VarCheck implements ScopedCallback, CompilerPass {
     // Check module dependencies.
     JSChunk currModule = currInput.getChunk();
     JSChunk varModule = varInput.getChunk();
-    JSChunkGraph moduleGraph = compiler.getModuleGraph();
+    JSChunkGraph chunkGraph = compiler.getChunkGraph();
     if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
       if (varModule.isWeak()) {
         this.handleUndeclaredVariableRef(t, n);
       }
 
-      if (moduleGraph.dependsOn(currModule, varModule)) {
+      if (chunkGraph.dependsOn(currModule, varModule)) {
         // The module dependency was properly declared.
       } else {
         if (scope.isGlobal()) {
-          if (moduleGraph.dependsOn(varModule, currModule)) {
+          if (chunkGraph.dependsOn(varModule, currModule)) {
             // The variable reference violates a declared module dependency.
             t.report(
                 n, VIOLATED_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);

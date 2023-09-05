@@ -318,19 +318,19 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   public void testNotEnoughPrototypeToExtractInChunk() {
     pattern = Pattern.USE_CHUNK_TEMP;
     for (int i = 0; i < 7; i++) {
-      JSChunk[] modules =
+      JSChunk[] chunks =
           JSChunkGraphBuilder.forStar()
               .addChunk(generatePrototypeDeclarations("x", i))
               .addChunk(generatePrototypeDeclarations("y", i))
               .build();
-      testSame(srcs(modules));
+      testSame(srcs(chunks));
     }
   }
 
   @Test
   public void testExtractingSingleClassPrototypeInChunk() {
     pattern = Pattern.USE_CHUNK_TEMP;
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             .addChunk(generatePrototypeDeclarations("x", 7))
             .addChunk(generatePrototypeDeclarations("y", 7))
@@ -353,7 +353,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             .addChunk(builderY.toString())
             .build();
 
-    test(srcs(modules), expected(expectedModules));
+    test(srcs(chunks), expected(expectedModules));
   }
 
   private String loadPrototype(String qName) {

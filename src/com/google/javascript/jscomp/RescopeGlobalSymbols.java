@@ -39,13 +39,13 @@ import java.util.Set;
  *
  * <pre> NS.a = 1; NS.b = function b() { return NS.a }</pre>
  *
- * This allows splitting code into modules that depend on each other's global symbols, without using
+ * This allows splitting code into chunks that depend on each other's global symbols, without using
  * polluting JavaScript's global scope with those symbols. You typically define just a single global
- * symbol, wrap each module in a function wrapper, and pass the global symbol around, eg,
+ * symbol, wrap each chunk in a function wrapper, and pass the global symbol around, eg,
  *
  * <pre> var uniqueNs = uniqueNs || {}; </pre>
  *
- * <pre> (function (NS) { ...your module code here... })(uniqueNs); </pre>
+ * <pre> (function (NS) { ...your chunk code here... })(uniqueNs); </pre>
  *
  * <p>This compile step requires rewriteGlobalDeclarationsForTryCatchWrapping to be turned on to
  * guarantee semantics.
@@ -60,8 +60,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final AbstractCompiler compiler;
   private final String globalSymbolNamespace;
   private final boolean addExtern;
-  private final boolean assumeCrossModuleNames;
-  private final Set<String> crossModuleNames = new HashSet<>();
+  private final boolean assumeCrossChunkNames;
+  private final Set<String> crossChunkNames = new HashSet<>();
+
   /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new HashSet<>();
 
@@ -71,44 +72,38 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * Constructor for the RescopeGlobalSymbols compiler pass.
    *
    * @param compiler The JSCompiler, for reporting code changes.
-   * @param globalSymbolNamespace Name of namespace into which all global
-   *     symbols are transferred.
-   * @param assumeCrossModuleNames If true, all global symbols will be assumed
-   *     cross module boundaries and thus require renaming.
+   * @param globalSymbolNamespace Name of namespace into which all global symbols are transferred.
+   * @param assumeCrossChunkNames If true, all global symbols will be assumed cross chunk boundaries
+   *     and thus require renaming.
    */
   RescopeGlobalSymbols(
-      AbstractCompiler compiler,
-      String globalSymbolNamespace,
-      boolean assumeCrossModuleNames) {
-    this(compiler, globalSymbolNamespace, true, assumeCrossModuleNames);
+      AbstractCompiler compiler, String globalSymbolNamespace, boolean assumeCrossChunkNames) {
+    this(compiler, globalSymbolNamespace, true, assumeCrossChunkNames);
   }
 
   /**
    * Constructor for the RescopeGlobalSymbols compiler pass for use in testing.
    *
    * @param compiler The JSCompiler, for reporting code changes.
-   * @param globalSymbolNamespace Name of namespace into which all global
-   *     symbols are transferred.
-   * @param addExtern If true, the compiler will consider the
-   *    globalSymbolNamespace an extern name.
-   * @param assumeCrossModuleNames If true, all global symbols will be assumed
-   *     cross module boundaries and thus require renaming.
-   * VisibleForTesting
+   * @param globalSymbolNamespace Name of namespace into which all global symbols are transferred.
+   * @param addExtern If true, the compiler will consider the globalSymbolNamespace an extern name.
+   * @param assumeCrossChunkNames If true, all global symbols will be assumed cross chunk boundaries
+   *     and thus require renaming. VisibleForTesting
    */
   RescopeGlobalSymbols(
       AbstractCompiler compiler,
       String globalSymbolNamespace,
       boolean addExtern,
-      boolean assumeCrossModuleNames) {
+      boolean assumeCrossChunkNames) {
     this.compiler = compiler;
     this.globalSymbolNamespace = globalSymbolNamespace;
     this.addExtern = addExtern;
-    this.assumeCrossModuleNames = assumeCrossModuleNames;
+    this.assumeCrossChunkNames = assumeCrossChunkNames;
   }
 
-  private boolean isCrossModuleName(String name) {
-    return assumeCrossModuleNames
-        || crossModuleNames.contains(name)
+  private boolean isCrossChunkName(String name) {
+    return assumeCrossChunkNames
+        || crossChunkNames.contains(name)
         || compiler.getCodingConvention().isExported(name, /* local= */ false);
   }
 
@@ -145,10 +140,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
     NodeTraversal.traverse(
         compiler, root, new RewriteGlobalClassFunctionDeclarationsToVarAssignmentsCallback());
 
-    // Find global names that are used in more than one module. Those that
+    // Find global names that are used in more than one chunk. Those that
     // are have to be rewritten.
     List<NodeTraversal.Callback> nonMutatingPasses = new ArrayList<>();
-    nonMutatingPasses.add(new FindCrossModuleNamesCallback());
+    nonMutatingPasses.add(new FindCrossChunkNamesCallback());
 
     // And find names that may refer to functions that reference this.
     nonMutatingPasses.add(new FindNamesReferencingThis());
@@ -161,7 +156,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     // Remove the var from statements in global scope if the declared names have been rewritten
     // in the previous pass.
     NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback());
-    rewriteScope.declareModuleGlobals();
+    rewriteScope.declareChunkGlobals();
   }
 
   /**
@@ -223,16 +218,15 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   /**
-   * Find all global names that are used in more than one module. The following
-   * compiler transformations can ignore the globals that are not.
+   * Find all global names that are used in more than one chunk. The following compiler
+   * transformations can ignore the globals that are not.
    */
-  private class FindCrossModuleNamesCallback extends
-      AbstractPostOrderCallback {
+  private class FindCrossChunkNamesCallback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         String name = n.getString();
-        if ("".equals(name) || crossModuleNames.contains(name)) {
+        if ("".equals(name) || crossChunkNames.contains(name)) {
           return;
         }
         Scope s = t.getScope();
@@ -242,28 +236,26 @@ final class RescopeGlobalSymbols implements CompilerPass {
         }
         CompilerInput input = v.getInput();
         if (input == null) {
-          // We know nothing. Assume name is used across modules.
-          crossModuleNames.add(name);
+          // We know nothing. Assume name is used across chunks.
+          crossChunkNames.add(name);
           return;
         }
-        // Compare the module where the variable is declared to the current
-        // module. If they are different, the variable is used across modules.
-        JSChunk module = input.getChunk();
-        if (module != t.getChunk()) {
-          crossModuleNames.add(name);
+        // Compare the chunk where the variable is declared to the current
+        // chunk. If they are different, the variable is used across chunks.
+        JSChunk chunk = input.getChunk();
+        if (chunk != t.getChunk()) {
+          crossChunkNames.add(name);
         }
       }
     }
   }
 
   /**
-   * Builds the maybeReferencesThis set of names that may reference a function
-   * that references this. If the function a name references does not reference
-   * this it can be called as a method call where the this value is not the
-   * same as in a normal function call.
+   * Builds the maybeReferencesThis set of names that may reference a function that references this.
+   * If the function a name references does not reference this it can be called as a method call
+   * where the this value is not the same as in a normal function call.
    */
-  private class FindNamesReferencingThis extends
-      AbstractPostOrderCallback {
+  private class FindNamesReferencingThis extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
@@ -341,7 +333,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * (This is invalid syntax, but the VAR token is removed later).
    */
   private class RewriteScopeCallback implements NodeTraversal.Callback {
-    final List<ModuleGlobal> preDeclarations = new ArrayList<>();
+    final List<ChunkGlobal> preDeclarations = new ArrayList<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -367,10 +359,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
       boolean hasImportantName = false;
       boolean isGlobalDeclaration = t.getScope().getVar(allLhsNodes.get(0).getString()).isGlobal();
 
-      // Check if any names are in the externs or are global and cross module.
+      // Check if any names are in the externs or are global and cross chunk.
       for (Node lhs : allLhsNodes) {
         checkState(lhs.isName(), "Unexpected lhs node %s, expected NAME", lhs);
-        if ((isGlobalDeclaration && isCrossModuleName(lhs.getString()))
+        if ((isGlobalDeclaration && isCrossChunkName(lhs.getString()))
             || isExternVar(lhs.getString(), t)) {
           hasImportantName = true;
           break;
@@ -385,7 +377,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     /**
      * Partially rewrites a declaration as an assignment.
      *
-     * <p>In the post traversal, all global, cross-module names and extern name references will
+     * <p>In the post traversal, all global, cross-chunk names and extern name references will
      * become property accesses. They will then be invalid as the lhs of a declaration, so we need
      * to convert them to assignments. We also convert any other names or destructuring patterns in
      * the same declaration to assignments and add an earlier declaration.
@@ -393,13 +385,13 @@ final class RescopeGlobalSymbols implements CompilerPass {
     private void rewriteNameDeclaration(
         NodeTraversal t, Node declaration, List<Node> allLhsNodes, boolean isGlobalDeclaration) {
 
-      // Add predeclarations for variables that are neither global/cross-module names nor externs.
+      // Add predeclarations for variables that are neither global/cross-chunk names nor externs.
       CompilerInput input = t.getInput();
       for (Node lhs : allLhsNodes) {
         String name = lhs.getString();
-        if (!(isGlobalDeclaration && isCrossModuleName(name)) && !isExternVar(name, t)) {
+        if (!(isGlobalDeclaration && isCrossChunkName(name)) && !isExternVar(name, t)) {
           preDeclarations.add(
-              new ModuleGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
+              new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
         }
       }
 
@@ -458,13 +450,13 @@ final class RescopeGlobalSymbols implements CompilerPass {
         compiler.reportChangeToEnclosingScope(n);
       }
       // We only care about global vars.
-      if (!(var.isGlobal() && isCrossModuleName(name))) {
+      if (!(var.isGlobal() && isCrossChunkName(name))) {
         return;
       }
       replaceSymbol(n, name);
     }
 
-    /** Replaces a global cross-module name with an access on the global namespace symbol */
+    /** Replaces a global cross-chunk name with an access on the global namespace symbol */
     private void replaceSymbol(Node node, String name) {
       Node parent = node.getParent();
       Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
@@ -482,11 +474,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
 
     /**
-     * Adds back declarations for variables that do not cross module boundaries.
-     * Must be called after RemoveGlobalVarCallback.
+     * Adds back declarations for variables that do not cross chunk boundaries. Must be called after
+     * RemoveGlobalVarCallback.
      */
-    void declareModuleGlobals() {
-      for (ModuleGlobal global : preDeclarations) {
+    void declareChunkGlobals() {
+      for (ChunkGlobal global : preDeclarations) {
         if (global.root.hasChildren() && global.root.getFirstChild().isVar()) {
           global.root.getFirstChild().addChildToBack(global.name);
         } else {
@@ -496,14 +488,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
       }
     }
 
-    /**
-     * Variable that doesn't cross module boundaries.
-     */
-    private class ModuleGlobal {
+    /** Variable that doesn't cross chunk boundaries. */
+    private class ChunkGlobal {
       final Node root;
       final Node name;
 
-      ModuleGlobal(Node root, Node name) {
+      ChunkGlobal(Node root, Node name) {
         this.root = root;
         this.name = name;
       }
@@ -556,7 +546,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         }
       }
       // If every child of a var declares a name, it must stay in place.
-      // This is the case if none of the declared variables cross module
+      // This is the case if none of the declared variables cross chunk
       // boundaries.
       if (allNameOrDestructuring) {
         return;
@@ -592,4 +582,3 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
   }
 }
-

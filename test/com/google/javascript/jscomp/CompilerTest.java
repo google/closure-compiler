@@ -535,14 +535,14 @@ public final class CompilerTest {
 
   @Test
   public void testRebuildInputsFromModule() {
-    ImmutableList<JSChunk> modules = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
-    modules.get(0).add(SourceFile.fromCode("in1", ""));
-    modules.get(1).add(SourceFile.fromCode("in2", ""));
+    ImmutableList<JSChunk> chunks = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
+    chunks.get(0).add(SourceFile.fromCode("in1", ""));
+    chunks.get(1).add(SourceFile.fromCode("in2", ""));
 
     Compiler compiler = new Compiler();
-    compiler.initModules(ImmutableList.<SourceFile>of(), modules, new CompilerOptions());
+    compiler.initChunks(ImmutableList.<SourceFile>of(), chunks, new CompilerOptions());
 
-    modules.get(1).add(SourceFile.fromCode("in3", ""));
+    chunks.get(1).add(SourceFile.fromCode("in3", ""));
     assertThat(compiler.getInput(new InputId("in3"))).isNull();
     compiler.rebuildInputsFromModules();
     assertThat(compiler.getInput(new InputId("in3"))).isNotNull();
@@ -1553,7 +1553,7 @@ public final class CompilerTest {
     compiler.parse();
     compiler.check();
     final CompilerInput onlyInputBeforeSave =
-        getOnlyElement(compiler.getModuleGraph().getAllInputs());
+        getOnlyElement(compiler.getChunkGraph().getAllInputs());
     // this is the special name used for a single fill file when there are no inputs
     assertThat(onlyInputBeforeSave.getName()).isEqualTo("$strong$$fillFile");
 
@@ -1565,7 +1565,7 @@ public final class CompilerTest {
 
     // The fillFile is still listed as the only input
     final CompilerInput onlyInputAfterRestore =
-        getOnlyElement(compiler.getModuleGraph().getAllInputs());
+        getOnlyElement(compiler.getChunkGraph().getAllInputs());
     assertThat(onlyInputAfterRestore.getName()).isEqualTo("$strong$$fillFile");
   }
 
@@ -1616,7 +1616,7 @@ public final class CompilerTest {
             Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"));
     JsAst realAst = new JsAst(inputSourceFile);
     m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors= */ true)));
-    compiler.initModules(externs, ImmutableList.of(m), options);
+    compiler.initChunks(externs, ImmutableList.of(m), options);
 
     compiler.parse();
     compiler.check();
@@ -1628,7 +1628,7 @@ public final class CompilerTest {
     compiler = new Compiler(new TestErrorManager());
     m = new JSChunk("m");
     m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors= */ true)));
-    compiler.initModules(externs, ImmutableList.of(m), options);
+    compiler.initChunks(externs, ImmutableList.of(m), options);
     restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
     compiler.performTranspilationAndOptimizations();
@@ -2565,10 +2565,10 @@ public final class CompilerTest {
     compiler.check();
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(2);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 0).getName())
+    assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 0).getName())
         .isEqualTo(JSChunk.STRONG_CHUNK_NAME);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 1).getName())
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 1).getName())
         .isEqualTo(JSChunk.WEAK_CHUNK_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};a.b={};var d={};");
@@ -2588,7 +2588,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2), options);
+    compiler.initChunks(ImmutableList.of(), ImmutableList.of(m1, m2), options);
 
     compiler.parse();
     compiler.check();
@@ -2605,15 +2605,15 @@ public final class CompilerTest {
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
       // restoring state creates new JSModule objects. the old ones are stale.
-      m1 = compiler.getModuleGraph().getChunkByName("m1");
-      m2 = compiler.getModuleGraph().getChunkByName("m2");
+      m1 = compiler.getChunkGraph().getChunkByName("m1");
+      m2 = compiler.getChunkGraph().getChunkByName("m2");
     }
 
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(3);
+    assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(3);
 
-    JSChunk weakModule = compiler.getModuleGraph().getChunkByName("$weak$");
+    JSChunk weakModule = compiler.getChunkGraph().getChunkByName("$weak$");
     ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(compiler);
     assertThat(weakModule).isNotNull();
 
@@ -2687,15 +2687,15 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
+    compiler.initChunks(ImmutableList.of(), ImmutableList.of(strong, weak), options);
 
     compiler.parse();
     compiler.check();
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(2);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 0).getName()).isEqualTo("m");
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 1).getName())
+    assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 0).getName()).isEqualTo("m");
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 1).getName())
         .isEqualTo(JSChunk.WEAK_CHUNK_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};");
@@ -2718,8 +2718,7 @@ public final class CompilerTest {
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
-            () ->
-                compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options));
+            () -> compiler.initChunks(ImmutableList.of(), ImmutableList.of(strong, weak), options));
     assertThat(e)
         .hasMessageThat()
         .contains("Found these strong sources in the weak chunk:\n  weak_but_actually_strong.js");
@@ -2741,8 +2740,7 @@ public final class CompilerTest {
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
-            () ->
-                compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options));
+            () -> compiler.initChunks(ImmutableList.of(), ImmutableList.of(strong, weak), options));
     assertThat(e)
         .hasMessageThat()
         .contains(
@@ -2763,8 +2761,7 @@ public final class CompilerTest {
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
-            () ->
-                compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options));
+            () -> compiler.initChunks(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options));
     assertThat(e)
         .hasMessageThat()
         .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
@@ -3375,14 +3372,14 @@ public final class CompilerTest {
         typedAstListStream);
     Node weakScript =
         compiler
-            .getModuleGraph()
+            .getChunkGraph()
             .getChunkByName(JSChunk.WEAK_CHUNK_NAME)
             .getInputs()
             .get(0)
             .getAstRoot(compiler);
     Node strongScript =
         compiler
-            .getModuleGraph()
+            .getChunkGraph()
             .getChunkByName(JSChunk.STRONG_CHUNK_NAME)
             .getInputs()
             .get(0)
@@ -3453,7 +3450,7 @@ public final class CompilerTest {
             TypedAst.List.newBuilder().addTypedAsts(typedAst).build().toByteArray());
 
     // When
-    compiler.initModulesWithTypedAstFilesystem(
+    compiler.initChunksWithTypedAstFilesystem(
         ImmutableList.of(),
         ImmutableList.of(strongChunk, weakChunk),
         compilerOptions,

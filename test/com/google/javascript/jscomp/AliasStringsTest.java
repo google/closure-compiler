@@ -39,7 +39,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     AliasStrings pass =
-        new AliasStrings(compiler, compiler.getModuleGraph(), false, aliasStringsMode);
+        new AliasStrings(compiler, compiler.getChunkGraph(), false, aliasStringsMode);
     if (hashReduction) {
       pass.unitTestHashReductionMask = 0;
     }
@@ -166,11 +166,11 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Test
   public void testStringsInModules() {
 
-    // Aliases must be placed in the correct module. The alias for
+    // Aliases must be placed in the correct chunk. The alias for
     // '------adios------' must be lifted from m2 and m3 and go in the
-    // common parent module m1
+    // common parent chunks m1
 
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forBush()
             .addChunk(
                 "function f(a) { alert('ffffffffffffffffffff' + 'ffffffffffffffffffff' + a); }"
@@ -188,7 +188,7 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';"
@@ -230,7 +230,7 @@ public final class AliasStringsTest extends CompilerTestCase {
     // '------adios------' must be lifted from m2 and m3 and go in the
     // common parent module m1
 
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forBush()
             .addChunk("function g() { alert('ciaociaociaociaociao'); }")
             .addChunk(
@@ -243,7 +243,7 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             lines(
@@ -265,7 +265,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Test
   public void testAliasInCommonModuleInclusive() {
 
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forBush()
             .addChunk("")
             .addChunk("function g() { alert('ciaociaociaociaociao'); }")
@@ -276,7 +276,7 @@ public final class AliasStringsTest extends CompilerTestCase {
     // The "ciao" string is used in m1 and m2.
     // Since m2 depends on m1, we should create the module there and not force it into m0.
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m0
             "",
@@ -292,7 +292,7 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testEmptyModules() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             .addChunk("")
             .addChunk("function foo() { f('goodgoodgoodgoodgood') }")
@@ -300,7 +300,7 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m0
             "var $$S_goodgoodgoodgoodgood='goodgoodgoodgoodgood'",

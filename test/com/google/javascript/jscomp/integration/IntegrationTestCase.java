@@ -327,14 +327,14 @@ abstract class IntegrationTestCase {
   }
 
   @CanIgnoreReturnValue
-  protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> modules) {
+  protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> chunks) {
     Compiler compiler =
         useNoninjectingCompiler
             ? createNoninjectingCompiler(new BlackHoleErrorManager())
             : createCompiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
-    compiler.compileModules(externs, modules, options);
+    var unused = compiler.compileChunks(externs, chunks, options);
     return compiler;
   }
 

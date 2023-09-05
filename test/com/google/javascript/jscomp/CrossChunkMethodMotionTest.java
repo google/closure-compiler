@@ -399,7 +399,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   public void doNotMoveFunctionCall_thatIsSideEffected() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forChain()
             // m1
             .addChunk(
@@ -412,7 +412,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             .addChunk("var c = b")
             .build();
 
-    testSame(srcs(modules));
+    testSame(srcs(chunks));
   }
 
   @Test
@@ -1046,7 +1046,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void movePrototypeMethodToDeepestCommonDependencyOfReferencingChunks() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
                 lines(
@@ -1061,11 +1061,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             .addChunk("(new Foo).baz() , 2")
             .build();
 
-    modules[1].addDependency(modules[0]);
-    modules[2].addDependency(modules[1]);
-    modules[3].addDependency(modules[1]);
+    chunks[1].addDependency(chunks[0]);
+    chunks[2].addDependency(chunks[1]);
+    chunks[3].addDependency(chunks[1]);
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             lines(
                 STUB_DECLARATIONS, //
@@ -1081,7 +1081,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodToDeepestCommonDependencyOfReferencingChunks() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forUnordered()
             .addChunk("class Foo { baz() {} }")
             // Chunk 2
@@ -1093,12 +1093,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             .addChunk("(new Foo).baz() , 2")
             .build();
 
-    modules[1].addDependency(modules[0]);
-    modules[2].addDependency(modules[1]);
-    modules[3].addDependency(modules[1]);
+    chunks[1].addDependency(chunks[0]);
+    chunks[2].addDependency(chunks[1]);
+    chunks[3].addDependency(chunks[1]);
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             lines(
                 STUB_DECLARATIONS, //

@@ -152,7 +152,7 @@ public final class JSChunk implements Serializable, DependencyInfo {
     checkArgument(
         !inputs.containsKey(inputName), "%s already exist in chunk %s", inputName, this.getName());
     inputs.put(inputName, input);
-    input.setModule(this);
+    input.setChunk(this);
   }
 
   /**
@@ -176,14 +176,14 @@ public final class JSChunk implements Serializable, DependencyInfo {
 
   /** Removes an input from this chunk. */
   public void remove(CompilerInput input) {
-    input.setModule(null);
+    input.setChunk(null);
     inputs.remove(input.getName());
   }
 
   /** Removes all of the inputs from this chunk. */
   public void removeAll() {
     for (CompilerInput input : inputs.values()) {
-      input.setModule(null);
+      input.setChunk(null);
     }
     inputs.clear();
   }

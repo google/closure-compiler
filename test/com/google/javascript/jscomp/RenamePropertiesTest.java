@@ -274,40 +274,40 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testModules() {
-    String module1Js =
+  public void testChunks() {
+    String chunk1Js =
         "function Bar(){} Bar.prototype.getA=function(x){};"
             + "var foo;foo.getA(foo);foo.doo=foo;foo.bloo=foo;";
 
-    String module2Js =
+    String chunk2Js =
         "function Far(){} Far.prototype.getB=function(y){};"
             + "var too;too.getB(too);too.woo=too;too.bloo=too;";
 
-    String module3Js =
+    String chunk3Js =
         "function Car(){} Car.prototype.getC=function(z){};"
             + "var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;";
 
-    JSChunk module1 = new JSChunk("m1");
-    module1.add(SourceFile.fromCode("input1", module1Js));
+    JSChunk chunk1 = new JSChunk("m1");
+    chunk1.add(SourceFile.fromCode("input1", chunk1Js));
 
-    JSChunk module2 = new JSChunk("m2");
-    module2.add(SourceFile.fromCode("input2", module2Js));
+    JSChunk chunk2 = new JSChunk("m2");
+    chunk2.add(SourceFile.fromCode("input2", chunk2Js));
 
-    JSChunk module3 = new JSChunk("m3");
-    module3.add(SourceFile.fromCode("input3", module3Js));
+    JSChunk chunk3 = new JSChunk("m3");
+    chunk3.add(SourceFile.fromCode("input3", chunk3Js));
 
-    JSChunk[] modules = new JSChunk[] {module1, module2, module3};
-    Compiler compiler = compileModules("", modules);
+    JSChunk[] chunks = new JSChunk[] {chunk1, chunk2, chunk3};
+    Compiler compiler = compileChunks("", chunks);
 
     Result result = compiler.getResult();
     assertThat(result.success).isTrue();
 
-    assertThat(compiler.toSource(module1))
+    assertThat(compiler.toSource(chunk1))
         .isEqualTo(
             "function Bar(){}Bar.prototype.b=function(x){};"
                 + "var foo;foo.b(foo);foo.f=foo;foo.a=foo;");
 
-    assertThat(compiler.toSource(module2))
+    assertThat(compiler.toSource(chunk2))
         .isEqualTo(
             "function Far(){}Far.prototype.c=function(y){};"
                 + "var too;too.c(too);too.g=too;too.a=too;");
@@ -315,10 +315,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     // Note that properties that occur most often globally get the earliest
     // names. The "getC" property, which doesn't occur until module 3, is
     // renamed to an earlier name in the alphabet than "woo", which appears
-    // in module 2, because "getC" occurs more total times across all modules.
-    // Might be better to give early modules the shortest names, but this is
+    // in module 2, because "getC" occurs more total times across all chunks.
+    // Might be better to give early chunks the shortest names, but this is
     // how the pass currently works.
-    assertThat(compiler.toSource(module3))
+    assertThat(compiler.toSource(chunk3))
         .isEqualTo(
             "function Car(){}Car.prototype.d=function(z){};"
                 + "var noo;noo.d(noo);noo.h=noo;noo.e=noo;");
@@ -787,7 +787,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         lines("var foo = { ", "  a: 1, ", "  b() {", "    return this.a", "  }", "};", "foo.b();"));
   }
 
-  private Compiler compileModules(String externs, JSChunk[] modules) {
+  private Compiler compileChunks(String externs, JSChunk[] chunks) {
     SourceFile externsInput = SourceFile.fromCode("externs", externs);
 
     CompilerOptions options = new CompilerOptions();
@@ -795,7 +795,9 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
 
     Compiler compiler = new Compiler();
-    compiler.compileModules(ImmutableList.of(externsInput), ImmutableList.copyOf(modules), options);
+    var unused =
+        compiler.compileChunks(
+            ImmutableList.of(externsInput), ImmutableList.copyOf(chunks), options);
     return compiler;
   }
 

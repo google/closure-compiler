@@ -55,7 +55,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   private final AbstractCompiler compiler;
 
-  private final JSChunkGraph moduleGraph;
+  private final JSChunkGraph chunkGraph;
 
   private final boolean outputStringUsage;
 
@@ -69,10 +69,10 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   private static final int ALIAS_LARGE_STRINGS_LENGTH = 100;
 
   /**
-   * Map from module to the node in that module that should parent any string variable declarations
-   * that have to be moved into that module
+   * Map from chunk to the node in that chunk that should parent any string variable declarations
+   * that have to be moved into that chunk
    */
-  private final Map<JSChunk, Node> moduleVarParentMap = new HashMap<>();
+  private final Map<JSChunk, Node> chunkVarParentMap = new HashMap<>();
 
   /** package private.  This value is AND-ed with the hash function to allow
    * unit tests to reduce the range of hash values to test collision cases */
@@ -82,18 +82,18 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * Creates an instance.
    *
    * @param compiler The compiler
-   * @param moduleGraph The module graph, or null if there are no modules
+   * @param chunkGraph The module graph, or null if there are no modules
    * @param outputStringUsage Outputs all strings and the number of times they were used in the
    *     application to the server log.
    * @param aliasStringsMode The alias strings policy set to either ALL or LARGE
    */
   AliasStrings(
       AbstractCompiler compiler,
-      JSChunkGraph moduleGraph,
+      JSChunkGraph chunkGraph,
       boolean outputStringUsage,
       AliasStringsMode aliasStringsMode) {
     this.compiler = compiler;
-    this.moduleGraph = moduleGraph;
+    this.chunkGraph = chunkGraph;
     this.outputStringUsage = outputStringUsage;
     this.aliasStringsMode = aliasStringsMode;
   }
@@ -154,26 +154,22 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
       info.occurrences.add(occurrence);
 
-      // The current module.
-      JSChunk module = t.getChunk();
+      // The current chunk.
+      JSChunk chunk = t.getChunk();
       if (info.occurrences.size() != 1) {
         // Check whether the current module depends on the module containing
         // the declaration.
-        if (module != null
-            && info.moduleToContainDecl != null
-            && module != info.moduleToContainDecl) {
+        if (chunk != null && info.chunkToContainDecl != null && chunk != info.chunkToContainDecl) {
           // We need to declare this string in the deepest module in the
           // module dependency graph that both of these modules depend on.
-          module =
-              moduleGraph.getDeepestCommonDependencyInclusive(module, info.moduleToContainDecl);
+          chunk = chunkGraph.getDeepestCommonDependencyInclusive(chunk, info.chunkToContainDecl);
         } else {
           // use the previously saved insertion location.
           return;
         }
       }
-      Node varParent =
-          moduleVarParentMap.computeIfAbsent(module, compiler::getNodeForCodeInsertion);
-      info.moduleToContainDecl = module;
+      Node varParent = chunkVarParentMap.computeIfAbsent(chunk, compiler::getNodeForCodeInsertion);
+      info.chunkToContainDecl = chunk;
       info.parentForNewVarDecl = varParent;
       info.siblingToInsertVarDeclBefore = varParent.getFirstChild();
     }
@@ -302,7 +298,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
     final ArrayList<Node> occurrences = new ArrayList<>();
 
-    JSChunk moduleToContainDecl;
+    JSChunk chunkToContainDecl;
     Node parentForNewVarDecl;
     Node siblingToInsertVarDeclBefore;
 

@@ -57,22 +57,22 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
     SourceFile emptyWeakSrc3 = SourceFile.fromCode("e.js", "");
     SourceFile fillFileSrc = SourceFile.fromCode("$fillFile", "");
 
-    JSChunk moduleBefore1 = new JSChunk("m1");
-    moduleBefore1.add(strongSrc1);
-    moduleBefore1.add(weakSrc1);
-    JSChunk moduleAfter1 = new JSChunk("m1");
-    moduleAfter1.add(strongSrc1);
+    JSChunk chunkBefore1 = new JSChunk("m1");
+    chunkBefore1.add(strongSrc1);
+    chunkBefore1.add(weakSrc1);
+    JSChunk chunkAfter1 = new JSChunk("m1");
+    chunkAfter1.add(strongSrc1);
 
-    JSChunk moduleBefore2 = new JSChunk("m2");
-    moduleBefore2.add(weakSrc2);
-    moduleBefore2.add(strongSrc2);
-    JSChunk moduleAfter2 = new JSChunk("m2");
-    moduleAfter2.add(strongSrc2);
+    JSChunk chunkBefore2 = new JSChunk("m2");
+    chunkBefore2.add(weakSrc2);
+    chunkBefore2.add(strongSrc2);
+    JSChunk chunkAfter2 = new JSChunk("m2");
+    chunkAfter2.add(strongSrc2);
 
-    JSChunk moduleBefore3 = new JSChunk("m3");
-    moduleBefore3.add(weakSrc3);
-    JSChunk moduleAfter3 = new JSChunk("m3");
-    moduleAfter3.add(fillFileSrc);
+    JSChunk chunkBefore3 = new JSChunk("m3");
+    chunkBefore3.add(weakSrc3);
+    JSChunk chunkAfter3 = new JSChunk("m3");
+    chunkAfter3.add(fillFileSrc);
 
     JSChunk weakModule = new JSChunk("$weak$");
     weakModule.add(emptyWeakSrc1);
@@ -81,7 +81,7 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
 
     // Expect the weak sources to be emptied and moved to a separate final module.
     test(
-        srcs(new JSChunk[] {moduleBefore1, moduleBefore2, moduleBefore3}),
-        expected(new JSChunk[] {moduleAfter1, moduleAfter2, moduleAfter3, weakModule}));
+        srcs(new JSChunk[] {chunkBefore1, chunkBefore2, chunkBefore3}),
+        expected(new JSChunk[] {chunkAfter1, chunkAfter2, chunkAfter3, weakModule}));
   }
 }

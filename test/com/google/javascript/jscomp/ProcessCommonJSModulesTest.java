@@ -600,10 +600,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   @Test
   public void testMultipleAssignments() {
 
-    JSChunk module = new JSChunk("out");
-    module.add(SourceFile.fromCode("other.js", "goog.provide('module$other');"));
-    module.add(SourceFile.fromCode("yet_another.js", "goog.provide('module$yet_another');"));
-    module.add(
+    JSChunk chunk = new JSChunk("out");
+    chunk.add(SourceFile.fromCode("other.js", "goog.provide('module$other');"));
+    chunk.add(SourceFile.fromCode("yet_another.js", "goog.provide('module$yet_another');"));
+    chunk.add(
         SourceFile.fromCode(
             "test",
             lines(
@@ -612,9 +612,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                 "/** @constructor */ function Bar() {} ",
                 "Bar.prototype.foobar = function() { alert('foobar'); };",
                 "exports = Bar;")));
-    JSChunk[] modules = {module};
+    JSChunk[] chunks = {chunk};
     test(
-        srcs(modules),
+        srcs(chunks),
         expected((String[]) null),
         new Diagnostic(
             ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT.level,

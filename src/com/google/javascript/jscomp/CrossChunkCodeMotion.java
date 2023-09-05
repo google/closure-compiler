@@ -122,7 +122,7 @@ class CrossChunkCodeMotion implements CompilerPass {
   private void addInstanceofGuards(Collection<GlobalSymbol> globalSymbols) {
     for (GlobalSymbol globalSymbol : globalSymbols) {
       for (InstanceofReference instanceofReference : globalSymbol.instanceofReferencesToGuard) {
-        if (!globalSymbol.declarationsCoverModule(instanceofReference.getModule())) {
+        if (!globalSymbol.declarationsCoverModule(instanceofReference.getChunk())) {
           addGuardToInstanceofReference(instanceofReference.getReference().getNode());
         }
       }
@@ -154,11 +154,11 @@ class CrossChunkCodeMotion implements CompilerPass {
 
     private void processImmovableStatement(TopLevelStatement statement) {
       for (Reference ref : statement.getNonDeclarationReferences()) {
-        processImmovableReference(ref, statement.getModule());
+        processImmovableReference(ref, statement.getChunk());
       }
     }
 
-    private void processImmovableReference(Reference ref, JSChunk module) {
+    private void processImmovableReference(Reference ref, JSChunk chunk) {
       GlobalSymbol globalSymbol = getGlobalSymbol(ref.getSymbol());
       if (parentModuleCanSeeSymbolsDeclaredInChildren) {
         // It is possible to move the declaration of `Foo` after
@@ -169,13 +169,13 @@ class CrossChunkCodeMotion implements CompilerPass {
           return;
         } else if (isUnguardedInstanceofReference(n)) {
           ImmovableInstanceofReference instanceofReference =
-              new ImmovableInstanceofReference(module, ref);
+              new ImmovableInstanceofReference(chunk, ref);
 
           globalSymbol.instanceofReferencesToGuard.push(instanceofReference);
           return;
         }
       }
-      globalSymbol.addImmovableReference(module);
+      globalSymbol.addImmovableReference(chunk);
     }
 
     private void processDeclarationStatement(TopLevelStatement statement) {
@@ -272,24 +272,24 @@ class CrossChunkCodeMotion implements CompilerPass {
       return var.getName();
     }
 
-    void addImmovableReference(JSChunk module) {
-      modulesWithImmovableReferences.set(module.getIndex());
+    void addImmovableReference(JSChunk chunk) {
+      modulesWithImmovableReferences.set(chunk.getIndex());
     }
 
     /** Adds the statement to the appropriate DeclarationStatementGroup and returns it. */
     DeclarationStatementGroup addDeclarationStatement(TopLevelStatement statement) {
-      JSChunk module = statement.getModule();
+      JSChunk chunk = statement.getChunk();
       DeclarationStatementGroup lastDsg = dsgStack.peek();
       if (lastDsg == null) {
-        lastDsg = new DeclarationStatementGroup(this, module);
+        lastDsg = new DeclarationStatementGroup(this, chunk);
         dsgStack.push(lastDsg);
       }
       DeclarationStatementGroup statementDsg;
-      if (module.equals(lastDsg.currentModule)) {
+      if (chunk.equals(lastDsg.currentChunk)) {
         statementDsg = lastDsg;
       } else {
         // new chunk requires a new DSG
-        statementDsg = new DeclarationStatementGroup(this, module);
+        statementDsg = new DeclarationStatementGroup(this, chunk);
         dsgStack.push(statementDsg);
       }
       statementDsg.statementStack.push(statement);
@@ -304,9 +304,9 @@ class CrossChunkCodeMotion implements CompilerPass {
      * Does the chunk depend on at least one of the chunks containing declaration statements for
      * this symbol?
      */
-    boolean declarationsCoverModule(JSChunk module) {
+    boolean declarationsCoverModule(JSChunk chunk) {
       for (DeclarationStatementGroup dsg : dsgStack) {
-        if (module.equals(dsg.currentModule) || graph.dependsOn(module, dsg.currentModule)) {
+        if (chunk.equals(dsg.currentChunk) || graph.dependsOn(chunk, dsg.currentChunk)) {
           return true;
         }
       }
@@ -336,7 +336,7 @@ class CrossChunkCodeMotion implements CompilerPass {
         for (GlobalSymbol symbol : symbols) {
           modulesWithImmovableReferences.or(symbol.modulesWithImmovableReferences);
         }
-        dsgCycle.moveToPreferredModule(modulesWithImmovableReferences);
+        dsgCycle.moveToPreferredChunk(modulesWithImmovableReferences);
       }
       for (GlobalSymbol symbol : symbols) {
         symbol.isMoveDeclarationStatementsDone = true;
@@ -348,8 +348,8 @@ class CrossChunkCodeMotion implements CompilerPass {
       Deque<DeclarationStatementGroup> dsgsLatestFirst = getDsgsLatestFirst();
       DeclarationStatementGroupCycle cycle = null;
       for (DeclarationStatementGroup dsg : dsgsLatestFirst) {
-        if (cycle == null || !cycle.currentModule.equals(dsg.currentModule)) {
-          cycle = new DeclarationStatementGroupCycle(this, dsg.currentModule);
+        if (cycle == null || !cycle.currentChunk.equals(dsg.currentChunk)) {
+          cycle = new DeclarationStatementGroupCycle(this, dsg.currentChunk);
           cyclesLatestFirst.add(cycle);
         }
         cycle.dsgs.add(dsg);
@@ -373,17 +373,17 @@ class CrossChunkCodeMotion implements CompilerPass {
           } else {
             DeclarationStatementGroup dsg1 = stack1.peek();
             DeclarationStatementGroup dsg2 = stack2.peek();
-            if (dsg1.currentModule.getIndex() > dsg2.currentModule.getIndex()) {
+            if (dsg1.currentChunk.getIndex() > dsg2.currentChunk.getIndex()) {
               resultStack.add(stack1.pop());
               checkState(
                   stack1.isEmpty()
-                      || stack1.peek().currentModule.getIndex() <= dsg1.currentModule.getIndex(),
+                      || stack1.peek().currentChunk.getIndex() <= dsg1.currentChunk.getIndex(),
                   "DSG stacks are out of order.");
             } else {
               resultStack.add(stack2.pop());
               checkState(
                   stack2.isEmpty()
-                      || stack2.peek().currentModule.getIndex() <= dsg2.currentModule.getIndex(),
+                      || stack2.peek().currentChunk.getIndex() <= dsg2.currentChunk.getIndex(),
                   "DSG stacks are out of order.");
             }
           }
@@ -423,14 +423,16 @@ class CrossChunkCodeMotion implements CompilerPass {
 
     final GlobalSymbol declaredGlobalSymbol;
     final Set<GlobalSymbol> referencedGlobalSymbols = new HashSet<>();
+
     /** chunk containing the statements */
-    JSChunk currentModule;
+    JSChunk currentChunk;
+
     /** statements in the group, latest first */
     final Deque<TopLevelStatement> statementStack = new ArrayDeque<>();
 
-    DeclarationStatementGroup(GlobalSymbol declaredGlobalSymbol, JSChunk currentModule) {
+    DeclarationStatementGroup(GlobalSymbol declaredGlobalSymbol, JSChunk currentChunk) {
       this.declaredGlobalSymbol = declaredGlobalSymbol;
-      this.currentModule = currentModule;
+      this.currentChunk = currentChunk;
     }
 
     boolean allStatementsCanMove() {
@@ -447,14 +449,14 @@ class CrossChunkCodeMotion implements CompilerPass {
     }
 
     void makeReferencesImmovable() {
-      declaredGlobalSymbol.addImmovableReference(currentModule);
+      declaredGlobalSymbol.addImmovableReference(currentChunk);
       for (GlobalSymbol symbol : referencedGlobalSymbols) {
         checkState(
             !symbol.isMoveDeclarationStatementsDone,
             "symbol %s moved before referring symbol %s",
             symbol,
             declaredGlobalSymbol);
-        symbol.addImmovableReference(currentModule);
+        symbol.addImmovableReference(currentChunk);
       }
     }
   }
@@ -554,17 +556,17 @@ class CrossChunkCodeMotion implements CompilerPass {
    * symbols refer to each other.
    */
   private class DeclarationStatementGroupCycle {
-    final JSChunk currentModule;
+    final JSChunk currentChunk;
     final Deque<DeclarationStatementGroup> dsgs;
 
-    DeclarationStatementGroupCycle(GlobalSymbolCycle globalSymbolCycle, JSChunk currentModule) {
-      this.currentModule = currentModule;
+    DeclarationStatementGroupCycle(GlobalSymbolCycle globalSymbolCycle, JSChunk currentChunk) {
+      this.currentChunk = currentChunk;
       this.dsgs = new ArrayDeque<>();
     }
 
-    void moveToPreferredModule(BitSet modulesWithImmovableReferences) {
-      JSChunk preferredModule = getPreferredModule(modulesWithImmovableReferences);
-      if (!preferredModule.equals(currentModule)) {
+    void moveToPreferredChunk(BitSet modulesWithImmovableReferences) {
+      JSChunk preferredChunk = getPreferredChunk(modulesWithImmovableReferences);
+      if (!preferredChunk.equals(currentChunk)) {
         if (cccmLog.isLogging()) {
           // Write a separate log for each global symbol, because this is easier to work
           // with when analyzing the log.
@@ -575,15 +577,15 @@ class CrossChunkCodeMotion implements CompilerPass {
                 () ->
                     SimpleFormat.format(
                         "Moving DSG for %s from chunk %s to chunk %s",
-                        globalSymbolName, currentModule, preferredModule));
+                        globalSymbolName, currentChunk, preferredChunk));
           }
         }
-        moveStatementsToModule(preferredModule);
+        moveStatementsToModule(preferredChunk);
       }
       // Now that all the statements have been moved, update the current chunk for all the DSGs
       // and treat all the references they contain as now immovable.
       for (DeclarationStatementGroup dsg : dsgs) {
-        dsg.currentModule = preferredModule;
+        dsg.currentChunk = preferredChunk;
         dsg.makeReferencesImmovable();
       }
     }
@@ -596,10 +598,10 @@ class CrossChunkCodeMotion implements CompilerPass {
       return builder.build();
     }
 
-    private void moveStatementsToModule(JSChunk preferredModule) {
+    private void moveStatementsToModule(JSChunk preferredChunk) {
       Node destParent =
           moduleInsertionPointMap.computeIfAbsent(
-              preferredModule, compiler::getNodeForCodeInsertion);
+              preferredChunk, compiler::getNodeForCodeInsertion);
       Deque<TopLevelStatement> statementsLastFirst = getStatementsLastFirst();
       for (TopLevelStatement statement : statementsLastFirst) {
         Node statementNode = statement.getStatementNode();
@@ -652,13 +654,13 @@ class CrossChunkCodeMotion implements CompilerPass {
       return result;
     }
 
-    private JSChunk getPreferredModule(BitSet modulesWithImmovableReferences) {
+    private JSChunk getPreferredChunk(BitSet modulesWithImmovableReferences) {
       if (modulesWithImmovableReferences.isEmpty()) {
-        return currentModule;
+        return currentChunk;
       } else if (!allStatementsCanMove()) {
-        return currentModule;
+        return currentChunk;
       } else {
-        return graph.getSmallestCoveringSubtree(currentModule, modulesWithImmovableReferences);
+        return graph.getSmallestCoveringSubtree(currentChunk, modulesWithImmovableReferences);
       }
     }
 
@@ -673,23 +675,23 @@ class CrossChunkCodeMotion implements CompilerPass {
   }
 
   interface InstanceofReference {
-    JSChunk getModule();
+    JSChunk getChunk();
 
     Reference getReference();
   }
 
   private static class ImmovableInstanceofReference implements InstanceofReference {
-    final JSChunk module;
+    final JSChunk chunk;
     final Reference reference;
 
-    ImmovableInstanceofReference(JSChunk module, Reference reference) {
-      this.module = module;
+    ImmovableInstanceofReference(JSChunk chunk, Reference reference) {
+      this.chunk = chunk;
       this.reference = reference;
     }
 
     @Override
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
 
     @Override
@@ -708,8 +710,8 @@ class CrossChunkCodeMotion implements CompilerPass {
     }
 
     @Override
-    public JSChunk getModule() {
-      return containingDsg.currentModule;
+    public JSChunk getChunk() {
+      return containingDsg.currentChunk;
     }
 
     @Override

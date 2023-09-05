@@ -40,7 +40,7 @@ public final class UnitTestUtils {
    * `TAGGED_TEMPLATE_TMP_VAR` in the test sources. This function replaces that generic name by a
    * specific name consisting of the runtime-computed uniqueID before test execution.
    *
-   * @param inputs input FlatSources. Does not work for ModuleSources.
+   * @param inputs input FlatSources. Does not work for ChunkSources.
    * @param outputs expected sources
    * @param replacementPrefixes mapping from generic variable names and actual variable name prefix
    * @return the updated output files with correct runtime variable names
@@ -51,10 +51,10 @@ public final class UnitTestUtils {
     // In FlatSources, we correspond each input SourceFile (i.e. each CompilerInput) with an
     // expected SourceFile. We can know what uniqueID to generate in the expected string by knowing
     // its CompilerInput.
-    // ModuleSources consist of JSChunks, and each chunk has multiple CompilerInputs which can
+    // ChunkSources consist of JSChunks, and each chunk has multiple CompilerInputs which can
     // correspond to an expected SourceFile. The uniqueID in the expected code could come from code
     // in any of those CompilerInputs, i.e. we do not know what uniqueID to generate in the expected
-    // string. Hence ModuleSources are unsupported.
+    // string. Hence ChunkSources are unsupported.
     int inLength = inputs.sources.size();
     int outLength = outputs.expected.size();
     Preconditions.checkArgument(inLength == outLength);

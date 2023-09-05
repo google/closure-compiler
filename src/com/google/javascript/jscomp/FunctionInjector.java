@@ -169,13 +169,13 @@ class FunctionInjector {
   static class Reference {
     final Node callNode;
     final Scope scope;
-    final JSChunk module;
+    final JSChunk chunk;
     final InliningMode mode;
 
-    Reference(Node callNode, Scope scope, JSChunk module, InliningMode mode) {
+    Reference(Node callNode, Scope scope, JSChunk chunk, InliningMode mode) {
       this.callNode = callNode;
       this.scope = scope;
-      this.module = module;
+      this.chunk = chunk;
       this.mode = mode;
     }
 
@@ -901,7 +901,7 @@ class FunctionInjector {
 
   /** Determine if inlining the function is likely to reduce the code size. */
   boolean inliningLowersCost(
-      JSChunk fnModule,
+      JSChunk fnChunk,
       Node fnNode,
       Collection<? extends Reference> refs,
       Set<String> namesToAlias,
@@ -914,8 +914,8 @@ class FunctionInjector {
 
     int referencesUsingBlockInlining = 0;
 
-    boolean checkModules = isRemovable && fnModule != null;
-    JSChunkGraph moduleGraph = compiler.getModuleGraph();
+    boolean checkModules = isRemovable && fnChunk != null;
+    JSChunkGraph chunkGraph = compiler.getChunkGraph();
 
     for (Reference ref : refs) {
       if (ref.mode == InliningMode.BLOCK) {
@@ -923,8 +923,8 @@ class FunctionInjector {
       }
 
       // Check if any of the references cross the module boundaries.
-      if (checkModules && ref.module != null) {
-        if (ref.module != fnModule && !moduleGraph.dependsOn(ref.module, fnModule)) {
+      if (checkModules && ref.chunk != null) {
+        if (ref.chunk != fnChunk && !chunkGraph.dependsOn(ref.chunk, fnChunk)) {
           // Calculate the cost as if the function were non-removable,
           // if it still lowers the cost inline it.
           isRemovable = false;

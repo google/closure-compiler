@@ -35,14 +35,13 @@ import java.util.Iterator;
 public class CrossChunkMethodMotion implements CompilerPass {
 
   // Internal errors
-  static final DiagnosticType NULL_COMMON_MODULE_ERROR = DiagnosticType.error(
-      "JSC_INTERNAL_ERROR_MODULE_DEPEND",
-      "null deepest common module");
+  static final DiagnosticType NULL_COMMON_MODULE_ERROR =
+      DiagnosticType.error("JSC_INTERNAL_ERROR_MODULE_DEPEND", "null deepest common module");
 
   private final AbstractCompiler compiler;
   private final IdGenerator idGenerator;
   private final AnalyzePrototypeProperties analyzer;
-  private final JSChunkGraph moduleGraph;
+  private final JSChunkGraph chunkGraph;
   private final boolean noStubFunctions;
   private final AstFactory astFactory;
 
@@ -71,8 +70,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
    * @param idGenerator An id generator for method stubs.
    * @param canModifyExterns If true, then we can move prototype properties that are declared in the
    *     externs file.
-   * @param noStubFunctions if true, we can move methods without stub functions in the parent
-   *     chunk.
+   * @param noStubFunctions if true, we can move methods without stub functions in the parent chunk.
    */
   CrossChunkMethodMotion(
       AbstractCompiler compiler,
@@ -81,14 +79,10 @@ public class CrossChunkMethodMotion implements CompilerPass {
       boolean noStubFunctions) {
     this.compiler = compiler;
     this.idGenerator = idGenerator;
-    this.moduleGraph = compiler.getModuleGraph();
+    this.chunkGraph = compiler.getChunkGraph();
     this.analyzer =
         new AnalyzePrototypeProperties(
-            compiler,
-            moduleGraph,
-            canModifyExterns,
-            /* anchorUnusedVars= */ false,
-            noStubFunctions);
+            compiler, chunkGraph, canModifyExterns, /* anchorUnusedVars= */ false, noStubFunctions);
     this.noStubFunctions = noStubFunctions;
     this.astFactory = compiler.createAstFactory();
   }
@@ -97,15 +91,13 @@ public class CrossChunkMethodMotion implements CompilerPass {
   public void process(Node externRoot, Node root) {
     // If there are < 2 chunks, then we will never move anything,
     // so we're done.
-    if (moduleGraph.getChunkCount() > 1) {
+    if (chunkGraph.getChunkCount() > 1) {
       analyzer.process(externRoot, root);
       moveMethods(analyzer.getAllNameInfo());
     }
   }
 
-  /**
-   * Move methods deeper in the chunk graph when possible.
-   */
+  /** Move methods deeper in the chunk graph when possible. */
   private void moveMethods(Collection<NameInfo> allNameInfo) {
     boolean hasStubDeclaration = idGenerator.hasGeneratedAnyIds();
     for (NameInfo nameInfo : allNameInfo) {
@@ -126,8 +118,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
         continue;
       }
 
-      Iterator<Symbol> declarations =
-          nameInfo.getDeclarations().descendingIterator();
+      Iterator<Symbol> declarations = nameInfo.getDeclarations().descendingIterator();
       while (declarations.hasNext()) {
         Symbol symbol = declarations.next();
         if (symbol instanceof PrototypeProperty) {
@@ -138,8 +129,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       }
     }
 
-    if (!noStubFunctions && !hasStubDeclaration && idGenerator
-        .hasGeneratedAnyIds()) {
+    if (!noStubFunctions && !hasStubDeclaration && idGenerator.hasGeneratedAnyIds()) {
       // Declare stub functions in the top-most chunk.
       Node declarations = compiler.parseSyntheticCode("chunk_method_stubbing", STUB_DECLARATIONS);
       NodeUtil.markNewScopesChanged(declarations, compiler);
@@ -190,7 +180,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       return;
     }
 
-    if (moduleGraph.dependsOn(deepestCommonModuleRef, prop.getModule())) {
+    if (chunkGraph.dependsOn(deepestCommonModuleRef, prop.getChunk())) {
       if (hasUnmovableRedeclaration(nameInfo, prop)) {
         // If it has been redeclared on the same object, skip it.
         return;
@@ -466,7 +456,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       return;
     }
 
-    if (moduleGraph.dependsOn(deepestCommonModuleRef, classMemberFunction.getModule())) {
+    if (chunkGraph.dependsOn(deepestCommonModuleRef, classMemberFunction.getChunk())) {
       if (hasUnmovableRedeclaration(nameInfo, classMemberFunction)) {
         // If it has been redeclared on the same object, skip it.
         return;
@@ -571,7 +561,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
         // worth the effort to check.
         if (prop != otherProp
             && prop.getRootVar() == otherProp.getRootVar()
-            && prop.getModule() != otherProp.getModule()) {
+            && prop.getChunk() != otherProp.getChunk()) {
           return true;
         }
       }

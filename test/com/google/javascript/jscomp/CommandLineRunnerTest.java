@@ -1388,7 +1388,7 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;"});
     assertThat(
             lastCommandLineRunner.expandSourceMapPath(
-                lastCompiler.getOptions(), lastCompiler.getModuleGraph().getRootChunk()))
+                lastCompiler.getOptions(), lastCompiler.getChunkGraph().getRootChunk()))
         .isEqualTo("foo_m0.js.map");
   }
 
@@ -1700,9 +1700,9 @@ public final class CommandLineRunnerTest {
 
     StringBuilder builder = new StringBuilder();
     ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
-    JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
-    String filename = lastCommandLineRunner.getModuleOutputFileName(module);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, module);
+    JSChunk chunk = lastCompiler.getChunkGraph().getRootChunk();
+    String filename = lastCommandLineRunner.getChunkOutputFileName(chunk);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, chunk);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
@@ -1714,9 +1714,9 @@ public final class CommandLineRunnerTest {
 
     StringBuilder builder = new StringBuilder();
     ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
-    JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
-    String filename = lastCommandLineRunner.getModuleOutputFileName(module);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, module);
+    JSChunk chunk = lastCompiler.getChunkGraph().getRootChunk();
+    String filename = lastCommandLineRunner.getChunkOutputFileName(chunk);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, chunk);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
   }
 
@@ -1759,8 +1759,8 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
-        lastCompiler.getModuleGraph(), builder, true);
+    lastCommandLineRunner.printChunkGraphManifestOrBundleTo(
+        lastCompiler.getChunkGraph(), builder, true);
     assertThat(builder.toString())
         .isEqualTo(
             Joiner.on('\n')
@@ -1787,8 +1787,8 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
-        lastCompiler.getModuleGraph(), builder, true);
+    lastCommandLineRunner.printChunkGraphManifestOrBundleTo(
+        lastCompiler.getChunkGraph(), builder, true);
     assertThat(builder.toString())
         .isEqualTo(
             Joiner.on('\n')
@@ -1810,12 +1810,12 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testOutputModuleGraphJson() throws Exception {
+  public void testOutputChunkGraphJson() throws Exception {
     useModules = ModulePattern.STAR;
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphJsonTo(builder);
+    lastCommandLineRunner.printChunkGraphJsonTo(builder);
     assertThat(builder.toString()).contains("transitive-dependencies");
   }
 

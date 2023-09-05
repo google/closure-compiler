@@ -221,7 +221,7 @@ final class CheckClosureImports implements CompilerPass {
     this.compiler = compiler;
     this.checker = new Checker(compiler, moduleMetadataMap);
     this.namespacesSeen = new HashSet<>();
-    this.chunkGraph = compiler.getModuleGraph();
+    this.chunkGraph = compiler.getChunkGraph();
   }
 
   @Override

@@ -630,7 +630,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     // run compilation
     try (InputStream inputStream = toInputStream(this.shards)) {
-      compiler.initModulesWithTypedAstFilesystem(
+      compiler.initChunksWithTypedAstFilesystem(
           ImmutableList.copyOf(this.externFiles),
           ImmutableList.of(chunk1, chunk2),
           options,

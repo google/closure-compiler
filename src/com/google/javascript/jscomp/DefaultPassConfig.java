@@ -2376,7 +2376,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new CrossChunkCodeMotion(
                       compiler,
-                      compiler.getModuleGraph(),
+                      compiler.getChunkGraph(),
                       options.parentChunkCanSeeSymbolsDeclaredInChildren))
           .build();
 
@@ -2483,7 +2483,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new AliasStrings(
                       compiler,
-                      compiler.getModuleGraph(),
+                      compiler.getChunkGraph(),
                       options.outputJsStringUsage,
                       options.getAliasStringsMode()))
           .build();

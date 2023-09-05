@@ -53,7 +53,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final boolean anchorUnusedVars;
   private final boolean rootScopeUsesAreGlobal;
 
-  private final JSChunkGraph moduleGraph;
+  private final JSChunkGraph chunkGraph;
   private final @Nullable JSChunk firstModule;
 
   // Properties that are implicitly used as part of the JS language.
@@ -100,7 +100,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * Creates a new pass for analyzing prototype properties.
    *
    * @param compiler The compiler.
-   * @param moduleGraph The graph for resolving module dependencies.
+   * @param chunkGraph The graph for resolving module dependencies.
    * @param canModifyExterns If true, then we can move prototype properties that are declared in the
    *     externs file.
    * @param anchorUnusedVars If true, then we must mark all vars as referenced, even if they are
@@ -110,18 +110,18 @@ class AnalyzePrototypeProperties implements CompilerPass {
    */
   AnalyzePrototypeProperties(
       AbstractCompiler compiler,
-      JSChunkGraph moduleGraph,
+      JSChunkGraph chunkGraph,
       boolean canModifyExterns,
       boolean anchorUnusedVars,
       boolean rootScopeUsesAreGlobal) {
     this.compiler = compiler;
-    this.moduleGraph = moduleGraph;
+    this.chunkGraph = chunkGraph;
     this.canModifyExterns = canModifyExterns;
     this.anchorUnusedVars = anchorUnusedVars;
     this.rootScopeUsesAreGlobal = rootScopeUsesAreGlobal;
 
-    if (moduleGraph.getChunkCount() > 1) {
-      firstModule = moduleGraph.getRootChunk();
+    if (chunkGraph.getChunkCount() > 1) {
+      firstModule = chunkGraph.getRootChunk();
     } else {
       firstModule = null;
     }
@@ -133,11 +133,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     for (String property : IMPLICITLY_USED_PROPERTIES) {
       NameInfo nameInfo = getNameInfoForName(property, PROPERTY);
-      if (moduleGraph == null) {
+      if (chunkGraph == null) {
         symbolGraph.connect(externNode, null, nameInfo);
       } else {
-        for (JSChunk module : moduleGraph.getAllChunks()) {
-          symbolGraph.connect(externNode, module, nameInfo);
+        for (JSChunk chunk : chunkGraph.getAllChunks()) {
+          symbolGraph.connect(externNode, chunk, nameInfo);
         }
       }
     }
@@ -402,7 +402,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       }
     }
 
-    private void addSymbolUse(String name, JSChunk module, SymbolType type) {
+    private void addSymbolUse(String name, JSChunk chunk, SymbolType type) {
       NameInfo info = getNameInfoForName(name, type);
       NameInfo def = null;
       // Skip all anonymous nodes. We care only about symbols with names.
@@ -413,7 +413,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
         }
       }
       if (!def.equals(info)) {
-        symbolGraph.connect(def, module, info);
+        symbolGraph.connect(def, chunk, info);
       }
     }
 
@@ -583,8 +583,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
       return maybeName.isName() ? t.getScope().getVar(maybeName.getString()) : null;
     }
 
-    private void addGlobalUseOfSymbol(String name, JSChunk module, SymbolType type) {
-      symbolGraph.connect(globalNode, module, getNameInfoForName(name, type));
+    private void addGlobalUseOfSymbol(String name, JSChunk chunk, SymbolType type) {
+      symbolGraph.connect(globalNode, chunk, getNameInfoForName(name, type));
     }
   }
 
@@ -623,7 +623,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     public boolean traverseEdge(NameInfo start, JSChunk edge, NameInfo dest) {
       if (start.isReferenced()) {
         JSChunk startModule = start.getDeepestCommonModuleRef();
-        if (startModule != null && moduleGraph.dependsOn(startModule, edge)) {
+        if (startModule != null && chunkGraph.dependsOn(startModule, edge)) {
           return dest.markReference(startModule);
         } else {
           return dest.markReference(edge);
@@ -639,7 +639,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     Var getRootVar();
 
     /** Returns the module where this appears. */
-    JSChunk getModule();
+    JSChunk getChunk();
   }
 
   private enum SymbolType {
@@ -653,15 +653,15 @@ class AnalyzePrototypeProperties implements CompilerPass {
    */
   static class GlobalFunction implements Symbol {
     private final Var var;
-    private final JSChunk module;
+    private final JSChunk chunk;
 
-    GlobalFunction(Node nameNode, Var var, JSChunk module) {
+    GlobalFunction(Node nameNode, Var var, JSChunk chunk) {
       Node parent = nameNode.getParent();
       checkState(
           (NodeUtil.isNameDeclaration(parent) && var.isGlobal())
               || NodeUtil.isFunctionDeclaration(parent));
       this.var = var;
-      this.module = module;
+      this.chunk = chunk;
     }
 
     @Override
@@ -670,8 +670,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
   }
 
@@ -684,14 +684,14 @@ class AnalyzePrototypeProperties implements CompilerPass {
   static class ClassMemberFunction implements Property {
     private final Node node;
     private final Var var;
-    private final JSChunk module;
+    private final JSChunk chunk;
 
-    ClassMemberFunction(Node node, Var var, JSChunk module) {
+    ClassMemberFunction(Node node, Var var, JSChunk chunk) {
       checkState(node.getParent().isClassMembers());
       checkState(node.isMemberFunctionDef() || node.isSetterDef() || node.isGetterDef());
       this.node = node;
       this.var = var;
-      this.module = module;
+      this.chunk = chunk;
     }
 
     @Override
@@ -700,8 +700,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
 
     /** Returns the function node within the definition. */
@@ -751,13 +751,15 @@ class AnalyzePrototypeProperties implements CompilerPass {
   static class AssignmentPrototypeProperty implements PrototypeProperty {
     private final Node exprNode;
     private final Var rootVar;
-    private final JSChunk module;
+    private final JSChunk chunk;
 
-    /** @param node An EXPR node. */
-    AssignmentPrototypeProperty(Node node, Var rootVar, JSChunk module) {
+    /**
+     * @param node An EXPR node.
+     */
+    AssignmentPrototypeProperty(Node node, Var rootVar, JSChunk chunk) {
       this.exprNode = node;
       this.rootVar = rootVar;
-      this.module = module;
+      this.chunk = chunk;
     }
 
     @Override
@@ -780,8 +782,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
   }
 
@@ -795,13 +797,13 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private final Node value;
     private final Node assign;
     private final Var rootVar;
-    private final JSChunk module;
+    private final JSChunk chunk;
 
-    LiteralPrototypeProperty(Node value, Node assign, Var rootVar, JSChunk module) {
+    LiteralPrototypeProperty(Node value, Node assign, Var rootVar, JSChunk chunk) {
       this.value = value;
       this.assign = assign;
       this.rootVar = rootVar;
-      this.module = module;
+      this.chunk = chunk;
     }
 
     @Override
@@ -820,8 +822,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
   }
 
@@ -849,7 +851,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     private boolean referenced = false;
     private final Deque<Symbol> declarations = new ArrayDeque<>();
-    private @Nullable JSChunk deepestCommonModuleRef = null;
+    private @Nullable JSChunk deepestCommonChunkRef = null;
 
     // True if this property is a function that reads a variable from an
     // outer scope which isn't the global scope.
@@ -896,23 +898,23 @@ class AnalyzePrototypeProperties implements CompilerPass {
      * @param module The module where it was referenced.
      * @return Whether the name info has changed.
      */
-    boolean markReference(@Nullable JSChunk module) {
+    boolean markReference(@Nullable JSChunk chunk) {
       boolean hasChanged = false;
       if (!referenced) {
         referenced = true;
         hasChanged = true;
       }
 
-      JSChunk originalDeepestCommon = deepestCommonModuleRef;
+      JSChunk originalDeepestCommon = deepestCommonChunkRef;
 
-      if (deepestCommonModuleRef == null) {
-        deepestCommonModuleRef = module;
+      if (deepestCommonChunkRef == null) {
+        deepestCommonChunkRef = chunk;
       } else {
-        deepestCommonModuleRef =
-            moduleGraph.getDeepestCommonDependencyInclusive(deepestCommonModuleRef, module);
+        deepestCommonChunkRef =
+            chunkGraph.getDeepestCommonDependencyInclusive(deepestCommonChunkRef, chunk);
       }
 
-      if (originalDeepestCommon != deepestCommonModuleRef) {
+      if (originalDeepestCommon != deepestCommonChunkRef) {
         hasChanged = true;
       }
 
@@ -921,7 +923,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     /** Returns the deepest common module of all the references to this property. */
     JSChunk getDeepestCommonModuleRef() {
-      return deepestCommonModuleRef;
+      return deepestCommonChunkRef;
     }
 
     /**
