@@ -160,6 +160,7 @@ MediaTrackCapabilities.prototype.torch
 
 /**
  * @interface
+ * @see https://www.w3.org/TR/screen-capture/#extensions-to-mediatracksettings
  * @see https://www.w3.org/TR/mediacapture-streams/#media-track-settings
  * @see https://w3c.github.io/mediacapture-image/#mediatracksettings-section
  */
@@ -182,6 +183,9 @@ MediaTrackSettings.prototype.facingMode;
 
 /** @type {string} */
 MediaTrackSettings.prototype.resizeMode;
+
+/** @type {string|undefined} */
+MediaTrackSettings.prototype.displaySurface;
 
 /** @type {number} */
 MediaTrackSettings.prototype.volume;
