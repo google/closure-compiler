@@ -165,6 +165,58 @@ KeyframeEffectReadOnly.prototype.timing;
  */
 var KeyframeEffect = function(target, frames, options) {};
 
+/**
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/KeyframeEffect/getKeyframes)
+ * @public
+ * @return {!Array<!ComputedKeyframe>}
+ */
+KeyframeEffect.prototype.getKeyframes = function() {};
+
+/**
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/KeyframeEffect/setKeyframes)
+ * @public
+ * @param {(null|!PropertyIndexedKeyframes|!Array<!Keyframe>)} keyframes
+ * @return {void}
+ */
+KeyframeEffect.prototype.setKeyframes = function(keyframes) {};
+
+/**
+ * @record
+ */
+var ComputedKeyframe = function() {};
+
+/** @type {string} */
+ComputedKeyframe.prototype.composite;
+/** @type {number} */
+ComputedKeyframe.prototype.computedOffset;
+/** @type {string} */
+ComputedKeyframe.prototype.easing;
+/** @type {(null|number)} */
+ComputedKeyframe.prototype.offset;
+
+/**
+ * @record
+ */
+var PropertyIndexedKeyframes = function() {};
+
+/** @type {(undefined|string|!Array<string>)} */
+PropertyIndexedKeyframes.prototype.composite;
+/** @type {(undefined|string|!Array<string>)} */
+PropertyIndexedKeyframes.prototype.easing;
+/** @type {(undefined|number|!Array<(null|number)>)} */
+PropertyIndexedKeyframes.prototype.offset;
+
+/**
+ * @record
+ */
+var Keyframe = function() {};
+
+/** @type {(undefined|string)} */
+Keyframe.prototype.composite;
+/** @type {(undefined|string)} */
+Keyframe.prototype.easing;
+/** @type {(undefined|null|number)} */
+Keyframe.prototype.offset;
 
 /**
  * @record
