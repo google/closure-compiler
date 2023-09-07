@@ -3704,4 +3704,28 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "class Foo { x = 0; }",
             "f(new Foo());"));
   }
+
+  @Test
+  public void testVariableUsedAsArgumentAndReassignedInFollowingArgument() {
+    // See https://github.com/google/closure-compiler/issues/4115.
+    test(
+        lines(
+            "function f(value, begin, end) {",
+            " return value.slice(begin, end);",
+            "}",
+            "window.g = function(a, b, c) {",
+            "  return f(a, b + 1, b = c);",
+            "};"),
+        lines(
+            "window.g = function(a, b, c) {",
+            "  var JSCompiler_inline_result$jscomp$0;",
+            "  {",
+            // TODO(b/298828688): don't assign `b = c` here before `a.slice(b + 1,` below, since
+            // `b = c` should execute after the `b + 1`.
+            "    var end$jscomp$inline_3 = b = c;",
+            "    JSCompiler_inline_result$jscomp$0 = a.slice(b + 1, end$jscomp$inline_3);",
+            "  }",
+            "  return JSCompiler_inline_result$jscomp$0;",
+            "};"));
+  }
 }
