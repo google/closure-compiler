@@ -46,7 +46,6 @@ import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1299,7 +1298,7 @@ class InlineAndCollapseProperties implements CompilerPass {
     /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
     private Map<String, Name> nameMap;
 
-    private final HashSet<String> dynamicallyImportedModules = new HashSet<>();
+    private final LinkedHashSet<String> dynamicallyImportedModules = new LinkedHashSet<>();
 
     @Override
     public void process(Node externs, Node root) {
@@ -1365,7 +1364,8 @@ class InlineAndCollapseProperties implements CompilerPass {
      */
     private ImmutableSet<Name> checkNamespaces() {
       ImmutableSet.Builder<Name> escaped = ImmutableSet.builder();
-      HashSet<String> dynamicallyImportedModuleRefs = new HashSet<>(dynamicallyImportedModules);
+      LinkedHashSet<String> dynamicallyImportedModuleRefs =
+          new LinkedHashSet<>(dynamicallyImportedModules);
       if (!dynamicallyImportedModules.isEmpty()) {
         // When the output chunk type is ES_MODULES, properties of the module namespace
         // must not be collapsed as they are referenced off the namespace object. The namespace

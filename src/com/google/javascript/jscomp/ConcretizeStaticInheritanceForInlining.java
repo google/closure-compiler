@@ -26,8 +26,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -107,7 +105,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
   static final DiagnosticType DUPLICATE_CLASS =
       DiagnosticType.error("DUPLICATE_CLASS", "Multiple classes cannot share the same name: {0}");
 
-  private final Set<String> duplicateClassNames = new HashSet<>();
+  private final Set<String> duplicateClassNames = new LinkedHashSet<>();
 
   // Property names that may cause issues if they are concretized.
   private static final ImmutableSet<String> BANNED_PROP_NAMES =
@@ -117,7 +115,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     // All static members to the class including get set properties.
     private final Set<Node> staticMembers = new LinkedHashSet<>();
     // Keep updated the set of static member names to avoid O(n^2) searches.
-    private final Set<String> staticMemberNames = new HashSet<>();
+    private final Set<String> staticMemberNames = new LinkedHashSet<>();
     // Collect all the static field accesses to the class.
     private final Set<Node> staticFieldAccess = new LinkedHashSet<>();
     // Collect all get set properties as defined by Object.defineProperties(...)
@@ -203,7 +201,9 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
   }
 
   private void copyStaticMembers(
-      JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall,
+      JavascriptClass superClass,
+      JavascriptClass subClass,
+      Node inheritsCall,
       FindStaticMembers findStaticMembers) {
     for (Node staticMember : superClass.staticMembers) {
       checkState(staticMember.isAssign(), staticMember);
@@ -276,7 +276,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     final List<Node> inheritsCalls = new ArrayList<>();
     // Store the order we find class definitions and static fields.  Copied statics must occur
     // after both the namespace and the copied property are defined.
-    final Map<Node, Integer> nodeOrder = new HashMap<>();
+    final Map<Node, Integer> nodeOrder = new LinkedHashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
