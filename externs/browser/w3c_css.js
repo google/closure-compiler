@@ -1523,6 +1523,48 @@ CSSProperties.prototype.height;
 
 /**
  * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#propdef-inset
+ */
+CSSProperties.prototype.inset;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetBlock;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetBlockEnd;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetBlockStart;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetInline;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetInlineEnd;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetInlineStart;
+
+/**
+ * @type {string}
  * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-left
  */
 CSSProperties.prototype.left;
