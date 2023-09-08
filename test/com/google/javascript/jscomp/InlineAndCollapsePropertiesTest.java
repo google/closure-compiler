@@ -70,6 +70,49 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTs52OutputChange() {
+    test(
+        srcs(
+            lines(
+                "", //
+                "var alias;",
+                "var module$exports$C = class {",
+                "  method1() {",
+                "    return alias.staticPropOnC;",
+                "  }",
+                "  method2() {",
+                "    return alias.staticPropOnAlias;",
+                "  }",
+                "}",
+                "alias = module$exports$C;",
+                "(() => {",
+                "  alias.staticPropOnAlias = 1",
+                "})();",
+                "module$exports$C.staticPropOnC = 2;",
+                "")),
+        expected(
+            lines(
+                "", //
+                "var alias;",
+                "var module$exports$C = class {",
+                "  method1() {",
+                "    return alias.staticPropOnC;",
+                "  }",
+                "  method2() {",
+                "    return alias.staticPropOnAlias;",
+                "  }",
+                "}",
+                "alias = module$exports$C;",
+                "(() => {",
+                "  alias.staticPropOnAlias = 1",
+                "})();",
+                // TODO : b/299055739 - bad collapse
+                "var module$exports$C$staticPropOnC = 2;",
+                "",
+                "")));
+  }
+
+  @Test
   public void testDoNotCollapseDeletedProperty() {
     testSame(
         srcs(
