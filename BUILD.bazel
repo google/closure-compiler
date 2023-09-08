@@ -24,6 +24,11 @@ load("@rules_jvm_external//:defs.bzl", "java_export")
 
 package(licenses = ["notice"])
 
+exports_files([
+    "LICENSE",
+    "THIRD_PARTY_NOTICES",
+])
+
 filegroup(
     name = "sonatype_bundles",
     srcs = [
@@ -32,6 +37,8 @@ filegroup(
         ":compiler_parent_bundle",
         ":compiler_shaded_bundle",
         ":compiler_unshaded_bundle",
+        ":LICENSE",
+        ":THIRD_PARTY_NOTICES",
     ],
 )
 
@@ -71,6 +78,8 @@ sonatype_artifact_bundle(
     artifact_id = "closure-compiler-parent",
     pom = "maven/closure-compiler-parent.pom.xml",
 )
+
+
 
 jar_jar(
     name = "compiler_shaded",
