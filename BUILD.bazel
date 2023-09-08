@@ -24,10 +24,16 @@ load("@rules_jvm_external//:defs.bzl", "java_export")
 
 package(licenses = ["notice"])
 
+exports_files([
+    "LICENSE",
+    "THIRD_PARTY_NOTICES",
+])
+
 filegroup(
     name = "sonatype_bundles",
     srcs = [
         ":compiler_externs_bundle",
+        ":compiler_licenses_bundle",
         ":compiler_main_bundle",
         ":compiler_parent_bundle",
         ":compiler_shaded_bundle",
@@ -72,6 +78,13 @@ sonatype_artifact_bundle(
     pom = "maven/closure-compiler-parent.pom.xml",
 )
 
+sonatype_artifact_bundle(
+    name = "compiler_license_bundle",
+    artifact_id = "closure-compiler-license",
+    jar = ":licenses",
+    pom = "maven/closure-compiler-license.pom.xml",
+)
+
 jar_jar(
     name = "compiler_shaded",
     input_jar = ":compiler_uberjar_deploy.jar",
@@ -108,6 +121,14 @@ java_binary(
 )
 
 java_library(
+    name = "licenses",
+    resources = [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES",
+    ],
+)
+
+java_library(
     name = "externs",
     resources = [":externs_zip"],
 )
@@ -118,6 +139,8 @@ java_library(
         "src/com/google/javascript/jscomp/js/polyfills.txt",
         ":runtime_lib_typedast_srcs",
         ":runtime_libs_typedast",
+        ":LICENSE",
+        ":THIRD_PARTY_NOTICES",
     ],
     exports = [":compiler_lib_no_runtime_libs"],
 )
