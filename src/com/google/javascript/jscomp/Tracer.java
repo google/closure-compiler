@@ -26,8 +26,8 @@ import com.google.common.base.Joiner;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -688,10 +688,10 @@ final class Tracer {
     final ArrayList<Event> events = new ArrayList<>();
 
     /** Tracers that have not had their .stop() called */
-    final HashSet<Tracer> outstandingEvents = new HashSet<>();
+    final LinkedHashSet<Tracer> outstandingEvents = new LinkedHashSet<>();
 
     /** Map from type to Stat object */
-    final Map<String, Stat> stats = new HashMap<>();
+    final Map<String, Stat> stats = new LinkedHashMap<>();
 
     /**
      * True if {@code outstandingEvents} has been cleared because we exceeded

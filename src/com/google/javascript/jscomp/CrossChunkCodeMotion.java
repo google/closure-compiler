@@ -31,8 +31,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +78,7 @@ class CrossChunkCodeMotion implements CompilerPass {
    * Map from chunk to the node in that chunk that should parent variable declarations that have to
    * be moved into that chunk
    */
-  private final Map<JSChunk, Node> moduleInsertionPointMap = new HashMap<>();
+  private final Map<JSChunk, Node> moduleInsertionPointMap = new LinkedHashMap<>();
 
   private final boolean parentModuleCanSeeSymbolsDeclaredInChildren;
 
@@ -132,7 +131,7 @@ class CrossChunkCodeMotion implements CompilerPass {
   /** Collects all global symbols, their declaration statements and references. */
   private class GlobalSymbolCollector {
 
-    final Map<Var, GlobalSymbol> globalSymbolforVar = new HashMap<>();
+    final Map<Var, GlobalSymbol> globalSymbolforVar = new LinkedHashMap<>();
 
     /**
      * Returning the symbols in the reverse order in which they are defined helps to minimize
@@ -251,9 +250,10 @@ class CrossChunkCodeMotion implements CompilerPass {
      *
      * <p>This is a LinkedHashSet in order to enforce a consistent ordering when we iterate over
      * these to identify cycles. This guarantees that the order in which statements are moved won't
-     * depend on the arbitrary ordering of HashSet.
+     * depend on the arbitrary ordering of LinkedHashSet.
      */
     final Set<GlobalSymbol> referencingGlobalSymbols = new LinkedHashSet<>();
+
     /** Instanceof references we may need to update with a guard after moving declarations. */
     final Deque<InstanceofReference> instanceofReferencesToGuard = new ArrayDeque<>();
     /** Used by OrderAndCombineGlobalSymbols to find reference cycles. */
@@ -422,7 +422,7 @@ class CrossChunkCodeMotion implements CompilerPass {
   private static class DeclarationStatementGroup {
 
     final GlobalSymbol declaredGlobalSymbol;
-    final Set<GlobalSymbol> referencedGlobalSymbols = new HashSet<>();
+    final Set<GlobalSymbol> referencedGlobalSymbols = new LinkedHashSet<>();
 
     /** chunk containing the statements */
     JSChunk currentChunk;

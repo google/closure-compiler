@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -106,7 +106,9 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     }
   }
 
-  /** @param configs The rules to check. */
+  /**
+   * @param configs The rules to check.
+   */
   CheckConformance(AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
     this.compiler = compiler;
     // Initialize the map of functions to inspect for renaming candidates.
@@ -183,7 +185,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   static List<Requirement> mergeRequirements(
       AbstractCompiler compiler, List<ConformanceConfig> configs) {
     List<Requirement.Builder> builders = new ArrayList<>();
-    Map<String, Requirement.Builder> extendable = new HashMap<>();
+    Map<String, Requirement.Builder> extendable = new LinkedHashMap<>();
     for (ConformanceConfig config : configs) {
       for (Requirement requirement : config.getRequirementList()) {
         Requirement.Builder builder = requirement.toBuilder();

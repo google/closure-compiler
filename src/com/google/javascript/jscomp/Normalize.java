@@ -27,8 +27,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -167,7 +167,7 @@ final class Normalize implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Note: Constant properties annotations are not propagated.
       if (!n.isName() || n.getString().isEmpty()) {
-          return;
+        return;
       }
 
       // Find the JSDocInfo for a top-level variable
@@ -214,7 +214,7 @@ final class Normalize implements CompilerPass {
       NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
-    private final Map<String, Boolean> constantMap = new HashMap<>();
+    private final Map<String, Boolean> constantMap = new LinkedHashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -683,7 +683,7 @@ final class Normalize implements CompilerPass {
   private final class DuplicateDeclarationHandler
       implements SyntacticScopeCreator.RedeclarationHandler {
 
-    private final Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
+    private final Set<Var> hasOkDuplicateDeclaration = new LinkedHashSet<>();
 
     /** Remove duplicate VAR declarations discovered during scope creation. */
     @Override

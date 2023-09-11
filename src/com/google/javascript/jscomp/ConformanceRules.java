@@ -57,7 +57,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -2021,7 +2021,7 @@ public final class ConformanceRules {
     public BanCreateElement(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      bannedTags = new HashSet<>();
+      bannedTags = new LinkedHashSet<>();
       for (String value : requirement.getValueList()) {
         bannedTags.add(Ascii.toLowerCase(value));
       }

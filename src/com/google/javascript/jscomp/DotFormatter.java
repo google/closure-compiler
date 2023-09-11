@@ -28,18 +28,19 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import org.jspecify.nullness.Nullable;
 
 /**
- * <p>DotFormatter prints out a dot file of the Abstract Syntax Tree.
- * For a detailed description of the dot format and visualization tool refer
- * to <a href="http://www.graphviz.org">Graphviz</a>.</p>
- * <p>Typical usage of this class</p>
- * <code>System.out.println(new DotFormatter().toDot(<i>node</i>));</code>
- * <p>This class is <b>not</b> thread safe and should not be used without proper
- * external synchronization.</p>
+ * DotFormatter prints out a dot file of the Abstract Syntax Tree. For a detailed description of the
+ * dot format and visualization tool refer to <a href="http://www.graphviz.org">Graphviz</a>.
+ *
+ * <p>Typical usage of this class <code>logfile.write(new DotFormatter().toDot(<i>node</i>));
+ * </code>
+ *
+ * <p>This class is <b>not</b> thread safe and should not be used without proper external
+ * synchronization.
  */
 public final class DotFormatter {
   private static final String INDENT = "  ";
@@ -48,7 +49,7 @@ public final class DotFormatter {
   private static final int MAX_LABEL_NAME_LENGTH = 10;
 
   // stores the current assignment of node to keys
-  private final HashMap<Node, Integer> assignments = new HashMap<>();
+  private final LinkedHashMap<Node, Integer> assignments = new LinkedHashMap<>();
 
   // key count in order to assign a unique key to each node
   private int keyCount = 0;
@@ -67,8 +68,9 @@ public final class DotFormatter {
     this.printAnnotations = false;
   }
 
-  private DotFormatter(Node n, ControlFlowGraph<Node> cfg,
-      Appendable builder, boolean printAnnotations) throws IOException {
+  private DotFormatter(
+      Node n, ControlFlowGraph<Node> cfg, Appendable builder, boolean printAnnotations)
+      throws IOException {
     this.cfg = cfg;
     this.builder = builder;
     this.printAnnotations = printAnnotations;
@@ -80,10 +82,11 @@ public final class DotFormatter {
 
   /**
    * Converts an AST to dot representation.
+   *
    * @param n the root of the AST described in the dot formatted string
    * @return the dot representation of the AST
    */
-  public static String toDot(Node n) throws IOException  {
+  public static String toDot(Node n) throws IOException {
     return toDot(n, null);
   }
 
@@ -166,18 +169,17 @@ public final class DotFormatter {
 
   /**
    * Converts an AST to dot representation and appends it to the given buffer.
+   *
    * @param n the root of the AST described in the dot formatted string
    * @param inCFG Control Flow Graph.
    * @param builder A place to dump the graph.
    */
-  static void appendDot(Node n, ControlFlowGraph<Node> inCFG,
-      Appendable builder) throws IOException {
+  static void appendDot(Node n, ControlFlowGraph<Node> inCFG, Appendable builder)
+      throws IOException {
     DotFormatter unused = new DotFormatter(n, inCFG, builder, false);
   }
 
-  /**
-   * Creates a DotFormatter purely for testing DotFormatter's internal methods.
-   */
+  /** Creates a DotFormatter purely for testing DotFormatter's internal methods. */
   static DotFormatter newInstanceForTesting() {
     return new DotFormatter();
   }
@@ -187,8 +189,7 @@ public final class DotFormatter {
     int keyParent = key(parent);
 
     // edges
-    for (Node child = parent.getFirstChild(); child != null;
-        child = child.getNext()) {
+    for (Node child = parent.getFirstChild(); child != null; child = child.getNext()) {
       int keyChild = key(child);
       builder.append(INDENT);
       builder.append(formatNodeName(keyParent));
@@ -216,9 +217,14 @@ public final class DotFormatter {
         }
 
         edgeList[i] =
-            formatNodeName(keyParent) + ARROW + toNode + " [label=\"" + edge.getValue() + "\", "
-            + "fontcolor=\"red\", "
-            + "weight=0.01, color=\"red\"];\n";
+            formatNodeName(keyParent)
+                + ARROW
+                + toNode
+                + " [label=\""
+                + edge.getValue()
+                + "\", "
+                + "fontcolor=\"red\", "
+                + "weight=0.01, color=\"red\"];\n";
       }
 
       Arrays.sort(edgeList);

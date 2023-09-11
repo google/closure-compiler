@@ -24,7 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -42,7 +42,7 @@ public class GenerateExports implements CompilerPass {
 
   private final boolean allowNonGlobalExports;
 
-  private final Set<String> exportedVariables = new HashSet<>();
+  private final Set<String> exportedVariables = new LinkedHashSet<>();
 
   static final DiagnosticType MISSING_EXPORT_CONVENTION =
       DiagnosticType.error(

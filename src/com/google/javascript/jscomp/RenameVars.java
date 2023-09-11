@@ -30,8 +30,8 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +60,7 @@ final class RenameVars implements CompilerPass {
   private final ArrayList<Node> localNameNodes = new ArrayList<>();
 
   /** Mapping of original names for change detection */
-  private final Map<Node, String> originalNameByNode = new HashMap<>();
+  private final Map<Node, String> originalNameByNode = new LinkedHashMap<>();
 
   /**
    * Maps a name node to its pseudo name, null if we are not generating so there will be no overhead
@@ -75,7 +75,7 @@ final class RenameVars implements CompilerPass {
   private final Set<String> reservedNames;
 
   /** The renaming map */
-  private final Map<String, String> renameMap = new HashMap<>();
+  private final Map<String, String> renameMap = new LinkedHashMap<>();
 
   /** The previously used rename map. */
   private final VariableMap prevUsedRenameMap;
@@ -88,7 +88,7 @@ final class RenameVars implements CompilerPass {
 
   // Logic for bleeding functions, where the name leaks into the outer
   // scope on IE but not on other browsers.
-  private final Set<Var> localBleedingFunctions = new HashSet<>();
+  private final Set<Var> localBleedingFunctions = new LinkedHashSet<>();
   private final ListMultimap<Scope, Var> localBleedingFunctionsPerScope =
       ArrayListMultimap.create();
 
@@ -119,8 +119,7 @@ final class RenameVars implements CompilerPass {
   }
 
   /** Maps an old name to a new name assignment */
-  private final Map<String, Assignment> assignments =
-      new HashMap<>();
+  private final Map<String, Assignment> assignments = new LinkedHashMap<>();
 
   /** Whether renaming should apply to local variables only. */
   private final boolean localRenamingOnly;
@@ -155,7 +154,7 @@ final class RenameVars implements CompilerPass {
     this.prefix = nullToEmpty(prefix);
     this.localRenamingOnly = localRenamingOnly;
     if (generatePseudoNames) {
-      this.pseudoNameMap = new HashMap<>();
+      this.pseudoNameMap = new LinkedHashMap<>();
     } else {
       this.pseudoNameMap = null;
     }
@@ -163,9 +162,9 @@ final class RenameVars implements CompilerPass {
     this.reservedCharacters = reservedCharacters;
     this.preferStableNames = preferStableNames;
     if (reservedNames == null) {
-      this.reservedNames = new HashSet<>();
+      this.reservedNames = new LinkedHashSet<>();
     } else {
-      this.reservedNames = new HashSet<>(reservedNames);
+      this.reservedNames = new LinkedHashSet<>(reservedNames);
     }
     this.nameGenerator = nameGenerator;
   }

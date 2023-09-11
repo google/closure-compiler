@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallba
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,10 +61,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final String globalSymbolNamespace;
   private final boolean addExtern;
   private final boolean assumeCrossChunkNames;
-  private final Set<String> crossChunkNames = new HashSet<>();
+  private final Set<String> crossChunkNames = new LinkedHashSet<>();
 
   /** Global identifiers that may be a non-arrow function referencing "this" */
-  private final Set<String> maybeReferencesThis = new HashSet<>();
+  private final Set<String> maybeReferencesThis = new LinkedHashSet<>();
 
   private ImmutableSet<String> externNames;
 

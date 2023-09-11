@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -61,7 +61,7 @@ class InlineSimpleMethods implements CompilerPass {
   //   - non-method properties
   //   - methods with @noinline
   //   - methods with multiple, non-equivalent definitions
-  private final Set<String> nonInlineableProperties = new HashSet<>();
+  private final Set<String> nonInlineableProperties = new LinkedHashSet<>();
 
   // Use a linked map here to keep the output deterministic.  Otherwise,
   // the choice of method bodies is random when multiple identical definitions

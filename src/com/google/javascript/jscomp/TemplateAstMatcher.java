@@ -30,7 +30,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +79,7 @@ public final class TemplateAstMatcher {
    * <p>This re-uses strings already present in the AST, which is faster and simpler than keeping an
    * additional layer of indirection.
    */
-  private final HashMap<String, Node> stringLiteralMatches = new HashMap<>();
+  private final LinkedHashMap<String, Node> stringLiteralMatches = new LinkedHashMap<>();
 
   /**
    * Record whether the last successful was a loosely matched type, only valid
@@ -144,7 +144,7 @@ public final class TemplateAstMatcher {
    * template.
    */
   public Map<String, Node> getTemplateNodeToMatchMap() {
-    Map<String, Node> map = new HashMap<>(stringLiteralMatches);
+    Map<String, Node> map = new LinkedHashMap<>(stringLiteralMatches);
 
     for (int i = 0; i < templateParams.size(); i++) {
       String name = templateParams.get(i);
@@ -200,7 +200,7 @@ public final class TemplateAstMatcher {
   private void prepTemplatePlaceholders(Node fn) {
     final List<String> locals = templateLocals;
     final List<String> params = templateParams;
-    final Map<String, JSType> paramTypes = new HashMap<>();
+    final Map<String, JSType> paramTypes = new LinkedHashMap<>();
 
     // drop the function name so it isn't include in the name maps
     String fnName = fn.getFirstChild().getString();

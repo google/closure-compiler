@@ -36,14 +36,13 @@ import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
 /**
- * A PerformanceTracker collects statistics about the runtime of each pass, and
- * how much a pass impacts the size of the compiled output, before and after
- * gzip.
+ * A PerformanceTracker collects statistics about the runtime of each pass, and how much a pass
+ * impacts the size of the compiled output, before and after gzip.
  */
 public final class PerformanceTracker {
   private static final int DEFAULT_WHEN_SIZE_UNTRACKED = -1;
@@ -139,8 +138,8 @@ public final class PerformanceTracker {
   }
 
   /**
-   * Collects information about a pass P after P finishes running, eg, how much
-   * time P took and what was its impact on code size.
+   * Collects information about a pass P after P finishes running, eg, how much time P took and what
+   * was its impact on code size.
    *
    * @param passName short name of the pass
    * @param runtime execution time in milliseconds
@@ -318,7 +317,7 @@ public final class PerformanceTracker {
   }
 
   private void populatePassSummary() {
-    HashMap<String, Stats> tmpPassSummary = new HashMap<>();
+    LinkedHashMap<String, Stats> tmpPassSummary = new LinkedHashMap<>();
 
     for (Stats logStat : this.log) {
       String passName = logStat.pass;
@@ -472,14 +471,14 @@ public final class PerformanceTracker {
   }
 
   /**
-   * A Stats object contains statistics about a pass run, such as running time,
-   * size changes, etc
+   * A Stats object contains statistics about a pass run, such as running time, size changes, etc
    */
   public static class Stats {
     Stats(String pass, boolean iot) {
       this.pass = pass;
       this.isOneTime = iot;
     }
+
     public final String pass;
     public final boolean isOneTime;
     public long runtime = 0;

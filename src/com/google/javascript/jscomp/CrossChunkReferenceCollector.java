@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,7 @@ import org.jspecify.nullness.Nullable;
 public final class CrossChunkReferenceCollector implements ScopedCallback, CompilerPass {
 
   /** Maps global variable name to the corresponding {@link Var} object. */
-  private final Map<String, Var> varsByName = new HashMap<>();
+  private final Map<String, Var> varsByName = new LinkedHashMap<>();
 
   /**
    * Maps a given variable to a collection of references to that name. Note that Var objects are not

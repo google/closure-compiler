@@ -23,8 +23,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -304,7 +304,7 @@ class PhaseOptimizer implements CompilerPass {
   @VisibleForTesting
   class Loop implements CompilerPass {
     private final List<NamedPass> myPasses = new ArrayList<>();
-    private final Set<String> myNames = new HashSet<>();
+    private final Set<String> myNames = new LinkedHashSet<>();
     private ScopedChangeHandler scopeHandler;
     private boolean isCodeRemovalLoop = false;
     private int howmanyIterationsUnderThreshold = 0;
@@ -329,18 +329,18 @@ class PhaseOptimizer implements CompilerPass {
 
       // lastRuns is initialized before each loop. This way, when a pass is run
       // in the 2nd loop for the 1st time, it looks at all scopes.
-      lastRuns = new HashMap<>();
+      lastRuns = new LinkedHashMap<>();
       for (NamedPass pass : myPasses) {
         lastRuns.put(pass, START_TIME);
       }
       // Contains a pass iff it made changes the last time it was run.
-      Set<NamedPass> madeChanges = new HashSet<>();
+      Set<NamedPass> madeChanges = new LinkedHashSet<>();
       // Contains a pass iff it was run during the last inner loop.
-      Set<NamedPass> runInPrevIter = new HashSet<>();
+      Set<NamedPass> runInPrevIter = new LinkedHashSet<>();
       // Contains a pass iff it did not make changes. This set is cleared each time any pass makes
       // changes. The purpose of this is to ensure we do not rerun any passes that did not make
       // changes unless a later run pass did make changes.
-      Set<NamedPass> didNotMakeChanges = new HashSet<>();
+      Set<NamedPass> didNotMakeChanges = new LinkedHashSet<>();
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
       int count = 1;
