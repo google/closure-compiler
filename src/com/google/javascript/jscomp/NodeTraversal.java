@@ -78,10 +78,17 @@ public class NodeTraversal {
   /** Callback for tree-based traversals */
   public interface Callback {
     /**
-     * Visits a node in preorder (before its children) and decides whether its children should be
-     * traversed. If the children should be traversed, they will be visited by {@link
+     * Visits a node in preorder (before its children) and decides whether the node and its children
+     * should be traversed.
+     *
+     * <p>If this method returns true, the node will be visited by {@link #visit(NodeTraversal,
+     * Node, Node)} in postorder and its children will be visited by both {@link
      * #shouldTraverse(NodeTraversal, Node, Node)} in preorder and by {@link #visit(NodeTraversal,
      * Node, Node)} in postorder.
+     *
+     * <p>If this method returns false, the node will not be visited by {@link #visit(NodeTraversal,
+     * Node, Node)} and its children will neither be visited by {@link
+     * #shouldTraverse(NodeTraversal, Node, Node)} nor {@link #visit(NodeTraversal, Node, Node)}.
      *
      * <p>Siblings are always visited left-to-right.
      *
@@ -98,8 +105,8 @@ public class NodeTraversal {
 
     /**
      * Visits a node in postorder (after its children). A node is visited in postorder iff {@link
-     * #shouldTraverse(NodeTraversal, Node, Node)} returned true for its parent. In particular, the
-     * root node is never visited in postorder.
+     * #shouldTraverse(NodeTraversal, Node, Node)} returned true for its parent and itself. In
+     * particular, the root node is never visited in postorder.
      *
      * <p>Siblings are always visited left-to-right.
      *
