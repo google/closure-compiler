@@ -410,6 +410,7 @@ class GlobalNamespace
   private class BuildGlobalNamespace extends NodeTraversal.AbstractPreOrderCallback {
     private @Nullable Node curModuleRoot = null;
     private @Nullable ModuleMetadata curMetadata = null;
+
     /** Collect the references in pre-order. */
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -1216,8 +1217,12 @@ class GlobalNamespace
 
     // The children of this name. Must be null if there are no children.
     @Nullable List<Name> props;
-    /** The first global assignment to a name. */
+
+    /** The declaration of a name. */
     private @Nullable Ref declaration;
+
+    /** The first global assignment to a name. */
+    private @Nullable Ref initialization;
 
     /**
      * Keep track of which Nodes are Refs for this Name.
@@ -1309,6 +1314,10 @@ class GlobalNamespace
     @Override
     public @Nullable Ref getDeclaration() {
       return declaration;
+    }
+
+    public @Nullable Ref getInitialization() {
+      return initialization;
     }
 
     boolean isFunction() {
@@ -1454,6 +1463,12 @@ class GlobalNamespace
         case SET_FROM_GLOBAL:
           if (declaration == null) {
             declaration = ref;
+          }
+          if (initialization == null && !ref.isUninitializedDeclaration()) {
+            // Record the reference where the first value is actually assigned.
+            // Do not include the automatically-assigned `undefined` value case.
+            // e.g. `var name;`
+            initialization = ref;
           }
           if (firstDeclarationJSDocInfo == null) {
             // JSDocInfo from the first SET_FROM_GLOBAL will be assumed to be canonical
@@ -1725,7 +1740,8 @@ class GlobalNamespace
      */
     Inlinability calculateInlinability() {
       // Only simple aliases with direct usage are inlineable.
-      if (inExterns() || globalSets != 1 || localSets != 0) {
+      // Exactly 2 global sets could be OK, if the first is the declaration with no initializer.
+      if (inExterns() || !hasOneRealGlobalSet() || localSets != 0) {
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -1759,6 +1775,10 @@ class GlobalNamespace
         throw new AssertionError();
       }
       return collapsibility;
+    }
+
+    private boolean hasOneRealGlobalSet() {
+      return globalSets == 1 || (globalSets == 2 && declaration.isUninitializedDeclaration());
     }
 
     boolean canCollapse() {
@@ -1914,13 +1934,13 @@ class GlobalNamespace
 
     private Inlinability getUnsafeInlinabilityBasedOnDeclaredType() {
       if (this.getBooleanProperty(NameProp.CONSTRUCTOR_TYPE)) {
-          return Inlinability.INLINE_BUT_KEEP_DECLARATION_CLASS;
+        return Inlinability.INLINE_BUT_KEEP_DECLARATION_CLASS;
       } else if (this.getBooleanProperty(NameProp.INTERFACE_TYPE)) {
-          return Inlinability.INLINE_BUT_KEEP_DECLARATION_INTERFACE;
+        return Inlinability.INLINE_BUT_KEEP_DECLARATION_INTERFACE;
       } else if (this.getBooleanProperty(NameProp.ENUM_TYPE)) {
-          return Inlinability.INLINE_BUT_KEEP_DECLARATION_ENUM;
+        return Inlinability.INLINE_BUT_KEEP_DECLARATION_ENUM;
       } else if (this.getBooleanProperty(NameProp.NOT_A_TYPE)) {
-          return Inlinability.DO_NOT_INLINE;
+        return Inlinability.DO_NOT_INLINE;
       }
       throw new IllegalStateException(
           SimpleFormat.format("name missing declaredType value: %s", this));
@@ -2133,11 +2153,11 @@ class GlobalNamespace
         return true;
       }
       if (getBooleanProperty(NameProp.FUNCTION)) {
-          // We want ES5 ctors/interfaces to behave consistently with ES6 because:
-          // - transpilation should not change behaviour
-          // - updating code shouldn't be hindered by behaviour changes
-          @Nullable JSDocInfo jsdoc = getJSDocInfo();
-          return jsdoc != null && jsdoc.isConstructorOrInterface();
+        // We want ES5 ctors/interfaces to behave consistently with ES6 because:
+        // - transpilation should not change behaviour
+        // - updating code shouldn't be hindered by behaviour changes
+        @Nullable JSDocInfo jsdoc = getJSDocInfo();
+        return jsdoc != null && jsdoc.isConstructorOrInterface();
       }
       return false;
     }
@@ -2470,6 +2490,11 @@ class GlobalNamespace
 
     boolean isSetFromGlobal() {
       return this.type == Type.SET_FROM_GLOBAL || this.type == Type.GET_AND_SET_FROM_GLOBAL;
+    }
+
+    /** True for `var name;` and similar cases. */
+    boolean isUninitializedDeclaration() {
+      return node.isName() && NodeUtil.isNameDeclaration(node.getParent()) && !node.hasChildren();
     }
 
     @Override

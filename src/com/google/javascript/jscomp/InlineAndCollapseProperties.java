@@ -835,8 +835,8 @@ class InlineAndCollapseProperties implements CompilerPass {
 
         if (aliasInlinability.shouldRemoveDeclaration()) {
           // Rewrite the initialization of the alias.
-          Ref aliasDeclaration = aliasingName.getDeclaration();
-          if (aliasDeclaration.isTwin()) {
+          Ref aliasInitialization = aliasingName.getInitialization();
+          if (aliasInitialization.isTwin()) {
             // This is in a nested assign.
             // Replace
             //   a.b = aliasing.name = aliased.name
@@ -846,7 +846,7 @@ class InlineAndCollapseProperties implements CompilerPass {
             Node aliasGrandparent = aliasParent.getParent();
             aliasParent.replaceWith(alias.getNode().detach());
             // Remove the ref to 'aliasing.name' entirely
-            aliasingName.removeRef(aliasDeclaration);
+            aliasingName.removeRef(aliasInitialization);
             // Force GlobalNamespace to revisit the new reference to 'aliased.name' and update its
             // internal state.
             newNodes.add(new AstChange(alias.scope, alias.getNode()));

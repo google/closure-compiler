@@ -133,8 +133,12 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         options,
         lines(
             "const foo = {}", //
-            "foo.x &&= 'something';"),
-        lines("let a; (a = {}).a && (a.a = 'something')"));
+            "foo.x &&= 'something';",
+            "alert(foo.x);"),
+        lines(
+            "var a;", //
+            "a &&= 'something';",
+            "alert(a);"));
   }
 
   @Test
@@ -281,10 +285,12 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         lines(
             "const obj = {};", //
             "obj.baa = true;",
-            "/** @type {?} */ (obj.baa) &&= 5"),
+            "/** @type {?} */ (obj.baa) &&= 5;",
+            "alert(obj.baa);"),
         lines(
-            "const a = {a:!0}", //
-            "a.a && (a.a = 5)"));
+            "var a = !0;", //
+            "a = 5;",
+            "alert(a);"));
   }
 
   @Test
@@ -322,10 +328,12 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         lines(
             "const obj = {};", //
             "obj.baa = true;",
-            "/** @type {?} */ (obj.baa) &&= 5"),
+            "/** @type {?} */ (obj.baa) &&= 5",
+            "alert(obj.baa);"),
         lines(
-            "const a = {a:!0}", //
-            "a.a && (a.a = 5)"));
+            "var a = !0;", //
+            "a = 5;",
+            "alert(a);"));
   }
 
   @Test
