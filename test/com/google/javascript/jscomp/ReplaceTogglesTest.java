@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -187,11 +186,13 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
 
   @Test
   public void testUnknownToggle() {
-    testError(
+    test(
         lines(
             "var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};",
             "const bar = goog.readToggleInternalDoNotCallDirectly('bar');"),
-        ReplaceToggles.UNKNOWN_TOGGLE);
+        lines(
+            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};", //
+            "const bar = false;"));
   }
 
   @Test

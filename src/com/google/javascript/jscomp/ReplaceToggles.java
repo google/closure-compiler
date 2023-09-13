@@ -51,12 +51,6 @@ class ReplaceToggles implements CompilerPass {
           "CLOSURE_TOGGLE_ORDINALS must be initialized with an object literal mapping strings to"
               + " booleans or unique whole numbers: {0}");
 
-  static final DiagnosticType UNKNOWN_TOGGLE =
-      DiagnosticType.error(
-          "JSC_UNKNOWN_TOGGLE",
-          "goog.readToggleInternalDoNotCallDirectly called with an unknown toggle. If a toggle"
-              + " list is given, it must be exhaustive.");
-
   // NOTE: These values are chosen as negative integers because actual toggle ordinals must always
   // be non-negative (at least zero).  Any negative integers would do to distinguish them from real
   // toggle ordinals, but -1 and -2 are the simplest.
@@ -152,10 +146,6 @@ class ReplaceToggles implements CompilerPass {
       if (arg == null || !arg.isStringLit() || !n.hasTwoChildren()) {
         compiler.report(JSError.make(n, INVALID_TOGGLE_PARAMETER));
         return;
-      }
-
-      if (ordinalMapping != null && !ordinalMapping.containsKey(arg.getString())) {
-        compiler.report(JSError.make(n, UNKNOWN_TOGGLE));
       }
 
       Integer ordinal = ordinalMapping != null ? ordinalMapping.get(arg.getString()) : null;
