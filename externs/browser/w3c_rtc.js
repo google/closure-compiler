@@ -77,6 +77,7 @@ MediaSettingsRange.prototype.step;
  * @interface
  * @see https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaTrackCapabilities
  * @see https://w3c.github.io/mediacapture-image/#mediatrackcapabilities-section
+ * @see https://www.w3.org/TR/screen-capture
  */
 function MediaTrackCapabilities() {}
 
@@ -158,8 +159,18 @@ MediaTrackCapabilities.prototype.zoom
 /** @type {boolean} */
 MediaTrackCapabilities.prototype.torch
 
+/** @type {string|undefined} */
+MediaTrackCapabilities.prototype.displaySurface;
+
+/** @type {boolean|undefined} */
+MediaTrackCapabilities.prototype.logicalSurface;
+
+/** @type {Array<string>} */
+MediaTrackCapabilities.prototype.cursor;
+
 /**
  * @interface
+ * @see https://www.w3.org/TR/screen-capture
  * @see https://www.w3.org/TR/screen-capture/#extensions-to-mediatracksettings
  * @see https://www.w3.org/TR/mediacapture-streams/#media-track-settings
  * @see https://w3c.github.io/mediacapture-image/#mediatracksettings-section
@@ -186,6 +197,18 @@ MediaTrackSettings.prototype.resizeMode;
 
 /** @type {string|undefined} */
 MediaTrackSettings.prototype.displaySurface;
+
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.logicalSurface;
+
+/** @type {string|undefined} */
+MediaTrackSettings.prototype.cursor;
+
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.restrictOwnAudio;
+
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.suppressLocalAudioPlayback;
 
 /** @type {number} */
 MediaTrackSettings.prototype.volume;
@@ -260,6 +283,8 @@ MediaTrackSettings.prototype.torch
 /**
  * @interface
  * @see https://w3c.github.io/mediacapture-main/#media-track-supported-constraints
+ * @see https://w3c.github.io/mediacapture-screen-share/#extensions-to-mediatracksupportedconstraints
+ * @see https://www.w3.org/TR/screen-capture
  */
 function MediaTrackSupportedConstraints() {}
 
@@ -311,6 +336,20 @@ MediaTrackSupportedConstraints.prototype.deviceId;
 /** @type {boolean|undefined} */
 MediaTrackSupportedConstraints.prototype.groupId;
 
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.displaySurface;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.logicalSurface;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.cursor;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.restrictOwnAudio;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.suppressLocalAudioPlayback;
 
 /**
  * @constructor
@@ -1179,6 +1218,8 @@ var ConstrainLong;
 
 /**
  * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-mediatrackconstraintset
+ * @see https://w3c.github.io/mediacapture-screen-share/#extensions-to-mediatrackconstraintset
+ * @see https://www.w3.org/TR/screen-capture
  * @record
  */
 function MediaTrackConstraintSet() {}
@@ -1263,6 +1304,20 @@ MediaTrackConstraintSet.prototype.volume;
  */
 MediaTrackConstraintSet.prototype.width;
 
+/** @type {ConstrainDOMString|undefined} */
+MediaTrackConstraintSet.prototype.displaySurface;
+
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.logicalSurface;
+
+/** @type {ConstrainDOMString|undefined} */
+MediaTrackConstraintSet.prototype.cursor;
+
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.restrictOwnAudio;
+
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.suppressLocalAudioPlayback;
 
 /**
  * @record
