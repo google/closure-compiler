@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
-import com.google.javascript.jscomp.Normalize.PropagateConstantPropertyOverVars;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -236,12 +235,6 @@ class InlineAndCollapseProperties implements CompilerPass {
     // and reuse that one instead.
     namespace = new GlobalNamespace(decisionsLog, compiler, root);
     new CollapseProperties().process(externs, root);
-
-    namespace = null; // free up memory before PropagateConstantPropertyOverVars
-    // This shouldn't be necessary, this pass should already be setting new constants as
-    // constant.
-    // TODO(b/64256754): Investigate.
-    new PropagateConstantPropertyOverVars(compiler, false).process(externs, root);
   }
 
   private void performAggressiveInliningAndCollapsing(Node externs, Node root) {
@@ -249,12 +242,6 @@ class InlineAndCollapseProperties implements CompilerPass {
     new AggressiveInlineAliases().process(externs, root);
 
     new CollapseProperties().process(externs, root);
-
-    namespace = null; // free up memory before PropagateConstantPropertyOverVars
-    // This shouldn't be necessary, this pass should already be setting new constants as
-    // constant.
-    // TODO(b/64256754): Investigate.
-    new PropagateConstantPropertyOverVars(compiler, false).process(externs, root);
   }
 
   private void performAggressiveInliningForTest(Node externs, Node root) {
@@ -1082,6 +1069,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           checkState(keyChild.isObjectPattern());
           String uniqueId = t.getCompiler().getUniqueIdSupplier().getUniqueId(t.getInput());
           nameNode = IR.name("destructuring$" + uniqueId).srcref(keyChild);
+          nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
         Node newRhs = IR.getprop(rhs.cloneTree(), key.getString()).srcref(keyChild);
         Node newConstNode = IR.constNode(nameNode, newRhs).srcref(objectPattern);
@@ -1544,6 +1532,22 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
 
     /**
+     * Returns whether a NAME node with the given {@code collapsedName}, for a name originally
+     * declared at {@code declarationNode}, should be annotated with {@link Node#IS_CONSTANT_NAME}
+     *
+     * <p>Validity checks in unit tests will otherwise throw an exception.
+     */
+    private boolean shouldAddConstantName(Node declarationNode, String collapsedName) {
+      if (declarationNode == null) {
+        return false;
+      }
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(declarationNode.getParent());
+      return (info != null && info.isConstant())
+          || declarationNode.getBooleanProp(Node.IS_CONSTANT_NAME)
+          || compiler.getCodingConvention().isConstant(collapsedName);
+    }
+
+    /**
      * Flattens all references to a collapsible property of a global name except its initial
      * definition.
      *
@@ -1552,6 +1556,9 @@ class InlineAndCollapseProperties implements CompilerPass {
      */
     private void flattenReferencesTo(Name n, String alias) {
       String originalName = n.getFullName();
+      boolean isConstantName =
+          shouldAddConstantName(
+              n.getDeclaration() != null ? n.getDeclaration().getNode() : null, alias);
       for (Ref r : n.getRefs()) {
         if (r == n.getDeclaration()) {
           // Declarations are handled separately.
@@ -1561,7 +1568,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         // We shouldn't flatten a reference that's an object literal key, because duplicate keys
         // show up as refs.
         if (!NodeUtil.mayBeObjectLitKey(r.getNode())) {
-          flattenNameRef(alias, r.getNode(), rParent, originalName);
+          flattenNameRef(alias, r.getNode(), rParent, originalName, isConstantName);
         } else if (r.getNode().isStringKey() && r.getNode().getParent().isObjectPattern()) {
           Node newNode = IR.name(alias).srcref(r.getNode());
           NodeUtil.copyNameAnnotations(r.getNode(), newNode);
@@ -1575,7 +1582,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       // replaced with "a$b" in all occurrences of "a.b.c", "a.b.c.d", etc.
       if (n.props != null) {
         for (Name p : n.props) {
-          flattenPrefixes(alias, originalName + p.getBaseName(), p, 1);
+          flattenPrefixes(alias, originalName + p.getBaseName(), p, 1, isConstantName);
         }
       }
     }
@@ -1590,12 +1597,13 @@ class InlineAndCollapseProperties implements CompilerPass {
      *     to n.getFullName(), but pre-computed to save on intermediate string allocation
      * @param depth The difference in depth between the property name and the prefix name (e.g. 2)
      */
-    private void flattenPrefixes(String alias, String originalName, Name n, int depth) {
+    private void flattenPrefixes(
+        String alias, String originalName, Name n, int depth, boolean isConstantName) {
       // Only flatten the prefix of a name declaration if the name being
       // initialized is fully qualified (i.e. not an object literal key).
       Ref decl = n.getDeclaration();
       if (decl != null && decl.getNode() != null && decl.getNode().isGetProp()) {
-        flattenNameRefAtDepth(alias, decl.getNode(), depth, originalName);
+        flattenNameRefAtDepth(alias, decl.getNode(), depth, originalName, isConstantName);
       }
 
       for (Ref r : n.getRefs()) {
@@ -1604,12 +1612,12 @@ class InlineAndCollapseProperties implements CompilerPass {
           continue;
         }
 
-        flattenNameRefAtDepth(alias, r.getNode(), depth, originalName);
+        flattenNameRefAtDepth(alias, r.getNode(), depth, originalName, isConstantName);
       }
 
       if (n.props != null) {
         for (Name p : n.props) {
-          flattenPrefixes(alias, originalName + p.getBaseName(), p, depth + 1);
+          flattenPrefixes(alias, originalName + p.getBaseName(), p, depth + 1, isConstantName);
         }
       }
     }
@@ -1622,7 +1630,8 @@ class InlineAndCollapseProperties implements CompilerPass {
      * @param depth The difference in depth between the property name and the prefix name (e.g. 2)
      * @param originalName String version of the property name.
      */
-    private void flattenNameRefAtDepth(String alias, Node n, int depth, String originalName) {
+    private void flattenNameRefAtDepth(
+        String alias, Node n, int depth, String originalName, boolean isConstantName) {
       // This method has to work for both GETPROP chains and, in rare cases,
       // OBJLIT keys, possibly nested. That's why we check for children before
       // proceeding. In the OBJLIT case, we don't need to do anything.
@@ -1635,7 +1644,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           n = n.getFirstChild();
         }
         if (n.isGetProp() && n.getFirstChild().isGetProp()) {
-          flattenNameRef(alias, n.getFirstChild(), n, originalName);
+          flattenNameRef(alias, n.getFirstChild(), n, originalName, isConstantName);
         }
       }
     }
@@ -1647,8 +1656,10 @@ class InlineAndCollapseProperties implements CompilerPass {
      * @param n The GETPROP node corresponding to the original name (e.g. "a.b")
      * @param parent {@code n}'s parent
      * @param originalName String version of the property name.
+     * @param isConstantName whether to annotate with {@link Node#IS_CONSTANT_NAME}
      */
-    private void flattenNameRef(String alias, Node n, Node parent, String originalName) {
+    private void flattenNameRef(
+        String alias, Node n, Node parent, String originalName, boolean isConstantName) {
       Preconditions.checkArgument(
           n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getToken(), n);
 
@@ -1662,6 +1673,9 @@ class InlineAndCollapseProperties implements CompilerPass {
       //   name a$b$c
       Node ref = NodeUtil.newName(compiler, alias, n, originalName).copyTypeFrom(n);
       NodeUtil.copyNameAnnotations(n, ref);
+      if (isConstantName) {
+        ref.putBooleanProp(Node.IS_CONSTANT_NAME, isConstantName);
+      }
       if (NodeUtil.isNormalOrOptChainCall(parent) && n.isFirstChildOf(parent)) {
         // The node was a call target. We are deliberately flattening these as
         // the "this" isn't provided by the namespace. Mark it as such:
@@ -1869,13 +1883,9 @@ class InlineAndCollapseProperties implements CompilerPass {
         Node nameNode =
             NodeUtil.newName(compiler, alias, ref.getNode().getAncestor(2), n.getFullName());
 
-        Node constPropNode = ref.getNode();
-        JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.getNode().getParent());
-        nameNode.putBooleanProp(
-            Node.IS_CONSTANT_NAME,
-            (info != null && info.hasConstAnnotation())
-                || constPropNode.getBooleanProp(Node.IS_CONSTANT_NAME));
+        nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, shouldAddConstantName(ref.getNode(), alias));
 
+        JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.getNode().getParent());
         if (info != null) {
           varNode.setJSDocInfo(info);
         }
@@ -2097,6 +2107,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
         String propAlias = appendPropForAlias(alias, propName);
         Node refNode = null;
+        boolean isConstantName = shouldAddConstantName(key, propAlias);
         if (discardKeys) {
           key.detach();
           value.detach();
@@ -2104,7 +2115,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         } else {
           // Substitute a reference for the value.
           refNode = IR.name(propAlias);
-          if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+          if (isConstantName) {
             refNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           }
 
@@ -2115,7 +2126,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         // Declare the collapsed name as a variable with the original value.
         Node nameNode = IR.name(propAlias);
         nameNode.addChildToFront(value);
-        if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        if (isConstantName) {
           nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
         Node newVar = IR.var(nameNode).srcrefTreeIfMissing(key);
@@ -2174,8 +2185,14 @@ class InlineAndCollapseProperties implements CompilerPass {
         // Determine if this is a constant var by checking the first
         // reference to it. Don't check the declaration, as it might be null.
         Node constPropNode = p.getFirstRef().getNode();
-        nameNode.putBooleanProp(
-            Node.IS_CONSTANT_NAME, constPropNode.getBooleanProp(Node.IS_CONSTANT_NAME));
+        boolean isConstantName =
+            // Don't call shouldAddConstantName because it expects to see a declaration node for
+            // a name, and this name is, by definition, undeclared.
+            constPropNode.getBooleanProp(Node.IS_CONSTANT_NAME)
+                || compiler.getCodingConvention().isConstant(propAlias);
+        if (isConstantName) {
+          nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        }
 
         compiler.reportChangeToEnclosingScope(newVar);
         addAfter = newVar;
