@@ -3254,6 +3254,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
+    if (level == CheckLevel.WARNING && options.shouldFailOnWarnings())
+      level = CheckLevel.ERROR;
+
     if (level.isOn()) {
       initCompilerOptionsIfTesting();
       if (getOptions().errorHandler != null) {

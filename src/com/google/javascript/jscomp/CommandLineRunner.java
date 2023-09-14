@@ -462,6 +462,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + " --parse_inline_source_maps.")
     private boolean applyInputSourceMaps = true;
 
+    @Option(
+        name = "--fail_on_warnings",
+        handler = BooleanOptionHandler.class,
+        usage = "Elevate all compiler warnings to errors")
+    private boolean failOnWarnings = false;
+
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(
@@ -1981,6 +1987,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       options.messageBundle = new EmptyMessageBundle();
       options.setWarningLevel(DiagnosticGroups.MSG_CONVENTIONS, CheckLevel.OFF);
     }
+
+    options.setFailOnWarnings(flags.failOnWarnings);
 
     options.setConformanceConfigs(loadConformanceConfigs(flags.conformanceConfigs));
 

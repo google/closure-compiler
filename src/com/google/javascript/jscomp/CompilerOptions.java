@@ -121,6 +121,9 @@ public class CompilerOptions implements Serializable {
   /** Should the compiled output start with "'use strict';"? */
   private Optional<Boolean> emitUseStrict = Optional.absent();
 
+  /** ... */
+  private boolean failOnWarnings = false;
+
   /** The JavaScript language version accepted. */
   private LanguageMode languageIn;
 
@@ -1456,6 +1459,14 @@ public class CompilerOptions implements Serializable {
   /** Whether the warnings guard in this Options object disables the given group of warnings. */
   boolean disables(DiagnosticGroup group) {
     return this.warningsGuard.mustRunChecks(group) == Tri.FALSE;
+  }
+
+  public boolean shouldFailOnWarnings() {
+    return failOnWarnings;
+  }
+
+  public void setFailOnWarnings(boolean failOnWarnings) {
+    this.failOnWarnings = failOnWarnings;
   }
 
   /** Configure the given type of warning to the given level. */
@@ -2811,6 +2822,7 @@ public class CompilerOptions implements Serializable {
         .add("externExportsPath", externExportsPath)
         .add("extraAnnotationNames", extraAnnotationNames)
         .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
+        .add("failOnWarnings", failOnWarnings)
         .add("filesToPrintAfterEachPassRegexList", filesToPrintAfterEachPassRegexList)
         .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
         .add("foldConstants", foldConstants)
