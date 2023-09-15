@@ -72,6 +72,7 @@ public final class PassNames {
   public static final String INLINE_PROPERTIES = "inlineProperties";
   public static final String INLINE_TYPE_ALIASES = "inlineTypeAliases";
   public static final String INLINE_VARIABLES = "inlineVariables";
+  public static final String LATE_PEEPHOLE_OPTIMIZATIONS = "latePeepholeOptimizations";
   public static final String LINT_CHECKS = "lintChecks";
   public static final String MARK_UNNORMALIZED = "markUnnormalized";
   public static final String NORMALIZE = "normalize";
