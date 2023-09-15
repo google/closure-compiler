@@ -40,6 +40,26 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLabeledBlocks() {
+    test(
+        lines(
+            "function b(m) {", //
+            " return m;",
+            " label: {",
+            "   START('debug');",
+            "   label2: {",
+            "     alert('Shouldnt be here' + m);",
+            "   }",
+            "   END('debug');",
+            "  }",
+            "}"),
+        lines(
+            "function b(m) {", //
+            "  return m;",
+            "}"));
+  }
+
+  @Test
   public void testDoNotRemoveDeclarationOfUsedVariable() {
     test(
         lines(
@@ -54,10 +74,6 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         lines(
             "var f = function() {", //
             "  return 1;",
-            "  do {",
-            // TODO: b/297246830 - This is broken behavior.
-            // Either delete all references to `b` or keep its declaration
-            "  } while (b);",
             "};"));
   }
 
@@ -403,7 +419,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     // for-loops.
     test(
         "for (; 1;) { break; do { print(1); break } while(1) }",
-        "for (; 1;) { break; do {} while(1) }");
+        "for (; 1;) { break;                                 }");
   }
 
   @Test
@@ -747,9 +763,13 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   @Test
   public void testIssue5215541_deadVarDeclar() {
-    testSame("throw 1; var x");
+    test(
+        "       throw 1; var x;", //
+        "var x; throw 1;       ");
     testSame("throw 1; function x() {}");
-    testSame("throw 1; var x; var y;");
+    test(
+        "throw 1; var x; var y;                ", //
+        "                var y; var x; throw 1;");
     test(
         "       throw 1; var x = foo", //
         "var x; throw 1");

@@ -23,6 +23,8 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -83,22 +85,48 @@ class UnreachableCodeElimination implements CompilerPass {
   private class EliminationPass implements NodeTraversal.Callback {
     private final ControlFlowGraph<Node> cfg;
 
+    /**
+     * Keep track of nodes that contain a sequence of statements.
+     *
+     * <p>As soon as we find one statement is unreachable, we can skip traversing the rest.
+     */
+    private final Deque<StatementSequenceParentContext> statementSequenceParentContextStack =
+        new ArrayDeque<>();
+
     private EliminationPass(ControlFlowGraph<Node> cfg) {
       this.cfg = cfg;
     }
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (parent == null) {
-        return true;
-      } else if (n.isExport()) {
+      if (n.isExport()) {
         // TODO(b/129564961): We should be exploring EXPORTs. We don't because their descendants
         // have side-effects that `AstAnalyzer.mayHaveSideEffects` doesn't recognize. Since this
         // pass currently runs after exports are removed anyway, this isn't yet an issue.
         return false;
-      } else if (parent.isFunction()) {
-        // We only want to traverse the name of a function.
-        return n.isFirstChildOf(parent);
+      } else if (n.isFunction()) {
+        // Do not descend into function scopes, because they won't be included in our
+        // current CFG.
+        return false;
+      }
+
+      StatementSequenceParentContext statementSequenceParentContext =
+          statementSequenceParentContextStack.peek();
+      if (statementSequenceParentContext != null
+          && statementSequenceParentContext.statementParentNode == parent) {
+        // We're looking at a statement node in the current statement parent
+        if (statementSequenceParentContext.firstUnreachableStatementNode != null) {
+          // A previous statement is unreachable, so there's no point looking at this one.
+          return false;
+        }
+        if (isDefinitelyUnreachable(n)) {
+          statementSequenceParentContext.firstUnreachableStatementNode = n;
+          return false;
+        }
+      }
+
+      if (isStatementSequenceParent(n)) {
+        statementSequenceParentContextStack.push(new StatementSequenceParentContext(n));
       }
 
       return true;
@@ -106,6 +134,21 @@ class UnreachableCodeElimination implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      StatementSequenceParentContext statementSequenceParentContext =
+          statementSequenceParentContextStack.peek();
+      if (statementSequenceParentContext != null
+          && statementSequenceParentContext.statementParentNode == n) {
+        // We're now visiting the statement parent, itself.
+        statementSequenceParentContextStack.pop();
+        Node unreachableStatementNode =
+            statementSequenceParentContext.firstUnreachableStatementNode;
+        while (unreachableStatementNode != null) {
+          final Node nextStatement = unreachableStatementNode.getNext();
+          removeStatementNode(unreachableStatementNode);
+          unreachableStatementNode = nextStatement;
+        }
+        return;
+      }
       if (parent == null || n.isFunction() || n.isScript()) {
         return;
       }
@@ -119,6 +162,32 @@ class UnreachableCodeElimination implements CompilerPass {
         return;
       }
       tryRemoveUnconditionalBranching(n);
+    }
+
+    private boolean isDefinitelyUnreachable(Node n) {
+      DiGraphNode<Node, Branch> gNode = getCfgNodeForStatement(n);
+      if (gNode == null) {
+        // Not in CFG.
+        // We may have traversed into a scope not covered by the CFG,
+        // or maybe just looking at a node the CFG doesn't consider part of the control flow.
+        return false;
+      }
+      return gNode.getAnnotation() != GraphReachability.REACHABLE;
+    }
+
+    private DiGraphNode<Node, Branch> getCfgNodeForStatement(Node statement) {
+      switch (statement.getToken()) {
+        case DO:
+          // CFG flows first into the statement within the do {} while ();
+          // So we should consider that CFG node to represent the whole statement.
+          return cfg.getNode(statement.getFirstChild());
+        case LABEL:
+          // A LABEL is never actually executed, so get what it labels.
+          // We use recursion because it is possible to label a label.
+          return getCfgNodeForStatement(statement.getLastChild());
+        default:
+          return cfg.getNode(statement);
+      }
     }
 
     /**
@@ -179,7 +248,7 @@ class UnreachableCodeElimination implements CompilerPass {
             Node fallThrough = computeFollowing(n);
             Node nextCfgNode = outEdges.get(0).getDestination().getValue();
             if (nextCfgNode == fallThrough && !inFinally(n.getParent(), n)) {
-              removeNode(n);
+              logicallyRemoveNode(n);
             }
           }
           break;
@@ -265,10 +334,18 @@ class UnreachableCodeElimination implements CompilerPass {
         return;
       }
 
-      removeNode(n);
+      logicallyRemoveNode(n);
     }
 
-    private void removeNode(Node n) {
+    /**
+     * Logically, put possibly not actually, remove a node.
+     *
+     * <p>This method uses {@code NodeUtil.removeChild()} which has a lot of logic to handle
+     * attempts to remove nodes that are structurally required by the AST. It will make a change
+     * that has the behavior of the node being removed, even though what actually is done to the AST
+     * may not be simple removal of the node.
+     */
+    private void logicallyRemoveNode(Node n) {
       codeChanged = true;
       NodeUtil.redeclareVarsInsideBranch(n);
       compiler.reportChangeToEnclosingScope(n);
@@ -277,6 +354,44 @@ class UnreachableCodeElimination implements CompilerPass {
       }
       NodeUtil.removeChild(n.getParent(), n);
       NodeUtil.markFunctionsDeleted(n, compiler);
+    }
+  }
+
+  /**
+   * Remove a statement that is part of a sequence of statements.
+   *
+   * <p>Unlike {@code logicallyRemoveNode()}, this method will always remove the node.
+   */
+  private void removeStatementNode(Node statementNode) {
+    codeChanged = true;
+    NodeUtil.redeclareVarsInsideBranch(statementNode);
+    compiler.reportChangeToEnclosingScope(statementNode);
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Removing " + statementNode);
+    }
+    // Since we know we have a statement within a statement sequence here, simply detaching it is
+    // always safe.
+    statementNode.detach();
+    NodeUtil.markFunctionsDeleted(statementNode, compiler);
+  }
+
+  /** Is {@code n} a {@code Node} that has a sequence of statements as its children? */
+  private static boolean isStatementSequenceParent(Node n) {
+    // A LABEL is a statement parent, but only for a single statement.
+    // For historical reasons, the second child of a TRY is a BLOCK with a single CATCH child.
+    // We don't want to treat the CATCH as if it were a statement.
+    return NodeUtil.isStatementParent(n) && !n.isLabel() && !NodeUtil.isTryCatchNodeContainer(n);
+  }
+
+  /** One of these is created for each node whose children are a sequence of statements. */
+  private static class StatementSequenceParentContext {
+    final Node statementParentNode;
+
+    /** Set non-null only if we discover that some statements are unreachable. */
+    Node firstUnreachableStatementNode = null;
+
+    public StatementSequenceParentContext(Node statementParentNode) {
+      this.statementParentNode = statementParentNode;
     }
   }
 }
