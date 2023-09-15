@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -253,11 +254,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    * becomes
    *
    * <pre>
-   * var $jscomp$computedfield$0;
+   * var $jscomp$computedfield$0 = bar('str');
    * class Foo {
    *   [$jscomp$computedfield$0] = 4;
    * }
-   * $jscomp$computedfield$0 = bar('str');
    * </pre>
    */
   private void extractExpressionFromCompField(
@@ -271,16 +271,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
     Node compExpression = memberField.getFirstChild().detach();
     Node compFieldVar =
-        astFactory.createSingleVarNameDeclaration(generateUniqueCompFieldVarName(t));
+        astFactory.createSingleVarNameDeclaration(
+            generateUniqueCompFieldVarName(t), compExpression);
     Node compFieldName = compFieldVar.getFirstChild();
     memberField.addChildToFront(compFieldName.cloneNode());
     compFieldVar.insertBefore(record.insertionPointBeforeClass);
     compFieldVar.srcrefTreeIfMissing(record.classNode);
-    Node exprResult =
-        astFactory.exprResult(astFactory.createAssign(compFieldName.cloneNode(), compExpression));
-    exprResult.insertAfter(record.insertionPointAfterClass);
-    record.insertionPointAfterClass = exprResult;
-    exprResult.srcrefTreeIfMissing(record.classNode);
   }
 
   /** Returns $jscomp$compfield$[FILE_ID]$[number] */
@@ -298,7 +294,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     ctorCreator.synthesizeClassConstructorIfMissing(t, record.classNode);
     Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(record.classNode);
     Node ctorBlock = ctor.getFirstChild().getLastChild();
-    Node insertionPoint = findInitialInstanceInsertionPoint(ctorBlock);
+    Node insertionPoint = addTemporaryInsertionPoint(ctorBlock);
 
     while (!instanceMembers.isEmpty()) {
       Node instanceMember = instanceMembers.pop();
@@ -314,14 +310,14 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           instanceMember.isMemberFieldDef()
               ? convNonCompFieldToGetProp(thisNode, instanceMember.detach())
               : convCompFieldToGetElem(thisNode, instanceMember.detach());
-      if (insertionPoint == ctorBlock) { // insert the field at the beginning of the block, no super
-        ctorBlock.addChildToFront(transpiledNode);
-      } else {
-        transpiledNode.insertAfter(insertionPoint);
-      }
-      t.reportCodeChange(); // we moved the field from the class body
-      t.reportCodeChange(ctorBlock); // to the constructor, so we need both
+
+      transpiledNode.insertBefore(insertionPoint);
     }
+
+    insertionPoint.detach();
+
+    t.reportCodeChange(); // we moved the field from the class body
+    t.reportCodeChange(ctorBlock); // to the constructor, so we need both
   }
 
   /** Rewrites and moves all static blocks and fields */
@@ -399,25 +395,22 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   }
 
   /**
-   * Finds the location in the constructor to put the transpiled instance fields
+   * Finds the location of super() call in the constructor and add a temporary empty node after the
+   * super() call. If there is no super() call, add a temporary empty node at the beginning of the
+   * constructor body.
    *
-   * <p>Returns the constructor body if there is no super() call so the field can be put at the
-   * beginning of the class
-   *
-   * <p>Returns the super() call otherwise so the field can be put after the super() call
+   * <p>Returns the added temporary empty node
    */
-  private Node findInitialInstanceInsertionPoint(Node ctorBlock) {
-    if (NodeUtil.referencesSuper(ctorBlock)) {
-      // will use the fact that if there is super in the constructor, the first appearance of
-      // super
-      // must be the super call
+  private Node addTemporaryInsertionPoint(Node ctorBlock) {
+    Node tempNode = IR.empty();
       for (Node stmt = ctorBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
         if (NodeUtil.isExprCall(stmt) && stmt.getFirstFirstChild().isSuper()) {
-          return stmt;
+        tempNode.insertAfter(stmt);
+        return tempNode;
         }
       }
-    }
-    return ctorBlock; // in case the super loop doesn't work, insert at beginning of block
+    ctorBlock.addChildToFront(tempNode);
+    return tempNode;
   }
 
   /**
@@ -489,7 +482,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       if (field.isStaticMember()) {
         staticMembers.push(field);
       } else {
-        instanceMembers.push(field);
+        instanceMembers.offer(field);
       }
     }
 

@@ -283,17 +283,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class Bar {",
             "  static a = { method1() {} };",
             "  static b = { method2() { super.method1(); } };",
-            "}",
-            "Object.setPrototypeOf = function(c, d) {}",
-            "Object.setPrototypeOf(Foo.b, Foo.a);",
-            "Foo.b.method2();"),
+            "}"),
         lines(
             "class Bar {}",
             "Bar.a = { method1() {} };",
-            "Bar.b = { method2() { super.method1(); } };",
-            "Object.setPrototypeOf = function(c, d) {}",
-            "Object.setPrototypeOf(Foo.b, Foo.a);",
-            "Foo.b.method2();"));
+            "Bar.b = { method2() { super.method1(); } };"));
   }
 
   @Test
@@ -302,15 +296,17 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         lines(
             "/** @unrestricted */",
             "class C {", //
-            "  ['x'];",
-            "  ['y'] = 3;",
+            "  [x+=1];",
+            "  [x+=2] = 3;",
             "}"),
         lines(
-            "class C {", //
+            "var $jscomp$compfield$m1146332801$0 = x += 1;",
+            "var $jscomp$compfield$m1146332801$1 = x += 2;",
+            "class C {",
             "  constructor() {",
-            "    this['x'];",
-            "    this['y'] = 3;",
-            "  }",
+            "    this[$jscomp$compfield$m1146332801$0];",
+            "    this[$jscomp$compfield$m1146332801$1] = 3;",
+            "   }",
             "}"));
 
     test(
@@ -492,14 +488,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             lines(
                 "function bar() {",
                 "  this.x = 3;",
-                "  var COMPFIELD$0;",
+                "  var COMPFIELD$0 = this.x;",
                 "  class Foo {",
                 "    constructor() {",
                 "      this.y;",
                 "      this[COMPFIELD$0] = 2;",
                 "    }",
                 "  }",
-                "  COMPFIELD$0 = this.x;",
                 "}")));
 
     computedFieldTest(
@@ -522,13 +517,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "}",
                 "class F extends E {",
                 "  x() {",
-                "    var COMPFIELD$0;",
+                "    var COMPFIELD$0 = super.y();",
                 "    const testcode$classdecl$var0 = class {",
                 "      constructor() {",
                 "        this[COMPFIELD$0] = 4;",
                 "      }",
                 "    };",
-                "    COMPFIELD$0 = super.y();",
                 "    return testcode$classdecl$var0;",
                 "  }",
                 "}")));
@@ -546,15 +540,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         expected(
             lines(
                 "function bar(num) {}",
-                "var COMPFIELD$0;",
-                "var COMPFIELD$1;",
+                "var COMPFIELD$0 = bar(1);",
+                "var COMPFIELD$1 = bar(2);",
                 "class Foo {",
                 "  constructor() {",
                 "    this[COMPFIELD$0] = 'a'",
                 "  }",
                 "}",
-                "COMPFIELD$0 = bar(1);",
-                "COMPFIELD$1 = bar(2);",
                 "Foo.b = bar(3);",
                 "Foo[COMPFIELD$1] = bar(4);")));
 
@@ -569,9 +561,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         expected(
             lines(
                 "let x = 'hello';",
-                "var COMPFIELD$0;",
+                "var COMPFIELD$0 = x;",
                 "class Foo {}",
-                "COMPFIELD$0 = x;",
                 "Foo.n = x = 5;",
                 "Foo[COMPFIELD$0] = 'world';")));
 
@@ -843,16 +834,20 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   public void testInstanceNoncomputedWithNonemptyConstructor() {
     test(
         lines(
-            "class C {", //
+            "class C extends Object {", //
             "  x = 1;",
+            "  z = 3;",
             "  constructor() {",
+            "    super();",
             "    this.y = 2;",
             "  }",
             "}"),
         lines(
-            "class C {", //
+            "class C extends Object{", //
             "  constructor() {",
+            "    super();",
             "    this.x = 1",
+            "    this.z = 3",
             "    this.y = 2;",
             "  }",
             "}"));
@@ -960,6 +955,34 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  this.b = 6",
             "}",
             "}"));
+  }
+
+  @Test
+  public void testInstanceComputedWithNonemptyConstructorAndSuper() {
+
+    computedFieldTest(
+        srcs(
+            lines(
+                "class A { constructor() { alert(1); } }",
+                "/** @unrestricted */ class C extends A {", //
+                "  ['x'] = 1;",
+                "  constructor() {",
+                "    super();",
+                "    this['y'] = 2;",
+                "    this['z'] = 3;",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "class A { constructor() { alert(1); } }",
+                "class C extends A {", //
+                "  constructor() {",
+                "    super()",
+                "    this['x'] = 1",
+                "    this['y'] = 2;",
+                "    this['z'] = 3;",
+                "  }",
+                "}")));
   }
 
   @Test
