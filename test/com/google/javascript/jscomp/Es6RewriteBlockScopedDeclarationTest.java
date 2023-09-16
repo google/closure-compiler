@@ -299,8 +299,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   @Test
   public void testLetShadowingWithMultivariateDeclaration() {
     Sources srcs = srcs("var x, y; for (let x, y;;) {}");
+    // normalized var decls outside the for loop
     Expected expected =
-        expected("var x, y; for (var x$jscomp$1 = void 0, y$jscomp$1 = void 0;;) {}");
+        expected("var x, y; var x$jscomp$1 = void 0; var y$jscomp$1 = void 0; for (;;) {}");
     test(srcs, expected);
   }
 
@@ -393,6 +394,88 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   @Test
+  public void testForLetInitializer_getsNormalized() {
+    Sources srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     for (let i = 0; i < 10; i++) {",
+                "     }",
+                "  };",
+                "}"));
+
+    Expected expected =
+        expected(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     var i = 0;", // normalized
+                "     for (; i < 10; i++) {",
+                "     }",
+                "  };",
+                "}"));
+
+    test(srcs, expected);
+  }
+
+  @Test
+  public void testForLetInitializer_declarationList_getsNormalized() {
+    Sources srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     for (let i = 0, y = 0; i < 10; i++) {",
+                "     }",
+                "  };",
+                "}"));
+
+    Expected expected =
+        expected(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     var i = 0; var y=0;", // normalized
+                "     for (; i < 10; i++) {",
+                "     }",
+                "  };",
+                "}"));
+
+    test(srcs, expected);
+  }
+
+  @Test
+  public void testsForVarInitializer_staysNormalized() {
+    Sources srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     var i = 0;",
+                "     for ( ;i < 10; i++) {", // originally normalized
+                "     }",
+                "  };",
+                "}"));
+
+    testSame(srcs);
+  }
+
+  @Test
+  public void testsForVarInitializer_unchanged() {
+    Sources srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     for (var i = 0; i < 10; i++) {", // originally unnormalized
+                "     }",
+                "  };",
+                "}"));
+    testSame(srcs);
+  }
+
+  @Test
   public void testForLoop() {
     Sources srcs =
         srcs(
@@ -412,7 +495,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "function use(x) {}",
                 "function f() {",
                 "  /** @const */ var y = 0;",
-                "  for (var x$jscomp$1 = 0; x$jscomp$1 < 10; x$jscomp$1++) {",
+                "  var x$jscomp$1 = 0;",
+                "  for (; x$jscomp$1 < 10; x$jscomp$1++) {",
                 "    /** @const */ var y$jscomp$1 = x$jscomp$1 * 2;",
                 "    /** @const */ var z = y$jscomp$1;",
                 "  }",
@@ -445,11 +529,11 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     loopClosureTest(srcs, expected);
 
     srcs = srcs("for (let i = 0;;) { let i; }");
-    expected = expected("for (var i = 0;;) { var i$jscomp$1 = void 0; }");
+    expected = expected("var i = 0; for (;;) { var i$jscomp$1 = void 0; }");
     loopClosureTest(srcs, expected);
 
     srcs = srcs("for (let i = 0;;) {} let i;");
-    expected = expected("for (var i$jscomp$1 = 0;;) {} var i;");
+    expected = expected("var i$jscomp$1 = 0; for (;;) {} var i;");
     loopClosureTest(srcs, expected);
 
     test(

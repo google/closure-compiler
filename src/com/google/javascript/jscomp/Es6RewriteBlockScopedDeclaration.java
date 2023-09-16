@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -154,36 +153,109 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
   }
 
+  /**
+   * Given a declarationList of let/const declarations, convert all declared names to their own,
+   * separate (normalized) var declarations.
+   *
+   * <p>"const i = 0, j = 0;" becomes "/\*\* @const *\/ var i = 0; /\** @const *\/ var j = 0;"
+   *
+   * <p>If the declarationList of let/const declarations is in a FOR intializer, moves those into
+   * separate declarations outside the FOR loop (for maintaining normalization).
+   *
+   * <p>TODO: b/197349249 - We won't have any declaration lists here when this pass runs post
+   * normalize.
+   */
   private void handleDeclarationList(Node declarationList, Node parent) {
-    // Normalize: "const i = 0, j = 0;" becomes "/** @const */ var i = 0; /** @const */ var j = 0;"
-    while (declarationList.hasMoreThanOneChild()) {
+    if (declarationList.isVar() && declarationList.hasOneChild()) {
+      // This declaration list is already handled and we can safely return. This happens because
+      // this method is also called by {@code replaceDeclarationWithProperty} where it gets
+      // repeatedly called for each name in the declarationList. After the first call
+      // to this (for the first name), this declarationList would no longer be {@code Token.CONST}
+      // (i.e. it would've become a separate var with an {@code /** const */} annotation).
+      return;
+    }
+    if (parent.isVanillaFor()) {
+      handleDeclarationListInForInitializer(declarationList, parent);
+      return;
+    }
+    // convert all names to their own, separate (normalized) declarations
+    while (declarationList.hasChildren()) {
       Node name = declarationList.getLastChild();
       Node newDeclaration = IR.var(name.detach()).srcref(declarationList);
+      /*
+       * This method gets called multiple times by {@code replaceDeclarationWithProperty}. In the
+       * first call, it splits the declarationList into individual /\** @const *\/ var declarations.
+       * i.e. `const a,b` --> `/\** @const *\/ var a; /\** @const *\/ var b;`
+       *
+       * <p>Then it gets invoked for each individual var declaration. once for each name in the
+       * original declarationList). However, after the first call to this (for the first name), this
+       * declarationList would no longer be {@code Token.CONST} (i.e. it would've become a separate
+       * var with an {@code /*\* const *\/} annotation).
+       *
+       * <p>Previously, this method rewrote those individual var declarations again into new var
+       * declarations. Without copying over the JSDoc, those newly created var declarations did not
+       * contain `@const`, and produce this:
+       *
+       * <p>`/\** @const *\/ var a; /\** @const *\/ var b;` -->`var a; var b;`
+       *
+       * <p>Now, even though the "redundant rewriting" is handled by early-returning from this
+       * method whenever this method gets called with a non-declaration var list, it's still
+       * important that the individual var declarations created by the first rewriting contain the
+       * annotations from original declaration list. Hence we propagate JSDoc from declarationList
+       * into the individual var declarations.
+       */
+      extractInlineJSDoc(declarationList, name, newDeclaration);
       maybeAddConstJSDoc(declarationList, name, newDeclaration);
       newDeclaration.insertAfter(declarationList);
       compiler.reportChangeToEnclosingScope(parent);
     }
-    maybeAddConstJSDoc(declarationList, declarationList.getFirstChild(), declarationList);
-    declarationList.setToken(Token.VAR);
+
+    // declarationList has no children left. Remove.
+    declarationList.detach();
+    compiler.reportChangeToEnclosingScope(parent);
+  }
+
+  private void handleDeclarationListInForInitializer(Node declarationList, Node parent) {
+    checkState(parent.isVanillaFor());
+    // if the declarationList is in a FOR initializer, move it outside
+    Node insertSpot = getInsertSpotBeforeLoop(parent);
+    // convert all names to their own, separate (normalized) declarations
+    while (declarationList.hasChildren()) {
+      Node name = declarationList.getLastChild();
+      Node newDeclaration = IR.var(name.detach()).srcref(declarationList);
+      extractInlineJSDoc(declarationList, name, newDeclaration);
+      maybeAddConstJSDoc(declarationList, name, newDeclaration);
+      // generate normalized var initializer (i.e. outside FOR)
+      newDeclaration.insertBefore(insertSpot);
+      insertSpot = newDeclaration;
+      compiler.reportChangeToEnclosingScope(parent);
+    }
+    // make FOR initializer empty
+    Node empty = astFactory.createEmpty().srcref(declarationList);
+    declarationList.replaceWith(empty);
+    compiler.reportChangeToEnclosingScope(empty);
   }
 
   private void addNodeBeforeLoop(Node newNode, Node loopNode) {
+    Node insertSpot = getInsertSpotBeforeLoop(loopNode);
+    newNode.insertBefore(insertSpot);
+    compiler.reportChangeToEnclosingScope(newNode);
+  }
+
+  private Node getInsertSpotBeforeLoop(Node loopNode) {
     Node insertSpot = loopNode;
     while (insertSpot.getParent().isLabel()) {
       insertSpot = insertSpot.getParent();
     }
-    newNode.insertBefore(insertSpot);
-    compiler.reportChangeToEnclosingScope(newNode);
+    return insertSpot;
   }
 
   private void rewriteDeclsToVars() {
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
-        if (n.isConst()) {
-          handleDeclarationList(n, n.getParent());
-        }
-        n.setToken(Token.VAR);
-        compiler.reportChangeToEnclosingScope(n);
+        // for both lets and consts we want to split the declaration lists when converting them to
+        // vars (to maintain normalization)
+        handleDeclarationList(n, n.getParent());
       }
     }
   }
@@ -416,11 +488,14 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         LoopObject loopObject, String newPropertyName, Node reference) {
       Node declaration = reference.getParent();
       Node grandParent = declaration.getParent();
-      // If the declaration contains multiple declared variables, split it apart.
-      handleDeclarationList(declaration, grandParent);
-      // Record that the let / const declaration statement has been turned into one or more
+      // Record that the let / const declaration statement will get turned into one or more
       // var statements by handleDeclarationList(), so we won't try to change it again later.
       letConsts.remove(declaration);
+      // If the declaration contains multiple declared variables, split it apart.
+      // NOTE: This call could be made for each declarationList once, rather than each name in that
+      // list
+      handleDeclarationList(declaration, grandParent);
+
       // The variable we're working with may have been moved to a new var statement.
       declaration = reference.getParent();
       if (reference.hasChildren()) {
