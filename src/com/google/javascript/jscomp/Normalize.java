@@ -138,18 +138,24 @@ final class Normalize implements CompilerPass {
     NodeTraversal.traverseRoots(
         compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
 
-    removeDuplicateDeclarations(externs, root);
-
-    new PropagateConstantPropertyOverVars(compiler, assertOnChange).process(externs, root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(new PropagateConstantPropertyOverVars(compiler, assertOnChange))
+        .setScopeCreator(new SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler()))
+        .traverseRoots(externs, root);
 
     if (!compiler.getLifeCycleStage().isNormalized()) {
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     }
   }
 
-  /** Propagate constant annotations and IS_CONSTANT_NAME property over the Var graph. */
-  static class PropagateConstantPropertyOverVars extends AbstractPostOrderCallback
-      implements CompilerPass {
+  /**
+   * Propagate constant annotations and IS_CONSTANT_NAME property over the Var graph.
+   *
+   * <p>Also invokes t.getScope() on every scope, for use with the {@link
+   * DuplicateDeclarationHandler}.
+   */
+  private static class PropagateConstantPropertyOverVars implements NodeTraversal.ScopedCallback {
     private final AbstractCompiler compiler;
     private final boolean assertOnChange;
 
@@ -159,8 +165,20 @@ final class Normalize implements CompilerPass {
     }
 
     @Override
-    public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(compiler, this, externs, root);
+    public void enterScope(NodeTraversal t) {
+      // Cause the scope to be created, which will cause duplicate
+      // to be found.
+      t.getScope();
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+      // Nothing to do.
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
     }
 
     @Override
@@ -670,15 +688,6 @@ final class Normalize implements CompilerPass {
     }
   }
 
-  /** Remove duplicate VAR declarations. */
-  private void removeDuplicateDeclarations(Node externs, Node root) {
-    NodeTraversal.builder()
-        .setCompiler(compiler)
-        .setCallback(new ScopeTicklingCallback())
-        .setScopeCreator(new SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler()))
-        .traverseRoots(externs, root);
-  }
-
   /** ScopeCreator duplicate declaration handler. */
   private final class DuplicateDeclarationHandler
       implements SyntacticScopeCreator.RedeclarationHandler {
@@ -750,31 +759,6 @@ final class Normalize implements CompilerPass {
         parent.detach();
         reportCodeChange("Duplicate VAR declaration", grandparent);
       }
-    }
-  }
-
-  /** A simple class that causes scope to be created. */
-  private static final class ScopeTicklingCallback implements NodeTraversal.ScopedCallback {
-    @Override
-    public void enterScope(NodeTraversal t) {
-      // Cause the scope to be created, which will cause duplicate
-      // to be found.
-      t.getScope();
-    }
-
-    @Override
-    public void exitScope(NodeTraversal t) {
-      // Nothing to do.
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      return true;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      // Nothing to do.
     }
   }
 }
