@@ -77,7 +77,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       case COMPUTED_FIELD_DEF:
         checkState(!classStack.isEmpty());
         if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
-          classStack.peek().computedFieldsWithSideEffectsToMove.push(n);
+          classStack.peek().computedPropMembers.add(n);
         }
         classStack.peek().enterField(n);
         break;
@@ -99,10 +99,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         break;
       case COMPUTED_PROP:
         checkState(!classStack.isEmpty());
-        ClassRecord record = classStack.peek();
-        if (!record.computedFieldsWithSideEffectsToMove.isEmpty()) {
-          moveComputedFieldsWithSideEffectsInsideComputedFunction(t, record, n);
-          record.computedFieldsWithSideEffectsToMove.clear();
+        if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
+          classStack.peek().computedPropMembers.add(n);
         }
         break;
       default:
@@ -141,11 +139,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
   /** Transpile the actual class members themselves */
   private void visitClass(NodeTraversal t, Node classNode) {
-    ClassRecord currClassRecord = classStack.pop();
+    ClassRecord currClassRecord = classStack.remove();
     checkState(currClassRecord.classNode == classNode, "unexpected node: %s", classNode);
     if (currClassRecord.cannotConvert) {
       return;
     }
+    rewriteSideEffectedComputedProp(t, currClassRecord);
     rewriteInstanceMembers(t, currClassRecord);
     rewriteStaticMembers(t, currClassRecord);
   }
@@ -177,68 +176,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   }
 
   /**
-   * Move computed fields with side effects into a computed function (Token is COMPUTED_PROP) to
-   * preserve the original behavior of possible side effects such as printing something in the call
-   * to a function in the computed field and function.
-   *
-   * <p>The computed fields that get moved into a computed function must be located above the
-   * computed function and below any other computed functions in the class. Any computed field not
-   * above a computed function gets extracted by {@link #extractExpressionFromCompField}.
-   *
-   * <p>E.g.
-   *
-   * <pre>
-   *   function bar(num) {}
-   *   class Foo {
-   *     [bar(1)] = 9;
-   *     [bar(2)]() {}
-   *   }
-   * </pre>
-   *
-   * becomes
-   *
-   * <pre>
-   *   function bar(num) {}
-   *   var $jscomp$compfield$0;
-   *   class Foo {
-   *     [$jscomp$compfield$0] = 9;
-   *     [($jscomp$compfield$0 = bar(1), bar(2))]() {}
-   *   }
-   * </pre>
-   */
-  private void moveComputedFieldsWithSideEffectsInsideComputedFunction(
-      NodeTraversal t, ClassRecord record, Node computedFunction) {
-    checkArgument(computedFunction.isComputedProp(), computedFunction);
-    Deque<Node> computedFields = record.computedFieldsWithSideEffectsToMove;
-    while (!computedFields.isEmpty()) {
-      Node computedField = computedFields.pop();
-      Node computedFieldVar =
-          astFactory
-              .createSingleVarNameDeclaration(generateUniqueCompFieldVarName(t))
-              .srcrefTreeIfMissing(record.classNode);
-      // `var $jscomp$compfield$0` is inserted before the class
-      computedFieldVar.insertBefore(record.insertionPointBeforeClass);
-      Node newNameNode = computedFieldVar.getFirstChild();
-      Node fieldLhsExpression = computedField.getFirstChild();
-      // Computed field changes from `[fieldLhs] = rhs;` to `[$jscomp$compfield$0] = rhs;`
-      fieldLhsExpression.replaceWith(newNameNode.cloneNode());
-      Node assignComputedLhsExpressionToNewVarName =
-          astFactory
-              .createAssign(newNameNode.cloneNode(), fieldLhsExpression)
-              .srcrefTreeIfMissing(computedField);
-      Node existingComputedFunctionExpression = computedFunction.getFirstChild();
-      Node newComma =
-          astFactory
-              .createComma(
-                  assignComputedLhsExpressionToNewVarName,
-                  existingComputedFunctionExpression.detach())
-              .srcrefTreeIfMissing(computedFunction);
-      // `[funcExpr]() {}` becomes `[($jscomp$compfield$0 = fieldLhs, funcExpr)]() {}`
-      computedFunction.addChildToFront(newComma);
-    }
-  }
-
-  /**
    * Extracts the expression in the LHS of a computed field to not disturb possible side effects and
    * allow for this and super to be used in the LHS of a computed field in certain cases. Does not
    * extract a computed field that was already moved into a computed function.
@@ -262,17 +199,13 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    */
   private void extractExpressionFromCompField(
       NodeTraversal t, ClassRecord record, Node memberField) {
-    checkArgument(memberField.isComputedFieldDef(), memberField);
-    // Computed field was already moved into a computed function and doesn't need to be extracted
-    if (memberField.getFirstChild().isName()
-        && memberField.getFirstChild().getString().startsWith(COMP_FIELD_VAR)) {
-      return;
-    }
+    checkArgument(memberField.isComputedFieldDef() || memberField.isComputedProp(), memberField);
 
     Node compExpression = memberField.getFirstChild().detach();
     Node compFieldVar =
-        astFactory.createSingleVarNameDeclaration(
-            generateUniqueCompFieldVarName(t), compExpression);
+        astFactory
+            .createSingleVarNameDeclaration(generateUniqueCompFieldVarName(t), compExpression)
+            .srcrefTreeIfMissing(record.classNode);
     Node compFieldName = compFieldVar.getFirstChild();
     memberField.addChildToFront(compFieldName.cloneNode());
     compFieldVar.insertBefore(record.insertionPointBeforeClass);
@@ -282,6 +215,21 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   /** Returns $jscomp$compfield$[FILE_ID]$[number] */
   private String generateUniqueCompFieldVarName(NodeTraversal t) {
     return COMP_FIELD_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+  }
+
+  /** Rewrites and moves all side effected computed field keys to the top */
+  private void rewriteSideEffectedComputedProp(NodeTraversal t, ClassRecord record) {
+    Deque<Node> computedPropMembers = record.computedPropMembers;
+
+    if (computedPropMembers.isEmpty()) {
+      return;
+    }
+
+    while (!computedPropMembers.isEmpty()) {
+      Node computedPropMember = computedPropMembers.remove();
+      extractExpressionFromCompField(t, record, computedPropMember);
+    }
+    t.reportCodeChange();
   }
 
   /** Rewrites and moves all instance fields */
@@ -297,15 +245,11 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     Node insertionPoint = addTemporaryInsertionPoint(ctorBlock);
 
     while (!instanceMembers.isEmpty()) {
-      Node instanceMember = instanceMembers.pop();
+      Node instanceMember = instanceMembers.remove();
       checkState(
           instanceMember.isMemberFieldDef() || instanceMember.isComputedFieldDef(), instanceMember);
 
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
-      if (instanceMember.isComputedFieldDef()
-          && NodeUtil.canBeSideEffected(instanceMember.getFirstChild())) {
-        extractExpressionFromCompField(t, record, instanceMember);
-      }
       Node transpiledNode =
           instanceMember.isMemberFieldDef()
               ? convNonCompFieldToGetProp(thisNode, instanceMember.detach())
@@ -323,9 +267,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   /** Rewrites and moves all static blocks and fields */
   private void rewriteStaticMembers(NodeTraversal t, ClassRecord record) {
     Deque<Node> staticMembers = record.staticMembers;
+    Node insertionPoint = addTemporaryInsertionPointAfterNode(record.insertionPointAfterClass);
 
     while (!staticMembers.isEmpty()) {
-      Node staticMember = staticMembers.pop();
+      Node staticMember = staticMembers.remove();
       // if the name is a property access, we want the whole chain of accesses, while for other
       // cases we only want the name node
       Node nameToUse = record.createNewNameReferenceNode().srcrefTree(staticMember);
@@ -343,17 +288,15 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
           break;
         case COMPUTED_FIELD_DEF:
-          if (NodeUtil.canBeSideEffected(staticMember.getFirstChild())) {
-            extractExpressionFromCompField(t, record, staticMember);
-          }
           transpiledNode = convCompFieldToGetElem(nameToUse, staticMember.detach());
           break;
         default:
           throw new IllegalStateException(String.valueOf(staticMember));
       }
-      transpiledNode.insertAfter(record.insertionPointAfterClass);
+      transpiledNode.insertBefore(insertionPoint);
       t.reportCodeChange();
     }
+    insertionPoint.detach();
   }
 
   /**
@@ -413,6 +356,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     return tempNode;
   }
 
+  private Node addTemporaryInsertionPointAfterNode(Node node) {
+    Node tempNode = IR.empty();
+    tempNode.insertAfter(node);
+    return tempNode;
+  }
+
   /**
    * Gets the location of the statement declaring the class
    *
@@ -455,8 +404,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     final Deque<Node> instanceMembers = new ArrayDeque<>();
     // Static fields + static blocks
     final Deque<Node> staticMembers = new ArrayDeque<>();
-    // Computed fields with side effects after the most recent computed member function
-    final Deque<Node> computedFieldsWithSideEffectsToMove = new ArrayDeque<>();
+    // computed props with side effects
+    final Deque<Node> computedPropMembers = new ArrayDeque<>();
 
     // Set of all the Vars defined in the constructor arguments scope and constructor body scope
     ImmutableSet<Var> constructorVars = ImmutableSet.of();
@@ -480,15 +429,15 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     void enterField(Node field) {
       checkArgument(field.isComputedFieldDef() || field.isMemberFieldDef());
       if (field.isStaticMember()) {
-        staticMembers.push(field);
+        staticMembers.add(field);
       } else {
-        instanceMembers.offer(field);
+        instanceMembers.add(field);
       }
     }
 
     void recordStaticBlock(Node block) {
       checkArgument(NodeUtil.isClassStaticBlock(block));
-      staticMembers.push(block);
+      staticMembers.add(block);
     }
 
     void recordConstructorScope(Scope s) {
