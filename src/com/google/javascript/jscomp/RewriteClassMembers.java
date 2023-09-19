@@ -89,11 +89,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         if (!NodeUtil.isClassStaticBlock(n)) {
           break;
         }
-        if (NodeUtil.referencesEnclosingReceiver(n)) {
-          t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Member references this or super");
-          classStack.peek().cannotConvert = true;
-          break;
-        }
         checkState(!classStack.isEmpty());
         classStack.peek().recordStaticBlock(n);
         break;
@@ -163,12 +158,44 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
       thisNode.replaceWith(className);
       t.reportCodeChange(className);
+    } else if (rootNode.isBlock()) {
+      final ClassRecord classRecord = classStack.peek();
+      Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
+      thisNode.replaceWith(className);
+      t.reportCodeChange(className);
     }
   }
 
+  /**
+   * Rename super in static context to super class name.
+   *
+   * <p>CASE : rootNode.isMemberFieldDef() && rootNode.isStaticMember()
+   *
+   * <pre><code>
+   *   class C {
+   *     static x = 2;
+   *   }
+   *   class D extends C {
+   *     static y = super.x;
+   *   }
+   * </code></pre>
+   *
+   * <p>CASE : rootNode.isBlock()
+   *
+   * <pre><code>
+   * class B {
+   *   static y = 3;
+   * }
+   * class C extends B {
+   *   static {
+   *     let x = super.y;
+   *   }
+   * }
+   * </code></pre>
+   */
   private void visitSuper(NodeTraversal t, Node n) {
-    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
-    if (rootNode.isMemberFieldDef() && rootNode.isStaticMember()) {
+    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper(); // returns BLOCK if static block
+    if ((rootNode.isMemberFieldDef() && rootNode.isStaticMember()) || rootNode.isBlock()) {
       Node superclassName = rootNode.getGrandparent().getChildAtIndex(1).cloneNode();
       n.replaceWith(superclassName);
       t.reportCodeChange(superclassName);
@@ -279,9 +306,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
       switch (staticMember.getToken()) {
         case BLOCK:
-          if (!NodeUtil.getVarsDeclaredInBranch(staticMember).isEmpty()) {
-            t.report(staticMember, TranspilationUtil.CANNOT_CONVERT_YET, "Var in static block");
-          }
           transpiledNode = staticMember.detach();
           break;
         case MEMBER_FIELD_DEF:

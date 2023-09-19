@@ -1306,6 +1306,11 @@ public class NodeTraversal {
         case MODULE_BODY:
         case ROOT:
           return rootNode;
+        case BLOCK:
+          if (NodeUtil.isClassStaticBlock(rootNode)) {
+            return rootNode;
+          }
+          continue;
         default:
           continue;
       }

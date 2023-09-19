@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
-
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,8 +68,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCannotConvertYet() {
-    testError(
+  public void testClassStaticBlock() {
+    test(
         lines(
             "class C {", //
             "  static {",
@@ -79,24 +77,34 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    this.y = x",
             "  }",
             "}"),
-        /*lines(
-        "class C {}", //
-        "{",
-        "  let x = 2;",
-        "  C.y = x", // TODO(b/235871861): Need to correct references to `this`
-        "}")*/
-        CANNOT_CONVERT_YET); // uses `this` in static block
-
-    testError(
         lines(
+            "class C {}", //
+            "{",
+            "  let x = 2;",
+            "  C.y = x",
+            "}")); // uses `this` in static block
+
+    test(
+        lines(
+            "class B {",
+            "  static y = 3;",
+            "}",
             "class C extends B {", //
             "  static {",
-            "    let x = super.y",
+            "    let x = super.y;",
             "  }",
             "}"),
-        CANNOT_CONVERT_YET); // uses `super`
+        lines(
+            "class B {}",
+            "B.y = 3;",
+            "class C extends B {}", //
+            "{",
+            // TODO (user): Object.getPrototypeOf(C) is the technically correct way.
+            //  We are not doing this for code size reasons.
+            "  let x = B.y", /* Object.getPrototypeOf(C).y */
+            "}")); // uses `super`
 
-    testError(
+    test(
         lines(
             "class C {", //
             "  static {",
@@ -104,27 +112,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    const y = this.x",
             "  }",
             "}"),
-        /*lines(
-        "class C {}", //
-        "{",
-        "  C.x = 2;",
-        "  const y = C.x",
-        "}")*/
-        CANNOT_CONVERT_YET); // uses `this` in static block
-
-    testError(
         lines(
-            "let C = class {",
-            "  static prop = 5;",
-            "},",
-            "D = class extends C {",
-            "  static {",
-            "    console.log(this.prop);",
-            "  }",
-            "}"),
-        CANNOT_CONVERT_YET); // uses `this` in static block
+            "class C {}", //
+            "{",
+            "  C.x = 2;",
+            "  const y = C.x",
+            "}")); // uses `this` in static block
 
-    testError(
+    test(
         lines(
             "var z = 1", //
             "class C {",
@@ -133,7 +128,85 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    var z = 3;",
             "  }",
             "}"),
-        CANNOT_CONVERT_YET); // `var` in static block
+        lines(
+            "var z = 1", //
+            "class C {}",
+            "{",
+            "  let x = 2",
+            "  var z$jscomp$1 = 3;",
+            "}")); // `var` in static block
+
+    test(
+        lines(
+            "let C = class {",
+            "  static prop = 5;",
+            "};",
+            "let D = class extends C {",
+            "  static {",
+            "    this.prop = 10;",
+            "  }",
+            "};"),
+        lines(
+            "let C = class {}",
+            "C.prop = 5;",
+            "let D = class extends C {}",
+            "{",
+            "  D.prop = 10;",
+            "}")); //
+
+    // TODO (user): This will be fixed by moving the RewriteClassMembers pass after
+    // normalization, because normalization will split these two declarations into separate let
+    // assignments.
+    test(
+        lines(
+            "let C = class {",
+            "  static prop = 5;",
+            "},",
+            "D = class extends C {",
+            "  static {",
+            "    this.prop = 10;",
+            "  }",
+            "}"),
+        lines(
+            "let C = class {}, D = class extends C {}",
+            "{",
+            "  D.prop = 10;",
+            "}",
+            "C.prop = 5;")); // defines classes in the same let statement
+  }
+
+  @Test
+  public void testMultipleStaticBlocks() {
+    computedFieldTest(
+        srcs(
+            lines(
+                "var z = 1", //
+                "/** @unrestricted */",
+                "class C {",
+                "  static x = 2;",
+                "  static {",
+                "    z = z + this.x;",
+                "  }",
+                "  static [z] = 3;",
+                "  static w = 5;",
+                "  static {",
+                "    z = z + this.w;",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "var z = 1", //
+                "var COMPFIELD$0 = z;",
+                "class C {}",
+                "C.x = 2;",
+                "{",
+                "    z = z + C.x;",
+                "}",
+                "C[COMPFIELD$0] = 3;",
+                "C.w = 5;",
+                "{",
+                "    z = z + C.w;",
+                "}"))); //
   }
 
   @Test
