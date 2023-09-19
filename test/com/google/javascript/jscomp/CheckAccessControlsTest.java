@@ -3006,6 +3006,22 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPublicOverrideOfProtectedProperty() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar() {}",
+                "}"),
+            lines(
+                "class SubFoo extends Foo {", //
+                "  /** @public */",
+                "  bar() {}",
+                "}")));
+  }
+
+  @Test
   public void testBadOverrideOfProtectedProperty() {
     test(
         srcs(
@@ -3020,6 +3036,22 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "  bar() {}",
                 "}")),
         error(VISIBILITY_MISMATCH));
+  }
+
+  @Test
+  public void testProtectedOverrideOfPackageProperty() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @package */",
+                "  bar() {}",
+                "}"),
+            lines(
+                "class SubFoo extends Foo {", //
+                "  /** @protected */",
+                "  bar() {}",
+                "}")));
   }
 
   @Test

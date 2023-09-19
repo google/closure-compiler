@@ -869,15 +869,14 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
 
     // Check that:
     // (a) the property *can* be overridden,
-    // (b) the visibility of the override is the same as the
+    // (b) the visibility of the override is the same as (or broader than) the
     //     visibility of the original property,
     // (c) the visibility is explicitly redeclared if the override is in
     //     a file with default visibility in the @fileoverview block.
     if (visibility == Visibility.PRIVATE && !sameInput) {
       compiler.report(
           JSError.make(propRef.getSourceNode(), PRIVATE_OVERRIDE, objectType.toString()));
-    } else if (overridingVisibility != Visibility.INHERITED
-        && overridingVisibility != visibility
+    } else if (!canOverrideVisibility(visibility, overridingVisibility)
         && fileOverviewVisibility == null) {
       compiler.report(
           JSError.make(
@@ -887,6 +886,14 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               objectType.toString(),
               overridingVisibility.name()));
     }
+  }
+
+  private static boolean canOverrideVisibility(
+      Visibility superclassVisibility, Visibility subclassVisibility) {
+    // This allows INHERITED to override anything, PUBLIC to override anything (except INHERITED),
+    // and PROTECTED to override anything (except PUBLIC or INHERITED). PRIVATE was already handled
+    // in a previous check, leaving PACKAGE as the lowest visibility.
+    return superclassVisibility.compareTo(subclassVisibility) <= 0;
   }
 
   private void checkPropertyAccessVisibility(
