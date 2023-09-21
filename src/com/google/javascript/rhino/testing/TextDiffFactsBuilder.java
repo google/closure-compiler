@@ -45,7 +45,6 @@ import static java.util.stream.Collectors.joining;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.UnifiedDiffUtils;
-import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -92,7 +91,8 @@ public final class TextDiffFactsBuilder {
           UnifiedDiffUtils.generateUnifiedDiff(
               "expected", "actual", expectedLines, patch, /* contextSize= */ 10);
       return ImmutableList.of(fact(title, unifiedDiff.stream().collect(joining("\n"))));
-    } catch (DiffException e) {
+    } catch (Exception e) {
+      // TODO: b/238438892 - Remove the try/catch entirely after upgrading to java-diff-utils 4.12
       // It's unclear when this exception happens.
       // It may indicate a bug in the diff library itself.
       throw new IllegalStateException(e);
