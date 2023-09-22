@@ -1836,6 +1836,7 @@ ImageCapture.prototype.track;
  * @see https://www.w3.org/TR/webrtc/#rtctrackevent
  * @param {string} type
  * @param {!Object} eventInitDict
+ * @extends {Event}
  * @constructor
  */
 function RTCTrackEvent(type, eventInitDict) {}
