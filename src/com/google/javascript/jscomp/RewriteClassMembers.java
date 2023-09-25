@@ -441,7 +441,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     final Node insertionPointBeforeClass;
 
     // Keeps track of the last statement inserted after the class
-    Node insertionPointAfterClass;
+    final Node insertionPointAfterClass;
 
     ClassRecord(Node classNode, Node classNameNode, Node classInsertionPoint) {
       this.classNode = classNode;
