@@ -49,27 +49,25 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
 /**
- * A builder for FunctionTypes, because FunctionTypes are so
- * ridiculously complex. All methods return {@code this} for ease of use.
+ * A builder for FunctionTypes, because FunctionTypes are so ridiculously complex. All methods
+ * return {@code this} for ease of use.
  *
- * Right now, this mostly uses JSDocInfo to infer type information about
- * functions. In the long term, developers should extend it to use other
- * signals by overloading the various "inferXXX" methods. For example, we
- * might want to use {@code goog.inherits} calls as a signal for inheritance, or
- * {@code return} statements as a signal for return type.
+ * <p>Right now, this mostly uses JSDocInfo to infer type information about functions. In the long
+ * term, developers should extend it to use other signals by overloading the various "inferXXX"
+ * methods. For example, we might want to use {@code goog.inherits} calls as a signal for
+ * inheritance, or {@code return} statements as a signal for return type.
  *
- * NOTE(nicksantos): Organizationally, this feels like it should be in Rhino.
- * But it depends on some coding convention stuff that's really part
- * of JSCompiler.
+ * <p>NOTE(nicksantos): Organizationally, this feels like it should be in Rhino. But it depends on
+ * some coding convention stuff that's really part of JSCompiler.
  */
 final class FunctionTypeBuilder {
 
@@ -104,39 +102,34 @@ final class FunctionTypeBuilder {
   private @Nullable TypedScope declarationScope = null;
   private StaticTypedScope templateScope;
 
-  static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
-      "JSC_EXTENDS_WITHOUT_TYPEDEF",
-      "@extends used without @constructor or @interface for {0}");
+  static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF =
+      DiagnosticType.warning(
+          "JSC_EXTENDS_WITHOUT_TYPEDEF",
+          "@extends used without @constructor or @interface for {0}");
 
-  static final DiagnosticType EXTENDS_NON_OBJECT = DiagnosticType.warning(
-      "JSC_EXTENDS_NON_OBJECT",
-      "{0} @extends non-object type {1}");
+  static final DiagnosticType EXTENDS_NON_OBJECT =
+      DiagnosticType.warning("JSC_EXTENDS_NON_OBJECT", "{0} @extends non-object type {1}");
 
-  static final DiagnosticType RESOLVED_TAG_EMPTY = DiagnosticType.warning(
-      "JSC_RESOLVED_TAG_EMPTY",
-      "Could not resolve type in {0} tag of {1}");
+  static final DiagnosticType RESOLVED_TAG_EMPTY =
+      DiagnosticType.warning("JSC_RESOLVED_TAG_EMPTY", "Could not resolve type in {0} tag of {1}");
 
   static final DiagnosticType CONSTRUCTOR_REQUIRED =
-      DiagnosticType.warning("JSC_CONSTRUCTOR_REQUIRED",
-                             "{0} used without @constructor for {1}");
+      DiagnosticType.warning("JSC_CONSTRUCTOR_REQUIRED", "{0} used without @constructor for {1}");
 
-  static final DiagnosticType VAR_ARGS_MUST_BE_LAST = DiagnosticType.warning(
-      "JSC_VAR_ARGS_MUST_BE_LAST",
-      "variable length argument must be last");
+  static final DiagnosticType VAR_ARGS_MUST_BE_LAST =
+      DiagnosticType.warning("JSC_VAR_ARGS_MUST_BE_LAST", "variable length argument must be last");
 
-  static final DiagnosticType OPTIONAL_ARG_AT_END = DiagnosticType.warning(
-      "JSC_OPTIONAL_ARG_AT_END",
-      "optional arguments must be at the end");
+  static final DiagnosticType OPTIONAL_ARG_AT_END =
+      DiagnosticType.warning("JSC_OPTIONAL_ARG_AT_END", "optional arguments must be at the end");
 
-  static final DiagnosticType INEXISTENT_PARAM = DiagnosticType.warning(
-      "JSC_INEXISTENT_PARAM",
-      "parameter {0} does not appear in {1}''s parameter list");
+  static final DiagnosticType INEXISTENT_PARAM =
+      DiagnosticType.warning(
+          "JSC_INEXISTENT_PARAM", "parameter {0} does not appear in {1}''s parameter list");
 
-  static final DiagnosticType TYPE_REDEFINITION = DiagnosticType.warning(
-      "JSC_TYPE_REDEFINITION",
-      "attempted re-definition of type {0}\n"
-      + "found   : {1}\n"
-      + "expected: {2}");
+  static final DiagnosticType TYPE_REDEFINITION =
+      DiagnosticType.warning(
+          "JSC_TYPE_REDEFINITION",
+          "attempted re-definition of type {0}\n" + "found   : {1}\n" + "expected: {2}");
 
   static final DiagnosticType TEMPLATE_TRANSFORMATION_ON_CLASS =
       DiagnosticType.warning(
@@ -326,8 +319,7 @@ final class FunctionTypeBuilder {
     } else {
       // We're overriding with a function literal. Apply type information
       // to each parameter of the literal.
-      FunctionParamBuilder paramBuilder =
-          new FunctionParamBuilder(typeRegistry);
+      FunctionParamBuilder paramBuilder = new FunctionParamBuilder(typeRegistry);
       Iterator<Parameter> oldParams = oldType.getParameters().iterator();
       boolean warnedAboutArgList = false;
       boolean oldParamsListHitOptArgs = false;
@@ -388,8 +380,7 @@ final class FunctionTypeBuilder {
   @CanIgnoreReturnValue
   FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info, boolean fromInlineDoc) {
     if (info != null) {
-      JSTypeExpression returnTypeExpr =
-          fromInlineDoc ? info.getType() : info.getReturnType();
+      JSTypeExpression returnTypeExpr = fromInlineDoc ? info.getType() : info.getReturnType();
       if (returnTypeExpr != null) {
         returnType = returnTypeExpr.evaluate(templateScope, typeRegistry);
         returnTypeInferred = false;
@@ -612,9 +603,7 @@ final class FunctionTypeBuilder {
     return this;
   }
 
-  /**
-   * Infer the parameter types from the doc info alone.
-   */
+  /** Infer the parameter types from the doc info alone. */
   FunctionTypeBuilder inferParameterTypes(JSDocInfo info) {
     // Create a fake args parent.
     Node lp = IR.paramList();
@@ -648,7 +637,7 @@ final class FunctionTypeBuilder {
     FunctionParamBuilder builder = new FunctionParamBuilder(typeRegistry);
     boolean warnedAboutArgList = false;
     Set<String> allJsDocParams =
-        (info == null) ? new HashSet<>() : new HashSet<>(info.getParameterNames());
+        (info == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(info.getParameterNames());
     boolean isVarArgs = false;
     int paramIndex = 0;
     for (Node param = paramsParent.getFirstChild(); param != null; param = param.getNext()) {
@@ -694,8 +683,7 @@ final class FunctionTypeBuilder {
         parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
         isOptionalParam = parameterTypeExpression.isOptionalArg();
         isVarArgs = parameterTypeExpression.isVarArgs();
-      } else if (oldParameterType != null &&
-          oldParameterType.getJSType() != null) {
+      } else if (oldParameterType != null && oldParameterType.getJSType() != null) {
         parameterType = oldParameterType.getJSType();
         isOptionalParam = oldParameterType.isOptional();
         isVarArgs = oldParameterType.isVariadic();
@@ -703,10 +691,8 @@ final class FunctionTypeBuilder {
         parameterType = typeRegistry.getNativeType(UNKNOWN_TYPE);
       }
 
-      warnedAboutArgList |= addParameter(
-          builder, parameterType, warnedAboutArgList,
-          isOptionalParam,
-          isVarArgs);
+      warnedAboutArgList |=
+          addParameter(builder, parameterType, warnedAboutArgList, isOptionalParam, isVarArgs);
 
       oldParameterType = oldParameters.hasNext() ? oldParameters.next() : null;
       paramIndex++;
@@ -781,7 +767,9 @@ final class FunctionTypeBuilder {
     }
   }
 
-  /** @return Whether the given param is an optional param. */
+  /**
+   * @return Whether the given param is an optional param.
+   */
   private boolean isOptionalParameterByConvention(Node param) {
     if (param.isDestructuringPattern()) {
       return false;
@@ -897,17 +885,21 @@ final class FunctionTypeBuilder {
 
   /**
    * Add a parameter to the param list.
+   *
    * @param builder A builder.
    * @param paramType The parameter type.
-   * @param warnedAboutArgList Whether we've already warned about arg ordering
-   *     issues (like if optional args appeared before required ones).
+   * @param warnedAboutArgList Whether we've already warned about arg ordering issues (like if
+   *     optional args appeared before required ones).
    * @param isOptional Is this an optional parameter?
    * @param isVarArgs Is this a var args parameter?
    * @return Whether a warning was emitted.
    */
-  private boolean addParameter(FunctionParamBuilder builder,
-      JSType paramType, boolean warnedAboutArgList,
-      boolean isOptional, boolean isVarArgs) {
+  private boolean addParameter(
+      FunctionParamBuilder builder,
+      JSType paramType,
+      boolean warnedAboutArgList,
+      boolean isOptional,
+      boolean isVarArgs) {
     boolean emittedWarning = false;
     if (isOptional) {
       // Remembering that an optional parameter has been encountered
@@ -985,9 +977,7 @@ final class FunctionTypeBuilder {
     }
   }
 
-  /**
-   * Builds the function type, and puts it in the registry.
-   */
+  /** Builds the function type, and puts it in the registry. */
   FunctionType buildAndRegister() {
     if (returnType == null) {
       provideDefaultReturnType();
@@ -995,8 +985,7 @@ final class FunctionTypeBuilder {
     }
 
     if (parameters == null) {
-      throw new IllegalStateException(
-          "All Function types must have params and a return type");
+      throw new IllegalStateException("All Function types must have params and a return type");
     }
 
     final FunctionType fnType;
@@ -1050,17 +1039,14 @@ final class FunctionTypeBuilder {
   }
 
   /**
-   * Returns a constructor function either by returning it from the
-   * registry if it exists or creating and registering a new type. If
-   * there is already a type, then warn if the existing type is
-   * different than the one we are creating, though still return the
-   * existing function if possible.  The primary purpose of this is
-   * that registering a constructor will fail for all built-in types
-   * that are initialized in {@link JSTypeRegistry}.  We a) want to
-   * make sure that the type information specified in the externs file
-   * matches what is in the registry and b) annotate the externs with
-   * the {@link JSType} from the registry so that there are not two
-   * separate JSType objects for one type.
+   * Returns a constructor function either by returning it from the registry if it exists or
+   * creating and registering a new type. If there is already a type, then warn if the existing type
+   * is different than the one we are creating, though still return the existing function if
+   * possible. The primary purpose of this is that registering a constructor will fail for all
+   * built-in types that are initialized in {@link JSTypeRegistry}. We a) want to make sure that the
+   * type information specified in the externs file matches what is in the registry and b) annotate
+   * the externs with the {@link JSType} from the registry so that there are not two separate JSType
+   * objects for one type.
    */
   private FunctionType getOrCreateConstructor() {
     FunctionType fnType =
@@ -1090,17 +1076,17 @@ final class FunctionTypeBuilder {
       boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
         FunctionType existingFn =
-            isInstanceObject ?
-            existingType.toObjectType().getConstructor() :
-            typeRegistry.getNativeFunctionType(FUNCTION_FUNCTION_TYPE);
+            isInstanceObject
+                ? existingType.toObjectType().getConstructor()
+                : typeRegistry.getNativeFunctionType(FUNCTION_FUNCTION_TYPE);
 
         if (existingFn.getSource() == null) {
           existingFn.setSource(contents.getSourceNode());
         }
 
         if (!existingFn.hasEqualCallType(fnType)) {
-          reportWarning(TYPE_REDEFINITION, formatFnName(),
-              fnType.toString(), existingFn.toString());
+          reportWarning(
+              TYPE_REDEFINITION, formatFnName(), fnType.toString(), existingFn.toString());
         }
 
         // If the existing function is a built-in type, set its base type in case it @extends
@@ -1156,17 +1142,15 @@ final class FunctionTypeBuilder {
     return fnType;
   }
 
-  private void reportWarning(DiagnosticType warning, String ... args) {
+  private void reportWarning(DiagnosticType warning, String... args) {
     compiler.report(JSError.make(errorRoot, warning, args));
   }
 
-  private void reportError(DiagnosticType error, String ... args) {
+  private void reportError(DiagnosticType error, String... args) {
     compiler.report(JSError.make(errorRoot, error, args));
   }
 
-  /**
-   * Determines whether the given JsDoc info declares a function type.
-   */
+  /** Determines whether the given JsDoc info declares a function type. */
   static boolean isFunctionTypeDeclaration(JSDocInfo info) {
     return info.getParameterCount() > 0
         || info.hasReturnType()
@@ -1276,6 +1260,4 @@ final class FunctionTypeBuilder {
       return block.hasOneChild() && block.getFirstChild().isThrow();
     }
   }
-
-
 }

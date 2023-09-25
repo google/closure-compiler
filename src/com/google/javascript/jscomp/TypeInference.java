@@ -67,9 +67,9 @@ import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -101,7 +101,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private final ArrayDeque<OptChainInfo> optChainArrayDeque = new ArrayDeque<>();
 
   // Scopes that have had their unbound untyped vars inferred as undefined.
-  private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
+  private final Set<TypedScope> inferredUnboundVars = new LinkedHashSet<>();
 
   // For convenience
   private final ObjectType unknownType;

@@ -24,8 +24,8 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,7 +71,9 @@ class LiveVariablesAnalysis
   static class LiveVariableLattice implements LatticeElement {
     private final BitSet liveSet;
 
-    /** @param numVars Number of all local variables. */
+    /**
+     * @param numVars Number of all local variables.
+     */
     private LiveVariableLattice(int numVars) {
       this.liveSet = new BitSet(numVars);
     }
@@ -128,6 +130,7 @@ class LiveVariablesAnalysis
   private final List<Var> orderedVars;
 
   private final Map<String, Var> allVarsInFn;
+
   /**
    * Live Variables Analysis using the ES6 scope creator. This analysis should only be done on
    * function where jsScope is the function scope. If we call LiveVariablesAnalysis from the
@@ -155,8 +158,8 @@ class LiveVariablesAnalysis
 
     this.jsScope = jsScope;
     this.jsScopeChild = jsScopeChild;
-    this.escaped = new HashSet<>();
-    this.scopeVariables = new HashMap<>();
+    this.escaped = new LinkedHashSet<>();
+    this.scopeVariables = new LinkedHashMap<>();
     this.orderedVars = allVarsDeclaredInFunction.getAllVariablesInOrder();
     this.allVarsInFn = allVarsDeclaredInFunction.getAllVariables();
 

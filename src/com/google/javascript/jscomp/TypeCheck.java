@@ -69,8 +69,6 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2643,7 +2641,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Check whether the extended interfaces have any conflicts
     if (functionType.getExtendedInterfacesCount() > 1) {
       // Only check when extending more than one interfaces
-      HashMap<String, ObjectType> properties = new HashMap<>();
+      LinkedHashMap<String, ObjectType> properties = new LinkedHashMap<>();
       LinkedHashMap<String, ObjectType> currentProperties = new LinkedHashMap<>();
       for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
         currentProperties.clear();
@@ -3319,7 +3317,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkTypeContainsObjectWithBadKey(Node n, JSTypeExpression type) {
     if (type != null && type.getRoot().getJSType() != null) {
       JSType realType = type.getRoot().getJSType();
-      JSType objectWithBadKey = findObjectWithNonStringifiableKey(realType, new HashSet<JSType>());
+      JSType objectWithBadKey =
+          findObjectWithNonStringifiableKey(realType, new LinkedHashSet<JSType>());
       if (objectWithBadKey != null) {
         compiler.report(JSError.make(n, NON_STRINGIFIABLE_OBJECT_KEY, objectWithBadKey.toString()));
       }

@@ -49,7 +49,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +59,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
@@ -98,10 +98,9 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -410,7 +409,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // Because JSTypeRegistry#getType looks up the scope in which a root of a qualified name is
       // declared, pre-populate this TypedScope with all qualified name roots. This prevents
       // type resolution from accidentally returning a type from an outer scope that is shadowed.
-      Set<String> reservedNames = new HashSet<>();
+      Set<String> reservedNames = new LinkedHashSet<>();
       reservedNames.addAll(reservedNamesForScope.removeAll(root));
       if (module != null && module.metadata().isGoogModule()) {
         // TypedScopeCreator treats default export assignments, like `exports = class {};`, as
@@ -671,14 +670,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   private void clearCommonState() {
     this.delegateProxyCtors = new ArrayList<>();
-    this.delegateCallingConventions = new HashMap<>();
+    this.delegateCallingConventions = new LinkedHashMap<>();
     this.reservedNamesForScope = MultimapBuilder.hashKeys().arrayListValues().build();
-    this.functionsWithNonEmptyReturns = new HashSet<>();
-    this.escapedVarNames = new HashSet<>();
+    this.functionsWithNonEmptyReturns = new LinkedHashSet<>();
+    this.escapedVarNames = new LinkedHashSet<>();
     this.assignedVarNames = HashMultiset.create();
     this.weakImports = new ArrayList<>();
     this.unresolvedNodes = new ArrayList<>();
-    this.undeclaredNamesForClosure = new HashSet<>();
+    this.undeclaredNamesForClosure = new LinkedHashSet<>();
     this.providedNamesFromCall = LinkedHashMultimap.create();
   }
 
@@ -761,7 +760,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * or resolving type-less stubs. These actions are added to this map, keyed by the node that
      * should be waited for before running.
      */
-    final Multimap<Node, Runnable> deferredActions = HashMultimap.create();
+    final SetMultimap<Node, Runnable> deferredActions = LinkedHashMultimap.create();
 
     AbstractScopeBuilder(TypedScope scope) {
       this.currentScope = scope;

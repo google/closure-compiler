@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -127,10 +127,9 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   }
 
   /**
-   * Returns the control flow graph that this analysis was performed on.
-   * Modifications can be done on this graph, however, the only time that the
-   * annotations are correct is after {@link #analyze()} is called and before
-   * the graph has been modified.
+   * Returns the control flow graph that this analysis was performed on. Modifications can be done
+   * on this graph, however, the only time that the annotations are correct is after {@link
+   * #analyze()} is called and before the graph has been modified.
    */
   final ControlFlowGraph<N> getCfg() {
     return cfg;
@@ -474,7 +473,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   }
 
   private static final class UniqueQueue<T> {
-    private final HashSet<T> seenSet = new HashSet<>();
+    private final LinkedHashSet<T> seenSet = new LinkedHashSet<>();
     private final Queue<T> queue;
 
     UniqueQueue(@Nullable Comparator<T> priority) {
