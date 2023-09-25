@@ -552,11 +552,10 @@ final class Normalize implements CompilerPass {
                 first.replaceWith(destructuringPattern);
               } else {
                 // Transform:
-                //    for (var a = 1 in b) {}
+                //    for (var a in b) {}
                 // to:
-                //    var a = 1; for (a in b) {};
+                //    var a; for (a in b) {};
                 Node newStatement = first;
-                // Clone just the node, to remove any initialization.
                 Node name = newStatement.getFirstChild().cloneNode();
                 first.replaceWith(name);
                 newStatement.insertBefore(insertBefore);

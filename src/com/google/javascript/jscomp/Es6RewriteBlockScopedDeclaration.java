@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -174,10 +175,42 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       // (i.e. it would've become a separate var with an {@code /** const */} annotation).
       return;
     }
+
     if (parent.isVanillaFor()) {
-      handleDeclarationListInForInitializer(declarationList, parent);
+      /*
+       * This is needed to handle the case where we get:
+       *
+       * <ol>
+       *   <li>`for (let x = ...)` or
+       *   <li>`for (const x = ...`. <
+       * </ol>
+       *
+       * <p>Normalize only moves "var" outside the for initializer, it allows let/const within the
+       * initializer. So both #1 and #2 can exist regardless if this pass runs before and after
+       * normalize.
+       */
+      handleDeclarationListInVanillaForInitializer(declarationList, parent);
       return;
     }
+
+    if (parent.isForIn()) {
+      /*
+       * This is needed to handle the case where we get:
+       *
+       * <ol>
+       *   <li>`for (let x in ...)` or
+       *   <li>`for (const x in ...`. <
+       * </ol>
+       *
+       *
+       * <p>Normalize only moves "var" outside the for initializer, it allows let/const within the
+       * initializer. So both #1 and #2 can exist regardless if this pass runs before and after
+       * normalize.
+       */
+      handleDeclarationListInForInInitializer(declarationList, parent);
+      return;
+    }
+
     // convert all names to their own, separate (normalized) declarations
     while (declarationList.hasChildren()) {
       Node name = declarationList.getLastChild();
@@ -215,7 +248,74 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     compiler.reportChangeToEnclosingScope(parent);
   }
 
-  private void handleDeclarationListInForInitializer(Node declarationList, Node parent) {
+  /**
+   * TODO: b/197349249 - We won't have any declaration lists in the FOR_IN initializer here when
+   * this pass runs post normalize. After that, all lets/consts can be directly converted to vars.
+   */
+  private void handleDeclarationListInForInInitializer(Node declarationList, Node parent) {
+    checkState(parent.isForIn());
+    Node first = declarationList;
+    Node lhs = first.getFirstChild();
+    Node loopNode = parent;
+    if (lhs.isDestructuringLhs()) {
+      // This pass relies on destructuring syntax being already removed. Hence we must not enter
+      // this case.
+      // TODO: b/279640656 Enable this code path once this pass runs unconditionally in stage3.
+      checkState(
+          false, "Destructuring syntax is unsupported in ES6RewriteBlockScopedDeclarations pass");
+      // Transform:
+      //    `for (let [a, b = 3] in c) {}` or `for (const [a, b = 3] in c) {}`
+      // to:
+      // <pre>
+      //    `var a; var b; for ([a, b = 3] in c) {}`
+      // </pre>
+      // respectively
+      NodeUtil.visitLhsNodesInNode(
+          lhs,
+          (name) -> {
+            // Add a declaration outside the for loop for the given name.
+            checkState(
+                name.isName(),
+                "lhs in destructuring declaration should be a simple name. (%s)",
+                name);
+            Node newName = IR.name(name.getString()).srcref(name);
+            Node newVar = IR.var(newName).srcref(name);
+            extractInlineJSDoc(declarationList, name, newVar);
+            // if the initializer name was a const, the newName must no longer be a const.
+            addNodeBeforeLoop(newVar, loopNode);
+          });
+
+      // Transform `for (var [a, b]... )` to `for ([a, b]...`
+      Node destructuringPattern = lhs.removeFirstChild();
+      first.replaceWith(destructuringPattern);
+    } else {
+      // Transform:
+      //    for (let a in b) {}
+      // to:
+      //    var a; for (a in b) {};
+      // and:
+      //    for (const a in b) {}
+      // to:
+      //    var a; for (a in b) {};
+      Node newStatement = first.cloneTree();
+      Node name = newStatement.getFirstChild().cloneNode();
+      // cloning also copies over any properties
+      if (name.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        // if the initializer name was a const, it must no longer be a const var.
+        name.putProp(Node.IS_CONSTANT_NAME, false);
+      }
+      newStatement.setToken(Token.VAR);
+      extractInlineJSDoc(first, first.getFirstChild(), newStatement);
+      first.replaceWith(name);
+      addNodeBeforeLoop(newStatement, loopNode);
+    }
+  }
+
+  /**
+   * TODO: b/197349249 - We won't have any declaration lists in the FOR initializer here when this
+   * pass runs post normalize. After that, all lets/consts can be directly converted to vars.
+   */
+  private void handleDeclarationListInVanillaForInitializer(Node declarationList, Node parent) {
     checkState(parent.isVanillaFor());
     // if the declarationList is in a FOR initializer, move it outside
     Node insertSpot = getInsertSpotBeforeLoop(parent);
@@ -224,13 +324,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node name = declarationList.getLastChild();
       Node newDeclaration = IR.var(name.detach()).srcref(declarationList);
       extractInlineJSDoc(declarationList, name, newDeclaration);
-      maybeAddConstJSDoc(declarationList, name, newDeclaration);
+      if (name.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        // if the initializer name was a const, it must no longer be a const var after rewriting.
+        name.putProp(Node.IS_CONSTANT_NAME, false);
+      }
       // generate normalized var initializer (i.e. outside FOR)
       newDeclaration.insertBefore(insertSpot);
       insertSpot = newDeclaration;
       compiler.reportChangeToEnclosingScope(parent);
     }
-    // make FOR initializer empty
+    // make FOR initializer empty `for (; cond; incr)`
     Node empty = astFactory.createEmpty().srcref(declarationList);
     declarationList.replaceWith(empty);
     compiler.reportChangeToEnclosingScope(empty);

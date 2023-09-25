@@ -394,7 +394,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   @Test
-  public void testForLetInitializer_getsNormalized() {
+  public void testVanillaFor_letInitializer_getsNormalized() {
     Sources srcs =
         srcs(
             lines(
@@ -412,6 +412,34 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  return function foo() {",
                 "     var i = 0;", // normalized
                 "     for (; i < 10; i++) {",
+                "     }",
+                "  };",
+                "}"));
+
+    test(srcs, expected);
+  }
+
+  @Test
+  public void testVanillaFor_constInitializer_getsNormalized() {
+    Sources srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                // const initializer (allowed syntactically) can not be updated in the incr.
+                "     for (const i = 0; i < 10; /* no incr */) {",
+                "     }",
+                "  };",
+                "}"));
+
+    Expected expected =
+        expected(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     var i = 0;", // normalized (outside the for) and no @const annotation after
+                // rewriting
+                "     for (; i < 10; /* no incr */) {",
                 "     }",
                 "  };",
                 "}"));
@@ -518,7 +546,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     expected =
         expected(
             lines(
-                "for (var i in [0, 1]) {",
+                "var i;",
+                "for (i in [0, 1]) {",
                 "  var f = function() {",
                 "    var i$jscomp$1 = 0;",
                 "    if (true) {",
@@ -538,6 +567,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test(
         lines(
+            // TODO: b/197349249  This unnormalized code would not reach this pass once this
+            // pass runs post normalize. The test must then be updated to the new "normalized"
+            // code form:
+            //  var x; for (x in y) { ...}
             "for (var x in y) {", //
             "  /** @type {number} */",
             "  let i;",
@@ -561,7 +594,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     expected =
         expected(
             lines(
-                "for (/** @const */ var i in [0, 1]) {",
+                "var i;", //
+                "for (i in [0, 1]) {",
                 "  var f = function() {",
                 "    var i$jscomp$1 = 0;",
                 "    if (true) {",
@@ -982,7 +1016,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var obj = {a: 1, b: 2, c: 3, skipMe: 4};",
                 "/** @const */ var arr = [];",
                 "var LOOP$0 = {};",
-                "for (/** @const */ var p in obj) {",
+                "var p",
+                "for (p in obj) {",
                 "  LOOP$0 = {",
                 "    p: LOOP$0.p",
                 "  };",
@@ -1577,7 +1612,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "/** @const */ var arr = [];",
                 "var LOOP$0 = {};",
-                "for (var i in [0, 1]) {",
+                "var i;",
+                "for (i in [0, 1]) {",
                 "  LOOP$0 = {",
                 "    i: LOOP$0.i",
                 "  };",
@@ -1594,6 +1630,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (;;) {",
                 "  let a = getArray();",
                 "  f = function() {",
+                // TODO: b/197349249  This unnormalized code would not reach this pass once this
+                // pass runs post normalize. The test must then be updated to the new "normalized"
+                // code form:
+                //  var x; for (x in use(a)) { ...}
                 "    for (var x in use(a)) {",
                 "      f(a);",
                 "      a.push(x);",
@@ -1656,7 +1696,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "      5: 5",
                 "    };",
                 "  var LOOP$0 = {};",
-                "  for (var i in obj) {",
+                "  var i;",
+                "  for (i in obj) {",
                 "    LOOP$0 = {",
                 "      i: LOOP$0.i",
                 "    };",
@@ -2102,7 +2143,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     Expected expected =
         expected(
             lines(
-                "for (/** @const */ var i in [0, 1]) {",
+                "var i;",
+                "for (i in [0, 1]) {",
                 "  var f = function() {",
                 "    var i$jscomp$1 = 0;",
                 "    if (true) {",
@@ -2111,8 +2153,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  }",
                 "}"),
             lines(
-                "for (/** @const */",
-                "var b in[0, 1]) {",
+                "var b",
+                "for (b in[0, 1]) {",
                 "  var f$jscomp$1 = function() {",
                 "    var b$jscomp$1 = 0;",
                 "    if (true) {",
