@@ -219,7 +219,7 @@ public class CompilerOptions implements Serializable {
     this.mergedPrecompiledLibraries = mergedPrecompiledLibraries;
   }
 
-  boolean getMergedPrecompiledLibraries() {
+  public boolean getMergedPrecompiledLibraries() {
     return this.mergedPrecompiledLibraries;
   }
 
