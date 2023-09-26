@@ -296,6 +296,30 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMakeLocalNamesUniqueWithContext11() {
+    this.useDefaultRenamer = true;
+    // Changes the parameter name if it's the same as loop object name
+    test(
+        lines(
+            "var loopObjName = {};", //
+            "for(;;) {",
+            "   var fn = (function f(loopObjName){ return function() {}; })(loopObjName);",
+            "}"),
+        lines(
+            "var loopObjName = {};", //
+            "for(;;) {",
+            "   var fn = (function f(loopObjName$jscomp$1){ return function() {}; })(loopObjName);",
+            "}"));
+
+    // parameter name is already unique; no change
+    testSame(
+        lines(
+            "var foo = {};",
+            "for(;;) {",
+            "   var fn = (function f(bar){ return function() {}; })(foo);}"));
+  }
+
+  @Test
   public void testMakeFunctionsUniqueWithContext() {
     this.useDefaultRenamer = true;
     testSame("function f(){} function f(){}");

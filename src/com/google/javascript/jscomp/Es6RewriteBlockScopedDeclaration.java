@@ -54,6 +54,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
   private final UniqueIdSupplier uniqueIdSupplier;
 
+  private static final String LOOP_PARAM_NAME_PREFIX = "$jscomp$loop_param$";
+
   public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
@@ -470,7 +472,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         return;
       }
 
-      createWrapperFunctions();
+      Set<Node> wrapperFunctions = createWrapperFunctions();
 
       for (Node loopNode : loopObjectMap.keySet()) {
         // Introduce objects to reflect the captured scope variables.
@@ -485,6 +487,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         Node updateLoopObject =
             astFactory.createAssign(createLoopObjectNameNode(loopObject), objectLitNextIteration);
         Node objectLit =
+            // This is the only time we generate a loop object variable for a loopNode.
             IR.var(createLoopObjectNameNode(loopObject), astFactory.createObjectLit())
                 .srcrefTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
@@ -498,26 +501,82 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
         changeLoopLocalVariablesToProperties(loopNode, loopObject);
       }
+
+      // At this point, all local variables in the loop have been changed to property accesses on
+      // the "loopObject" name. For the wrapper functions that we introduced in the loop, we must
+      // change the name references in their body to refer to their parameter name instead of the
+      // "loopObject" name.
+      // TODO(bradfordcsmith): This is inefficient. We should really choose the names first, then
+      // make the changes, instead of changing the same variable references twice.
+      updateNamesInWrapperFunctions(wrapperFunctions);
+    }
+
+    /**
+     * Before:
+     *
+     * <pre>{@code
+     * var arr = [];
+     * var LOOP$0 = {};
+     * var i = 0;
+     * for (; i < 10; LOOP$0 = {y: LOOP$0.y}, i++) {
+     *   LOOP$0.y = i;
+     *   arr.push((function(LOOP$0$PARAM$1) {
+     *       return function() { return LOOP$0.y; }; <---- must use param name
+     *   })(LOOP$0));
+     * }
+     *
+     * }</pre>
+     *
+     * After:
+     *
+     * <pre>{@code
+     * var arr = [];
+     * var LOOP$0 = {};
+     * var i = 0;
+     * for (; i < 10; LOOP$0 = {y: LOOP$0.y}, i++) {
+     *   LOOP$0.y = i;
+     *   arr.push((function(LOOP$0$PARAM$1) {
+     *       return function() { return LOOP$0$PARAM$1.y; }; <--- changed
+     *   })(LOOP$0));
+     * }
+     *
+     * }</pre>
+     */
+    private void updateNamesInWrapperFunctions(Set<Node> wrapperFunctions) {
+      for (Node func : wrapperFunctions) {
+        // get the param names here (and the loopObject names from it)
+        Node paramList = func.getSecondChild();
+
+        for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+          String loopObjectName =
+              param.getString().substring(0, param.getString().indexOf(LOOP_PARAM_NAME_PREFIX));
+          updateNames(/* block */ func.getLastChild(), param, loopObjectName);
+        }
+      }
     }
 
     /** Create wrapper functions and call them. */
-    private void createWrapperFunctions() {
+    private Set<Node> createWrapperFunctions() {
+      Set<Node> wrapperFunctions = new LinkedHashSet<>();
       for (Node functionOrObjectLit : nodesRequiringLoopObjectsClosureMap.keySet()) {
         Node returnNode = IR.returnNode();
         Set<LoopObject> objects = nodesRequiringLoopObjectsClosureMap.get(functionOrObjectLit);
-        Node[] objectNames = new Node[objects.size()];
+        Node[] parameterNames = new Node[objects.size()];
         Node[] objectNamesForCall = new Node[objects.size()];
-        int i = 0;
+        int loopObjectIndex = 0;
         for (LoopObject object : objects) {
-          objectNames[i] = createLoopObjectNameNode(object);
-          objectNamesForCall[i] = createLoopObjectNameNode(object);
-          i++;
+          // This name for parameter should be unique to preserve normalization
+          parameterNames[loopObjectIndex] =
+              createUniqueParameterNameToUseWithinLoop(functionOrObjectLit, object);
+          // this name must be the same as the loop object name
+          objectNamesForCall[loopObjectIndex] = createLoopObjectNameNode(object);
+          loopObjectIndex++;
         }
 
         Node iife =
             astFactory.createFunction(
                 "",
-                IR.paramList(objectNames),
+                IR.paramList(parameterNames),
                 IR.block(returnNode),
                 type(StandardColors.TOP_OBJECT));
         compiler.reportChangeToChangeScope(iife);
@@ -531,8 +590,28 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             functionOrObjectLit);
         replacement = call.srcrefTreeIfMissing(functionOrObjectLit);
         functionOrObjectLit.replaceWith(replacement);
+        wrapperFunctions.add(iife);
         returnNode.addChildToFront(functionOrObjectLit);
         compiler.reportChangeToEnclosingScope(replacement);
+      }
+      return wrapperFunctions;
+    }
+
+    /*
+     * Renames all references within the functionOrObjectLit body from the old loopObjectName
+     * (e.g. "$jscomp$loop$1") to the given loopObjectParamName
+     * (e.g. $jscomp$loop$1$jscomp$loop_param$m123..456).
+     */
+    private void updateNames(Node node, Node paramName, String loopObjectName) {
+
+      if (node.isName() && !node.getString().isEmpty() /* not an anonymous function name */) {
+        if (node.getString().contains(loopObjectName)) {
+          node.setString(paramName.getString());
+          return;
+        }
+      }
+      for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+        updateNames(child, paramName, loopObjectName);
       }
     }
 
@@ -690,6 +769,21 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               createLoopObjectNameNode(loopObject), propertyName, type(reference));
       replacement.srcrefTree(reference);
       return replacement;
+    }
+
+    /**
+     * Gets a name other than the loop object name to use for parameter names of the new wrapper
+     * functions being added in the loop.
+     *
+     * <p>For a loop object "$jscomp$loop$0", this creates a unique parameter name like
+     * "$jscomp$loop$0$jscomp$loop_param$1".
+     */
+    private Node createUniqueParameterNameToUseWithinLoop(Node node, LoopObject loopObject) {
+      return astFactory.createName(
+          loopObject.name
+              + LOOP_PARAM_NAME_PREFIX
+              + uniqueIdSupplier.getUniqueId(compiler.getInput(NodeUtil.getInputId(node))),
+          type(StandardColors.TOP_OBJECT));
     }
 
     private Node createLoopObjectNameNode(LoopObject loopObject) {

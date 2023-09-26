@@ -64,10 +64,18 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   private void loopClosureTest(Externs externs, Sources srcs, Expected originalExpected) {
+    // change the "LOOP" in expected with "$jscomp$loop$m123..456" name
     Expected modifiedExpected =
         expected(
             UnitTestUtils.updateGenericVarNamesInExpectedFiles(
                 (FlatSources) srcs, originalExpected, ImmutableMap.of("LOOP", "$jscomp$loop$")));
+    // change the "$PARAM" in expected with "$jscomp$loop_param$m123..456" parameter name
+    modifiedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs,
+                modifiedExpected,
+                ImmutableMap.of("$PARAM", "$jscomp$loop_param$")));
     test(externs, srcs, modifiedExpected);
   }
 
@@ -626,8 +634,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "      i: LOOP$0.i",
                 "    },",
                 "    LOOP$0.i++) {",
-                "  arr.push((function(LOOP$0) {",
-                "      return function() { return LOOP$0.i; };",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
+                "      return function() { return LOOP$0$PARAM$1.i; };",
                 "  })(LOOP$0));",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -650,8 +658,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "     LOOP$0 = {y: LOOP$0.y},",
                 "     i++) {",
                 "  LOOP$0.y = i;",
-                "  arr.push((function(LOOP$0) {",
-                "      return function() { return LOOP$0.y; };",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
+                "      return function() { return LOOP$0$PARAM$1.y; };",
                 "  })(LOOP$0));",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -675,9 +683,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  };",
                 "  LOOP$0.i = 0;",
                 "  arr.push(",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return function() {",
-                "          return LOOP$0.i;",
+                "          return LOOP$0$PARAM$1.i;",
                 "        };",
                 "       })(LOOP$0));",
                 "}"));
@@ -702,10 +710,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "        i: LOOP$0.i},",
                 "        LOOP$0.i++) {",
                 "  LOOP$0.y =" + " LOOP$0.i;",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      return LOOP$0.y",
-                "        + LOOP$0.i;",
+                "      return LOOP$0$PARAM$1.y",
+                "        + LOOP$0$PARAM$1.i;",
                 "    };",
                 "  }(LOOP$0)));",
                 "}"));
@@ -735,9 +743,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    },",
                 "    i++) {",
                 "  LOOP$0.i$jscomp$1 = x + 1;",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
                 "      return function() {",
-                "          return LOOP$0.i$jscomp$1 + LOOP$0.i$jscomp$1;",
+                "          return LOOP$0$PARAM$1.i$jscomp$1 + LOOP$0$PARAM$1.i$jscomp$1;",
                 "      };",
                 "  }(LOOP$0)));",
                 "  x++;",
@@ -767,15 +775,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    LOOP$0 = {",
                 "      i$jscomp$1: LOOP$0.i$jscomp$1",
                 "    }, i++) {",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
                 "      return function() {",
-                "          return LOOP$0.i$jscomp$1 + LOOP$0.i$jscomp$1;",
+                "          return LOOP$0$PARAM$1.i$jscomp$1 + LOOP$0$PARAM$1.i$jscomp$1;",
                 "      };",
                 "  }(LOOP$0)));",
                 "  LOOP$0.i$jscomp$1 = x + 1;",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$2) {",
                 "      return function() {",
-                "          return LOOP$0.i$jscomp$1 + LOOP$0.i$jscomp$1;",
+                "          return LOOP$0$PARAM$2.i$jscomp$1 + LOOP$0$PARAM$2.i$jscomp$1;",
                 "      };",
                 "  }(LOOP$0)));",
                 "  x++;",
@@ -808,16 +816,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  if (true) {",
                 "    LOOP$0.i$jscomp$2 = x - 1;",
                 "    arr.push(",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return function() {",
-                "          return LOOP$0.i$jscomp$2 + LOOP$0.i$jscomp$2;",
+                "          return LOOP$0$PARAM$1.i$jscomp$2 + LOOP$0$PARAM$1.i$jscomp$2;",
                 "        };",
                 "      })(LOOP$0));",
                 "  }",
                 "  LOOP$0.i$jscomp$1 = x + 1;",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$2) {",
                 "      return function() {",
-                "         return LOOP$0.i$jscomp$1 + LOOP$0.i$jscomp$1;",
+                "         return LOOP$0$PARAM$2.i$jscomp$1 + LOOP$0$PARAM$2.i$jscomp$1;",
                 "      };",
                 "  })(LOOP$0));",
                 "  x++;",
@@ -831,8 +839,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "var LOOP$0 = {};",
                 "for (;;LOOP$0 = {x: LOOP$0.x}) {",
                 "  LOOP$0.x = 3;",
-                "  var f = function(LOOP$0) {",
-                "    return function() { return LOOP$0.x; }",
+                "  var f = function(LOOP$0$PARAM$1) {",
+                "    return function() { return LOOP$0$PARAM$1.x; }",
                 "  }(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -844,8 +852,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "var LOOP$0 = {};",
                 "for (;; LOOP$0 = { x: LOOP$0.x }) {",
                 "  LOOP$0.x = 3;",
-                "  var f = function(LOOP$0) {",
-                "    return function() { return LOOP$0.x; }",
+                "  var f = function(LOOP$0$PARAM$1) {",
+                "    return function() { return LOOP$0$PARAM$1.x; }",
                 "  }(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -858,8 +866,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "var LOOP$0 = {};",
                 "for (;; LOOP$0 = { x: LOOP$0.x}) {",
                 "  /** @const */ LOOP$0.x = 3;",
-                "  var f = function(LOOP$0) {",
-                "    return function() { return LOOP$0.x}",
+                "  var f = function(LOOP$0$PARAM$1) {",
+                "    return function() { return LOOP$0$PARAM$1.x}",
                 "  }(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -876,8 +884,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (;;LOOP$0 = {x: LOOP$0.x, y: LOOP$0.y}) {",
                 "  LOOP$0.x = 3;",
                 "  LOOP$0.y = 4;",
-                "  var f = function(LOOP$0) {",
-                "    return function() { return LOOP$0.x + LOOP$0.y; };",
+                "  var f = function(LOOP$0$PARAM$1) {",
+                "    return function() { return LOOP$0$PARAM$1.x + LOOP$0$PARAM$1.y; };",
                 "  }(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -897,9 +905,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (;;LOOP$0 = { x: LOOP$0.x, y: LOOP$0.y })" + " {",
                 "  /** @const */ LOOP$0.x = 3;",
                 "  /** @const */ LOOP$0.y = 4;",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "        return LOOP$0.x + LOOP$0.y;",
+                "        return LOOP$0$PARAM$1.x + LOOP$0$PARAM$1.y;",
                 "    }",
                 "  }(LOOP$0);",
                 "}"));
@@ -920,8 +928,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "i = 0;",
                 "for(;; LOOP$0 = { x: LOOP$0.x }) {",
                 "  LOOP$0.x = 0;",
-                "  var f = (function(LOOP$0) {",
-                "    return function() { LOOP$0.x; };",
+                "  var f = (function(LOOP$0$PARAM$1) {",
+                "    return function() { LOOP$0$PARAM$1.x; };",
                 "  })(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -940,8 +948,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "foo();",
                 "for(;; LOOP$0 = { x: LOOP$0.x }) {",
                 "  LOOP$0.x = 0;",
-                "  var f = (function(LOOP$0) {",
-                "    return function() { LOOP$0.x; };",
+                "  var f = (function(LOOP$0$PARAM$1) {",
+                "    return function() { LOOP$0$PARAM$1.x; };",
                 "  })(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -960,8 +968,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "(function foo() {});",
                 "for(;; LOOP$0 = { x: LOOP$0.x }) {",
                 "  LOOP$0.x = 0;",
-                "  var f = (function(LOOP$0) {",
-                "    return function() { LOOP$0.x; };",
+                "  var f = (function(LOOP$0$PARAM$1) {",
+                "    return function() { LOOP$0$PARAM$1.x; };",
                 "  })(LOOP$0);",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -980,9 +988,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "var LOOP$0 = {};",
                 "for(;; LOOP$0 = {x: LOOP$0.x}) {",
                 "  LOOP$0.x = void 0;",
-                "  foo(function(LOOP$0) {",
+                "  foo(function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      return LOOP$0.x;",
+                "      return LOOP$0$PARAM$1.x;",
                 "    };",
                 "  }(LOOP$0));",
                 "  LOOP$0.x=5;",
@@ -1026,16 +1034,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    continue;",
                 "  }",
                 "  arr.push(",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return function() {",
-                "          return obj[LOOP$0.p];",
+                "          return obj[LOOP$0$PARAM$1.p];",
                 "        };",
                 "      })(LOOP$0));",
                 "}",
                 ""));
     loopClosureTest(srcs, expected);
 
-    // while case
+    // while case - TODO: b/197349249 Delete after b/197349249 is fixed
     srcs =
         srcs(
             lines(
@@ -1063,15 +1071,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    continue",
                 "  }",
                 "  arr.push(",
-                "    (function(LOOP$0) {",
+                "    (function(LOOP$0$PARAM$1) {",
                 "      return function() {",
-                "        return LOOP$0.v;",
+                "        return LOOP$0$PARAM$1.v;",
                 "      };",
                 "    })(LOOP$0));",
                 "}"));
     loopClosureTest(srcs, expected);
 
-    // do-while case
+    // do-while case - TODO: b/197349249 Delete after b/197349249 is fixed
     srcs =
         srcs(
             lines(
@@ -1100,16 +1108,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    continue",
                 "  }",
                 "  arr.push(",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return function() {",
-                "          return LOOP$0.v;",
+                "          return LOOP$0$PARAM$1.v;",
                 "        };",
                 "      })(LOOP$0));",
                 "} while (values.length > 0);",
                 ""));
     loopClosureTest(srcs, expected);
 
-    // labeled continue case
+    // labeled continue case - TODO: b/197349249 Delete after b/197349249 is fixed
     srcs =
         srcs(
             lines(
@@ -1138,16 +1146,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    continue LABEL;",
                 "  }",
                 "  arr.push(",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return function() {",
-                "          return LOOP$0.v;",
+                "          return LOOP$0$PARAM$1.v;",
                 "        };",
                 "      })(LOOP$0));",
                 "}",
                 ""));
     loopClosureTest(srcs, expected);
 
-    // nested labeled continue case
+    // nested labeled continue case - TODO: b/197349249 Delete after b/197349249 is fixed
     srcs =
         srcs(
             lines(
@@ -1198,17 +1206,17 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "        continue OUTER;",
                 "      } else {",
                 "        letters.push(",
-                "            (function(LOOP$0) {",
+                "            (function(LOOP$0$PARAM$2) {",
                 "              return function() {",
-                "                return LOOP$0.c;",
+                "                return LOOP$0$PARAM$2.c;",
                 "              };",
                 "            })(LOOP$0));",
                 "      }",
                 "      i++;",
                 "  }",
                 "  words.push(",
-                "      (function(LOOP$1) {",
-                "        return function() { return LOOP$1.v; };",
+                "      (function(LOOP$1$PARAM$3) {",
+                "        return function() { return LOOP$1$PARAM$3.v; };",
                 "      })(LOOP$1));",
                 "}",
                 ""));
@@ -1243,9 +1251,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  LOOP$0.i$jscomp$1 = void 0;",
                 "  LOOP$0.j$jscomp$1 = 0;",
                 "  foobar.push(",
-                "      function(LOOP$0) {",
+                "      function(LOOP$0$PARAM$1) {",
                 "        return function() {",
-                "          return LOOP$0.i$jscomp$1 + LOOP$0.j$jscomp$1;",
+                "          return LOOP$0$PARAM$1.i$jscomp$1 + LOOP$0$PARAM$1.j$jscomp$1;",
                 "        };",
                 "      }(LOOP$0));",
                 "}"));
@@ -1274,9 +1282,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    LOOP$0 = {",
                 "      i:LOOP$0.i",
                 "    }, (LOOP$0.i++, j++)) {",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      return LOOP$0.i + j;",
+                "      return LOOP$0$PARAM$1.i + j;",
                 "    };",
                 "  })(LOOP$0));",
                 "}",
@@ -1306,9 +1314,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "      j: LOOP$0.j",
                 "    },",
                 "    (LOOP$0.i++, LOOP$0.j++)) {",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
                 "      return function() { ",
-                "         return LOOP$0.i + LOOP$0.j;",
+                "         return LOOP$0$PARAM$1.i + LOOP$0$PARAM$1.j;",
                 "    };",
                 "  })(LOOP$0));",
                 "}"));
@@ -1332,8 +1340,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    LOOP$0 = {j :",
                 "    LOOP$0.j},",
                 "    (i++, LOOP$0.j++)) {",
-                "  arr.push((function(LOOP$0) {",
-                "      return function() { return LOOP$0.j; };",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
+                "      return function() { return LOOP$0$PARAM$1.j; };",
                 "  })(LOOP$0));",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -1357,9 +1365,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (; LOOP$0.i < 10;",
                 "    LOOP$0 = {i: LOOP$0.i},",
                 "    LOOP$0.i++) {",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
+                // Is this right?
                 "      return function() {",
-                "          return ++LOOP$0.i;",
+                "          return ++LOOP$0$PARAM$1.i;",
                 "      };",
                 "  }(LOOP$0)));",
                 "}"));
@@ -1382,9 +1391,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (; LOOP$0.i < 10;",
                 "    LOOP$0 = {i: LOOP$0.i},",
                 "    LOOP$0.i++) {",
-                "  arr.push((function(LOOP$0) {",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
                 "      return function() {",
-                "          return LOOP$0.i;",
+                "          return LOOP$0$PARAM$1.i;",
                 "      };",
                 "  }(LOOP$0)));",
                 "  LOOP$0.i += 100;",
@@ -1410,9 +1419,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (; LOOP$0.i < 10;",
                 "    LOOP$0 = { i: LOOP$0.i },",
                 "    LOOP$0.i++) {",
-                "  later((function(LOOP$0) {",
+                "  later((function(LOOP$0$PARAM$1) {",
                 "    return function(ctr) {",
-                "      (function() { return use(LOOP$0.i); })();",
+                "      (function() { return use(LOOP$0$PARAM$1.i); })();",
                 "    };",
                 "  })(LOOP$0));",
                 "}"));
@@ -1436,10 +1445,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (; LOOP$0.i < 10;",
                 "    LOOP$0 = {i:" + " LOOP$0.i},",
                 "    LOOP$0.i++) {",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
                 "      return function() {",
-                "        return LOOP$0.i;",
+                "        return LOOP$0$PARAM$1.i;",
                 "      };",
                 "    };",
                 "  }(LOOP$0);",
@@ -1466,8 +1475,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    for (; LOOP$0.i < 10;",
                 "        LOOP$0 = { i: LOOP$0.i },",
                 "        LOOP$0.i++) {",
-                "      (function(LOOP$0) {",
-                "        return function() { return use(LOOP$0.i); }",
+                "      (function(LOOP$0$PARAM$1) {",
+                "        return function() { return use(LOOP$0$PARAM$1.i); }",
                 "      })(LOOP$0)();",
                 "    }",
                 "  });",
@@ -1508,14 +1517,14 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "          j: LOOP$0.j",
                 "        },",
                 "        LOOP$0.j++) {",
-                "      array.push((function(LOOP$0, LOOP$1) {",
+                "      array.push((function(LOOP$0$PARAM$2, LOOP$1$PARAM$3) {",
                 "          return function() {",
-                "              return LOOP$0.j++ + LOOP$1.i++;",
+                "              return LOOP$0$PARAM$2.j++ + LOOP$1$PARAM$3.i++;",
                 "          };",
                 "      }(LOOP$0, LOOP$1)));",
-                "      array.push((function(LOOP$0, LOOP$1) {",
+                "      array.push((function(LOOP$0$PARAM$4, LOOP$1$PARAM$5) {",
                 "          return function() {",
-                "              return LOOP$0.j++ + LOOP$1.i++;",
+                "              return LOOP$0$PARAM$4.j++ + LOOP$1$PARAM$5.i++;",
                 "          };",
                 "      }(LOOP$0, LOOP$1)));",
                 "    }",
@@ -1547,9 +1556,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "      LOOP$0 = { i: LOOP$0.i },",
                 "      LOOP$0.i++) {",
                 "    array.push(",
-                "        (function(LOOP$0) {",
+                "        (function(LOOP$0$PARAM$2) {",
                 "          return function() {",
-                "            return LOOP$0.i++ + LOOP$0.i++;",
+                "            return LOOP$0$PARAM$2.i++ + LOOP$0$PARAM$2.i++;",
                 "          };",
                 "        }(LOOP$0)));",
                 "    var LOOP$1 = {};",
@@ -1558,9 +1567,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "        LOOP$1 = { i$jscomp$1: LOOP$1.i$jscomp$1 },",
                 "        LOOP$1.i$jscomp$1++) {",
                 "      array.push(",
-                "          (function(LOOP$1) {",
+                "          (function(LOOP$1$PARAM$3) {",
                 "            return function() {",
-                "              return LOOP$1.i$jscomp$1++ + LOOP$1.i$jscomp$1++;",
+                "              return LOOP$1$PARAM$3.i$jscomp$1++ + LOOP$1$PARAM$3.i$jscomp$1++;",
                 "            };",
                 "          }(LOOP$1)));",
                 "    }",
@@ -1589,9 +1598,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "label1:",
                 "label2:",
                 "for (;; LOOP$0 = { x: LOOP$0.x }) {",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      return LOOP$0.x;",
+                "      return LOOP$0$PARAM$1.x;",
                 "    }",
                 "  }(LOOP$0);",
                 "}"));
@@ -1618,8 +1627,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    i: LOOP$0.i",
                 "  };",
                 "  LOOP$0.i = i;",
-                "  arr.push((function(LOOP$0) {",
-                "      return function() { return LOOP$0.i; };",
+                "  arr.push((function(LOOP$0$PARAM$1) {",
+                "      return function() { return LOOP$0$PARAM$1.i; };",
                 "  })(LOOP$0));",
                 "}"));
     loopClosureTest(srcs, expected);
@@ -1647,11 +1656,11 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "var LOOP$0 = {};",
                 "for (;; LOOP$0 = { a: LOOP$0.a }) {",
                 "  LOOP$0.a = getArray();",
-                "  f = (function(LOOP$0) {",
+                "  f = (function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      for (var x in use(LOOP$0.a)) {",
-                "        f(LOOP$0.a);",
-                "        LOOP$0.a.push(x);",
+                "      for (var x in use(LOOP$0$PARAM$1.a)) {",
+                "        f(LOOP$0$PARAM$1.a);",
+                "        LOOP$0$PARAM$1.a.push(x);",
                 "        return x;",
                 "      }",
                 "    };",
@@ -1704,15 +1713,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    LOOP$0.i = i",
                 "    LOOP$0.i = Number(LOOP$0.i);",
                 "    arr.push(",
-                "        (function(LOOP$0) {",
+                "        (function(LOOP$0$PARAM$2) {",
                 "          return function() {",
-                "            return LOOP$0.i++;",
+                "            return LOOP$0$PARAM$2.i++;",
                 "          };",
                 "        }(LOOP$0)));",
                 "    arr.push(",
-                "        (function(LOOP$0, LOOP$1) {",
+                "        (function(LOOP$0$PARAM$3, LOOP$1$PARAM$4) {",
                 "          return function() { ",
-                "            return LOOP$0.i + LOOP$1.special;",
+                "            return LOOP$0$PARAM$3.i + LOOP$1$PARAM$4.special;",
                 "          };",
                 "        }(LOOP$0, LOOP$1)));",
                 "  }",
@@ -1742,9 +1751,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "        x: LOOP$0.x",
                 "      };",
                 "  LOOP$0.x = null;",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      (0,LOOP$0.x)();",
+                "      (0,LOOP$0$PARAM$1.x)();",
                 "    };",
                 "  }(LOOP$0);",
                 "}"));
@@ -1767,9 +1776,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  LOOP$0 =",
                 "      { x: LOOP$0.x };",
                 "  LOOP$0.x = null;",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      (0,LOOP$0.x)();",
+                "      (0,LOOP$0$PARAM$1.x)();",
                 "    };",
                 "  }(LOOP$0);",
                 "}"));
@@ -1792,9 +1801,9 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  LOOP$0 =",
                 "      { x: LOOP$0.x };",
                 "  LOOP$0.x = null;",
-                "  (function(LOOP$0) {",
+                "  (function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      (0,LOOP$0.x)();",
+                "      (0,LOOP$0$PARAM$1.x)();",
                 "    };",
                 "  })(LOOP$0)();",
                 "}"));
@@ -1825,10 +1834,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  };",
                 "  LOOP$0.x = void 0;",
                 "  LOOP$0.y = void 0;",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      LOOP$0.x = 1;",
-                "      LOOP$0.y = 2;",
+                "      LOOP$0$PARAM$1.x = 1;",
+                "      LOOP$0$PARAM$1.y = 2;",
                 "    }",
                 "  }(LOOP$0);",
                 "}"));
@@ -1855,10 +1864,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  };",
                 "  LOOP$0.x = void 0;",
                 "  LOOP$0.y = void 0;",
-                "  var f = function(LOOP$0) {",
+                "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      LOOP$0.y = 2;",
-                "      LOOP$0.x = 1;",
+                "      LOOP$0$PARAM$1.y = 2;",
+                "      LOOP$0$PARAM$1.x = 1;",
                 "    }",
                 "  }(LOOP$0);",
                 "}"));
@@ -1951,12 +1960,12 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "    LOOP$0.lx = vx;",
                 "    LOOP$0.ly = vy;",
                 "    LOOP$0.lz = vz;",
-                "    l.push(function(LOOP$0) {",
+                "    l.push(function(LOOP$0$PARAM$1) {",
                 "        return function() {",
                 "            return [ ",
-                "                LOOP$0.lx,",
-                "                LOOP$0.ly,",
-                "                LOOP$0.lz ];",
+                "                LOOP$0$PARAM$1.lx,",
+                "                LOOP$0$PARAM$1.ly,",
+                "                LOOP$0$PARAM$1.lz ];",
                 "        };",
                 "    }(LOOP$0));",
                 "  }",
@@ -2025,15 +2034,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 // Note that we wrap the entire object literal in an IIFE, because that's simpler
                 // than trying to individually wrap the getter and setter methods defined in it.
                 "  var a =",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return {",
                 "          get foo() {",
-                "            return LOOP$0.bar;",
+                "            return LOOP$0$PARAM$1.bar;",
                 "          },",
                 "          set foo(x) {",
-                "            use(LOOP$0.bar);",
+                "            use(LOOP$0$PARAM$1.bar);",
                 "          },",
-                "          prop: LOOP$0.bar",
+                "          prop: LOOP$0$PARAM$1.bar",
                 "      };",
                 "  })(LOOP$0);",
                 "  LOOP$0.bar = 43;",
@@ -2067,11 +2076,11 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  LOOP$0.bar = 42;",
                 "  /** @const */",
                 "  LOOP$0.baz = 43;",
-                "  var a = (function(LOOP$0) {",
+                "  var a = (function(LOOP$0$PARAM$1) {",
                 "   return {",
                 "    get foo() {",
-                "       return LOOP$0.bar +",
-                "           LOOP$0.baz;",
+                "       return LOOP$0$PARAM$1.bar +",
+                "           LOOP$0$PARAM$1.baz;",
                 "    }",
                 "  };",
                 " })(LOOP$0);",
@@ -2107,10 +2116,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  LOOP$0.bar = 42;",
                 "  LOOP$0.baz = 43;",
                 "  var a =",
-                "      (function(LOOP$0) {",
+                "      (function(LOOP$0$PARAM$1) {",
                 "        return {",
-                "          set foo(x = LOOP$0.bar) {",
-                "            return x + LOOP$0.baz;",
+                "          set foo(x = LOOP$0$PARAM$1.bar) {",
+                "            return x + LOOP$0$PARAM$1.baz;",
                 "          }",
                 "        };",
                 "      })(LOOP$0);",
