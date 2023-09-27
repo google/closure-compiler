@@ -185,6 +185,15 @@ public final class ModuleMetadataMap {
     public abstract ImmutableMultiset<String> dynamicallyRequiredGoogNamespaces();
 
     /**
+     * Closure namespaces this file "maybe" require, i.e., arguments to
+     * goog.maybeRequireFrameworkInternalOnlyDoNotCallOrElse() calls.
+     *
+     * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
+     * that information with this multiset.
+     */
+    public abstract ImmutableMultiset<String> maybeRequiredGoogNamespaces();
+
+    /**
      * Closure namespaces this file weakly requires, i.e., arguments to goog.requireType calls.
      *
      * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
@@ -240,6 +249,8 @@ public final class ModuleMetadataMap {
       public abstract ImmutableMultiset.Builder<String> stronglyRequiredGoogNamespacesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> dynamicallyRequiredGoogNamespacesBuilder();
+
+      public abstract ImmutableMultiset.Builder<String> maybeRequiredGoogNamespacesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> weaklyRequiredGoogNamespacesBuilder();
 

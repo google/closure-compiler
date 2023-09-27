@@ -87,6 +87,7 @@ public class JsFileFullParser {
     public final Multiset<String> provides = TreeMultiset.create();
     public final Multiset<String> requires = TreeMultiset.create();
     public final Multiset<String> typeRequires = TreeMultiset.create();
+    public final Multiset<String> maybeRequires = TreeMultiset.create();
     public final Multiset<String> requiresCss = TreeMultiset.create();
     public final Multiset<String> visibility = TreeMultiset.create();
 
@@ -251,6 +252,7 @@ public class JsFileFullParser {
     if (module.usesClosure()) {
       info.provides.addAll(module.googNamespaces());
       info.requires.addAll(module.stronglyRequiredGoogNamespaces());
+      info.maybeRequires.addAll(module.maybeRequiredGoogNamespaces());
       info.dynamicRequires.addAll(module.dynamicallyRequiredGoogNamespaces().elementSet());
       info.readToggles.addAll(module.readToggles().elementSet());
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());

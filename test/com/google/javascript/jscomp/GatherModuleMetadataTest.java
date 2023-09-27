@@ -592,6 +592,23 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMaybeRequire() {
+    testSame("goog.maybeRequireFrameworkInternalOnlyDoNotCallOrElse('my.Type')");
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.maybeRequiredGoogNamespaces()).containsExactly("my.Type");
+  }
+
+  @Test
+  public void testMaybeRequireWithIllegalArg() {
+    testError(
+        "goog.maybeRequireFrameworkInternalOnlyDoNotCallOrElse('my.Type','extra.Type');",
+        GatherModuleMetadata.INVALID_MAYBE_REQUIRE);
+    testError(
+        "goog.maybeRequireFrameworkInternalOnlyDoNotCallOrElse(42);",
+        GatherModuleMetadata.INVALID_MAYBE_REQUIRE);
+  }
+
+  @Test
   public void testRequiredClosureNamespaces() {
     testSame("goog.require('my.Type');");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
