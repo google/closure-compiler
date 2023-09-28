@@ -3101,6 +3101,10 @@ google.maps.FeatureType = {
    * Indicates a postal code as used to address postal mail within the country.
    */
   POSTAL_CODE: 'POSTAL_CODE',
+  /**
+   * Indicates a school district.
+   */
+  SCHOOL_DISTRICT: 'SCHOOL_DISTRICT',
 };
 
 /**
@@ -7225,8 +7229,10 @@ google.maps.Place.prototype.query;
  * An interface representing a feature with a place ID which includes features
  * of type {@link google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_1}, {@link
  * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_2}, {@link
- * google.maps.FeatureType.COUNTRY}, {@link google.maps.FeatureType.LOCALITY},
- * and {@link google.maps.FeatureType.POSTAL_CODE}.
+ * google.maps.FeatureType.COUNTRY}, {@link
+ * google.maps.FeatureType.LOCALITY}, {@link
+ * google.maps.FeatureType.POSTAL_CODE}, and {@link
+ * google.maps.FeatureType.SCHOOL_DISTRICT}.
  * @extends {google.maps.Feature}
  * @record
  */
@@ -11953,11 +11959,15 @@ google.maps.journeySharing.JourneySharingMapView.prototype.element;
 google.maps.journeySharing.JourneySharingMapView.prototype.enableTraffic;
 
 /**
- * This Field is read-only. A source of tracked locations to be shown in the
- * tracking map view.
- * @type {!google.maps.journeySharing.LocationProvider}
+ * This field is read-only. Sources of tracked locations to be shown in the
+ * tracking map view. To add or remove location providers, use the {@link
+ * google.maps.journeySharing.JourneySharingMapView.addLocationProvider}
+ * and {@link
+ * google.maps.journeySharing.JourneySharingMapView.removeLocationProvider}
+ * methods.
+ * @type {?Array<!google.maps.journeySharing.LocationProvider>}
  */
-google.maps.journeySharing.JourneySharingMapView.prototype.locationProvider;
+google.maps.journeySharing.JourneySharingMapView.prototype.locationProviders;
 
 /**
  * This Field is read-only. The map object contained in the map view.
@@ -11995,6 +12005,16 @@ google.maps.journeySharing.JourneySharingMapView.prototype.takenRoutePolylines;
  */
 google.maps.journeySharing.JourneySharingMapView.prototype
     .takenRoutePolylineSetup;
+
+/**
+ * This Field is read-only. A source of tracked locations to be shown in the
+ * tracking map view.
+ * @type {?google.maps.journeySharing.LocationProvider}
+ * @deprecated Use {@link
+ *     google.maps.journeySharing.JourneySharingMapView.locationProviders}
+ *     instead.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype.locationProvider;
 
 /**
  * Configures options for a destination location marker. Invoked whenever a new
@@ -12233,6 +12253,26 @@ google.maps.journeySharing.JourneySharingMapView.prototype.vehicleMarkers;
 google.maps.journeySharing.JourneySharingMapView.prototype.waypointMarkers;
 
 /**
+ * Adds a location provider to the map view. If the location provider is already
+ * added, no action is performed.
+ * @param {!google.maps.journeySharing.LocationProvider} locationProvider the
+ *     location provider to add.
+ * @return {undefined}
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype.addLocationProvider =
+    function(locationProvider) {};
+
+/**
+ * Removes a location provider from the map view. If the location provider is
+ * not already added to the map view, no action is performed.
+ * @param {!google.maps.journeySharing.LocationProvider} locationProvider the
+ *     location provider to remove.
+ * @return {undefined}
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype
+    .removeLocationProvider = function(locationProvider) {};
+
+/**
  * Options for the map view.
  * @record
  */
@@ -12274,11 +12314,11 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype.element;
 
 /**
- * A source of tracked locations to be shown in the tracking map view. Required.
- * @type {!google.maps.journeySharing.LocationProvider}
+ * Sources of tracked locations to be shown in the tracking map view. Optional.
+ * @type {?Array<!google.maps.journeySharing.LocationProvider>}
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype
-    .locationProvider;
+    .locationProviders;
 
 /**
  * Map options passed into the google.maps.Map constructor.
@@ -12303,6 +12343,16 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype.mapOptions;
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype
     .takenRoutePolylineSetup;
+
+/**
+ * A source of tracked locations to be shown in the tracking map view. Optional.
+ * @type {?google.maps.journeySharing.LocationProvider}
+ * @deprecated Use {@link
+ *     google.maps.journeySharing.JourneySharingMapViewOptions.locationProviders}
+ *     instead.
+ */
+google.maps.journeySharing.JourneySharingMapViewOptions.prototype
+    .locationProvider;
 
 /**
  * Configures options for a destination location marker. Invoked whenever a new
