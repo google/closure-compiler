@@ -201,6 +201,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   private @Nullable ImmutableMap<String, String> parsedModuleOutputFiles = null;
 
   @GwtIncompatible("Unnecessary")
+  private @Nullable ImmutableMap<String, String> parsedModuleConformanceFiles = null;
+
+  @GwtIncompatible("Unnecessary")
   private final Gson gson;
 
   static final String OUTPUT_MARKER = "%output%";
@@ -1042,6 +1045,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return config.moduleOutputPathPrefix + outputFile;
     }
     return config.moduleOutputPathPrefix + m.getName() + ".js";
+  }
+
+  /** Returns the conformance file name for a chunk. */
+  @GwtIncompatible("Unnecessary")
+  @VisibleForTesting
+  String getChunkConformanceFileName(JSChunk m) {
+    if (parsedModuleConformanceFiles == null) {
+      parsedModuleConformanceFiles = parseModuleOutputFiles(config.moduleConformanceFiles);
+    }
+    return parsedModuleConformanceFiles.get(m.getName());
   }
 
   @VisibleForTesting
@@ -2887,6 +2900,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     public CommandLineConfig setModuleOutputFiles(List<String> moduleOutputFiles) {
       this.moduleOutputFiles.clear();
       this.moduleOutputFiles.addAll(moduleOutputFiles);
+      return this;
+    }
+
+    private final List<String> moduleConformanceFiles = new ArrayList<>();
+
+    /**
+     * The conformance report file name for a JavaScript chunk (optional). See the flag description
+     * for formatting requirements.
+     */
+    @CanIgnoreReturnValue
+    public CommandLineConfig setModuleConformanceFiles(List<String> moduleConformanceFiles) {
+      this.moduleConformanceFiles.clear();
+      this.moduleConformanceFiles.addAll(moduleConformanceFiles);
       return this;
     }
 
