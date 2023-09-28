@@ -73,6 +73,11 @@ Animation.prototype.cancel = function() {};
 /**
  * @return {undefined}
  */
+Animation.prototype.commitStyles = function() {};
+
+/**
+ * @return {undefined}
+ */
 Animation.prototype.finish = function() {};
 
 /**
