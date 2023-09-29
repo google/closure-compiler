@@ -280,6 +280,16 @@ CanvasPathMethods.prototype.rect = function(x, y, w, h) {};
 /**
  * @param {number} x
  * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {(number|DOMPointInit|Array<number|DOMPointInit>)=} radii
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.roundRect = function(x, y, w, h, radii) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
  * @param {number} radius
  * @param {number} startAngle
  * @param {number} endAngle
@@ -367,7 +377,7 @@ Path2D.prototype.rect = function(x, y, w, h) {};
  * @param {number} y
  * @param {number} w
  * @param {number} h
- * @param {(number|DOMPointInit|Array<DOMPointInit>)=} radii
+ * @param {(number|DOMPointInit|Array<number|DOMPointInit>)=} radii
  * @return {undefined}
  * @override
  */
@@ -676,8 +686,9 @@ BaseRenderingContext2D.prototype.rect = function(x, y, w, h) {};
  * @param {number} y
  * @param {number} w
  * @param {number} h
- * @param {number|DOMPointInit|Array<DOMPointInit>} radii
+ * @param {(number|DOMPointInit|Array<number|DOMPointInit>)=} radii
  * @return {undefined}
+ * @override
  */
 BaseRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {};
 
