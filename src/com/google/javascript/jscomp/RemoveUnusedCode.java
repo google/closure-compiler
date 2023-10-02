@@ -390,7 +390,7 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void removeIndependentlyRemovableProperties() {
-    for (String propName : removablesForPropertyNames.keys()) {
+    for (String propName : removablesForPropertyNames.keySet()) {
       removalLog.log(RemovalLogRecord.forProperty(propName));
       for (Removable removable : removablesForPropertyNames.get(propName)) {
         removable.remove(compiler);
