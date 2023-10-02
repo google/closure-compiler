@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -289,7 +288,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
      * Object.defineProperties nodes.
      */
     private class GatherJ2CLClassGetterSetters extends AbstractPostOrderCallback {
-      private final Map<String, J2clProperty> j2clPropertiesByName = new HashMap<>();
+      private final Map<String, J2clProperty> j2clPropertiesByName = new LinkedHashMap<>();
 
       private Map<String, J2clProperty> getResults() {
         return j2clPropertiesByName;

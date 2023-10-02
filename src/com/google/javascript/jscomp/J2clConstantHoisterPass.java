@@ -22,7 +22,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -44,7 +44,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
     }
 
     final Multimap<String, Node> fieldAssignments = ArrayListMultimap.create();
-    final Set<Node> hoistableFunctions = new HashSet<>();
+    final Set<Node> hoistableFunctions = new LinkedHashSet<>();
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(

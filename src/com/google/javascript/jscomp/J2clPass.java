@@ -20,7 +20,7 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -101,7 +101,7 @@ public class J2clPass implements CompilerPass {
     private final String classFileName;
     private final Set<String> fnNamesToInline;
     private final InliningMode inliningMode;
-    private final Map<String, Node> fnsToInlineByQualifiedName = new HashMap<>();
+    private final Map<String, Node> fnsToInlineByQualifiedName = new LinkedHashMap<>();
     private final FunctionInjector injector;
     private final Node root;
 

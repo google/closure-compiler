@@ -29,8 +29,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -88,8 +88,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
   private void pruneEmptyClinits(Node root, List<Node> changedScopes) {
     // Clear emptiedClinitMethods before EmptyClinitPruner to populate only with new ones.
     emptiedClinitMethods.clear();
-    NodeTraversal.traverseScopeRoots(
-        compiler, root, changedScopes, new EmptyClinitPruner(), false);
+    NodeTraversal.traverseScopeRoots(compiler, root, changedScopes, new EmptyClinitPruner(), false);
 
     // Make sure replacements are to final destination instead of pointing intermediate ones.
     for (Entry<String, Node> clinitReplacementEntry : emptiedClinitMethods.entrySet()) {
@@ -265,8 +264,11 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
       // Check that the call isn't a recursive call to the same function.
       Node enclosingFunction = NodeUtil.getEnclosingFunction(node);
-      if (enclosingFunction == null || callOrNewNode.getFirstChild().getString()
-          .equals(NodeUtil.getNearestFunctionName(enclosingFunction))) {
+      if (enclosingFunction == null
+          || callOrNewNode
+              .getFirstChild()
+              .getString()
+              .equals(NodeUtil.getNearestFunctionName(enclosingFunction))) {
         return;
       }
 
@@ -438,7 +440,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
    * any of its parents.
    */
   private static class HierarchicalSet<T> {
-    private final Set<T> currentSet = new HashSet<>();
+    private final Set<T> currentSet = new LinkedHashSet<>();
     private final @Nullable HierarchicalSet<T> parent;
 
     public HierarchicalSet(@Nullable HierarchicalSet<T> parent) {
