@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.jspecify.nullness.Nullable;
@@ -36,6 +37,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private final Deque<ClassRecord> classStack;
 
   private static final String COMP_FIELD_VAR = "$jscomp$compfield$";
+  private static final String STATIC_FIELD_NAME = "$jscomp$static$init$";
+  private static final String STATIC_BLOCK_NAME = "$jscomp$static$block$";
 
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -121,12 +124,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       case CLASS:
         visitClass(t, n);
         break;
-      case THIS:
-        visitThis(t, n);
-        break;
-      case SUPER:
-        visitSuper(t, n);
-        break;
       default:
         break;
     }
@@ -142,64 +139,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     rewriteSideEffectedComputedProp(t, currClassRecord);
     rewriteInstanceMembers(t, currClassRecord);
     rewriteStaticMembers(t, currClassRecord);
-  }
-
-  private void visitThis(NodeTraversal t, Node thisNode) {
-    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
-    if (rootNode.isStaticMember()
-        && (rootNode.isMemberFieldDef() || rootNode.isComputedFieldDef())) {
-      final Node classNode = rootNode.getGrandparent();
-      final ClassRecord classRecord = classStack.peek();
-      checkState(
-          classRecord.classNode == classNode,
-          "wrong class node: %s != %s",
-          classRecord.classNode,
-          classNode);
-      Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
-      thisNode.replaceWith(className);
-      t.reportCodeChange(className);
-    } else if (rootNode.isBlock()) {
-      final ClassRecord classRecord = classStack.peek();
-      Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
-      thisNode.replaceWith(className);
-      t.reportCodeChange(className);
-    }
-  }
-
-  /**
-   * Rename super in static context to super class name.
-   *
-   * <p>CASE : rootNode.isMemberFieldDef() && rootNode.isStaticMember()
-   *
-   * <pre><code>
-   *   class C {
-   *     static x = 2;
-   *   }
-   *   class D extends C {
-   *     static y = super.x;
-   *   }
-   * </code></pre>
-   *
-   * <p>CASE : rootNode.isBlock()
-   *
-   * <pre><code>
-   * class B {
-   *   static y = 3;
-   * }
-   * class C extends B {
-   *   static {
-   *     let x = super.y;
-   *   }
-   * }
-   * </code></pre>
-   */
-  private void visitSuper(NodeTraversal t, Node n) {
-    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper(); // returns BLOCK if static block
-    if ((rootNode.isMemberFieldDef() && rootNode.isStaticMember()) || rootNode.isBlock()) {
-      Node superclassName = rootNode.getGrandparent().getChildAtIndex(1).cloneNode();
-      n.replaceWith(superclassName);
-      t.reportCodeChange(superclassName);
-    }
   }
 
   /**
@@ -242,6 +181,22 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   /** Returns $jscomp$compfield$[FILE_ID]$[number] */
   private String generateUniqueCompFieldVarName(NodeTraversal t) {
     return COMP_FIELD_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+  }
+
+  /**
+   * Returns $jscomp$static$init$[FILE_ID]$[number] for static fields
+   * $jscomp$static$block$[FILE_ID]$[number] for static blocks
+   */
+  private String generateUniqueStaticMethodName(
+      NodeTraversal t, Node staticMember, boolean isStaticBlock) {
+    String prefix = isStaticBlock ? STATIC_BLOCK_NAME : STATIC_FIELD_NAME;
+    String uniqueName = prefix + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+
+    if (staticMember.isMemberFieldDef()) {
+      uniqueName = uniqueName + "$" + staticMember.getString();
+    }
+
+    return uniqueName;
   }
 
   /** Rewrites and moves all side effected computed field keys to the top */
@@ -303,20 +258,65 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       Node nameToUse = record.createNewNameReferenceNode().srcrefTree(staticMember);
 
       Node transpiledNode;
+      // a placeholder node is added after the staticMember to keep track of the position
+      Node staticMethodInsertionPoint = addTemporaryInsertionPointAfterNode(staticMember);
+      Node blockNode;
+      Node callNode;
 
       switch (staticMember.getToken()) {
         case BLOCK:
-          transpiledNode = staticMember.detach();
+          blockNode = staticMember.detach();
+          callNode =
+              convBlockToStaticMethod(
+                  t,
+                  nameToUse,
+                  staticMethodInsertionPoint,
+                  blockNode,
+                  /* returnType= */ null,
+                  staticMember,
+                  /* isStaticBlock= */ true);
+          transpiledNode = astFactory.exprResult(callNode).srcrefTreeIfMissing(staticMember);
           break;
         case MEMBER_FIELD_DEF:
-          transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
+          if (staticMember.getFirstChild() == null) {
+            transpiledNode =
+                convStaticMethodToCall(nameToUse, staticMember.detach(), /* callNode= */ null);
+            break;
+          }
+          blockNode = createBlockNodeWithReturn(staticMember.getFirstChild().detach());
+          callNode =
+              convBlockToStaticMethod(
+                  t,
+                  nameToUse,
+                  staticMethodInsertionPoint,
+                  blockNode,
+                  blockNode.getJSType(),
+                  staticMember,
+                  /* isStaticBlock= */ false);
+          transpiledNode = convStaticMethodToCall(nameToUse, staticMember.detach(), callNode);
           break;
         case COMPUTED_FIELD_DEF:
-          transpiledNode = convCompFieldToGetElem(nameToUse, staticMember.detach());
+          if (staticMember.hasChildren() && staticMember.getChildCount() > 1) {
+            blockNode = createBlockNodeWithReturn(staticMember.getLastChild().detach());
+            callNode =
+                convBlockToStaticMethod(
+                    t,
+                    nameToUse,
+                    staticMethodInsertionPoint,
+                    blockNode,
+                    blockNode.getJSType(),
+                    staticMember,
+                    /* isStaticBlock= */ false);
+            transpiledNode = convStaticMethodToCall(nameToUse, staticMember.detach(), callNode);
+          } else {
+            transpiledNode =
+                convStaticMethodToCall(nameToUse, staticMember.detach(), /* callNode= */ null);
+          }
           break;
         default:
           throw new IllegalStateException(String.valueOf(staticMember));
       }
+      staticMethodInsertionPoint.detach();
       transpiledNode.insertBefore(insertionPoint);
       t.reportCodeChange();
     }
@@ -343,6 +343,67 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     return result;
   }
 
+  private Node convStaticMethodToCall(Node receiver, Node staticMember, Node callNode) {
+    checkArgument(staticMember.isMemberFieldDef() || staticMember.isComputedFieldDef());
+    checkArgument(staticMember.getParent() == null, staticMember);
+    checkArgument(receiver.getParent() == null, receiver);
+
+    Node getPropOrElem;
+    if (staticMember.isMemberFieldDef()) {
+      getPropOrElem =
+          astFactory
+              .createGetProp(receiver, staticMember.getString(), AstFactory.type(staticMember))
+              .srcrefTreeIfMissing(staticMember);
+    } else {
+      getPropOrElem = astFactory.createGetElem(receiver, staticMember.getFirstChild().detach());
+    }
+
+    Node result;
+    if (callNode != null) {
+      result = astFactory.createAssignStatement(getPropOrElem, callNode);
+    } else {
+      result = astFactory.exprResult(getPropOrElem);
+    }
+    result.srcrefTreeIfMissing(staticMember);
+    return result;
+  }
+
+  private Node convBlockToStaticMethod(
+      NodeTraversal t,
+      Node receiver,
+      Node insertionPoint,
+      Node blockNode,
+      JSType returnType,
+      Node staticMember,
+      boolean isStaticBlock) {
+
+    checkArgument(blockNode.isBlock());
+    checkArgument(blockNode.getParent() == null, blockNode);
+    checkArgument(receiver.getParent() == null, receiver);
+
+    Node functionNode =
+        astFactory
+            .createZeroArgFunction("", blockNode, returnType)
+            .srcrefTreeIfMissing(staticMember);
+    compiler.reportChangeToChangeScope(functionNode);
+    String uniqueStaticMethodName = generateUniqueStaticMethodName(t, staticMember, isStaticBlock);
+    Node methodNode =
+        astFactory
+            .createMemberFunctionDef(uniqueStaticMethodName, functionNode)
+            .srcrefTreeIfMissing(staticMember);
+    methodNode.setStaticMember(true);
+    methodNode.insertBefore(insertionPoint);
+    compiler.reportChangeToEnclosingScope(methodNode);
+
+    Node getPropNode =
+        astFactory
+            .createGetProp(
+                receiver.cloneTree(), methodNode.getString(), AstFactory.type(methodNode))
+            .srcrefTreeIfMissing(staticMember);
+    Node callNode = astFactory.createCall(getPropNode, AstFactory.type(methodNode.getFirstChild()));
+    return callNode;
+  }
+
   /**
    * Creates a node that represents receiver[key] = value; where the key and value comes from the
    * computed field
@@ -359,6 +420,14 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             : astFactory.exprResult(getElem);
     result.srcrefTreeIfMissing(computedField);
     return result;
+  }
+
+  private Node createBlockNodeWithReturn(Node returnValue) {
+
+    Node returnNode = astFactory.createReturn(returnValue);
+    Node blockNode = astFactory.createBlock(returnNode);
+
+    return blockNode;
   }
 
   /**
