@@ -400,8 +400,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             .createGetProp(
                 receiver.cloneTree(), methodNode.getString(), AstFactory.type(methodNode))
             .srcrefTreeIfMissing(staticMember);
-    Node callNode = astFactory.createCall(getPropNode, AstFactory.type(methodNode.getFirstChild()));
-    return callNode;
+    return astFactory.createCall(getPropNode, AstFactory.type(methodNode.getFirstChild()));
   }
 
   /**
@@ -425,9 +424,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private Node createBlockNodeWithReturn(Node returnValue) {
 
     Node returnNode = astFactory.createReturn(returnValue);
-    Node blockNode = astFactory.createBlock(returnNode);
-
-    return blockNode;
+    return astFactory.createBlock(returnNode);
   }
 
   /**
