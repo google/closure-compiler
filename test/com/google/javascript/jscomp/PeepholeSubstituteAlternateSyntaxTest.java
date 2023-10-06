@@ -438,6 +438,17 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   }
 
   @Test
+  public void testTemplateStringLiterals() {
+    // If there is a template string with just a string, then replace the entire thing with the
+    // string.
+    test("console.log(`${Math.random()}/${\"test\"}`);", "console.log(`${Math.random()}/test`)");
+    test(
+        "console.log(`${Math.random()}/${\"test\"}/${Math.random()}/${\"foo\"}`);",
+        "console.log(`${Math.random()}/test/${Math.random()}/foo`)");
+    test("console.log(`${\"test\"}/${\"test\"}`);", "console.log(\"test/test\")");
+  }
+
+  @Test
   public void testBindToCall1() {
     test("(goog.bind(f))()", "f()");
     test("(goog.bind(f,a))()", "f.call(a)");
