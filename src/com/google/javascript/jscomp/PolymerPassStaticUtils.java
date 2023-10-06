@@ -31,7 +31,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
 
@@ -42,7 +42,7 @@ final class PolymerPassStaticUtils {
   private static final String VIRTUAL_FILE = "<PolymerPassStaticUtils.java>";
   private static final QualifiedName POLYMER_DOT_ELEMENT = QualifiedName.of("Polymer.Element");
 
-  /** @return Whether the call represents a call to the Polymer function. */
+  /** Returns whether the call represents a call to the Polymer function. */
   @VisibleForTesting
   public static boolean isPolymerCall(Node call) {
     if (call == null || !call.isCall()) {
@@ -57,7 +57,7 @@ final class PolymerPassStaticUtils {
         || (name.isGetProp() && name.getString().equals("Polymer"));
   }
 
-  /** @return Whether the class extends PolymerElement. */
+  /** Returns whether the class extends PolymerElement. */
   @VisibleForTesting
   public static boolean isPolymerClass(Node cls) {
     if (cls == null || !cls.isClass()) {
@@ -172,7 +172,7 @@ final class PolymerPassStaticUtils {
       return ImmutableList.of();
     }
 
-    Map<String, JSDocInfo> constructorPropertyJsDoc = new HashMap<>();
+    Map<String, JSDocInfo> constructorPropertyJsDoc = new LinkedHashMap<>();
     if (constructor != null) {
       collectConstructorPropertyJsDoc(constructor, constructorPropertyJsDoc);
     }
@@ -278,8 +278,10 @@ final class PolymerPassStaticUtils {
    * @return The PolymerElement type string for a class definition.
    */
   public static String getPolymerElementType(final PolymerClassDefinition cls) {
-    String nativeElementName = cls.nativeBaseElement == null ? ""
-        : CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, cls.nativeBaseElement);
+    String nativeElementName =
+        cls.nativeBaseElement == null
+            ? ""
+            : CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, cls.nativeBaseElement);
     return SimpleFormat.format("Polymer%sElement", nativeElementName);
   }
 

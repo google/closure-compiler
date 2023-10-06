@@ -28,9 +28,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -400,7 +400,7 @@ final class PolymerClassDefinition {
     }
     Iterator<Map.Entry<MemberDefinition, BehaviorDefinition>> behaviorsItr =
         behaviorProps.entrySet().iterator();
-    Set<String> seen = new HashSet<>();
+    Set<String> seen = new LinkedHashSet<>();
     while (behaviorsItr.hasNext()) {
       MemberDefinition memberDefinition = behaviorsItr.next().getKey();
       String propertyName = memberDefinition.name.getString();

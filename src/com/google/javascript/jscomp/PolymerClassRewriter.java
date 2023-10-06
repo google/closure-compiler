@@ -34,7 +34,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -177,13 +176,13 @@ final class PolymerClassRewriter {
     switch (enclosingNode.getToken()) {
       case MODULE_BODY:
         {
-        if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
-          // The goog.module('ns'); call must remain the first statement in the module.
-          Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
-          enclosingNode.addChildrenAfter(statements, insertionPoint);
-        } else {
-          enclosingNode.addChildrenToFront(statements);
-        }
+          if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
+            // The goog.module('ns'); call must remain the first statement in the module.
+            Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
+            enclosingNode.addChildrenAfter(statements, insertionPoint);
+          } else {
+            enclosingNode.addChildrenToFront(statements);
+          }
         }
         break;
       case SCRIPT:
@@ -623,7 +622,9 @@ final class PolymerClassRewriter {
     return attrReflectedProps.build();
   }
 
-  /** @return The proper constructor doc for the Polymer call. */
+  /**
+   * @return The proper constructor doc for the Polymer call.
+   */
   private JSDocInfo.Builder getConstructorDoc(final PolymerClassDefinition cls) {
     JSDocInfo.Builder constructorDoc = JSDocInfo.Builder.maybeCopyFrom(cls.constructor.info);
     constructorDoc.recordConstructor();
@@ -875,7 +876,7 @@ final class PolymerClassRewriter {
   /** Appends all required behavior functions and non-property members to the given block. */
   private void appendBehaviorMembersToBlock(final PolymerClassDefinition cls, Node block) {
     String qualifiedPath = cls.target.getQualifiedName() + ".prototype.";
-    Map<String, Node> nameToExprResult = new HashMap<>();
+    Map<String, Node> nameToExprResult = new LinkedHashMap<>();
     for (BehaviorDefinition behavior : cls.behaviors) {
       for (MemberDefinition behaviorFunction : behavior.functionsToCopy) {
         String fnName = behaviorFunction.name.getString();

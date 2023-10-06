@@ -24,7 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -59,7 +59,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
 
   private final List<Node> problemNodes = new ArrayList<>();
 
-  private final Set<String> noSideEffectExterns = new HashSet<>();
+  private final Set<String> noSideEffectExterns = new LinkedHashSet<>();
 
   private final AbstractCompiler compiler;
 
