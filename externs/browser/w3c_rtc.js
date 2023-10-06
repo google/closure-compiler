@@ -1393,13 +1393,13 @@ DisplayMediaStreamOptions.prototype.controller;
 DisplayMediaStreamOptions.prototype.selfBrowserSurface;
 
 /**
- * @see https://w3c.github.io/mediacapture-screen-share/#dom-systemaudiopreferenceenum
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-surfaceswitchingpreferenceenum
  * @type {string|undefined}
  */
 DisplayMediaStreamOptions.prototype.surfaceSwitching;
 
 /**
- * @see https://w3c.github.io/mediacapture-screen-share/#dom-surfaceswitchingpreferenceenum
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-systemaudiopreferenceenum
  * @type {string|undefined}
  */
 DisplayMediaStreamOptions.prototype.systemAudio;
