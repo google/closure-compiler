@@ -2496,7 +2496,11 @@ RTCInboundRtpStreamStats.prototype.framesReceived;
 /** @const {string|undefined} */
 RTCInboundRtpStreamStats.prototype.decoderImplementation;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.framesAssembledFromMultiplePackets;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalAssemblyTime;
 
 /**
  * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteinboundrtpstreamstats
