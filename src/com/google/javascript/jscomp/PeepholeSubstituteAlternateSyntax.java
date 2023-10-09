@@ -621,63 +621,13 @@ class PeepholeSubstituteAlternateSyntax
       return n;
     }
     String string = getSideEffectFreeStringValue(n);
-    if (string != null) {
-      Node stringNode = IR.string(string).srcref(n);
-      n.replaceWith(stringNode);
-      reportChangeToEnclosingScope(stringNode);
-      return stringNode;
+    if (string == null) {
+      return n;
     }
-    // The children of a template string alternate between a template string node (literal text)
-    // and substitution nodes (which are expressions that you evaluate at runtime).
-
-    // In the if case, the current substitution node does have just a string inside (e.g. node could
-    // be ${"foo"}), so we want to prepend the previous literal and append the next literal to the
-    // value of the substitution node
-
-    // In the else case, the current substitution node does not have just a string inside so we move
-    // on (e.g. node could be ${Math.random()}, not ${"foo"})
-
-    // Given the template literal `${"foo"}/${Math.random()}` The AST initially is:
-    // [""] -> [${"foo"}] -> ["/"] -> [${Math.random()}] -> [""]
-    // and this code transforms it into:
-    // ["foo/"] -> [${Math.random()}] -> [""]
-    Node previousLiteral = n.getFirstChild();
-    Node substitution = previousLiteral.getNext();
-    boolean changeWasMade = false;
-    while (substitution != null) {
-      Node nextLiteral = substitution.getNext();
-      Node expression = substitution.getOnlyChild();
-      if (expression.isStringLit()) {
-        changeWasMade = true;
-        // if the expression only contains a string literal, build a string combining all 3 nodes
-        // into a new node and detach previousLiteral and substitution nodes
-        // NOTE: We are operating only on normal, un-tagged template literals.
-        // This means that it is not necessary to keep track of the raw strings,
-        // which are used only for tagged template literal calls.
-        final String concatenatedString =
-            previousLiteral.getCookedString()
-                + expression.getString()
-                + nextLiteral.getCookedString();
-        Node newNextLiteral = Node.newTemplateLitString(concatenatedString, concatenatedString);
-        newNextLiteral.srcref(previousLiteral);
-        // setting the length of the new node to be the sum of the three nodes that have been
-        // removed for proper error reporting
-        newNextLiteral.setLength(
-            previousLiteral.getLength() + substitution.getLength() + nextLiteral.getLength());
-        nextLiteral.replaceWith(newNextLiteral);
-        previousLiteral.detach();
-        substitution.detach();
-        previousLiteral = newNextLiteral;
-        substitution = newNextLiteral.getNext();
-      } else {
-        previousLiteral = nextLiteral;
-        substitution = nextLiteral.getNext();
-      }
-    }
-    if (changeWasMade) {
-      reportChangeToEnclosingScope(n);
-    }
-    return n;
+    Node stringNode = IR.string(string).srcref(n);
+    n.replaceWith(stringNode);
+    reportChangeToEnclosingScope(stringNode);
+    return stringNode;
   }
 
   /**
