@@ -278,6 +278,17 @@ CanvasPathMethods.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
 CanvasPathMethods.prototype.rect = function(x, y, w, h) {};
 
 /**
+ * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/roundRect
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {(number|!DOMPointInit|!Array<number|!DOMPointInit>)=} radii
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.roundRect = function(x, y, w, h, radii) {};
+
+/**
  * @param {number} x
  * @param {number} y
  * @param {number} radius
@@ -361,6 +372,18 @@ Path2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
  * @override
  */
 Path2D.prototype.rect = function(x, y, w, h) {};
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/roundRect
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {(number|!DOMPointInit|!Array<number|!DOMPointInit>)=} radii
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.roundRect = function(x, y, w, h, radii) {};
 
 /**
  * @param {number} x
@@ -659,6 +682,18 @@ BaseRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
  * @override
  */
 BaseRenderingContext2D.prototype.rect = function(x, y, w, h) {};
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/roundRect
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {(number|!DOMPointInit|!Array<number|!DOMPointInit>)=} radii
+ * @return {undefined}
+ * @override
+ */
+BaseRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {};
 
 /**
  * @param {number} x
@@ -982,6 +1017,7 @@ function CanvasPattern() {}
 
 /**
  * @constructor
+ * https://developer.mozilla.org/en-US/docs/Web/API/TextMetrics
  */
 function TextMetrics() {}
 
@@ -999,6 +1035,27 @@ TextMetrics.prototype.actualBoundingBoxLeft;
 
 /** @const {number|undefined} */
 TextMetrics.prototype.actualBoundingBoxRight;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.fontBoundingBoxAscent;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.fontBoundingBoxDescent;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.emHeightAscent;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.emHeightDescent;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.hangingBaseline;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.alphabeticBaseline;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.ideographicBaseline;
 
 /**
  * @param {!Uint8ClampedArray|number} dataOrWidth In the first form, this is the
@@ -6182,15 +6239,17 @@ ElementInternals.prototype.validationMessage;
 /**
  * @return {boolean}
  */
-ElementInternals.prototype.checkValidity = function() {}
+ElementInternals.prototype.checkValidity =
+    function() {}
 
-/**
- * @return {boolean}
- */
-ElementInternals.prototype.reportValidity = function() {}
+    /**
+     * @return {boolean}
+     */
+    ElementInternals.prototype.reportValidity =
+        function() {}
 
-/** @type {!NodeList<!HTMLLabelElement>} */
-ElementInternals.prototype.labels;
+        /** @type {!NodeList<!HTMLLabelElement>} */
+        ElementInternals.prototype.labels;
 
 /**
  * @see https://html.spec.whatwg.org/multipage/custom-elements.html#the-elementinternals-interface
