@@ -72,6 +72,7 @@ public class JsFileFullParser {
     public boolean provideGoog = false;
     public boolean testonly = false;
     public ModuleType moduleType = ModuleType.UNKNOWN;
+    public boolean isLegacyNamespace = false;
 
     public final Set<String> delcalls = new TreeSet<>();
     public final Set<String> deltemplates = new TreeSet<>();
@@ -225,8 +226,11 @@ public class JsFileFullParser {
         info.moduleType = FileInfo.ModuleType.GOOG_PROVIDE;
         break;
       case GOOG_MODULE:
+        info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
+        break;
       case LEGACY_GOOG_MODULE:
         info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
+        info.isLegacyNamespace = true;
         break;
       case ES6_MODULE:
         info.moduleType = FileInfo.ModuleType.ES_MODULE;
