@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_NAME
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
@@ -1279,6 +1280,15 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "     console.log(foo.Foo);",
                 "  });",
                 "}")));
+  }
+
+  @Test
+  public void testRequireDynamic_illegal_await_lhs() {
+    testError(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines("async function test() {", "await goog.requireDynamic('a.b.c');", "}")),
+        ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT);
   }
 
   @Test

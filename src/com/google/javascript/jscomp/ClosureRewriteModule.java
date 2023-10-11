@@ -141,6 +141,12 @@ final class ClosureRewriteModule implements CompilerPass {
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
           "Internal compiler error: rewritten module global name {0} is already in use.");
 
+  static final DiagnosticType ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT =
+      DiagnosticType.error(
+          "ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT",
+          "Illegal use of dynamic import: LHS of await goog.requireDynamic() must be a destructing"
+              + " LHS or name, and it must be in a declaration statement.");
+
   static final String MODULE_EXPORTS_PREFIX = "module$exports$";
 
   private static final String MODULE_CONTENTS_PREFIX = "module$contents$";
@@ -1351,17 +1357,17 @@ final class ClosureRewriteModule implements CompilerPass {
 
     // `{Foo} = await goog.requireDynamic('a.b.c')`
     Node awaitParent = existingAwait.getParent();
-    checkState(
-        awaitParent != null && (awaitParent.isDestructuringLhs() || awaitParent.isName()),
-        "LHS must be a destructing LHS or name");
+    if (awaitParent == null || (!awaitParent.isDestructuringLhs() && !awaitParent.isName())) {
+      compiler.report(JSError.make(call, ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT));
+    }
 
     // `const {Foo} = await goog.requireDynamic('a.b.c')`
     Node declarationStatement = awaitParent.getParent();
     // Reject non-declarations or declarations in a for loop.
-    checkState(
-        NodeUtil.isNameDeclaration(declarationStatement)
-            && NodeUtil.isStatement(declarationStatement),
-        "must be a declaration statement");
+    if (!NodeUtil.isNameDeclaration(declarationStatement)
+        || !NodeUtil.isStatement(declarationStatement)) {
+      compiler.report(JSError.make(call, ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT));
+    }
 
     // `module$exports$a$b$c`
     Node exportedNamespaceNameNode =
