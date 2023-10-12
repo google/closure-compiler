@@ -606,6 +606,21 @@ MediaStream.prototype.onremovetrack;
 MediaStream.prototype.stop = function() {};
 
 /**
+ * @param {string} constraint
+ * @param {string=} message
+ * @constructor
+ * @extends {Error}
+ * @see https://www.w3.org/TR/mediacapture-streams/#overconstrainederror-interface
+ */
+function OverconstrainedError(constraint, message) {}
+
+/**
+ * @const {string}
+ * Read only.
+ */
+OverconstrainedError.prototype.constraint;
+
+/**
  * @typedef {{tone: string}}
  * @see https://www.w3.org/TR/webrtc/#dom-rtcdtmftonechangeeventinit
  */
