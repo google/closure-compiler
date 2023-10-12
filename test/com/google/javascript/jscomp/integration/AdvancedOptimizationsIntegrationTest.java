@@ -75,6 +75,62 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
+  public void testBug303058080() {
+    // TODO: b/303058080 - Actually fix the problem this test records.
+    // The problem is a timeout, so as-written this test doesn't actually trigger the timeout.
+    // See the comment below for how to modify this test case to cause the timeout for
+    // investigation.
+
+    // Avoid including the transpilation library
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setPrettyPrint(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addExtra(
+                    "/**",
+                    " * @template T",
+                    " * @record",
+                    " * @struct",
+                    " */",
+                    "var Foo = function() {};",
+                    "",
+                    "/**",
+                    " * @return {!Foo<!Array<T>>}",
+                    " */",
+                    "Foo.prototype.partition = function() {};",
+                    "",
+                    "/**",
+                    " * @return {!Foo<?>}",
+                    " */",
+                    "Foo.prototype.flatten = function() {};",
+                    "",
+                    "/**",
+                    " * @extends {Foo}",
+                    " * @template T",
+                    " * @record",
+                    " * @struct",
+                    " */",
+                    "var Bar = function() {};",
+                    "",
+                    "/**",
+                    " * @return {!Foo<?>}", // Change `?` to `T` to trigger the timeout
+                    " */",
+                    "Bar.prototype.flatten = function() {};")
+                .buildExternsFile("externs.js"));
+    // The timeout happens while processing the externs, so there's no need to have any input
+    // code.
+    test(options, "", "");
+  }
+
+  @Test
   public void testBug123583793() {
     // Avoid including the transpilation library
     useNoninjectingCompiler = true;
