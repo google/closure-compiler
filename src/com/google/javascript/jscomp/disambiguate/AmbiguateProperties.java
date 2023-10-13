@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DefaultNameGenerator;
+import com.google.javascript.jscomp.DotFormatter;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.NameGenerator;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -33,13 +34,14 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
-import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.GraphColoring;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
@@ -158,7 +160,10 @@ public class AmbiguateProperties implements CompilerPass {
         new ColorGraphBuilder(
             graphNodeFactory, LowestCommonAncestorFinder::new, this.colorRegistry);
     graphBuilder.addAll(graphNodeFactory.getAllKnownTypes());
-    DiGraph<ColorGraphNode, Object> colorGraph = graphBuilder.build();
+    LinkedDirectedGraph<ColorGraphNode, Object> colorGraph = graphBuilder.build();
+    try (LogFile chunkGraphLog = compiler.createOrReopenLog(this.getClass(), "color_graph.dot")) {
+      chunkGraphLog.log(DotFormatter.toDot(colorGraph));
+    }
     for (ColorGraphNode node : graphNodeFactory.getAllKnownTypes()) {
       node.getSubtypeIndices().set(node.getIndex()); // Init subtyping as reflexive.
     }
