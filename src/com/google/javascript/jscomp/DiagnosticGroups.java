@@ -56,7 +56,7 @@ import com.google.javascript.jscomp.lint.CheckUnusedPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Named groups of DiagnosticTypes exposed by Compiler. */
@@ -68,7 +68,7 @@ public class DiagnosticGroups {
 
   public DiagnosticGroups() {}
 
-  private static final Map<String, DiagnosticGroup> groupsByName = new HashMap<>();
+  private static final Map<String, DiagnosticGroup> groupsByName = new LinkedHashMap<>();
 
   static DiagnosticGroup registerDeprecatedGroup(String name) {
     return registerGroup(name, new DiagnosticGroup(name, UNUSED));

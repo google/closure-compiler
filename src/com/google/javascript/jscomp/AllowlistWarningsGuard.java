@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -83,7 +82,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
    * @return known legacy warnings without line numbers.
    */
   public static ImmutableSet<String> normalizeAllowlist(Set<String> allowlist) {
-    Set<String> result = new HashSet<>();
+    Set<String> result = new LinkedHashSet<>();
     for (String line : allowlist) {
       String trimmed = line.trim();
       if (trimmed.isEmpty() || trimmed.charAt(0) == '#') {
@@ -110,6 +109,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     }
     return null;
   }
+
   /**
    * Determines whether a given warning is included in the allowlist.
    *
@@ -160,7 +160,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
   // TODO(nicksantos): This is a weird API.
   static Set<String> loadAllowlistedJsWarnings(Reader reader) throws IOException {
     checkNotNull(reader);
-    Set<String> result = new HashSet<>();
+    Set<String> result = new LinkedHashSet<>();
 
     result.addAll(CharStreams.readLines(reader));
 
@@ -168,16 +168,16 @@ public class AllowlistWarningsGuard extends WarningsGuard {
   }
 
   /**
-   * If subclasses want to modify the formatting, they should override
-   * #formatWarning(JSError, boolean), not this method.
+   * If subclasses want to modify the formatting, they should override #formatWarning(JSError,
+   * boolean), not this method.
    */
   protected String formatWarning(JSError error) {
     return formatWarning(error, false);
   }
 
   /**
-   * @param withMetaData If true, include metadata that's useful to humans
-   *     This metadata won't be used for matching the warning.
+   * @param withMetaData If true, include metadata that's useful to humans This metadata won't be
+   *     used for matching the warning.
    */
   protected String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
@@ -240,7 +240,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     /** A note to include at the top of the allowlist file. */
     @CanIgnoreReturnValue
     public AllowlistBuilder setNote(String note) {
-      this.headerNote  = note;
+      this.headerNote = note;
       return this;
     }
 
@@ -268,17 +268,18 @@ public class AllowlistWarningsGuard extends WarningsGuard {
      * later.
      */
     public void appendAllowlist(PrintStream out) {
-      out.append(
-          "# This is a list of legacy warnings that have yet to be fixed.\n");
+      out.append("# This is a list of legacy warnings that have yet to be fixed.\n");
 
       if (productName != null && !productName.isEmpty() && !warnings.isEmpty()) {
-        out.append("# Please find some time and fix at least one of them "
-            + "and it will be the happiest day for " + productName + ".\n");
+        out.append(
+            "# Please find some time and fix at least one of them "
+                + "and it will be the happiest day for "
+                + productName
+                + ".\n");
       }
 
       if (generatorTarget != null && !generatorTarget.isEmpty()) {
-        out.append("# When you fix any of these warnings, run "
-            + generatorTarget + " task.\n");
+        out.append("# When you fix any of these warnings, run " + generatorTarget + " task.\n");
       }
 
       if (headerNote != null) {
@@ -287,9 +288,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
       Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();
       for (JSError warning : warnings) {
-        warningsByType.put(
-            warning.getType(),
-            formatWarning(warning, true /* withLineNumber */));
+        warningsByType.put(warning.getType(), formatWarning(warning, true /* withLineNumber */));
       }
 
       for (DiagnosticType type : warningsByType.keySet()) {
