@@ -6152,6 +6152,29 @@ SecurityPolicyViolationEventInit.prototype.columnNumber;
 
 
 /**
+ * @record
+ * @extends {EventInit}
+ * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-submitevent-interface
+ */
+function SubmitEventInit() {}
+
+/** @type {undefined|?HTMLElement} */
+SubmitEventInit.prototype.submitter;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {SubmitEventInit=} opt_eventInitDict
+ * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-submitevent-interface
+ */
+function SubmitEvent(type, opt_eventInitDict) {}
+
+/** @type {undefined|!HTMLElement} */
+SubmitEvent.prototype.submitter;
+
+
+/**
  * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#formdataevent
  *
  * @constructor
