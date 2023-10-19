@@ -1332,17 +1332,39 @@ class InlineAndCollapseProperties implements CompilerPass {
       return true;
     }
 
-    private boolean canEliminate(Name name) {
+    /**
+     * Returns true if it is safe to completely remove the rvalue assigned to the name from the AST.
+     */
+    private boolean canEliminate(Name name, Node rvalue) {
       if (!name.canEliminate()) {
         return false;
       }
 
+      if (rvalue.isObjectLit()) {
+        for (Node child = rvalue.getFirstChild(); child != null; child = child.getNext()) {
+          switch (child.getToken()) {
+            case GETTER_DEF:
+            case SETTER_DEF:
+            case COMPUTED_PROP:
+            case OBJECT_SPREAD:
+              // We cannot completely eliminate the object literal, because it contains
+              // at least one feature that we cannot extract as a collapsed variable name.
+              return false;
+            case STRING_KEY:
+            case MEMBER_FUNCTION_DEF:
+              break;
+            default:
+              throw new IllegalStateException(
+                  "Unexpected child of OBJECTLIT: " + child.toStringTree());
+          }
+        }
+      }
       if (name.props == null
           || name.props.isEmpty()
           || propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT) {
         return true;
       }
-
+      
       return false;
     }
 
@@ -1662,7 +1684,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         String alias, Node n, Node parent, String originalName, boolean isConstantName) {
       Preconditions.checkArgument(
           n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getToken(), n);
-
+      
       // BEFORE:
       //   getprop
       //     getprop
@@ -1681,7 +1703,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         // the "this" isn't provided by the namespace. Mark it as such:
         parent.putBooleanProp(Node.FREE_CALL, true);
       }
-
+      
       n.replaceWith(ref);
       compiler.reportChangeToEnclosingScope(ref);
     }
@@ -1865,7 +1887,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       boolean isObjLit = rvalue.isObjectLit();
       boolean insertedVarNode = false;
 
-      if (isObjLit && canEliminate(n)) {
+      if (isObjLit && canEliminate(n, rvalue)) {
         // Eliminate the object literal altogether.
         grandparent.replaceWith(varNode);
         n.updateRefNode(ref, null);
@@ -1970,7 +1992,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
       addStubsForUndeclaredProperties(n, name, grandparent, variableNode);
 
-      if (isObjLit && canEliminate(n)) {
+      if (isObjLit && canEliminate(n, rvalue)) {
         ref.getNode().detach();
         compiler.reportChangeToEnclosingScope(variableNode);
         if (!variableNode.hasChildren()) {

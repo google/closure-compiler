@@ -1324,7 +1324,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // quoted/computed does not get read
     test(
         srcs("    var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;"),
-        expected("var            a$b$c = 0          ; var e = 1; e = a$b$c")); // incorrect
+        expected("var a$b$c = 0; var a$b = {['d']:1}; var e = 1; e = a$b$c"));
     test(
         srcs("var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b?.c;"),
         expected("var         a$b = {c: 0, ['d']: 1}; var e = 1; e = a$b?.c"));
@@ -1337,7 +1337,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // key collision
     test(
         srcs("    var a = {}; a.b = {c : 0, ['c']: 1}; var e = a.b.c;"),
-        expected("var            a$b$c = 0;            var e =  null;")); // incorrect
+        expected("var a$b$c = 0;  var a$b = {['c']:1};  var e =  null;"));
   }
 
   @Test
@@ -3216,7 +3216,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // Notice we can still collapse the parent namespace, `a`.
     test(
         srcs("var a = {b: {c: 0}}; var d = {...a.b}; use(a.b.c);"),
-        expected("var a$b = {c: 0}; use(a$b.c);"));
+        expected("var a$b = {c: 0};var d = {...a$b}; use(a$b.c);"));
     // test transpiled version of spread.
     test(
         "var a = {b: {c: 0}}; var d = Object.assign({}, a.b); use(a.b.c);",
@@ -3246,7 +3246,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     testSame("var a = {...c}; use?.(a?.b);");
 
-    test(srcs("var a = {...c, b: 0}; use(a.b);"), expected("var a$b = 0; use(a$b);"));
+    test(
+        srcs("    var a = {...c, b: 0};        use(a.b);"),
+        expected("var a$b = 0; var a = {...c}; use(a$b);"));
     // test transpiled - does not collapse properties after spread.
     testSame("var a = Object.assign({}, c, {b: 0}); use(a.b);");
 

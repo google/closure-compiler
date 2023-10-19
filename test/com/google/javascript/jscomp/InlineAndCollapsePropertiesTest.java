@@ -135,8 +135,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "  [`${module$name.cssClasses.CLASS_A}`]: 'old-class-a',",
                 "};",
                 "")),
-        // TODO(bradfordcsmith): Shouldn't we be leaving the computed property in place?
-        expected("var module$name$cssClasses$CLASS_A = 'class-a';"));
+        expected(
+            lines(
+                "var module$name$cssClasses$CLASS_A = 'class-a';",
+                "var module$name$oldCssClassesMap = {",
+                "  [`${module$name$cssClasses$CLASS_A}`]:'old-class-a'",
+                "};")));
   }
 
   @Test
