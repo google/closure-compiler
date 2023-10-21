@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.escape.ArrayBasedCharEscaper;
 import com.google.common.escape.Escaper;
 import java.io.IOException;
 
@@ -64,80 +62,98 @@ public final class SourceCodeEscapers {
    * An Escaper for javascript strings. Turns all non-ASCII characters into ASCII javascript escape
    * sequences.
    */
-  private static final class JavaScriptEscaper extends ArrayBasedCharEscaper {
-    private static final ImmutableMap<Character, String> JS_MAP =
-        ImmutableMap.<Character, String>builder()
-            .put('\'', "\\x27")
-            .put('"', "\\x22")
-            .put('<', "\\x3c")
-            .put('=', "\\x3d")
-            .put('>', "\\x3e")
-            .put('&', "\\x26")
-            .put('\b', "\\b")
-            .put('\t', "\\t")
-            .put('\n', "\\n")
-            .put('\f', "\\f")
-            .put('\r', "\\r")
-            .put('\\', "\\\\")
-            .buildOrThrow();
+  private static final class JavaScriptEscaper extends Escaper {
+    private static final char[][] REPLACEMENT_CHARS;
 
-    JavaScriptEscaper() {
-      super(JS_MAP, PRINTABLE_ASCII_MIN, PRINTABLE_ASCII_MAX);
-    }
-
-    @Override
-    protected char[] escapeUnsafe(char c) {
-      // Do two digit hex escape for value less than 0x100.
-      if (c < 0x100) {
+    static {
+      REPLACEMENT_CHARS = new char[0x100][];
+      for (char i = 0; i < PRINTABLE_ASCII_MIN; i++) {
+        char c = i;
         char[] r = new char[4];
         r[3] = HEX_DIGITS[c & 0xF];
         c = (char) (c >>> 4);
         r[2] = HEX_DIGITS[c & 0xF];
         r[1] = 'x';
         r[0] = '\\';
-        return r;
+        REPLACEMENT_CHARS[i] = r;
       }
-      return asUnicodeHexEscape(c);
+      for (char i = PRINTABLE_ASCII_MAX + 1; i < 0x100; i++) {
+        char c = i;
+        char[] r = new char[4];
+        r[3] = HEX_DIGITS[c & 0xF];
+        c = (char) (c >>> 4);
+        r[2] = HEX_DIGITS[c & 0xF];
+        r[1] = 'x';
+        r[0] = '\\';
+        REPLACEMENT_CHARS[i] = r;
+      }
+      REPLACEMENT_CHARS['\''] = "\\x27".toCharArray();
+      REPLACEMENT_CHARS['"'] = "\\x22".toCharArray();
+      REPLACEMENT_CHARS['<'] = "\\x3c".toCharArray();
+      REPLACEMENT_CHARS['='] = "\\x3d".toCharArray();
+      REPLACEMENT_CHARS['>'] = "\\x3e".toCharArray();
+      REPLACEMENT_CHARS['&'] = "\\x26".toCharArray();
+      REPLACEMENT_CHARS['\b'] = "\\b".toCharArray();
+      REPLACEMENT_CHARS['\t'] = "\\t".toCharArray();
+      REPLACEMENT_CHARS['\n'] = "\\n".toCharArray();
+      REPLACEMENT_CHARS['\f'] = "\\f".toCharArray();
+      REPLACEMENT_CHARS['\r'] = "\\r".toCharArray();
+      REPLACEMENT_CHARS['\\'] = "\\\\".toCharArray();
     }
 
-    /**
-     * Append the escaped transformation of {@code c} to {@code to}.
-     *
-     * <p>{@link Escaper#escape(String)} has to build and return a new string, which is redundant if
-     * we're just going to pass that string on to an {@link Appendable} anyway. This method just
-     * appends the possibly-transformed characters one at a time to avoid the double memory
-     * allocation.
-     */
-    void appendTo(CharSequence c, Appendable to) throws IOException {
-      int l = c.length();
-      for (int i = 0; i < l; i++) {
-        char unescaped = c.charAt(i);
-        // #escape(char) is protected so this must be done in a subclass.
-        char[] escaped = escape(unescaped);
-        if (escaped != null) {
-          for (char value : escaped) {
-            to.append(value);
+    void appendTo(CharSequence cs, Appendable to) throws IOException {
+      int last = 0;
+      int length = cs.length();
+      for (int i = 0; i < length; i++) {
+        char c = cs.charAt(i);
+        char[] replacement;
+        if (c < 0x100) {
+          replacement = REPLACEMENT_CHARS[c];
+          if (replacement == null) {
+            continue;
           }
         } else {
-          to.append(unescaped);
+          replacement = asUnicodeHexEscape(c);
         }
+        if (last < i) {
+          to.append(cs, last, i);
+        }
+        for (char r : replacement) {
+          to.append(r);
+        }
+        last = i + 1;
+      }
+      if (last < length) {
+        to.append(cs, last, length);
       }
     }
-  }
 
-  // Helper for common case of escaping a single char.
-  private static char[] asUnicodeHexEscape(char c) {
-    // Equivalent to String.format("\\u%04x", (int) c);
-    char[] r = new char[6];
-    r[0] = '\\';
-    r[1] = 'u';
-    r[5] = HEX_DIGITS[c & 0xF];
-    c = (char) (c >>> 4);
-    r[4] = HEX_DIGITS[c & 0xF];
-    c = (char) (c >>> 4);
-    r[3] = HEX_DIGITS[c & 0xF];
-    c = (char) (c >>> 4);
-    r[2] = HEX_DIGITS[c & 0xF];
-    return r;
+    // Helper for common case of escaping a single char.
+    private static char[] asUnicodeHexEscape(char c) {
+      // Equivalent to String.format("\\u%04x", (int) c);
+      char[] r = new char[6];
+      r[0] = '\\';
+      r[1] = 'u';
+      r[5] = HEX_DIGITS[c & 0xF];
+      c = (char) (c >>> 4);
+      r[4] = HEX_DIGITS[c & 0xF];
+      c = (char) (c >>> 4);
+      r[3] = HEX_DIGITS[c & 0xF];
+      c = (char) (c >>> 4);
+      r[2] = HEX_DIGITS[c & 0xF];
+      return r;
+    }
+
+    @Override
+    public String escape(String string) {
+      StringBuilder sb = new StringBuilder();
+      try {
+        this.appendTo(string, sb);
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "This should never throw - StringBuilder.append doesn't actually throw IOException", e);
+      }
+      return sb.toString();
+    }
   }
 }
