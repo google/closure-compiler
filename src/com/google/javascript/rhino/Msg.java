@@ -108,6 +108,7 @@ public enum Msg {
   JSDOC_NGINJECT_EXTRA("extra @ngInject tag"),
   JSDOC_NOCOLLAPSE("extra @nocollapse tag"),
   JSDOC_NOCOMPILE("extra @nocompile tag"),
+  JSDOC_NOCOVERAGE("extra @nocoverage tag"),
   JSDOC_NODTS("extra @nodts tag"),
   JSDOC_NOINLINE("extra @noinline tag"),
   JSDOC_NOSIDEEFFECTS("conflicting @nosideeffects tag"),

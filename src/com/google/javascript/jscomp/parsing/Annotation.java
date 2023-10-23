@@ -59,6 +59,7 @@ enum Annotation {
   NG_INJECT,
   NO_COLLAPSE,
   NO_COMPILE,
+  NO_COVERAGE,
   /**
    * A tag to suppress clutz's d.ts generation for classes and method. This is specifically for the
    * use of J2CL.
@@ -145,6 +146,7 @@ enum Annotation {
           .put("mods", Annotation.MODS)
           .put("nocollapse", Annotation.NO_COLLAPSE)
           .put("nocompile", Annotation.NO_COMPILE)
+          .put("nocoverage", Annotation.NO_COVERAGE)
           .put("nodts", Annotation.NO_DTS)
           .put("noinline", Annotation.NO_INLINE)
           .put("nosideeffects", Annotation.NO_SIDE_EFFECTS)

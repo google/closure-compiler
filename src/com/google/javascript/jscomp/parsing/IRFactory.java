@@ -648,6 +648,9 @@ class IRFactory {
         this.currentFileIsExterns = true;
         merged.recordExterns();
       }
+      if (newFileoverview.isNoCoverage()) {
+        merged.recordNoCoverage();
+      }
       this.firstFileoverview = merged.build();
     }
 

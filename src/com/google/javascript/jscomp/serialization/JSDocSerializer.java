@@ -65,6 +65,11 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_SASS_GENERATED_CSS_TS);
     }
 
+    // Used by CoverageInstrumentationCallback
+    if (jsdoc.isNoCoverage()) {
+      builder.addKind(JsdocTag.JSDOC_NO_COVERAGE);
+    }
+
     if (jsdoc.isNoInline()) {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
@@ -334,6 +339,10 @@ public final class JSDocSerializer {
 
         case JSDOC_FILEOVERVIEW:
           builder.recordFileOverview("");
+          continue;
+
+        case JSDOC_NO_COVERAGE:
+          builder.recordNoCoverage();
           continue;
 
         case JSDOC_SASS_GENERATED_CSS_TS:

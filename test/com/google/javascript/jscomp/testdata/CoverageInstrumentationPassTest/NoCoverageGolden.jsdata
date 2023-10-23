@@ -1,0 +1,11 @@
+(function(self) {
+  if (!self.window) {
+    self.window = self;
+    self.window.top = self;
+  }
+})(typeof self !== "undefined" ? self : globalThis);
+var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "instrumentedLines":[], "executedLines":[]});
+function f() {
+  console.log("no coverage please");
+}
+;

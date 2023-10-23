@@ -1,0 +1,5 @@
+/**
+ * @nocoverage
+ */
+
+function f() { console.log('no coverage please'); }

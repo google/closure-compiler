@@ -333,6 +333,7 @@ public class JSDocInfo implements Serializable {
     ABSTRACT,
     PURE_OR_BREAK_MY_CODE,
     COLLAPSIBLE_OR_BREAK_MY_CODE,
+    NOCOVERAGE,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -832,6 +833,11 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @externs} annotation is present on this {@link JSDocInfo}. */
   public boolean isExterns() {
     return checkBit(Bit.EXTERNS);
+  }
+
+  /** Returns whether the {@code @nocoverage} annotation is present on this {@link JSDocInfo}. */
+  public boolean isNoCoverage() {
+    return checkBit(Bit.NOCOVERAGE);
   }
 
   /** Returns whether the {@code @typeSummary} annotation is present on this {@link JSDocInfo}. */
@@ -1645,6 +1651,7 @@ public class JSDocInfo implements Serializable {
                       & (Bit.FILEOVERVIEW.mask
                           | Bit.EXTERNS.mask
                           | Bit.NOCOMPILE.mask
+                          | Bit.NOCOVERAGE.mask
                           | Bit.TYPE_SUMMARY.mask
                           | Bit.ENHANCED_NAMESPACE.mask))
                   != 0
@@ -2515,6 +2522,15 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordExterns() {
       return populateBit(Bit.EXTERNS, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isNoCoverage()} flag set to {@code true}.
+     */
+    @CanIgnoreReturnValue
+    public boolean recordNoCoverage() {
+      return populateBit(Bit.NOCOVERAGE, true);
     }
 
     /**

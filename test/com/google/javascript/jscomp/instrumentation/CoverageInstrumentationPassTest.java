@@ -202,4 +202,12 @@ public final class CoverageInstrumentationPassTest {
         options,
         "CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfill.jsdata");
   }
+
+  @Test
+  public void testNoCoverage() throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        "CoverageInstrumentationPassTest/NoCoverageGolden.jsdata",
+        options(LanguageMode.STABLE),
+        "CoverageInstrumentationPassTest/NoCoverage.jsdata");
+  }
 }

@@ -76,4 +76,7 @@ enum JsdocTag {
 
   // Used to suppress warnings by ReportUntranspilableFeatures pass in stage2
   JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES = 36;
+
+  // Used by CoverageInstrumentationCallback
+  JSDOC_NO_COVERAGE = 37;
 }

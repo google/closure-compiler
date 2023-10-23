@@ -593,6 +593,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case NO_COVERAGE:
+          if (!jsdocBuilder.recordNoCoverage()) {
+            addParserWarning(Msg.JSDOC_NOCOVERAGE);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case TYPE_SUMMARY:
           if (!jsdocBuilder.recordTypeSummary()) {
             addParserWarning(Msg.JSDOC_TYPESUMMARY);

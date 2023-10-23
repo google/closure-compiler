@@ -2249,6 +2249,21 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseNoCoverage_fileOverview() {
+    assertThat(parseFileOverview("@nocoverage*/").isNoCoverage()).isTrue();
+  }
+
+  @Test
+  public void testParseNoCoverage_extraTag() {
+    parseFileOverview("@nocoverage\n@nocoverage*/", "extra @nocoverage tag");
+  }
+
+  @Test
+  public void testParseNoCoverage_nonFileOverview() {
+    assertThat(parse("@nocoverage*/")).isNull();
+  }
+
+  @Test
   public void testParseNoDts1() {
     JSDocInfo doc = parse("@nodts*/", true);
     assertThat(doc.isNoDts()).isTrue();

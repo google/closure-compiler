@@ -26,12 +26,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
 
-/**
- * This class implements a traversal to instrument an AST for code coverage.
- */
+/** This class implements a traversal to instrument an AST for code coverage. */
 @GwtIncompatible("FileInstrumentationData")
-class CoverageInstrumentationCallback extends
-    NodeTraversal.AbstractPostOrderCallback {
+class CoverageInstrumentationCallback implements NodeTraversal.Callback {
 
   private final Map<String, FileInstrumentationData> instrumentationData;
   private final CoverageReach reach;
@@ -137,9 +134,18 @@ class CoverageInstrumentationCallback extends
         .srcrefTreeIfMissing(srcref);
   }
 
+  @Override
+  public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+    // Skip scripts that are marked with @nocoverage.
+    if (n.isScript() && n.getJSDocInfo() != null && n.getJSDocInfo().isNoCoverage()) {
+      return false;
+    }
+    return true;
+  }
+
   /**
-   * Instruments the JS code by inserting appropriate nodes into the AST. The
-   * instrumentation logic is tuned to collect "line coverage" data only.
+   * Instruments the JS code by inserting appropriate nodes into the AST. The instrumentation logic
+   * is tuned to collect "line coverage" data only.
    */
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
