@@ -24,9 +24,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,9 +46,9 @@ public final class SortedDependencies<InputT extends DependencyInfo> {
 
   private final List<InputT> userOrderedInputs = new ArrayList<>();
   private final List<InputT> importOrderedInputs = new ArrayList<>();
-  private final Set<InputT> completedInputs = new HashSet<>();
+  private final Set<InputT> completedInputs = new LinkedHashSet<>();
   private final Map<String, InputT> nonExportingInputs = new LinkedHashMap<>();
-  private final Map<String, InputT> exportingInputBySymbolName = new HashMap<>();
+  private final Map<String, InputT> exportingInputBySymbolName = new LinkedHashMap<>();
   // Maps an input A to the inputs it depends on, ie, inputs that provide stuff that A requires.
   private final SetMultimap<InputT, InputT> importedInputByImportingInput =
       LinkedHashMultimap.create();
@@ -68,7 +67,7 @@ public final class SortedDependencies<InputT extends DependencyInfo> {
    *     original order they were passed to the compiler.
    */
   public ImmutableList<InputT> getStrongDependenciesOf(List<InputT> rootInputs, boolean sorted) {
-    Set<InputT> includedInputs = new HashSet<>();
+    Set<InputT> includedInputs = new LinkedHashSet<>();
     Deque<InputT> worklist = new ArrayDeque<>(rootInputs);
     while (!worklist.isEmpty()) {
       InputT input = worklist.pop();
@@ -132,8 +131,8 @@ public final class SortedDependencies<InputT extends DependencyInfo> {
    * <p>Root inputs will never be in the returned list as they are all considered strong.
    */
   public ImmutableList<InputT> getSortedWeakDependenciesOf(List<InputT> rootInputs) {
-    Set<InputT> strongInputs = new HashSet<>(getSortedStrongDependenciesOf(rootInputs));
-    Set<InputT> weakInputs = new HashSet<>();
+    Set<InputT> strongInputs = new LinkedHashSet<>(getSortedStrongDependenciesOf(rootInputs));
+    Set<InputT> weakInputs = new LinkedHashSet<>();
     Deque<InputT> worklist = new ArrayDeque<>(strongInputs);
     while (!worklist.isEmpty()) {
       InputT input = worklist.pop();
