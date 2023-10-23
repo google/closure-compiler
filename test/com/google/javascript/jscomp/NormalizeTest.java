@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import org.junit.Before;
@@ -1145,7 +1145,7 @@ public final class NormalizeTest extends CompilerTestCase {
       (n) -> n.getBooleanProp(Node.IS_CONSTANT_NAME);
 
   private Set<Node> findNodesWithProperty(Node root, Predicate<Node> prop) {
-    final Set<Node> set = new HashSet<>();
+    final Set<Node> set = new LinkedHashSet<>();
 
     NodeTraversal.builder()
         .setCompiler(getLastCompiler())
