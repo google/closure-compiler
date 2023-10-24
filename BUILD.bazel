@@ -24,6 +24,10 @@ load("@rules_jvm_external//:defs.bzl", "java_export")
 
 package(licenses = ["notice"])
 
+exports_files([
+    "LICENSE",
+])
+
 filegroup(
     name = "sonatype_bundles",
     srcs = [
@@ -152,7 +156,9 @@ oss_java_library(
             "-target 11",
         ],
         resources = [
+            ":LICENSE",
             ":externs_zip",
+            "//license_check:THIRD_PARTY_NOTICES",
         ] + glob([
             "src/**/*.properties",
         ]),
