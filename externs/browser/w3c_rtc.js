@@ -2508,6 +2508,12 @@ RTCInboundRtpStreamStats.prototype.totalSamplesDuration;
 /** @const {number|undefined} */
 RTCInboundRtpStreamStats.prototype.framesReceived;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.freezeCount;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalFreezesDuration;
+
 /** @const {string|undefined} */
 RTCInboundRtpStreamStats.prototype.decoderImplementation;
 
