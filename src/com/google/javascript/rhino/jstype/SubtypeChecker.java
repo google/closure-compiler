@@ -48,8 +48,8 @@ import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import org.jspecify.nullness.Nullable;
@@ -84,7 +84,7 @@ final class SubtypeChecker {
   private Boolean isUsingStructuralTyping;
   private SubtypingMode subtypingMode;
 
-  private HashMap<CacheKey, MatchStatus> subtypeCache;
+  private LinkedHashMap<CacheKey, MatchStatus> subtypeCache;
 
   private boolean hasRun = false;
   private int recursionDepth = 0;
@@ -144,7 +144,7 @@ final class SubtypeChecker {
     // Wait to instantiate/use the cache until we have some hint that there may be recursion.
     if (this.recursionDepth > POTENTIALLY_CYCLIC_RECURSION_DEPTH) {
       if (this.subtypeCache == null) {
-        this.subtypeCache = new HashMap<>();
+        this.subtypeCache = new LinkedHashMap<>();
       }
     }
 
@@ -729,7 +729,7 @@ final class SubtypeChecker {
     COVARIANT,
     CONTRAVARIANT,
     BIVARIANT,
-    INVARIANT;
+    INVARIANT
   }
 
   private static final class CacheKey {

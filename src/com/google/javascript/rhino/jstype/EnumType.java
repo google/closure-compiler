@@ -46,7 +46,7 @@ import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -61,7 +61,7 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
   // the type of the individual elements
   private EnumElementType elementType;
   // the elements' names (they all have the same type)
-  private final Set<String> elements = new HashSet<>();
+  private final Set<String> elements = new LinkedHashSet<>();
   // the node representing rhs of the enum
   private final Node source;
   private final String googModuleId;
@@ -140,8 +140,8 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
 
   /**
    * Gets the elements defined on this enum.
-   * @return the elements' names defined on this enum. The returned set is
-   *         immutable.
+   *
+   * @return the elements' names defined on this enum. The returned set is immutable.
    */
   public Set<String> getElements() {
     return Collections.unmodifiableSet(elements);
@@ -149,6 +149,7 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
 
   /**
    * Defines a new element on this enum.
+   *
    * @param name the name of the new element
    * @param definingNode the {@code Node} that defines this new element
    * @return true iff the new element is added successfully
@@ -193,7 +194,8 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
     return visitor.caseObjectType(this);
   }
 
-  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+  @Override
+  <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
     return visitor.caseObjectType(this, that);
   }
 

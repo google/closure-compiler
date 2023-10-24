@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -51,7 +51,7 @@ import java.util.Map;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class MapBasedScope extends AbstractStaticScope {
-  private final Map<String, StaticTypedSlot> slots = new HashMap<>();
+  private final Map<String, StaticTypedSlot> slots = new LinkedHashMap<>();
 
   public MapBasedScope(Map<String, ? extends JSType> namesToTypes) {
     for (Map.Entry<String, ? extends JSType> entry : namesToTypes.entrySet()) {

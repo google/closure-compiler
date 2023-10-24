@@ -55,7 +55,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2255,11 +2254,11 @@ public class JSDocInfo implements Serializable {
 
     public boolean addLicense(String license) {
       // The vast majority of JSDoc doesn't have @license so it make sense to be lazy about building
-      // the HashSet.
+      // the LinkedHashSet.
       if (licenseTexts == null) {
-        // The HashSet is only used to remove duplicates, it is never read beyond the add,
+        // The LinkedHashSet is only used to remove duplicates, it is never read beyond the add,
         // so LinkedHashSet is not required.
-        licenseTexts = new HashSet<>();
+        licenseTexts = new LinkedHashSet<>();
       }
 
       if (!licenseTexts.add(license)) {

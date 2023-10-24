@@ -76,8 +76,8 @@ import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -180,7 +180,7 @@ public final class JSTypeRegistry {
   private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
 
   // Only needed for type resolution at the moment
-  private final transient Map<String, ClosureNamespace> closureNamespaces = new HashMap<>();
+  private final transient Map<String, ClosureNamespace> closureNamespaces = new LinkedHashMap<>();
 
   // NOTE: This would normally be "static final" but that causes unit test failures
   // when serializing and deserializing compiler state for multistage builds.
@@ -227,8 +227,8 @@ public final class JSTypeRegistry {
   // consider it to possibly have any property in droppedPropertiesOfUnions. This is a loose
   // check, but we restrict it to records that may be present in unions, and it allows us to
   // keep nonRefTypesIndexedByProperty small.
-  private final Set<String> propertiesOfSupertypesInUnions = new HashSet<>();
-  private final Set<String> droppedPropertiesOfUnions = new HashSet<>();
+  private final Set<String> propertiesOfSupertypesInUnions = new LinkedHashSet<>();
+  private final Set<String> droppedPropertiesOfUnions = new LinkedHashSet<>();
 
   // A map of properties to each reference type on which those properties have been declared.
   private final SetMultimap<String, ObjectType> eachRefTypeIndexedByProperty =

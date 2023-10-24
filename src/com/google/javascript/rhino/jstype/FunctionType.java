@@ -55,7 +55,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -592,7 +591,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   public final Collection<ObjectType> getAncestorInterfaces() {
-    Set<ObjectType> result = new HashSet<>();
+    Set<ObjectType> result = new LinkedHashSet<>();
     if (isConstructor()) {
       result.addAll((Collection<? extends ObjectType>) getImplementedInterfaces());
     } else {
@@ -921,9 +920,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   public final boolean hasEqualCallType(FunctionType that) {
-    return new EqualityChecker()
-        .setEqMethod(EqMethod.IDENTITY)
-        .check(this.call, that.call);
+    return new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this.call, that.call);
   }
 
   /**
@@ -1197,14 +1194,14 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   @Override
   public final Map<String, JSType> getPropertyTypeMap() {
     Map<String, JSType> propTypeMap = new LinkedHashMap<>();
-    updatePropertyTypeMap(this, propTypeMap, new HashSet<FunctionType>());
+    updatePropertyTypeMap(this, propTypeMap, new LinkedHashSet<FunctionType>());
     return propTypeMap;
   }
 
   // cache is added to prevent infinite recursion when retrieving
   // the super type: see testInterfaceExtendsLoop in TypeCheckTest.java
   private static void updatePropertyTypeMap(
-      FunctionType type, Map<String, JSType> propTypeMap, HashSet<FunctionType> cache) {
+      FunctionType type, Map<String, JSType> propTypeMap, LinkedHashSet<FunctionType> cache) {
     if (type == null) {
       return;
     }
@@ -1240,7 +1237,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * @return an array of all functions in the loop chain if a loop exists, otherwise returns null
    */
   public final List<FunctionType> checkExtendsLoop() {
-    return checkExtendsLoop(new HashSet<FunctionType>(), new ArrayList<FunctionType>());
+    return checkExtendsLoop(new LinkedHashSet<FunctionType>(), new ArrayList<FunctionType>());
   }
 
   private @Nullable List<FunctionType> checkExtendsLoop(
@@ -1551,6 +1548,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       this.kind = kind;
       return this;
     }
+
     /** Make this a constructor. */
     public Builder forConstructor() {
       this.kind = Kind.CONSTRUCTOR;

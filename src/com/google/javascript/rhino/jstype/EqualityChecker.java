@@ -46,7 +46,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -100,7 +100,7 @@ final class EqualityChecker {
 
   private EqMethod eqMethod;
 
-  private HashMap<CacheKey, MatchStatus> eqCache;
+  private LinkedHashMap<CacheKey, MatchStatus> eqCache;
   private int recursionDepth = 0;
   private boolean hasRun = false;
 
@@ -134,7 +134,7 @@ final class EqualityChecker {
     // Wait to instantiate/use the cache until we have some hint that there may be recursion.
     if (this.recursionDepth > POTENTIALLY_CYCLIC_RECURSION_DEPTH) {
       if (this.eqCache == null) {
-        this.eqCache = new HashMap<>();
+        this.eqCache = new LinkedHashMap<>();
       }
     }
 
