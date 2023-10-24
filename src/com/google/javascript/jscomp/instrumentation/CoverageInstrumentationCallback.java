@@ -137,10 +137,7 @@ class CoverageInstrumentationCallback implements NodeTraversal.Callback {
   @Override
   public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     // Skip scripts that are marked with @nocoverage.
-    if (n.isScript() && n.getJSDocInfo() != null && n.getJSDocInfo().isNoCoverage()) {
-      return false;
-    }
-    return true;
+    return !n.isScript() || n.getJSDocInfo() == null || !n.getJSDocInfo().isNoCoverage();
   }
 
   /**
