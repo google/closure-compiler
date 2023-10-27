@@ -8340,6 +8340,17 @@ google.maps.StreetViewControlOptions = function() {};
 google.maps.StreetViewControlOptions.prototype.position;
 
 /**
+ * Specifies the sources of panoramas to search. This allows a restriction to
+ * search for just official Google panoramas for example. Setting multiple
+ * sources will be evaluated as the intersection of those sources. Note:
+ * the {@link google.maps.StreetViewSource.OUTDOOR} source is not supported at
+ * this time.
+ * @default [{@link google.maps.StreetViewSource.DEFAULT}]
+ * @type {Iterable<!google.maps.StreetViewSource>|null|undefined}
+ */
+google.maps.StreetViewControlOptions.prototype.sources;
+
+/**
  * A layer that illustrates the locations where Street View is available.
  *
  * Access by calling `const {StreetViewCoverageLayer} = await
@@ -8494,10 +8505,20 @@ google.maps.StreetViewLocationRequest.prototype.preference;
 google.maps.StreetViewLocationRequest.prototype.radius;
 
 /**
+ * Specifies the sources of panoramas to search. This allows a restriction to
+ * search for just outdoor panoramas for example. Setting multiple sources will
+ * be evaluated as the intersection of those sources.
+ * @default [{@link google.maps.StreetViewSource.DEFAULT}]
+ * @type {!Iterable<!google.maps.StreetViewSource>|null|undefined}
+ */
+google.maps.StreetViewLocationRequest.prototype.sources;
+
+/**
  * Specifies the source of panoramas to search. This allows a restriction to
  * search for just outdoor panoramas for example.
  * @default {@link google.maps.StreetViewSource.DEFAULT}
  * @type {!google.maps.StreetViewSource|null|undefined}
+ * @deprecated Use <code>sources</code> instead.
  */
 google.maps.StreetViewLocationRequest.prototype.source;
 
@@ -9013,6 +9034,10 @@ google.maps.StreetViewSource = {
    * specific sources.
    */
   DEFAULT: 'default',
+  /**
+   * Limits Street View searches to official Google collections.
+   */
+  GOOGLE: 'google',
   /**
    * Limits Street View searches to outdoor collections. Indoor collections are
    * not included in search results. Note also that the search only returns
