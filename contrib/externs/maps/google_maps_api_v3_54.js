@@ -5777,30 +5777,6 @@ google.maps.MapOptions.prototype.minZoom;
 google.maps.MapOptions.prototype.noClear;
 
 /**
- * The enabled/disabled state of the Pan control. <p> Note: The Pan control is
- * not available in the new set of controls introduced in v3.22 of the Google
- * Maps JavaScript API. While using v3.22 and v3.23, you can choose to use the
- * earlier set of controls rather than the new controls, thus making the Pan
- * control available as part of the old control set. See <a
- * href="https://developers.google.com/maps/articles/v322-controls-diff">What&#39;s
- * New in the v3.22 Map Controls</a>.
- * @type {boolean|null|undefined}
- */
-google.maps.MapOptions.prototype.panControl;
-
-/**
- * The display options for the Pan control. <p> Note: The Pan control is not
- * available in the new set of controls introduced in v3.22 of the Google Maps
- * JavaScript API. While using v3.22 and v3.23, you can choose to use the
- * earlier set of controls rather than the new controls, thus making the Pan
- * control available as part of the old control set. See <a
- * href="https://developers.google.com/maps/articles/v322-controls-diff">What&#39;s
- * New in the v3.22 Map Controls</a>.
- * @type {google.maps.PanControlOptions|null|undefined}
- */
-google.maps.MapOptions.prototype.panControlOptions;
-
-/**
  * Defines a boundary that restricts the area of the map accessible to users.
  * When set, a user can only pan and zoom while the camera view stays inside the
  * limits of the boundary.
@@ -5924,6 +5900,20 @@ google.maps.MapOptions.prototype.zoomControlOptions;
  *     <code>"none"</code>.
  */
 google.maps.MapOptions.prototype.draggable;
+
+/**
+ * The enabled/disabled state of the Pan control. <p>
+ * @type {boolean|null|undefined}
+ * @deprecated The Pan control is deprecated as of September 2015.
+ */
+google.maps.MapOptions.prototype.panControl;
+
+/**
+ * The display options for the Pan control. <p>
+ * @type {google.maps.PanControlOptions|null|undefined}
+ * @deprecated The Pan control is deprecated as of September 2015.
+ */
+google.maps.MapOptions.prototype.panControlOptions;
 
 /**
  * @record
@@ -6351,6 +6341,12 @@ google.maps.MapsLibrary.prototype.TransitLayer;
  * @type {typeof google.maps.WebGLOverlayView}
  */
 google.maps.MapsLibrary.prototype.WebGLOverlayView;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.ZoomChangeEvent}
+ */
+google.maps.MapsLibrary.prototype.ZoomChangeEvent;
 
 /**
  * Base class for managing network errors in Maps.
@@ -10127,6 +10123,19 @@ google.maps.WebGLStateOptions = function() {};
  * @type {!WebGLRenderingContext}
  */
 google.maps.WebGLStateOptions.prototype.gl;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * This event is created from monitoring zoom change.
+ *
+ * Access by calling `const {ZoomChangeEvent} = await
+ * google.maps.importLibrary("maps")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.ZoomChangeEvent = function() {};
 
 /**
  * Options for the rendering of the zoom control.
@@ -15510,22 +15519,23 @@ google.maps.places.PlaceAspectRating.prototype.type;
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
- * Implementation of AutocompleteView for Places API
+ * <ul>
+<li>PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
+provides a UI component for the Places Autocomplete API. After loading the
+<code>places</code> library, an input with autocomplete functionality can be
+created in HTML. For example: <pre><code>&lt;gmp-placeautocomplete
+&gt;&lt;/gmp-placeautocomplete&gt;</code></pre></li>
+</ul>
  *
  * Access by calling `const {PlaceAutocompleteElement} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
+google.maps.importLibrary("places")`. See
+https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
  * @implements {google.maps.places.PlaceAutocompleteElementOptions}
+ * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceAutocompleteElement = function(options) {};
-
-/**
- * This Field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement|!SVGElement|null|undefined}
- */
-google.maps.places.PlaceAutocompleteElement.prototype.element;
 
 /**
  * The input element to show autocompletions for.
@@ -15533,14 +15543,7 @@ google.maps.places.PlaceAutocompleteElement.prototype.element;
  */
 google.maps.places.PlaceAutocompleteElement.prototype.inputElement;
 
-/**
- * Adds the given listener function to the given event name.
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.places.PlaceAutocompleteElement.prototype.addListener = function(
-    eventName, handler) {};
+
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -15558,12 +15561,6 @@ google.maps.places.PlaceAutocompleteElementOptions = function() {};
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype
     .componentRestrictions;
-
-/**
- * This Field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement|!SVGElement|null|undefined}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.element;
 
 /**
  * The input element to show autocompletions for.
@@ -15616,6 +15613,34 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
  * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created after the user selects a place with the Place
+ * Autocomplete Element. Access the selection with <code>event.place</code>.
+ *
+ * Access by calling `const {PlaceAutocompletePlaceSelectEvent} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.places.PlaceAutocompletePlaceSelectEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is emitted by the PlaceAutocompleteElement when there is an issue
+ * with the network request.
+ *
+ * Access by calling `const {PlaceAutocompleteRequestErrorEvent} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
 
 /**
  * A Place details query to be sent to the <code>PlacesService</code>.
