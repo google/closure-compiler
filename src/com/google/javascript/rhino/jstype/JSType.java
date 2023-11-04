@@ -210,6 +210,10 @@ public abstract class JSType {
     return false;
   }
 
+  public boolean isFromEmptyObjLitExtern() {
+    return false;
+  }
+
   /** Whether this is the prototype of a function. */
   // TODO(sdh): consider renaming this to isPrototypeObject.
   public boolean isFunctionPrototypeType() {
