@@ -333,7 +333,7 @@ public final class ConformanceRules {
         }
       }
       String separator = (result.note.isEmpty()) ? "" : "\n";
-      JSError err = JSError.make(n, msg, message, separator, result.note);
+      JSError err = JSError.make(requirement, n, msg, message, separator, result.note);
 
       String path = NodeUtil.getSourceName(n);
       AllowList allowlist = path != null ? findAllowListForPath(path) : null;

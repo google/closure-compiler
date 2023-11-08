@@ -50,10 +50,14 @@ public abstract class JSError implements Serializable {
   /** The default level, before any of the {@code WarningsGuard}s are applied. */
   public abstract CheckLevel getDefaultLevel();
 
+  /** Requirement that fails in the case of conformance violations. */
+  public abstract @Nullable Requirement getRequirement();
+
   private static final int DEFAULT_LINENO = -1;
   private static final int DEFAULT_CHARNO = -1;
   private static final @Nullable String DEFAULT_SOURCENAME = null;
   private static final @Nullable Node DEFAULT_NODE = null;
+  private static final @Nullable Requirement DEFAULT_REQUIREMENT = null;
 
   /**
    * Creates a JSError with no source information
@@ -90,6 +94,19 @@ public abstract class JSError implements Serializable {
     return builder(type, arguments).setNode(n).build();
   }
 
+  /**
+   * Creates a JSError from a requirement, file and Node position.
+   *
+   * @param requirement The conformance requirement that fails
+   * @param n Determines the line and char position and source file name
+   * @param type The DiagnosticType
+   * @param arguments Arguments to be incorporated into the message
+   */
+  public static JSError make(
+      Requirement requirement, Node n, DiagnosticType type, String... arguments) {
+    return builder(type, arguments).setNode(n).setRequirement(requirement).build();
+  }
+
   static final class Builder {
     private final DiagnosticType type;
     private final String[] args;
@@ -99,6 +116,7 @@ public abstract class JSError implements Serializable {
     private String sourceName = DEFAULT_SOURCENAME;
     private int lineno = DEFAULT_LINENO;
     private int charno = DEFAULT_CHARNO;
+    private Requirement requirement = DEFAULT_REQUIREMENT;
 
     private Builder(DiagnosticType type, String... args) {
       this.type = type;
@@ -136,6 +154,13 @@ public abstract class JSError implements Serializable {
       return this;
     }
 
+    /** Sets the requirement that fails in the case of conformance violations. */
+    @CanIgnoreReturnValue
+    Builder setRequirement(Requirement requirement) {
+      this.requirement = Preconditions.checkNotNull(requirement);
+      return this;
+    }
+
     /**
      * Sets the location where this error occurred
      *
@@ -156,7 +181,8 @@ public abstract class JSError implements Serializable {
     }
 
     JSError build() {
-      return new AutoValue_JSError(type, type.format(args), sourceName, lineno, charno, n, level);
+      return new AutoValue_JSError(
+          type, type.format(args), sourceName, lineno, charno, n, level, requirement);
     }
   }
 

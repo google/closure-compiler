@@ -71,6 +71,16 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
         jsonWriter.name("level").value(message.level == CheckLevel.ERROR ? "error" : "warning");
         jsonWriter.name("description").value(message.error.getDescription());
         jsonWriter.name("key").value(message.error.getType().key);
+        if (message.error.getRequirement() != null) {
+          jsonWriter.name("requirement").beginObject();
+          jsonWriter.name("ruleId").value(message.error.getRequirement().getRuleId());
+          jsonWriter.name("configFiles").beginArray();
+          for (String configFile : message.error.getRequirement().getConfigFileList()) {
+            jsonWriter.value(configFile);
+          }
+          jsonWriter.endArray();
+          jsonWriter.endObject();
+        }
         jsonWriter.name("source").value(sourceName);
         jsonWriter.name("line").value(lineNumber);
         jsonWriter.name("column").value(charno);
