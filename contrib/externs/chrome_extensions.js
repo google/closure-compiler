@@ -3063,6 +3063,7 @@ chrome.runtime.PlatformOs = {
   ANDROID: '',
   CROS: '',
   LINUX: '',
+  FUCHSIA: '',
   MAC: '',
   OPENBSD: '',
   WIN: '',
