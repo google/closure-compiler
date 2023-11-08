@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1905,8 +1906,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
+  @Ignore("b/78345133")
   // TODO(b/78345133): Re-enable if/when InlineFunctions supports inlining default parameters
-  public void disabled_testDefaultParametersNonTranspiling() {
+  @Test
+  public void testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -1959,9 +1962,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}(1,1,1,1,1))"));
   }
 
+  @Ignore
+  @Test
   // TODO(tbreisacher): Re-enable if/when InlineFunctions supports rest parameters that are
   // object patterns.
-  public void disabled_testRestObjectPatternParametersNonTranspiling() {
+  public void testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
