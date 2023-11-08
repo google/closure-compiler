@@ -135,11 +135,21 @@ Animation.prototype.timeline;
 var AnimationEffect = function() {};
 
 /**
+ * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEffect/getTiming)
+ * @return {!AnimationEffectTimingProperties}
+ */
+AnimationEffect.prototype.getTiming = function() {};
+
+/**
+ * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEffect/getComputedTiming)
  * @return {!ComputedTimingProperties}
  */
 AnimationEffect.prototype.getComputedTiming = function() {};
 
-/** @param {AnimationEffectTimingProperties=} timing */
+/**
+ * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEffect/updateTiming)
+ * @param {AnimationEffectTimingProperties=} timing
+ */
 AnimationEffect.prototype.updateTiming = function(timing) {};
 
 /** @type {!AnimationEffectTiming} */
