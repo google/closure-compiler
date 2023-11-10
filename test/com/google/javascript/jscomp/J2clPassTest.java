@@ -15,6 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+
+import com.google.javascript.jscomp.testing.ColorSubject;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.testing.NodeSubject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,10 +29,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class J2clPassTest extends CompilerTestCase {
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
+    enableTypeCheck();
+    replaceTypesWithColors();
     this.enableNormalize();
   }
 
@@ -124,7 +129,7 @@ public class J2clPassTest extends CompilerTestCase {
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
                     declarations,
-                    "",
+                    "/** @constructor */",
                     "var Foo = function() {};",
                     "FooInterface.$markImplementor(Foo);"))),
         expected(
@@ -132,9 +137,32 @@ public class J2clPassTest extends CompilerTestCase {
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
                     declarations,
-                    "",
+                    "/** @constructor */",
                     "var Foo = function() {};",
                     "{Foo.$implements__FooInterface = true;}"))));
+    final Node scriptNode = getLastCompiler().getJsRoot().getLastChild();
+    assertNode(scriptNode).isScript();
+    final Node inlinedBlock = scriptNode.getLastChild();
+    final Node varStatement = inlinedBlock.getPrevious();
+
+    final NodeSubject declaredFooNameNodeSubject =
+        assertNode(varStatement).isVar().hasOneChildThat().isName("Foo");
+    final ColorSubject declaredColorSubject = declaredFooNameNodeSubject.hasColorThat();
+
+    final NodeSubject inlinedFooNameNodeSubject =
+        assertNode(inlinedBlock)
+            .isBlock()
+            .hasOneChildThat()
+            .isExprResult()
+            .hasOneChildThat()
+            .isAssign()
+            .hasFirstChildThat()
+            .isGetProp()
+            .hasOneChildThat()
+            .isName("Foo");
+    final ColorSubject inlinedColorSubject = inlinedFooNameNodeSubject.hasColorThat();
+
+    inlinedColorSubject.isEqualTo(declaredColorSubject);
   }
 
   @Test

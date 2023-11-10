@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertAbout;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -77,6 +78,12 @@ public final class ColorSubject extends Subject {
 
   public void isConstructor() {
     check("isConstructor()").that(actualNonNull().isConstructor()).isTrue();
+  }
+
+  @CanIgnoreReturnValue
+  public ColorSubject isEqualTo(ColorSubject otherSubject) {
+    isEqualTo(otherSubject.actual);
+    return this;
   }
 
   public void propertiesKeepOriginalName() {
