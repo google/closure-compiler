@@ -20,12 +20,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -284,6 +287,10 @@ class FunctionArgumentInjector {
     ImmutableSet<String> namesAfterSideEffects =
         findParametersReferencedAfterSideEffect(argMap.keySet(), block);
 
+    // A map of var names to a set of all arg names they were used in.
+    // If an arg is deemed unsafe, we also add temps for all args using the same vars
+    HashMultimap<String, String> argNamesByVarName = HashMultimap.create();
+
     // Check for arguments that are evaluated more than once.
     for (Map.Entry<String, Node> entry : argMap.entrySet()) {
       String argName = entry.getKey();
@@ -293,6 +300,21 @@ class FunctionArgumentInjector {
       Node cArg = entry.getValue();
       boolean safe = true;
       int references = NodeUtil.getNameReferenceCount(block, argName);
+
+      if (cArg.isName()) {
+        argNamesByVarName.put(cArg.getString(), argName);
+      } else {
+        NodeUtil.visitPostOrder(
+            cArg,
+            (n) -> {
+              // if the var is assigned to while being passed to a function, add it to the bucket
+              if ((NodeUtil.isAssignmentOp(n) || NodeUtil.isUpdateOperator(n))
+                  && n.getFirstChild() != null
+                  && n.getFirstChild().isName()) {
+                argNamesByVarName.put(n.getFirstChild().getString(), argName);
+              }
+            });
+      }
 
       boolean argSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(cArg);
       if (!argSideEffects && references == 0) {
@@ -346,6 +368,12 @@ class FunctionArgumentInjector {
       }
 
       if (!safe) {
+        for (Collection<String> argBucket : argNamesByVarName.asMap().values()) {
+          if (argBucket.contains(argName)) {
+            namesNeedingTemps.addAll(argBucket);
+          }
+        }
+
         namesNeedingTemps.add(argName);
       }
     }

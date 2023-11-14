@@ -580,6 +580,70 @@ public final class FunctionArgumentInjectorTest {
         "function foo(...args){return args;} foo();", "foo", ImmutableSet.of("this", "args"));
   }
 
+  @Test
+  public void testAddingTempsForModifiedParams1() {
+    // The param is not modified so no need for temps.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x,x);", "foo", EMPTY_STRING_SET);
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams2() {
+    // The first param is modified, so we add a temp for it.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x=2,x,x);", "foo", ImmutableSet.of("a"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams3() {
+    // The second param is modified, with first param using the same var, so we add temps for both.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x=2,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams4() {
+    // The second param is modified, with first param using different var, so we only add temp for
+    // second.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(y,x=2,x);", "foo", ImmutableSet.of("b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams5() {
+    // The second param is modified with a more complex statement, we detect it and add temps for
+    // first two params.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,(y=2,x=1,z=6),x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams6() {
+    // The second param is modified with a function call, we detect it and add temps for first two
+    // params.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,(function(){y=2,x=1})(),x);",
+        "foo",
+        ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams7() {
+    // The second param is modified with addition, with first param using the same var, so we add
+    // temps for both.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,x+=2,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams8() {
+    // The second param is modified with increment, with first param using the same var, so we add
+    // temps for both.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x++,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams9() {
+    // The second param is used in addition but not modified, no temps needed.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x+2,x);", "foo", EMPTY_STRING_SET);
+  }
+
   private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);

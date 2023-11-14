@@ -3092,6 +3092,58 @@ public final class CommandLineRunnerTest {
     assertThat(lastCompiler.getOptions().crossChunkCodeMotionNoStubMethods).isTrue();
   }
 
+  @Test
+  public void testParamModification1() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, i = 5);"
+            + "}",
+        "window.a=function(b,c){return b.slice(c,5);};");
+  }
+
+  @Test
+  public void testParamModification2() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, (s='',i=5));"
+            + "}",
+        "window.a=function(b,c){return b.slice(c,5)}");
+  }
+
+  @Test
+  public void testParamModification3() {
+    args.add("--compilation_level=SIMPLE");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, (s='',i=5));"
+            + "}",
+        "function substr(a,b,c){return a.slice(b,c)} window.bug=function(a,b){return substr(a,b,5)}");
+  }
+
+  @Test
+  public void testParamModification4() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end, a, b, c) {"
+            + "  return value.slice(begin, end, a, b, c)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, i=5, i, i=7, i);"
+            + "}",
+        "window.a=function(c,b){var d=b,e=b=5,f=b,g=b=7;return c.slice(d,e,f,g,b)}");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
