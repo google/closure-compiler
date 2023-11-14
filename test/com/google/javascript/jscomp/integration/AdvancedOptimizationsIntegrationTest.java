@@ -58,6 +58,114 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testTSVariableReassignmentAndAliasingDueToDecoration() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addObject()
+                .addConsole()
+                .addClosureExterns()
+                .addExtra(
+                    // simulate "const tslib_1 = goog.require('tslib');",
+                    lines(
+                        "var tslib_1 = {", //
+                        "  __decorate: function(decorators, clazz) {}",
+                        "};"))
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "/* output - 1387 characters long */", //
+            "goog.module('main');",
+            "var module = module || { id: 'main.ts' };",
+            "var Foo_1;",
+            "/**",
+            " * @fileoverview added by tsickle",
+            " * Generated from: main.ts",
+            " * @suppress {checkTypes} added by tsickle",
+            " * @suppress {extraRequire} added by tsickle",
+            " * @suppress {missingRequire} added by tsickle",
+            " * @suppress {uselessCode} added by tsickle",
+            " * @suppress {missingReturn} added by tsickle",
+            " * @suppress {unusedPrivateMembers} added by tsickle",
+            " * @suppress {missingOverride} added by tsickle",
+            " * @suppress {const} added by tsickle",
+            " */",
+            "/**",
+            " * @param {?} arg",
+            " * @return {?}",
+            " */",
+            "function noopDecorator(arg) { return arg; }",
+            "let Foo = Foo_1 = class Foo {",
+            "    /**",
+            "     * @public",
+            "     * @return {void}",
+            "     */",
+            "    static foo() {",
+            "        console.log('Hello');",
+            "    }",
+            "    /**",
+            "     * @public",
+            "     * @return {void}",
+            "     */",
+            "    bar() {",
+            "        Foo_1.foo();",
+            "        console.log('ID: ' + Foo_1.ID + '');",
+            "    }",
+            "};",
+            "Foo.ID = 'original';",
+            "Foo.ID2 = Foo_1.ID;",
+            "(() => {",
+            "    Foo_1.foo();",
+            "    console.log('ID: ' + Foo_1.ID + '');",
+            "})();",
+            "Foo = Foo_1 = tslib_1.__decorate([",
+            "    noopDecorator",
+            "], Foo);",
+            "/* istanbul ignore if */",
+            "if (false) {",
+            "    /**",
+            "     * @type {string}",
+            "     * @public",
+            "     */",
+            "    Foo.ID;",
+            "    /**",
+            "     * @type {string}",
+            "     * @public",
+            "     */",
+            "    Foo.ID2;",
+            "    /* Skipping unhandled member: static {",
+            "        Foo.foo();",
+            "        console.log('ID: ' + Foo.ID + '');",
+            "      }*/",
+            "}",
+            "new Foo().bar();",
+            ""),
+        lines(
+            "var a, b = a = function() {",
+            "};",
+            "b.a = 'original';",
+            "b.c = a.a;",
+            // TODO: b/299055739 - a.b() is not defined because its definition was removed
+            "a.b();",
+            "console.log('ID: ' + a.a);",
+            "b = a = tslib_1.__decorate([function(c) {",
+            "  return c;",
+            "}], b);",
+            "new b();",
+            // TODO: b/299055739 - a.b() is not defined because its definition was removed
+            "a.b();",
+            "console.log('ID: ' + a.a);",
+            ""));
+  }
+
+  @Test
   public void testFoldSpread() {
     useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
