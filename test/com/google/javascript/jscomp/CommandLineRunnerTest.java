@@ -3144,6 +3144,19 @@ public final class CommandLineRunnerTest {
         "window.a=function(c,b){var d=b,e=b=5,f=b,g=b=7;return c.slice(d,e,f,g,b)}");
   }
 
+  @Test
+  public void testParamModification5() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (a, b, c) {"
+            + "  return substr(a, b+1, b=c);"
+            + "}",
+        "window.a=function(b,c,d){return b.slice(c+1,d)}");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

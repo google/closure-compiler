@@ -301,20 +301,14 @@ class FunctionArgumentInjector {
       boolean safe = true;
       int references = NodeUtil.getNameReferenceCount(block, argName);
 
-      if (cArg.isName()) {
-        argNamesByVarName.put(cArg.getString(), argName);
-      } else {
-        NodeUtil.visitPostOrder(
-            cArg,
-            (n) -> {
-              // if the var is assigned to while being passed to a function, add it to the bucket
-              if ((NodeUtil.isAssignmentOp(n) || NodeUtil.isUpdateOperator(n))
-                  && n.getFirstChild() != null
-                  && n.getFirstChild().isName()) {
-                argNamesByVarName.put(n.getFirstChild().getString(), argName);
-              }
-            });
-      }
+      // collect all var names used for the arg
+      NodeUtil.visitPostOrder(
+          cArg,
+          (n) -> {
+            if (n.isName()) {
+              argNamesByVarName.put(n.getString(), argName);
+            }
+          });
 
       boolean argSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(cArg);
       if (!argSideEffects && references == 0) {

@@ -3720,10 +3720,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "window.g = function(a, b, c) {",
             "  var JSCompiler_inline_result$jscomp$0;",
             "  {",
-            // TODO(b/298828688): don't assign `b = c` here before `a.slice(b + 1,` below, since
-            // `b = c` should execute after the `b + 1`.
+            "    var begin$jscomp$inline_2 = b + 1;",
             "    var end$jscomp$inline_3 = b = c;",
-            "    JSCompiler_inline_result$jscomp$0 = a.slice(b + 1, end$jscomp$inline_3);",
+            "    JSCompiler_inline_result$jscomp$0 = a.slice(begin$jscomp$inline_2, end$jscomp$inline_3);",
             "  }",
             "  return JSCompiler_inline_result$jscomp$0;",
             "};"));

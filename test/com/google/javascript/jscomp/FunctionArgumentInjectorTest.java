@@ -644,6 +644,13 @@ public final class FunctionArgumentInjectorTest {
     testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x+2,x);", "foo", EMPTY_STRING_SET);
   }
 
+  @Test
+  public void testAddingTempsForModifiedParams10() {
+    // The second param is used in addition, the third param is modified, temp all refs.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,x+2,x=5);", "foo", ImmutableSet.of("a", "b", "c"));
+  }
+
   private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
