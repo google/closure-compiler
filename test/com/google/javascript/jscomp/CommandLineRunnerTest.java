@@ -956,9 +956,8 @@ public final class CommandLineRunnerTest {
   public void testIssue504() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     test(
-        "void function() { alert('hi'); }();",
-        "alert('hi');void 0",
-        CheckSideEffects.USELESS_CODE_ERROR);
+        "void function() { alert('hi'); }();", //
+        "alert('hi');");
   }
 
   @Test

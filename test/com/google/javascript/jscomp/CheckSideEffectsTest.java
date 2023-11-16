@@ -164,12 +164,12 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame("for(; true; ) { bar() }");
     testSame("for(foo(); true; foo()) { bar() }");
     test(
-        "for(void 0; true; foo()) { bar() }",
-        "for(JSCOMPILER_PRESERVE(void 0); true; foo()) { bar() }",
+        "for(i < 5; true; foo()) { bar() }",
+        "for(JSCOMPILER_PRESERVE(i < 5); true; foo()) { bar() }",
         warning(e));
     test(
-        "for(foo(); true; void 0) { bar() }",
-        "for(foo(); true; JSCOMPILER_PRESERVE(void 0)) { bar() }",
+        "for(var i = foo(); i++; i < 5) { bar() }",
+        "for(var i = foo(); i++; JSCOMPILER_PRESERVE(i < 5)) { bar() }",
         warning(e));
     test(
         "for(foo(); true; (1, bar())) { bar() }",
@@ -288,11 +288,14 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
 
   @Test
   public void testIssue504() {
+    // See https://blickly.github.io/closure-compiler-issues/#504, though the `void` idiom in the
+    // original issue is still relevant externally (see ESLint's ignoreVoid option for the
+    // no-floating-promises rule), so it's no longer an error.
     test(
-        "void f();",
-        "JSCOMPILER_PRESERVE(void f());",
+        "+f();",
+        "JSCOMPILER_PRESERVE(+f());",
         warning(e)
-            .withMessage("Suspicious code. The result of the 'void' operator is not being used."));
+            .withMessage("Suspicious code. The result of the 'pos' operator is not being used."));
   }
 
   @Test
