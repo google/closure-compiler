@@ -1787,4 +1787,17 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("(f(), null)?.()");
     foldSame("f?.()");
   }
+
+  @Test
+  public void testRemoveUnusedVoid() {
+    // remove void at statement level
+    fold("void 0;", "");
+    fold("void foo();", "foo();");
+    // preserve void when passed somewhere else
+    foldSame("use(void 0);");
+    foldSame("use(void foo());");
+    foldSame("use(() => void foo());");
+
+    fold("void use(() => void foo());", "use(() => void foo());");
+  }
 }
