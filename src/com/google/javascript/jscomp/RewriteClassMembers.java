@@ -167,7 +167,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       NodeTraversal t, ClassRecord record, Node memberField) {
     checkArgument(memberField.isComputedFieldDef() || memberField.isComputedProp(), memberField);
 
-    Node compExpression = memberField.getFirstChild().detach();
+    Node compExpression = memberField.removeFirstChild();
     Node compFieldVar =
         astFactory
             .createSingleVarNameDeclaration(generateUniqueCompFieldVarName(t), compExpression)
@@ -278,12 +278,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           transpiledNode = astFactory.exprResult(callNode).srcrefTreeIfMissing(staticMember);
           break;
         case MEMBER_FIELD_DEF:
-          if (staticMember.getFirstChild() == null) {
+          if (!staticMember.hasChildren()) {
             transpiledNode =
                 convStaticMethodToCall(nameToUse, staticMember.detach(), /* callNode= */ null);
             break;
           }
-          blockNode = createBlockNodeWithReturn(staticMember.getFirstChild().detach());
+          blockNode = createBlockNodeWithReturn(staticMember.removeFirstChild());
           callNode =
               convBlockToStaticMethod(
                   t,
@@ -355,7 +355,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
               .createGetProp(receiver, staticMember.getString(), AstFactory.type(staticMember))
               .srcrefTreeIfMissing(staticMember);
     } else {
-      getPropOrElem = astFactory.createGetElem(receiver, staticMember.getFirstChild().detach());
+      getPropOrElem = astFactory.createGetElem(receiver, staticMember.removeFirstChild());
     }
 
     Node result;
@@ -411,7 +411,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     checkArgument(computedField.isComputedFieldDef(), computedField);
     checkArgument(computedField.getParent() == null, computedField);
     checkArgument(receiver.getParent() == null, receiver);
-    Node getElem = astFactory.createGetElem(receiver, computedField.getFirstChild().detach());
+    Node getElem = astFactory.createGetElem(receiver, computedField.removeFirstChild());
     Node fieldValue = computedField.getLastChild();
     Node result =
         (fieldValue != null)

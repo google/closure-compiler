@@ -22,6 +22,7 @@ import com.google.javascript.refactoring.NodeMetadata;
 import com.google.javascript.refactoring.Scanner;
 import com.google.javascript.refactoring.SuggestedFix;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 
 /**
  * Replaces goog.bind(..., this) with arrow functions. The pretty-printer does not do well with
@@ -31,8 +32,10 @@ import com.google.javascript.rhino.Node;
  * TODO(tbreisacher): Handle (function(){}).bind(this); as well.
  */
 public final class GoogBindToArrow extends Scanner {
+  private static final QualifiedName GOOG_BIND_NAME = QualifiedName.of("goog.bind");
+
   private static boolean isGoogBind(Node n) {
-    return n.isGetProp() && n.matchesQualifiedName("goog.bind");
+    return n.isGetProp() && GOOG_BIND_NAME.matches(n);
   }
 
   @Override
@@ -67,7 +70,7 @@ public final class GoogBindToArrow extends Scanner {
     if (body.hasOneChild()) {
       Node returnNode = body.getFirstChild();
       if (returnNode.isReturn()) {
-        arrowFunction.getLastChild().replaceWith(returnNode.getFirstChild().detach());
+        arrowFunction.getLastChild().replaceWith(returnNode.removeFirstChild());
       }
     }
 

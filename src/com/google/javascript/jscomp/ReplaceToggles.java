@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
-import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -86,7 +85,7 @@ class ReplaceToggles implements CompilerPass {
       if (NodeUtil.isNameDeclaration(n) && n.getFirstChild().matchesName(ORDINAL_VAR_NAME)) {
         Node rhs = n.getFirstFirstChild();
 
-        if (rhs == null && n.getToken() == Token.VAR) {
+        if (rhs == null && n.isVar()) {
           // An empty var is fine; it should get deleted later.
           return;
         } else if (!rhs.isObjectLit()) {
