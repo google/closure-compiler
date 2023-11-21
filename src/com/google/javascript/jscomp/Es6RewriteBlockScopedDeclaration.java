@@ -303,8 +303,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node name = newStatement.getFirstChild().cloneNode();
       // cloning also copies over any properties
       if (name.getBooleanProp(Node.IS_CONSTANT_NAME)) {
-        // if the initializer name was a const, it must no longer be a const var.
-        name.putProp(Node.IS_CONSTANT_NAME, false);
+        // if the initializer name was a const, it must no longer be a marked const. However,
+        // marking it as non-const requires us to also change all references to the initializer name
+        // in the for-in's body. That is expensive to do. Hence, we leave the initializer name and
+        // its references within the loop to be const (trade off optimizability for compile time).
       }
       newStatement.setToken(Token.VAR);
       extractInlineJSDoc(first, first.getFirstChild(), newStatement);
@@ -327,8 +329,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node newDeclaration = IR.var(name.detach()).srcref(declarationList);
       extractInlineJSDoc(declarationList, name, newDeclaration);
       if (name.getBooleanProp(Node.IS_CONSTANT_NAME)) {
-        // if the initializer name was a const, it must no longer be a const var after rewriting.
-        name.putProp(Node.IS_CONSTANT_NAME, false);
+        // if the initializer name was a const, it must no longer be a marked const. However,
+        // marking it as non-const requires us to also change all references to the initializer name
+        // in the for's body. That is expensive to do. Hence, we leave the initializer name and
+        // its references within the loop to be const (trade off optimizability for compile time).
       }
       // generate normalized var initializer (i.e. outside FOR)
       newDeclaration.insertBefore(insertSpot);
