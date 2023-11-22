@@ -6956,7 +6956,7 @@ chrome.sockets.udp.send = function(socketId, data, address, port, callback) {};
 
 /**
  * @param {number} socketId
- * @param {function()} callback
+ * @param {function()=} callback
  * @return {undefined}
  * @see https://developer.chrome.com/apps/sockets_udp#method-close
  */
