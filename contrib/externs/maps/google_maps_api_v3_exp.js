@@ -3171,6 +3171,7 @@ google.maps.FeatureType = {
   LOCALITY: 'LOCALITY',
   /**
    * Indicates a postal code as used to address postal mail within the country.
+   * Includes zip codes.
    */
   POSTAL_CODE: 'POSTAL_CODE',
   /**
@@ -15237,6 +15238,7 @@ google.maps.places.Place.prototype.hasDineIn;
 google.maps.places.Place.prototype.hasTakeout;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Whether a place has a wheelchair accessible entrance. Returns &#39;true&#39;
  * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
  * is unknown. Returns &#39;undefined&#39; if this field has not yet been
@@ -15635,6 +15637,12 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
  * @constructor
  */
 google.maps.places.PlaceAutocompletePlaceSelectEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {!google.maps.places.Place}
+ */
+google.maps.places.PlaceAutocompletePlaceSelectEvent.prototype.place;
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
