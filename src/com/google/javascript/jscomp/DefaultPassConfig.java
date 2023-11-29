@@ -832,6 +832,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.collapseAnonymousFunctions) {
+      // TODO: b/197349249 - Maybe we should just move this pass after denormalization. It seems
+      // weird to convert from function expression to function declaration while we're still
+      // supposed to be in a normalized state. But it requires testing as perhaps some optimizations
+      // in that range will get affected if we skip this rewriting.
       passes.maybeAdd(collapseAnonymousFunctions);
     }
 

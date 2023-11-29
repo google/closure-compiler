@@ -129,6 +129,18 @@ final class Normalize implements CompilerPass {
     compiler.reportChangeToEnclosingScope(n);
   }
 
+  /** Is this a name node of a function expression? */
+  private static boolean isFunctionExpressionNameNode(Node n) {
+    if (n == null || !n.isName()) {
+      return false;
+    }
+    Node parent = n.getParent();
+    if (parent == null) {
+      return false;
+    }
+    return NodeUtil.isFunctionExpression(parent) && n.isFirstChildOf(parent);
+  }
+
   @Override
   public void process(Node externs, Node root) {
     MakeDeclaredNamesUnique renamer =
@@ -193,7 +205,7 @@ final class Normalize implements CompilerPass {
       JSDocInfo info = (var != null) ? var.getJSDocInfo() : null;
 
       boolean shouldBeConstant =
-          (var != null && var.isConst())
+          (var != null && (var.isConst() || isFunctionExpressionNameNode(var.getNode())))
               || (info != null && info.isConstant())
               || NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
       boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
@@ -357,6 +369,7 @@ final class Normalize implements CompilerPass {
 
         case NAME:
           annotateConstantsByConvention(n);
+          annotateFunctionExpressionNameAsConstant(n);
           break;
 
         case ASSIGN_OR:
@@ -383,6 +396,14 @@ final class Normalize implements CompilerPass {
       if (!n.getBooleanProp(Node.IS_CONSTANT_NAME)
           && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
         checkState(!assertOnChange, "Not marked as constant when it should be: %s", n);
+        n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      }
+    }
+
+    /** Annotate function names on function expressions to be unconditionally constant */
+    private void annotateFunctionExpressionNameAsConstant(Node n) {
+      checkState(n.isName(), "Expected NAME node but got %s", n.getToken().toString());
+      if (isFunctionExpressionNameNode(n)) {
         n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
     }

@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,11 +57,45 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   @Test
   public void testLet() {
     test("let f = function() {};", "function f() {}");
+    Node fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    // The function name `f` is not marked as IS_CONSTANT_NAME property as LHS declaration is
+    // `let`.
+    checkState(!fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+    // The function name `f` and call name `f` are not marked as IS_CONSTANT_NAME property as LHS
+    // declaration is `let`
+    test("let f = function() {}; f();", "function f(){} f();");
+    fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    checkState(!fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+    Node calledFnName = fnName.getParent().getNext().getFirstFirstChild();
+    checkState(calledFnName.isName());
+    checkState(calledFnName.getString().equals("f"));
+    checkState(!calledFnName.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
   @Test
   public void testConst() {
-    test("let f = function() {};", "function f() {}");
+    // The function name `f` gets marked as IS_CONSTANT_NAME property as LHS declaration is `const`.
+    test("const f = function() {};", "function f() {}");
+    Node fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    checkState(fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+    // The function name `f` and call name `f` stays marked as IS_CONSTANT_NAME property
+    test("const f = function() {}; f();", "function f(){} f();");
+    fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    checkState(fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+    Node calledFnName = fnName.getParent().getNext().getFirstFirstChild();
+    checkState(calledFnName.isName());
+    checkState(calledFnName.getString().equals("f"));
+    checkState(calledFnName.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
   @Test

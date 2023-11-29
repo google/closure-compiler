@@ -1040,7 +1040,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testFunctionWithReferenceToArgumentsShouldNotBeOptimized() {
     testSame("function foo(a,b,c) { return arguments.size; }; foo(1);");
     testSame("var foo = function(a,b,c) { return arguments.size }; foo(1);");
-    testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2); bar(2);");
+    testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2);");
   }
 
   @Test
@@ -1065,11 +1065,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testFunctionWithTwoNames() {
     testSame("var foo = function bar(a,b) {};");
     testSame("var foo = function bar(a,b) {}; foo(1)");
-    testSame("var foo = function bar(a,b) {}; bar(1);");
     testSame("var foo = function bar(a,b) {}; foo(1); foo(2)");
-    testSame("var foo = function bar(a,b) {}; foo(1); bar(1)");
-    testSame("var foo = function bar(a,b) {}; foo(1); bar(2)");
-    testSame("var foo = function bar(a,b) {}; foo(1,2); bar(2,1)");
   }
 
   @Test

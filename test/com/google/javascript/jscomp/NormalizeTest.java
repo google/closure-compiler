@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -777,9 +778,11 @@ public final class NormalizeTest extends CompilerTestCase {
   @Test
   public void testNormalizeFunctionDeclarations() {
     testSame("function f() {}");
+    testSame("function f() {}; var g = f;");
     testSame("var f = function () {}");
     test("var f = function f() {}", "var f = function f$jscomp$1() {}");
     testSame("var f = function g() {}");
+    testSame("var f = function(){}; var g = f;");
     testSame("{function g() {}}");
     testSame("if (function g() {}) {}");
     testSame("if (true) {function g() {}}");
@@ -1088,6 +1091,120 @@ public final class NormalizeTest extends CompilerTestCase {
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
     }
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const even if
+  // the LHS declaration is a var
+  @Test
+  public void testRHSFunctionExpressionNameNodeIsConstant() {
+    testSame("var someNonConstVar = function foo() {};");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(1);
+    assertThat(constantNodes.iterator().next().getString()).isEqualTo("foo");
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const if the LHS
+  // is a const
+  @Test
+  public void testRHSFunctionExpressionNameNodeIsConstant1() {
+    testSame("const someConstVar = function foo() {};");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(2); // {someConstVar, foo}
+    Iterator<Node> itr = constantNodes.iterator();
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("someConstVar");
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const if the LHS
+  // is a const
+  @Test
+  public void testRHSFunctionExpressionNameNodeIsConstant2() {
+    testSame("const someConstVar = function foo() { foo(); };");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(3); // {someConstVar, foo, foo}
+    Iterator<Node> itr = constantNodes.iterator();
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("someConstVar");
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const
+  // irrespective of whether or not the LHS is a const
+  @Test
+  public void testRHSFunctionExpressionNameNodeIsConstant3() {
+    testSame(
+        lines(
+            "const someConstVar = function foo() { foo(); };",
+            // this call to something undefined but having the same name foo is not marked const
+            "foo();"));
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(3); // {someConstVar, foo, foo}
+    Iterator<Node> itr = constantNodes.iterator();
+
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("someConstVar");
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const
+  // irrespective of whether or not the LHS is a const
+  @Test
+  public void testRHSFunctionExpressionNameNodeIsConstant4() {
+    testSame(
+        lines(
+            "let someNonConstVar = function foo() { foo(); };",
+            // this call to something undefined but having the same name foo is not marked const
+            "foo();"));
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(2); // {foo, foo}
+    Iterator<Node> itr = constantNodes.iterator();
+
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("foo");
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const
+  // irrespective of whether or not the LHS is a const
+  @Test
+  public void testFunctionExpressionNameNodeIsConstant() {
+    testSame("use(function foo(i) { foo(i-1);});");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(2); // {foo, foo}
+    Iterator<Node> itr = constantNodes.iterator();
+
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("foo");
+  }
+
+  // Test that the name nodes of function expressions are unconditionally marked as const
+  // irrespective of whether or not the LHS is a const
+  @Test
+  public void testFunctionExpressionNameNodeIsConstant2() {
+    testSame(
+        lines(
+            "use(function foo(i) { foo(i-1);});",
+            // this call to something undefined but having the same name foo is not marked const
+            "foo();"));
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(2); // {foo, foo}
+    Iterator<Node> itr = constantNodes.iterator();
+
+    assertThat(itr.next().getString()).isEqualTo("foo");
+    assertThat(itr.next().getString()).isEqualTo("foo");
   }
 
   @Test

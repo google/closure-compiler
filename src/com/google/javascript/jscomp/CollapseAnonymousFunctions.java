@@ -83,6 +83,15 @@ class CollapseAnonymousFunctions extends AbstractPostOrderCallback implements Co
         && !value.isArrowFunction()
         && !isRecursiveFunction(value)) {
       Node fnName = value.getFirstChild();
+      if (fnName.getBooleanProp(Node.IS_CONSTANT_NAME)
+          && !name.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        // When the LHS name `f` is already a const `const f = function() {};`, then we must
+        // preserve its constness during this rewriting to `function f() {}`.
+        // When the LHS name `f` is non-const `var f = function() {}` or `let f = function() {}`, we
+        // must reset the constness as the function will no longer be an RHS function expression
+        // during this rewriting to `function f() {}`
+        fnName.putBooleanProp(Node.IS_CONSTANT_NAME, false);
+      }
       fnName.setString(name.getString());
       NodeUtil.copyNameAnnotations(name, fnName);
       value.detach();
