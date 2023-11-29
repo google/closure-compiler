@@ -3702,6 +3702,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testFileOverviewJSDoc_notOnTopOfFile() {
+    isIdeMode = true;
+
+    Node n = parse("// some comment \n let x; /** @fileoverview Hi mom! */ class Foo {}");
+    assertNode(n).hasType(Token.SCRIPT);
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
+
+    Node letNode = n.getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+    assertThat(letNode.getJSDocInfo()).isNull();
+
+    Node classNode = n.getSecondChild();
+    assertNode(classNode).hasType(Token.CLASS);
+    assertThat(classNode.getJSDocInfo()).isNull();
+  }
+
+  @Test
   public void testFileOverviewJSDocDoesNotHoseParsing() {
     assertNode(parse("/** @fileoverview Hi mom! \n */ function Foo() {}").getFirstChild())
         .hasType(Token.FUNCTION);
