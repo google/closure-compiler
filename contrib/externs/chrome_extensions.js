@@ -7042,14 +7042,68 @@ chrome.sockets.udp.setBroadcast = function(socketId, enabled, callback) {};
 
 
 /**
- * @type {!ChromeObjectEvent}
+ * @constructor
+ * @see https://developer.chrome.com/docs/extensions/reference/sockets_udp/#type-ReceiveInfo
+ */
+chrome.sockets.udp.ReceiveEventData = function() {};
+
+
+/** @type {number} */
+chrome.sockets.udp.ReceiveEventData.prototype.socketId;
+
+
+/** @type {!ArrayBuffer} */
+chrome.sockets.udp.ReceiveEventData.prototype.data;
+
+
+/** @type {!string} */
+chrome.sockets.udp.ReceiveEventData.prototype.remoteAddress;
+
+
+/** @type {!number} */
+chrome.sockets.udp.ReceiveEventData.prototype.remotePort;
+
+
+/**
+ * Event whose listeners take a ReceiveEventData parameter.
+ * @interface
+ * @extends {ChromeBaseEvent<function(!chrome.sockets.udp.ReceiveEventData)>}
+ */
+chrome.sockets.udp.ReceiveEvent = function() {};
+
+
+/**
+ * @type {!chrome.sockets.udp.ReceiveEvent}
  * @see https://developer.chrome.com/apps/sockets_udp#event-onReceive
  */
 chrome.sockets.udp.onReceive;
 
 
 /**
- * @type {!ChromeObjectEvent}
+ * @constructor
+ * @see https://developer.chrome.com/docs/extensions/reference/sockets_udp/#type-ReceiveErrorInfo
+ */
+chrome.sockets.udp.ReceiveErrorEventData = function() {};
+
+
+/** @type {number} */
+chrome.sockets.udp.ReceiveErrorEventData.prototype.socketId;
+
+
+/** @type {number} */
+chrome.sockets.udp.ReceiveErrorEventData.prototype.resultCode;
+
+
+/**
+ * Event whose listeners take a ReceiveErrorEventData parameter.
+ * @interface
+ * @extends {ChromeBaseEvent<function(!chrome.sockets.udp.ReceiveErrorEventData)>}
+ */
+chrome.sockets.udp.ReceiveErrorEvent = function() {};
+
+
+/**
+ * @type {!chrome.sockets.udp.ReceiveErrorEvent}
  * @see https://developer.chrome.com/apps/sockets_udp#event-onReceiveError
  */
 chrome.sockets.udp.onReceiveError;
