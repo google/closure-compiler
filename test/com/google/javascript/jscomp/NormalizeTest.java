@@ -853,6 +853,16 @@ public final class NormalizeTest extends CompilerTestCase {
         srcs("var a;", "let a; export {a as a};"),
         expected("var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"));
 
+    // Verify same local names in 2 different files get different new names
+    test(
+        srcs(
+            "function foo() {var a; a;}",
+            "function bar() {let a; let a$jscomp$1; a + a$jscomp$1;}"),
+        expected(
+            "function foo() {var a; a;}",
+            // TODO(b/313965492): Normalize generates wrong code here
+            "function bar() {let a$jscomp$1; let a$jscomp$1; a$jscomp$1 + a$jscomp$1;}"));
+
     test(
         srcs("var a;", "import {a as a} from './foo.js'; let b = a;"),
         expected("var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"));
