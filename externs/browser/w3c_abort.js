@@ -29,6 +29,27 @@
  */
 function AbortSignal() {}
 
+/**
+ * @param {*=} reason
+ * @return {!AbortSignal}
+ * @see https://dom.spec.whatwg.org/#dom-abortsignal-abort
+ */
+AbortSignal.abort = function(reason) {};
+
+/**
+ * @param {number} miliseconds
+ * @return {!AbortSignal}
+ * @see https://dom.spec.whatwg.org/#dom-abortsignal-timeout
+ */
+AbortSignal.timeout = function(miliseconds) {};
+
+/**
+ * @param {!Iterable} signals
+ * @return {!AbortSignal}
+ * @see https://dom.spec.whatwg.org/#dom-abortsignal-any
+ */
+AbortSignal.any = function(signals) {};
+
 /** @type {boolean} */
 AbortSignal.prototype.aborted;
 
