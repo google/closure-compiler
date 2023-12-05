@@ -762,14 +762,16 @@ BaseRenderingContext2D.prototype.clip = function(
 BaseRenderingContext2D.prototype.isPointInStroke = function(x, y) {};
 
 /**
- * @param {number} x
- * @param {number} y
- * @param {string=} opt_fillRule
+ * @param {!Path2D|number} pathOrX
+ * @param {number} xOrY
+ * @param {number|string=} yOrFillRule
+ * @param {string=} fillRule
  * @return {boolean}
  * @nosideeffects
+ * @see http://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/isPointInPath
  */
 BaseRenderingContext2D.prototype.isPointInPath = function(
-    x, y, opt_fillRule) {};
+    pathOrX, xOrY, yOrFillRule, fillRule) {};
 
 /**
  * @param {string} text
