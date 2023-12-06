@@ -20,9 +20,11 @@ import static com.google.javascript.jscomp.InlineAndCollapseProperties.PARTIAL_N
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
 import org.junit.Before;
@@ -109,6 +111,96 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "})();",
                 "var module$exports$C$staticPropOnC = 2;",
                 "")));
+  }
+
+  @Test
+  public void testTs52OutputChangeVariableReassignment() {
+    // This test case was created by executing
+    // AdvancedOptimizationsIntegrationTest#testTSVariableReassignmentAndAliasingDueToDecoration
+    // with `options.setPrintSourceAfterEachPass(true)`.
+    // The input source here is how the source code looks at the point just before
+    // InlineAndCollapseProperties runs in that test case.
+    test(
+        externs(
+            ImmutableList.of(
+                new TestExternsBuilder()
+                    .addObject()
+                    .addConsole()
+                    .addClosureExterns()
+                    .addExtra(
+                        // simulate "const tslib_1 = goog.require('tslib');",
+                        lines(
+                            "var tslib_1 = {", //
+                            "  __decorate: function(decorators, clazz) {}",
+                            "};"))
+                    .buildExternsFile("externs.js"))),
+        srcs(
+            lines(
+                "var module$exports$main = {};", //
+                "var module$contents$main_module =",
+                "    module$contents$main_module || {id: 'main.ts'};",
+                "var module$contents$main_Foo_1;",
+                "function module$contents$main_noopDecorator(arg) {",
+                "  return arg;",
+                "}",
+                "var i0$classdecl$var0 = function() {};",
+                "i0$classdecl$var0.foo = function() {",
+                "  console.log('Hello');",
+                "};",
+                "i0$classdecl$var0.prototype.bar = function() {",
+                "  module$contents$main_Foo_1.foo();",
+                "  console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "};",
+                "var module$contents$main_Foo = module$contents$main_Foo_1 = i0$classdecl$var0;",
+                "module$contents$main_Foo.ID = 'original';",
+                "module$contents$main_Foo.ID2 = module$contents$main_Foo_1.ID;",
+                "(function() {",
+                "module$contents$main_Foo_1.foo();",
+                "console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "})();",
+                "module$contents$main_Foo = module$contents$main_Foo_1 = tslib_1.__decorate(",
+                "    [module$contents$main_noopDecorator], module$contents$main_Foo);",
+                "if (false) {",
+                "  module$contents$main_Foo.ID;",
+                "  module$contents$main_Foo.ID2;",
+                "}",
+                "(new module$contents$main_Foo()).bar();")),
+        expected(
+            lines(
+                "var module$contents$main_module =", //
+                "    module$contents$main_module || {id: 'main.ts'};",
+                "var module$contents$main_Foo_1;",
+                "function module$contents$main_noopDecorator(arg) {",
+                "  return arg;",
+                "}",
+                "var i0$classdecl$var0 = function() {};",
+                // TODO : b/299055739 - This unit test doesn't reproduce the problem we want to fix.
+                // In the AdvancedOptimizationsIntegrationTest test case
+                // `.foo` gets collapsed, which breaks this code.
+                // Why doesn't that happen in this unit test case?
+                // This one line is the only difference
+                "i0$classdecl$var0.foo = function() {",
+                // "var i0$classdecl$var0$foo = function() {",
+                "  console.log('Hello');",
+                "};",
+                "i0$classdecl$var0.prototype.bar = function() {",
+                "  module$contents$main_Foo_1.foo();",
+                "  console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "};",
+                "var module$contents$main_Foo = module$contents$main_Foo_1 = i0$classdecl$var0;",
+                "module$contents$main_Foo.ID = 'original';",
+                "module$contents$main_Foo.ID2 = module$contents$main_Foo_1.ID;",
+                "(function() {",
+                "module$contents$main_Foo_1.foo();",
+                "console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "})();",
+                "module$contents$main_Foo = module$contents$main_Foo_1 = tslib_1.__decorate(",
+                "    [module$contents$main_noopDecorator], module$contents$main_Foo);",
+                "if (false) {",
+                "  module$contents$main_Foo.ID;",
+                "  module$contents$main_Foo.ID2;",
+                "}",
+                "(new module$contents$main_Foo()).bar();")));
   }
 
   @Test
