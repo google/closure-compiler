@@ -758,7 +758,27 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
               int id = incrementNameCount(name);
               String newName = null;
               if (id != 0) {
+                // this name is exists at another source location, create another
+                // The stack of renamers traverse all scopes and track all declared
+                // names and their counts. This means, they could generate conflicting names if it
+                // does not see the entire program (e.g. when used via library level checks).
+                // Currently, the renamer stack is only used by Normalize and ScopedAliases pass.
+                // 1. When used in normalize, renamer stack see the whole program and tracks the
+                // name counts. Hence, when generating a unique name, it's guaranteed to generate
+                // names unique across the entire program.
+                // 2. When used in ScopedAliases, the renamer stack sees only the current library
+                // sources. But, in this use case, is only renames locals within a function body.
+                // Hence it does not generate conflicting declarations.
+                // We could stop tracking the counts and switch the renamer to use the file hashcode
+                // based UniqueIdSupplier, but that requires updating several unit tests that run
+                // normalize.
                 newName = getUniqueName(name, id);
+                while (nameUsage.contains(newName)) {
+                  // if the newName also exists at another location, create another
+                  id = incrementNameCount(newName);
+                  newName = getUniqueName(name, id);
+                }
+                reserveName(newName); // reserve this new name so that it's never reused
               }
               declarations.put(name, newName);
             }

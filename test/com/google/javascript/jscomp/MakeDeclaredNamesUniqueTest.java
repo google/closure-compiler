@@ -1032,6 +1032,117 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTwoMethodsInTheSameFileWithSameLocalNames() {
+    this.useDefaultRenamer = true;
+    // Verify same local names in 2 different files get different new names.
+    // The ContextualRenamer renames an "oldName" by adding "$jscomp$" + "id" as a suffix string.
+    // So, when another declaration containing "$jscomp$id" exists at any other source location in
+    // the entire JS program (due to a prior renaming), the ContextualRenamer should not generate
+    // that same name when renaming this declaration.
+    test(
+        "function foo() {var a; a;} function bar() {let a; let a$jscomp$1; a + a$jscomp$1;}",
+        lines(
+            "function foo() {var a; a;}",
+            "function bar() {",
+            "  let a$jscomp$1; let a$jscomp$1$jscomp$1; ",
+            "  a$jscomp$1 + a$jscomp$1$jscomp$1;",
+            "}"));
+
+    test(
+        "function bar() {let a; let a$jscomp$1; a + a$jscomp$1;} function foo() {var a; a;}",
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; ",
+            "  a + a$jscomp$1;",
+            "}",
+            "function foo() {var a$jscomp$2; a$jscomp$2;}"));
+
+    // tests when name with $jscomp$1 suffix comes first
+    test(
+        "function bar() {let a$jscomp$1; let a; a + a$jscomp$1;} function foo() {var a; a;}",
+        lines(
+            "function bar() {",
+            "  let a$jscomp$1; let a;",
+            "  a + a$jscomp$1;",
+            "}",
+            "function foo() {var a$jscomp$2; a$jscomp$2;}"));
+
+    test(
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; ",
+            "  a + a$jscomp$1;",
+            "}",
+            "function foo() {",
+            // tests when a$jscomp$2 declared later in the same scope
+
+            "  var a; a; var a$jscomp$2; a$jscomp$2;",
+            "}"),
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; a + a$jscomp$1;",
+            "}",
+            "function foo() {",
+            "  var a$jscomp$2; a$jscomp$2; ",
+            "  var a$jscomp$2$jscomp$1; a$jscomp$2$jscomp$1;",
+            "}"));
+
+    test(
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; a + a$jscomp$1;",
+            "}",
+            "function foo() {",
+            // tests when a$jscomp$2 declared first in the same scope
+            "  var a$jscomp$2; a$jscomp$2; var a; a;",
+            "}"),
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; a + a$jscomp$1;",
+            "}",
+            "function foo() {",
+            "  var a$jscomp$2; a$jscomp$2; var a$jscomp$3; a$jscomp$3;",
+            "}"));
+
+    test(
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; a + a$jscomp$1;",
+            "}",
+            "function foo() {",
+            // tests when a$jscomp$2 is declared in another scope
+            "  var a; a;",
+            "}",
+            "function baz() { ",
+            "  var a$jscomp$2; a$jscomp$2;",
+            "}"),
+        lines(
+            "function bar() {",
+            "  let a; let a$jscomp$1; a + a$jscomp$1;",
+            "}",
+            "function foo() {",
+            "  var a$jscomp$2; a$jscomp$2;",
+            "}",
+            "function baz() { ",
+            "  var a$jscomp$2$jscomp$1; a$jscomp$2$jscomp$1;",
+            "}"));
+  }
+
+  @Test
+  public void testTwoFilesWithSameLocalNames() {
+    this.useDefaultRenamer = true;
+    // Verify same local names in 2 different files get different new names
+    test(
+        srcs(
+            "function foo() {var a; a;}",
+            "function bar() {let a; let a$jscomp$1; a + a$jscomp$1;}"),
+        expected(
+            "function foo() {var a; a;}",
+            "function bar() {let a$jscomp$1; let a$jscomp$1$jscomp$1; a$jscomp$1 +"
+                + " a$jscomp$1$jscomp$1;}"));
+  }
+
+  @Test
   public void testImportStarWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
