@@ -491,6 +491,10 @@ public final class GatherModuleMetadata implements CompilerPass {
               toggleModules.add(nameVar);
               toggleModuleNames.add(name);
             } else if (currentModule.metadataBuilder.moduleType() != ModuleType.GOOG_PROVIDE) {
+              // Side-effect toggle-module imports are not allowed, since they don't actually do
+              // anything.  We allow it in `goog.provide()` files because there's no other way to
+              // import, and since toggle modules don't declare a legacy namespace, it's unusable
+              // without a `goog.module.get()` (so we can catch the toggle use there, instead).
               t.report(n, INVALID_TOGGLE_USAGE, "import must be assigned");
             }
           }
