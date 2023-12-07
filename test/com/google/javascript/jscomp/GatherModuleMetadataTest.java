@@ -795,6 +795,31 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testToggleModuleGoogModuleGet() {
+    testSame(
+        lines(
+            "goog.provide('foo.soy.gencode');",
+            "goog.require('foo$2etoggles');",
+            "function foo() {",
+            "  console.log(goog.module.get('foo$2etoggles').TOGGLE_foo);",
+            "  console.log(goog.module.get('bar').TOGGLE_bar);",
+            "}"));
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.readToggles()).containsExactly("foo");
+  }
+
+  @Test
+  public void testToggleModulegoogModuleGetInvalidUsage() {
+    test(
+        srcs(
+            lines(
+                "goog.provide('foo.soy.gencode');",
+                "goog.require('foo$2etoggles');", //
+                "const toggles = goog.module.get('foo$2etoggles');")),
+        error(GatherModuleMetadata.INVALID_TOGGLE_USAGE));
+  }
+
+  @Test
   public void testToggleModuleImportAsSideEffect() {
     test(
         srcs("goog.require('foo$2etoggles');"), //

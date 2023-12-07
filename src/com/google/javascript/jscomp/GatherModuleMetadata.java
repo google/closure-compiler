@@ -93,6 +93,8 @@ public final class GatherModuleMetadata implements CompilerPass {
 
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
+  private static final Node GOOG_MODULE_GET =
+      IR.getprop(IR.getprop(IR.name("goog"), "module"), "get");
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
   private static final Node GOOG_REQUIRE_TYPE = IR.getprop(IR.name("goog"), "requireType");
   private static final Node GOOG_MAYBE_REQUIRE =
@@ -435,6 +437,22 @@ public final class GatherModuleMetadata implements CompilerPass {
           t.report(n, ClosureRewriteModule.INVALID_MODULE_ID_ARG);
           currentModule.metadataBuilder.usesClosure(false);
         }
+      } else if (getprop.matchesQualifiedName(GOOG_MODULE_GET)) {
+        // Look for a module named ???$2etoggles and a getprop of .TOGGLE_??? on the call's return
+        if (!n.hasTwoChildren()
+            || !n.getLastChild().isStringLit()
+            || !n.getLastChild().getString().endsWith("$2etoggles")) {
+          return; // only do anything with toggle namespaces
+        }
+        Node parent = n.getParent();
+        if (!parent.isGetProp()) {
+          t.report(
+              n,
+              INVALID_TOGGLE_USAGE,
+              "goog.module.get of toggles module must immediately look up a single toggle");
+          return;
+        }
+        addToggle(t, parent, parent.getString());
       } else if (getprop.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
         currentModule.recordDeclareLegacyNamespace(n);
       } else if (getprop.matchesQualifiedName(GOOG_DECLARE_MODULE_ID)
@@ -472,7 +490,7 @@ public final class GatherModuleMetadata implements CompilerPass {
               Var nameVar = t.getScope().getVar(name);
               toggleModules.add(nameVar);
               toggleModuleNames.add(name);
-            } else {
+            } else if (currentModule.metadataBuilder.moduleType() != ModuleType.GOOG_PROVIDE) {
               t.report(n, INVALID_TOGGLE_USAGE, "import must be assigned");
             }
           }
