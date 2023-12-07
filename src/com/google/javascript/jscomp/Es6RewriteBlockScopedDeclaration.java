@@ -486,7 +486,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // later.
         LoopObject loopObject = loopObjectMap.get(loopNode);
         Node objectLitNextIteration = astFactory.createObjectLit();
-        renameVarsToProperties(loopObject, objectLitNextIteration);
+        renameVarsToProperties(loopObject, objectLitNextIteration, loopNode);
 
         Node updateLoopObject =
             astFactory.createAssign(createLoopObjectNameNode(loopObject), objectLitNextIteration);
@@ -752,13 +752,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
 
     /** Rename all variables in the loop object to properties */
-    private void renameVarsToProperties(LoopObject loopObject, Node objectLitNextIteration) {
+    private void renameVarsToProperties(
+        LoopObject loopObject, Node objectLitNextIteration, Node scopeRoot) {
       for (Var var : loopObject.vars) {
         String newPropertyName = getLoopObjPropName(var);
+        Node newPropertyValue =
+            var.getScopeRoot() == scopeRoot
+                ? createLoopVarReferenceReplacement(loopObject, var.getNameNode(), newPropertyName)
+                : astFactory.createUndefinedValue();
         objectLitNextIteration.addChildToBack(
-            astFactory.createStringKey(
-                newPropertyName,
-                createLoopVarReferenceReplacement(loopObject, var.getNameNode(), newPropertyName)));
+            astFactory.createStringKey(newPropertyName, newPropertyValue));
       }
     }
 
