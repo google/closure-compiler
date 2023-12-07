@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -291,6 +292,10 @@ class FunctionArgumentInjector {
     // If an arg is deemed unsafe, we also add temps for all args using the same vars
     HashMultimap<String, String> argNamesByVarName = HashMultimap.create();
 
+    // Track all args that either have a name reference or is a function call
+    // These args with automatically be temped if subsequent args are unsafe
+    HashSet<String> nameOrCallArgNames = new HashSet<>();
+
     // Check for arguments that are evaluated more than once.
     for (Map.Entry<String, Node> entry : argMap.entrySet()) {
       String argName = entry.getKey();
@@ -306,7 +311,13 @@ class FunctionArgumentInjector {
           cArg,
           (n) -> {
             if (n.isName()) {
+              nameOrCallArgNames.add(argName);
               argNamesByVarName.put(n.getString(), argName);
+            } else if (n.isCall()) {
+              // If the arg contains a function call and is unsafe,
+              // temp all previous name or call args
+              argNamesByVarName.putAll(n.toString(), nameOrCallArgNames);
+              argNamesByVarName.put(n.toString(), argName);
             }
           });
 

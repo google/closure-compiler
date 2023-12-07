@@ -3727,4 +3727,45 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  return JSCompiler_inline_result$jscomp$0;",
             "};"));
   }
+
+  @Test
+  public void testVariableUsedAsArgumentAndModifiedInFollowingFunctionArgumentCall() {
+    test(
+        lines(
+            "let text = 'abc'",
+            "let index = 1",
+            "",
+            "// This function is necessary. Inlining the slice call will make temps for both args",
+            "function slice(begin, end) {",
+            "  return text.slice(begin, end);",
+            "}",
+            "",
+            "function getEndIndex() {",
+            "  if (index)",
+            "    // This line is the only relevant line in this function - the index is being modified.",
+            "    // Everything else is artifical complexity to prevent the function from being inlined",
+            "    return ++index;",
+            "",
+            "  return getEndIndex();",
+            "}",
+            "",
+            "window.bug = slice(index - 1, getEndIndex());"),
+        lines(
+            "let text = 'abc';",
+            "let index = 1;",
+            "function getEndIndex() {",
+            "  if (index) {",
+            "    return ++index;",
+            "  }",
+            "  return getEndIndex();",
+            "}",
+            "var JSCompiler_temp_const$jscomp$0 = window;",
+            "var JSCompiler_inline_result$jscomp$1;",
+            "{",
+            "  var begin$jscomp$inline_2 = index - 1;",
+            "  var end$jscomp$inline_3 = getEndIndex();",
+            "  JSCompiler_inline_result$jscomp$1 = text.slice(begin$jscomp$inline_2, end$jscomp$inline_3);",
+            "}",
+            "JSCompiler_temp_const$jscomp$0.bug = JSCompiler_inline_result$jscomp$1;"));
+  }
 }

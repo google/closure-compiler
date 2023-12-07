@@ -651,6 +651,24 @@ public final class FunctionArgumentInjectorTest {
         "function foo(a,b,c){a;b;c;}; foo(x,x+2,x=5);", "foo", ImmutableSet.of("a", "b", "c"));
   }
 
+  @Test
+  public void testAddingTempsForCallParams1() {
+    // The second param is a function call so temp it and previous args with names or calls
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; var x; function incX(){return ++x}; foo(x,incX(),x);",
+        "foo",
+        ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForCallParams2() {
+    // The second param is a function call so temp it. The first param is a number, so not inlined.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; var x; function incX(){return ++x}; foo(4,incX(),x);",
+        "foo",
+        ImmutableSet.of("b"));
+  }
+
   private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
