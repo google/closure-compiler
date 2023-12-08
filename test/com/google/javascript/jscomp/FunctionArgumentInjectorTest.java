@@ -248,6 +248,94 @@ public final class FunctionArgumentInjectorTest {
   }
 
   @Test
+  public void testAddingTempsForModifiedParams1() {
+    // The param is not modified so no need for temps.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x,x);", "foo", EMPTY_STRING_SET);
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams2() {
+    // The first param is modified, so we add a temp for it.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x=2,x,x);", "foo", ImmutableSet.of("a"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams3() {
+    // The second param is modified, with first param using the same var, so we add temps for both.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x=2,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams4() {
+    // The second param is modified, so we only add temp for both.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(y,x=2,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams5() {
+    // The second param is modified with a more complex statement, we detect it and add temps for
+    // first two params.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,(y=2,x=1,z=6),x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams6() {
+    // The second param is modified with a function call, we detect it and add temps for first two
+    // params.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,(function(){y=2,x=1})(),x);",
+        "foo",
+        ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams7() {
+    // The second param is modified with addition, so we add temps for both.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,x+=2,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams8() {
+    // The second param is modified with increment, with first param using the same var, so we add
+    // temps for both.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x++,x);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams9() {
+    // The second param is used in addition but not modified, no temps needed.
+    testNeededTemps("function foo(a,b,c){a;b;c;}; foo(x,x+2,x);", "foo", EMPTY_STRING_SET);
+  }
+
+  @Test
+  public void testAddingTempsForModifiedParams10() {
+    // The second param is used in addition, the third param is modified, temp all refs.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; foo(x,x+2,x=5);", "foo", ImmutableSet.of("a", "b", "c"));
+  }
+
+  @Test
+  public void testAddingTempsForCallParams1() {
+    // The second param is a function call so temp it and previous args with names or calls
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; var x; function incX(){return ++x}; foo(x,incX(),x);",
+        "foo",
+        ImmutableSet.of("a", "b"));
+  }
+
+  @Test
+  public void testAddingTempsForCallParams2() {
+    // The second param is a function call so temp it.
+    testNeededTemps(
+        "function foo(a,b,c){a;b;c;}; var x; function incX(){return ++x}; foo(4,incX(),x);",
+        "foo",
+        // TODO: b/309593967 The first param is a number, so we can skip creating a temp for it.
+        ImmutableSet.of("a", "b"));
+  }
+
+  @Test
   public void testMaybeAddTempsForCallArguments2_optChain() {
     // Unreferenced parameters without side-effects can be ignored.
     testNeededTemps("function foo(a,b){}; foo?.(1,2);", "foo", EMPTY_STRING_SET);
@@ -268,9 +356,9 @@ public final class FunctionArgumentInjectorTest {
 
   @Test
   public void testMaybeAddTempsForCallArguments4() {
-    // Parameters referenced after side-effect must
-    // be assigned to temps.
-    testNeededTemps("function foo(a,b){a;goo();b;}; foo(x,y);", "foo", ImmutableSet.of("b"));
+    // Parameters referenced after side-effect must be assigned to temps.
+    // Since b is getting hoisted as a temp, we must also hoist a.
+    testNeededTemps("function foo(a,b){a;goo();b;}; foo(x,y);", "foo", ImmutableSet.of("a", "b"));
   }
 
   @Test
@@ -285,7 +373,8 @@ public final class FunctionArgumentInjectorTest {
   @Test
   public void testMaybeAddTempsForCallArguments4_optChain() {
     // Parameters referenced after side-effect must be assigned to temps.
-    testNeededTemps("function foo(a,b){a;goo();b;}; foo?.(x,y);", "foo", ImmutableSet.of("b"));
+    // Any param before that param must also be assigned to a temp.
+    testNeededTemps("function foo(a,b){a;goo();b;}; foo?.(x,y);", "foo", ImmutableSet.of("a", "b"));
   }
 
   @Test
@@ -498,9 +587,12 @@ public final class FunctionArgumentInjectorTest {
   @Test
   public void testMaybeAddTempsForCallArguments27() {
     // Ensure the correct parameter is given a temp, when there is
-    // a this value in the call.
+    // a this value in the call. Since `goo()` is a call and needs to be evaluated in a temp before
+    // inlining, we also evaluate the previous args in temporaries.
     testNeededTemps(
-        "function foo(a,b,c){}; foo.call(this,1,goo(),2);", "foo", ImmutableSet.of("b"));
+        "function foo(a,b,c){}; foo.call(this,1,goo(),2);",
+        "foo",
+        ImmutableSet.of("this", "a", "b"));
   }
 
   @Test
@@ -540,6 +632,23 @@ public final class FunctionArgumentInjectorTest {
   }
 
   @Test
+  public void testMaybeAddTempsForCallArguments_argMutatesState() {
+    // `y=z` changes state. We create a temp for it and all previous args that it could affect.
+    testNeededTemps(
+        "function foo(a, b, c){return a+b+c;}; foo(x,y+1,y=z);",
+        "foo",
+        ImmutableSet.of("a", "b", "c"));
+  }
+
+  @Test
+  public void testMaybeAddTempsForCallArguments_argMutatesState2() {
+    // `y=z` happens before `y+1` is read. Safe to inject a temp for evaluating it.
+    // Consequently, we also inject a temp for previous arg `a` that it could affect
+    testNeededTemps(
+        "function foo(a, b, c){return a+b+c;}; foo(x,y=z,y+1);", "foo", ImmutableSet.of("a", "b"));
+  }
+
+  @Test
   public void testMaybeAddTempsForCallArgumentsInLoops() {
     // A mutable parameter referenced in loop needs a
     // temporary.
@@ -564,8 +673,9 @@ public final class FunctionArgumentInjectorTest {
 
   @Test
   public void testMaybeAddTempsForCallArgumentsRestParam2() {
+    // Since args is hoisted as a temp, we must also hoist the previous argument a
     testNeededTemps(
-        "function foo(x, ...args) {return args;} foo(1, 2);", "foo", ImmutableSet.of("args"));
+        "function foo(x, ...args) {return args;} foo(1, 2);", "foo", ImmutableSet.of("x", "args"));
   }
 
   @Test

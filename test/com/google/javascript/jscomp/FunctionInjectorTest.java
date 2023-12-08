@@ -1203,16 +1203,24 @@ public final class FunctionInjectorTest {
   @Test
   public void testInline19b() {
     helperInlineReferenceToFunction(
-        "var x = 1; var y = 2;"
-            + "function foo(a,b){y = a; x = b;}; "
-            + "function bar() { foo(x,y); }",
-        "var x = 1; var y = 2;"
-            + "function foo(a,b){y = a; x = b;}; "
-            + "function bar() {"
-            + "{var b$jscomp$inline_1=y;"
-            + "y = x;"
-            + "x = b$jscomp$inline_1;}"
-            + "}",
+        lines(
+            "var x = 1; var y = 2;",
+            "function foo(a, b) {",
+            "  y = a; x = b;",
+            "};",
+            "function bar() { foo(x,y); }"),
+        lines(
+            "var x = 1; var y = 2;",
+            "function foo(a,b){",
+            "  y = a; x = b;",
+            "};",
+            "function bar() {",
+            "{",
+            "  var a$jscomp$inline_0=x;",
+            "  var b$jscomp$inline_1=y;",
+            "  y=a$jscomp$inline_0;",
+            "  x=b$jscomp$inline_1}",
+            "}"),
         "foo",
         INLINE_BLOCK);
   }

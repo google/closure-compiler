@@ -58,6 +58,37 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testVariableUsedAsArgumentMultipleTimes() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "let value = 10;",
+            "function add(a,b) {",
+            " return (value = 0)+a+b;",
+            "}",
+            "let f = function() {",
+            "  return add(++value, ++value);",
+            "};",
+            "console.log(f());"),
+        lines(
+            "let a = 10;",
+            "var b = console, c = b.log, d, e = ++a, f = ++a;",
+            "d = (a = 0) + e + f;",
+            "c.call(b, d);"));
+  }
+
+  @Test
   public void testTSVariableReassignmentAndAliasingDueToDecoration() {
     useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();

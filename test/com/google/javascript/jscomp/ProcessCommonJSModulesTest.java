@@ -413,10 +413,14 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "}));"),
         lines(
             "/** @const */ var module$test = {};",
-            "var angular$$module$test = ",
-            "    typeof angular === 'undefined' ? module$other.default : angular;",
-            "console.log(angular$$module$test);",
-            "module$test.default = angular$$module$test;"));
+            "var global$$module$test = this;",
+            "var factory$$module$test = function(angular) {",
+            "  console.log(angular);",
+            "  return angular;",
+            "};",
+            "/** @const */ ",
+            "module$test.default = factory$$module$test(typeof angular === \"undefined\" ?"
+                + " module$other.default : angular);"));
 
     testModules(
         "test.js",
@@ -435,10 +439,14 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "}));"),
         lines(
             "/** @const */ var module$test = {};",
-            "var angular$$module$test = ",
-            "    typeof angular === 'undefined' ? module$other.default : angular;",
-            "console.log(angular$$module$test);",
-            "module$test.default = angular$$module$test;"));
+            "var global$$module$test = this;",
+            "var factory$$module$test = function(angular) {",
+            "  console.log(angular);",
+            "  return angular;",
+            "};",
+            "/** @const */ ",
+            "module$test.default = factory$$module$test(typeof angular === \"undefined\" ?"
+                + " module$other.default : angular);"));
   }
 
   @Test
@@ -1039,6 +1047,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
             "/** @suppress {duplicate} */",
             "module$test.default;",
+            "var root$$module$test = this;",
             "var factory$$module$test = function (angular, tinymce) {",
             "  console.log(angular, tinymce)",
             "};",
@@ -1105,10 +1114,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "})));"),
         lines(
             "/** @const */ var module$test={/** @const */ default: {}};",
-            "module$test.default.webkit=userAgentContains$$module$test('webkit');",
-            "function userAgentContains$$module$test(str) {",
-            "  return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
-            "}"));
+            "var global$$module$test = this;",
+            "var factory$$module$test = function(exports) {",
+            "  var webkit = userAgentContains(\"webkit\");",
+            "  function userAgentContains(str) {",
+            "    return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
+            "  }",
+            "  exports.webkit = webkit;",
+            "};",
+            "factory$$module$test(module$test.default);"));
   }
 
   @Test
@@ -1127,7 +1141,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "});"),
         lines(
             "/** @const */ var module$test={};",
-            "/** @const */ module$test.default = {foo: 'bar'};"));
+            "var root$$module$test = this;",
+            "var name$$module$test = \"foobar\";",
+            "var definition$$module$test = function() {",
+            "  return {foo: 'bar'};",
+            "};",
+            "/** @const */",
+            "module$test.default = definition$$module$test();"));
   }
 
   @Test
@@ -1224,12 +1244,18 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "})"),
         lines(
             "/** @const */ var module$test = {};",
-            "var Fingerprint2$$module$test = function() {",
-            "  if (!(this instanceof Fingerprint2$$module$test)) {",
-            "    return new Fingerprint2$$module$test();",
-            "  }",
+            "var name$$module$test = \"Fingerprint2\";",
+            "var context$$module$test = this;",
+            "var definition$$module$test = function() {",
+            "  var Fingerprint2 = function() {",
+            "    if (!(this instanceof Fingerprint2)) {",
+            "      return new Fingerprint2();",
+            "    }",
+            "  };",
+            "  return Fingerprint2;",
             "};",
-            "module$test.default = Fingerprint2$$module$test;"));
+            "/** @const */ ",
+            "module$test.default = definition$$module$test();"));
   }
 
   @Test
