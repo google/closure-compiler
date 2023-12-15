@@ -65,7 +65,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           "JSC_GOOG_SCOPE_HIDDEN_TYPE",
           "Found a goog.scope local type declaration.\n"
               + "If you can't yet migrate this file to goog.module, use a /** @private */"
-              + " declaration within the goog.provide namepsace.");
+              + " declaration within the goog.provide namespace.");
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
