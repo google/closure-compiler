@@ -794,8 +794,10 @@ public final class UnionType extends JSType {
           // 5) alternate:Array and current:Array<string> ==> Array
           // 6) alternate:Array and
           //    current:Object<string> ==> Array|Object<string>
-          // 7) alternate:Array<string> and
-          //    current:Array<number> ==> Array<?>
+          // 7a) alternate:Object<string> and
+          //     current:Object<number> ==> Object<?>
+          // 7b) alternate:ReadonlyArray<string> and
+          //     current:ReadonlyArray<number> ==> ReadonlyArray<string>|ReadonlyArray<number>
           // 8) alternate:Array<string> and
           //    current:Array<string> ==> Array<string>
           // 9) alternate:Array<string> and
@@ -823,15 +825,15 @@ public final class UnionType extends JSType {
               if (current.equals(alternate)) {
                 // case 8
                 return this;
-              } else {
-                // case 7: replace with a merged alternate specialized on `?`.
+              } else if (!templatizedCurrent.getReferencedType().isReadonlyArrayType()) {
+                // case 7a: replace with a merged alternate specialized on `?`.
                 ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
                 // Providing no type-parameter values specializes `rawType` on `?` by default.
                 alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
                 removeCurrent = true;
               }
             }
-            // case 9: leave current, add alternate
+            // case 9 & 7b: leave current, add alternate
           }
           // Otherwise leave both templatized types.
         } else if (isSubtype(alternate, current)) {

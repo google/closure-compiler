@@ -279,6 +279,10 @@ public abstract class JSType {
     return false;
   }
 
+  public boolean isReadonlyArrayType() {
+    return false;
+  }
+
   public boolean isBooleanObjectType() {
     return false;
   }

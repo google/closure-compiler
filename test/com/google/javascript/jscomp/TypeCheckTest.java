@@ -4383,6 +4383,54 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testReadonlyArrayUnionIndexAccessStringElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string>|!ReadonlyArray<string>} */ const a = [];"
+                + "/** @const {!null} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : string\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayUnionIndexAccessOverlappingElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string|undefined>|!ReadonlyArray<string>} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : (string|undefined)\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayUnionIndexAccessDisjointElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string|number>|!ReadonlyArray<boolean>} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : (boolean|number|string)\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
   public void testUnionIndexAccessIncompatibleBecomesUnknown() {
     newTest()
         .addSource(
