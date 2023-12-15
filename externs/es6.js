@@ -486,7 +486,7 @@ TypedArray.prototype.copyWithin = function(target, start, opt_end) {};
 TypedArray.prototype.entries = function() {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : ?} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {boolean}
  * @template S
@@ -506,7 +506,7 @@ TypedArray.prototype.every = function(callback, opt_thisArg) {};
 TypedArray.prototype.fill = function(value, opt_begin, opt_end) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {THIS}
  * @this {THIS}
@@ -516,7 +516,7 @@ TypedArray.prototype.fill = function(value, opt_begin, opt_end) {};
 TypedArray.prototype.filter = function(callback, opt_thisArg) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {(number|undefined)}
  * @template S
@@ -525,7 +525,7 @@ TypedArray.prototype.filter = function(callback, opt_thisArg) {};
 TypedArray.prototype.find = function(callback, opt_thisArg) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {number}
  * @template S
@@ -649,7 +649,7 @@ TypedArray.prototype.set = function(array, opt_offset) {};
 TypedArray.prototype.slice = function(opt_begin, opt_end) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {boolean}
  * @template S
@@ -1566,7 +1566,7 @@ Array.prototype.entries;
 
 /**
  * @override
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
  * @this {IArrayLike<T>|string}
@@ -1578,7 +1578,7 @@ Array.prototype.find = function(predicateFn, opt_this) {};
 
 /**
  * @override
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {number}
  * @this {IArrayLike<T>|string}
@@ -1694,7 +1694,7 @@ ReadonlyArray.prototype.entries;
 
 
 /**
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
  * @this {IArrayLike<T>|string}
@@ -1705,7 +1705,7 @@ ReadonlyArray.prototype.find = function(predicateFn, opt_this) {};
 
 
 /**
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {number}
  * @this {IArrayLike<T>|string}

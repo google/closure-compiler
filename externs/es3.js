@@ -725,7 +725,7 @@ ReadonlyArray.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -736,7 +736,7 @@ ReadonlyArray.prototype.every = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -793,7 +793,7 @@ ReadonlyArray.prototype.map = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -1009,7 +1009,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -1021,7 +1021,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -1083,7 +1083,7 @@ Array.prototype.map = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}

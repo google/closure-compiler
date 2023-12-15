@@ -113302,7 +113302,7 @@ typed_asts {
       file_on_disk {
       }
       source_kind: EXTERN
-      num_bytes_plus_one: 162560
+      num_bytes_plus_one: 162512
       num_lines_plus_one: 5785
     }
     source_file {
