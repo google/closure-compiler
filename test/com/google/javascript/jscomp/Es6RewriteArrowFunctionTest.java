@@ -111,7 +111,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInArrowPlacesAliasAboveContainingStatement() {
-    // We use `switch` here becuse it's a very complex kind of statement.
+    // We use `switch` here because it's a very complex kind of statement.
     test(
         "switch(a) { case b: (() => { this; })(); }",
         lines(
@@ -124,7 +124,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInMultipleArrowsPlacesOneAliasAboveContainingStatement() {
-    // We use `switch` here becuse it's a very complex kind of statement.
+    // We use `switch` here because it's a very complex kind of statement.
     test(
         lines(
             "switch(a) {",
@@ -145,7 +145,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInMultipleArrowsPlacesOneAliasAboveAllContainingStatements() {
-    // We use `switch` here becuse it's a very complex kind of statement.
+    // We use `switch` here because it's a very complex kind of statement.
     test(
         lines(
             "switch(a) {",
