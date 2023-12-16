@@ -3828,7 +3828,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String code = "(x)=>{this.foo[0](3);}";
     String expectedCode =
         ""
-            + "var $jscomp$this = this;\n" // TODO(tomnguyen): Avoid printing this line.
+            + "var $jscomp$this$3556498$0 = this;\n" // TODO(tomnguyen): Avoid printing this line.
             + "(function(x) {\n" // TODO(tomnguyen): This should print as an => function.
             + "  this.foo[0](3);\n"
             + "});\n";

@@ -56,11 +56,11 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case SCRIPT:
-        contextStack.push(contextForScript(n));
+        contextStack.push(contextForScript(n, t.getInput()));
         break;
       case FUNCTION:
         if (!n.isArrowFunction()) {
-          contextStack.push(contextForFunction(n));
+          contextStack.push(contextForFunction(n, t.getInput()));
         }
         break;
       case SUPER:
@@ -119,7 +119,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     Node scopeBody = context.scopeBody;
 
     if (context.needsThisVar) {
-      Node name = astFactory.createName(THIS_VAR, context.getThisType());
+      Node name = astFactory.createName(THIS_VAR + "$" + context.uniqueId, context.getThisType());
       Node thisVar = IR.constNode(name, astFactory.createThis(context.getThisType()));
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       thisVar.srcrefTreeIfMissing(scopeBody);
@@ -164,15 +164,20 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     final Node scopeBody;
     final boolean isConstructor;
     @Nullable Node lastSuperStatement = null; // Last statement in the body that refers to super().
+    // An object of ThisAndArgumentsContext exists for each Script and each Function. Store a
+    // uniqueId string based on the script node's filename's hash. This gets used to generate a
+    // unique name when rewriting `this` to `$jscomp$this`.
+    String uniqueId = "";
 
     boolean needsThisVar = false;
     private AstFactory.@Nullable Type thisType;
 
     boolean needsArgumentsVar = false;
 
-    private ThisAndArgumentsContext(Node scopeBody, boolean isConstructor) {
+    private ThisAndArgumentsContext(Node scopeBody, boolean isConstructor, String uniqueId) {
       this.scopeBody = scopeBody;
       this.isConstructor = isConstructor;
+      this.uniqueId = uniqueId;
     }
 
     AstFactory.@Nullable Type getThisType() {
@@ -193,13 +198,17 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     }
   }
 
-  private ThisAndArgumentsContext contextForFunction(Node functionNode) {
+  private ThisAndArgumentsContext contextForFunction(Node functionNode, CompilerInput input) {
     Node scopeBody = functionNode.getLastChild();
-    return new ThisAndArgumentsContext(scopeBody, NodeUtil.isEs6Constructor(functionNode));
+    return new ThisAndArgumentsContext(
+        scopeBody,
+        NodeUtil.isEs6Constructor(functionNode),
+        compiler.getUniqueIdSupplier().getUniqueId(input));
   }
 
-  private ThisAndArgumentsContext contextForScript(Node scriptNode) {
-    return new ThisAndArgumentsContext(scriptNode, /* isConstructor= */ false);
+  private ThisAndArgumentsContext contextForScript(Node scriptNode, CompilerInput input) {
+    return new ThisAndArgumentsContext(
+        scriptNode, /* isConstructor= */ false, compiler.getUniqueIdSupplier().getUniqueId(input));
   }
 
   /**
@@ -226,7 +235,10 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
       if (n.isThis()) {
         context.setNeedsThisVarWithType(AstFactory.type(n));
 
-        Node name = astFactory.createName(THIS_VAR, context.getThisType()).srcref(n);
+        Node name =
+            astFactory
+                .createName(THIS_VAR + "$" + context.uniqueId, context.getThisType())
+                .srcref(n);
         name.makeNonIndexable();
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("this");
