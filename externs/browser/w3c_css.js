@@ -2845,6 +2845,25 @@ Element.prototype.clientWidth;
  */
 Element.prototype.clientHeight;
 
+/**
+ * @record
+ * @see https://drafts.csswg.org/cssom-view/#dictdef-checkvisibilityoptions
+ */
+function CheckVisibilityOptions() {}
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.checkOpacity;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.checkVisibilityCSS;
+
+/**
+ * @param {CheckVisibilityOptions=} options
+ * @return {boolean}
+ * @see https://drafts.csswg.org/cssom-view/#dom-element-checkvisibility
+ */
+Element.prototype.checkVisibility = function(options) {};
+
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-htmlelement-interface
 
 /**
