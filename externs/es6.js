@@ -534,6 +534,24 @@ TypedArray.prototype.find = function(callback, opt_thisArg) {};
 TypedArray.prototype.findIndex = function(callback, opt_thisArg) {};
 
 /**
+ * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {S=} opt_thisArg
+ * @return {(number|undefined)}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findLast
+ */
+TypedArray.prototype.findLast = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {S=} opt_thisArg
+ * @return {number}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findLastIndex
+ */
+TypedArray.prototype.findLastIndex = function(callback, opt_thisArg) {};
+
+/**
  * @param {function(this:S, number, number, !TypedArray) : ?} callback
  * @param {S=} opt_thisArg
  * @return {undefined}
@@ -1587,6 +1605,30 @@ Array.prototype.find = function(predicateFn, opt_this) {};
  */
 Array.prototype.findIndex = function(predicateFn, opt_this) {};
 
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {T|undefined}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlast
+ */
+Array.prototype.findLast = function(predicateFn, opt_this) {};
+
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlastindex
+ */
+Array.prototype.findLastIndex = function(predicateFn, opt_this) {};
 
 /**
  * @param {T} value
@@ -1713,6 +1755,29 @@ ReadonlyArray.prototype.find = function(predicateFn, opt_this) {};
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
  */
 ReadonlyArray.prototype.findIndex = function(predicateFn, opt_this) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {T|undefined}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlast
+ */
+ReadonlyArray.prototype.findLast = function(predicateFn, opt_this) {};
+
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlastindex
+ */
+ReadonlyArray.prototype.findLastIndex = function(predicateFn, opt_this) {};
 
 
 /**

@@ -29,6 +29,8 @@ delete Array.prototype.copyWithin;
 delete Array.prototype.fill;
 delete Array.prototype.find;
 delete Array.prototype.findIndex;
+delete Array.prototype.findLast;
+delete Array.prototype.findLastIndex;
 delete Array.prototype.includes;
 
 // this works here because Map is a property on the global object
@@ -96,6 +98,26 @@ delete Int32Array.prototype.at;
 delete Uint32Array.prototype.at;
 delete Float32Array.prototype.at;
 delete Float64Array.prototype.at;
+
+delete Int8Array.prototype.findLast;
+delete Uint8Array.prototype.findLast;
+delete Uint8ClampedArray.prototype.findLast;
+delete Int16Array.prototype.findLast;
+delete Uint16Array.prototype.findLast;
+delete Int32Array.prototype.findLast;
+delete Uint32Array.prototype.findLast;
+delete Float32Array.prototype.findLast;
+delete Float64Array.prototype.findLast;
+
+delete Int8Array.prototype.findLastIndex;
+delete Uint8Array.prototype.findLastIndex;
+delete Uint8ClampedArray.prototype.findLastIndex;
+delete Int16Array.prototype.findLastIndex;
+delete Uint16Array.prototype.findLastIndex;
+delete Int32Array.prototype.findLastIndex;
+delete Uint32Array.prototype.findLastIndex;
+delete Float32Array.prototype.findLastIndex;
+delete Float64Array.prototype.findLastIndex;
 
 delete Symbol;
 

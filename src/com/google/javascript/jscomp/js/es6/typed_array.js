@@ -15,9 +15,11 @@
  */
 
 /**
- * @fileoverview Brings in all ES6 TypedArray polyfills.
+ * @fileoverview Brings in all ES6+ TypedArray polyfills.
  * @suppress {uselessCode}
  */
 'require es6/typedarray/at';
 'require es6/typedarray/copywithin';
 'require es6/typedarray/fill';
+'require es6/typedarray/findlast';
+'require es6/typedarray/findlastindex';
