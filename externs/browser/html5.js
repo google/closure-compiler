@@ -2622,6 +2622,12 @@ TextTrack.prototype.activeCues;
 TextTrack.prototype.cues;
 
 /**
+ * @const {string}
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-texttrack-id-dev
+ */
+TextTrack.prototype.id;
+
+/**
  * @type {string}
  */
 TextTrack.prototype.mode;
