@@ -45,6 +45,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableNormalize();
     enableMultistageCompilation();
   }
 
@@ -309,7 +310,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     Sources srcs = srcs("var x, y; for (let x, y;;) {}");
     // normalized var decls outside the for loop
     Expected expected =
-        expected("var x, y; var x$jscomp$1 = void 0; var y$jscomp$1 = void 0; for (;;) {}");
+        expected("var x; var y; var x$jscomp$1 = void 0; var y$jscomp$1 = void 0; for (;;) {}");
     test(srcs, expected);
   }
 
@@ -508,7 +509,17 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "     }",
                 "  };",
                 "}"));
-    testSame(srcs);
+    Expected expected =
+        expected(
+            lines(
+                "function f() {",
+                "  return function foo() {",
+                "     var i = 0;", // normalized; no rewriting change in this pass
+                "     for (; i < 10; i++) {",
+                "     }",
+                "  };",
+                "}"));
+    test(srcs, expected);
   }
 
   @Test
@@ -575,16 +586,16 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test(
         lines(
-            // TODO: b/197349249  This unnormalized code would not reach this pass once this
-            // pass runs post normalize. The test must then be updated to the new "normalized"
-            // code form:
+            // enableNormalize() changes this test source to the following before this pass runs:
             //  var x; for (x in y) { ...}
             "for (var x in y) {", //
             "  /** @type {number} */",
             "  let i;",
             "}"),
         lines(
-            "for (var x in y) {", //
+            // this pass does nothing to an already normalized for with hoisted var declaration
+            "var x;", //
+            "for (x in y) {", //
             "  var i = void 0;",
             "}"));
 
@@ -677,10 +688,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "/** @const */ var arr = [];",
                 "var LOOP$0 = {}",
-                "while (true) {",
-                "  LOOP$0 = {",
-                "    i: void 0",
-                "  };",
+                "for (; true; LOOP$0 = {i:void 0}) {",
                 "  LOOP$0.i = 0;",
                 "  arr.push(",
                 "      (function(LOOP$0$PARAM$1) {",
@@ -923,8 +931,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var i;",
-                "var LOOP$0={};",
                 "i = 0;",
+                "var LOOP$0={};",
                 "for(;; LOOP$0 = { x: void 0 }) {",
                 "  LOOP$0.x = 0;",
                 "  var f = (function(LOOP$0$PARAM$1) {",
@@ -943,8 +951,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     expected =
         expected(
             lines(
-                "var LOOP$0={};",
                 "foo();",
+                "var LOOP$0={};",
                 "for(;; LOOP$0 = { x: void 0 }) {",
                 "  LOOP$0.x = 0;",
                 "  var f = (function(LOOP$0$PARAM$1) {",
@@ -1042,7 +1050,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 ""));
     loopClosureTest(srcs, expected);
 
-    // while case - TODO: b/197349249 Delete after b/197349249 is fixed
     srcs =
         srcs(
             lines(
@@ -1061,10 +1068,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
                 "/** @const */ var arr = [];",
                 "var LOOP$0 = {};",
-                "while (values.length > 0) {",
-                "  LOOP$0 = {",
-                "    v: void 0",
-                "  };",
+                "for (; values.length > 0; LOOP$0 = {v:void 0}) {",
                 "  /** @const */ LOOP$0.v = values.shift();",
                 "  if (LOOP$0.v == 'skipMe') {",
                 "    continue",
@@ -1078,7 +1082,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "}"));
     loopClosureTest(srcs, expected);
 
-    // do-while case - TODO: b/197349249 Delete after b/197349249 is fixed
     srcs =
         srcs(
             lines(
@@ -1136,10 +1139,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
                 "/** @const */ var arr = [];",
                 "var LOOP$0 = {};",
-                "LABEL: while (values.length > 0) {",
-                "  LOOP$0 = {",
-                "    v: void 0",
-                "  };",
+                "LABEL: for (; values.length > 0; LOOP$0 = {v:void 0}) {",
                 "  /** @const */ LOOP$0.v = values.shift();",
                 "  if (LOOP$0.v == 'skipMe') {",
                 "    continue LABEL;",
@@ -1186,17 +1186,11 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "/** @const */ var words = [];",
                 "/** @const */ var letters = [];",
                 "var LOOP$1 = {};",
-                "OUTER: while (values.length > 0) {",
-                "  LOOP$1 = {",
-                "    v: void 0",
-                "  };",
+                "OUTER: for (; values.length > 0; LOOP$1 = {v:void 0}) {",
                 "  /** @const */ LOOP$1.v = values.shift();",
                 "  var i = 0;",
                 "  var LOOP$0 = {};",
-                "  while (i < LOOP$1.v.length) {",
-                "      LOOP$0 = {",
-                "        c: void 0",
-                "      };",
+                "  for (; i < LOOP$1.v.length; LOOP$0 = {c:void 0}) {",
                 "      /** @const */ LOOP$0.c = LOOP$1.v.charAt(i);",
                 "      if (LOOP$0.c == 'a') {",
                 "        i++;",
@@ -1395,7 +1389,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "          return LOOP$0$PARAM$1.i;",
                 "      };",
                 "  }(LOOP$0)));",
-                "  LOOP$0.i += 100;",
+                "  LOOP$0.i = LOOP$0.i + 100;",
                 "}"));
     loopClosureTest(srcs, expected);
   }
@@ -1657,7 +1651,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  LOOP$0.a = getArray();",
                 "  f = (function(LOOP$0$PARAM$1) {",
                 "    return function() {",
-                "      for (var x in use(LOOP$0$PARAM$1.a)) {",
+                "      var x;",
+                "for (x in use(LOOP$0$PARAM$1.a)) {",
                 "        f(LOOP$0$PARAM$1.a);",
                 "        LOOP$0$PARAM$1.a.push(x);",
                 "        return x;",
@@ -1744,11 +1739,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var LOOP$0 = {};",
-                "while (true) {",
-                "  LOOP$0 =",
-                "      {",
-                "        x: void 0",
-                "      };",
+                "for (; true; LOOP$0 = {x:void 0}) {",
                 "  LOOP$0.x = null;",
                 "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
@@ -1771,9 +1762,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var LOOP$0 = {};",
-                "while (true) {",
-                "  LOOP$0 =",
-                "      { x: void 0 };",
+                "for (; true; LOOP$0 = {x:void 0}) {",
                 "  LOOP$0.x = null;",
                 "  var f = function(LOOP$0$PARAM$1) {",
                 "    return function() {",
@@ -1796,9 +1785,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var LOOP$0 = {};",
-                "while (true) {",
-                "  LOOP$0 =",
-                "      { x: void 0 };",
+                "for (; true; LOOP$0 = {x:void 0}) {",
                 "  LOOP$0.x = null;",
                 "  (function(LOOP$0$PARAM$1) {",
                 "    return function() {",
@@ -1823,8 +1810,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var LOOP$0 = {};",
-                "while (true) {",
-                "  LOOP$0 = {x: void 0, f: void 0};",
+                "for (; true; LOOP$0 = {x:void 0, f:void 0}) {",
                 "  LOOP$0.x = 1;",
                 "  LOOP$0.f = (function(LOOP$0$PARAM$1) {",
                 "    return function(i) {",
@@ -1855,11 +1841,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var LOOP$0 = {};",
-                "while (true) {",
-                "  LOOP$0 = {",
-                "    x: void 0,",
-                "    y: void 0",
-                "  };",
+                "for (; true; LOOP$0 = {x:void 0, y:void 0}) {",
                 "  LOOP$0.x = void 0;",
                 "  LOOP$0.y = void 0;",
                 "  var f = function(LOOP$0$PARAM$1) {",
@@ -1885,11 +1867,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             lines(
                 "var LOOP$0 = {};",
-                "while (true) {",
-                "  LOOP$0 = {",
-                "    y: void 0,",
-                "    x: void 0",
-                "  };",
+                "for (; true; LOOP$0 = {y:void 0, x:void 0}) {",
                 "  LOOP$0.x = void 0;",
                 "  LOOP$0.y = void 0;",
                 "  var f = function(LOOP$0$PARAM$1) {",
@@ -1976,8 +1954,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             lines(
                 "{",
                 "  var l = [];",
+                "  var vx = 1; var vy = 2; var vz = 3;",
                 "  var LOOP$0 = {};",
-                "  var vx = 1, vy = 2, vz = 3;",
                 "  for (; vx < 10; ",
                 "      LOOP$0 = {",
                 "        lx: void 0,",
