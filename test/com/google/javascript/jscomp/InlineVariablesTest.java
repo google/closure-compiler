@@ -346,6 +346,45 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInliningAcrossSiblingChunk_assignmentChunkIsFirst() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var a;") // root chunk
+                // two child chunks that both depend on the root chunk. Neither is guaranteed
+                // to be loaded, and if both load the order is not guaranteed.
+                .addChunk("a = true;")
+                .addChunk("function foo() { if (a) console.log('test'); } foo();")
+                .build()),
+        // TODO(b/295308604): fix this output to not assume that `a` is true. It's possible that the
+        // chunk with `a = true;` is never loaded or loaded after the `function foo() {` chunk.
+        expected(
+            "",
+            // root
+            "true", // child 1
+            "(function() { if (true) console.log('test'); })();")); // child 2
+  }
+
+  @Test
+  public void testInliningAcrossSiblingChunk_useChunkIsFirst() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var a;") // root chunk
+                // Two child chunks that both depend on the root chunk. Neither is guaranteed
+                // to be loaded, and if both load the order is not guaranteed.
+                .addChunk("function foo() { if (a) console.log('test'); } foo();")
+                .addChunk("a = true;")
+                .build()),
+        // the expected code has the correct behavior. The compiler doesn't know whether `a = true;`
+        // will execute before the first child chunk or not.
+        expected(
+            "var a;", // root
+            "(function() { if (a) console.log('test'); })();", // child 1
+            "a = true;")); // child 2
+  }
+
+  @Test
   public void testDoNotExitConditional1() {
     test(
         "if (true) { var x = 1; } var z = x; use(z);", //
