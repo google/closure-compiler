@@ -221,9 +221,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.FOR_OF)) {
       passes.maybeAdd(es6ForOf);
     }
-    if (options.needsTranspilationOf(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
-      passes.maybeAdd(rewriteBlockScopedFunctionDeclaration);
-    }
   }
 
   /**
@@ -236,6 +233,10 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
+      passes.maybeAdd(rewriteBlockScopedFunctionDeclaration);
+    }
 
     if (options.needsTranspilationFrom(
         FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS))) {
