@@ -193,13 +193,15 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           // `varName = value;`
           draft.declaredNameNode = lhs;
           draft.declaredValueNode = rhs;
-        } else if (lhs.isGetProp()) {
+        } else if (lhs.isGetProp() || lhs.isGetElem()) {
           Node nameNode = checkNotNull(lhs.getFirstChild());
           while (nameNode.isGetProp()) {
             nameNode = checkNotNull(nameNode.getFirstChild());
           }
           if (nameNode.isName()) {
             // `varName.some.property = value;`
+            // OR
+            // `varName.maybe.property[expression] = value;`
             draft.declaredNameNode = nameNode;
             draft.declaredValueNode = rhs;
           }
@@ -437,6 +439,18 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           }
         }
         return true;
+
+      case GETPROP:
+        // `Symbol` is a built-in JavaScript object that is guaranteed to be unique. Therefore it
+        // is movable. Any properties on `Symbol` are also movable (e.g `Symbol.iterator`).
+        Node child = valueNode.getFirstChild();
+        if (child != null && child.isName()) {
+          String symbol = child.getString();
+          if (symbol != null && symbol.equals("Symbol")) {
+            return true;
+          }
+        }
+        return false;
 
       default:
         break;

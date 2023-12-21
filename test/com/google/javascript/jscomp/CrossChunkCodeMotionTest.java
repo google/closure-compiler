@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -2033,6 +2034,109 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .addChunk("a;")
                 .build()),
         expected("", "let a = 1; let b = { [a + 1]: 2 };", "a;"));
+
+    //  Well defined variables are moveable
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("var a = function() {}; a.prototype.blah = function() {};")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            "",
+            // m2
+            "var a = function() {}; a.prototype.blah = function() {};" + "a;"));
+  }
+
+  @Test
+  public void testComputedPropertiesUsingSymbol() {
+    // Computed properties are movable if the key is a `Symbol.<any_property_on_symbol>`
+    // `Symbol` is a built-in JavaScript object that is guaranteed to be unique. Therefore, it
+    // is movable. Any properties on `Symbol` are also movable (e.g `Symbol.iterator`).
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("let a = { [Symbol.iterator]: 1};")
+                .addChunk("a;")
+                .build()),
+        expected(
+            "", // everything has been moved out of this chunk
+            "let a = { [Symbol.iterator]: 1}; a;"));
+
+    // `Symbol` is declared in m1, and used in m2. It should be moved to m2 in expected output.
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = class { [Symbol.anyPropertyOnSymbolIsMovable]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            "",
+            // m2
+            "let a = class { [Symbol.anyPropertyOnSymbolIsMovable]() {} }; a;"));
+
+    // Now turn on transpilation and rerun the same above 2 unit tests.
+    enableTranspile();
+    disableCompareSyntheticCode();
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = { [Symbol.iterator]: 1};")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            // Ideally, we should be moving this code out of m1, but this would require us to move
+            // an `ASSIGN` node which we don't want to do.
+            "var $jscomp$compprop0 = {}; "
+                + "var a = ($jscomp$compprop0[Symbol.iterator] = 1, $jscomp$compprop0);",
+            // m2
+            "a;"));
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = class { [Symbol.anyPropertyOnSymbolIsMovable]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            "",
+            // m2
+            "/** @constructor */ var a = function() {};"
+                + "a.prototype[Symbol.anyPropertyOnSymbolIsMovable] = function() {};"
+                + "a;"));
+  }
+
+  @Test
+  public void testComputedPropertiesUsingSymbolUnmovable() {
+    // Computed properties are not movable if the key is not explicitly called `Symbol.`
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("let a = { [Symbol123.iterator]: 1};")
+                .addChunk("a;")
+                .build()));
+
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = class { [Symbol123.anyPropertyOnSymbolIsMovable]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()));
   }
 
   @Test
@@ -2112,5 +2216,15 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/"
                     + " i0.ɵɵdefinePipe({ name: \"lowercase\", type: LowerCasePipe, pure: true });",
                 "new LowerCasePipe();")));
+  }
+
+  @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
+  }
+
+  @Override
+  protected NoninjectingCompiler getLastCompiler() {
+    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }
