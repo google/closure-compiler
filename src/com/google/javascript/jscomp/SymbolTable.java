@@ -1973,7 +1973,8 @@ public final class SymbolTable {
         }
         // There is no handy way to find symbol object the given property node. So we do
         // property node => namespace node => namespace symbol => property symbol.
-        if (propNodeDecl != null && propNodeDecl.isGetProp()) {
+        if (propNodeDecl != null
+            && (propNodeDecl.isGetProp() || propNodeDecl.isOptChainGetProp())) {
           Node namespace = propNodeDecl.getFirstChild();
           Symbol namespaceSym = getSymbolForName(namespace, namespace.getQualifiedName());
           if (namespaceSym != null && namespaceSym.getPropertyScope() != null) {
@@ -2018,7 +2019,7 @@ public final class SymbolTable {
       // definitions. e.g., for "a.b", it's more useful to record
       // this as "property b of the type of a", than as "symbol a.b".
 
-      if (n.isGetProp()) {
+      if (n.isGetProp() || n.isOptChainGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
         if (owner != null) {
           boolean defined = maybeDefineTypedReference(n, n.getString(), owner);
@@ -2229,7 +2230,7 @@ public final class SymbolTable {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         visitName(t, n);
-      } else if (n.isGetProp()) {
+      } else if (n.isGetProp() || n.isOptChainGetProp()) {
         visitProperty(n, parent);
       }
     }
