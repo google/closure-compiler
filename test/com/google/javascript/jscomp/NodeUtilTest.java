@@ -4092,6 +4092,30 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testCallTargetNodeResolution_qualifiedName() {
+      assertThat(
+              NodeUtil.getCallTargetResolvingIndirectCalls(parse("foo()").getFirstFirstChild())
+                  .matchesQualifiedName("foo")) // matches `foo`
+          .isTrue();
+
+      assertThat(
+              NodeUtil.getCallTargetResolvingIndirectCalls(
+                      parse("a.b.c.foo()").getFirstFirstChild())
+                  .matchesQualifiedName("a.b.c.foo"))
+          .isTrue();
+    }
+
+    @Test
+    public void testCallTargetNodeResolution_notAQualifiedName() {
+      Node script = parse("({valueOf: () => {}}.valueOf());");
+      assertThat(script.isScript()).isTrue();
+      Node callNode = script.getFirstFirstChild();
+      assertThat(callNode.isCall()).isTrue();
+      assertThat(NodeUtil.getCallTargetResolvingIndirectCalls(callNode).isQualifiedName())
+          .isFalse();
+    }
+
+    @Test
     public void testIsGoogModuleGetCall() {
       Node root = parse("const Foo = goog.module.get('a.b.c.Foo');");
       Node call = root.getFirstChild().getFirstChild().getFirstChild();
