@@ -29,12 +29,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
-  private boolean propertyRenamingEnabled = true;
   private boolean canUseEs6Syntax = true;
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new ClosureOptimizePrimitives(compiler, propertyRenamingEnabled, canUseEs6Syntax);
+    return new ClosureOptimizePrimitives(compiler, canUseEs6Syntax);
   }
 
   @Override
@@ -222,13 +221,6 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   public void testObjectCreateSetSingleLiteralArg() {
     test("const s = goog.object.createSet(3);", "const s = {3: true};");
     test("const s = goog.object.createSet('a');", "const s = {'a': true};");
-  }
-
-  @Test
-  public void testPropertyReflectionSimple() {
-    propertyRenamingEnabled = false;
-    test("goog.reflect.objectProperty('push', [])", "'push'");
-    test("JSCompiler_renameProperty('push', [])", "'push'");
   }
 
   @Test

@@ -862,6 +862,8 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.maybeAdd(renameProperties);
+    } else {
+      passes.maybeAdd(removePropertyRenamingCalls);
     }
 
     // Reserve global names added to the "windows" object.
@@ -2130,7 +2132,6 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new ClosureOptimizePrimitives(
                       compiler,
-                      compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED,
                       compiler.getOptions().getOutputFeatureSet().contains(ES2015)))
           .build();
 
@@ -2573,6 +2574,13 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
+          .build();
+
+  /** Inlines calls to property renaming functions. */
+  private final PassFactory removePropertyRenamingCalls =
+      PassFactory.builder()
+          .setName("removePropertyRenamingCalls")
+          .setInternalFactory(RemovePropertyRenamingCalls::new)
           .build();
 
   /** Renames variables. */
