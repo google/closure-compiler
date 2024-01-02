@@ -342,6 +342,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
                 .addChunk("var a = 2;")
                 .addChunk("var b = a;")
                 .build()),
+        // Note that there's nothing ensuring "var a = 2;" will be loaded before "var b = a;", but
+        // if it's not, this code would be broken uncompiled and we'd get an "a is not defined"
+        // error, so the compiler inlines anyway.
         expected("", "var b = 2;"));
   }
 
@@ -351,18 +354,18 @@ public final class InlineVariablesTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forTree()
                 .addChunk("var a;") // root chunk
-                // two child chunks that both depend on the root chunk. Neither is guaranteed
+                // Two child chunks that both depend on the root chunk. Neither is guaranteed
                 // to be loaded, and if both load the order is not guaranteed.
                 .addChunk("a = true;")
                 .addChunk("function foo() { if (a) console.log('test'); } foo();")
                 .build()),
-        // TODO(b/295308604): fix this output to not assume that `a` is true. It's possible that the
-        // chunk with `a = true;` is never loaded or loaded after the `function foo() {` chunk.
+        // The expected code has the correct behavior. The compiler doesn't know whether `a = true;`
+        // will execute before the second child chunk or not.
         expected(
-            "",
+            "var a;",
             // root
-            "true", // child 1
-            "(function() { if (true) console.log('test'); })();")); // child 2
+            "a = true;", // child 1
+            "(function() { if (a) console.log('test'); })();")); // child 2
   }
 
   @Test

@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -126,16 +127,23 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
    * @return The reference that provides the value for the variable at the time of the first read,
    *     if known, otherwise null.
    *     <p>This is either the variable declaration ("var a = ...") or first reference following the
-   *     declaration if it is an assignment.
+   *     declaration if it is an assignment in the same {@link JSChunk}.
    */
-  @Nullable
-  Reference getInitializingReference() {
+  @Nullable Reference getInitializingReference() {
     if (isInitializingDeclarationAt(0)) {
       return references.get(0);
-    } else if (isInitializingAssignmentAt(1)) {
+    } else if (isInitializingAssignmentAt(1)
+        // Check that these references are in the same file as a way of ensuring they are in the
+        // same chunk: checking for the same chunk would also be reasonable, but is slightly more
+        // complicated and as of time of writing, didn't seem to help code size in practice.
+        && areInSameFile(0, 1)) {
       return references.get(1);
     }
     return null;
+  }
+
+  private boolean areInSameFile(int ref0, int ref1) {
+    return Objects.equals(references.get(ref0).getInputId(), references.get(ref1).getInputId());
   }
 
   /** Constants are allowed to be defined after their first use. */
