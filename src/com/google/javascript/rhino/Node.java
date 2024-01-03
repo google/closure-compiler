@@ -1560,7 +1560,8 @@ public class Node {
   private transient @Nullable Node next; // next sibling, a linked list
   private transient @Nullable Node previous; // previous sibling, a circular linked list
   private transient @Nullable Node first; // first element of a linked list of children
-    private transient @Nullable  Node parent;
+  private transient @Nullable Node parent;
+
   // We get the last child as first.previous. But last.next is null, not first.
 
   /**
@@ -1633,7 +1634,7 @@ public class Node {
   }
 
   /** Returns the Id of the CompilerInput associated with this Node. */
-   public @Nullable  InputId getInputId() {
+  public @Nullable InputId getInputId() {
     return ((InputId) this.getProp(Prop.INPUT_ID));
   }
 
@@ -1808,7 +1809,7 @@ public class Node {
    * @see Node#children()
    */
   private static final class SiblingNodeIterator implements Iterator<Node> {
-      private @Nullable  Node current;
+    private @Nullable Node current;
 
     SiblingNodeIterator(Node start) {
       this.current = start;
@@ -1846,7 +1847,7 @@ public class Node {
     this.propListHead = propListHead;
   }
 
-   public final @Nullable  Node getParent() {
+  public final @Nullable Node getParent() {
     return parent;
   }
 
@@ -1854,7 +1855,7 @@ public class Node {
     return parent != null;
   }
 
-   public final @Nullable  Node getGrandparent() {
+  public final @Nullable Node getGrandparent() {
     return parent == null ? null : parent.parent;
   }
 
@@ -1863,7 +1864,7 @@ public class Node {
    *
    * @param level 0 = this, 1 = the parent, etc.
    */
-   public final @Nullable  Node getAncestor(int level) {
+  public final @Nullable Node getAncestor(int level) {
     checkArgument(level >= 0);
     Node node = this;
     while (node != null && level-- > 0) {
@@ -1903,7 +1904,7 @@ public class Node {
 
   /** Iterator to go up the ancestor tree. */
   public static final class AncestorIterable implements Iterable<Node> {
-      private @Nullable  Node cur;
+    private @Nullable Node cur;
 
     /**
      * @param cur The node to start.
@@ -2165,7 +2166,7 @@ public class Node {
    * @return a null if this is not a qualified name, or a dot-separated string of the name and
    *     properties.
    */
-   public final @Nullable  String getQualifiedName() {
+  public final @Nullable String getQualifiedName() {
     switch (token) {
       case NAME:
         String name = getString();
@@ -2182,7 +2183,7 @@ public class Node {
     }
   }
 
-   public final @Nullable  QualifiedName getQualifiedNameObject() {
+  public final @Nullable QualifiedName getQualifiedNameObject() {
     return isQualifiedName() ? new QualifiedName.NodeQname(this) : null;
   }
 
@@ -2193,7 +2194,7 @@ public class Node {
    * @return {@code null} if this is not a qualified name or a StringBuilder if it is a complex
    *     qualified name.
    */
-   private @Nullable  StringBuilder getQualifiedNameForGetProp(int reserve) {
+  private @Nullable StringBuilder getQualifiedNameForGetProp(int reserve) {
     String propName = this.getString();
     reserve += 1 + propName.length(); // +1 for the '.'
     StringBuilder builder;
@@ -2224,7 +2225,8 @@ public class Node {
    *     properties.
    * @deprecated "original name" is poorly defined. See #getOriginalName
    */
-  @Deprecated public final @Nullable  String getOriginalQualifiedName() {
+  @Deprecated
+  public final @Nullable String getOriginalQualifiedName() {
     if (token == Token.NAME) {
       String name = getOriginalName();
       if (name == null) {
@@ -2516,7 +2518,7 @@ public class Node {
    * Returns the compiler inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
-   public final @Nullable  JSType getJSType() {
+  public final @Nullable JSType getJSType() {
     return (this.jstypeOrColor instanceof JSType) ? (JSType) this.jstypeOrColor : null;
   }
 
@@ -2535,7 +2537,7 @@ public class Node {
    * Returns the compiled inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
-   public final @Nullable  Color getColor() {
+  public final @Nullable Color getColor() {
     return (this.jstypeOrColor instanceof Color) ? (Color) this.jstypeOrColor : null;
   }
 
@@ -2556,7 +2558,7 @@ public class Node {
    *
    * @return the information or {@code null} if no JSDoc is attached to this node
    */
-   public final @Nullable  JSDocInfo getJSDocInfo() {
+  public final @Nullable JSDocInfo getJSDocInfo() {
     return (JSDocInfo) getProp(Prop.JSDOC_INFO);
   }
 
