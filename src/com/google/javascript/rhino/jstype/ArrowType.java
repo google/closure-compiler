@@ -172,4 +172,18 @@ final class ArrowType extends JSType {
     }
     return false;
   }
+
+  /**
+   * A string representation of this type, suitable for printing
+   * in warnings.
+   */
+  @Override
+  public String toString() {
+    TypeStringBuilder typeStringBuilder = new TypeStringBuilder(false);
+    typeStringBuilder.append("(");
+    typeStringBuilder.appendAll(parameterList, ",");
+    typeStringBuilder.append(") -> ");
+    typeStringBuilder.append(returnType);
+    return typeStringBuilder.build();
+  }
 }
