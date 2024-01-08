@@ -64,7 +64,20 @@ public abstract class DependencyOptions implements Serializable {
      *
      * <p>All entry points must be explicitly defined.
      */
-    PRUNE;
+    PRUNE,
+
+    /**
+     * Identical to PRUNE unless there are no entry points specifified, in which case drops all
+     * other input files instead of crashing with an error about invalid flag usage.
+     *
+     * <p>PRUNE mode will report an error if used without a specified entry point because that
+     * usually indicates user error, where the user actually wants pruning starting from one/more
+     * entry points.
+     *
+     * <p>This mode is only recommended for use when using some macro to generate JSCompiler flags
+     * for a variety of targets, some of which have entry points and some of which do not.
+     */
+    PRUNE_ALLOW_NO_ENTRY_POINTS;
   }
 
   /** Returns the dependency management mode. */
@@ -95,7 +108,9 @@ public abstract class DependencyOptions implements Serializable {
    * dependency of an entry point. Otherwise, all input files should be included.
    */
   public boolean shouldPrune() {
-    return getMode() == DependencyMode.PRUNE_LEGACY || getMode() == DependencyMode.PRUNE;
+    return getMode() == DependencyMode.PRUNE_LEGACY
+        || getMode() == DependencyMode.PRUNE
+        || getMode() == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
   }
 
   /**
@@ -107,7 +122,8 @@ public abstract class DependencyOptions implements Serializable {
    * <p>If true, moochers should not be considered implicit entry points.
    */
   public boolean shouldDropMoochers() {
-    return getMode() == DependencyMode.PRUNE;
+    return getMode() == DependencyMode.PRUNE
+        || getMode() == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
   }
 
   /** Returns a {@link DependencyOptions} using the {@link DependencyMode#NONE} mode. */
@@ -131,6 +147,15 @@ public abstract class DependencyOptions implements Serializable {
       Iterable<ModuleIdentifier> entryPoints) {
     return new AutoValue_DependencyOptions(
         DependencyMode.PRUNE_LEGACY, ImmutableList.copyOf(entryPoints));
+  }
+
+  /**
+   * Returns a {@link DependencyOptions} using the {@link DependencyMode#PRUNE} mode with the given
+   * entry points.
+   */
+  public static DependencyOptions pruneAllowNoEntryPoints(Iterable<ModuleIdentifier> entryPoints) {
+    return new AutoValue_DependencyOptions(
+        DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS, ImmutableList.copyOf(entryPoints));
   }
 
   /**
@@ -212,6 +237,8 @@ public abstract class DependencyOptions implements Serializable {
     DependencyMode dependencyMode;
     if (dependencyModeFlag == DependencyMode.PRUNE || onlyClosureDependenciesFlag) {
       dependencyMode = DependencyMode.PRUNE;
+    } else if (dependencyModeFlag == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS) {
+      dependencyMode = DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
     } else if (dependencyModeFlag == DependencyMode.PRUNE_LEGACY
         || manageClosureDependenciesFlag
         || hasEntryPoint) {
@@ -240,6 +267,8 @@ public abstract class DependencyOptions implements Serializable {
         return DependencyOptions.sortOnly();
       case PRUNE_LEGACY:
         return DependencyOptions.pruneLegacyForEntryPoints(entryPointsBuilder.build());
+      case PRUNE_ALLOW_NO_ENTRY_POINTS:
+        return DependencyOptions.pruneAllowNoEntryPoints(entryPointsBuilder.build());
       case PRUNE:
         return DependencyOptions.pruneForEntryPoints(entryPointsBuilder.build());
     }

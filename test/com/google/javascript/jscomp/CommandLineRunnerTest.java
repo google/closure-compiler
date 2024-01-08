@@ -1360,6 +1360,40 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testOnlyClosureDependenciesOneEntryPoint_pruneAllowNoEntryPoints() {
+    args.add("--dependency_mode=PRUNE_ALLOW_NO_ENTRY_POINTS");
+    args.add("--entry_point=goog:beer");
+    test(
+        new String[] {
+          "goog.require('beer'); var beerRequired = 1;",
+          "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
+          "goog.provide('hops'); var hopsProvided = 1;",
+          "goog.provide('scotch'); var scotchProvided = 1;",
+          "goog.require('scotch');\nvar includeFileWithoutProvides = 1;",
+          "/** This is base.js @provideGoog */ var COMPILED = false;",
+        },
+        new String[] {
+          "var COMPILED = !1;",
+          "var hops = {}, hopsProvided = 1;",
+          "var beer = {}, beerProvided = 1;"
+        });
+  }
+
+  @Test
+  public void testPruneAllowNoEntryPoints_noEntryPointsPrunesEverything() {
+    args.add("--dependency_mode=PRUNE_ALLOW_NO_ENTRY_POINTS");
+    test(
+        new String[] {
+          "goog.require('beer'); var beerRequired = 1;",
+          "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
+          "goog.provide('hops'); var hopsProvided = 1;",
+          "goog.provide('scotch'); var scotchProvided = 1;",
+          "goog.require('scotch');\nvar includeFileWithoutProvides = 1;",
+        },
+        new String[] {});
+  }
+
+  @Test
   public void testSourceMapExpansion1() {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
