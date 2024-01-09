@@ -73,6 +73,36 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMultipleForOfLoopsWithSameNameInductionVariable() {
+    Sources srcs =
+        srcs(
+            lines(
+                "function* inorder1(t) {",
+                "    for (var x of []) {",
+                "      yield x;",
+                "    }",
+                "    for (var x of []) {",
+                "      yield x;",
+                "    }",
+                "}"));
+
+    Expected expected =
+        expected(
+            lines(
+                "function* inorder1(t) {",
+                "    var x;",
+                "    for (x of []) {",
+                "      yield x;",
+                "    }",
+                "    for (x of []) {",
+                "      yield x;",
+                "    }",
+                "}"));
+
+    test(srcs, expected); //
+  }
+
+  @Test
   public void testConstAnnotationPropagation() {
     test(
         "const x = 3; var a,     b; var y = x + 2;", //

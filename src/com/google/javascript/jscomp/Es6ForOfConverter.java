@@ -75,7 +75,15 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node getNext =
         astFactory.createCallWithUnknownType(
             astFactory.createGetPropWithUnknownType(iterName.cloneTree(), "next"));
-    String iteratorResultName = ITER_RESULT;
+    // generate a unique iterator result name for every for-of loop getting rewritten to avoid
+    // conflicts
+    String iteratorResultName =
+        ITER_RESULT
+            + compiler
+                .getUniqueIdSupplier()
+                .getUniqueId(compiler.getInput(NodeUtil.getEnclosingScript(node).getInputId()))
+            + "$";
+
     if (NodeUtil.isNameDeclaration(variable)) {
       iteratorResultName += variable.getFirstChild().getString();
     } else if (variable.isName()) {

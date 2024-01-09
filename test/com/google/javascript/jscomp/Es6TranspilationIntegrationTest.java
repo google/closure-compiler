@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
@@ -131,6 +132,19 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   private void rewriteUniqueIdAndTest(Sources srcs, Expected originalExpected) {
     Externs externs = externs("");
     test(externs, srcs, originalExpected);
+  }
+
+  private void testForOf(Sources srcs, Expected originalExpected) {
+    testForOf(externs(""), srcs, originalExpected);
+  }
+
+  private void testForOf(Externs externs, Sources srcs, Expected originalExpected) {
+    // change the UID in expected with "$jscomp$key$m123..456" name
+    Expected modifiedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs, originalExpected, ImmutableMap.of("KEY", "$jscomp$key$")));
+    test(externs, srcs, modifiedExpected);
   }
 
   @Test
@@ -1988,29 +2002,87 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testForOf() {
+  public void testForOfLoop() {
     // Iteration var shadows an outer var ()
     Sources srcs = srcs("var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);");
     Expected expected =
         expected(
             lines(
                 "var i = 'outer';",
-                // Normalization extracts the variables from the loop.
                 "var $jscomp$iter$0 = $jscomp.makeIterator([1, 2, 3]);",
-                "var $jscomp$key$i = $jscomp$iter$0.next();",
-                "for (; !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-                "  var i$jscomp$1 = $jscomp$key$i.value;",
+                "var KEY$0$i = $jscomp$iter$0.next();",
+                "for (; !KEY$0$i.done; KEY$0$i =" + " $jscomp$iter$0.next()) {",
+                "  var i$jscomp$1 = KEY$0$i.value;",
                 "  {",
                 "    alert(i$jscomp$1);",
                 "  }",
                 "}",
                 "alert(i);"));
-    test(srcs, expected);
+    testForOf(srcs, expected);
+  }
+
+  @Test
+  public void testMultipleForOfWithSameInitializerName() {
+    enableNormalize();
+    Sources srcs =
+        srcs(
+            lines(
+                "function* inorder1(t) {",
+                "    for (var x of []) {",
+                "      yield x;",
+                "    }",
+                "    for (var x of []) {",
+                "      yield x;",
+                "    }",
+                "}"));
+    Expected expected =
+        expected(
+            lines(
+                "function inorder1(t) {",
+                "  var x;",
+                "  var $jscomp$iter$0;",
+                "  var KEY$0$x;", // key for first for-of loop
+                "  var $jscomp$iter$1;",
+                "  var KEY$1$x;", // key for second for-of loop
+                "  return $jscomp.generator.createGenerator(inorder1,"
+                    + " function($jscomp$generator$context$m1146332801$2) {",
+                "    switch($jscomp$generator$context$m1146332801$2.nextAddress) {",
+                "      case 1:",
+                "        $jscomp$iter$0 = $jscomp.makeIterator([]);",
+                "        KEY$0$x = $jscomp$iter$0.next();",
+                "      case 2:",
+                "        if (!!KEY$0$x.done) {",
+                "          $jscomp$generator$context$m1146332801$2.jumpTo(4);",
+                "          break;",
+                "        }",
+                "        x = KEY$0$x.value;",
+                "        return $jscomp$generator$context$m1146332801$2.yield(x, 3);",
+                "      case 3:",
+                "        KEY$0$x = $jscomp$iter$0.next();",
+                "        $jscomp$generator$context$m1146332801$2.jumpTo(2);",
+                "        break;",
+                "      case 4:",
+                "        $jscomp$iter$1 = $jscomp.makeIterator([]);",
+                "        KEY$1$x = $jscomp$iter$1.next();",
+                "      case 6:",
+                "        if (!!KEY$1$x.done) {",
+                "          $jscomp$generator$context$m1146332801$2.jumpTo(0);",
+                "          break;",
+                "        }",
+                "        x = KEY$1$x.value;",
+                "        return $jscomp$generator$context$m1146332801$2.yield(x, 7);",
+                "      case 7:",
+                "        KEY$1$x = $jscomp$iter$1.next();",
+                "        $jscomp$generator$context$m1146332801$2.jumpTo(6);",
+                "        break;",
+                "    }",
+                "  });}"));
+    testForOf(srcs, expected);
   }
 
   @Test
   public void testForOfRedeclaredVar() {
-    rewriteUniqueIdAndTest(
+    testForOf(
         srcs(
             lines(
                 "for (let x of []) {", //
@@ -2018,11 +2090,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "}")),
         expected(
             lines(
-                // Normalization extracts the variables from the loop.
                 "var $jscomp$iter$0 = $jscomp.makeIterator([]);",
-                "var $jscomp$key$x = $jscomp$iter$0.next();",
-                "for (; !$jscomp$key$x.done; $jscomp$key$x = $jscomp$iter$0.next()) {",
-                "  var x = $jscomp$key$x.value;",
+                "var KEY$0$x = $jscomp$iter$0.next();",
+                "for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {",
+                "  var x = KEY$0$x.value;",
                 "  {",
                 "    var x$jscomp$1 = 0;",
                 "  }",
