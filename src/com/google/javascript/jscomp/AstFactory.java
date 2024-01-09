@@ -1546,12 +1546,16 @@ final class AstFactory {
 
     @Override
     public JSType getJSType(JSTypeRegistry registry) {
-      return checkNotNull(this.n.getJSType(), n);
+      JSType jstype = this.n.getJSType();
+      // TODO(b/149843534): crash instead of defaulting to unknown
+      return jstype != null ? jstype : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
 
     @Override
     public Color getColor(ColorRegistry registry) {
-      return checkNotNull(this.n.getColor(), n);
+      Color color = this.n.getColor();
+      // TODO(b/149843534): crash instead of defaulting to unknown
+      return color != null ? color : StandardColors.UNKNOWN;
     }
   }
 

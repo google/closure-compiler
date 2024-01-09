@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.AstFactory.type;
@@ -375,6 +376,36 @@ public class AstFactoryTest {
     Scope scope = getScope(root);
 
     assertThrows(Exception.class, () -> astFactory.createName(scope, "missing"));
+  }
+
+  @Test
+  public void testCreateGetPropFromScope_defaultsToUnknownJSTypeWhenNull() {
+    AstFactory astFactory = createTestAstFactory();
+    Node receiver = astFactory.createNameWithUnknownType("JQ");
+    Node typeTemplate = IR.name("JQ");
+
+    checkState(typeTemplate.getJSType() == null, "getJSType does not return null ");
+
+    Node x = astFactory.createGetProp(receiver, "$", type(typeTemplate));
+
+    assertNode(x).hasType(Token.GETPROP);
+    assertNode(x).matchesQualifiedName("JQ.$");
+    assertNode(x).hasJSTypeThat().isUnknown();
+  }
+
+  @Test
+  public void testCreateGetPropFromScope_defaultsToUnknownColorWhenNull() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+    Node receiver = astFactory.createNameWithUnknownType("JQ");
+    Node typeTemplate = IR.name("JQ");
+
+    checkState(typeTemplate.getColor() == null, "getColor does not return null ");
+
+    Node x = astFactory.createGetProp(receiver, "$", type(typeTemplate));
+
+    assertNode(x).hasType(Token.GETPROP);
+    assertNode(x).matchesQualifiedName("JQ.$");
+    assertNode(x).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
   @Test
