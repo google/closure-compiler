@@ -2010,14 +2010,42 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             lines(
                 "var i = 'outer';",
                 "var $jscomp$iter$0 = $jscomp.makeIterator([1, 2, 3]);",
-                "var KEY$0$i = $jscomp$iter$0.next();",
-                "for (; !KEY$0$i.done; KEY$0$i =" + " $jscomp$iter$0.next()) {",
-                "  var i$jscomp$1 = KEY$0$i.value;",
+                // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
+                // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
+                // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
+                // name as it does to all for-of loop keys.
+                "var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();",
+                "for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 =" + " $jscomp$iter$0.next()) {",
+                "  var i$jscomp$1 = KEY$0$i$jscomp$1.value;",
                 "  {",
                 "    alert(i$jscomp$1);",
                 "  }",
                 "}",
                 "alert(i);"));
+    testForOf(srcs, expected);
+  }
+
+  @Test
+  public void testForOfWithConstInitiliazer() {
+    enableNormalize();
+
+    Sources srcs = srcs("for(const i of [1,2]) {i;}");
+    Expected expected =
+        expected(
+            lines(
+                "var $jscomp$iter$0 = $jscomp.makeIterator([1, 2]);",
+                // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
+                // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
+                // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
+                // loop keys.
+                "var KEY$0$i = $jscomp$iter$0.next();",
+                "for (; !KEY$0$i.done; KEY$0$i =" + " $jscomp$iter$0.next()) {",
+                "  /** @const */ ",
+                "  var i = KEY$0$i.value;", // marked as const name
+                "  {",
+                "    i;", // marked as const name
+                "  }",
+                "}"));
     testForOf(srcs, expected);
   }
 

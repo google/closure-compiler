@@ -110,6 +110,43 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "  }",
             "}"));
 
+    // for of with const initializer
+    testForOf(
+        "for (const i of [1,2,3]) { console.log(i); }",
+        lines(
+            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var KEY$0$i = $jscomp$iter$0.next();",
+            "for (;",
+            "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
+            "  const i = KEY$0$i.value;",
+            "  {",
+            "    console.log(i);",
+            "  }",
+            "}"));
+
+    // multiple for-of loops with the const initializer name
+    testForOf(
+        "for (const i of [1,2,3]) { console.log(i); } for (const i of [4,5,6]) { console.log(i); }",
+        lines(
+            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var KEY$0$i = $jscomp$iter$0.next();",
+            "for (;",
+            "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
+            "  const i = KEY$0$i.value;",
+            "  {",
+            "    console.log(i);",
+            "  }",
+            "}",
+            "var $jscomp$iter$1 = $jscomp.makeIterator([4, 5, 6]);",
+            "var KEY$1$i$jscomp$1 = $jscomp$iter$1.next();",
+            "for (;",
+            "    !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = $jscomp$iter$1.next())" + " {",
+            "  const i$jscomp$1 = KEY$1$i$jscomp$1.value;",
+            "  {",
+            "    console.log(i$jscomp$1);",
+            "  }",
+            "}"));
+
     // With empty loop body.
     testForOf(
         "for (var i of [1,2,3]);",

@@ -452,6 +452,19 @@ final class AstFactory {
     return createName(aliasName, getTypeOfThisForEs6Class(functionNode));
   }
 
+  Node createSingleNameDeclaration(Token tokenType, String name, Node value) {
+    switch (tokenType) {
+      case LET:
+        return createSingleLetNameDeclaration(name, value);
+      case VAR:
+        return createSingleVarNameDeclaration(name, value);
+      case CONST:
+        return createSingleConstNameDeclaration(name, value);
+      default:
+        throw new UnsupportedOperationException("Unexpeted token type: " + tokenType);
+    }
+  }
+
   /**
    * Creates a new `let` declaration for a single variable name with a void type and no JSDoc.
    *

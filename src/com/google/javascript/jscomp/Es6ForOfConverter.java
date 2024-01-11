@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -114,6 +115,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
     Node declarationOrAssign;
     if (!NodeUtil.isNameDeclaration(variable)) {
+      // e.g. `for(a.b of []) {}`
       declarationOrAssign =
           astFactory.createAssign(
               variable.cloneTree().setJSDocInfo(null),
@@ -121,17 +123,17 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
       declarationOrAssign = IR.exprResult(declarationOrAssign);
     } else {
+      // `for(let a of []) {}` or `for(const a of []) {}`
       AstFactory.Type type = type(variable.getFirstChild());
       Token declarationType = variable.getToken(); // i.e. VAR, CONST, or LET.
+      checkState(
+          !declarationType.equals(Token.VAR),
+          "var initializers must've gotten moved out of the loop during normalize");
       declarationOrAssign =
-          new Node(
+          astFactory.createSingleNameDeclaration(
               declarationType,
-              astFactory
-                  .createName(variable.getFirstChild().getString(), type)
-                  .srcref(variable.getFirstChild()));
-      declarationOrAssign
-          .getFirstChild()
-          .addChildToBack(astFactory.createGetProp(iterResult.cloneTree(), "value", type));
+              variable.getFirstChild().getString(),
+              astFactory.createGetProp(iterResult.cloneTree(), "value", type));
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
