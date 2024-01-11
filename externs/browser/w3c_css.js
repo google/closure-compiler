@@ -3024,6 +3024,25 @@ CSSInterface.prototype.escape = function(ident) {};
 CSSInterface.prototype.supports = function(property, opt_value) {};
 
 /**
+* @typedef {{
+*   name: string,
+*   syntax: (string|undefined),
+*   inherits: boolean,
+*   initialValue: (string|undefined),
+* }}
+* @see https://www.w3.org/TR/css-properties-values-api-1/#the-propertydefinition-dictionary
+*/
+var PropertyDefinition;
+
+/**
+ * @param {PropertyDefinition} propertyDefinition
+ * @return {undefined}
+ * @see https://www.w3.org/TR/css-properties-values-api-1/#the-registerproperty-function
+ * @throws {DOMException|TypeError} {@see DOMException.InvalidModificationError}, {@see DOMException.SyntaxError}
+ */
+CSSInterface.prototype.registerProperty = function(propertyDefinition) {};
+
+/**
  * TODO(nicksantos): This suppress tag probably isn't needed, and
  * should be removed.
  * @suppress {duplicate}
