@@ -105,7 +105,9 @@ Intl.Collator.prototype.resolvedOptions = function() {};
  *     maximumSignificantDigits: (number|undefined),
  *     compactDisplay: (string|undefined), currencySign: (string|undefined),
  *     signDisplay: (string|undefined), unit: (string|undefined),
- *     unitDisplay: (string|undefined)
+ *     unitDisplay: (string|undefined), roundingIncrement: (number|undefined),
+ *     roundingMode: (string|undefined), roundingPriority: (string|undefined),
+ *     trailingZeroDisplay: (string|undefined)
  *     }=}
  *         options
  */
@@ -139,7 +141,10 @@ Intl.NumberFormat.prototype.formatToParts = function(num) {};
  *     maximumSignificantDigits: number, useGrouping: boolean,
  *     compactDisplay: (string|undefined), currencySign: (string|undefined),
  *     signDisplay: (string|undefined), unit: (string|undefined),
- *     unitDisplay: (string|undefined)}}
+ *     unitDisplay: (string|undefined), roundingIncrement: number,
+ *     roundingMode: string, roundingPriority: string,
+ *     trailingZeroDisplay: string
+ * }}
  */
 Intl.NumberFormat.prototype.resolvedOptions = function() {};
 
@@ -251,7 +256,8 @@ Intl.DisplayNames.prototype.resolvedOptions = function() {};
  *     minimumFractionDigits: (number|undefined),
  *     maximumFractionDigits: (number|undefined),
  *     minimumSignificantDigits: (number|undefined),
- *     maximumSignificantDigits: (number|undefined)}=}
+ *     maximumSignificantDigits: (number|undefined),
+ *     roundingMode: (string|undefined)}=}
  *         options
  */
 Intl.PluralRules = function(locales, options) {};
@@ -269,7 +275,7 @@ Intl.PluralRules.supportedLocalesOf = function(locales, options) {};
  * @return {{locale: string, pluralCategories: Array<string>, type: string,
  *            minimumIntegerDigits: number, minimumFractionDigits: number,
  *            maximumFractionDigits: number, minimumSignificantDigits: number,
- *            maximumSignificantDigits: number }}
+ *            maximumSignificantDigits: number, roundingMode: string}}
  */
 Intl.PluralRules.prototype.resolvedOptions = function() {};
 
