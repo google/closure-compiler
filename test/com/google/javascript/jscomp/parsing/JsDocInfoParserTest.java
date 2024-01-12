@@ -3932,6 +3932,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParserWithTemplateTypeNameWithDollar() {
+    JSDocInfo info = parse("@template A,B$,C */");
+    assertThat(info.getTemplateTypeNames()).containsExactly("A", "B$", "C");
+  }
+
+  @Test
   public void testParserWithTypeTransformationNewline() {
     parse("@template R := \n 'string' =:*/");
   }

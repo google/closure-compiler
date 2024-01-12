@@ -54,7 +54,7 @@ public final class JsDocInfoParser {
   private static final String TTL_END_DELIMITER = "=:";
 
   private static final CharMatcher TEMPLATE_NAME_MATCHER =
-      CharMatcher.javaLetterOrDigit().or(CharMatcher.is('_'));
+      CharMatcher.javaLetterOrDigit().or(CharMatcher.anyOf("_$"));
 
   @VisibleForTesting
   public static final String BAD_TYPE_WIKI_LINK =
@@ -1279,7 +1279,10 @@ public final class JsDocInfoParser {
     return ttlParser.getTypeTransformationAst();
   }
 
-  /** The types in @template annotations must contain only letters, digits, and underscores. */
+  /**
+   * The types in @template annotations must contain only letters, digits, underscores and dollar
+   * signs.
+   */
   private static boolean validTemplateTypeName(String name) {
     return name != null && !name.isEmpty() && TEMPLATE_NAME_MATCHER.matchesAllOf(name);
   }
