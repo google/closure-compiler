@@ -1710,6 +1710,12 @@ CSSProperties.prototype.outlineWidth;
 CSSProperties.prototype.overflow;
 
 /**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-overscroll-1/#propdef-overscroll-behavior
+ */
+CSSProperties.prototype.overscrollBehavior;
+
+/**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-padding
  */
