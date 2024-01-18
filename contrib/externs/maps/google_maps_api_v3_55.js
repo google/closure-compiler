@@ -5495,11 +5495,12 @@ google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
  * Access by calling `const {MapElement} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.MapElementOptions=} options
  * @implements {google.maps.MapElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.MapElement = function() {};
+google.maps.MapElement = function(options) {};
 
 /**
  * The center latitude/longitude of the map.
@@ -14525,6 +14526,13 @@ google.maps.marker.AdvancedMarkerElement.prototype.content;
 google.maps.marker.AdvancedMarkerElement.prototype.element;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * See {@link google.maps.marker.AdvancedMarkerElementOptions.gmpClickable}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.gmpClickable;
+
+/**
  * See {@link google.maps.marker.AdvancedMarkerElementOptions.gmpDraggable}.
  * @type {boolean|null|undefined}
  */
@@ -14597,6 +14605,17 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.collisionBehavior;
  * @type {!Node|null|undefined}
  */
 google.maps.marker.AdvancedMarkerElementOptions.prototype.content;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * If <code>true</code>, the <code>AdvancedMarkerElement</code> will be
+ * clickable and trigger the <code>gmp-click</code> event, and will be
+ * interactive for accessibility purposes (e.g. allowing keyboard navigation via
+ * arrow keys).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElementOptions.prototype.gmpClickable;
 
 /**
  * If <code>true</code>, the <code>AdvancedMarkerElement</code> can be dragged.
