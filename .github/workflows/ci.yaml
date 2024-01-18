@@ -41,7 +41,7 @@ jobs:
     steps:
       - name: Setup Java
         # https://github.com/marketplace/actions/setup-java-jdk
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: '11'
@@ -142,7 +142,7 @@ jobs:
         # TODO(nickreid): Delete this if we can find/write an upload tool other than Maven.
       - name: Setup Java
         # https://github.com/marketplace/actions/setup-java-jdk
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: '11'
