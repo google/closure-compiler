@@ -7092,10 +7092,25 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testEsModule_importDefaultClass() {
+  public void testEsModule_exportAndImportDefaultClassDeclaration() {
     testSame(
         srcs(
             "export default class Button {}; const /** !Button */ b = new Button(); B1: b;",
+            "import Button from './testcode0'; const /** !Button */ b = new Button(); B2: b;"));
+
+    assertNode(getLabeledStatement("B1").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Button");
+    assertNode(getLabeledStatement("B2").statementNode.getOnlyChild())
+        .hasJSTypeThat()
+        .toStringIsEqualTo("Button");
+  }
+
+  @Test
+  public void testEsModule_importAndImportDefault_nameLocalToModule() {
+    testSame(
+        srcs(
+            "class Button {} export default Button; const /** !Button */ b = new Button(); B1: b;",
             "import Button from './testcode0'; const /** !Button */ b = new Button(); B2: b;"));
 
     assertNode(getLabeledStatement("B1").statementNode.getOnlyChild())

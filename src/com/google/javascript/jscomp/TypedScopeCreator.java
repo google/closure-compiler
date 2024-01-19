@@ -2375,8 +2375,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      // Check if this is constant, and if it has a known type.
-      if (NodeUtil.isConstantDeclaration(info, lValue) || isGoogModuleExports(lValue)) {
+      // Check if this is constant and if it has a known type.
+      if ((lValue.isExport() && lValue.getBooleanProp(Node.EXPORT_DEFAULT))
+          || NodeUtil.isConstantDeclaration(info, lValue)
+          || isGoogModuleExports(lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
           declareAliasTypeIfRvalueIsAliasable(
@@ -3208,7 +3210,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
             // Define a dummy var for "export default <someExpr>" so that other utilities have
             // access to the type.
-            JSType declaredType = n.getOnlyChild().getJSType();
+            // Problem: according to the debugger, if we have export default SomeName
+            // SomeName does not have a type attached so we don't really export it and can't use it
+            // as a type later. So we need to call getDeclaredType() instead to get the type.
+            JSType declaredType = getDeclaredType(null, n, n.getOnlyChild(), null);
             new SlotDefiner()
                 .inScope(currentScope)
                 .forDeclarationNode(n)
