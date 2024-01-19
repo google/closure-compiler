@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
@@ -351,12 +350,8 @@ final class Es6RewriteGenerators implements CompilerPass {
             // itself.
             genFuncName.setColor(generatorFunction.getColor());
           }
-          // If this function is being assigned to a constant, then the name we just added
-          // and the clones made of it must also be marked as constant.
-          final JSDocInfo genFuncJsDocInfo = NodeUtil.getBestJSDocInfo(genFuncName);
-          if (genFuncJsDocInfo != null && genFuncJsDocInfo.isConstant()) {
-            genFuncName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          }
+          // Function expression name nodes are always marked constant.
+          genFuncName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
 
         // Prepare a "program" function:
