@@ -29,4 +29,8 @@ public interface Path {
   Path resolve(String other);
 
   Path resolve(Path other);
+
+  static Path of(String first, String... more) {
+    throw new UnsupportedOperationException("Operation not available in JavaScript.");
+  }
 }

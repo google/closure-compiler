@@ -22,6 +22,6 @@ public final class Paths {
   private Paths() {}
 
   public static Path get(String first, String... more) {
-    throw new UnsupportedOperationException("Operation not available in JavaScript.");
+    return Path.of(first, more);
   }
 }
