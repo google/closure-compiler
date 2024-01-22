@@ -52,7 +52,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -1706,7 +1705,7 @@ public final class CommandLineRunnerTest {
   public void testSymlink() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     Path symlink1 = Files.createTempDir().toPath().resolve("symlink1");
-    Path jscompTempDir = Paths.get(jsFile1.getValue()).getParent();
+    Path jscompTempDir = Path.of(jsFile1.getValue()).getParent();
     java.nio.file.Files.createSymbolicLink(symlink1, jscompTempDir);
     compileFiles("var a;", new FlagEntry<>(JsSourceType.JS, symlink1.toString()));
   }

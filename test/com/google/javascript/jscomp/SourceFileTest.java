@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.List;
@@ -208,7 +207,7 @@ public final class SourceFileTest {
     assertThat(sourceFileFromFileStringCharset.getCode()).isEqualTo(expectedContent);
 
     // Test SourceFile#fromPath(Path, Charset)
-    Path zipEntryPath = Paths.get(jsZipPath + "!/foo.js");
+    Path zipEntryPath = Path.of(jsZipPath + "!/foo.js");
     SourceFile sourceFileFromPathCharset = SourceFile.fromPath(zipEntryPath, UTF_8);
     assertThat(sourceFileFromPathCharset.getCode()).isEqualTo(expectedContent);
   }

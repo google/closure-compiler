@@ -30,7 +30,6 @@ import com.google.javascript.refactoring.FixingErrorManager;
 import com.google.javascript.refactoring.SuggestedFix;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -117,7 +116,7 @@ public final class Linter {
   }
 
   void lint(String filename) {
-    lint(Paths.get(filename), new Compiler(System.out));
+    lint(Path.of(filename), new Compiler(System.out));
   }
 
   void lint(Path path, Compiler compiler) {
@@ -157,7 +156,7 @@ public final class Linter {
     compiler.setErrorManager(errorManager);
     errorManager.setCompiler(compiler);
 
-    lint(Paths.get(filename), compiler);
+    lint(Path.of(filename), compiler);
 
     Collection<SuggestedFix> fixes = errorManager.getSureFixes();
     if (!fixes.isEmpty()) {

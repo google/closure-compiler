@@ -24,7 +24,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,8 +42,8 @@ public final class TranspilerTest {
   @Mock(answer = RETURNS_SMART_NULLS)
   Transpiler.CompilerSupplier mockCompiler;
 
-  private static final Path FOO_JS = Paths.get("foo.js");
-  private static final Path SOURCE_JS = Paths.get("source.js");
+  private static final Path FOO_JS = Path.of("foo.js");
+  private static final Path SOURCE_JS = Path.of("source.js");
   private static final ImmutableList<JSError> NO_ERRORS = ImmutableList.of();
 
   @Before

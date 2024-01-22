@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -642,7 +641,8 @@ public final class CompileTask
     while (iter.hasNext()) {
       FileResource fr = (FileResource) iter.next();
       // Construct path to file, relative to current working directory.
-      java.nio.file.Path path = Paths.get("").toAbsolutePath().relativize(fr.getFile().toPath());
+      java.nio.file.Path path =
+          java.nio.file.Path.of("").toAbsolutePath().relativize(fr.getFile().toPath());
       files.add(SourceFile.fromPath(path, Charset.forName(encoding)));
     }
     return files;

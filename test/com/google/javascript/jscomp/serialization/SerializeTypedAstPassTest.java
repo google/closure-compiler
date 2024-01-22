@@ -38,7 +38,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.function.Consumer;
@@ -569,7 +568,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   private ImmutableList<Path> debugLogFiles() {
     try {
       Path dir =
-          Paths.get(
+          Path.of(
               this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
               SerializeTypesToPointers.class.getSimpleName());
 

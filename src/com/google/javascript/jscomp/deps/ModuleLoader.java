@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -307,8 +306,8 @@ public final class ModuleLoader {
   }
 
   public static String relativePathFrom(String fromUriPath, String toUriPath) {
-    Path fromPath = Paths.get(fromUriPath);
-    Path toPath = Paths.get(toUriPath);
+    Path fromPath = Path.of(fromUriPath);
+    Path toPath = Path.of(toUriPath);
     Path fromFolder = fromPath.getParent();
 
     // if the from URIs are simple names without paths, they are in the same folder
@@ -384,7 +383,7 @@ public final class ModuleLoader {
     ABSOLUTE {
       @Override
       public String apply(String path) {
-        return Paths.get(path).toAbsolutePath().toString();
+        return Path.of(path).toAbsolutePath().toString();
       }
     };
   }

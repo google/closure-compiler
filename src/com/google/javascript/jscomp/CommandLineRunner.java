@@ -63,7 +63,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -1551,7 +1550,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   }
 
   private void processFlagFile(String flagFileString) throws CmdLineException, IOException {
-    Path flagFile = Paths.get(flagFileString);
+    Path flagFile = Path.of(flagFileString);
 
     BufferedReader buffer = java.nio.file.Files.newBufferedReader(flagFile, UTF_8);
     // Builds the tokens.
@@ -1905,7 +1904,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     if (flags.typedAstOutputFile != null) {
-      options.setTypedAstOutputFile(Paths.get(flags.typedAstOutputFile));
+      options.setTypedAstOutputFile(Path.of(flags.typedAstOutputFile));
     }
     options.setGenerateExports(flags.generateExports);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
@@ -2186,7 +2185,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         if (matchedFile.isDirectory()) {
           matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs, excludes);
         } else {
-          Path original = Paths.get(pattern);
+          Path original = Path.of(pattern);
           String pathStringAbsolute = original.normalize().toAbsolutePath().toString();
           if (!excludes.contains(pathStringAbsolute)) {
             allJsInputs.put(pathStringAbsolute, original.toString());

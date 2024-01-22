@@ -34,7 +34,7 @@ import com.google.javascript.jscomp.instrumentation.reporter.proto.ReportProfile
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -66,7 +66,7 @@ public final class ReportDecoder {
       throws IOException {
 
     String fileContent =
-        CharStreams.toString(Files.newBufferedReader(Paths.get(mappingFilePath), UTF_8));
+        CharStreams.toString(Files.newBufferedReader(Path.of(mappingFilePath), UTF_8));
     return ReportDecoder.parseMapping(fileContent);
   }
 

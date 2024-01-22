@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 /**
  * Rewrites ES6 import paths to be relative after resolving according to the compiler's module
@@ -103,11 +103,7 @@ public class Es6RelativizeImportPaths implements CompilerPass {
         newSpecifier = "/" + newSpecifier;
       }
 
-      newSpecifier =
-          Paths.get(scriptPath)
-              .getParent()
-              .relativize(Paths.get(newSpecifier))
-              .toString();
+      newSpecifier = Path.of(scriptPath).getParent().relativize(Path.of(newSpecifier)).toString();
 
       // Relativizing two paths with the same directory yields an ambiguous path rather than one
       // starting with "./".

@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.WarningsGuard;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.stream.Stream;
@@ -1294,7 +1293,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   private ImmutableList<Path> debugLogFiles() {
     try {
       Path dir =
-          Paths.get(
+          Path.of(
               this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
               DisambiguateProperties.class.getSimpleName());
 

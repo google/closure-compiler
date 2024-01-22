@@ -23,7 +23,6 @@ import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -36,7 +35,7 @@ public class ProductionInstrumentationReporterTest {
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
   private static String readFile(String filePath) throws IOException {
-    return CharStreams.toString(Files.newBufferedReader(Paths.get(filePath), UTF_8)).trim();
+    return CharStreams.toString(Files.newBufferedReader(Path.of(filePath), UTF_8)).trim();
   }
 
   @Test

@@ -45,7 +45,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -651,7 +650,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
     }
 
     Path dir = getOptions().getDebugLogDirectory();
-    Path relativeParts = Paths.get(firstNamePart, restNameParts);
+    Path relativeParts = Path.of(firstNamePart, restNameParts);
     Path file = dir.resolve(owner.getSimpleName()).resolve(relativeParts);
 
     // If a filter list for log file names was provided, only create a log file if any

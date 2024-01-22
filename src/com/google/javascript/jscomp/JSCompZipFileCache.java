@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -80,7 +79,7 @@ final class JSCompZipFileCache {
     private volatile FileTime lastModified;
 
     private CachedZipFile(String zipName) {
-      this.path = Paths.get(zipName);
+      this.path = Path.of(zipName);
     }
 
     InputStream getEntryStream(String entryName) throws IOException {

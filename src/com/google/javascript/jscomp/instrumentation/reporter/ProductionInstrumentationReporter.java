@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Map;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -76,7 +76,7 @@ final class ProductionInstrumentationReporter {
 
   /** This function reads a file at the given filePath and converts the contents into a string. */
   public static String readFile(String filePath) throws IOException {
-    return CharStreams.toString(Files.newBufferedReader(Paths.get(filePath), UTF_8));
+    return CharStreams.toString(Files.newBufferedReader(Path.of(filePath), UTF_8));
   }
 
   /**
@@ -109,7 +109,7 @@ final class ProductionInstrumentationReporter {
     File myObj = new File(fileName);
     myObj.createNewFile();
 
-    try (Writer myWriter = Files.newBufferedWriter(Paths.get(fileName), UTF_8)) {
+    try (Writer myWriter = Files.newBufferedWriter(Path.of(fileName), UTF_8)) {
       myWriter.write(fileContents);
     }
   }
