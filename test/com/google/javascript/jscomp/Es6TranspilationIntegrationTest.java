@@ -109,7 +109,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             .build());
 
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compilerOptions);
-    // TODO(b/197349249): We will soon run some of the transpilation passes after normalization.
     passes.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
