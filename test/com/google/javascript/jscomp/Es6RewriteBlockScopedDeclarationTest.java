@@ -1632,10 +1632,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "for (;;) {",
                 "  let a = getArray();",
                 "  f = function() {",
-                // TODO: b/197349249  This unnormalized code would not reach this pass once this
-                // pass runs post normalize. The test must then be updated to the new "normalized"
-                // code form:
-                //  var x; for (x in use(a)) { ...}
+                // gets normalized first to `var x; for (x in use(a))` because of
+                // `enableNormalize()` before the let/const rewriting pass runs.
                 "    for (var x in use(a)) {",
                 "      f(a);",
                 "      a.push(x);",
@@ -1652,7 +1650,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 "  f = (function(LOOP$0$PARAM$1) {",
                 "    return function() {",
                 "      var x;",
-                "for (x in use(LOOP$0$PARAM$1.a)) {",
+                "      for (x in use(LOOP$0$PARAM$1.a)) {",
                 "        f(LOOP$0$PARAM$1.a);",
                 "        LOOP$0$PARAM$1.a.push(x);",
                 "        return x;",
