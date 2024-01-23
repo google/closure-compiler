@@ -23,7 +23,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
@@ -325,7 +324,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
         // nice spaces for the line number
         int spaces = numberLength - Integer.toString(lineNumber).length();
-        builder.append(Strings.repeat(" ", spaces));
+        builder.append(" ".repeat(spaces));
         builder.append(lineNumber);
         builder.append("| ");
 

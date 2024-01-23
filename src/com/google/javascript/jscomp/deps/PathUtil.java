@@ -21,9 +21,7 @@ import static com.google.common.base.StandardSystemProperty.USER_DIR;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -195,7 +193,7 @@ public final class PathUtil {
         // Eg) base: /java/com/google/c/ui
         //   target: /java/com/google
         //   result: ../..
-        return Strings.repeat("../", baseFragments.length - i - 1) + "..";
+        return "../".repeat(baseFragments.length - i - 1) + "..";
       }
 
     } while (baseFragments[i].equals(targetFragments[i]));
@@ -203,8 +201,7 @@ public final class PathUtil {
     // Eg) base: /java/com/google/c
     //   target: /java/com/google/common/base
     //   result: ../common/base
-    return Strings.repeat("../", baseFragments.length - i) +
-        Joiner.on("/").join(
-            Lists.newArrayList(Arrays.asList(targetFragments).listIterator(i)));
+    return "../".repeat(baseFragments.length - i)
+        + Joiner.on("/").join(Lists.newArrayList(Arrays.asList(targetFragments).listIterator(i)));
   }
 }
