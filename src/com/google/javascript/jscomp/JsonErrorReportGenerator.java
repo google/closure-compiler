@@ -158,6 +158,6 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    stream.append(bufferedStream.toString());
+    stream.append(bufferedStream.toString(UTF_8));
   }
 }

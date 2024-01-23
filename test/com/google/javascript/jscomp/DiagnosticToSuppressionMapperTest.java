@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -78,7 +79,7 @@ public final class DiagnosticToSuppressionMapperTest {
     mapper.printSuppressions(OutputFormat.JSON);
 
     LinkedHashMap<String, String> suppressions =
-        new Gson().fromJson(myOut.toString(), LinkedHashMap.class);
+        new Gson().fromJson(myOut.toString(UTF_8), LinkedHashMap.class);
 
     assertThat(suppressions).isEqualTo(mapper.createSuppressionMap());
   }
@@ -103,7 +104,7 @@ public final class DiagnosticToSuppressionMapperTest {
             ImmutableSet.of("suppressionA", "suppressionB"), diagnosticGroups);
     mapper.printSuppressions(OutputFormat.MD);
 
-    assertThat(myOut.toString())
+    assertThat(myOut.toString(UTF_8))
         .isEqualTo(
             "| Error | Suppression tag |\n"
                 + "|---|---|\n"

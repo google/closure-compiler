@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -190,7 +191,7 @@ public final class PerformanceTrackerTest {
     try (PrintStream outstream = new PrintStream(output)) {
       tracker.outputTracerReport(outstream);
     }
-    return output.toString();
+    return output.toString(UTF_8);
   }
 
   private static String lines(String... lines) {

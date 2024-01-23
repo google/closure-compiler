@@ -369,7 +369,8 @@ public final class CommandLineRunnerTest {
 
     // An exit code of -1 indicates that the command line options were bad
     assertThat(exitCodes).containsExactly(-1);
-    assertThat(errReader.toString()).contains("Unknown diagnostic group: 'unknownDiagnosticGroup'");
+    assertThat(errReader.toString(UTF_8))
+        .contains("Unknown diagnostic group: 'unknownDiagnosticGroup'");
   }
 
   @Test
@@ -2094,7 +2095,7 @@ public final class CommandLineRunnerTest {
     setFilename(0, "foo/bar.js");
     String expected = "var module$foo$bar={default:{}};module$foo$bar.default.test=1;";
     test("exports.test = 1", expected);
-    assertThat(outReader.toString()).isEqualTo(expected + "\n");
+    assertThat(outReader.toString(UTF_8)).isEqualTo(expected + "\n");
   }
 
   @Test
@@ -2105,7 +2106,7 @@ public final class CommandLineRunnerTest {
     setFilename(0, "foo/bar.js");
     test("exports.test = 1", "var module$foo$bar={default: {}}; module$foo$bar.default.test = 1;");
     // With modules=auto no direct output is created.
-    assertThat(outReader.toString()).isEmpty();
+    assertThat(outReader.toString(UTF_8)).isEmpty();
   }
 
   @Test
