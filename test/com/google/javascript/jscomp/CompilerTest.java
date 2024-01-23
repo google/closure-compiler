@@ -3315,7 +3315,7 @@ public final class CompilerTest {
   @Test
   public void testTypedAstFilesystem_doesNotParseWeakFileTypedAstContents() {
     // Given
-    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
+    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
     Compiler compiler = new Compiler();
     CompilerOptions compilerOptions = new CompilerOptions();
@@ -3395,7 +3395,7 @@ public final class CompilerTest {
   @Test
   public void testTypedAstFilesystemWithModules_doesNotParseWeakFileTypedAstContents() {
     // Given
-    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
+    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
     Compiler compiler = new Compiler();
     CompilerOptions compilerOptions = new CompilerOptions();

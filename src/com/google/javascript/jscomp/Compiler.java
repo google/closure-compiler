@@ -1572,7 +1572,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void markFeatureNotAllowed(FeatureSet.Feature feature) {
+  void markFeatureNotAllowed(Feature feature) {
     this.allowableFeatures = this.allowableFeatures.without(feature);
   }
 
