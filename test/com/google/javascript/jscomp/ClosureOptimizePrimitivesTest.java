@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_S
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,12 +33,6 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ClosureOptimizePrimitives(compiler, canUseEs6Syntax);
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
   }
 
   @Test
