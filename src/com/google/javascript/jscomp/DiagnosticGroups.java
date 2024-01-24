@@ -428,15 +428,12 @@ public class DiagnosticGroups {
           REPORT_UNKNOWN_TYPES,
           UNDEFINED_VARIABLES,
           MISSING_PROVIDE,
-          DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),
           DiagnosticGroup.forType(MISSING_MODULE_OR_PROVIDE),
           MISSING_PROPERTIES,
           // triggered by typedefs with missing types
           DUPLICATE_VARS,
           // caused by a define depending on another define that's missing
-          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
-          // ES Module imports of files not reachable from this partial program.
-          DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
+          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE));
 
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");

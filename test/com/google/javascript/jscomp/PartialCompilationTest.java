@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.NoType;
@@ -203,21 +202,5 @@ public class PartialCompilationTest {
         "function missingInside() {",
         "  useMissing(new some.thing.Missing());",
         "}");
-  }
-
-  @Test
-  public void testUnresolvedBaseClassDoesNotHideFields() throws Exception {
-    assertPartialCompilationSucceeds(
-        "/** @constructor @extends {MissingBase} */",
-        "var Klass = function () {",
-        "  /** @type {string} */",
-        "  this.foo;",
-        "};");
-    TypedVar x = compiler.getTopScope().getSlot("Klass");
-    JSType type = x.getType();
-    assertThat(type.isFunctionType()).isTrue();
-
-    FunctionType fType = (FunctionType) type;
-    assertThat(fType.getTypeOfThis().hasProperty("foo")).isTrue();
   }
 }
