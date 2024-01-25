@@ -188,7 +188,6 @@ public class RewriteGoogJsImports implements CompilerPass {
       nameNode.setString("$goog");
       t.reportCodeChange();
 
-      return;
     }
 
     @Override

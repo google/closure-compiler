@@ -1063,7 +1063,6 @@ final class ClosureRewriteModule implements CompilerPass {
       recordExportToInline(defaultExport);
     }
 
-    return;
   }
 
   private void updateModuleBodyEarly(Node moduleScopeRoot) {
@@ -1649,7 +1648,6 @@ final class ClosureRewriteModule implements CompilerPass {
     compiler.reportChangeToEnclosingScope(jsdocNode);
 
     maybeUpdateExportObjectLiteral(t, rhs);
-    return;
   }
 
   private void maybeUpdateExportNameRef(NodeTraversal t, Node n) {

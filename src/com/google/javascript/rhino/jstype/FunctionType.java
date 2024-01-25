@@ -973,7 +973,6 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     sb.appendNonNull(call.getReturnType());
 
     setPrettyPrint(true);
-    return;
   }
 
   private void appendArgString(TypeStringBuilder sb, Parameter p) {
