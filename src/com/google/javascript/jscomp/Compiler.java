@@ -1269,7 +1269,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         if (hasErrors()) {
           return;
         }
+        beforePass(pf.getName());
         pf.create(this).process(externsRoot, jsRoot);
+        afterPass(pf.getName());
       }
     } finally {
       stopTracer(t, "runTranspileOnlyPasses");
