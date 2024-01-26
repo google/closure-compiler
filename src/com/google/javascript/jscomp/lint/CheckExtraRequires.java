@@ -60,7 +60,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       DiagnosticType.disabled(
           "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}'' is never referenced in this file");
 
-  // TODO(b/130215517): This should eventually be removed and exceptions supressed
+  // TODO(b/130215517): This should eventually be removed and exceptions suppressed
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
       ImmutableSet.of(
           "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
