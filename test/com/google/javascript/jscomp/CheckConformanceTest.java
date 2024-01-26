@@ -2384,6 +2384,18 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("function f() {goog.asserts.assertInstanceof(this, Error);}");
   }
 
+  @Test
+  public void testCustomBanUnknownThis_allowsTs() {
+    configuration =
+        "requirement: {\n"
+            + "  type: CUSTOM\n"
+            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
+            + "  error_message: 'BanUnknownThis Message'\n"
+            + "}";
+
+    testNoWarning(srcs(SourceFile.fromCode("file.closure.js", "function f() {alert(this);}")));
+  }
+
   private static String config(String rule, String message, String... fields) {
     String result = "requirement: {\n" + "  type: CUSTOM\n" + "  java_class: '" + rule + "'\n";
     for (String field : fields) {

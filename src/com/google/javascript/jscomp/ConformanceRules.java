@@ -1632,6 +1632,12 @@ public final class ConformanceRules {
     }
 
     @Override
+    protected boolean tsIsAllowlisted() {
+      // We expect TypeScript to already check it.
+      return true;
+    }
+
+    @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isThis()) {
         JSType type = n.getJSType();
