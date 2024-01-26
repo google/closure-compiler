@@ -51,14 +51,8 @@ public class Xid {
     int hashCode(String value);
   }
 
-  private static final HashFunction DEFAULT = new HashFunction() {
-    @Override public int hashCode(String value) {
-      return value.hashCode();
-    }
-  };
-
   public Xid() {
-    this.hasher = DEFAULT;
+    this.hasher = String::hashCode;
   }
 
   public Xid(HashFunction hasher) {

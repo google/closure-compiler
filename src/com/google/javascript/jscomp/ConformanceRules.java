@@ -588,17 +588,14 @@ public final class ConformanceRules {
     }
 
     private static final Precondition IS_CANDIDATE_NODE =
-        new Precondition() {
-          @Override
-          public boolean shouldCheck(Node n) {
-            switch (n.getToken()) {
-              case GETPROP:
-                return n.getFirstChild().isQualifiedName();
-              case NAME:
-                return !n.getString().isEmpty();
-              default:
-                return false;
-            }
+        (Node n) -> {
+          switch (n.getToken()) {
+            case GETPROP:
+              return n.getFirstChild().isQualifiedName();
+            case NAME:
+              return !n.getString().isEmpty();
+            default:
+              return false;
           }
         };
 
@@ -1953,17 +1950,10 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static final Precondition IS_SCRIPT_NODE =
-        new Precondition() {
-          @Override
-          public boolean shouldCheck(Node n) {
-            return n.isScript();
-          }
-        };
 
     @Override
     public final Precondition getPrecondition() {
-      return IS_SCRIPT_NODE;
+      return Node::isScript;
     }
   }
 
@@ -1996,17 +1986,10 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static final Precondition IS_SCRIPT_NODE =
-        new Precondition() {
-          @Override
-          public boolean shouldCheck(Node n) {
-            return n.isScript();
-          }
-        };
 
     @Override
     public final Precondition getPrecondition() {
-      return IS_SCRIPT_NODE;
+      return Node::isScript;
     }
   }
 

@@ -292,21 +292,17 @@ final class RenameVars implements CompilerPass {
   }
 
   /**
-   * Sorts Assignment objects by their count, breaking ties by their order of
-   * occurrence in the source to ensure a deterministic total ordering.
+   * Sorts Assignment objects by their count, breaking ties by their order of occurrence in the
+   * source to ensure a deterministic total ordering.
    */
-  private static final Comparator<Assignment> FREQUENCY_COMPARATOR =
-      new Comparator<Assignment>() {
-    @Override
-    public int compare(Assignment a1, Assignment a2) {
-      if (a1.count != a2.count) {
-        return a2.count - a1.count;
-      }
-      // Break a tie using the order in which the variable first appears in
-      // the source.
-      return ORDER_OF_OCCURRENCE_COMPARATOR.compare(a1, a2);
+  private static int frequencyComparator(Assignment a1, Assignment a2) {
+    if (a1.count != a2.count) {
+      return a2.count - a1.count;
     }
-  };
+    // Break a tie using the order in which the variable first appears in
+    // the source.
+    return ORDER_OF_OCCURRENCE_COMPARATOR.compare(a1, a2);
+  }
 
   /** Sorts Assignment objects by the order the variable name first appears in the source. */
   private static final Comparator<Assignment> ORDER_OF_OCCURRENCE_COMPARATOR =
@@ -325,7 +321,7 @@ final class RenameVars implements CompilerPass {
     reservedNames.addAll(externNames);
 
     // Rename vars, sorted by frequency of occurrence to minimize code size.
-    SortedSet<Assignment> varsByFrequency = new TreeSet<>(FREQUENCY_COMPARATOR);
+    SortedSet<Assignment> varsByFrequency = new TreeSet<>(RenameVars::frequencyComparator);
     varsByFrequency.addAll(assignments.values());
 
     // First try to reuse names from an earlier compilation.

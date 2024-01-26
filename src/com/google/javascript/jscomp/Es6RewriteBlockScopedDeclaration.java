@@ -129,12 +129,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   private static final Predicate<Node> isLoopOrFunction =
-      new Predicate<Node>() {
-        @Override
-        public boolean apply(Node n) {
-          return n.isFunction() || NodeUtil.isLoopStructure(n);
-        }
-      };
+      (n) -> n.isFunction() || NodeUtil.isLoopStructure(n);
 
   private static void extractInlineJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
     JSDocInfo existingInfo = srcDeclaration.getJSDocInfo();
