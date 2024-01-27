@@ -385,4 +385,68 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
             "  console.log(c.a)",
             "};"));
   }
+
+  @Test
+  public void testEs6RewriteClassExtendsExpression() {
+    CompilerOptions options = createCompilerOptions();
+
+    String code =
+        lines(
+            "/** @unrestricted */",
+            "class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {",
+            "  constructor(e) {",
+            "    this.databaseInfo = e, this.databaseId = e.databaseId;",
+            "  }",
+            "} {",
+            "  constructor(e) {",
+            "    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling"
+                + " = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams,"
+                + " this.longPollingOptions = e.longPollingOptions;",
+            "    console.log('test');",
+            "  }",
+            "}");
+    String expectedCodeNonTraspiled =
+        lines(
+            "class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {",
+            "  constructor(e) {",
+            "    this.databaseInfo = e, this.databaseId = e.databaseId;",
+            "  }",
+            "} {",
+            "  constructor(e) {",
+            "    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling ="
+                + " ",
+            "    e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams,"
+                + " this.longPollingOptions = ",
+            "    e.longPollingOptions;",
+            "    console.log('test');",
+            "  }",
+            "}\n");
+
+    String expectedCodeTranspiled =
+        lines(
+            "const i0$classdecl$var0 = class {",
+            "  constructor(e) {",
+            "    this.databaseInfo = e, this.databaseId = e.databaseId;",
+            "  }",
+            "};",
+            "const i0$classextends$var0 = i0$classdecl$var0;",
+            "class __PRIVATE_WebChannelConnection extends i0$classdecl$var0 {",
+            "  constructor(e) {",
+            "    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling ="
+                + " ",
+            "    e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams,"
+                + " this.longPollingOptions = ",
+            "    e.longPollingOptions;",
+            "    console.log('test');",
+            "  }",
+            "}\n");
+
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    test(options, code, expectedCodeTranspiled);
+
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.UNSTABLE);
+    test(options, code, expectedCodeNonTraspiled);
+  }
 }

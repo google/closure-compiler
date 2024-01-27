@@ -48,8 +48,8 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
  * <p>TODO(bradfordcsmith): This pass may no longer be necessary once the typechecker passes have
  * all been updated to understand ES6 classes.
  */
-public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.AbstractPostOrderCallback
-    implements CompilerPass {
+public final class Es6RewriteClassExtendsExpressions
+    implements NodeTraversal.Callback, CompilerPass {
 
   static final String CLASS_EXTENDS_VAR = "$classextends$var";
 
@@ -63,9 +63,19 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
     this.astFactory = compiler.createAstFactory();
   }
 
+  
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, features, this);
+    NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript()) {
+      FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      return scriptFeatures == null || scriptFeatures.contains(features);
+    }
+    return true;
   }
 
   @Override

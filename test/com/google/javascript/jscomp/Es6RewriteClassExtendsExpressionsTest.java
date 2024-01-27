@@ -97,6 +97,40 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   }
 
   @Test
+  public void testClassExtendsClassTranspilation() {
+    String code =
+        lines(
+            "class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {",
+            "  constructor(e) {",
+            "    this.databaseInfo = e, this.databaseId = e.databaseId;",
+            "  }",
+            "} {",
+            "  constructor(e) {",
+            "    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling"
+                + " = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams,"
+                + " this.longPollingOptions = e.longPollingOptions;",
+            "    console.log('test');",
+            "  }",
+            "}");
+    String expectedCode =
+        lines(
+            "const testcode$classextends$var0 = class __PRIVATE_RestConnection {",
+            "  constructor(e) {",
+            "    this.databaseInfo = e, this.databaseId = e.databaseId;",
+            "  }",
+            "};",
+            "class __PRIVATE_WebChannelConnection extends testcode$classextends$var0 {",
+            "  constructor(e) {",
+            "    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling"
+                + " = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams,"
+                + " this.longPollingOptions = e.longPollingOptions;",
+            "    console.log('test');",
+            "  }",
+            "}");
+    test(code, expectedCode);
+  }
+
+  @Test
   public void testVarDeclaration() {
     test(
         lines(
