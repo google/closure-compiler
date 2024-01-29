@@ -146,14 +146,16 @@ public class CompilerOptions implements Serializable {
 
     BrowserFeaturesetYear(int year) {
       checkState(
-          year == 2012 || (year >= 2018 && year <= 2023),
-          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2023 only",
+          year == 2012 || (year >= 2018 && year <= 2024),
+          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2024 only",
           year);
       this.year = year;
     }
 
     void setDependentValuesFromYear() {
-      if (year == 2023) {
+      if (year == 2024) {
+        setOutputFeatureSet(FeatureSet.BROWSER_2024);
+      } else if (year == 2023) {
         setOutputFeatureSet(FeatureSet.BROWSER_2023);
       } else if (year == 2022) {
         setOutputFeatureSet(FeatureSet.BROWSER_2022);

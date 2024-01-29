@@ -85,6 +85,9 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2021 = ES2021_MODULES.without(Feature.MODULES);
 
+  // NOTE: when ES2022 / ES2023 are added, the BROWSER_2024 FeatureSet defined below should be
+  // updated to include them.
+
   // Set of all fully supported features, even those part of language versions not fully supported
   public static final FeatureSet ES_NEXT = ES2021_MODULES.with(LangVersion.ES_NEXT.features());
 
@@ -127,6 +130,10 @@ public final class FeatureSet implements Serializable {
           // If future Browser FeatureSet Year definitions have to remove any other features, then
           // we need to change the way that is done to avoid incorrect inclusion of polyfills.
           Feature.REGEXP_LOOKBEHIND);
+
+  // According to https://compat-table.github.io/compat-table/es2016plus/ this should include all
+  // features through ES2023.
+  public static final FeatureSet BROWSER_2024 = ES2021_MODULES;
 
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
