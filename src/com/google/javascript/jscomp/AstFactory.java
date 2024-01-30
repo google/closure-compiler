@@ -577,6 +577,9 @@ final class AstFactory {
     if (lifeCycleStage.isNormalized() && name.startsWith("$jscomp")) {
       // $jscomp will always be a constant and needs to be marked that way to satisfy
       // the normalization invariants.
+      // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() and "$jscomp" prefix to
+      // decide constness. The callers must explicitly use `createConstantName` is they need a NAME
+      // node that's set with IS_CONSTANT_NAME prop.
       result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
     return result;
@@ -587,6 +590,7 @@ final class AstFactory {
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
     if (lifeCycleStage.isNormalized()) {
+      // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() to decide constness
       result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
     return result;
