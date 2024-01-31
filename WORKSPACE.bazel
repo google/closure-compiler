@@ -18,26 +18,15 @@ rules_jvm_external_deps()
 load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 rules_jvm_external_setup()
 
-#
-# To update google_bazel_common, locate the git commit to depend on and
-# use something like the following to determine the sha256
-#  curl -L https://github.com/google/bazel-common/archive/<git-commit-id>.zip |
-#  sha256
-#
-#
+# From https://github.com/bazelbuild/rules_java/releases/
 http_archive(
-    name = "google_bazel_common",
-    # output from `sha256sum` on the downloaded zip file
-    sha256 = "bcb5de5a5b951434828ead94479d3e1ff6501c2c8fc490db6cf3fbf7c188684b",
-    strip_prefix = "bazel-common-aaa4d801588f7744c6f4428e4f133f26b8518f42",
-    urls = [
-      "https://github.com/google/bazel-common/archive/aaa4d801588f7744c6f4428e4f133f26b8518f42.zip",
-    ],
+    name = "rules_java",
+    url = "https://github.com/bazelbuild/rules_java/releases/download/5.1.0/rules_java-5.1.0.tar.gz",
+    sha256 = "d974a2d6e1a534856d1b60ad6a15e57f3970d8596fbb0bb17b9ee26ca209332a",
 )
-
-load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules")
-
-google_common_workspace_rules()
+load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
+rules_java_dependencies()
+rules_java_toolchains()
 
 http_archive(
     name = "protobuf_proto_rules",
@@ -54,15 +43,26 @@ load("@protobuf_proto_rules//proto:repositories.bzl", "rules_proto_dependencies"
 rules_proto_dependencies()
 rules_proto_toolchains()
 
-# From https://github.com/bazelbuild/rules_java/releases/
+#
+# To update google_bazel_common, locate the git commit to depend on and
+# use something like the following to determine the sha256
+#  curl -L https://github.com/google/bazel-common/archive/<git-commit-id>.zip |
+#  sha256
+#
+#
 http_archive(
-    name = "rules_java",
-    url = "https://github.com/bazelbuild/rules_java/releases/download/5.1.0/rules_java-5.1.0.tar.gz",
-    sha256 = "d974a2d6e1a534856d1b60ad6a15e57f3970d8596fbb0bb17b9ee26ca209332a",
+    name = "google_bazel_common",
+    # output from `sha256sum` on the downloaded zip file
+    sha256 = "82a49fb27c01ad184db948747733159022f9464fc2e62da996fa700594d9ea42",
+    strip_prefix = "bazel-common-2a6b6406e12208e02b2060df0631fb30919080f3",
+    urls = [
+      "https://github.com/google/bazel-common/archive/2a6b6406e12208e02b2060df0631fb30919080f3.zip",
+    ],
 )
-load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
-rules_java_dependencies()
-rules_java_toolchains()
+
+load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules")
+
+google_common_workspace_rules()
 
 # Jarjar is a Google tool (https://github.com/google/jarjar) for generating
 # shaded JARs (https://stackoverflow.com/questions/49810578). This repo contains
