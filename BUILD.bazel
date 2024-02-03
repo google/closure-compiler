@@ -22,12 +22,22 @@ load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 # Produce an unshaded export jar based on :compiler_lib
 load("@rules_jvm_external//:defs.bzl", "java_export")
 
+# IMPORTANT:
+#
+# A "shaded jar" is one that includes the Java .class files not only of
+# closure-compiler but also the libraries it depends on. However, those
+# library class files have been renamed from their original names.
+# This allows someone who uses a different version of one of those libraries
+# to still use this closure-compiler jar file without causing conflicts
+# between the 2 versions of the same library.
+
 package(licenses = ["notice"])
 
 exports_files([
     "LICENSE",
 ])
 
+# Builds all of the bundle jars we upload to sonatype for a release
 filegroup(
     name = "sonatype_bundles",
     srcs = [
@@ -234,6 +244,8 @@ oss_java_library(
     ),
 )
 
+# Create a zip file containing the externs files distributed with closure-compiler.
+# The closure-compiler main class will expect to find this as a resource in its class path.
 genrule(
     name = "externs_zip",
     srcs = glob(["externs/**/*.js"]),
