@@ -22,22 +22,12 @@ load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 # Produce an unshaded export jar based on :compiler_lib
 load("@rules_jvm_external//:defs.bzl", "java_export")
 
-# IMPORTANT:
-#
-# A "shaded jar" is one that includes the Java .class files not only of
-# closure-compiler but also the libraries it depends on. However, those
-# library class files have been renamed from their original names.
-# This allows someone who uses a different version of one of those libraries
-# to still use this closure-compiler jar file without causing conflicts
-# between the 2 versions of the same library.
-
 package(licenses = ["notice"])
 
 exports_files([
     "LICENSE",
 ])
 
-# Builds all of the bundle jars we upload to sonatype for a release
 filegroup(
     name = "sonatype_bundles",
     srcs = [
@@ -95,9 +85,6 @@ jar_jar(
 java_binary(
     name = "compiler_uberjar",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
-    resources = [
-        ":LICENSE",
-    ],
     runtime_deps = [":compiler_lib"],
 )
 
@@ -114,26 +101,14 @@ genrule(
     cmd = "cp $(location //license_check:THIRD_PARTY_NOTICES) $(location THIRD_PARTY_NOTICES)",
 )
 
+# This rule creates a jar file containing the contents of the java libraries
+# given in its runtime_deps and the libraries they depend on which are also
+# built by our rules here. It excludes libraries we depend on from outside of
+# our sources.
 java_export(
     name = "compiler_unshaded",
     maven_coordinates = "com.google.javascript:closure-compiler-unshaded:{0}".format(version),
     pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl",
-    resources = [
-        ":LICENSE",
-        ":THIRD_PARTY_NOTICES",
-    ],
-    runtime_deps = [
-        "//:compiler_unshaded_lib_deploy.jar",
-    ],
-)
-
-java_binary(
-    name = "compiler_unshaded_lib",
-    main_class = "com.google.javascript.jscomp.CommandLineRunner",
-    resources = [
-        ":LICENSE",
-        ":THIRD_PARTY_NOTICES",
-    ],
     runtime_deps = [
         "//:compiler_lib",
     ],
@@ -185,11 +160,22 @@ filegroup(
 java_binary(
     name = "compiler_unshaded_no_runtime_libs",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
-    resources = [
-        ":LICENSE",
-        ":THIRD_PARTY_NOTICES",
-    ],
     runtime_deps = [":compiler_lib_no_runtime_libs"],
+)
+
+# java_export() appears to have a bug/feature that causes it to refuse to
+# include a file named LICENSE in the final merged jar file, so we have to
+# rename our license file to make it appear in the merged library jar sent to
+# Maven.
+genrule(
+    name = "LICENSE_renamed_as_a_workaround",
+    srcs = [
+        ":LICENSE",
+    ],
+    outs = [
+        "LICENSE.txt",
+    ],
+    cmd = "cp $(location LICENSE) $(location LICENSE.txt)",
 )
 
 oss_java_library(
@@ -200,7 +186,11 @@ oss_java_library(
             "-target 11",
         ],
         resources = [
+            # include the license under the commonly used name
             ":LICENSE",
+            # but also a renamed one needed to work around
+            # a bug in the java_export() rule
+            ":LICENSE_renamed_as_a_workaround",
             ":THIRD_PARTY_NOTICES",
             ":externs_zip",
         ] + glob([
@@ -244,8 +234,6 @@ oss_java_library(
     ),
 )
 
-# Create a zip file containing the externs files distributed with closure-compiler.
-# The closure-compiler main class will expect to find this as a resource in its class path.
 genrule(
     name = "externs_zip",
     srcs = glob(["externs/**/*.js"]),
