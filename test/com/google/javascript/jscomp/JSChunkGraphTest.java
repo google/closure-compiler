@@ -24,7 +24,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.truth.Truth8;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
@@ -664,9 +663,9 @@ public final class JSChunkGraphTest {
 
     makeGraph();
 
-    Truth8.assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2);
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
   }
 
@@ -691,9 +690,9 @@ public final class JSChunkGraphTest {
     makeGraph();
     graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
-    Truth8.assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2);
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
   }
 
@@ -727,7 +726,7 @@ public final class JSChunkGraphTest {
                 .map(CompilerInput::getSourceFile)
                 .collect(Collectors.toList()))
         .isEmpty();
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
   }
 
@@ -769,7 +768,7 @@ public final class JSChunkGraphTest {
                 .map(CompilerInput::getSourceFile)
                 .collect(Collectors.toList()))
         .isEmpty();
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
   }
 
@@ -795,9 +794,9 @@ public final class JSChunkGraphTest {
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("strong"))));
 
-    Truth8.assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak);
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong, moocher);
   }
 
@@ -823,7 +822,7 @@ public final class JSChunkGraphTest {
     graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
     assertThat(getWeakModule().getInputs()).isEmpty();
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, strong1, weak2, strong2);
   }
 
@@ -852,9 +851,9 @@ public final class JSChunkGraphTest {
             ImmutableList.of(
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
 
-    Truth8.assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2);
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
   }
 
@@ -889,9 +888,9 @@ public final class JSChunkGraphTest {
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("strong1"))));
 
-    Truth8.assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2, weak3, strongFromWeak);
-    Truth8.assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1);
   }
 
