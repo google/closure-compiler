@@ -53,10 +53,10 @@ rules_proto_toolchains()
 http_archive(
     name = "google_bazel_common",
     # output from `sha256sum` on the downloaded zip file
-    sha256 = "82a49fb27c01ad184db948747733159022f9464fc2e62da996fa700594d9ea42",
-    strip_prefix = "bazel-common-2a6b6406e12208e02b2060df0631fb30919080f3",
+    sha256 = "9e966f57182e76ba2f5a692ec410e32e5c77808220fd94f99071caac5310a019",
+    strip_prefix = "bazel-common-65f295afec03cce3807df5b06ef42bf8e46df4e4",
     urls = [
-      "https://github.com/google/bazel-common/archive/2a6b6406e12208e02b2060df0631fb30919080f3.zip",
+      "https://github.com/google/bazel-common/archive/65f295afec03cce3807df5b06ef42bf8e46df4e4.zip",
     ],
 )
 
