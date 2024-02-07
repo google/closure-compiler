@@ -89,13 +89,13 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
   private static final int BITS_SHIFT = 32 - BITS;
 
   /** Non-null key (exception: empty map has a null key). */
-  private final K key;
+  private final @Nullable K key;
 
   /** Hash of the key, right-shifted by BITS*depth. */
   private final int hash;
 
   /** Non-null value (exceptions: (1) empty map, (2) result of pivot, if not found). */
-  private final V value;
+  private final @Nullable V value;
 
   /** Bit mask indicating the children that are present (bitCount(mask) == children.length). */
   private final int mask;
@@ -424,14 +424,14 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
     }
 
     if (t1.hash != t2.hash) {
-      // Due to our invariant, we can safely conclude that there's a discrepancy in the
-      // keys without any extra work.
+      // Due to the invariant that keys that are .equals must have the same hash code, we can
+      // safely conclude that there's a discrepancy in the keys without any extra work.
       return false;
     } else if (!t1.key.equals(t2.key)) {
       // Hash collision: try to rearrange t2 to have the same root as t1
       t2 = t2.pivot(t1.key, t1.hash);
-      if (t2.key == null) {
-        // t1.key not found in t2
+      if (t2.value == null) {
+        // pivot() returns a null 't2.value' when t1.key was not found in t2
         return false;
       }
     }
@@ -504,7 +504,8 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
 
   /**
    * Returns a new version of this map with the given key at the root, and the root element moved to
-   * some deeper node. If the key is not found, then value will be null.
+   * some deeper node. If the key is not found in this map, then value will be null in the returned
+   * map.
    */
   @SuppressWarnings("unchecked")
   private HamtPMap<K, V> pivot(K key, int hash) {
@@ -512,8 +513,12 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
   }
 
   /**
-   * Internal recursive version of pivot. If parent is null then the result is used for the value in
-   * the returned map. The value, if found, is stored in the 'result' array as a secondary return.
+   * Internal recursive version of pivot.
+   *
+   * @param result an array of size 1. The value, if found, is stored in the 'result' array, as a
+   *     secondary return value. Otherwise the result array is unchanged.
+   * @return if parent is null, a map whose value is the value from the 'result' array (possibly
+   *     null) and that is rooted at 'key'. Otherwise, a map rooted at 'parent.key'.
    */
   private HamtPMap<K, V> pivot(K key, int hash, @Nullable HamtPMap<K, V> parent, V[] result) {
     int newMask = mask;
