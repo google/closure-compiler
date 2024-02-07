@@ -2,14 +2,21 @@ workspace(name = "com_google_javascript_jscomp")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-RULES_JVM_EXTERNAL_TAG = "5.3"
-RULES_JVM_EXTERNAL_SHA = "d31e369b854322ca5098ea12c69d7175ded971435e55c18dd9dd5f29cc5249ac"
+# From https://github.com/bazelbuild/rules_java/releases/
+http_archive(
+    name = "rules_java",
+    url = "https://github.com/bazelbuild/rules_java/releases/download/5.4.1/rules_java-5.4.1.tar.gz",
+    sha256 = "a1f82b730b9c6395d3653032bd7e3a660f9d5ddb1099f427c1e1fe768f92e395",
+)
+load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
+rules_java_dependencies()
+rules_java_toolchains()
 
 http_archive(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    sha256 = RULES_JVM_EXTERNAL_SHA,
-    url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/%s/rules_jvm_external-%s.tar.gz" % (RULES_JVM_EXTERNAL_TAG, RULES_JVM_EXTERNAL_TAG)
+    strip_prefix = "rules_jvm_external-77c3538b33cf195879b337fd48c480b77815b9a0",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/77c3538b33cf195879b337fd48c480b77815b9a0.zip",
+    sha256 = "12695154251711a275f0e637731d87dcaf8d9c5a6bb200735325ebebc2feba02",
 )
 
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
@@ -18,15 +25,6 @@ rules_jvm_external_deps()
 load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 rules_jvm_external_setup()
 
-# From https://github.com/bazelbuild/rules_java/releases/
-http_archive(
-    name = "rules_java",
-    url = "https://github.com/bazelbuild/rules_java/releases/download/5.1.0/rules_java-5.1.0.tar.gz",
-    sha256 = "d974a2d6e1a534856d1b60ad6a15e57f3970d8596fbb0bb17b9ee26ca209332a",
-)
-load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
-rules_java_dependencies()
-rules_java_toolchains()
 
 http_archive(
     name = "protobuf_proto_rules",

@@ -294,6 +294,7 @@ public final class DToA {
    * 2.49 will still round to 2, and 2.51 will still round to 3. */
   /* bufsize should be at least 20 for modes 0 and 1.  For the other modes,
    * bufsize should be two greater than the maximum number of output characters expected. */
+  @SuppressWarnings("BoxedPrimitiveEquality")
   private static int JS_dtoa(
       double d, int mode, boolean biasUp, int ndigits, boolean[] sign, StringBuilder buf) {
     /*  Arguments ndigits, decpt, sign are similar to those
