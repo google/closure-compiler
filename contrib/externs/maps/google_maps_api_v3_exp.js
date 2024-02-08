@@ -7350,6 +7350,11 @@ google.maps.PlaceFeature.prototype.fetchPlace = function() {};
 google.maps.PlacesLibrary = function() {};
 
 /**
+ * @type {typeof google.maps.places.AccessibilityOptions}
+ */
+google.maps.PlacesLibrary.prototype.AccessibilityOptions;
+
+/**
  * @type {typeof google.maps.places.AddressComponent}
  */
 google.maps.PlacesLibrary.prototype.AddressComponent;
@@ -14924,6 +14929,51 @@ google.maps.marker.PinElementOptions.prototype.scale;
 google.maps.places = {};
 
 /**
+ *
+ * Access by calling `const {AccessibilityOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.AccessibilityOptions = function() {};
+
+/**
+ * Whether a place has a wheelchair accessible entrance. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleEntrance;
+
+/**
+ * Whether a place has wheelchair accessible parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleParking;
+
+/**
+ * Whether a place has a wheelchair accessible restroom. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleRestroom;
+
+/**
+ * Whether a place offers wheelchair accessible seating. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleSeating;
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
@@ -15697,6 +15747,13 @@ google.maps.places.PhotoOptions.prototype.maxWidth;
 google.maps.places.Place = function(options) {};
 
 /**
+ * Accessibility options of this Place. <code>undefined</code> if the
+ * accessibility options data have not been called for from the server.
+ * @type {google.maps.places.AccessibilityOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.accessibilityOptions;
+
+/**
  * The collection of address components for this Place’s location. Empty object
  * if there is no known address data. <code>undefined</code> if the address data
  * has not been called for from the server.
@@ -16056,7 +16113,7 @@ google.maps.places.PlaceAspectRating.prototype.rating;
 google.maps.places.PlaceAspectRating.prototype.type;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * <ul>
 <li>PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
@@ -16085,12 +16142,6 @@ google.maps.places.PlaceAutocompleteElement = function(options) {};
 google.maps.places.PlaceAutocompleteElement.prototype.componentRestrictions;
 
 /**
- * The input element to show autocompletions for.
- * @type {!HTMLInputElement}
- */
-google.maps.places.PlaceAutocompleteElement.prototype.inputElement;
-
-/**
  * A soft boundary or hint to use when searching for places.
  * @type {!google.maps.places.LocationBias|null}
  */
@@ -16105,8 +16156,11 @@ google.maps.places.PlaceAutocompleteElement.prototype.locationRestriction;
 /**
  * The name to be used for the input element. See <a
  * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#name">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#name</a>
- * for details. Follows the same behavior as the name attribute for inputs.
- * @type {string}
+ * for details. Follows the same behavior as the name attribute for inputs. Note
+ * that this is the name that will be used when a form is submitted. See <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form</a>
+ * for details.
+ * @type {string|null}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.name;
 
@@ -16146,7 +16200,7 @@ google.maps.places.PlaceAutocompleteElement.prototype.types;
 
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * Options for constructing a PlaceAutocompleteElement.
  * @record
@@ -16159,12 +16213,6 @@ google.maps.places.PlaceAutocompleteElementOptions = function() {};
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype
     .componentRestrictions;
-
-/**
- * The input element to show autocompletions for.
- * @type {!HTMLInputElement}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.inputElement;
 
 /**
  * See {@link google.maps.places.PlaceAutocompleteElement.locationBias}
