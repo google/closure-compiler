@@ -16246,7 +16246,7 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
 google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * This event is created after the user selects a place with the Place
  * Autocomplete Element. Access the selection with <code>event.place</code>.
@@ -16260,13 +16260,13 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
 google.maps.places.PlaceAutocompletePlaceSelectEvent = function() {};
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {!google.maps.places.Place}
  */
 google.maps.places.PlaceAutocompletePlaceSelectEvent.prototype.place;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * This event is emitted by the PlaceAutocompleteElement when there is an issue
  * with the network request.
@@ -17440,7 +17440,7 @@ google.maps.places.SearchByTextRequest = function() {};
 /**
  * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
- * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
+ * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
  * google.maps.places.PlaceResult}. Nested fields can be specified with
