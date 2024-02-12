@@ -101,6 +101,11 @@ WebAssemblyTagOptions.prototype.parameters;
 WebAssembly.Tag = function(type) {};
 
 /**
+ * @type {!WebAssembly.Tag}
+ */
+WebAssembly.JSTag;
+
+/**
  * @record
  */
 function WebAssemblyExceptionOptions() {};
