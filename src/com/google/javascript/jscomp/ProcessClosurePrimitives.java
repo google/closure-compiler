@@ -93,6 +93,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
       "JSC_BASE_CLASS_ERROR",
       "incorrect use of {0}.base: {1}");
 
+  static final DiagnosticType POSSIBLE_BASE_CLASS_ERROR =
+      DiagnosticType.error(
+          "JSC_POSSIBLE_BASE_CLASS_ERROR",
+          "potentially incorrect use of {0}.base: {1}\n"
+              + "Note: if this .base method is not on a Closure subclass, this error is a false"
+              + " positive. Suppress with /** @suppress '{closureClassChecks}' */");
+
   static final DiagnosticType INVALID_FORWARD_DECLARE =
       DiagnosticType.error("JSC_INVALID_FORWARD_DECLARE", "Malformed goog.forwardDeclare");
 
@@ -436,7 +443,20 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
   private void rewriteBaseCallInMethod(
       String enclosingQname, String baseContainer, Node n, Node enclosingFnNameNode) {
     if (!knownClosureSubclasses.contains(baseContainer)) {
-      // Can't determine if this is a known "class" that has a known "base" method.
+      // Can't determine if this is a known "class" that has a known "base" method. Don't rewrite
+      // the "base" method call because if it's not a Closure subclass, the rewriting would be
+      // wrong. Instead emit an error the user can either suppress or fix.
+      reportPossibleBadBaseMethodUse(
+          n,
+          baseContainer,
+          "base used outside a known Closure subclass, in: "
+              + baseContainer
+              + "\nIf "
+              + baseContainer
+              + " is actually a Closure subclass, the compiler is unable to statically determine"
+              + " this. This can happen when calling .base off of some import or other alias of the"
+              + " original Closure subclass, such as from a goog.require in another file. Instead"
+              + " of using .base, rewrite this call as ParentClass.prototype.method.call(this)");
       return;
     }
 
@@ -537,6 +557,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
   /** Reports an incorrect use of super-method calling. */
   private void reportBadBaseMethodUse(Node n, String className, String extraMessage) {
     compiler.report(JSError.make(n, BASE_CLASS_ERROR, className, extraMessage));
+  }
+
+  /**
+   * Reports a potential incorrect use of super-method calling.
+   *
+   * <p>Use this instead of {@link #reportBadBaseMethodUse} when reporting a potential false
+   * positive that should be suppressible in JS code, instead of a coding pattern that is definitely
+   * bad and is not suppressible.
+   */
+  private void reportPossibleBadBaseMethodUse(Node n, String className, String extraMessage) {
+    compiler.report(JSError.make(n, POSSIBLE_BASE_CLASS_ERROR, className, extraMessage));
   }
 
   /**
