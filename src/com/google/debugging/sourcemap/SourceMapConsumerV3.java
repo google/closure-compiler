@@ -467,7 +467,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
             reverseSourceMapping.computeIfAbsent(
                 originalFile,
-                (String k) -> new LinkedHashMap<Integer, Collection<OriginalMapping>>());
+                (String k) -> new LinkedHashMap<>());
 
             Map<Integer, Collection<OriginalMapping>> lineToCollectionMap =
                 reverseSourceMapping.get(originalFile);
@@ -476,7 +476,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
             if (!lineToCollectionMap.containsKey(sourceLine)) {
               lineToCollectionMap.put(sourceLine,
-                  new ArrayList<OriginalMapping>(1));
+                  new ArrayList<>(1));
             }
 
             Collection<OriginalMapping> mappings =
