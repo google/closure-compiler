@@ -25,7 +25,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Hash;
 import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;

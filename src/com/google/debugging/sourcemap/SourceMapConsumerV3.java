@@ -21,8 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -169,7 +167,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
     int index = search(entries, column, 0, entries.size() - 1);
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
-    return getOriginalMappingForEntry(entries.get(index), Precision.EXACT);
+    return getOriginalMappingForEntry(entries.get(index), OriginalMapping.Precision.EXACT);
   }
 
   @Override
@@ -429,17 +427,17 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       lineNumber--;
     } while (lines.get(lineNumber) == null);
     ArrayList<Entry> entries = lines.get(lineNumber);
-    return getOriginalMappingForEntry(Iterables.getLast(entries), Precision.APPROXIMATE_LINE);
+    return getOriginalMappingForEntry(Iterables.getLast(entries), OriginalMapping.Precision.APPROXIMATE_LINE);
   }
 
   /** Creates an "OriginalMapping" object for the given entry object. */
-  private @Nullable OriginalMapping getOriginalMappingForEntry(Entry entry, Precision precision) {
+  private @Nullable OriginalMapping getOriginalMappingForEntry(Entry entry, OriginalMapping.Precision precision) {
     if (entry.getSourceFileId() == UNMAPPED) {
       return null;
     } else {
       // Adjust the line/column here to be start at 1.
       OriginalMapping.Builder x =
-          OriginalMapping.newBuilder()
+          OriginalMapping.builder()
               .setOriginalFile(sources[entry.getSourceFileId()])
               .setLineNumber(entry.getSourceLine() + 1)
               .setColumnPosition(entry.getSourceColumn() + 1)
@@ -485,7 +483,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
                 lineToCollectionMap.get(sourceLine);
 
             OriginalMapping.Builder builder =
-                OriginalMapping.newBuilder()
+                OriginalMapping.builder()
                     .setLineNumber(targetLine)
                     .setColumnPosition(entry.getGeneratedColumn());
 

@@ -16,8 +16,6 @@
 
 package com.google.debugging.sourcemap;
 
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-
 import java.util.Collection;
 
 /**

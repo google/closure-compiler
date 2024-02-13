@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.testing;
 
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.OriginalMapping;
 import com.google.javascript.jscomp.Region;
 import com.google.javascript.jscomp.SourceExcerptProvider;
 import com.google.javascript.jscomp.SourceFile;

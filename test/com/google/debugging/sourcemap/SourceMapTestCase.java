@@ -24,7 +24,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -269,12 +268,12 @@ public abstract class SourceMapTestCase {
       if (!inputToken.tokenName.startsWith("STR")) {
         assertWithMessage("missing name for %s", inputToken.tokenName)
             .that(mapping.getIdentifier())
-            .isNotEmpty();
+            .isPresent();
       }
 
       // Ensure that if the mapping has a name, it matches the token.
-      if (!mapping.getIdentifier().isEmpty()) {
-        assertThat("__" + inputToken.tokenName + "__").isEqualTo(mapping.getIdentifier());
+      if (mapping.getIdentifier().isPresent()) {
+        assertThat("__" + inputToken.tokenName + "__").isEqualTo(mapping.getIdentifier().get());
       }
     }
   }

@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.OriginalMapping;
 import org.jspecify.nullness.Nullable;
 
 /**

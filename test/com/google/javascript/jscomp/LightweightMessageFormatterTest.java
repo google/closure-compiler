@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.OriginalMapping;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 import com.google.javascript.rhino.IR;
@@ -35,7 +35,7 @@ public final class LightweightMessageFormatterTest {
       DiagnosticType.error("TEST_FOO", "error description here");
   private static final String ORIGINAL_SOURCE_FILE = "original/source.html";
   private static final OriginalMapping ORIGINAL_SOURCE =
-      OriginalMapping.newBuilder()
+      OriginalMapping.builder()
           .setOriginalFile(ORIGINAL_SOURCE_FILE)
           .setLineNumber(3)
           .setColumnPosition(15)

@@ -23,9 +23,8 @@ import static org.mockito.Mockito.when;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.debugging.sourcemap.OriginalMapping;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -112,12 +111,12 @@ public final class CoverageInstrumenterTest {
     OriginalMapping mappingFoX = sourceMap.getMappingForLine(1, result.source.indexOf("x=42") + 1);
     assertThat(mappingFoX)
         .isEqualTo(
-            OriginalMapping.newBuilder()
+            OriginalMapping.builder()
                 .setOriginalFile(SOURCE_JS.toString())
                 .setLineNumber(1)
                 .setColumnPosition(5)
                 .setIdentifier("x")
-                .setPrecision(Precision.EXACT)
+                .setPrecision(OriginalMapping.Precision.EXACT)
                 .build());
   }
 }

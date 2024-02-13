@@ -34,10 +34,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.OriginalMapping;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -191,12 +190,12 @@ public final class CompilerTest {
 
     assertThat(compiler.getSourceMapping(normalize("generated_js/example.js"), 3, 3))
         .isEqualTo(
-            OriginalMapping.newBuilder()
+            OriginalMapping.builder()
                 .setOriginalFile(origSourceName)
                 .setLineNumber(18)
                 .setColumnPosition(25)
                 .setIdentifier("testSymbolName")
-                .setPrecision(Precision.APPROXIMATE_LINE)
+                .setPrecision(OriginalMapping.Precision.APPROXIMATE_LINE)
                 .build());
     assertThat(compiler.getSourceLine(origSourceName, 1)).isEqualTo("<div ng-show='foo()'>");
   }

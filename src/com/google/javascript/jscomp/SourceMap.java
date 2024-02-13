@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.OriginalMapping;
 import com.google.debugging.sourcemap.SourceMapFormat;
 import com.google.debugging.sourcemap.SourceMapGenerator;
 import com.google.debugging.sourcemap.SourceMapGeneratorFactory;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.IOException;
@@ -30,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -193,9 +195,9 @@ public final class SourceMap {
         sourceFileName = sourceMapping.getOriginalFile();
         lineNo = sourceMapping.getLineNumber();
         charNo = sourceMapping.getColumnPosition();
-        String identifier = sourceMapping.getIdentifier();
-        if (sourceMapping.hasIdentifier() && !identifier.isEmpty()) {
-          originalName = identifier;
+        Optional<String> identifier = sourceMapping.getIdentifier();
+        if (identifier.isPresent() && !identifier.get().isEmpty()) {
+          originalName = identifier.get();
         }
       }
     }
