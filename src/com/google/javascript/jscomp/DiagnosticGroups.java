@@ -633,10 +633,6 @@ public class DiagnosticGroups {
           INVALID_CLOSURE_CALL_SCOPE_ERROR,
           INVALID_GET_CALL_SCOPE);
 
-  public static final DiagnosticGroup CLOSURE_CLASS_CHECKS =
-      DiagnosticGroups.registerGroup(
-          "closureClassChecks", ProcessClosurePrimitives.POSSIBLE_BASE_CLASS_ERROR);
-
   // This group exists so that tests can check for these warnings. It is intentionally not
   // named so that it is is not suppressible via the command line or in code.
   @VisibleForTesting

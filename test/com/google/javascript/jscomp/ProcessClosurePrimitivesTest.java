@@ -27,7 +27,6 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_RENAME_FUNCTION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_STYLE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.POSSIBLE_BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 
 import org.junit.Test;
@@ -394,42 +393,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
             "alert(1);",
             "alert(2);",
             FOO_INHERITS));
-  }
-
-  @Test
-  public void testValidBase_googProvide_googRequiredInOtherModule() {
-    test(
-        srcs(
-            lines(
-                "goog.provide('my.Foo');",
-                "/** @constructor */",
-                "my.Foo = function() {}",
-                "goog.inherits(my.Foo, BaseFoo);"),
-            lines(
-                "goog.module('test');",
-                "const Foo = goog.require('my.Foo');",
-                "Foo.prototype.method = function() {",
-                "  Foo.base(this, 'method');",
-                "};")),
-        error(POSSIBLE_BASE_CLASS_ERROR));
-  }
-
-  @Test
-  public void testValidBase_googModule_googRequiredInOtherModule() {
-    test(
-        srcs(
-            lines(
-                "goog.module('FooModule');",
-                "/** @constructor */ function Foo() {}",
-                "goog.inherits(Foo, BaseFoo);",
-                "exports = {Foo};"),
-            lines(
-                "goog.module('test');",
-                "const {Foo: FooRequired} = goog.require('FooModule');",
-                "FooRequired.prototype.method = function() {",
-                "  FooRequired.base(this, 'method');",
-                "};")),
-        error(POSSIBLE_BASE_CLASS_ERROR));
   }
 
   @Test
