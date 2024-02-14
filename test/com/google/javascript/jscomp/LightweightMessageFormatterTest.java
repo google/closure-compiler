@@ -39,6 +39,7 @@ public final class LightweightMessageFormatterTest {
           .setOriginalFile(ORIGINAL_SOURCE_FILE)
           .setLineNumber(3)
           .setColumnPosition(15)
+          .setPrecision(OriginalMapping.Precision.EXACT)
           .build();
 
   @Test

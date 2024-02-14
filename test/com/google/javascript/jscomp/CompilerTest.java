@@ -399,7 +399,7 @@ public final class CompilerTest {
     // FilePosition above is 0-based, whereas OriginalMapping is 1-based, thus 18 & 26.
     assertThat(mapping.getLineNumber()).isEqualTo(18);
     assertThat(mapping.getColumnPosition()).isEqualTo(26);
-    assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
+    assertThat(mapping.getIdentifier().get()).isEqualTo("testSymbolName");
     assertThat(consumer.getOriginalSources()).containsExactly("input.js", "input.ts");
     assertThat(consumer.getOriginalSourcesContent()).isNull();
     assertThat(consumer.getOriginalNames()).containsExactly("testSymbolName");
