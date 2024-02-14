@@ -3,6 +3,9 @@ package com.google.debugging.sourcemap;
 import com.google.auto.value.AutoValue;
 import java.util.Optional;
 
+/**
+ * Simple representation of information made available when parsing a sourcemap file.
+ */
 @AutoValue
 public abstract class OriginalMapping {
     public enum Precision {
@@ -15,14 +18,29 @@ public abstract class OriginalMapping {
         return new AutoValue_OriginalMapping.Builder();
     }
 
+    /**
+     * The original source file.
+     */
     public abstract String getOriginalFile();
 
+    /**
+     * The line in the original file.
+     */
     public abstract int getLineNumber();
 
+    /**
+     * The column number on the line.
+     */
     public abstract int getColumnPosition();
 
+    /**
+     * The original name of the identifier, if any.
+     */
     public abstract Optional<String> getIdentifier();
 
+    /**
+     * The type of retrieval performed to get this mapping.
+     */
     public abstract Precision getPrecision();
 
     @AutoValue.Builder
