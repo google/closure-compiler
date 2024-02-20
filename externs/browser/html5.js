@@ -1017,7 +1017,6 @@ CanvasGradient.prototype.addColorStop = function(offset, color) {};
  */
 function CanvasPattern() {}
 
-
 /**
  * @param {DOMMatrixReadOnly} matrix
  * @return {undefined}
