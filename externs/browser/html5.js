@@ -531,16 +531,16 @@ BaseRenderingContext2D.prototype.transform = function(
     m11, m12, m21, m22, dx, dy) {};
 
 /**
- * @param {number} m11
- * @param {number} m12
- * @param {number} m21
- * @param {number} m22
- * @param {number} dx
- * @param {number} dy
+ * @param {(number|DOMMatrixReadOnly)} m11OrMatrix
+ * @param {number=} m12
+ * @param {number=} m21
+ * @param {number=} m22
+ * @param {number=} dx
+ * @param {number=} dy
  * @return {undefined}
  */
 BaseRenderingContext2D.prototype.setTransform = function(
-    m11, m12, m21, m22, dx, dy) {};
+    m11OrMatrix, m12, m21, m22, dx, dy) {};
 
 /**
  * @return {undefined}
@@ -1016,6 +1016,13 @@ CanvasGradient.prototype.addColorStop = function(offset, color) {};
  * @constructor
  */
 function CanvasPattern() {}
+
+
+/**
+ * @param {DOMMatrixReadOnly} matrix
+ * @return {undefined}
+ */
+CanvasPattern.prototype.setTransform = function(matrix) {};
 
 /**
  * @constructor
