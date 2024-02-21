@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -51,7 +50,7 @@ class ColorSerializer {
    * Stores the `Integer` values assigned to `Color`s as they are added for serialization, so they
    * can be looked up and used for references between the output `TypeProto`s.
    */
-  private final HashMap<ColorId, Integer> colorIdToTypePointer = new HashMap<>();
+  private final LinkedHashMap<ColorId, Integer> colorIdToTypePointer = new LinkedHashMap<>();
 
   /**
    * Stores the `Color`s to be serialized in the order they will be serialized.
