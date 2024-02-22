@@ -3171,6 +3171,7 @@ google.maps.FeatureType = {
   LOCALITY: 'LOCALITY',
   /**
    * Indicates a postal code as used to address postal mail within the country.
+   * Includes zip codes.
    */
   POSTAL_CODE: 'POSTAL_CODE',
   /**
@@ -4169,6 +4170,11 @@ google.maps.JourneySharingLibrary.prototype.FleetEngineVehicleLocationProvider;
  * @type {typeof google.maps.journeySharing.JourneySharingMapView}
  */
 google.maps.JourneySharingLibrary.prototype.JourneySharingMapView;
+
+/**
+ * @type {typeof google.maps.journeySharing.Speed}
+ */
+google.maps.JourneySharingLibrary.prototype.Speed;
 
 /**
  * @type {typeof google.maps.journeySharing.TripType}
@@ -5494,11 +5500,12 @@ google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
  * Access by calling `const {MapElement} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.MapElementOptions=} options
  * @implements {google.maps.MapElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.MapElement = function() {};
+google.maps.MapElement = function(options) {};
 
 /**
  * The center latitude/longitude of the map.
@@ -6454,6 +6461,10 @@ google.maps.MapsNetworkErrorEndpoint = {
    */
   PLACES_GATEWAY: 'PLACES_GATEWAY',
   /**
+   * Identifies the Get Place API within the Places API.
+   */
+  PLACES_GET_PLACE: 'PLACES_GET_PLACE',
+  /**
    * Identifies the LocalContextSearch API within the Places API.
    */
   PLACES_LOCAL_CONTEXT_SEARCH: 'PLACES_LOCAL_CONTEXT_SEARCH',
@@ -6461,6 +6472,10 @@ google.maps.MapsNetworkErrorEndpoint = {
    * Identifies the NearbySearch API within the Places API.
    */
   PLACES_NEARBY_SEARCH: 'PLACES_NEARBY_SEARCH',
+  /**
+   * Identifies the Search Text API within the Places API.
+   */
+  PLACES_SEARCH_TEXT: 'PLACES_SEARCH_TEXT',
   /**
    * Identifies the getPanorama method within the Streetview service.
    */
@@ -7335,6 +7350,11 @@ google.maps.PlaceFeature.prototype.fetchPlace = function() {};
 google.maps.PlacesLibrary = function() {};
 
 /**
+ * @type {typeof google.maps.places.AccessibilityOptions}
+ */
+google.maps.PlacesLibrary.prototype.AccessibilityOptions;
+
+/**
  * @type {typeof google.maps.places.AddressComponent}
  */
 google.maps.PlacesLibrary.prototype.AddressComponent;
@@ -7428,6 +7448,11 @@ google.maps.PlacesLibrary.prototype.Review;
  * @type {typeof google.maps.places.SearchBox}
  */
 google.maps.PlacesLibrary.prototype.SearchBox;
+
+/**
+ * @type {typeof google.maps.places.SearchByTextRankPreference}
+ */
+google.maps.PlacesLibrary.prototype.SearchByTextRankPreference;
 
 /**
  *
@@ -8146,7 +8171,7 @@ google.maps.RotateControlOptions = function() {};
 
 /**
  * Position id. Used to specify the position of the control on the map.
- * @default {@link google.maps.ControlPosition.INLINE_START_BLOCK_END}
+ * @default {@link google.maps.ControlPosition.INLINE_END_BLOCK_END}
  * @type {google.maps.ControlPosition|null|undefined}
  */
 google.maps.RotateControlOptions.prototype.position;
@@ -10145,7 +10170,7 @@ google.maps.ZoomControlOptions = function() {};
 
 /**
  * Position id. Used to specify the position of the control on the map.
- * @default {@link google.maps.ControlPosition.INLINE_START_BLOCK_END}
+ * @default {@link google.maps.ControlPosition.INLINE_END_BLOCK_END}
  * @type {google.maps.ControlPosition|null|undefined}
  */
 google.maps.ZoomControlOptions.prototype.position;
@@ -10786,6 +10811,9 @@ google.maps.journeySharing.DefaultMarkerSetupOptions.prototype
 /**
  * PolylineSetup default options.
  * @record
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead.
  */
 google.maps.journeySharing.DefaultPolylineSetupOptions = function() {};
 
@@ -10883,6 +10911,22 @@ google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams =
  */
 google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams
     .prototype.vehicle;
+
+/**
+ * Parameters specific to polyline customization functions for {@link
+ * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProvider}.
+ * @extends {google.maps.journeySharing.PolylineCustomizationFunctionParams}
+ * @record
+ */
+google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams =
+    function() {};
+
+/**
+ * The delivery vehicle traversing through this polyline.
+ * @type {!google.maps.journeySharing.DeliveryVehicle}
+ */
+google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams
+    .prototype.deliveryVehicle;
 
 /**
  * DeliveryVehicleStop type
@@ -11131,6 +11175,28 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions =
     function() {};
 
 /**
+ * Customization applied to the active polyline. An active polyline corresponds
+ * to a portion of the route the vehicle is currently traversing through.
+ * <br><br>Use this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams}
+ * for a list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
+    .prototype.activePolylineCustomization;
+
+/**
  * Provides JSON Web Tokens for authenticating the client to Fleet Engine.
  * @type {!google.maps.journeySharing.AuthTokenFetcher}
  */
@@ -11210,6 +11276,28 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
     .prototype.projectId;
 
 /**
+ * Customization applied to the remaining polyline. A remaining polyline
+ * corresponds to a portion of the route the vehicle has not yet started
+ * traversing through. <br><br>Use this field to specify custom styling (such as
+ * polyline color) and interactivity (such as click handling).<ul><li> If
+ * a {@link google.maps.PolylineOptions} object is specified, the changes
+ * specified in it are applied to the polyline after the polyline has been
+ * created, overwriting its default options if they exist. </li><li>If a
+ * function is specified, it is invoked once when the polyline is created. (On
+ * this invocation, the <code>isNew</code> parameter in the function parameters
+ * object is set to <code>true</code>.) Additionally, this function is invoked
+ * when the polyline&#39;s coordinates change, or when the location provider
+ * receives data from Fleet Engine, regardless of whether the data corresponding
+ * to this polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams}
+ * for a list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
+    .prototype.remainingPolylineCustomization;
+
+/**
  * Boolean to show or hide outcome locations for the fetched tasks.
  * @type {?boolean}
  */
@@ -11235,6 +11323,28 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
  */
 google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
     .prototype.staleLocationThresholdMillis;
+
+/**
+ * Customization applied to the taken polyline. A taken polyline corresponds to
+ * a portion of the route the vehicle has already traversed through. <br><br>Use
+ * this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams}
+ * for a list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.DeliveryVehiclePolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
+    .prototype.takenPolylineCustomization;
 
 /**
  * Filter options to apply when fetching tasks. The options can include specific
@@ -11519,6 +11629,28 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions =
     function() {};
 
 /**
+ * Customization applied to the active polyline. An active polyline corresponds
+ * to a portion of the route the vehicle is currently traversing through.
+ * <br><br>Use this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
+    .activePolylineCustomization;
+
+/**
  * Provides JSON Web Tokens for authenticating the client to Fleet Engine.
  * @type {!google.maps.journeySharing.AuthTokenFetcher}
  */
@@ -11587,6 +11719,50 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
  */
 google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
     .projectId;
+
+/**
+ * Customization applied to the remaining polyline. A remaining polyline
+ * corresponds to a portion of the route the vehicle has not yet started
+ * traversing through. <br><br>Use this field to specify custom styling (such as
+ * polyline color) and interactivity (such as click handling).<ul><li> If
+ * a {@link google.maps.PolylineOptions} object is specified, the changes
+ * specified in it are applied to the polyline after the polyline has been
+ * created, overwriting its default options if they exist. </li><li>If a
+ * function is specified, it is invoked once when the polyline is created. (On
+ * this invocation, the <code>isNew</code> parameter in the function parameters
+ * object is set to <code>true</code>.) Additionally, this function is invoked
+ * when the polyline&#39;s coordinates change, or when the location provider
+ * receives data from Fleet Engine, regardless of whether the data corresponding
+ * to this polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
+    .remainingPolylineCustomization;
+
+/**
+ * Customization applied to the taken polyline. A taken polyline corresponds to
+ * a portion of the route the vehicle has already traversed through. <br><br>Use
+ * this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
+    .takenPolylineCustomization;
 
 /**
  * The tracking ID of the task to track immediately after the location provider
@@ -11665,6 +11841,31 @@ google.maps.journeySharing.FleetEngineTripLocationProvider = function(
 google.maps.journeySharing.FleetEngineTripLocationProvider.prototype.tripId;
 
 /**
+ * Polyline customization function that colors the active polyline according to
+ * its speed reading. Specify this function as the {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.activePolylineCustomization}
+ * to render a traffic-aware polyline for the active polyline.
+ * @param {!google.maps.journeySharing.TripPolylineCustomizationFunctionParams}
+ *     params The parameters provided to the polyline customization function.
+ * @return {undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProvider
+    .TRAFFIC_AWARE_ACTIVE_POLYLINE_CUSTOMIZATION_FUNCTION = function(params) {};
+
+/**
+ * Polyline customization function that colors the remaining polyline according
+ * to its speed reading. Specify this function as the {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProviderOptions.remainingPolylineCustomization}
+ * to render a traffic-aware polyline for the remaining polyline.
+ * @param {!google.maps.journeySharing.TripPolylineCustomizationFunctionParams}
+ *     params The parameters provided to the polyline customization function.
+ * @return {undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProvider
+    .TRAFFIC_AWARE_REMAINING_POLYLINE_CUSTOMIZATION_FUNCTION = function(
+    params) {};
+
+/**
  * Explicitly refreshes the tracked location.
  * @return {void}
  */
@@ -11677,6 +11878,28 @@ google.maps.journeySharing.FleetEngineTripLocationProvider.prototype.refresh =
  */
 google.maps.journeySharing.FleetEngineTripLocationProviderOptions =
     function() {};
+
+/**
+ * Customization applied to the active polyline. An active polyline corresponds
+ * to a portion of the route the vehicle is currently traversing through.
+ * <br><br>Use this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.TripPolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.TripPolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .activePolylineCustomization;
 
 /**
  * Provides JSON Web Tokens for authenticating the client to Fleet Engine.
@@ -11745,6 +11968,50 @@ google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
  */
 google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .projectId;
+
+/**
+ * Customization applied to the remaining polyline. A remaining polyline
+ * corresponds to a portion of the route the vehicle has not yet started
+ * traversing through. <br><br>Use this field to specify custom styling (such as
+ * polyline color) and interactivity (such as click handling).<ul><li> If
+ * a {@link google.maps.PolylineOptions} object is specified, the changes
+ * specified in it are applied to the polyline after the polyline has been
+ * created, overwriting its default options if they exist. </li><li>If a
+ * function is specified, it is invoked once when the polyline is created. (On
+ * this invocation, the <code>isNew</code> parameter in the function parameters
+ * object is set to <code>true</code>.) Additionally, this function is invoked
+ * when the polyline&#39;s coordinates change, or when the location provider
+ * receives data from Fleet Engine, regardless of whether the data corresponding
+ * to this polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.TripPolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.TripPolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .remainingPolylineCustomization;
+
+/**
+ * Customization applied to the taken polyline. A taken polyline corresponds to
+ * a portion of the route the vehicle has already traversed through. <br><br>Use
+ * this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.TripPolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.TripPolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
+    .takenPolylineCustomization;
 
 /**
  * The trip ID to track immediately after the location provider is instantiated.
@@ -11846,6 +12113,31 @@ google.maps.journeySharing.FleetEngineVehicleLocationProvider.prototype
     .vehicleId;
 
 /**
+ * Polyline customization function that colors the active polyline according to
+ * its speed reading. Specify this function as the {@link
+ * google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.activePolylineCustomization}
+ * to render a traffic-aware polyline for the active polyline.
+ * @param {!google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams}
+ *     params The parameters provided to the polyline customization function.
+ * @return {undefined}
+ */
+google.maps.journeySharing.FleetEngineVehicleLocationProvider
+    .TRAFFIC_AWARE_ACTIVE_POLYLINE_CUSTOMIZATION_FUNCTION = function(params) {};
+
+/**
+ * Polyline customization function that colors the remaining polyline according
+ * to its speed reading. Specify this function as the {@link
+ * google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.remainingPolylineCustomization}
+ * to render a traffic-aware polyline for the remaining polyline.
+ * @param {!google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams}
+ *     params The parameters provided to the polyline customization function.
+ * @return {undefined}
+ */
+google.maps.journeySharing.FleetEngineVehicleLocationProvider
+    .TRAFFIC_AWARE_REMAINING_POLYLINE_CUSTOMIZATION_FUNCTION = function(
+    params) {};
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * Options for vehicle location provider.
@@ -11853,6 +12145,28 @@ google.maps.journeySharing.FleetEngineVehicleLocationProvider.prototype
  */
 google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions =
     function() {};
+
+/**
+ * Customization applied to the active polyline. An active polyline corresponds
+ * to a portion of the route the vehicle is currently traversing through.
+ * <br><br>Use this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
+    .activePolylineCustomization;
 
 /**
  * Provides JSON Web Tokens for authenticating the client to Fleet Engine.
@@ -11944,6 +12258,28 @@ google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
     .projectId;
 
 /**
+ * Customization applied to the remaining polyline. A remaining polyline
+ * corresponds to a portion of the route the vehicle has not yet started
+ * traversing through. <br><br>Use this field to specify custom styling (such as
+ * polyline color) and interactivity (such as click handling).<ul><li> If
+ * a {@link google.maps.PolylineOptions} object is specified, the changes
+ * specified in it are applied to the polyline after the polyline has been
+ * created, overwriting its default options if they exist. </li><li>If a
+ * function is specified, it is invoked once when the polyline is created. (On
+ * this invocation, the <code>isNew</code> parameter in the function parameters
+ * object is set to <code>true</code>.) Additionally, this function is invoked
+ * when the polyline&#39;s coordinates change, or when the location provider
+ * receives data from Fleet Engine, regardless of whether the data corresponding
+ * to this polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
+    .remainingPolylineCustomization;
+
+/**
  * Threshold for stale vehicle location. If the last updated location for the
  * vehicle is older this threshold, the vehicle will not be displayed. Defaults
  * to 24 hours in milliseconds. If the threshold is less than 0, or
@@ -11953,6 +12289,28 @@ google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
  */
 google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
     .staleLocationThresholdMillis;
+
+/**
+ * Customization applied to the taken polyline. A taken polyline corresponds to
+ * a portion of the route the vehicle has already traversed through. <br><br>Use
+ * this field to specify custom styling (such as polyline color) and
+ * interactivity (such as click handling).<ul><li> If a {@link
+ * google.maps.PolylineOptions} object is specified, the changes specified in it
+ * are applied to the polyline after the polyline has been created, overwriting
+ * its default options if they exist. </li><li>If a function is specified, it is
+ * invoked once when the polyline is created. (On this invocation, the
+ * <code>isNew</code> parameter in the function parameters object is set to
+ * <code>true</code>.) Additionally, this function is invoked when the
+ * polyline&#39;s coordinates change, or when the location provider receives
+ * data from Fleet Engine, regardless of whether the data corresponding to this
+ * polyline have changed.<br><br>See {@link
+ * google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams} for a
+ * list of supplied parameters and their uses.</li></ul>
+ * @type {(function(!google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams):
+ *     void)|google.maps.PolylineOptions|null|undefined}
+ */
+google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
+    .takenPolylineCustomization;
 
 /**
  * The vehicle ID to track immediately after the location provider is
@@ -12023,32 +12381,6 @@ google.maps.journeySharing.FleetEngineVehicleLocationProviderUpdateEvent
 google.maps.journeySharing.JourneySharingMapView = function(options) {};
 
 /**
- * Returns the anticipated route polylines, if any.
- * @type {!Array<!google.maps.Polyline>}
- */
-google.maps.journeySharing.JourneySharingMapView.prototype
-    .anticipatedRoutePolylines;
-
-/**
- * Configures options for an anticipated route polyline. Invoked whenever a new
- * anticipated route polyline is rendered. <br><br>If specifying a function, the
- * function can and should modify the input&#39;s defaultPolylineOptions field
- * containing a google.maps.PolylineOptions object, and return it as
- * polylineOptions in the output PolylineSetupOptions object. <br><br>Specifying
- * a PolylineSetupOptions object has the same effect as specifying a function
- * that returns that static object. <br><br>Do not reuse the same
- * PolylineSetupOptions object in different PolylineSetup functions or static
- * values, and do not reuse the same google.maps.PolylineOptions object for the
- * polylineOptions key in different PolylineSetupOptions objects. If
- * polylineOptions or visible is unset or null, it will be overwritten with the
- * default. Any values set for polylineOptions.map or polylineOptions.path will
- * be ignored.
- * @type {!google.maps.journeySharing.PolylineSetup}
- */
-google.maps.journeySharing.JourneySharingMapView.prototype
-    .anticipatedRoutePolylineSetup;
-
-/**
  * This Field is read-only. Automatic viewport mode.
  * @type {!google.maps.journeySharing.AutomaticViewportMode}
  */
@@ -12090,30 +12422,6 @@ google.maps.journeySharing.JourneySharingMapView.prototype.map;
  * @type {!google.maps.MapOptions}
  */
 google.maps.journeySharing.JourneySharingMapView.prototype.mapOptions;
-
-/**
- * Returns the taken route polylines, if any.
- * @type {!Array<!google.maps.Polyline>}
- */
-google.maps.journeySharing.JourneySharingMapView.prototype.takenRoutePolylines;
-
-/**
- * Configures options for a taken route polyline. Invoked whenever a new taken
- * route polyline is rendered. <br><br>If specifying a function, the function
- * can and should modify the input&#39;s defaultPolylineOptions field containing
- * a google.maps.PolylineOptions object, and return it as polylineOptions in the
- * output PolylineSetupOptions object. <br><br>Specifying a PolylineSetupOptions
- * object has the same effect as specifying a function that returns that static
- * object. <br><br>Do not reuse the same PolylineSetupOptions object in
- * different PolylineSetup functions or static values, and do not reuse the same
- * google.maps.PolylineOptions object for the polylineOptions key in different
- * PolylineSetupOptions objects. <br><br>Any values set for polylineOptions.map
- * or polylineOptions.path will be ignored. Any unset or null value will be
- * overwritten with the default.
- * @type {!google.maps.journeySharing.PolylineSetup}
- */
-google.maps.journeySharing.JourneySharingMapView.prototype
-    .takenRoutePolylineSetup;
 
 /**
  * This Field is read-only. A source of tracked locations to be shown in the
@@ -12165,47 +12473,6 @@ google.maps.journeySharing.JourneySharingMapView.prototype
  *     provider instead. This field will be removed in the future.
  */
 google.maps.journeySharing.JourneySharingMapView.prototype.originMarkerSetup;
-
-/**
- * Configures options for a ping location marker. Invoked whenever a new ping
- * marker is rendered. <br><br>If specifying a function, the function can and
- * should modify the input&#39;s defaultMarkerOptions field containing a
- * google.maps.MarkerOptions object, and return it as markerOptions in the
- * output MarkerSetupOptions object. <br><br>Specifying a MarkerSetupOptions
- * object has the same effect as specifying a function that returns that static
- * object. <br><br>Do not reuse the same MarkerSetupOptions object in different
- * MarkerSetup functions or static values, and do not reuse the same
- * google.maps.MarkerOptions object for the markerOptions key in different
- * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
- * overwritten with the default. Any value set for markerOptions.map or
- * markerOptions.position will be ignored.
- * @type {!google.maps.journeySharing.MarkerSetup}
- * @deprecated Marker setup is deprecated. Use the
- *     <code>MarkerCustomizationFunction</code> methods for your location
- *     provider instead. This field will be removed in the future.
- */
-google.maps.journeySharing.JourneySharingMapView.prototype.pingMarkerSetup;
-
-/**
- * Configures options for a successful task location marker. Invoked whenever a
- * new successful task marker is rendered. <br><br>If specifying a function, the
- * function can and should modify the input&#39;s defaultMarkerOptions field
- * containing a google.maps.MarkerOptions object, and return it as markerOptions
- * in the output MarkerSetupOptions object. <br><br>Specifying a
- * MarkerSetupOptions object has the same effect as specifying a function that
- * returns that static object. <br><br>Do not reuse the same MarkerSetupOptions
- * object in different MarkerSetup functions or static values, and do not reuse
- * the same google.maps.MarkerOptions object for the markerOptions key in
- * different MarkerSetupOptions objects. If markerOptions is unset or null, it
- * will be overwritten with the default. Any value set for markerOptions.map or
- * markerOptions.position will be ignored.
- * @type {!google.maps.journeySharing.MarkerSetup}
- * @deprecated Marker setup is deprecated. Use the
- *     <code>MarkerCustomizationFunction</code> methods for your location
- *     provider instead. This field will be removed in the future.
- */
-google.maps.journeySharing.JourneySharingMapView.prototype
-    .successfulTaskMarkerSetup;
 
 /**
  * Configures options for a task outcome location marker. Invoked whenever a new
@@ -12290,6 +12557,90 @@ google.maps.journeySharing.JourneySharingMapView.prototype.vehicleMarkerSetup;
 google.maps.journeySharing.JourneySharingMapView.prototype.waypointMarkerSetup;
 
 /**
+ * Configures options for an anticipated route polyline. Invoked whenever a new
+ * anticipated route polyline is rendered. <br><br>If specifying a function, the
+ * function can and should modify the input&#39;s defaultPolylineOptions field
+ * containing a google.maps.PolylineOptions object, and return it as
+ * polylineOptions in the output PolylineSetupOptions object. <br><br>Specifying
+ * a PolylineSetupOptions object has the same effect as specifying a function
+ * that returns that static object. <br><br>Do not reuse the same
+ * PolylineSetupOptions object in different PolylineSetup functions or static
+ * values, and do not reuse the same google.maps.PolylineOptions object for the
+ * polylineOptions key in different PolylineSetupOptions objects. If
+ * polylineOptions or visible is unset or null, it will be overwritten with the
+ * default. Any values set for polylineOptions.map or polylineOptions.path will
+ * be ignored.
+ * @type {!google.maps.journeySharing.PolylineSetup}
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype
+    .anticipatedRoutePolylineSetup;
+
+/**
+ * Configures options for a taken route polyline. Invoked whenever a new taken
+ * route polyline is rendered. <br><br>If specifying a function, the function
+ * can and should modify the input&#39;s defaultPolylineOptions field containing
+ * a google.maps.PolylineOptions object, and return it as polylineOptions in the
+ * output PolylineSetupOptions object. <br><br>Specifying a PolylineSetupOptions
+ * object has the same effect as specifying a function that returns that static
+ * object. <br><br>Do not reuse the same PolylineSetupOptions object in
+ * different PolylineSetup functions or static values, and do not reuse the same
+ * google.maps.PolylineOptions object for the polylineOptions key in different
+ * PolylineSetupOptions objects. <br><br>Any values set for polylineOptions.map
+ * or polylineOptions.path will be ignored. Any unset or null value will be
+ * overwritten with the default.
+ * @type {!google.maps.journeySharing.PolylineSetup}
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype
+    .takenRoutePolylineSetup;
+
+/**
+ * Configures options for a ping location marker. Invoked whenever a new ping
+ * marker is rendered. <br><br>If specifying a function, the function can and
+ * should modify the input&#39;s defaultMarkerOptions field containing a
+ * google.maps.MarkerOptions object, and return it as markerOptions in the
+ * output MarkerSetupOptions object. <br><br>Specifying a MarkerSetupOptions
+ * object has the same effect as specifying a function that returns that static
+ * object. <br><br>Do not reuse the same MarkerSetupOptions object in different
+ * MarkerSetup functions or static values, and do not reuse the same
+ * google.maps.MarkerOptions object for the markerOptions key in different
+ * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
+ * overwritten with the default. Any value set for markerOptions.map or
+ * markerOptions.position will be ignored.
+ * @type {!google.maps.journeySharing.MarkerSetup}
+ * @deprecated Marker setup is deprecated. Use the
+ *     <code>MarkerCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype.pingMarkerSetup;
+
+/**
+ * Configures options for a successful task location marker. Invoked whenever a
+ * new successful task marker is rendered. <br><br>If specifying a function, the
+ * function can and should modify the input&#39;s defaultMarkerOptions field
+ * containing a google.maps.MarkerOptions object, and return it as markerOptions
+ * in the output MarkerSetupOptions object. <br><br>Specifying a
+ * MarkerSetupOptions object has the same effect as specifying a function that
+ * returns that static object. <br><br>Do not reuse the same MarkerSetupOptions
+ * object in different MarkerSetup functions or static values, and do not reuse
+ * the same google.maps.MarkerOptions object for the markerOptions key in
+ * different MarkerSetupOptions objects. If markerOptions is unset or null, it
+ * will be overwritten with the default. Any value set for markerOptions.map or
+ * markerOptions.position will be ignored.
+ * @type {!google.maps.journeySharing.MarkerSetup}
+ * @deprecated Marker setup is deprecated. Use the
+ *     <code>MarkerCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype
+    .successfulTaskMarkerSetup;
+
+/**
  * Returns the destination markers, if any.
  * @type {!Array<!google.maps.Marker>}
  * @deprecated getting a list of markers via the <code>MapView</code> is
@@ -12362,6 +12713,27 @@ google.maps.journeySharing.JourneySharingMapView.prototype.vehicleMarkers;
 google.maps.journeySharing.JourneySharingMapView.prototype.waypointMarkers;
 
 /**
+ * Returns the anticipated route polylines, if any.
+ * @type {!Array<!google.maps.Polyline>}
+ * @deprecated getting a list of polylines via the <code>MapView</code> is
+ *     deprecated. Use the <code>PolylineCustomizationFunction</code>s for your
+ *     location provider to receive callbacks when a polyline is added to the
+ *     map or updated.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype
+    .anticipatedRoutePolylines;
+
+/**
+ * Returns the taken route polylines, if any.
+ * @type {!Array<!google.maps.Polyline>}
+ * @deprecated getting a list of polylines via the <code>MapView</code> is
+ *     deprecated. Use the <code>PolylineCustomizationFunction</code>s for your
+ *     location provider to receive callbacks when a polyline is added to the
+ *     map or updated.
+ */
+google.maps.journeySharing.JourneySharingMapView.prototype.takenRoutePolylines;
+
+/**
  * Adds a location provider to the map view. If the location provider is already
  * added, no action is performed.
  * @param {!google.maps.journeySharing.LocationProvider} locationProvider the
@@ -12386,25 +12758,6 @@ google.maps.journeySharing.JourneySharingMapView.prototype
  * @record
  */
 google.maps.journeySharing.JourneySharingMapViewOptions = function() {};
-
-/**
- * Configures options for an anticipated route polyline. Invoked whenever a new
- * anticipated route polyline is rendered. <br><br>If specifying a function, the
- * function can and should modify the input&#39;s defaultPolylineOptions field
- * containing a google.maps.PolylineOptions object, and return it as
- * polylineOptions in the output PolylineSetupOptions object. <br><br>Specifying
- * a PolylineSetupOptions object has the same effect as specifying a function
- * that returns that static object. <br><br>Do not reuse the same
- * PolylineSetupOptions object in different PolylineSetup functions or static
- * values, and do not reuse the same google.maps.PolylineOptions object for the
- * polylineOptions key in different PolylineSetupOptions objects. If
- * polylineOptions or visible is unset or null, it will be overwritten with the
- * default. Any values set for polylineOptions.map or polylineOptions.path will
- * be ignored.
- * @type {google.maps.journeySharing.PolylineSetup|null|undefined}
- */
-google.maps.journeySharing.JourneySharingMapViewOptions.prototype
-    .anticipatedRoutePolylineSetup;
 
 /**
  * Automatic viewport mode. Default value is FIT_ANTICIPATED_ROUTE, which
@@ -12434,24 +12787,6 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * @type {google.maps.MapOptions|null|undefined}
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype.mapOptions;
-
-/**
- * Configures options for a taken route polyline. Invoked whenever a new taken
- * route polyline is rendered. <br><br>If specifying a function, the function
- * can and should modify the input&#39;s defaultPolylineOptions field containing
- * a google.maps.PolylineOptions object, and return it as polylineOptions in the
- * output PolylineSetupOptions object. <br><br>Specifying a PolylineSetupOptions
- * object has the same effect as specifying a function that returns that static
- * object. <br><br>Do not reuse the same PolylineSetupOptions object in
- * different PolylineSetup functions or static values, and do not reuse the same
- * google.maps.PolylineOptions object for the polylineOptions key in different
- * PolylineSetupOptions objects. <br><br>Any values set for polylineOptions.map
- * or polylineOptions.path will be ignored. Any unset or null value will be
- * overwritten with the default.
- * @type {google.maps.journeySharing.PolylineSetup|null|undefined}
- */
-google.maps.journeySharing.JourneySharingMapViewOptions.prototype
-    .takenRoutePolylineSetup;
 
 /**
  * A source of tracked locations to be shown in the tracking map view. Optional.
@@ -12504,48 +12839,6 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype
     .originMarkerSetup;
-
-/**
- * Configures options for a ping location marker. Invoked whenever a new ping
- * marker is rendered. <br><br>If specifying a function, the function can and
- * should modify the input&#39;s defaultMarkerOptions field containing a
- * google.maps.MarkerOptions object, and return it as markerOptions in the
- * output MarkerSetupOptions object. <br><br>Specifying a MarkerSetupOptions
- * object has the same effect as specifying a function that returns that static
- * object. <br><br>Do not reuse the same MarkerSetupOptions object in different
- * MarkerSetup functions or static values, and do not reuse the same
- * google.maps.MarkerOptions object for the markerOptions key in different
- * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
- * overwritten with the default. Any value set for markerOptions.map or
- * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
- * @deprecated Marker setup is deprecated. Use the
- *     <code>MarkerCustomizationFunction</code> methods for your location
- *     provider instead. This field will be removed in the future.
- */
-google.maps.journeySharing.JourneySharingMapViewOptions.prototype
-    .pingMarkerSetup;
-
-/**
- * Configures options for a successful task location marker. Invoked whenever a
- * new successful task marker is rendered. <br><br>If specifying a function, the
- * function can and should modify the input&#39;s defaultMarkerOptions field
- * containing a google.maps.MarkerOptions object, and return it as markerOptions
- * in the output MarkerSetupOptions object. <br><br>Specifying a
- * MarkerSetupOptions object has the same effect as specifying a function that
- * returns that static object. <br><br>Do not reuse the same MarkerSetupOptions
- * object in different MarkerSetup functions or static values, and do not reuse
- * the same google.maps.MarkerOptions object for the markerOptions key in
- * different MarkerSetupOptions objects. If markerOptions is unset or null, it
- * will be overwritten with the default. Any value set for markerOptions.map or
- * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
- * @deprecated Marker setup is deprecated. Use the
- *     <code>MarkerCustomizationFunction</code> methods for your location
- *     provider instead. This field will be removed in the future.
- */
-google.maps.journeySharing.JourneySharingMapViewOptions.prototype
-    .successfulTaskMarkerSetup;
 
 /**
  * Configures options for a task outcome location marker. Invoked whenever a new
@@ -12630,6 +12923,91 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype
     .waypointMarkerSetup;
+
+/**
+ * Configures options for an anticipated route polyline. Invoked whenever a new
+ * anticipated route polyline is rendered. <br><br>If specifying a function, the
+ * function can and should modify the input&#39;s defaultPolylineOptions field
+ * containing a google.maps.PolylineOptions object, and return it as
+ * polylineOptions in the output PolylineSetupOptions object. <br><br>Specifying
+ * a PolylineSetupOptions object has the same effect as specifying a function
+ * that returns that static object. <br><br>Do not reuse the same
+ * PolylineSetupOptions object in different PolylineSetup functions or static
+ * values, and do not reuse the same google.maps.PolylineOptions object for the
+ * polylineOptions key in different PolylineSetupOptions objects. If
+ * polylineOptions or visible is unset or null, it will be overwritten with the
+ * default. Any values set for polylineOptions.map or polylineOptions.path will
+ * be ignored.
+ * @type {google.maps.journeySharing.PolylineSetup|null|undefined}
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapViewOptions.prototype
+    .anticipatedRoutePolylineSetup;
+
+/**
+ * Configures options for a taken route polyline. Invoked whenever a new taken
+ * route polyline is rendered. <br><br>If specifying a function, the function
+ * can and should modify the input&#39;s defaultPolylineOptions field containing
+ * a google.maps.PolylineOptions object, and return it as polylineOptions in the
+ * output PolylineSetupOptions object. <br><br>Specifying a PolylineSetupOptions
+ * object has the same effect as specifying a function that returns that static
+ * object. <br><br>Do not reuse the same PolylineSetupOptions object in
+ * different PolylineSetup functions or static values, and do not reuse the same
+ * google.maps.PolylineOptions object for the polylineOptions key in different
+ * PolylineSetupOptions objects. <br><br>Any values set for polylineOptions.map
+ * or polylineOptions.path will be ignored. Any unset or null value will be
+ * overwritten with the default.
+ * @type {google.maps.journeySharing.PolylineSetup|null|undefined}
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapViewOptions.prototype
+    .takenRoutePolylineSetup;
+
+/**
+ * Configures options for a ping location marker. Invoked whenever a new ping
+ * marker is rendered. <br><br>If specifying a function, the function can and
+ * should modify the input&#39;s defaultMarkerOptions field containing a
+ * google.maps.MarkerOptions object, and return it as markerOptions in the
+ * output MarkerSetupOptions object. <br><br>Specifying a MarkerSetupOptions
+ * object has the same effect as specifying a function that returns that static
+ * object. <br><br>Do not reuse the same MarkerSetupOptions object in different
+ * MarkerSetup functions or static values, and do not reuse the same
+ * google.maps.MarkerOptions object for the markerOptions key in different
+ * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
+ * overwritten with the default. Any value set for markerOptions.map or
+ * markerOptions.position will be ignored.
+ * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @deprecated Marker setup is deprecated. Use the
+ *     <code>MarkerCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapViewOptions.prototype
+    .pingMarkerSetup;
+
+/**
+ * Configures options for a successful task location marker. Invoked whenever a
+ * new successful task marker is rendered. <br><br>If specifying a function, the
+ * function can and should modify the input&#39;s defaultMarkerOptions field
+ * containing a google.maps.MarkerOptions object, and return it as markerOptions
+ * in the output MarkerSetupOptions object. <br><br>Specifying a
+ * MarkerSetupOptions object has the same effect as specifying a function that
+ * returns that static object. <br><br>Do not reuse the same MarkerSetupOptions
+ * object in different MarkerSetup functions or static values, and do not reuse
+ * the same google.maps.MarkerOptions object for the markerOptions key in
+ * different MarkerSetupOptions objects. If markerOptions is unset or null, it
+ * will be overwritten with the default. Any value set for markerOptions.map or
+ * markerOptions.position will be ignored.
+ * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @deprecated Marker setup is deprecated. Use the
+ *     <code>MarkerCustomizationFunction</code> methods for your location
+ *     provider instead. This field will be removed in the future.
+ */
+google.maps.journeySharing.JourneySharingMapViewOptions.prototype
+    .successfulTaskMarkerSetup;
 
 /**
  * Parent class of all location providers.
@@ -12768,14 +13146,50 @@ google.maps.journeySharing.PollingLocationProviderIsPollingChangeEvent.prototype
     .error;
 
 /**
+ * Parameters that are common to all polyline customization functions. No object
+ * of this class is provided directly to any polyline customization function; an
+ * object of one of its descendent classes is provided instead.
+ * @record
+ */
+google.maps.journeySharing.PolylineCustomizationFunctionParams = function() {};
+
+/**
+ * The default options used to create this set of polylines.
+ * @type {!google.maps.PolylineOptions}
+ */
+google.maps.journeySharing.PolylineCustomizationFunctionParams.prototype
+    .defaultOptions;
+
+/**
+ * If true, the list of polylines was newly created, and the polyline
+ * customization function is being called for the first time. False otherwise.
+ * @type {boolean}
+ */
+google.maps.journeySharing.PolylineCustomizationFunctionParams.prototype.isNew;
+
+/**
+ * The list of polylines created. They are arranged sequentially to form the
+ * rendered route.
+ * @type {!Array<!google.maps.Polyline>}
+ */
+google.maps.journeySharing.PolylineCustomizationFunctionParams.prototype
+    .polylines;
+
+/**
  * @typedef {!google.maps.journeySharing.PolylineSetupOptions|(function(!google.maps.journeySharing.DefaultPolylineSetupOptions):
  * !google.maps.journeySharing.PolylineSetupOptions)}
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead.
  */
 google.maps.journeySharing.PolylineSetup;
 
 /**
  * PolylineSetup options.
  * @record
+ * @deprecated Polyline setup is deprecated. Use the
+ *     <code>PolylineCustomizationFunction</code> methods for your location
+ *     provider instead.
  */
 google.maps.journeySharing.PolylineSetupOptions = function() {};
 
@@ -12810,6 +13224,71 @@ google.maps.journeySharing.ShipmentMarkerCustomizationFunctionParams =
  */
 google.maps.journeySharing.ShipmentMarkerCustomizationFunctionParams.prototype
     .taskTrackingInfo;
+
+/**
+ * Parameters specific to polyline customization functions for {@link
+ * google.maps.journeySharing.FleetEngineShipmentLocationProvider}.
+ * @extends {google.maps.journeySharing.PolylineCustomizationFunctionParams}
+ * @record
+ */
+google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams =
+    function() {};
+
+/**
+ * Information for the task associated with this polyline.
+ * @type {!google.maps.journeySharing.TaskTrackingInfo}
+ */
+google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams.prototype
+    .taskTrackingInfo;
+
+/**
+ * The classification of polyline speed based on traffic data.
+ *
+ * Access by calling `const {Speed} = await
+ * google.maps.importLibrary("journeySharing")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.journeySharing.Speed = {
+  /**
+   * Normal speed, no slowdown is detected.
+   */
+  NORMAL: 'NORMAL',
+  /**
+   * Slowdown detected, but no traffic jam formed.
+   */
+  SLOW: 'SLOW',
+  /**
+   * Traffic jam detected.
+   */
+  TRAFFIC_JAM: 'TRAFFIC_JAM',
+};
+
+/**
+ * Traffic density indicator on a contiguous path segment. The interval defines
+ * the starting and ending points of the segment via their indices.
+ * @record
+ */
+google.maps.journeySharing.SpeedReadingInterval = function() {};
+
+/**
+ * The zero-based index of the ending point of the interval in the path.
+ * @type {number}
+ */
+google.maps.journeySharing.SpeedReadingInterval.prototype.endPolylinePointIndex;
+
+/**
+ * Traffic speed in this interval.
+ * @type {!google.maps.journeySharing.Speed}
+ */
+google.maps.journeySharing.SpeedReadingInterval.prototype.speed;
+
+/**
+ * The zero-based index of the starting point of the interval in the path.
+ * @type {number}
+ */
+google.maps.journeySharing.SpeedReadingInterval.prototype
+    .startPolylinePointIndex;
 
 /**
  * The details for a task returned by Fleet Engine.
@@ -13193,6 +13672,22 @@ google.maps.journeySharing.TripMarkerCustomizationFunctionParams =
 google.maps.journeySharing.TripMarkerCustomizationFunctionParams.prototype.trip;
 
 /**
+ * Parameters specific to polyline customization functions for {@link
+ * google.maps.journeySharing.FleetEngineTripLocationProvider}.
+ * @extends {google.maps.journeySharing.PolylineCustomizationFunctionParams}
+ * @record
+ */
+google.maps.journeySharing.TripPolylineCustomizationFunctionParams =
+    function() {};
+
+/**
+ * The trip associated with this polyline.
+ * @type {!google.maps.journeySharing.Trip}
+ */
+google.maps.journeySharing.TripPolylineCustomizationFunctionParams.prototype
+    .trip;
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * Trip types supported by a {@link google.maps.journeySharing.Vehicle}.
@@ -13243,9 +13738,27 @@ google.maps.journeySharing.TripWaypoint.prototype.durationMillis;
 
 /**
  * The location of the waypoint.
- * @type {?google.maps.LatLngLiteral}
+ * @type {?google.maps.LatLng}
  */
 google.maps.journeySharing.TripWaypoint.prototype.location;
+
+/**
+ * The path from the previous stop (or the vehicle&#39;s current location, if
+ * this stop is the first in the list of stops) to this stop.
+ * @type {?Array<!google.maps.LatLng>}
+ */
+google.maps.journeySharing.TripWaypoint.prototype.path;
+
+/**
+ * The list of traffic speeds along the path from the previous waypoint (or
+ * vehicle location) to the current waypoint. Each interval in the list
+ * describes the traffic on a contiguous segment on the path; the interval
+ * defines the starting and ending points of the segment via their indices. See
+ * the definition of {@link google.maps.journeySharing.SpeedReadingInterval} for
+ * more details.
+ * @type {?Array<!google.maps.journeySharing.SpeedReadingInterval>}
+ */
+google.maps.journeySharing.TripWaypoint.prototype.speedReadingIntervals;
 
 /**
  * The trip associated with this waypoint.
@@ -13499,6 +14012,22 @@ google.maps.journeySharing.VehicleNavigationStatus = {
 };
 
 /**
+ * Parameters specific to polyline customization functions for {@link
+ * google.maps.journeySharing.FleetEngineVehicleLocationProvider}.
+ * @extends {google.maps.journeySharing.PolylineCustomizationFunctionParams}
+ * @record
+ */
+google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams =
+    function() {};
+
+/**
+ * The vehicle traversing through this polyline.
+ * @type {!google.maps.journeySharing.Vehicle}
+ */
+google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams.prototype
+    .vehicle;
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * The current state of a {@link google.maps.journeySharing.Vehicle}.
@@ -13590,6 +14119,17 @@ google.maps.journeySharing.VehicleWaypoint.prototype.location;
  * @type {?Array<!google.maps.LatLngLiteral>}
  */
 google.maps.journeySharing.VehicleWaypoint.prototype.path;
+
+/**
+ * The list of traffic speeds along the path from the previous waypoint (or
+ * vehicle location) to the current waypoint. Each interval in the list
+ * describes the traffic on a contiguous segment on the path; the interval
+ * defines the starting and ending points of the segment via their indices. See
+ * the definition of {@link google.maps.journeySharing.SpeedReadingInterval} for
+ * more details.
+ * @type {?Array<!google.maps.journeySharing.SpeedReadingInterval>}
+ */
+google.maps.journeySharing.VehicleWaypoint.prototype.speedReadingIntervals;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -14137,6 +14677,13 @@ google.maps.marker.AdvancedMarkerElement.prototype.content;
 google.maps.marker.AdvancedMarkerElement.prototype.element;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * See {@link google.maps.marker.AdvancedMarkerElementOptions.gmpClickable}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.gmpClickable;
+
+/**
  * See {@link google.maps.marker.AdvancedMarkerElementOptions.gmpDraggable}.
  * @type {boolean|null|undefined}
  */
@@ -14209,6 +14756,17 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.collisionBehavior;
  * @type {!Node|null|undefined}
  */
 google.maps.marker.AdvancedMarkerElementOptions.prototype.content;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * If <code>true</code>, the <code>AdvancedMarkerElement</code> will be
+ * clickable and trigger the <code>gmp-click</code> event, and will be
+ * interactive for accessibility purposes (e.g. allowing keyboard navigation via
+ * arrow keys).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElementOptions.prototype.gmpClickable;
 
 /**
  * If <code>true</code>, the <code>AdvancedMarkerElement</code> can be dragged.
@@ -14369,6 +14927,51 @@ google.maps.marker.PinElementOptions.prototype.scale;
  * @const
  */
 google.maps.places = {};
+
+/**
+ *
+ * Access by calling `const {AccessibilityOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.AccessibilityOptions = function() {};
+
+/**
+ * Whether a place has a wheelchair accessible entrance. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleEntrance;
+
+/**
+ * Whether a place has wheelchair accessible parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleParking;
+
+/**
+ * Whether a place has a wheelchair accessible restroom. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleRestroom;
+
+/**
+ * Whether a place offers wheelchair accessible seating. Returns &#39;true&#39;
+ * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
+ * is unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.AccessibilityOptions.prototype
+    .hasWheelchairAccessibleSeating;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -14892,8 +15495,6 @@ google.maps.places.ComponentRestrictions = function() {};
 google.maps.places.ComponentRestrictions.prototype.country;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for fetching Place fields.
  * @record
  */
@@ -14904,13 +15505,6 @@ google.maps.places.FetchFieldsRequest = function() {};
  * @type {!Array<string>}
  */
 google.maps.places.FetchFieldsRequest.prototype.fields;
-
-/**
- * Unique reference used to bundle the details request with an autocomplete
- * session.
- * @type {google.maps.places.AutocompleteSessionToken|null|undefined}
- */
-google.maps.places.FetchFieldsRequest.prototype.sessionToken;
 
 /**
  * A find place from text search request to be sent to {@link
@@ -15143,8 +15737,6 @@ google.maps.places.PhotoOptions.prototype.maxHeight;
 google.maps.places.PhotoOptions.prototype.maxWidth;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  *
  * Access by calling `const {Place} = await
  * google.maps.importLibrary("places")`. See
@@ -15153,6 +15745,13 @@ google.maps.places.PhotoOptions.prototype.maxWidth;
  * @constructor
  */
 google.maps.places.Place = function(options) {};
+
+/**
+ * Accessibility options of this Place. <code>undefined</code> if the
+ * accessibility options data have not been called for from the server.
+ * @type {google.maps.places.AccessibilityOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.accessibilityOptions;
 
 /**
  * The collection of address components for this Place’s location. Empty object
@@ -15189,6 +15788,22 @@ google.maps.places.Place.prototype.businessStatus;
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.displayName;
+
+/**
+ * The editorial summary for this place. <code>null</code> if there is no
+ * editorial summary. <code>undefined</code> if this field has not yet been
+ * requested.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.editorialSummary;
+
+/**
+ * The language of the editorial summary for this place. <code>null</code> if
+ * there is no editorial summary. <code>undefined</code> if this field has not
+ * yet been requested.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.editorialSummaryLanguageCode;
 
 /**
  * The locations’s full address.
@@ -15237,15 +15852,6 @@ google.maps.places.Place.prototype.hasDineIn;
 google.maps.places.Place.prototype.hasTakeout;
 
 /**
- * Whether a place has a wheelchair accessible entrance. Returns &#39;true&#39;
- * or &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value
- * is unknown. Returns &#39;undefined&#39; if this field has not yet been
- * requested.
- * @type {boolean|null|undefined}
- */
-google.maps.places.Place.prototype.hasWheelchairAccessibleEntrance;
-
-/**
  * The default HEX color code for the place&#39;s category.
  * @type {string|null|undefined}
  */
@@ -15287,11 +15893,6 @@ google.maps.places.Place.prototype.location;
 google.maps.places.Place.prototype.nationalPhoneNumber;
 
 /**
- * @type {google.maps.places.OpeningHours|null|undefined}
- */
-google.maps.places.Place.prototype.openingHours;
-
-/**
  * Photos of this Place. The collection will contain up to ten {@link
  * google.maps.places.Photo} objects.
  * @type {!Array<!google.maps.places.Photo>|undefined}
@@ -15317,6 +15918,11 @@ google.maps.places.Place.prototype.priceLevel;
  * @type {number|null|undefined}
  */
 google.maps.places.Place.prototype.rating;
+
+/**
+ * @type {google.maps.places.OpeningHours|null|undefined}
+ */
+google.maps.places.Place.prototype.regularOpeningHours;
 
 /**
  * The requested language for this place.
@@ -15441,29 +16047,19 @@ google.maps.places.Place.prototype.viewport;
 google.maps.places.Place.prototype.websiteURI;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Searches for a place based on the given phone number. Returns an array due to
- * rare cases where multiple places may share a phone number.
- * @param {!google.maps.places.FindPlaceFromPhoneNumberRequest} request The
- *     request containing the phone number and requested fields.
- * @return {!Promise<{places:!Array<!google.maps.places.Place>}>}
+ * @type {google.maps.places.OpeningHours|null|undefined}
+ * @deprecated Use {@link google.maps.places.Place.regularOpeningHours} instead.
  */
-google.maps.places.Place.findPlaceFromPhoneNumber = function(request) {};
+google.maps.places.Place.prototype.openingHours;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Searches for a place based on the given text query. Returns an array due to
- * cases where the query is mildly ambiguous, and more than one place gets
- * returned. This method is <em>not</em> intended for searches where multiple
- * results are expected.
- * @param {!google.maps.places.FindPlaceFromQueryRequest} request The request
- *     containing the text query and requested fields.
+ * Text query based place search.
+ * @param {!google.maps.places.SearchByTextRequest} request
  * @return {!Promise<{places:!Array<!google.maps.places.Place>}>}
  */
-google.maps.places.Place.findPlaceFromQuery = function(request) {};
+google.maps.places.Place.searchByText = function(request) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @param {!google.maps.places.FetchFieldsRequest} options
  * @return {!Promise<{place:!google.maps.places.Place}>}
  */
@@ -15517,7 +16113,7 @@ google.maps.places.PlaceAspectRating.prototype.rating;
 google.maps.places.PlaceAspectRating.prototype.type;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * <ul>
 <li>PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
@@ -15538,48 +16134,35 @@ https://developers.google.com/maps/documentation/javascript/libraries.
 google.maps.places.PlaceAutocompleteElement = function(options) {};
 
 /**
- * The input element to show autocompletions for.
- * @type {!HTMLInputElement}
- */
-google.maps.places.PlaceAutocompleteElement.prototype.inputElement;
-
-
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * Options for constructing a PlaceAutocompleteElement.
- * @record
- */
-google.maps.places.PlaceAutocompleteElementOptions = function() {};
-
-/**
  * The component restrictions. Component restrictions are used to restrict
  * predictions to only those within the parent component. For example, the
  * country.
- * @type {!google.maps.places.ComponentRestrictions|null|undefined}
+ * @type {!google.maps.places.ComponentRestrictions|null}
  */
-google.maps.places.PlaceAutocompleteElementOptions.prototype
-    .componentRestrictions;
-
-/**
- * The input element to show autocompletions for.
- * @type {!HTMLInputElement}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.inputElement;
+google.maps.places.PlaceAutocompleteElement.prototype.componentRestrictions;
 
 /**
  * A soft boundary or hint to use when searching for places.
- * @type {!google.maps.places.LocationBias|null|undefined}
+ * @type {!google.maps.places.LocationBias|null}
  */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.locationBias;
+google.maps.places.PlaceAutocompleteElement.prototype.locationBias;
 
 /**
  * Bounds to constrain search results.
- * @type {!google.maps.places.LocationRestriction|null|undefined}
+ * @type {!google.maps.places.LocationRestriction|null}
  */
-google.maps.places.PlaceAutocompleteElementOptions.prototype
-    .locationRestriction;
+google.maps.places.PlaceAutocompleteElement.prototype.locationRestriction;
+
+/**
+ * The name to be used for the input element. See <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#name">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#name</a>
+ * for details. Follows the same behavior as the name attribute for inputs. Note
+ * that this is the name that will be used when a form is submitted. See <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form</a>
+ * for details.
+ * @type {string|null}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.name;
 
 /**
  * A language identifier for the language in which the results should be
@@ -15587,9 +16170,9 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype
  * ranking, but suggestions are not restricted to this language. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
  * supported languages</a>.
- * @type {string|null|undefined}
+ * @type {string|null}
  */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
+google.maps.places.PlaceAutocompleteElement.prototype.requestedLanguage;
 
 /**
  * A region code which is used for result formatting and for result filtering.
@@ -15601,21 +16184,69 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
  * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
  * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
  * United Kingdom of Great Britain and Northern Ireland&quot;).
- * @type {string|null|undefined}
+ * @type {string|null}
  */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
+google.maps.places.PlaceAutocompleteElement.prototype.requestedRegion;
 
 /**
  * The types of predictions to be returned. For supported types, see the <a
  * href="https://developers.google.com/maps/documentation/javascript/places-autocomplete#constrain-place-types">
  * developer&#39;s guide</a>. If no types are specified, all types will be
  * returned.
+ * @type {!Array<string>|null}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.types;
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for constructing a PlaceAutocompleteElement.
+ * @record
+ */
+google.maps.places.PlaceAutocompleteElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.componentRestrictions}
+ * @type {!google.maps.places.ComponentRestrictions|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .componentRestrictions;
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.locationBias}
+ * @type {!google.maps.places.LocationBias|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.locationBias;
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.locationRestriction}
+ * @type {!google.maps.places.LocationRestriction|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .locationRestriction;
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.requestedLanguage}
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.requestedRegion}
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.types}
  * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * This event is created after the user selects a place with the Place
  * Autocomplete Element. Access the selection with <code>event.place</code>.
@@ -15629,7 +16260,13 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
 google.maps.places.PlaceAutocompletePlaceSelectEvent = function() {};
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {!google.maps.places.Place}
+ */
+google.maps.places.PlaceAutocompletePlaceSelectEvent.prototype.place;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * This event is emitted by the PlaceAutocompleteElement when there is an issue
  * with the network request.
@@ -15841,8 +16478,6 @@ google.maps.places.PlaceOpeningHoursTime.prototype.nextDate;
 google.maps.places.PlaceOpeningHoursTime.prototype.time;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for constructing a Place.
  * @record
  */
@@ -16776,6 +17411,155 @@ google.maps.places.SearchBoxOptions = function() {};
  * @type {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null|undefined}
  */
 google.maps.places.SearchBoxOptions.prototype.bounds;
+
+/**
+ * RankPreference enum for SearchByTextRequest.
+ *
+ * Access by calling `const {SearchByTextRankPreference} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.SearchByTextRankPreference = {
+  /**
+   * Ranks results by distance.
+   */
+  DISTANCE: 'DISTANCE',
+  /**
+   * Ranks results by relevance.
+   */
+  RELEVANCE: 'RELEVANCE',
+};
+
+/**
+ * Request interface for {@link google.maps.places.Place.searchByText}.
+ * @record
+ */
+google.maps.places.SearchByTextRequest = function() {};
+
+/**
+ * Fields to be included in the response, <a
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
+ * available fields will be returned and billed for (this is not recommended for
+ * production deployments). For a list of fields see {@link
+ * google.maps.places.PlaceResult}. Nested fields can be specified with
+ * dot-paths (for example, <code>"geometry.location"</code>).
+ * @type {!Array<string>}
+ */
+google.maps.places.SearchByTextRequest.prototype.fields;
+
+/**
+ * The requested place type. Full list of types supported: <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">https://developers.google.com/maps/documentation/places/web-service/place-types</a>.
+ * Only one included type is supported. See {@link
+ * google.maps.places.SearchByTextRequest.useStrictTypeFiltering}
+ * @type {string|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.includedType;
+
+/**
+ * Used to restrict the search to places that are currently open.
+ * @default <code>false</code>
+ * @type {boolean|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.isOpenNow;
+
+/**
+ * Place details will be displayed with the preferred language if available.
+ * Will default to the browser&#39;s language preference. Current list of
+ * supported languages: <a
+ * href="https://developers.google.com/maps/faq#languagesupport">https://developers.google.com/maps/faq#languagesupport</a>.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.language;
+
+/**
+ * The region to search. This location serves as a bias which means results
+ * around given location might be returned. Cannot be set along with
+ * locationRestriction.
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|!google.maps.Circle|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.locationBias;
+
+/**
+ * The region to search. This location serves as a restriction which means
+ * results outside given location will not be returned. Cannot be set along with
+ * locationBias.
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.locationRestriction;
+
+/**
+ * Maximum number of results to return. It must be between 1 and 20,
+ * inclusively.
+ * @type {number|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.maxResultCount;
+
+/**
+ * Filter out results whose average user rating is strictly less than this
+ * limit. A valid value must be an float between 0 and 5 (inclusively) at a 0.5
+ * cadence i.e. [0, 0.5, 1.0, ... , 5.0] inclusively. The input rating will be
+ * rounded up to the nearest 0.5(ceiling). For instance, a rating of 0.6 will
+ * eliminate all results with a less than 1.0 rating.
+ * @type {number|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.minRating;
+
+/**
+ * Used to restrict the search to places that are marked as certain price
+ * levels. Any combinations of price levels can be chosen. Defaults to all price
+ * levels.
+ * @type {!Array<!google.maps.places.PriceLevel>|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.priceLevels;
+
+/**
+ * How results will be ranked in the response.
+ * @default <code>SearchByTextRankPreference.DISTANCE</code>
+ * @type {!google.maps.places.SearchByTextRankPreference|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.rankPreference;
+
+/**
+ * The Unicode country/region code (CLDR) of the location where the request is
+ * coming from. This parameter is used to display the place details, like
+ * region-specific place name, if available. The parameter can affect results
+ * based on applicable law. For more information, see <a
+ * href="https://www.unicode.org/cldr/charts/latest/supplemental/territory_language_information.html">https://www.unicode.org/cldr/charts/latest/supplemental/territory_language_information.html</a>.
+ * Note that 3-digit region codes are not currently supported.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.region;
+
+/**
+ * Required. The text query for textual search.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.textQuery;
+
+/**
+ * Used to set strict type filtering for {@link
+ * google.maps.places.SearchByTextRequest.includedType}. If set to true, only
+ * results of the same type will be returned.
+ * @default <code>false</code>
+ * @type {boolean|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.useStrictTypeFiltering;
+
+/**
+ * @type {string|undefined}
+ * @deprecated Please use textQuery instead
+ */
+google.maps.places.SearchByTextRequest.prototype.query;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {!google.maps.places.SearchByTextRankPreference|undefined}
+ * @deprecated Please use rankPreference instead.
+ */
+google.maps.places.SearchByTextRequest.prototype.rankBy;
 
 /**
  * Contains structured information about the place&#39;s description, divided
