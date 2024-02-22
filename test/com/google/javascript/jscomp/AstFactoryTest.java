@@ -591,6 +591,110 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateStartOptChainGetprop() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node receiver = astFactory.createNameWithUnknownType("x");
+    Node typeTemplate = astFactory.createNumber(0);
+
+    Node getProp = astFactory.createStartOptChainGetprop(receiver, "y", type(typeTemplate));
+
+    assertNode(getProp).hasToken(Token.OPTCHAIN_GETPROP);
+    assertNode(getProp).hasStringThat().isEqualTo("y");
+    assertNode(getProp).hasFirstChildThat().isEqualTo(receiver);
+    assertNode(getProp).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(getProp).isOptionalChainStart();
+  }
+
+  @Test
+  public void testCreateContinueOptChainGetprop() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node receiver = astFactory.createNameWithUnknownType("x");
+    Node typeTemplate = astFactory.createNumber(0);
+
+    Node getProp = astFactory.createContinueOptChainGetprop(receiver, "y", type(typeTemplate));
+
+    assertNode(getProp).hasToken(Token.OPTCHAIN_GETPROP);
+    assertNode(getProp).hasStringThat().isEqualTo("y");
+    assertNode(getProp).hasFirstChildThat().isEqualTo(receiver);
+    assertNode(getProp).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(getProp).isNotOptionalChainStart();
+  }
+
+  @Test
+  public void testCreateStartOptChainGetelem() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node receiver = astFactory.createNameWithUnknownType("x");
+    Node elem = astFactory.createNumber(0);
+    Node typeTemplate = astFactory.createNumber(0);
+
+    Node getElem = astFactory.createStartOptChainGetelem(receiver, elem, type(typeTemplate));
+
+    assertNode(getElem).hasToken(Token.OPTCHAIN_GETELEM);
+    assertNode(getElem).hasFirstChildThat().isEqualTo(receiver);
+    assertNode(getElem).hasSecondChildThat().isEqualTo(elem);
+    assertNode(getElem).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(getElem).isOptionalChainStart();
+  }
+
+  @Test
+  public void testCreateContinueOptChainGetelem() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node receiver = astFactory.createNameWithUnknownType("x");
+    Node elem = astFactory.createNumber(0);
+    Node typeTemplate = astFactory.createNumber(0);
+
+    Node getElem = astFactory.createContinueOptChainGetelem(receiver, elem, type(typeTemplate));
+
+    assertNode(getElem).hasToken(Token.OPTCHAIN_GETELEM);
+    assertNode(getElem).hasFirstChildThat().isEqualTo(receiver);
+    assertNode(getElem).hasSecondChildThat().isEqualTo(elem);
+    assertNode(getElem).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(getElem).isNotOptionalChainStart();
+  }
+
+  @Test
+  public void testCreateStartOptChainCall() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node receiver = astFactory.createNameWithUnknownType("x");
+    Node typeTemplate = astFactory.createNumber(0);
+    Node arg1 = astFactory.createNumber(1);
+    Node arg2 = astFactory.createNumber(2);
+
+    Node call = astFactory.createStartOptChainCall(receiver, type(typeTemplate), arg1, arg2);
+
+    assertNode(call).hasToken(Token.OPTCHAIN_CALL);
+    assertNode(call).hasFirstChildThat().isEqualTo(receiver);
+    assertNode(call).hasSecondChildThat().isEqualTo(arg1);
+    assertNode(call).hasLastChildThat().isEqualTo(arg2);
+    assertNode(call).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(call).isOptionalChainStart();
+  }
+
+  @Test
+  public void testCreateContinueOptChainCall() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node receiver = astFactory.createNameWithUnknownType("x");
+    Node typeTemplate = astFactory.createNumber(0);
+    Node arg1 = astFactory.createNumber(1);
+    Node arg2 = astFactory.createNumber(2);
+
+    Node call = astFactory.createContinueOptChainCall(receiver, type(typeTemplate), arg1, arg2);
+
+    assertNode(call).hasToken(Token.OPTCHAIN_CALL);
+    assertNode(call).hasFirstChildThat().isEqualTo(receiver);
+    assertNode(call).hasSecondChildThat().isEqualTo(arg1);
+    assertNode(call).hasLastChildThat().isEqualTo(arg2);
+    assertNode(call).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(call).isNotOptionalChainStart();
+  }
+
+  @Test
   public void testCreateStringKey_jstypes() {
     AstFactory astFactory = createTestAstFactory();
 

@@ -843,6 +843,42 @@ final class AstFactory {
     return result;
   }
 
+  Node createStartOptChainGetprop(Node receiver, String propertyName, Type type) {
+    Node result = IR.startOptChainGetprop(receiver, propertyName);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createContinueOptChainGetprop(Node receiver, String propertyName, Type type) {
+    Node result = IR.continueOptChainGetprop(receiver, propertyName);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createStartOptChainGetelem(Node receiver, Node elem, Type type) {
+    Node result = IR.startOptChainGetelem(receiver, elem);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createContinueOptChainGetelem(Node receiver, Node elem, Type type) {
+    Node result = IR.continueOptChainGetelem(receiver, elem);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createStartOptChainCall(Node receiver, Type type, Node... args) {
+    Node result = IR.startOptChainCall(receiver, args);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createContinueOptChainCall(Node receiver, Type type, Node... args) {
+    Node result = IR.continueOptChainCall(receiver, args);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
   Node createGetElem(Node receiver, Node key) {
     Node result = IR.getelem(receiver, key);
     // TODO(bradfordcsmith): When receiver is an Array<T> or an Object<K, V>, use the template
