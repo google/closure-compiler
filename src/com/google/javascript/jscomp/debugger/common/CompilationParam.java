@@ -693,12 +693,12 @@ public enum CompilationParam {
   REMOVE_DEAD_CODE(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setRemoveDeadCode(value);
+      options.setRemoveUnreachableCode(value);
     }
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.removeDeadCode;
+      return options.removeUnreachableCode;
     }
   },
 

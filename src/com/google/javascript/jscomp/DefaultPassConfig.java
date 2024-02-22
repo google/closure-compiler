@@ -993,7 +993,7 @@ public final class DefaultPassConfig extends PassConfig {
       earlyLoopPasses.maybeAdd(peepholeOptimizations);
     }
 
-    if (options.removeDeadCode) {
+    if (options.removeUnreachableCode) {
       earlyLoopPasses.maybeAdd(removeUnreachableCode);
     }
 
@@ -1068,7 +1068,7 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.maybeAdd(peepholeOptimizations);
     }
 
-    if (options.removeDeadCode) {
+    if (options.removeUnreachableCode) {
       loopPasses.maybeAdd(removeUnreachableCode);
     }
     loopPasses.assertAllLoopablePasses();
@@ -1137,7 +1137,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(peepholeOptimizations);
     }
 
-    if (options.removeDeadCode) {
+    if (options.removeUnreachableCode) {
       passes.maybeAdd(removeUnreachableCode);
     }
 

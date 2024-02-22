@@ -401,7 +401,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
     options.setInlineVariables(true);
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
     test(options, "var x; x && alert(1);", "");
   }
 
@@ -1476,7 +1476,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
     options.setRemoveAbstractMethods(true);
     test(
         options,
@@ -1504,7 +1504,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setPropertiesThatMustDisambiguate(ImmutableSet.of("a"));
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
     options.setRemoveAbstractMethods(true);
     test(
         options,
@@ -1531,7 +1531,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
 
     testSame(options, testCode);
 
@@ -1748,7 +1748,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "function f() { return; f(); }";
     testSame(options, code);
 
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
     test(options, code, "function f() {}");
   }
 
@@ -1784,7 +1784,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
@@ -1832,7 +1832,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setRemoveDeadCode(true);
+    options.setRemoveUnreachableCode(true);
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
@@ -4804,7 +4804,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2016);
 
-    options.setRemoveDeadCode(false);
+    options.setRemoveUnreachableCode(false);
     options.setRemoveUnusedVariables(Reach.NONE);
     options.setRemoveUnusedClassProperties(false);
 

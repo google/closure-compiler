@@ -453,7 +453,7 @@ public class CompilerOptions implements Serializable {
   public boolean smartNameRemoval;
 
   /** Removes code that will never execute */
-  public boolean removeDeadCode;
+  public boolean removeUnreachableCode;
 
   public enum ExtractPrototypeMemberDeclarationsMode {
     OFF,
@@ -1306,7 +1306,7 @@ public class CompilerOptions implements Serializable {
     inlineVariables = false;
     inlineLocalVariables = false;
     smartNameRemoval = false;
-    removeDeadCode = false;
+    removeUnreachableCode = false;
     extractPrototypeMemberDeclarations = ExtractPrototypeMemberDeclarationsMode.OFF;
     removeUnusedPrototypeProperties = false;
     removeUnusedClassProperties = false;
@@ -2092,8 +2092,16 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  public void setRemoveDeadCode(boolean removeDeadCode) {
-    this.removeDeadCode = removeDeadCode;
+  /**
+   * @deprecated Use {@link #setRemoveUnreachableCode} instead.
+   */
+  @Deprecated
+  public void setRemoveDeadCode(boolean removeUnreachableCode) {
+    setRemoveUnreachableCode(removeUnreachableCode);
+  }
+
+  public void setRemoveUnreachableCode(boolean removeUnreachableCode) {
+    this.removeUnreachableCode = removeUnreachableCode;
   }
 
   public void setExtractPrototypeMemberDeclarations(boolean enabled) {
@@ -2889,8 +2897,8 @@ public class CompilerOptions implements Serializable {
         .add("quoteKeywordProperties", quoteKeywordProperties)
         .add("removeAbstractMethods", removeAbstractMethods)
         .add("removeClosureAsserts", removeClosureAsserts)
-        .add("removeDeadCode", removeDeadCode)
         .add("removeJ2clAsserts", removeJ2clAsserts)
+        .add("removeUnreachableCode", removeUnreachableCode)
         .add("removeUnusedClassProperties", removeUnusedClassProperties)
         .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
         .add("removeUnusedLocalVars", removeUnusedLocalVars)
