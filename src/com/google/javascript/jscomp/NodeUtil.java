@@ -6004,7 +6004,12 @@ public final class NodeUtil {
     if (feature != Feature.MODULES) {
       // Except MODULES (which can get reintroduced later in ConvertChunksToEsModules pass),
       // prohibit passes from reintroducing any feature that already got transpiled.
-      checkState(compiler.getAllowableFeatures().contains(feature));
+      checkState(
+          compiler.getAllowableFeatures().contains(feature),
+          "Cannot add feature: %s. It is not supported in the output language, and either 1) its"
+              + " corresponding transpilation pass has already run or 2) transpilation of this"
+              + " feature is unsupported entirely",
+          feature);
     } else {
       compiler.setAllowableFeatures(compiler.getAllowableFeatures().with(feature));
     }
