@@ -458,6 +458,8 @@ final class FunctionTypeBuilder {
         }
         if (infoBaseType.setValidator(createExtendedTypeValidator())) {
           baseType = infoBaseType.toObjectType();
+        } else {
+          this.isKnownAmbiguous = true;
         }
       } else {
         reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());

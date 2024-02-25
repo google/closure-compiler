@@ -1600,6 +1600,78 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testTypecheckClassMultipleExtends_doesNotDisambiguate() {
+    // Regression test for b/325489639
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setGeneratePseudoNames(true);
+    inputFileNameSuffix = ".closure.js";
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAlert()
+                .addClosureExterns()
+                .addExtra("var window;")
+                .buildExternsFile("externs.js"));
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+
+    test(
+        options,
+        lines(
+            "/** @fileoverview @suppress {checkTypes} */",
+            "",
+            // Define two parent classes, Foo and Bar, and a child class FooBar that all share
+            // method 1.
+            // FooBar is not really allowed to extend both Foo and Bar, but the @suppress checkTypes
+            // and the .closure.js suffix make it not an error. We expect property disambiguation to
+            // back off on Foo and Bar.
+            "class Foo { method1() { alert('foo'); } }",
+            "class Bar { method1() { alert('bar'); } }",
+            "/**",
+            " * @extends {Foo}",
+            " * @extends {Bar}",
+            " */",
+            "class FooBar { method1() {alert('foobar'); } }",
+            // Define extra normal classes Quz and Baz with a method2, just to ensure that
+            // property disambiguation actually runs in this test case, and it's not a fluke that
+            // method1 is not disambiguated.
+            "class Qux { method2() { alert('qux'); } }",
+            "class Baz { method2() { alert('baz'); } }",
+            "/** @noinline */",
+            "function callMethods(/** !Foo */ foo, /** !Bar */ bar, /** !FooBar */ fooBar, /** !Qux"
+                + " */ qux, /** !Baz */ baz) {",
+            // not disambiguated
+            "  foo.method1();",
+            "  bar.method1();",
+            "  fooBar.method1();",
+            // disambiguated
+            "  qux.method2();",
+            "  baz.method2();",
+            "}",
+            "window['prevent_dce'] = [Foo, Bar, FooBar, Qux, Baz, callMethods];"),
+        lines(
+            "class $Foo$$ { $method1$() { alert('foo'); } }",
+            "class $Bar$$ { $method1$() { alert('bar'); } }",
+            "class $FooBar$$ { $method1$() {alert('foobar'); } }",
+            "class $Qux$$ { }",
+            "class $Baz$$ { }",
+            "",
+            "/** @noinline */",
+            "function $callMethods$$(/** !Foo */ $foo$$, /** !Bar */ $bar$$, /** !FooBar */"
+                + " $fooBar$$) {",
+            // not disambiguated
+            "  $foo$$.$method1$();",
+            "  $bar$$.$method1$();",
+            "  $fooBar$$.$method1$();",
+            // disambiguated + inlined by InlineFunctions
+            "  alert('qux');",
+            "  alert('baz');",
+            "}",
+            "window.prevent_dce = [$Foo$$, $Bar$$, $FooBar$$, $Qux$$, $Baz$$, $callMethods$$];"));
+  }
+
+  @Test
   public void testFileoverviewVisibility_overridenOnLegacyGoogModuleExport() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);

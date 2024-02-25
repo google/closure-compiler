@@ -61,9 +61,13 @@ public final class JsDocInfoParser {
       " See https://github.com/google/closure-compiler/wiki/Annotating-JavaScript-for-the-Closure-Compiler"
           + " for more information.";
 
+  private static final String TSICKLE_MISSING_TYPE_PLACEHOLDER =
+      "JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder";
+
   private final JsDocTokenStream stream;
   private final JSDocInfo.Builder jsdocBuilder;
   private final ErrorReporter errorReporter;
+  private final JsDocSourceKind jsDocSourceKind;
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these (similar to IRFactory).
@@ -158,12 +162,19 @@ public final class JsDocInfoParser {
     NEXT_IS_ANNOTATION
   }
 
+  /** How to handle unexpected JSDoc format */
+  public enum JsDocSourceKind {
+    NORMAL, // classic Closure Compiler
+    TSICKLE // make some extra allowances for tsickle-generated JSDoc
+  }
+
   public JsDocInfoParser(
       JsDocTokenStream stream,
       String comment,
       int commentPosition,
       @Nullable Node templateNode,
       Config config,
+      JsDocSourceKind jsDocSourceKind,
       ErrorReporter errorReporter) {
     this.stream = stream;
 
@@ -180,6 +191,7 @@ public final class JsDocInfoParser {
     this.suppressionNames = config.suppressionNames();
     this.closurePrimitiveNames = config.closurePrimitiveNames();
     this.preserveWhitespace = config.jsDocParsingMode().shouldPreserveWhitespace();
+    this.jsDocSourceKind = jsDocSourceKind;
 
     this.errorReporter = errorReporter;
     this.templateNode = templateNode == null ? IR.script() : templateNode;
@@ -251,7 +263,13 @@ public final class JsDocInfoParser {
             .setClosurePrimitiveNames(ImmutableSet.of("testPrimitive"))
             .build();
     return new JsDocInfoParser(
-        new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
+        new JsDocTokenStream(toParse),
+        toParse,
+        0,
+        null,
+        config,
+        JsDocSourceKind.NORMAL,
+        ErrorReporter.NULL_INSTANCE);
   }
 
   /**
@@ -1303,6 +1321,23 @@ public final class JsDocInfoParser {
   }
 
   private void checkExtendedTypes(List<ExtendedTypeInfo> extendedTypes) {
+    if (extendedTypes.size() > 1) {
+      // Multiple extends is always ok for an interface.
+      boolean isInterface = jsdocBuilder.isInterfaceRecorded();
+      // Normally having multiple extended types is an error for a non-interface, but in TSICKLE
+      // mode, we instead record there being a single @extends with a placeholder name. This
+      // works around some weirdness with TypeScript allowing extending classes.
+      boolean isFromTsickle = this.jsDocSourceKind.equals(JsDocSourceKind.TSICKLE);
+      if (!isInterface && isFromTsickle) {
+        boolean result =
+            jsdocBuilder.recordBaseType(
+                createJSTypeExpression(
+                    wrapNode(Token.BANG, newStringNode(TSICKLE_MISSING_TYPE_PLACEHOLDER))
+                        .srcrefTree(extendedTypes.get(0).type.getRoot())));
+        checkState(result, "Unexpected failure to record base type");
+        return;
+      }
+    }
     for (ExtendedTypeInfo typeInfo : extendedTypes) {
       // If interface, record the multiple extended interfaces
       if (jsdocBuilder.isInterfaceRecorded()) {

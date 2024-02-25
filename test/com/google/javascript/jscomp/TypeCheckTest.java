@@ -23511,6 +23511,32 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
+  @Test
+  public void testClassMultipleExtends_fromClosureJs() {
+    // Tests a workaround for b/325489639
+    // This is a hacky fix for a Closure type system vs. TypeScript compatibility problem:
+    // TypeScript allows extending classes, while Closure does not. This results in tsickle
+    // sometimes outputting classes with multiple @extends clauses. The Closure type system doesn't
+    // support this, but does allow suppressing it via checkTypes in .closure.js files, and then
+    // treats the resulting subtype as "unknown" as not to mislead type-based optimizations into
+    // thinking it can handle this type.
+    newTest()
+        .addSource(
+            "/** @fileoverview @suppress {checkTypes} */",
+            "class Foo {}",
+            "class Bar {}",
+            "/**",
+            " * @extends {Foo}",
+            " * @extends {Bar}",
+            " */",
+            "class FooBar {}")
+        .usingSourceNameExtension(".closure.js")
+        .run();
+
+    FunctionType fooBar = compiler.getTopScope().getVar("FooBar").getType().assertFunctionType();
+    assertThat(fooBar.isAmbiguousConstructor()).isTrue();
+  }
+
   private void testClosureTypes(String js, @Nullable String description) {
     testClosureTypesMultipleWarnings(
         js, description == null ? null : ImmutableList.of(description));

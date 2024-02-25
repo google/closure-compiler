@@ -238,6 +238,7 @@ class IRFactory {
 
   private final CommentTracker jsdocTracker;
   private final CommentTracker nonJsdocTracker;
+  private final JsDocInfoParser.JsDocSourceKind jsDocSourceKind;
 
   private boolean currentFileIsExterns = false;
 
@@ -249,7 +250,8 @@ class IRFactory {
       Config config,
       ErrorReporter errorReporter,
       ImmutableList<Comment> comments,
-      SourceFile fileWithContent) {
+      SourceFile fileWithContent,
+      JsDocInfoParser.JsDocSourceKind jsDocSourceKind) {
     this.jsdocTracker = new CommentTracker(comments, (c) -> c.type == Comment.Type.JSDOC);
     this.nonJsdocTracker = new CommentTracker(comments, (c) -> c.type != Comment.Type.JSDOC);
     this.sourceFile = sourceFile;
@@ -271,6 +273,7 @@ class IRFactory {
     } else {
       reservedKeywords = ES5_RESERVED_KEYWORDS;
     }
+    this.jsDocSourceKind = jsDocSourceKind;
   }
 
   private static final class CommentTracker {
@@ -324,8 +327,13 @@ class IRFactory {
       Config config,
       ErrorReporter errorReporter,
       SourceFile file) {
+    JsDocInfoParser.JsDocSourceKind jsDocSourceKind =
+        sourceFile.getName().endsWith(".closure.js")
+            ? JsDocInfoParser.JsDocSourceKind.TSICKLE
+            : JsDocInfoParser.JsDocSourceKind.NORMAL;
     IRFactory irFactory =
-        new IRFactory(sourceFile, config, errorReporter, tree.sourceComments, file);
+        new IRFactory(
+            sourceFile, config, errorReporter, tree.sourceComments, file, jsDocSourceKind);
 
     // don't call transform as we don't want standard jsdoc handling.
     Node n = irFactory.transformDispatcher.process(tree);
@@ -1011,6 +1019,7 @@ class IRFactory {
             position,
             templateNode,
             config,
+            jsDocSourceKind,
             errorReporter);
     jsdocParser.setFileOverviewJSDocInfo(this.firstFileoverview);
     if (node.type == Comment.Type.IMPORTANT && node.value.length() > 0) {
@@ -1038,6 +1047,7 @@ class IRFactory {
             node.location.start.offset,
             templateNode,
             config,
+            jsDocSourceKind,
             errorReporter);
     return parser.parseInlineTypeDoc();
   }

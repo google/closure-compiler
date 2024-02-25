@@ -67,6 +67,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraSuppressions;
   private Set<String> extraPrimitives;
   private String prevLicense;
+  private JsDocInfoParser.JsDocSourceKind jsDocSourceKind;
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT = "Missing type declaration.";
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
@@ -90,6 +91,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     extraPrimitives.add("id");
     extraPrimitives.add("idA");
     extraPrimitives.add("idB");
+
+    jsDocSourceKind = JsDocInfoParser.JsDocSourceKind.NORMAL;
   }
 
   @Test
@@ -1505,6 +1508,27 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. "
             + "@implements/@extends requires a bare interface/record name without ! or ?."
             + BAD_TYPE_WIKI_LINK);
+  }
+
+  @Test
+  public void testParseExtends_multipleExtends() {
+    jsDocSourceKind = JsDocInfoParser.JsDocSourceKind.NORMAL;
+    parse(
+        "@extends {Foo}\n@extends {Bar} */",
+        "Bad type annotation. type annotation incompatible with other annotations. See"
+            + " https://github.com/google/closure-compiler/wiki/Annotating-JavaScript-for-the-Closure-Compiler"
+            + " for more information.");
+  }
+
+  @Test
+  public void testParseExtends_multipleExtendsTsickleMode() {
+    jsDocSourceKind = JsDocInfoParser.JsDocSourceKind.TSICKLE;
+    JSDocInfo result = parse("@extends {Foo}\n@extends {Bar} */");
+    // Treated as "@extends {JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder}"
+    // which has an implicit "!" (Token.BANG) when parsed.
+    assertNode(result.getBaseType().getRoot()).hasToken(Token.BANG);
+    assertNode(result.getBaseType().getRoot().getOnlyChild())
+        .isString("JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder");
   }
 
   @Test
@@ -5973,7 +5997,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     templateNode.setStaticSourceFile(file);
 
     JsDocInfoParser jsdocParser =
-        new JsDocInfoParser(stream(comment), comment, 0, templateNode, config, errorReporter);
+        new JsDocInfoParser(
+            stream(comment), comment, 0, templateNode, config, jsDocSourceKind, errorReporter);
 
     jsdocParser.parse();
     this.prevLicense = jsdocParser.getLicenseText();

@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOS
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -122,6 +123,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   public final class TypeTestBuilder {
     private String source;
     private String externs;
+    private String sourceNameExtension = "";
     private boolean includeDefaultExterns = false;
     private final ArrayList<DiagnosticType> diagnosticTypes = new ArrayList<>();
     private final ArrayList<String> diagnosticDescriptions = new ArrayList<>();
@@ -138,6 +140,12 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     public TypeTestBuilder addExterns(String... x) {
       checkState(this.externs == null, "Can only have one externs right now.");
       this.externs = lines(x);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public TypeTestBuilder usingSourceNameExtension(String extension) {
+      this.sourceNameExtension = extension;
       return this;
     }
 
@@ -181,7 +189,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         correspondence = castAny(DESCRIPTION_EQUALITY);
       }
 
-      parseAndTypeCheck(allExterns, this.source);
+      parseAndTypeCheckWithScope(allExterns, this.source, sourceNameExtension);
 
       final ImmutableList<JSError> assertedErrors;
       final ImmutableList<JSError> emptyErrors;
@@ -212,7 +220,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected Node parseAndTypeCheck(String externs, String js) {
-    return parseAndTypeCheckWithScope(externs, js).root;
+    return parseAndTypeCheckWithScope(externs, js, "").root;
   }
 
   /**
@@ -220,14 +228,24 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
    * checking.
    */
   protected TypeCheckResult parseAndTypeCheckWithScope(String js) {
-    return parseAndTypeCheckWithScope("", js);
+    return parseAndTypeCheckWithScope("", js, "");
   }
 
+  /**
+   * Parses and type checks the JavaScript code and returns the TypedScope used whilst type
+   * checking.
+   */
   protected TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
+    return parseAndTypeCheckWithScope(externs, js, "");
+  }
+
+  @CanIgnoreReturnValue
+  protected TypeCheckResult parseAndTypeCheckWithScope(
+      String externs, String js, String sourceNameExtension) {
     compiler.getOptions().setClosurePass(runClosurePass);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
-        ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
+        ImmutableList.of(SourceFile.fromCode("[testcode]" + sourceNameExtension, js)),
         compiler.getOptions());
     compiler.parse();
 
