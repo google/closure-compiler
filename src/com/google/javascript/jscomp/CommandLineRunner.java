@@ -965,6 +965,18 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "stub functions in a parent chunk.")
     private boolean assumeNoPrototypeMethodEnumeration = false;
 
+    @Option(
+        name = "--variable_map_input_file",
+        usage = "File containing the serialized version of the variable "
+        + "renaming map produced by a previous compilation")
+    private String variableMapInputFile = "";
+
+    @Option(
+        name = "--property_map_input_file",
+        usage = "File containing the serialized version of the property "
+        + "renaming map produced by a previous compilation")
+    private String propertyMapInputFile = "";
+ 
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -1760,6 +1772,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
+          .setPropertyMapInputFile(flags.propertyMapInputFile)
+          .setVariableMapInputFile(flags.variableMapInputFile)
           .setInstrumentationMappingFile(flags.instrumentationMappingOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
