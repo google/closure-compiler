@@ -128,7 +128,13 @@ final class InlineProperties implements CompilerPass {
         invalidatingPropRef = true;
       } else if (n.isMemberFieldDef()) {
         propName = n.getString();
-        invalidatingPropRef = !maybeRecordCandidateClassFieldDefinition(n);
+        if (n.getFirstChild() != null) {
+          // class field with initialization
+          invalidatingPropRef = !maybeRecordCandidateClassFieldDefinition(n);
+        } else {
+          // class field with no initialization
+          invalidatingPropRef = false;
+        }
       } else {
         return;
       }
@@ -142,7 +148,7 @@ final class InlineProperties implements CompilerPass {
     /** @return Whether this is a valid definition for a candidate class field. */
     private boolean maybeRecordCandidateClassFieldDefinition(Node n) {
       checkState(n.isMemberFieldDef(), n);
-      Node src = n.getFirstChild();
+      Node value = n.getFirstChild();
       String propName = n.getString();
       Node classNode = n.getGrandparent();
       final Color c;
@@ -157,7 +163,7 @@ final class InlineProperties implements CompilerPass {
                 : Color.createUnion(possibleInstances);
       }
 
-      return maybeStoreCandidateValue(c, propName, src);
+      return maybeStoreCandidateValue(c, propName, value);
     }
 
     /** @return Whether this is a valid definition for a candidate property. */

@@ -715,13 +715,17 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         lines(
             "class C {", //
             "  a = 1;",
+            "  b;",
             "}",
-            "(new C()).a"),
+            "(new C()).a;",
+            "(new C()).b"),
         lines(
             "class C {", //
             "  a = 1;",
+            "  b;",
             "}",
-            "new C(), 1;"));
+            "new C(), 1;",
+            "(new C()).b"));
   }
 
   @Test
@@ -730,15 +734,19 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         lines(
             "class C {", //
             "  a = 1;",
+            "  b;",
             "}",
             "class D extends C {};",
-            "(new D()).a"),
+            "(new D()).a;",
+            "(new D()).b"),
         lines(
             "class C {", //
             "  a = 1;",
+            "  b;",
             "}",
             "class D extends C {};",
-            "new D(), 1;"));
+            "new D(), 1;",
+            "(new D()).b;"));
   }
 
   @Test
@@ -747,13 +755,17 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         lines(
             "class C {", //
             "  static a = 1;",
+            "  static b;",
             "}",
-            "C.a"),
+            "C.a;",
+            "C.b"),
         lines(
             "class C {", //
             "  static a = 1;",
+            "  static b;",
             "}",
-            "1"));
+            "1;",
+            "C.b"));
   }
 
   @Test
@@ -763,8 +775,10 @@ public final class InlinePropertiesTest extends CompilerTestCase {
             "/** @dict */", //
             "class C {",
             "  ['a'] = 1;",
+            "  ['b'];",
             "}",
-            "(new C())['a']"));
+            "(new C())['a'];",
+            "(new C())['b']"));
   }
 
   @Test
@@ -774,7 +788,9 @@ public final class InlinePropertiesTest extends CompilerTestCase {
             "/** @dict */", //
             "class C {",
             "  static ['a'] = 1;",
+            "  static ['b'];",
             "}",
-            "C['a']"));
+            "C['a']",
+            "C['b']"));
   }
 }
