@@ -28,6 +28,8 @@ public final class PassNames {
   public static final String ANALYZER_CHECKS = "analyzerChecks";
   public static final String ANGULAR_PASS = "angularPass";
   public static final String BEFORE_EARLY_OPTIMIZATION_LOOP = "beforeEarlyOptimizationLoop";
+  public static final String BEFORE_EARLY_OPTIMIZATIONS_TRANSPILATION =
+      "beforeEarlyOptimizationsTranspilation";
   public static final String BEFORE_STANDARD_OPTIMIZATIONS = "beforeStandardOptimizations";
   public static final String BEFORE_MAIN_OPTIMIZATIONS = "beforeMainOptimizations";
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";

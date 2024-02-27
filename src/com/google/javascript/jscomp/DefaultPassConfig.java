@@ -590,7 +590,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Defines in code always need to be processed.
     passes.maybeAdd(processDefinesOptimize);
-
+    passes.maybeAdd(createEmptyPass(PassNames.BEFORE_EARLY_OPTIMIZATIONS_TRANSPILATION));
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     passes.maybeAdd(normalize);
