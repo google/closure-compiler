@@ -1172,7 +1172,7 @@ Number.prototype.toExponential = function(opt_fractionDigits) {};
 
 /**
  * @this {Number|number}
- * @param {*=} opt_digits
+ * @param {number=} opt_digits
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed

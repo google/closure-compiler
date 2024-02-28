@@ -10664,7 +10664,7 @@ typed_asts {
                 kind: IDENTIFIER
                 string_value_pointer: 645
                 relative_column: 1
-                type: 0
+                type: 34
               }
               relative_column: 8
             }
@@ -115878,7 +115878,7 @@ typed_asts {
       file_on_disk {
       }
       source_kind: EXTERN
-      num_bytes_plus_one: 164593
+      num_bytes_plus_one: 164598
       num_lines_plus_one: 5850
     }
     source_file {
