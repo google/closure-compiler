@@ -505,6 +505,10 @@ Tab.prototype.height;
 Tab.prototype.sessionId;
 
 
+/** @type {number|undefined} */
+Tab.prototype.groupId;
+
+
 /** @const */
 chrome.app = {};
 
