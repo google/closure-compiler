@@ -33,6 +33,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.errorprone.annotations.RestrictedApi;
 import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
@@ -2095,8 +2096,9 @@ public class CompilerOptions implements Serializable {
   /**
    * @deprecated Use {@link #setRemoveUnreachableCode} instead.
    */
+  @InlineMe(replacement = "this.setRemoveUnreachableCode(removeUnreachableCode)")
   @Deprecated
-  public void setRemoveDeadCode(boolean removeUnreachableCode) {
+  public final void setRemoveDeadCode(boolean removeUnreachableCode) {
     setRemoveUnreachableCode(removeUnreachableCode);
   }
 
