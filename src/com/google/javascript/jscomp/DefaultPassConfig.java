@@ -378,9 +378,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(checkRegExp);
     }
 
-    // Passes running before this point should expect to see language features up to ES_2017.
-    checks.maybeAdd(createEmptyPass(PassNames.BEFORE_PRE_TYPECHECK_TRANSPILATION));
-
     checks.maybeAdd(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     if (options.checkTypes || options.inferTypes) {
