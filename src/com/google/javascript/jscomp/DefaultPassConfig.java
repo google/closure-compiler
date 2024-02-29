@@ -491,14 +491,15 @@ public final class DefaultPassConfig extends PassConfig {
     // See b/180424427 for why this runs in stage 1 and not stage 2.
     checks.maybeAdd(gatherExternPropertiesCheck);
 
-    checks.assertAllOneTimePasses();
-    assertValidOrderForChecks(checks);
-
     checks.maybeAdd(createEmptyPass(PassNames.BEFORE_SERIALIZATION));
 
     if (options.getTypedAstOutputFile() != null) {
       checks.maybeAdd(serializeTypedAst);
     }
+
+    // Validation should be after all pass additions
+    checks.assertAllOneTimePasses();
+    assertValidOrderForChecks(checks);
 
     return checks;
   }
