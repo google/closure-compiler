@@ -101,8 +101,9 @@ class RhinoErrorReporter {
           "JSC_INVALID_OCTAL_LITERAL",
           "This style of octal literal is not supported in strict mode.");
 
+  // This check should only be enabled in the lintChecks DiagnosticGroup as part of the linter
   static final DiagnosticType STRING_CONTINUATION =
-      DiagnosticType.warning("JSC_STRING_CONTINUATION", "{0}");
+      DiagnosticType.disabled("JSC_STRING_CONTINUATION", "{0}");
 
   static final DiagnosticType LANGUAGE_FEATURE =
       DiagnosticType.error("JSC_LANGUAGE_FEATURE", "{0}.");

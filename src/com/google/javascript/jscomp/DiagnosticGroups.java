@@ -604,7 +604,8 @@ public class DiagnosticGroups {
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
-              RhinoErrorReporter.UNNECESSARY_ESCAPE));
+              RhinoErrorReporter.UNNECESSARY_ESCAPE,
+              RhinoErrorReporter.STRING_CONTINUATION));
 
   public static final DiagnosticGroup STRICT_MODULE_CHECKS =
       DiagnosticGroups.registerGroup(
