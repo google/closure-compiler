@@ -12536,3 +12536,82 @@ chrome.dom = {};
  * @see https://developer.chrome.com/docs/extensions/reference/dom/#method-openOrClosedShadowRoot
  */
 chrome.dom.openOrClosedShadowRoot = function(element) {};
+
+/**
+ * @see https://developer.chrome.com/docs/extensions/reference/api/userScripts
+ * @const
+ */
+chrome.userScripts = {};
+
+/**
+ * @typedef {{
+*   code: (string|undefined),
+*   file: (string|undefined)
+* }}
+*/
+chrome.userScripts.ScriptSource;
+
+/**
+ * @typedef {{
+ *   allFrames: (boolean|undefined),
+ *   excludeGlobs: (!Array<string>|undefined),
+ *   excludeMatches: (!Array<string>|undefined),
+ *   id: string,
+ *   includeGlobs: (!Array<string>|undefined),
+ *   js: (!Array<chrome.userScripts.ScriptSource>|undefined),
+ *   matches: (!Array<string>|undefined),
+ *   runAt: (string|undefined),
+ *   world: (string|undefined)
+ * }}
+ */
+chrome.userScripts.RegisteredUserScript;
+
+/**
+ * @typedef {{
+ *   ids: (!Array<string>|undefined)
+ * }}
+ */
+chrome.userScripts.UserScriptFilter;
+
+/**
+ * @typedef {{
+ *   csp: (string|undefined),
+ *   messaging: (boolean|undefined)
+ * }}
+ */
+chrome.userScripts.WorldProperties;
+
+/**
+ * @param {!chrome.userScripts.WorldProperties} properties
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.userScripts.configureWorld = function(properties, opt_callback) {};
+
+/**
+ * @param {!chrome.userScripts.UserScriptFilter} filter
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.userScripts.getScripts = function(filter, opt_callback) {};
+
+/**
+ * @param {!Array<!chrome.userScripts.RegisteredUserScript>} scripts
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.userScripts.register = function(scripts, opt_callback) {};
+
+/**
+ * @param {!chrome.userScripts.UserScriptFilter} filter
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.userScripts.unregister = function(filter, opt_callback) {};
+
+/**
+ * @param {!Array<!chrome.userScripts.RegisteredUserScript>} scripts
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.userScripts.update = function(scripts, opt_callback) {};
