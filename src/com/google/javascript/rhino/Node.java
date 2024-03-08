@@ -203,11 +203,7 @@ public class Node {
     // Only present in the "synthetic externs file". Builds initialized using a
     // "TypedAST filesystem" will delete any such declarations present in a different compilation
     // shard
-    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
-    // Marks a function for eager compile by wrapping with (). This has potential performance
-    // benefits when focused on critical functions but needs to be sparingly applied, since too many
-    // functions eager compiled will lead to performance regressions.
-    MARK_FOR_PARENTHESIZE
+    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -260,17 +256,6 @@ public class Node {
   /** Check whether node was inside original source-level parentheses. */
   public final boolean getIsParenthesized() {
     return getBooleanProp(Prop.IS_PARENTHESIZED);
-  }
-
-  /** Sets whether this node is should be parenthesized in output. */
-  public final void setMarkForParenthesize(boolean value) {
-    checkState(IR.mayBeExpression(this));
-    putBooleanProp(Prop.MARK_FOR_PARENTHESIZE, value);
-  }
-
-  /** Check whether node should be parenthesized in output. */
-  public final boolean getMarkForParenthesize() {
-    return getBooleanProp(Prop.MARK_FOR_PARENTHESIZE);
   }
 
   // TODO(sdh): Get rid of these by using accessor methods instead.
@@ -1009,7 +994,6 @@ public class Node {
       // this method was created to cover the checks previously done there.
       switch (prop) {
         case IS_PARENTHESIZED:
-        case MARK_FOR_PARENTHESIZE:
           if (!IR.mayBeExpression(this)) {
             violationMessageConsumer.accept("non-expression is parenthesized");
           }

@@ -955,10 +955,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(optimizeToEs6);
     }
 
-    if (!options.parenthesizeFunctionsInChunks.isEmpty()) {
-      passes.maybeAdd(parenthesizeFunctionsInChunks);
-    }
-
     // Must run after all non-safety-check passes as the optimizations do not support modules.
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.maybeAdd(convertChunksToESModules);
@@ -2187,16 +2183,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new DisambiguateProperties(compiler, options.getPropertiesThatMustDisambiguate()))
-          .build();
-
-  /** Marks all functions for wrapping with () in the specified chunks. */
-  private final PassFactory parenthesizeFunctionsInChunks =
-      PassFactory.builder()
-          .setName(PassNames.PARENTHESIZE_FUNCTIONS_IN_CHUNKS)
-          .setInternalFactory(
-              (compiler) ->
-                  new ParenthesizeFunctionsInChunks(
-                      compiler, new LinkedHashSet<>(options.parenthesizeFunctionsInChunks)))
           .build();
 
   /** Rewrite instance methods as static methods, to make them easier to inline. */

@@ -1608,7 +1608,7 @@ public class CodeGenerator {
 
   private void addArrowFunction(Node n, Node first, Node last, Context context) {
     checkState(first.getString().isEmpty(), first);
-    boolean funcNeedsParens = arrowFunctionNeedsParens(n) || n.getMarkForParenthesize();
+    boolean funcNeedsParens = arrowFunctionNeedsParens(n);
     if (funcNeedsParens) {
       add("(");
     }
@@ -1638,7 +1638,7 @@ public class CodeGenerator {
   }
 
   private void addFunction(Node n, Node first, Node last, Context context) {
-    boolean funcNeedsParens = (context == Context.START_OF_EXPR || n.getMarkForParenthesize());
+    boolean funcNeedsParens = (context == Context.START_OF_EXPR);
     if (funcNeedsParens) {
       add("(");
     }

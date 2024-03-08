@@ -113,25 +113,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMarkForParenthesizeProperty() {
-    // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = TypeInfoValidation.NONE;
-
-    Node n = IR.string("a");
-    n.setMarkForParenthesize(true);
-    setTestSourceLocationForTree(n);
-    expectValid(n, Check.EXPRESSION);
-
-    n.setToken(Token.STRING_KEY); // A string key cannot be parenthesized
-    // We have to put the STRING_KEY into an object and give it a child, so we have an
-    // expression to validate that is valid other than the bad parenthesized property.
-    Node objNode = IR.objectlit(n);
-    n.addChildToFront(IR.number(0));
-    objNode.srcrefTree(n);
-    expectInvalid(objNode, Check.EXPRESSION, "non-expression is parenthesized");
-  }
-
-  @Test
   public void testValidGetPropAndGetElem() {
     valid(
         lines(

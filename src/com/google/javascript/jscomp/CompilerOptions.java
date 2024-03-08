@@ -1258,8 +1258,6 @@ public class CompilerOptions implements Serializable {
 
   ChunkOutputType chunkOutputType;
 
-  public List<String> parenthesizeFunctionsInChunks;
-
   /**
    * Initializes compiler options. All options are disabled by default.
    *
@@ -1370,7 +1368,6 @@ public class CompilerOptions implements Serializable {
     replaceStringsPlaceholderToken = "";
     propertiesThatMustDisambiguate = ImmutableSet.of();
     inputSourceMaps = ImmutableMap.of();
-    parenthesizeFunctionsInChunks = ImmutableList.of();
 
     instrumentForCoverageOption = InstrumentOption.NONE;
     productionInstrumentationArrayName = "";
@@ -2418,10 +2415,6 @@ public class CompilerOptions implements Serializable {
   public void setReplaceStringsFunctionDescriptions(
       List<String> replaceStringsFunctionDescriptions) {
     this.replaceStringsFunctionDescriptions = replaceStringsFunctionDescriptions;
-  }
-
-  public void setParenthesizeFunctionsInChunks(List<String> parenthesizeFunctionsInChunks) {
-    this.parenthesizeFunctionsInChunks = parenthesizeFunctionsInChunks;
   }
 
   public void setReplaceStringsPlaceholderToken(String replaceStringsPlaceholderToken) {
