@@ -441,3 +441,434 @@ function VideoFrameOutputCallback() {}
  * @see https://www.w3.org/TR/webcodecs/#callbackdef-webcodecserrorcallback
  */
 function WebCodecsErrorCallback() {}
+
+
+/**
+ * @param {!AudioEncoderInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#audioencoder-constructors
+ */
+function AudioEncoder(init) {}
+
+/**
+ * @type {!CodecState}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-state
+ */
+AudioEncoder.prototype.state;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-encodequeuesize
+ */
+AudioEncoder.prototype.encodeQueueSize;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-ondequeue
+ */
+AudioEncoder.prototype.ondequeue;
+
+/**
+ * @param {!AudioEncoderConfig} config
+ * @return {!Promise<!AudioEncoderSupport>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-isconfigsupported
+ */
+AudioEncoder.isConfigSupported = function(config) {};
+
+/**
+ * @param {!AudioEncoderConfig} config
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-configure
+ */
+AudioEncoder.prototype.configure = function(config) {};
+
+/**
+ * @param {!AudioData} data
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-encode
+ */
+AudioEncoder.prototype.encode = function(data) {};
+
+/**
+ * @return {!Promise<undefined>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-flush
+ */
+AudioEncoder.prototype.flush = function() {};
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-reset
+ */
+AudioEncoder.prototype.reset = function() {};
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-close
+ */
+AudioEncoder.prototype.close = function() {};
+
+
+/**
+ * @param {!EncodedAudioChunkInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#encodedaudiochunk-constructors
+ */
+function EncodedAudioChunk(init) {}
+
+/**
+ * @type {!EncodedAudioChunkType}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-type
+ */
+EncodedAudioChunk.prototype.type;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-timestamp
+ */
+EncodedAudioChunk.prototype.timestamp;
+
+/**
+ * @type {number|null}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-duration
+ */
+EncodedAudioChunk.prototype.duration;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-bytelength
+ */
+EncodedAudioChunk.prototype.byteLength;
+
+/**
+ * @param {!BufferSource} destination
+ */
+EncodedAudioChunk.prototype.copyTo = function(destination) {};
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-encodedvideochunkinit
+ */
+function EncodedAudioChunkInit() {}
+
+/**
+ * @type {!EncodedAudioChunkType}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-type
+ */
+EncodedAudioChunkInit.prototype.type;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-timestamp
+ */
+EncodedAudioChunkInit.prototype.timestamp;
+
+/**
+ * @type {undefined|number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-duration
+ */
+EncodedAudioChunkInit.prototype.duration;
+
+/**
+ * @type {!BufferSource}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-data
+ */
+EncodedAudioChunkInit.prototype.data;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-encodedaudiochunkmetadata
+ */
+function EncodedAudioChunkMetadata() {}
+
+/**
+ * @type {AudioDecoderConfig}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkmetadata-decoderconfig
+ */
+EncodedAudioChunkMetadata.prototype.decoderConfig;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audioencoderconfig
+ */
+function AudioEncoderConfig() {}
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-codec
+ */
+AudioEncoderConfig.prototype.codec;
+
+/**
+ * @type {(undefined|number)}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-samplerate
+ */
+AudioEncoderConfig.prototype.sampleRate;
+
+/**
+ * @type {(undefined|number)}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-numberofchannels
+ */
+AudioEncoderConfig.prototype.numberOfChannels;
+
+/**
+ * @type {(undefined|number)}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-bitrate
+ */
+AudioEncoderConfig.prototype.bitrate;
+
+/**
+ * @type {(undefined|!BitrateMode)}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-bitratemode
+ */
+AudioEncoderConfig.prototype.bitrateMode;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audiodecoderconfig
+ */
+function AudioDecoderConfig() {}
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderconfig-codec
+ */
+AudioDecoderConfig.prototype.codec;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderconfig-samplerate
+ */
+AudioDecoderConfig.prototype.sampleRate;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderconfig-numberofchannels
+ */
+AudioDecoderConfig.prototype.numberOfChannels;
+
+/**
+ * @type {BufferSource}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderconfig-description
+ */
+AudioDecoderConfig.prototype.description;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audioencodersupport
+ */
+function AudioEncoderSupport() {}
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencodersupport-supported
+ */
+AudioEncoderSupport.prototype.supported;
+
+/**
+ * @type {!AudioEncoderConfig}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencodersupport-config
+ */
+AudioEncoderSupport.prototype.config;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audioencoderinit
+ */
+function AudioEncoderInit() {}
+
+/**
+ * @type {!EncodedAudioChunkOutputCallback}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderinit-output
+ */
+AudioEncoderInit.prototype.output;
+
+/**
+ * @type {!WebCodecsErrorCallback}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderinit-error
+ */
+AudioEncoderInit.prototype.error;
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#callbackdef-encodedaudiochunkoutputcallback
+ */
+function EncodedAudioChunkOutputCallback() {}
+
+
+/**
+ * @param {!AudioDataInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#audiodata-constructors
+ */
+function AudioData(init) {}
+
+/**
+ * @type {?AudioSampleFormat}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-format
+ */
+AudioData.prototype.format;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-samplerate
+ */
+AudioData.prototype.sampleRate;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-numberofframes
+ */
+AudioData.prototype.numberOfFrames;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-numberofchannels
+ */
+AudioData.prototype.numberOfChannels;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-duration
+ */
+AudioData.prototype.duration;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-timestamp
+ */
+AudioData.prototype.timestamp;
+
+/**
+ * @param {!AudioDataCopyToOptions} options
+ * @return {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-allocationsize
+ */
+AudioData.prototype.allocationSize = function(options) {};
+
+/**
+ * @param {!BufferSource} destination
+ * @param {!AudioDataCopyToOptions} options
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-copyto
+ */
+AudioData.prototype.copyTo = function(destination, options) {};
+
+/**
+ * @return {!AudioData}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-clone
+ */
+AudioData.prototype.clone = function() {};
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-close
+ */
+AudioData.prototype.close = function() {};
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audiodatainit
+ */
+function AudioDataInit() {}
+
+/**
+ * @type {!AudioSampleFormat}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-format
+ */
+AudioDataInit.prototype.format;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-samplerate
+ */
+AudioDataInit.prototype.sampleRate;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-numberofframes
+ */
+AudioDataInit.prototype.numberOfFrames;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-numberofchannels
+ */
+AudioDataInit.prototype.numberOfChannels;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-timestamp
+ */
+AudioDataInit.prototype.timestamp;
+
+/**
+ * @type {!BufferSource}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-data
+ */
+AudioDataInit.prototype.data;
+
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audiodatacopytooptions
+ */
+function AudioDataCopyToOptions() {}
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-planeindex
+ */
+AudioDataCopyToOptions.prototype.planeIndex;
+
+/**
+ * @type {undefined|number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-frameoffset
+ */
+AudioDataCopyToOptions.prototype.frameOffset;
+
+/**
+ * @type {undefined|number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-framecount
+ */
+AudioDataCopyToOptions.prototype.frameCount;
+
+/**
+ * @type {undefined|!AudioSampleFormat}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-format
+ */
+AudioDataCopyToOptions.prototype.format;
+
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-codecstate
+ */
+var CodecState;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-audiosampleformat
+ */
+var AudioSampleFormat;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/mediastream-recording/#enumdef-bitratemode
+ */
+var BitrateMode;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-encodedaudiochunktype
+ */
+var EncodedAudioChunkType;
