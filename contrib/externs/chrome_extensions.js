@@ -12589,8 +12589,8 @@ chrome.userScripts.WorldProperties;
 chrome.userScripts.configureWorld = function(properties, opt_callback) {};
 
 /**
- * @param {!chrome.userScripts.UserScriptFilter} filter
- * @param {function(): void=} opt_callback
+ * @param {(!chrome.userScripts.UserScriptFilter|undefined)} filter
+ * @param {function(!Array<!chrome.userScripts.RegisteredUserScript>): void=} opt_callback
  * @return {undefined}
  */
 chrome.userScripts.getScripts = function(filter, opt_callback) {};
@@ -12603,7 +12603,7 @@ chrome.userScripts.getScripts = function(filter, opt_callback) {};
 chrome.userScripts.register = function(scripts, opt_callback) {};
 
 /**
- * @param {!chrome.userScripts.UserScriptFilter} filter
+ * @param {(!chrome.userScripts.UserScriptFilter|undefined)} filter
  * @param {function(): void=} opt_callback
  * @return {undefined}
  */
