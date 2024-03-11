@@ -35,7 +35,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -75,7 +75,7 @@ public final class ParserRunner {
     if (extraAnnotationNames == null) {
       effectiveAnnotationNames = annotationNames;
     } else {
-      effectiveAnnotationNames = new HashSet<>(annotationNames);
+      effectiveAnnotationNames = new LinkedHashSet<>(annotationNames);
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
     return Config.builder()
@@ -188,9 +188,7 @@ public final class ParserRunner {
     private boolean errorSeen = false;
     private final boolean reportAllErrors;
 
-    Es6ErrorReporter(
-        ErrorReporter reporter,
-        boolean reportAllErrors) {
+    Es6ErrorReporter(ErrorReporter reporter, boolean reportAllErrors) {
       this.reporter = reporter;
       this.reportAllErrors = reportAllErrors;
     }
@@ -201,23 +199,17 @@ public final class ParserRunner {
       // sometimes it is useful to keep going.
       if (reportAllErrors || !errorSeen) {
         errorSeen = true;
-        this.reporter.error(
-            message, location.source.name,
-            location.line + 1, location.column);
+        this.reporter.error(message, location.source.name, location.line + 1, location.column);
       }
     }
 
     @Override
     protected void reportWarning(SourcePosition location, String message) {
-      this.reporter.warning(
-          message, location.source.name,
-          location.line + 1, location.column);
+      this.reporter.warning(message, location.source.name, location.line + 1, location.column);
     }
   }
 
-  /**
-   * Holds results of parsing.
-   */
+  /** Holds results of parsing. */
   public static class ParseResult {
     public final Node ast;
     public final List<Comment> comments;

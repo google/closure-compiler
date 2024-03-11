@@ -136,7 +136,6 @@ import com.google.javascript.rhino.dtoa.DToA;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -193,6 +192,7 @@ class IRFactory {
 
   private final StaticSourceFile sourceFile;
   private final @Nullable String sourceName;
+
   /** Source file reference that also contains the file content. */
   private final SourceFile fileWithContent;
 
@@ -227,7 +227,7 @@ class IRFactory {
   /** If non-null, use this set of keywords instead of TokenStream.isKeyword(). */
   private final @Nullable ImmutableSet<String> reservedKeywords;
 
-  private final Set<Comment> parsedComments = new HashSet<>();
+  private final Set<Comment> parsedComments = new LinkedHashSet<>();
 
   private final LinkedHashSet<String> licenseBuilder = new LinkedHashSet<>();
   private @Nullable JSDocInfo firstFileoverview = null;
@@ -288,8 +288,7 @@ class IRFactory {
       this.advance();
     }
 
-    @Nullable
-    Comment current() {
+    @Nullable Comment current() {
       return (this.index >= this.source.size()) ? null : this.source.get(this.index);
     }
 

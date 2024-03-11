@@ -38,7 +38,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -1362,7 +1362,7 @@ public final class JsDocInfoParser {
       addParserWarning(Msg.JSDOC_SUPPRESS);
       return token;
     } else {
-      Set<String> suppressions = new HashSet<>();
+      Set<String> suppressions = new LinkedHashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
@@ -1465,7 +1465,7 @@ public final class JsDocInfoParser {
    */
   private JsDocToken parseModifiesTag(JsDocToken token) {
     if (token == JsDocToken.LEFT_CURLY) {
-      Set<String> modifies = new HashSet<>();
+      Set<String> modifies = new LinkedHashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
@@ -2577,7 +2577,7 @@ public final class JsDocInfoParser {
   private @Nullable Node parseFieldTypeList(JsDocToken token) {
     Node fieldTypeList = newNode(Token.LB);
 
-    Set<String> names = new HashSet<>();
+    Set<String> names = new LinkedHashSet<>();
 
     do {
       Node fieldType = parseFieldType(token);
