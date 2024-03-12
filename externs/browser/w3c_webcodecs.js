@@ -544,7 +544,7 @@ EncodedAudioChunk.prototype.copyTo = function(destination) {};
 /**
  * @record
  * @struct
- * @see https://www.w3.org/TR/webcodecs/#dictdef-encodedvideochunkinit
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-encodedaudiochunkinit
  */
 function EncodedAudioChunkInit() {}
 
@@ -872,3 +872,108 @@ var BitrateMode;
  * @see https://www.w3.org/TR/webcodecs/#enumdef-encodedaudiochunktype
  */
 var EncodedAudioChunkType;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-encodedvideochunktype
+ */
+var EncodedVideoChunkType;
+
+/**
+ * @param {!VideoEncoderInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#videoencoder-constructors
+ */
+function VideoEncoder(init) {}
+
+/**
+ * @type {!CodecState}
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-state
+ */
+VideoEncoder.prototype.state;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-encodequeuesize
+ */
+VideoEncoder.prototype.encodeQueueSize;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-ondequeue
+ */
+VideoEncoder.prototype.ondequeue;
+
+/**
+ * @param {!VideoEncoderConfig} config
+ * @return {!Promise<!VideoEncoderSupport>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-isconfigsupported
+ */
+VideoEncoder.isConfigSupported = function(config) {};
+
+/**
+ * @param {!VideoEncoderConfig} config
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-configure
+ */
+VideoEncoder.prototype.configure = function(config) {};
+
+/**
+ * @param {!VideoFrame} frame
+ * @param {undefined|!VideoEncoderEncodeOptions} options
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-encode
+ */
+VideoEncoder.prototype.encode = function(frame, options) {};
+
+/**
+ * @return {!Promise<undefined>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-flush
+ */
+VideoEncoder.prototype.flush = function() {};
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-reset
+ */
+VideoEncoder.prototype.reset = function() {};
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-close
+ */
+VideoEncoder.prototype.close = function() {};
+
+
+/**
+ * @param {!EncodedVideoChunkInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#encodedvideochunk-constructors
+ */
+function EncodedVideoChunk(init) {}
+
+/**
+ * @type {!EncodedVideoChunkType}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-type
+ */
+EncodedVideoChunk.prototype.type;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-timestamp
+ */
+EncodedVideoChunk.prototype.timestamp;
+
+/**
+ * @type {number|null}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-duration
+ */
+EncodedVideoChunk.prototype.duration;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-bytelength
+ */
+EncodedVideoChunk.prototype.byteLength;
+
+/**
+ * @param {!BufferSource} destination
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-copyto
+ */
+EncodedVideoChunk.prototype.copyTo = function(destination) {};
