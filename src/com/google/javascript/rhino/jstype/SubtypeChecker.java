@@ -263,6 +263,16 @@ final class SubtypeChecker {
   private boolean isObjectSubtypeHelper(ObjectType subtype, ObjectType supertype) {
     TemplateTypeMap subtypeParams = subtype.getTemplateTypeMap();
     TemplateTypeMap supertypeParams = supertype.getTemplateTypeMap();
+    boolean subAndSuperAreSameBaseType = false;
+    if (subtype.isTemplatizedType() && supertype.isTemplatizedType()) {
+      TemplatizedType templatizedSubType = subtype.toMaybeTemplatizedType();
+      TemplatizedType templatizedSuperType = supertype.toMaybeTemplatizedType();
+      ObjectType superTypeReferencedType = templatizedSuperType.getReferencedType();
+      ObjectType subTypeReferencedType = templatizedSubType.getReferencedType();
+      if (subTypeReferencedType.equals(superTypeReferencedType)) {
+        subAndSuperAreSameBaseType = true;
+      }
+    }
     boolean bivarantMatch = false;
 
     /*
@@ -284,7 +294,9 @@ final class SubtypeChecker {
       bivarantMatch = true;
     }
 
-    if (this.isUsingStructuralTyping && supertype.isStructuralType()) {
+    if (!subAndSuperAreSameBaseType
+        && this.isUsingStructuralTyping
+        && supertype.isStructuralType()) {
       /*
        * Do this before considering templatization in general.
        *
@@ -293,7 +305,7 @@ final class SubtypeChecker {
        */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
-    } else if (supertype.isRecordType()) {
+    } else if (!subAndSuperAreSameBaseType && supertype.isRecordType()) {
       /*
        * Anonymous record types are always considered structurally when supertypes.
        *

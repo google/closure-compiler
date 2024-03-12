@@ -216,11 +216,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testBug303058080() {
-    // TODO: b/303058080 - Actually fix the problem this test records.
-    // The problem is a timeout, so as-written this test doesn't actually trigger the timeout.
-    // See the comment below for how to modify this test case to cause the timeout for
-    // investigation.
-
     // Avoid including the transpilation library
     useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
@@ -259,11 +254,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                     "var Bar = function() {};",
                     "",
                     "/**",
-                    " * @return {!Foo<?>}", // Change `?` to `T` to trigger the timeout
+                    " * @return {!Foo<T>}",
                     " */",
                     "Bar.prototype.flatten = function() {};")
                 .buildExternsFile("externs.js"));
-    // The timeout happens while processing the externs, so there's no need to have any input
+    // The timeout happened while processing the externs, so there's no need to have any input
     // code.
     test(options, "", "");
   }
