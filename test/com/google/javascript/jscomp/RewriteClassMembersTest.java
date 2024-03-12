@@ -870,6 +870,32 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "}",
                 "Baz.x = Baz.STATIC$FIELD$5$x();",
                 "Baz[COMPFIELD$2] = Baz.STATIC$FIELD$6();")));
+
+    rewriteFieldOrBlockTest(
+        srcs(
+            lines(
+                "class Baz {",
+                "  z = 1;",
+                "  func(x) {",
+                "    x.a = 'y';",
+                "    return {",
+                "      [x.a]:'aa'", // computed property in an object literal remains unchanged
+                "    }",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "class Baz {",
+                "  constructor() {",
+                "    this.z = 1;",
+                "  }",
+                "  func(x) {",
+                "    x.a = 'y';",
+                "    return {",
+                "      [x.a]:'aa'",
+                "    }",
+                "  }",
+                "}")));
   }
 
   @Test

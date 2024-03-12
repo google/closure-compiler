@@ -97,7 +97,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         break;
       case COMPUTED_PROP:
         checkState(!classStack.isEmpty());
-        if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
+        if (n.getParent().isClassMembers() && NodeUtil.canBeSideEffected(n.getFirstChild())) {
           classStack.peek().computedPropMembers.add(n);
         }
         break;
