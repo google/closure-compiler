@@ -896,6 +896,24 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "    }",
                 "  }",
                 "}")));
+
+    rewriteFieldOrBlockTest(
+        srcs(
+            lines(
+                "x.a = 'b';",
+                "y = { [x.a]:'aa' };", // computed property not in a class body
+                "class Baz {",
+                "  z = 1;",
+                "}")),
+        expected(
+            lines(
+                "x.a = 'b';",
+                "y = {[x.a]:'aa'};",
+                "class Baz {",
+                "  constructor() {",
+                "    this.z = 1;",
+                "  }",
+                "}")));
   }
 
   @Test
