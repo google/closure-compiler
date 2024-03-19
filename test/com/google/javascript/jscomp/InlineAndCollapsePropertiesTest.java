@@ -119,7 +119,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     // AdvancedOptimizationsIntegrationTest#testTSVariableReassignmentAndAliasingDueToDecoration
     // with `options.setPrintSourceAfterEachPass(true)`.
     // The input source here is how the source code looks at the point just before
-    // InlineAndCollapseProperties runs in that test case.
+    // InlineAndCollapseProperties runs in that test case except for the addition of one line of
+    // JSDoc to make the unit test recognize a function declaration as a class declaration.
     test(
         externs(
             ImmutableList.of(
@@ -143,6 +144,9 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "function module$contents$main_noopDecorator(arg) {",
                 "  return arg;",
                 "}",
+                // This JSDoc annotation makes this unit test recognize the declaration as a
+                // class definition.
+                "/** @constructor */",
                 "var i0$classdecl$var0 = function() {};",
                 "i0$classdecl$var0.foo = function() {",
                 "  console.log('Hello');",
@@ -173,17 +177,15 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "function module$contents$main_noopDecorator(arg) {",
                 "  return arg;",
                 "}",
+                "/** @constructor */",
                 "var i0$classdecl$var0 = function() {};",
-                // TODO : b/299055739 - This unit test doesn't reproduce the problem we want to fix.
-                // In the AdvancedOptimizationsIntegrationTest test case
-                // `.foo` gets collapsed, which breaks this code.
-                // Why doesn't that happen in this unit test case?
-                // This one line is the only difference
-                "i0$classdecl$var0.foo = function() {",
-                // "var i0$classdecl$var0$foo = function() {",
+                // TODO : b/299055739 - This property collapse breaks the output code.
+                "var i0$classdecl$var0$foo = function() {",
+                // "i0$classdecl$var0.foo = function() {", // this is the correct line
                 "  console.log('Hello');",
                 "};",
                 "i0$classdecl$var0.prototype.bar = function() {",
+                // This reference to foo() is broken.
                 "  module$contents$main_Foo_1.foo();",
                 "  console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
                 "};",
