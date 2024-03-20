@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -185,8 +185,8 @@ public class ModuleMapCreator implements CompilerPass {
     this.esModuleProcessor = new EsModuleProcessor(compiler);
     this.closureModuleProcessor = new ClosureModuleProcessor(compiler);
     this.nonEsModuleProcessor = new NonEsModuleProcessor();
-    unresolvedModules = new HashMap<>();
-    unresolvedModulesByClosureNamespace = new HashMap<>();
+    unresolvedModules = new LinkedHashMap<>();
+    unresolvedModulesByClosureNamespace = new LinkedHashMap<>();
   }
 
   private ModuleMap create() {
@@ -204,8 +204,8 @@ public class ModuleMapCreator implements CompilerPass {
 
   private ModuleMap resolve() {
     ModuleRequestResolver requestResolver = new ModuleRequestResolverImpl();
-    Map<String, Module> resolvedModules = new HashMap<>();
-    Map<String, Module> resolvedClosureModules = new HashMap<>();
+    Map<String, Module> resolvedModules = new LinkedHashMap<>();
+    Map<String, Module> resolvedClosureModules = new LinkedHashMap<>();
 
     // We need to resolve in a loop as any missing reference will add a fake to the
     // unresolvedModules map (see getFallback* methods above). This would cause a concurrent
@@ -286,5 +286,4 @@ public class ModuleMapCreator implements CompilerPass {
   public void process(Node externs, Node root) {
     compiler.setModuleMap(create());
   }
-
 }

@@ -33,9 +33,8 @@ import com.google.javascript.jscomp.modules.ClosureRequireProcessor.Require;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -117,7 +116,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
 
     /** A map from import bound name to binding. */
     Map<String, Binding> getAllResolvedImports(ModuleRequestResolver moduleRequestResolver) {
-      Map<String, Binding> imports = new HashMap<>();
+      Map<String, Binding> imports = new LinkedHashMap<>();
 
       for (String name : requiresByLocalName.keySet()) {
         ResolveExportResult b = resolveImport(moduleRequestResolver, name);
@@ -152,8 +151,8 @@ final class ClosureModuleProcessor implements ModuleProcessor {
                 moduleRequestResolver,
                 importRecord.moduleRequest(),
                 importRecord.importName(),
-                new HashSet<>(),
-                new HashSet<>());
+                new LinkedHashSet<>(),
+                new LinkedHashSet<>());
         if (!result.found() && !result.hadError()) {
           reportInvalidDestructuringRequire(requested, importRecord);
           return ResolveExportResult.ERROR;
@@ -288,15 +287,19 @@ final class ClosureModuleProcessor implements ModuleProcessor {
   /** Traverses a subtree rooted at a module, gathering all exports and requires */
   private static class ModuleProcessingCallback extends AbstractPreOrderCallback {
     private final ModuleMetadata metadata;
+
     /** The Closure namespace 'a.b.c' from the `goog.module('a.b.c');` statement */
     private final String closureNamespace;
+
     // Note: the following two maps are mutable because in some cases, we need to check if a key has
     // already been added before trying to add a second.
 
     /** All named exports and explicit assignments of the `exports` object */
     private final Map<String, Binding> namespace;
+
     /** All required/forwardDeclared local names */
     private final Map<String, Require> requiresByLocalName;
+
     /** Whether we've come across an "exports = ..." assignment */
     private boolean seenExportsAssignment;
 

@@ -17,7 +17,7 @@ package com.google.javascript.jscomp.modules;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -81,8 +81,8 @@ abstract class UnresolvedModule {
         moduleRequestResolver,
         /* moduleSpecifier= */ null,
         exportName,
-        new HashSet<>(),
-        new HashSet<>());
+        new LinkedHashSet<>(),
+        new LinkedHashSet<>());
   }
 
   /**

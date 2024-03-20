@@ -38,9 +38,8 @@ import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -196,9 +195,9 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
     UnresolvedModuleBuilder(ModulePath path, Node root) {
       this.path = path;
       this.root = root;
-      importsByLocalName = new HashMap<>();
+      importsByLocalName = new LinkedHashMap<>();
       exports = new ArrayList<>();
-      exportedNames = new HashSet<>();
+      exportedNames = new LinkedHashSet<>();
     }
 
     void add(Import i) {
@@ -293,8 +292,8 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
       this.indirectExports = indirectExports;
       this.starExports = starExports;
       exportedNames = null;
-      resolvedImports = new HashMap<>();
-      resolvedExports = new HashMap<>();
+      resolvedImports = new LinkedHashMap<>();
+      resolvedExports = new LinkedHashMap<>();
       resolved = null;
     }
 
@@ -314,7 +313,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
         Map<String, Binding> boundNames =
             new LinkedHashMap<>(getAllResolvedImports(moduleRequestResolver));
 
-        Map<String, Export> localNameToLocalExport = new HashMap<>();
+        Map<String, Export> localNameToLocalExport = new LinkedHashMap<>();
 
         // Only local exports that are not an anonymous default export create local bindings.
         for (Export e : localExports) {
@@ -350,7 +349,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
 
     /** A map from import bound name to binding. */
     Map<String, Binding> getAllResolvedImports(ModuleRequestResolver moduleRequestResolver) {
-      Map<String, Binding> imports = new HashMap<>();
+      Map<String, Binding> imports = new LinkedHashMap<>();
 
       for (String name : importsByLocalName.keySet()) {
         ResolveExportResult b = resolveImport(moduleRequestResolver, name);
@@ -378,7 +377,8 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
 
     public ResolveExportResult resolveImport(
         ModuleRequestResolver moduleRequestResolver, String name) {
-      return resolveImport(moduleRequestResolver, name, new HashSet<>(), new HashSet<>());
+      return resolveImport(
+          moduleRequestResolver, name, new LinkedHashSet<>(), new LinkedHashSet<>());
     }
 
     private ResolveExportResult resolveImportImpl(
@@ -461,7 +461,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
     @Override
     public ImmutableSet<String> getExportedNames(ModuleRequestResolver moduleRequestResolver) {
       if (exportedNames == null) {
-        exportedNames = getExportedNames(moduleRequestResolver, new HashSet<>());
+        exportedNames = getExportedNames(moduleRequestResolver, new LinkedHashSet<>());
       }
       return exportedNames;
     }
@@ -672,10 +672,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
   private @Nullable ModuleMetadata metadata;
 
   @Override
-  public UnresolvedModule process(
-      ModuleMetadata metadata,
-      ModulePath path,
-      Node script) {
+  public UnresolvedModule process(ModuleMetadata metadata, ModulePath path, Node script) {
     this.metadata = metadata;
     currentModuleBuilder = new UnresolvedModuleBuilder(path, script);
 
