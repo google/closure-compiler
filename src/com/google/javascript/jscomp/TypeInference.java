@@ -1976,9 +1976,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private @Nullable JSType getGoogModuleDependencyCallResultType(Node callNode) {
     String moduleId = callNode.getSecondChild().getString();
     Module module = compiler.getModuleMap().getClosureModule(moduleId);
-    // Only declared module ids.
+    // Fall back to the `?` type if the module is unknown to the compiler
     if (module == null) {
-      return null;
+      return unknownType;
     }
 
     ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(callNode);
@@ -1987,7 +1987,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       TypedVar otherVar =
           otherModuleScope != null ? otherModuleScope.getSlot(name.getName()) : null;
       if (otherVar != null) {
-        return otherVar.getType();
+        return otherVar.getType() != null ? otherVar.getType() : unknownType;
       }
 
       if (otherModuleScope != null && module.metadata().moduleType() == ModuleType.GOOG_PROVIDE) {

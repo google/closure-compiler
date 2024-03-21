@@ -23512,6 +23512,31 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGoogRequireDynamic_missingSources() {
+    // regression test for case that used to throw an exception
+    newTest()
+        .addSource(
+            "class Test {",
+            " /**",
+            "  * @return {!Object}",
+            "  *",
+            "  * @suppress {missingSourcesWarnings} reference to dynamically loaded",
+            "  * namespace.",
+            "  * @suppress {checkTypes}",
+            "  */",
+            "testGoogRequireDynamicStubbedAndWithLoadedModule() {",
+            "   goog.setImportHandlerInternalDoNotCallOrElse(() => Promise.resolve(null));",
+            "   goog.setUncompiledChunkIdHandlerInternalDoNotCallOrElse(s => s);",
+            "",
+            "   goog.loadModule('goog.module(\"a.loaded.module\"); exports.foo = 12;');",
+            "",
+            "   return goog.requireDynamic('a.loaded.module')",
+            "       .then(({foo}) => assertEquals(foo, 12));",
+            " } }")
+        .run();
+  }
+
+  @Test
   public void testClassMultipleExtends_fromClosureJs() {
     // Tests a workaround for b/325489639
     // This is a hacky fix for a Closure type system vs. TypeScript compatibility problem:
