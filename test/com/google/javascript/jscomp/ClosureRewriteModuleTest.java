@@ -1283,6 +1283,23 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogRequireDynamic_then_missingSources() {
+    test(
+        srcs(
+            lines(
+                "async function test() {", //
+                "  /** @suppress {missingSourcesWarnings} */",
+                "  goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});",
+                "}")),
+        expected(
+            lines(
+                "async function test() {", //
+                "  /** @suppress {missingSourcesWarnings} */",
+                "  null.then((foo) => {console.log(foo.Foo);});",
+                "}")));
+  }
+
+  @Test
   public void testRequireDynamic_illegal_await_lhs() {
     testError(
         srcs(
