@@ -1222,6 +1222,11 @@ final class ClosureRewriteModule implements CompilerPass {
 
   private void updateGoogRequireDynamicCall(Node call) {
     final Node parent = call.getParent();
+    if (parent == null) {
+      // This call has been detached from the AST in unrecognized require handling. Nothing else to
+      // do here.
+      return;
+    }
     checkState(
         parent.isAwait() || (parent.isGetProp() && parent.getString().equals("then")),
         "goog.requireDynamic() in only allowed in await/then expression");

@@ -1283,6 +1283,45 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogRequireDynamic_then_name_laterLoadedModule() {
+    test(
+        srcs(
+            lines(
+                "async function test() {", //
+                "  goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});",
+                "}"),
+            lines("goog.module('a.b.c');", "exports.Foo=class{}")),
+        expected(
+            lines(
+                "async function test() {", //
+                "  goog.importHandler_('sG5M4c').then(() => { ",
+                "     const foo = module$exports$a$b$c;",
+                "     console.log(foo.Foo);",
+                "  });",
+                "}"),
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}")));
+  }
+
+  @Test
+  public void testGoogRequireDynamic_then_missingSources() {
+    test(
+        srcs(
+            lines(
+                "async function test() {", //
+                "  /** @suppress {missingSourcesWarnings} */",
+                "  goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});",
+                "}")),
+        expected(
+            lines(
+                "async function test() {", //
+                "  /** @suppress {missingSourcesWarnings} */",
+                "  null.then((foo) => {console.log(foo.Foo);});",
+                "}")));
+  }
+
+  @Test
   public void testRequireDynamic_illegal_await_lhs() {
     testError(
         srcs(
