@@ -964,9 +964,8 @@ final class ClosureRewriteModule implements CompilerPass {
     if (!rewriteState.containsModule(namespaceId)) {
       unrecognizedRequires.add(
           new UnrecognizedRequire(call, namespaceId, /* mustBeOrdered= */ false));
-    } else {
-      this.googRequireDynamicCalls.add(call);
     }
+    this.googRequireDynamicCalls.add(call);
   }
 
   private void recordGoogModuleGet(NodeTraversal t, Node call) {
