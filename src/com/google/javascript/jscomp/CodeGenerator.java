@@ -769,6 +769,8 @@ public class CodeGenerator {
               add("static");
             }
           }
+          // A BLOCK marked as synthetic is not a real JS block with {} around it in the JS code.
+          // It just represents a span of statements that need to be kept together.
           boolean preserveBlock = node.isBlock() && !node.isSyntheticBlock();
           if (preserveBlock) {
             cc.beginBlock();

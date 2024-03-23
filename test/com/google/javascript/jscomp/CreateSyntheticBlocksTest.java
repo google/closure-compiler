@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -160,5 +163,17 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
     testSame("startMarker();var x=1;endMarker()");
     testSame("startMarker();let x=1;endMarker()");
     testSame("startMarker();const x=1;endMarker()");
+  }
+
+  @Test
+  public void testSyntheticBlock_doesNotCreateNewScope() {
+    testSame("startMarker();var x=1;endMarker()");
+    Node script = this.getLastCompiler().getJsRoot().getOnlyChild();
+    assertNode(script).isScript();
+    Node synctheticBlock = script.getFirstChild();
+    assertNode(synctheticBlock).isBlock();
+    assertThat(synctheticBlock.isSyntheticBlock()).isTrue();
+    // confirm that synthetic block does not create a new block scope
+    assertThat(NodeUtil.createsBlockScope(synctheticBlock)).isFalse();
   }
 }
