@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -554,6 +555,30 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "   return $jscomp$destructuring$var5;",
             " })();",
             "true; c++) {}"));
+  }
+
+  @Test
+  public void testSimpleDestructuring_constAnnotationAdded() {
+
+    test(
+        "function foo(...{length}) {}",
+        // pull destructuring out of params first.
+        lines(
+            "function foo(...$jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var length = $jscomp$destructuring$var1.length;",
+            "}"));
+    Node script = getLastCompiler().getJsRoot().getFirstChild();
+    checkState(script.isScript());
+    Node func = script.getFirstChild();
+    checkState(func.isFunction());
+    Node block = func.getLastChild();
+    checkState(block.isBlock());
+    // `var $jscomp$destructuring$var1 =  ...`
+    Node var1 = block.getFirstFirstChild();
+    checkState(var1.isName());
+    assertThat(var1.getString()).isEqualTo("$jscomp$destructuring$var1");
+    assertThat(var1.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
   }
 
   @Test

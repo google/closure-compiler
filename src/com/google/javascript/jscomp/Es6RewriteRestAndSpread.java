@@ -105,6 +105,18 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                     astFactory.createNumber(restIndex),
                     astFactory.createArgumentsReference()))
             .srcrefTreeIfMissing(functionBody);
+    if (paramName.startsWith("$jscomp$destructuring$var")) {
+      // Currently this pass is before normalization. Hence, the createSingleLetNameDeclaration
+      // creates a non-const names. But the earlier Es6RewriteDesctructuring pass creates these
+      // names as const names.
+      // TODO(b/197349249): When this pass moves post normalization, stop explictly marking these
+      // names as const in this if-block.
+      checkState(
+          nameNode.getBooleanProp(Node.IS_CONSTANT_NAME),
+          "The $jscomp$destructuring$var[num] name must've been marked as const by the"
+              + " Es6RewriteDesctructuring pass");
+      let.getFirstChild().putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
     functionBody.addChildToFront(let);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
