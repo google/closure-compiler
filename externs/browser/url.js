@@ -187,6 +187,14 @@ URL.domainToUnicode = function(domain) {};
 URL.createObjectURL = function(obj) {};
 
 /**
+ * @see https://url.spec.whatwg.org
+ * @param {!URL|string} url
+ * @param {(!URL|string)=} base
+ * @return {boolean}
+ */
+URL.canParse = function(url, base) {};
+
+/**
  * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
  * @param {!URL|string} url
  * @return {undefined}
