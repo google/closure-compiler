@@ -234,8 +234,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(checkSideEffects);
       checks.maybeAdd(angularPass);
       checks.maybeAdd(closureGoogScopeAliases);
-      addModuleRewritingPasses(checks, options);
       checks.maybeAdd(closurePrimitives);
+      addModuleRewritingPasses(checks, options);
       checks.maybeAdd(clearTypedScopeCreatorPass);
       checks.maybeAdd(clearTopTypedScopePass);
       checks.maybeAdd(generateExports);
@@ -344,13 +344,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(closureGoogScopeAliases);
     }
 
+    if (options.closurePass) {
+      checks.maybeAdd(closurePrimitives);
+    }
+
     // TODO(b/141389184): Move this after the Polymer pass
     if (options.shouldRewriteModulesBeforeTypechecking()) {
       addModuleRewritingPasses(checks, options);
-    }
-
-    if (options.closurePass) {
-      checks.maybeAdd(closurePrimitives);
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
