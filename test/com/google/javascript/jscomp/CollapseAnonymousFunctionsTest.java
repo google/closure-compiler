@@ -43,6 +43,11 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSeparateDeclarationAndInitilization_unchanged() {
+    testSame("var f; f = function(){}");
+  }
+
+  @Test
   public void testLocalScope1() {
     test("function f(){ var x = function(){}; x() }", "function f(){ function x(){} x() }");
   }
