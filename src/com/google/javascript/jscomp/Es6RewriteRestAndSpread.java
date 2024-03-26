@@ -93,10 +93,12 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       return;
     }
 
+    // Now that the restParam is deleted, create a let declaration by making a new NAME node of the
+    // same name `paramName`
     Node let =
         astFactory
             .createSingleLetNameDeclaration(
-                paramName,
+                paramName, // creates a new NAME node with name `paramName`
                 astFactory.createCall(
                     astFactory.createGetPropWithUnknownType(
                         astFactory.createQName(this.namespace, "$jscomp.getRestArguments"),
@@ -105,22 +107,35 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                     astFactory.createNumber(restIndex),
                     astFactory.createArgumentsReference()))
             .srcrefTreeIfMissing(functionBody);
-    if (paramName.startsWith("$jscomp$destructuring$var")) {
-      // Currently this pass is before normalization. Hence, the createSingleLetNameDeclaration
-      // creates a non-const names. But the earlier Es6RewriteDesctructuring pass creates these
-      // names as const names.
-      // TODO(b/197349249): When this pass moves post normalization, stop explictly marking these
-      // names as const in this if-block.
-      checkState(
-          nameNode.getBooleanProp(Node.IS_CONSTANT_NAME),
-          "The $jscomp$destructuring$var[num] name must've been marked as const by the"
-              + " Es6RewriteDesctructuring pass");
-      let.getFirstChild().putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    Node insertBeforePoint = getInsertBeforePoint(functionBody);
+    if (insertBeforePoint != null) {
+      let.insertBefore(insertBeforePoint);
+    } else {
+      // functionBody only contains hoisted function declarations
+      functionBody.addChildToBack(let);
     }
-    functionBody.addChildToFront(let);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     t.reportCodeChange();
+  }
+
+  /**
+   * Gets an insertion point in the function body before which we want to insert the new let
+   * declaration. If there's not good insertion point (e.g. the function is empty or only contains
+   * inner function declarations), return null.
+   */
+  private Node getInsertBeforePoint(Node functionBody) {
+    checkState(functionBody.getParent().isFunction());
+    Node current = functionBody.getFirstChild();
+
+    // Do not insert the let declaration before any hoisted function declarations in this function
+    // body as those function declarations are hoisted by normalization. We must maintain
+    // normalization.
+    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
+      current = current.getNext();
+    }
+
+    return current;
   }
 
   /**

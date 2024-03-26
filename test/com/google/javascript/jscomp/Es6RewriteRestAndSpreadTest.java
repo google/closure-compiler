@@ -570,6 +570,44 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUsedRestParameterAtPositionTwo_maintainsNormalization() {
+    test(
+        "function f(zero, one, ...two) { function inner() {} return two; }",
+        lines(
+            "function f(zero, one) {",
+            "  function inner() {}", // stays hoisted
+            "  let two = $jscomp.getRestArguments.apply(2, arguments);",
+            "  return two;",
+            "}"));
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/restarguments");
+  }
+
+  @Test
+  public void testUsedRestParameterAtPositionTwo_maintainsNormalization_withoutReturn() {
+    test(
+        "function f(zero, one, ...two) { function inner() {} two; }",
+        lines(
+            "function f(zero, one) {",
+            "  function inner() {}", // stays hoisted
+            "  let two = $jscomp.getRestArguments.apply(2, arguments);",
+            "  two;",
+            "}"));
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/restarguments");
+  }
+
+  @Test
+  public void testUnusedRestParameterAtPositionTwo_noGoodInsertionPoint() {
+    test(
+        "function f(zero, one, ...two) { function inner() {} }",
+        lines(
+            "function f(zero, one) {",
+            "  function inner() {}", // stays hoisted
+            "  let two = $jscomp.getRestArguments.apply(2, arguments);", // declaration inserted
+            "}"));
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/restarguments");
+  }
+
+  @Test
   public void testUnusedRestParameterAtPositionZeroWithTypingOnFunction() {
     test("/** @param {...number} zero */ function f(...zero) {}", "function f() {}");
   }

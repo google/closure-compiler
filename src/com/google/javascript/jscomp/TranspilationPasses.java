@@ -209,10 +209,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6RewriteClass);
     }
-    if (options.needsTranspilationFrom(
-        FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS))) {
-      passes.maybeAdd(es6RewriteRestAndSpread);
-    }
   }
 
   /**
@@ -225,6 +221,11 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS))) {
+      passes.maybeAdd(es6RewriteRestAndSpread);
+    }
 
     if (options.needsTranspilationFrom(
         FeatureSet.BARE_MINIMUM.with(

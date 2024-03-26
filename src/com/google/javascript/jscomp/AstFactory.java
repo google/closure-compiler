@@ -570,6 +570,9 @@ final class AstFactory {
    * (e.g. because you are creating a new variable), you can use this method. However, if you've
    * just created the variable declaration, you could also just clone the {@code NAME} node from it
    * to create the new reference.
+   *
+   * <p>This method assumes that if the AST is normalized and the name starts with "$jscomp", then
+   * it must be a constant name.
    */
   Node createName(String name, Type type) {
     Node result = IR.name(name);
