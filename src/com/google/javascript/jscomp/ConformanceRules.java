@@ -77,7 +77,8 @@ public final class ConformanceRules {
 
   private static AllowList createTsAllowlist() {
     try {
-      return new AllowList(ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js"));
+      return new AllowList(
+          ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js", ".*\\.tsx\\.cl\\.js"));
     } catch (Throwable t) {
       throw new AssertionError(t);
     }
