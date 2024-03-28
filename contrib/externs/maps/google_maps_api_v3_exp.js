@@ -16324,17 +16324,12 @@ google.maps.places.PlaceAspectRating.prototype.type;
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
- * <ul>
-<li>PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
-provides a UI component for the Places Autocomplete API. After loading the
-<code>places</code> library, an input with autocomplete functionality can be
-created in HTML. For example: <pre><code>&lt;gmp-placeautocomplete
-&gt;&lt;/gmp-placeautocomplete&gt;</code></pre></li>
-</ul>
+ * PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
+ * provides a UI component for the Places Autocomplete API.
  *
  * Access by calling `const {PlaceAutocompleteElement} = await
-google.maps.importLibrary("places")`. See
-https://developers.google.com/maps/documentation/javascript/libraries.
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
  * @implements {google.maps.places.PlaceAutocompleteElementOptions}
  * @extends {HTMLElement}
