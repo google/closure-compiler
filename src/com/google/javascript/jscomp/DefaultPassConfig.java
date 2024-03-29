@@ -505,6 +505,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
     if (options.isPropertyRenamingOnlyCompilationMode()) {
+      passes.maybeAdd(removeUnnecessarySyntheticExterns);
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
       passes.maybeAdd(closureProvidesRequires);
       passes.maybeAdd(processDefinesOptimize);
