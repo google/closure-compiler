@@ -341,6 +341,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         (fieldValue != null)
             ? astFactory.createAssignStatement(getProp, fieldValue.detach())
             : astFactory.exprResult(getProp);
+    // Move any JSDoc from the field declaration to the child of the EXPR_RESULT,
+    // which represents the new declaration.
+    // noncomputedField is already detached, so there's no benefit to calling
+    // NodeUtil.getBestJSDocInfo(noncomputedField). For now at least,
+    // the JSDocInfo we want will always be directly on noncomputedField in all cases.
+    result.getFirstChild().setJSDocInfo(noncomputedField.getJSDocInfo());
     result.srcrefTreeIfMissing(noncomputedField);
     return result;
   }

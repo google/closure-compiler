@@ -283,12 +283,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         lines(
             "class A {", //
+            "  /** @suppress {partialAlias} */",
             "  b = 'word';",
             "  c = this.b;",
             "}"),
         lines(
             "class A {",
             "  constructor() {",
+            "    /** @suppress {partialAlias} */",
             "    this.b = 'word';",
             "    this.c = this.b;",
             "  }",
