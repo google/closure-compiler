@@ -199,10 +199,24 @@ The Closure Compiler will concatenate the files in the order they're passed at
 the command line.
 
 If you're using globs or many files, you may start to run into problems with
-managing dependencies between scripts. In this case, you should use the
-[Closure Library](https://developers.google.com/closure/library/). It contains
-functions for enforcing dependencies between scripts, and Closure Compiler will
+managing dependencies between scripts. In this case, you should either use the
+included [lib/base.js](lib/base.js) that provides functions for enforcing
+dependencies between scripts (namely `goog.module` and `goog.require`) or
+[JavaScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+(using the ECMAScript `import` and `export` syntax). Closure Compiler will
 re-order the inputs automatically.
+
+## Closure JavaScript Library
+
+The Closure Compiler releases with [lib/base.js](lib/base.js) that provides
+JavaScript functions and variables that serve as primitives enabling certain
+features of the Closure Compiler. This file is a derivative of the
+[identically named base.js](https://github.com/google/closure-library/blob/7818ff7dc0b53555a7fb3c3427e6761e88bde3a2/closure/goog/base.js)
+in the
+[soon-to-be deprecated](https://github.com/google/closure-library/issues/1214)
+Closure Library. This `base.js` will be supported by Closure Compiler going
+forward and may receive new features. It was designed to only retain its
+perceived core parts.
 
 ## Getting Help
 
