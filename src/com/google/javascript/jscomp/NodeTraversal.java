@@ -1085,6 +1085,9 @@ public class NodeTraversal {
           break;
         case COMPUTED_FIELD_DEF:
           currentNode = n;
+
+          Node previousHoistScopeRoot = currentHoistScopeRoot;
+          currentHoistScopeRoot = n;
           pushScope(child);
 
           if (callback.shouldTraverse(this, child, n)) {
@@ -1096,6 +1099,7 @@ public class NodeTraversal {
           }
 
           popScope();
+          currentHoistScopeRoot = previousHoistScopeRoot;
           break;
         case MEMBER_FIELD_DEF:
           handleMemberFieldDef(n, child);

@@ -77,6 +77,26 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "class Bar extends Foo {", //
             "   z = this.x;",
             "}"));
+
+    testSame(
+        lines(
+            "goog.module('xyz');",
+            "class Foo {", //
+            "  [x] = 5;",
+            "}",
+            "class Bar extends Foo {", //
+            "   z = this[x];",
+            "}"));
+
+    testSame(
+        lines(
+            "goog.module('xyz');",
+            "class Foo {", //
+            "  [x] = 5;",
+            "}",
+            "class Bar extends Foo {", //
+            "   [z] = this[x];",
+            "}"));
   }
 
   @Test
@@ -89,6 +109,23 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "  x = 5;",
             "  y = this.x",
             "}"));
+
+    testSame(
+        lines(
+            "goog.module('xyz');",
+            "class Foo {", //
+            "  [x] = 5;",
+            "  [y] = this[x]",
+            "}"));
+
+    testError(
+        lines(
+            "goog.module('xyz');",
+            "class Foo {", //
+            "  [x] = 5;",
+            "  [this.x] = 6",
+            "}"),
+        GOOG_MODULE_REFERENCES_THIS);
   }
 
   @Test
@@ -100,6 +137,14 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "class Foo {",
             "  static x = 5;",
             "  static y = this.x",
+            "}"));
+
+    testSame(
+        lines(
+            "goog.module('math')", //
+            "class Foo {",
+            "  static [x] = 5;",
+            "  static [y] = this[x]",
             "}"));
   }
 
