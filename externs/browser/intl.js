@@ -251,14 +251,18 @@ Intl.DisplayNames.prototype.resolvedOptions = function() {};
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules#Syntax
  * @param {string|Array<string>=} locales
- * @param {{localeMatcher: (string|undefined), type: (string|undefined),
- *     minimumIntegerDigits: (number|undefined),
- *     minimumFractionDigits: (number|undefined),
- *     maximumFractionDigits: (number|undefined),
- *     minimumSignificantDigits: (number|undefined),
- *     maximumSignificantDigits: (number|undefined),
- *     roundingMode: (string|undefined)}=}
- *         options
+ * @param {{
+ *   localeMatcher: (string|undefined), type: (string|undefined),
+ *   minimumIntegerDigits: (number|undefined),
+ *   minimumFractionDigits: (number|undefined),
+ *   maximumFractionDigits: (number|undefined),
+ *   minimumSignificantDigits: (number|undefined),
+ *   maximumSignificantDigits: (number|undefined),
+ *   roundingMode: (string|undefined),
+ *   roundingIncrement: (number|undefined),
+ *   roundingPriority: (string|undefined),
+ *   trailingZeroDisplay: (string|undefined),
+ * }=} options
  */
 Intl.PluralRules = function(locales, options) {};
 
