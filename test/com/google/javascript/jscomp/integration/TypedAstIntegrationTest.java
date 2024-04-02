@@ -35,6 +35,8 @@ import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.ModuleIdentifier;
+import com.google.javascript.jscomp.PolymerExportPolicy;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
@@ -614,6 +616,162 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     assertThat(ex).hasMessageThat().contains("mode=PRUNE");
   }
 
+  private static final String EXPORT_PROPERTY_DEF =
+      lines(
+          "goog.exportProperty = function(object, publicName, symbol) {",
+          "  object[publicName] = symbol;",
+          "};");
+
+  @Test
+  public void testPolymerExportPolicyExportAllClassBased() throws IOException {
+    CompilerOptions options = new CompilerOptions();
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(DependencyOptions.none());
+
+    SourceFile closureBase =
+        SourceFile.fromCode("base.js", "/** @const */ var goog = {};" + EXPORT_PROPERTY_DEF);
+    precompileLibrary(closureBase);
+    precompileLibrary(
+        typeSummary(closureBase),
+        extern(new TestExternsBuilder().addString().addPolymer().build()),
+        code(
+            lines(
+                "class FooElement extends PolymerElement {",
+                "  static get properties() {",
+                "    return {",
+                "      longUnusedProperty: String,",
+                "    }",
+                "  }",
+                "  longUnusedMethod() {",
+                "    return this.longUnusedProperty;",
+                "  }",
+                "}")));
+
+    Compiler compiler = compileTypedAstShards(options);
+    String source = compiler.toSource();
+
+    // If we see these identifiers anywhere in the output source, we know that we successfully
+    // protected it against removal and renaming.
+    assertThat(source).contains("longUnusedProperty");
+    assertThat(source).contains("longUnusedMethod");
+  }
+
+  @Test
+  public void testPolymerExportPolicyExportAllClassBased_inGoogModule() throws IOException {
+    CompilerOptions options = new CompilerOptions();
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(DependencyOptions.none());
+
+    SourceFile closureBase =
+        SourceFile.fromCode(
+            "base.js",
+            "/** @const */ var goog = {}; goog.module = function(s) {};" + EXPORT_PROPERTY_DEF);
+    precompileLibrary(closureBase);
+    precompileLibrary(
+        typeSummary(closureBase),
+        extern(new TestExternsBuilder().addString().addPolymer().build()),
+        code(
+            lines(
+                "goog.module('fooElement');",
+                "class FooElement extends PolymerElement {",
+                "  static get properties() {",
+                "    return {",
+                "      longUnusedProperty: String,",
+                "    }",
+                "  }",
+                "  longUnusedMethod() {",
+                "    return this.longUnusedProperty;",
+                "  }",
+                "}")));
+
+    Compiler compiler = compileTypedAstShards(options);
+    String source = compiler.toSource();
+
+    // If we see these identifiers anywhere in the output source, we know that we successfully
+    // protected it against removal and renaming.
+    assertThat(source).contains("longUnusedProperty");
+    assertThat(source).contains("longUnusedMethod");
+  }
+
+  @Test
+  public void testPolymer_propertiesOnLegacyElementNotRenamed() throws IOException {
+    CompilerOptions options = new CompilerOptions();
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(DependencyOptions.none());
+
+    SourceFile closureBase =
+        SourceFile.fromCode("base.js", "/** @const */ var goog = {};" + EXPORT_PROPERTY_DEF);
+    precompileLibrary(closureBase);
+    precompileLibrary(
+        typeSummary(closureBase),
+        extern(new TestExternsBuilder().addString().addPolymer().build()),
+        code(
+            lines(
+                "Polymer({",
+                "  is: \"foo-element\",",
+                "  properties: {",
+                "    longUnusedProperty: String,",
+                "  },",
+                "  longUnusedMethod: function() {",
+                "    return this.longUnusedProperty;",
+                "  },",
+                "});")));
+
+    Compiler compiler = compileTypedAstShards(options);
+    String source = compiler.toSource();
+
+    // If we see these identifiers anywhere in the output source, we know that we successfully
+    // protected them against removal and renaming.
+    assertThat(source).contains("longUnusedProperty");
+    assertThat(source).contains("longUnusedMethod");
+  }
+
+  @Test
+  public void testPolymer_propertiesOnLegacyElementNotRenamed_inGoogModule() throws IOException {
+    CompilerOptions options = new CompilerOptions();
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(DependencyOptions.none());
+
+    SourceFile closureBase =
+        SourceFile.fromCode(
+            "base.js",
+            "/** @const */ var goog = {}; goog.module = function(s) {};" + EXPORT_PROPERTY_DEF);
+    precompileLibrary(closureBase);
+    precompileLibrary(
+        typeSummary(closureBase),
+        extern(new TestExternsBuilder().addString().addPolymer().build()),
+        code(
+            lines(
+                "goog.module('fooElement');",
+                "Polymer({",
+                "  is: \"foo-element\",",
+                "  properties: {",
+                "    longUnusedProperty: String,",
+                "  },",
+                "  longUnusedMethod: function() {",
+                "    return this.longUnusedProperty;",
+                "  },",
+                "});")));
+
+    // TODO(b/218711238): investigate this crash
+    assertThrows(NullPointerException.class, () -> compileTypedAstShards(options));
+    // Compiler compiler = compileTypedAstShards(options);
+    // String source = compiler.toSource();
+
+    // // If we see these identifiers anywhere in the output source, we know that we successfully
+    // // protected them against removal and renaming.
+    // assertThat(source).contains("longUnusedProperty");
+    // assertThat(source).contains("longUnusedMethod");
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
@@ -682,6 +840,8 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     options.setProtectHiddenSideEffects(true);
     options.setTypedAstOutputFile(typedAstPath);
     options.setClosurePass(true);
+    options.setPolymerVersion(2);
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
 
     ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();

@@ -958,6 +958,52 @@ public class TestExternsBuilder {
           "/** @type {string} */",
           "RegExp.$1;");
 
+  private static final String HTML_ELEMENT_EXTERNS =
+      lines(
+          "/** @constructor */",
+          "function Node() {}",
+          "/** @constructor @extends {Node} */",
+          "function Element() {}",
+          "/** @constructor @extends {Element} */",
+          "function HTMLElement() {}");
+
+  private static final String POLYMER_EXTERNS =
+      lines(
+          "",
+          "/**",
+          " * @param {!Object} init",
+          " * @return {!function(new:HTMLElement)}",
+          " */",
+          "function Polymer(init) {}",
+          "",
+          "Polymer.ElementMixin = function(mixin) {}",
+          "",
+          "/** @typedef {!Object} */",
+          "var PolymerElementProperties;",
+          "",
+          "/** @interface */",
+          "function Polymer_ElementMixin() {}",
+          "/** @type {string} */",
+          "Polymer_ElementMixin.prototype._importPath;",
+          "",
+          "/**",
+          "* @interface",
+          "* @extends {Polymer_ElementMixin}",
+          "*/",
+          "function Polymer_LegacyElementMixin(){}",
+          "/** @type {boolean} */",
+          "Polymer_LegacyElementMixin.prototype.isAttached;",
+          "/**",
+          " * @constructor",
+          " * @extends {HTMLElement}",
+          " * @implements {Polymer_LegacyElementMixin}",
+          " */",
+          "var PolymerElement = function() {};", // Polymer 1
+          "",
+          "/** @constructor @extends {HTMLElement} */",
+          "Polymer.Element = function() {};", // Polymer 2
+          "");
+
   private boolean includeBigIntExterns = false;
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
@@ -976,6 +1022,8 @@ public class TestExternsBuilder {
   private boolean includeJSCompLibraries = false;
   private boolean includeMathExterns = false;
   private boolean includeRegExpExterns = false;
+  private boolean includeHtmlElementExterns = false;
+  private boolean includePolymerExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   @CanIgnoreReturnValue
@@ -1111,6 +1159,19 @@ public class TestExternsBuilder {
   }
 
   @CanIgnoreReturnValue
+  public TestExternsBuilder addHtmlElement() {
+    includeHtmlElementExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addPolymer() {
+    addHtmlElement();
+    includePolymerExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;
@@ -1178,6 +1239,12 @@ public class TestExternsBuilder {
     }
     if (includeJSCompLibraries) {
       externSections.add(JSCOMP_LIBRARIES);
+    }
+    if (includeHtmlElementExterns) {
+      externSections.add(HTML_ELEMENT_EXTERNS);
+    }
+    if (includePolymerExterns) {
+      externSections.add(POLYMER_EXTERNS);
     }
     externSections.addAll(extraExterns);
     return LINE_JOINER.join(externSections);

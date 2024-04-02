@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -59,23 +60,42 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
   private void addPolymerExterns() {
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
     externsList.add(
-        SourceFile.fromCode(
-            "polymer_externs.js",
-            lines(
-                "/** @return {function(new: PolymerElement)} */",
-                "var Polymer = function(descriptor) {};",
+        new TestExternsBuilder()
+            .addObject()
+            .addClosureExterns()
+            .addPolymer()
+            .addExtra(
+                "/**",
+                " * @see"
+                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
+                " * @constructor",
+                " */",
+                "function CustomElementRegistry() {}",
                 "",
-                "/** @constructor @extends {HTMLElement} */",
-                "var PolymerElement = function() {};", // Polymer 1
+                "/**",
+                " * @param {string} tagName",
+                " * @param {function(new:HTMLElement)} klass",
+                " * @param {{extends: string}=} options",
+                " * @return {undefined}",
+                " */",
+                "CustomElementRegistry.prototype.define = function (tagName, klass, options) {};",
                 "",
-                "/** @constructor @extends {HTMLElement} */",
-                "Polymer.Element = function() {};", // Polymer 2
+                "/**",
+                " * @param {string} tagName",
+                " * @return {function(new:HTMLElement)|undefined}",
+                " */",
+                "CustomElementRegistry.prototype.get = function(tagName) {};",
                 "",
-                "/** @typedef {Object} */",
-                "let PolymerElementProperties;",
-                "")));
+                "/**",
+                " * @param {string} tagName",
+                " * @return {!Promise<undefined>}",
+                " */",
+                "CustomElementRegistry.prototype.whenDefined = function(tagName) {};",
+                "",
+                "/** @type {!CustomElementRegistry} */",
+                "var customElements;")
+            .buildExternsFile("polymer_externs.js"));
     externs = externsList.build();
   }
 
@@ -458,87 +478,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(options, "const Foo = Polymer({ is: 'x-foo' });");
   }
 
-  private void addPolymer2Externs() {
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-
-    externsList.add(
-        SourceFile.fromCode(
-            "polymer_externs.js",
-            lines(
-                "",
-                "/**",
-                " * @param {!Object} init",
-                " * @return {!function(new:HTMLElement)}",
-                " */",
-                "function Polymer(init) {}",
-                "",
-                "Polymer.ElementMixin = function(mixin) {}",
-                "",
-                "/** @typedef {!Object} */",
-                "var PolymerElementProperties;",
-                "",
-                "/** @interface */",
-                "function Polymer_ElementMixin() {}",
-                "/** @type {string} */",
-                "Polymer_ElementMixin.prototype._importPath;",
-                "",
-                "/**",
-                "* @interface",
-                "* @extends {Polymer_ElementMixin}",
-                "*/",
-                "function Polymer_LegacyElementMixin(){}",
-                "/** @type {boolean} */",
-                "Polymer_LegacyElementMixin.prototype.isAttached;",
-                "/**",
-                " * @constructor",
-                " * @extends {HTMLElement}",
-                " * @implements {Polymer_LegacyElementMixin}",
-                " */",
-                "var PolymerElement = function() {};",
-                "")));
-
-    externsList.add(
-        SourceFile.fromCode(
-            "html5.js",
-            lines(
-                "/** @constructor */",
-                "function Element() {}",
-                "",
-                "/**",
-                " * @see"
-                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
-                " * @constructor",
-                " */",
-                "function CustomElementRegistry() {}",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @param {function(new:HTMLElement)} klass",
-                " * @param {{extends: string}=} options",
-                " * @return {undefined}",
-                " */",
-                "CustomElementRegistry.prototype.define = function (tagName, klass, options) {};",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @return {function(new:HTMLElement)|undefined}",
-                " */",
-                "CustomElementRegistry.prototype.get = function(tagName) {};",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @return {!Promise<undefined>}",
-                " */",
-                "CustomElementRegistry.prototype.whenDefined = function(tagName) {};",
-                "",
-                "/** @type {!CustomElementRegistry} */",
-                "var customElements;",
-                "")));
-
-    externs = externsList.build();
-  }
-
   // Regression test for b/77650996
   @Test
   public void testPolymer2b() {
@@ -546,7 +485,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    addPolymer2Externs();
+    addPolymerExterns();
 
     test(
         options,
@@ -575,13 +514,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
               "   * @extends {HTMLElement}",
               "   */",
               "  const Element = Polymer.ElementMixin(HTMLElement);",
-              "",
-              "  /**",
-              "   * @constructor",
-              "   * @implements {Polymer_ElementMixin}",
-              "   * @extends {HTMLElement}",
-              "   */",
-              "  Polymer.Element = Element;",
               "})();",
               ""),
         },
@@ -594,7 +526,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    addPolymer2Externs();
+    addPolymerExterns();
 
     test(
         options,
@@ -611,13 +543,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
               "   * @extends {HTMLElement}",
               "   */",
               "  const Element = Polymer.ElementMixin(HTMLElement);",
-              "",
-              "  /**",
-              "   * @constructor",
-              "   * @implements {Polymer_ElementMixin}",
-              "   * @extends {HTMLElement}",
-              "   */",
-              "  Polymer.Element = Element;",
               "})();",
               ""),
         },
@@ -820,7 +745,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     // is injected into the externs. We need to make sure the types of the properties on this
     // interface aligns with the types we declared in the constructor, or else we'll get an error.
     options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
-    addPolymer2Externs();
+    addPolymerExterns();
 
     Compiler compiler =
         compile(
