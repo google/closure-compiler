@@ -26,7 +26,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,8 +42,8 @@ public class CheckConstPrivateProperties extends AbstractPostOrderCallback imple
 
   private final AbstractCompiler compiler;
   private final List<Node> candidates = new ArrayList<>();
-  private final Set<String> modified = new HashSet<>();
-  private final HashSet<String> constructorsAndInterfaces = new HashSet<>();
+  private final Set<String> modified = new LinkedHashSet<>();
+  private final LinkedHashSet<String> constructorsAndInterfaces = new LinkedHashSet<>();
 
   public CheckConstPrivateProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -143,7 +143,9 @@ public class CheckConstPrivateProperties extends AbstractPostOrderCallback imple
         && !isFunctionProperty(n);
   }
 
-  /** @return Whether the given property declaration is assigned to a function. */
+  /**
+   * @return Whether the given property declaration is assigned to a function.
+   */
   private boolean isFunctionProperty(Node n) {
     // TODO(dylandavidson): getAssignedValue does not support GETELEM.
     if (n.isGetElem()) {

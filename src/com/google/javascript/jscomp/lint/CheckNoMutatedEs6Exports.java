@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /** Checks that exports of ES6 modules are not mutated outside of module initialization. */
@@ -47,7 +47,7 @@ public final class CheckNoMutatedEs6Exports implements NodeTraversal.Callback, C
   private final AbstractCompiler compiler;
   private final Multimap<String, Node> mutatedNames =
       MultimapBuilder.hashKeys().hashSetValues().build();
-  private final Set<String> exportedLocalNames = new HashSet<>();
+  private final Set<String> exportedLocalNames = new LinkedHashSet<>();
 
   public CheckNoMutatedEs6Exports(AbstractCompiler compiler) {
     this.compiler = compiler;

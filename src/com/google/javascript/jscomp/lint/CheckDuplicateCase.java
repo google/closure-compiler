@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -33,8 +33,8 @@ import java.util.Set;
  * (https://github.com/eslint/eslint/blob/master/lib/rules/no-duplicate-case.js)
  */
 public final class CheckDuplicateCase extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType DUPLICATE_CASE = DiagnosticType.warning(
-      "JSC_DUPLICATE_CASE", "Duplicate case in a switch statement.");
+  public static final DiagnosticType DUPLICATE_CASE =
+      DiagnosticType.warning("JSC_DUPLICATE_CASE", "Duplicate case in a switch statement.");
 
   private final AbstractCompiler compiler;
 
@@ -50,7 +50,7 @@ public final class CheckDuplicateCase extends AbstractPostOrderCallback implemen
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isSwitch()) {
-      Set<String> cases = new HashSet<>();
+      Set<String> cases = new LinkedHashSet<>();
       for (Node curr = n.getSecondChild(); curr != null; curr = curr.getNext()) {
         String source = compiler.toSource(curr.getFirstChild());
         if (!cases.add(source)) {

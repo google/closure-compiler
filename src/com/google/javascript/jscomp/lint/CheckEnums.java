@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -39,18 +39,17 @@ import java.util.Set;
  * </ol>
  */
 public final class CheckEnums extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType DUPLICATE_ENUM_VALUE = DiagnosticType.disabled(
-      "JSC_DUPLICATE_ENUM_VALUE",
-      "The value {0} is duplicated in this enum.");
-  public static final DiagnosticType COMPUTED_PROP_NAME_IN_ENUM = DiagnosticType.disabled(
-      "JSC_COMPUTED_PROP_NAME_IN_ENUM",
-      "Computed property name used in enum.");
-  public static final DiagnosticType SHORTHAND_ASSIGNMENT_IN_ENUM = DiagnosticType.disabled(
-      "JSC_SHORTHAND_ASSIGNMENT_IN_ENUM",
-      "Shorthand assignment used in enum.");
-  public static final DiagnosticType ENUM_PROP_NOT_CONSTANT = DiagnosticType.disabled(
-      "JSC_ENUM_PROP_NOT_CONSTANT",
-      "enum key {0} must be in ALL_CAPS.");
+  public static final DiagnosticType DUPLICATE_ENUM_VALUE =
+      DiagnosticType.disabled(
+          "JSC_DUPLICATE_ENUM_VALUE", "The value {0} is duplicated in this enum.");
+  public static final DiagnosticType COMPUTED_PROP_NAME_IN_ENUM =
+      DiagnosticType.disabled(
+          "JSC_COMPUTED_PROP_NAME_IN_ENUM", "Computed property name used in enum.");
+  public static final DiagnosticType SHORTHAND_ASSIGNMENT_IN_ENUM =
+      DiagnosticType.disabled(
+          "JSC_SHORTHAND_ASSIGNMENT_IN_ENUM", "Shorthand assignment used in enum.");
+  public static final DiagnosticType ENUM_PROP_NOT_CONSTANT =
+      DiagnosticType.disabled("JSC_ENUM_PROP_NOT_CONSTANT", "enum key {0} must be in ALL_CAPS.");
 
   public static final DiagnosticType ENUM_TYPE_NOT_STRING_OR_NUMBER =
       DiagnosticType.disabled(
@@ -138,7 +137,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   }
 
   private static void checkDuplicateEnumValues(NodeTraversal t, Node enumNode) {
-    Set<String> values = new HashSet<>();
+    Set<String> values = new LinkedHashSet<>();
     for (Node prop = enumNode.getFirstChild(); prop != null; prop = prop.getNext()) {
       Node valueNode = prop.getLastChild();
       String value;

@@ -27,7 +27,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import org.jspecify.nullness.Nullable;
 
 /**
@@ -69,10 +69,10 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
   private final AbstractCompiler compiler;
 
   // Store the candidate warnings and template types found while traversing a single script node.
-  private final HashSet<Node> redundantCandidates = new HashSet<>();
-  private final HashSet<Node> missingCandidates = new HashSet<>();
-  private final HashSet<Node> nullMissingCandidates = new HashSet<>();
-  private final HashSet<String> templateTypeNames = new HashSet<>();
+  private final LinkedHashSet<Node> redundantCandidates = new LinkedHashSet<>();
+  private final LinkedHashSet<Node> missingCandidates = new LinkedHashSet<>();
+  private final LinkedHashSet<Node> nullMissingCandidates = new LinkedHashSet<>();
+  private final LinkedHashSet<String> templateTypeNames = new LinkedHashSet<>();
 
   public CheckNullabilityModifiers(AbstractCompiler compiler) {
     this.compiler = compiler;

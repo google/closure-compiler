@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Miscellaneous checks for style in ES6 modules. */
@@ -38,7 +38,7 @@ public final class CheckEs6Modules implements NodeTraversal.Callback, CompilerPa
               + "imported.");
 
   private final AbstractCompiler compiler;
-  private final Map<String, Node> importSpecifiers = new HashMap<>();
+  private final Map<String, Node> importSpecifiers = new LinkedHashMap<>();
 
   public CheckEs6Modules(AbstractCompiler compiler) {
     this.compiler = compiler;

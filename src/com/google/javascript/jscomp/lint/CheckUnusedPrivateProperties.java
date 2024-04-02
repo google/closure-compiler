@@ -27,7 +27,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,9 +42,9 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
       DiagnosticType.disabled("JSC_UNUSED_PRIVATE_PROPERTY", "Private property {0} is never read");
 
   private final AbstractCompiler compiler;
-  private final Set<String> used = new HashSet<>();
+  private final Set<String> used = new LinkedHashSet<>();
   private final List<Node> candidates = new ArrayList<>();
-  private final HashSet<String> constructorsAndInterfaces = new HashSet<>();
+  private final LinkedHashSet<String> constructorsAndInterfaces = new LinkedHashSet<>();
 
   public CheckUnusedPrivateProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -90,55 +90,59 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-       case SCRIPT: {
-         // exiting the script, report any privates not used in the file.
-         reportUnused(t);
-         break;
-       }
+      case SCRIPT:
+        {
+          // exiting the script, report any privates not used in the file.
+          reportUnused(t);
+          break;
+        }
 
-       case GETPROP: {
+      case GETPROP:
+        {
           String propName = n.getString();
           if (isPinningPropertyUse(n) || !isCandidatePropertyDefinition(n)) {
-           used.add(propName);
-         } else {
-           // Only consider "private" properties.
-           if (isCheckablePrivatePropDecl(n)) {
-             candidates.add(n);
-           }
-         }
-         break;
-       }
+            used.add(propName);
+          } else {
+            // Only consider "private" properties.
+            if (isCheckablePrivatePropDecl(n)) {
+              candidates.add(n);
+            }
+          }
+          break;
+        }
 
-       case MEMBER_FUNCTION_DEF: {
-         // Only consider "private" methods.
-         if (isCheckablePrivatePropDecl(n)) {
-           candidates.add(n);
-         }
-         break;
-       }
+      case MEMBER_FUNCTION_DEF:
+        {
+          // Only consider "private" methods.
+          if (isCheckablePrivatePropDecl(n)) {
+            candidates.add(n);
+          }
+          break;
+        }
 
-       case OBJECTLIT: {
+      case OBJECTLIT:
+        {
           // Assume any object literal definition might be a reflection on the
           // class property.
           for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
             if (c.isStringKey() || c.isGetterDef() || c.isSetterDef() || c.isMemberFunctionDef()) {
               used.add(c.getString());
             }
-         }
-         break;
-       }
+          }
+          break;
+        }
 
       case CALL:
         // Look for properties referenced through a property rename function.
         Node target = n.getFirstChild();
         if (n.hasMoreThanOneChild()
             && compiler.getCodingConvention().isPropertyRenameFunction(target)) {
-           Node propName = target.getNext();
+          Node propName = target.getNext();
           if (propName.isStringLit()) {
             used.add(propName.getString());
-           }
-         }
-         break;
+          }
+        }
+        break;
 
       case FUNCTION:
         JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
@@ -205,8 +209,7 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
       } else if (parent.isAssign()) {
         // A simple assignment doesn't pin the property.
         return false;
-      } else if (NodeUtil.isAssignmentOp(parent)
-            || parent.isInc() || parent.isDec()) {
+      } else if (NodeUtil.isAssignmentOp(parent) || parent.isInc() || parent.isDec()) {
         // In general, compound assignments are both reads and writes, but
         // if the property is never otherwise read we can consider it simply
         // a write.
