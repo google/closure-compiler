@@ -86,10 +86,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
-    // Make all declared names unique, so we can safely just switch 'let' or 'const' to 'var' in all
-    // non-loop cases.
-    MakeDeclaredNamesUnique renamer = MakeDeclaredNamesUnique.builder().build();
-    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
+    // All declared names are already unique post normalize, so we can safely just switch 'let' or
+    // 'const' to 'var' in all non-loop cases.
     // - Gather a list of let & const variables
     // - Also add `= void 0` to any that are not initialized.
     NodeTraversal.traverse(compiler, root, this);
