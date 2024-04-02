@@ -549,10 +549,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @extends {Error}",
             " */",
             "var C = function() {",
-            "  var $jscomp$tmp$error;",
-            "  $jscomp$tmp$error = Error.apply(this, arguments),",
-            "      this.message = $jscomp$tmp$error.message,",
-            "      ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack),",
+            "  var $jscomp$tmp$error$m1146332801$1;",
+            "  $jscomp$tmp$error$m1146332801$1 = Error.apply(this, arguments),",
+            "      this.message = $jscomp$tmp$error$m1146332801$1.message,",
+            "      ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack ="
+                + " $jscomp$tmp$error$m1146332801$1.stack),",
             "      this;",
             "};",
             "$jscomp.inherits(C, Error);"));
@@ -569,11 +570,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @extends {Error}",
             " */",
             "var C = function() {",
-            "  var $jscomp$tmp$error;",
+            "  var $jscomp$tmp$error$m1146332801$1;",
             "  var self =",
-            "      ($jscomp$tmp$error = Error.call(this, 'C error'),",
-            "          this.message = $jscomp$tmp$error.message,",
-            "          ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack),",
+            "      ($jscomp$tmp$error$m1146332801$1 = Error.call(this, 'C error'),",
+            "          this.message = $jscomp$tmp$error$m1146332801$1.message,",
+            "          ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack ="
+                + " $jscomp$tmp$error$m1146332801$1.stack),",
             "          this)",
             "      || this;",
             "};",
@@ -813,10 +815,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @extends {D} */",
             "var C = function(str, n) {",
-            "  var $jscomp$super$this;",
-            "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
-            "  return $jscomp$super$this;", // Duplicate because of existing return statement.
-            "  return $jscomp$super$this;",
+            "  var $jscomp$super$this$m1146332801$0;",
+            "  ($jscomp$super$this$m1146332801$0 = D.call(this,str) || this).n = n;",
+            "  return $jscomp$super$this$m1146332801$0;", // Duplicate because of existing return
+            // statement.
+            "  return $jscomp$super$this$m1146332801$0;",
             "}",
             "$jscomp.inherits(C, D);"));
   }
@@ -877,14 +880,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @extends {D} */",
             "var C = function(str, n) {",
-            "  var $jscomp$super$this;",
+            "  var $jscomp$super$this$m1146332801$0;",
             "  if (n >= 0) {",
-            "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
+            "    $jscomp$super$this$m1146332801$0 = D.call(this, 'positive: ' + str) || this;",
             "  } else {",
-            "    $jscomp$super$this = D.call(this, 'negative: ' + str) || this;",
+            "    $jscomp$super$this$m1146332801$0 = D.call(this, 'negative: ' + str) || this;",
             "  }",
-            "  $jscomp$super$this.n = n;",
-            "  return $jscomp$super$this;",
+            "  $jscomp$super$this$m1146332801$0.n = n;",
+            "  return $jscomp$super$this$m1146332801$0;",
             "}",
             "$jscomp.inherits(C, D);"));
   }
@@ -1008,10 +1011,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @extends {Promise}",
             " */",
             "var FooPromise = function(callback, msg) {",
-            "  var $jscomp$super$this;",
-            "  $jscomp$super$this = $jscomp.construct(Promise, [callback], this.constructor)",
-            "  $jscomp$super$this.msg = msg;",
-            "  return $jscomp$super$this;",
+            "  var $jscomp$super$this$m1146332801$0;",
+            "  $jscomp$super$this$m1146332801$0 = $jscomp.construct(Promise, [callback],"
+                + " this.constructor)",
+            "  $jscomp$super$this$m1146332801$0.msg = msg;",
+            "  return $jscomp$super$this$m1146332801$0;",
             "}",
             "$jscomp.inherits(FooPromise, Promise);",
             ""));

@@ -1123,9 +1123,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "",
             "function mixinX(baseType) {",
             "  var i0$classdecl$var0 = function() {",
-            "    var $jscomp$super$this = baseType.call(this) || this;",
-            "    $jscomp$super$this.c = 'x';", // unique property name
-            "    return $jscomp$super$this;",
+            "    var $jscomp$super$this$98447280$0 = baseType.call(this) || this;",
+            "    $jscomp$super$this$98447280$0.c = 'x';", // unique property name
+            "    return $jscomp$super$this$98447280$0;",
             "  };",
             "  $jscomp.inherits(i0$classdecl$var0,baseType);",
             "  return i0$classdecl$var0;",
@@ -1134,9 +1134,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var BSuper = mixinX(A);",
             "",
             "var B = function() {",
-            "  var $jscomp$super$this = BSuper.call(this) || this;",
-            "  $jscomp$super$this.b = 'bProp';", // unique property name
-            "  return $jscomp$super$this;",
+            "  var $jscomp$super$this$98447280$1 = BSuper.call(this) || this;",
+            "  $jscomp$super$this$98447280$1.b = 'bProp';", // unique property name
+            "  return $jscomp$super$this$98447280$1;",
             "};",
             "$jscomp.inherits(B,BSuper);",
             ""));
