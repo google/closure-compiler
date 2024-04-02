@@ -83,10 +83,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("alert(10);");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "alert(10);");
   }
 
   @Test
@@ -104,10 +101,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("", "alert(10);");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "", "alert(10);");
   }
 
   @Test
@@ -125,12 +119,8 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
 
     Compiler compiler = compileTypedAstShards(options);
-    Node expectedRoot =
-        parseExpectedCode(
-            "var $jscomp$scope$1954846972$0$x=3;", "var $jscomp$scope$1954846973$0$x=4");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(
+        compiler, "var $jscomp$scope$1954846972$0$x=3;", "var $jscomp$scope$1954846973$0$x=4");
   }
 
   @Test
@@ -152,10 +142,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("", "", "alert('lib1'); alert('lib2')");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "", "", "alert('lib1'); alert('lib2')");
   }
 
   @Test
@@ -178,10 +165,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("", "", "alert('lib1'); alert('lib2')");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "", "", "alert('lib1'); alert('lib2')");
   }
 
   @Test
@@ -250,10 +234,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("", "", "alert('lib1'); alert('lib2')");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "", "", "alert('lib1'); alert('lib2')");
   }
 
   @Test
@@ -280,17 +261,14 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot =
-        parseExpectedCode(
-            lines(
-                "class a {", //
-                "constructor() { this.foo = 1; }",
-                "}",
-                "alert(new a());"),
-            "");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(
+        compiler,
+        lines(
+            "class a {", //
+            "constructor() { this.foo = 1; }",
+            "}",
+            "alert(new a());"),
+        "");
   }
 
   @Test
@@ -325,14 +303,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot =
-        parseExpectedCode(
-            lines(
-                "class a {}", //
-                "alert(new a());"));
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(
+        compiler,
+        lines(
+            "class a {}", //
+            "alert(new a());"));
   }
 
   @Test
@@ -364,10 +339,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
               "}"),
           "var $lib2Var$$ = 10; $lib1$$();"
         };
-    Node expectedRoot = parseExpectedCode(expected);
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, expected);
   }
 
   @Test
@@ -394,11 +366,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot =
-        parseExpectedCode("lateDefinedVar;", "var lateDefinedVar; var $normalVar$$;");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "lateDefinedVar;", "var lateDefinedVar; var $normalVar$$;");
   }
 
   @Test
@@ -421,10 +389,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("takeCoord({x: 1, y: 2});");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "takeCoord({x: 1, y: 2});");
   }
 
   @Test
@@ -447,10 +412,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("ns.a = 2; console.log(ns.x);console.log(ns.a);");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "ns.a = 2; console.log(ns.x);console.log(ns.a);");
   }
 
   @Test
@@ -480,10 +442,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("foo.bar");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "foo.bar");
   }
 
   @Test
@@ -506,10 +465,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("foo.bar");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "foo.bar");
   }
 
   @Test
@@ -523,10 +479,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "");
   }
 
   @Test
@@ -543,10 +496,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("(/abc/gi).exec(''); console.log(RegExp.$1);");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "(/abc/gi).exec(''); console.log(RegExp.$1);");
   }
 
   @Test
@@ -570,10 +520,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("");
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, "");
   }
 
   @Test
@@ -590,15 +537,12 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot =
-        parseExpectedCode(
-            lines(
-                "function f() {} ",
-                "function g(a) {} g['$inject']=['a'];",
-                "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']"));
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(
+        compiler,
+        lines(
+            "function f() {} ",
+            "function g(a) {} g['$inject']=['a'];",
+            "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']"));
   }
 
   @Test
@@ -646,10 +590,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
               + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
           "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
         };
-    Node expectedRoot = parseExpectedCode(expected);
-    assertNode(compiler.getRoot().getSecondChild())
-        .usingSerializer(compiler::toSource)
-        .isEqualTo(expectedRoot);
+    assertCompiledCodeEquals(compiler, expected);
   }
 
   @Test
@@ -776,9 +717,12 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     return new SequenceInputStream(Collections.enumeration(inputShards));
   }
 
-  private Node parseExpectedCode(String... files) {
-    // pass empty CompilerOptions; CompilerOptions only matters for CommonJS module parsing
-    CompilerOptions options = new CompilerOptions();
-    return super.parseExpectedCode(files, options);
+  private void assertCompiledCodeEquals(Compiler compiler, String... expected) {
+    // Passing the default CompilerOptions to parse the expected code is OK, since it configures the
+    // parser to support all input languages.
+    Node expectedRoot = super.parseExpectedCode(expected, new CompilerOptions());
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
   }
 }
