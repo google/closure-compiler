@@ -30,7 +30,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +73,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         ImmutableList.<TestPart>builder()
             .add(srcs(GOOG_SCOPE_START_BLOCK + code + GOOG_SCOPE_END_BLOCK))
             .add(expected(expected))
-            .addAll(Arrays.asList(postconditions))
+            .add(postconditions)
             .build();
     test(parts.toArray(new TestPart[0]));
   }

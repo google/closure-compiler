@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.bundle;
 
-import static java.util.Arrays.asList;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
@@ -118,8 +117,7 @@ public abstract class Source {
     }
 
     public final Builder addRuntime(String... runtimes) {
-      return setRuntimes(
-          ImmutableSet.<String>builder().addAll(runtimes()).addAll(asList(runtimes)).build());
+      return setRuntimes(ImmutableSet.<String>builder().addAll(runtimes()).add(runtimes).build());
     }
 
     public final Builder setDependencyInfo(DependencyInfo info) {
