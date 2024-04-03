@@ -13,6 +13,135 @@ analyzes it, removes dead code and rewrites and minimizes what's left. It also
 checks syntax, variable references, and types, and warns about common JavaScript
 pitfalls.
 
+## Important Caveats
+
+1. Compilation modes other than `ADVANCED` were always an afterthought and we
+   have deprecated those modes. We believe that other tools perform comparably
+   for non-`ADVANCED` modes and are better integrated into the broader JS
+   ecosystem.
+
+1. Closure Compiler is not suitable for arbitrary JavaScript.  For `ADVANCED`
+   mode to generate working JavaScript, the input JS code must be written with
+   closure-compiler in mind.
+
+1. Closure Compiler is a "whole world" optimizer. It expects to directly see or
+   at least receive information about every possible use of every global or
+   exported variable and every property name.
+
+   It will aggressively remove and rename variables and properties in order to
+   make the output code as small as possible. This will result in broken output
+   JS, if uses of global variables or properties are hidden from it.
+
+    Although one can write custom externs files to tell the compiler to leave
+    some names unchanged so they can safely be accessed by code that is not part
+    of the compilation, this is often tedious to maintain.
+
+1. Closure Compiler property renaming requires you to consistently access a
+   property with either `obj[p]` or `obj.propName`, but not both.
+
+   When you access a property with square brackets (e.g. `obj[p]`) or using some
+   other indirect method like `let {p} = obj;` this hides the literal name of
+   the property being referenced from the compiler. It cannot know if
+   `obj.propName` is referring to the same property as `obj[p]`. In some cases
+   it will notice this problem and stop the compilation with an error. In other
+   cases it will rename `propName` to something shorter, without noticing this
+   problem, resulting in broken output JS code.
+
+1. Closure Compiler aggressively inlines global variables and flattens chains
+   of property names on global variables (e.g. `myFoo.some.sub.property` ->
+   `myFoo$some$sub$property`), to make reasoning about them easier for detecting
+   unused code.
+
+   It tries to either back off from doing this or halt with an error when
+   doing it will generate broken JS output, but there are cases where it will
+   fail to recognize the problem and simply generate broken JS without warning.
+   This is much more likely to happen in code that was not explicitly written
+   with Closure Compiler in mind.
+
+1. Closure compiler and the externs it uses by default assume that the target
+   environment is a web browser window.
+
+   WebWorkers are supported also, but the compiler will likely fail to warn
+   you if you try to use features that aren't actually available to a WebWorker.
+
+   Some externs files and features have been added to Closure Compiler to
+   support the NodeJS environment, but they are not actively supported and
+   never worked very well.
+
+1. JavaScript that does not use the `goog.module()` and `goog.require()` from
+   `base.js` to declare and use modules is not well supported.
+
+    The ECMAScript `import` and `export` syntax did not exist until 2015.
+    Closure compiler and `closure-library` developed their own means for
+    declaring and using modules, and this remains the only well supported
+    way of defining modules.
+
+    The compiler does implement some understanding of ECMAScript modules,
+    but changing Google's projects to use the newer syntax has never offered
+    a benefit that was worth the cost of the change. Google's TypeScript code
+    uses ECMAScript modules, but they are converted to `goog.module()` syntax
+    before closure-compiler sees them. So, effectively the ECMAScript modules
+    support is unused within Google. This means we are unlikely to notice
+    or fix bugs in the support for ECMAScript modules.
+
+    Support for CommonJS modules as input was added in the past, but is not
+    used within Google, and is likely to be entirely removed sometime in 2024.
+
+## Supported uses
+
+Closure Compiler is used by Google projects to:
+
+*   Drastically reduce the code size of very large JavaScript applications
+
+*   Check the JS code for errors and for conformance to general and/or
+    project-specific best practices.
+
+*   Define user-visible messages in a way that makes it possible to replace
+    them with translated versions to create localized versions of an
+    application.
+
+*   Transpile newer JS features into a form that will run on browsers that
+    lack support for those features.
+
+*   Break the output application into chunks that may be individually loaded
+    as needed.
+
+    NOTE: These chunks are plain JavaScript scripts. They do not use the
+    ECMAScript `import` and `export` syntax.
+
+To achieve these goals closure compiler places many restrictions on its input:
+
+*   Use `goog.module()` and `goog.require()` to declare and use modules.
+
+    Support for the `import` and `export` syntax added in ES6 is not actively
+    maintained.
+
+*   Use annotations in comments to declare type information and provide
+    information the compiler needs to avoid breaking some code patterns
+    (e.g. `@nocollapse` and `@noinline`).
+
+*   Either use only dot-access (e.g. `object.property`) or only use dynamic
+    access (e.g. `object[propertyName]` or `Object.keys(object)`) to access
+    the properties of a particular object type.
+
+    Mixing these will hide some uses of a property from the compiler, resulting
+    in broken output code when it renames the property.
+
+*   In general the compiler expects to see an entire application as a single
+    compilation. Interfaces must be carefully and explicitly constructed in
+    order to allow interoperation with code outside of the compilation unit.
+
+    The compiler assumes it can see all uses of all variables and properties
+    and will freely rename them or remove them if they appear unused.
+
+*   Use externs files to inform the compiler of any variables or properties
+    that it must not remove or rename.
+
+    There are default externs files declaring the standard JS and DOM global
+    APIs. More externs files are necessary if you are using less common
+    APIs or expect some external JavaScript code to access an API in the
+    code you are compiling.
+
 ## Getting Started
 
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
@@ -199,12 +328,10 @@ The Closure Compiler will concatenate the files in the order they're passed at
 the command line.
 
 If you're using globs or many files, you may start to run into problems with
-managing dependencies between scripts. In this case, you should either use the
+managing dependencies between scripts. In this case, you should use the
 included [lib/base.js](lib/base.js) that provides functions for enforcing
-dependencies between scripts (namely `goog.module` and `goog.require`) or
-[JavaScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
-(using the ECMAScript `import` and `export` syntax). Closure Compiler will
-re-order the inputs automatically.
+dependencies between scripts (namely `goog.module` and `goog.require`). Closure
+Compiler will re-order the inputs automatically.
 
 ## Closure JavaScript Library
 
