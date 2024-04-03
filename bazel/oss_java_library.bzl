@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """See oss_jar_set"""
 
 load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@rules_java//java:defs.bzl", "java_library")
 
 def oss_java_library(
         name,
@@ -34,7 +34,7 @@ def oss_java_library(
         <name>.javadoc: (javadoc_library)
         <name>.sources: (sources JAR)
     """
-    native.java_library(
+    java_library(
         name = name,
         **_copy_and_merge(shared_attrs, java_attrs)
     )
