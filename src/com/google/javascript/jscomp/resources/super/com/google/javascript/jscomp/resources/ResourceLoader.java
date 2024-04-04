@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.resources;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.ConformanceConfig;
 import jsinterop.annotations.JsType;
 import jsinterop.base.JsPropertyMap;
 
@@ -39,10 +38,6 @@ public final class ResourceLoader {
 
   public static ImmutableMap<String, String> loadPropertiesMap(String resourceName) {
     return PropertiesParser.parse(loadTextResource(null, resourceName));
-  }
-
-  public static ConformanceConfig loadGlobalConformance(Class<?> clazz) {
-    return ConformanceConfig.newBuilder().build();
   }
 
   public static boolean resourceExists(Class<?> clazz, String path) {

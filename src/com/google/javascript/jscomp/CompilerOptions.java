@@ -41,7 +41,6 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
@@ -1126,15 +1125,8 @@ public class CompilerOptions implements Serializable {
 
   private String productionInstrumentationArrayName;
 
-  private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
-      ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
-
-  /**
-   * List of conformance configs to use in CheckConformance.
-   *
-   * <p>The first entry of this list is always the Global ConformanceConfig
-   */
-  private ImmutableList<ConformanceConfig> conformanceConfigs = GLOBAL_CONFORMANCE_CONFIGS;
+  /** List of conformance configs to use in CheckConformance. */
+  private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
   /**
    * Remove the first match of this regex from any paths when checking conformance whitelists.
@@ -2667,11 +2659,7 @@ public class CompilerOptions implements Serializable {
   /** Both enable and configure conformance checks, if non-null. */
   @GwtIncompatible("Conformance")
   public void setConformanceConfigs(List<ConformanceConfig> configs) {
-    this.conformanceConfigs =
-        ImmutableList.<ConformanceConfig>builder()
-            .add(ResourceLoader.loadGlobalConformance(CompilerOptions.class))
-            .addAll(configs)
-            .build();
+    this.conformanceConfigs = ImmutableList.copyOf(configs);
   }
 
   public void clearConformanceConfigs() {
