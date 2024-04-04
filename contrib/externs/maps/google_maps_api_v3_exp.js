@@ -7484,6 +7484,11 @@ google.maps.PlacesLibrary.prototype.SearchBox;
 google.maps.PlacesLibrary.prototype.SearchByTextRankPreference;
 
 /**
+ * @type {typeof google.maps.places.SearchNearbyRankPreference}
+ */
+google.maps.PlacesLibrary.prototype.SearchNearbyRankPreference;
+
+/**
  *
  * Access by calling `const {Point} = await google.maps.importLibrary("core")`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
@@ -16269,6 +16274,13 @@ google.maps.places.Place.prototype.openingHours;
 google.maps.places.Place.searchByText = function(request) {};
 
 /**
+ * Search for nearby places.
+ * @param {!google.maps.places.SearchNearbyRequest} request
+ * @return {!Promise<{places:!Array<!google.maps.places.Place>}>}
+ */
+google.maps.places.Place.searchNearby = function(request) {};
+
+/**
  * @param {!google.maps.places.FetchFieldsRequest} options
  * @return {!Promise<{place:!google.maps.places.Place}>}
  */
@@ -17764,6 +17776,120 @@ google.maps.places.SearchByTextRequest.prototype.query;
  * @deprecated Please use rankPreference instead.
  */
 google.maps.places.SearchByTextRequest.prototype.rankBy;
+
+/**
+ * RankPreference enum for SearchNearbyRequest.
+ *
+ * Access by calling `const {SearchNearbyRankPreference} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.SearchNearbyRankPreference = {
+  /**
+   * Ranks results by distance.
+   */
+  DISTANCE: 'DISTANCE',
+  /**
+   * Ranks results by popularity.
+   */
+  POPULARITY: 'POPULARITY',
+};
+
+/**
+ * Request interface for {@link google.maps.places.Place.searchNearby}. For more
+ * information on the request, see <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places/searchNearby">Places
+ * API reference</a>.
+ * @record
+ */
+google.maps.places.SearchNearbyRequest = function() {};
+
+/**
+ * Excluded primary place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can only have a single primary type. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
+
+/**
+ * Fields to be included in the response, <a
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
+ * available fields will be returned and billed for (this is not recommended for
+ * production deployments). For a list of fields see {@link
+ * google.maps.places.PlaceResult}. Nested fields can be specified with
+ * dot-paths (for example, <code>"geometry.location"</code>).
+ * @type {!Array<string>}
+ */
+google.maps.places.SearchNearbyRequest.prototype.fields;
+
+/**
+ * Included primary place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can only have a single primary type. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.includedPrimaryTypes;
+
+/**
+ * Included place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can have many different place types. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.includedTypes;
+
+/**
+ * Place details will be displayed with the preferred language if available.
+ * Will default to the browser&#39;s language preference. Current list of
+ * supported languages: <a
+ * href="https://developers.google.com/maps/faq#languagesupport">https://developers.google.com/maps/faq#languagesupport</a>.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.language;
+
+/**
+ * The region to search, specified as a circle with center and radius. Results
+ * outside given location are not returned.
+ * @type {!google.maps.Circle|!google.maps.CircleLiteral}
+ */
+google.maps.places.SearchNearbyRequest.prototype.locationRestriction;
+
+/**
+ * Maximum number of results to return. It must be between 1 and 20,
+ * inclusively.
+ * @type {number|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.maxResultCount;
+
+/**
+ * How results will be ranked in the response.
+ * @default <code>SearchNearbyRankPreference.DISTANCE</code>
+ * @type {!google.maps.places.SearchNearbyRankPreference|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.rankPreference;
+
+/**
+ * The Unicode country/region code (CLDR) of the location where the request is
+ * coming from. This parameter is used to display the place details, like
+ * region-specific place name, if available. The parameter can affect results
+ * based on applicable law. For more information, see <a
+ * href="https://www.unicode.org/cldr/charts/latest/supplemental/territory_language_information.html">https://www.unicode.org/cldr/charts/latest/supplemental/territory_language_information.html</a>.
+ * Note that 3-digit region codes are not currently supported.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.region;
 
 /**
  * Contains structured information about the place&#39;s description, divided
