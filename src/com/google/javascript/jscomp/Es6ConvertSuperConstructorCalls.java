@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
@@ -71,6 +72,10 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript() && !NodeUtil.getFeatureSetOfScript(n).contains(Feature.SUPER)) {
+      // If a script contains Feature.SUPER, only then process super constructor calls for it
+      return false;
+    }
     if (n.isFunction()) {
       // TODO(bradfordcsmith): Avoid creating data for non-constructor functions.
       constructorDataStack.push(new ConstructorData(n));

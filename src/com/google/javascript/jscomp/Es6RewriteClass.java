@@ -71,8 +71,10 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     // have an invalid AST state between passes.
     // TODO(bradfordcsmith): It would probably be more readable and efficient to merge the super
     //     constructor rewriting logic into this class.
+    // The code here only creates the GlobalNamespace object which is very cheap. The expensive
+    // building of global namespace happens inside es6ConvertSuperConstructorCalls pass.
     convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
-    TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
+    NodeTraversal.traverse(compiler, root, convertSuperConstructorCalls);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, features);
   }
 
@@ -256,7 +258,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         this.transpilationNamespace, "Object.defineProperty");
   }
 
-  /** @param member A getter or setter */
+  /**
+   * @param member A getter or setter
+   */
   private void addToDefinePropertiesObject(ClassDeclarationMetadata metadata, Node member) {
     Preconditions.checkArgument(!member.isComputedProp());
     Node obj =
