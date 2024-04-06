@@ -185,7 +185,6 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   private PolymerClassDefinition parseAndExtractClassDefFromClass(String code) {
     Node rootNode = compiler.parseTestCode(code);
-    GlobalNamespace globalNamespace = new GlobalNamespace(compiler, rootNode);
 
     NodeUtil.visitPostOrder(
         rootNode,
@@ -199,6 +198,6 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
         });
 
     assertThat(polymerCall).isNotNull();
-    return PolymerClassDefinition.extractFromClassNode(polymerCall, compiler, globalNamespace);
+    return PolymerClassDefinition.extractFromClassNode(polymerCall, compiler);
   }
 }

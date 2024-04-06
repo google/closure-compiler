@@ -285,7 +285,7 @@ final class PolymerClassDefinition {
    * opposed to the Polymer 1 extraction, this operation is non-destructive.
    */
   static @Nullable PolymerClassDefinition extractFromClassNode(
-      Node classNode, AbstractCompiler compiler, GlobalNamespace globalNames) {
+      Node classNode, AbstractCompiler compiler) {
     checkState(classNode != null && classNode.isClass());
 
     // The supported case is for the config getter to return an object literal descriptor.

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
@@ -109,8 +108,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    checkNotNull(globalNames, "Cannot call visit() before process()");
-
     if (PolymerPassStaticUtils.isPolymerCall(node)) {
       if (polymerElementExterns != null) {
         rewritePolymer1ClassDefinition(node, parent, traversal);
@@ -171,8 +168,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
   /** Polymer 2.x Class Nodes */
   private void rewritePolymer2ClassDefinition(Node node, NodeTraversal traversal) {
-    PolymerClassDefinition def =
-        PolymerClassDefinition.extractFromClassNode(node, compiler, globalNames);
+    PolymerClassDefinition def = PolymerClassDefinition.extractFromClassNode(node, compiler);
     if (def != null) {
       PolymerClassRewriter rewriter =
           new PolymerClassRewriter(
