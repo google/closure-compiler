@@ -761,15 +761,13 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
                 "  },",
                 "});")));
 
-    // TODO(b/218711238): investigate this crash
-    assertThrows(NullPointerException.class, () -> compileTypedAstShards(options));
-    // Compiler compiler = compileTypedAstShards(options);
-    // String source = compiler.toSource();
+    Compiler compiler = compileTypedAstShards(options);
+    String source = compiler.toSource();
 
-    // // If we see these identifiers anywhere in the output source, we know that we successfully
-    // // protected them against removal and renaming.
-    // assertThat(source).contains("longUnusedProperty");
-    // assertThat(source).contains("longUnusedMethod");
+    // If we see these identifiers anywhere in the output source, we know that we successfully
+    // protected them against removal and renaming.
+    assertThat(source).contains("longUnusedProperty");
+    assertThat(source).contains("longUnusedMethod");
   }
 
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your

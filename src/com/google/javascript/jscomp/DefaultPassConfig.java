@@ -465,14 +465,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.maybeAdd(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
 
-    if (options.checksOnly) {
-      checks.maybeAdd(removeSyntheticScript);
-    } else if (!options.checksOnly) {
-      checks.maybeAdd(mergeSyntheticScript);
-      // At this point all checks have been done.
-      if (options.exportTestFunctions) {
-        checks.maybeAdd(exportTestFunctions);
-      }
+    checks.maybeAdd(mergeSyntheticScript);
+
+    // At this point all checks have been done.
+    if (!options.checksOnly && options.exportTestFunctions) {
+      checks.maybeAdd(exportTestFunctions);
     }
 
     // Create extern exports after the normalize because externExports depends on unique names.
