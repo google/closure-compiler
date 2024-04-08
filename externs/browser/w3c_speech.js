@@ -264,6 +264,11 @@ SpeechGrammarList.prototype.addFromUri = function(src, weight) {};
 /**
  * @type {function(string, number)}
  */
+SpeechGrammarList.prototype.addFromURI = function(src, weight) {};
+
+/**
+ * @type {function(string, number)}
+ */
 SpeechGrammarList.prototype.addFromString = function(str, weight) {};
 
 
