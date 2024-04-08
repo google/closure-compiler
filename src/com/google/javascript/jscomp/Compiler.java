@@ -464,6 +464,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               + options.getDependencyOptions()
               + "");
     }
+
+    if (options.getMergedPrecompiledLibraries() && !options.getConformanceConfigs().isEmpty()) {
+      ImmutableSet.Builder<String> conformanceConfigFiles = ImmutableSet.builder();
+      for (ConformanceConfig conformanceConfig : options.getConformanceConfigs()) {
+        for (Requirement requirement : conformanceConfig.getRequirementList()) {
+          conformanceConfigFiles.addAll(requirement.getConfigFileList());
+        }
+      }
+      throw new IllegalArgumentException(
+          "use_precompiled_libraries mode does not support passing JS conformance configs: this"
+              + " mode skips all check passes including conformance\n"
+              + "Unsupported conformance configs: "
+              + conformanceConfigFiles.build());
+    }
   }
 
   public void printConfig() {
