@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
@@ -400,6 +401,13 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             .createMemberFunctionDef(uniqueStaticMethodName, functionNode)
             .srcrefTreeIfMissing(staticMember);
     methodNode.setStaticMember(true);
+
+    // add `@nocollapse` to static methods
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordNoCollapse();
+    JSDocInfo jsDoc = builder.build();
+    methodNode.setJSDocInfo(jsDoc);
+
     methodNode.insertBefore(insertionPoint);
     compiler.reportChangeToEnclosingScope(methodNode);
 
