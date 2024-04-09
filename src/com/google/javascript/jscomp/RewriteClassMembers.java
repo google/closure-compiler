@@ -286,6 +286,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
                 convStaticMethodToCall(nameToUse, staticMember.detach(), /* callNode= */ null);
             break;
           }
+          // if staticMember doesn't reference this or super, then don't extract it into a static
+          // method
+          if (!NodeUtil.referencesEnclosingReceiver(staticMember)) {
+            transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
+            break;
+          }
           blockNode = createBlockNodeWithReturn(staticMember.removeFirstChild());
           callNode =
               convBlockToStaticMethod(
@@ -300,6 +306,14 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
           break;
         case COMPUTED_FIELD_DEF:
           if (staticMember.hasChildren() && staticMember.getChildCount() > 1) {
+
+            // if staticMember doesn't reference this or super, then don't extract it into a static
+            // method
+            if (!NodeUtil.referencesEnclosingReceiver(staticMember)) {
+              transpiledNode = convCompFieldToGetElem(nameToUse, staticMember.detach());
+              break;
+            }
+
             blockNode = createBlockNodeWithReturn(staticMember.getLastChild().detach());
             callNode =
                 convBlockToStaticMethod(
