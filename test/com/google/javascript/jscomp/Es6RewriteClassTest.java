@@ -1445,6 +1445,36 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExtendNativeClass_withExplicitConstructor_withInnerFunction() {
+    test(
+        lines(
+            "class FooPromise extends Promise {",
+            "  /** @param {string} msg */",
+            "  constructor(callbackArg, msg) {",
+            "    function inner() {}", // hoisted, normalized
+            "    super(callbackArg);",
+            "    this.msg = msg;",
+            "  }",
+            "}"),
+        lines(
+            "/**",
+            " * @constructor",
+            " */",
+            "let FooPromise = function(callbackArg, msg) {",
+            // stays hoisted
+            "  function inner() {}",
+            // declaration created after function declaration
+            "  var $jscomp$super$this$m1146332801$0;",
+            "  $jscomp$super$this$m1146332801$0 =",
+            "      $jscomp.construct(Promise, [callbackArg], this.constructor);",
+            "  $jscomp$super$this$m1146332801$0.msg = msg;",
+            "  return $jscomp$super$this$m1146332801$0;",
+            "}",
+            "$jscomp.inherits(FooPromise, Promise);",
+            ""));
+  }
+
+  @Test
   public void testExtendNativeClass_withImplicitConstructor() {
     test(
         "class FooPromise extends Promise {}",

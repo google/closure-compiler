@@ -223,10 +223,18 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           // `this` -> `$jscomp$super$this` throughout the constructor body,
           // except for super() calls.
           updateThisToSuperThis(typeOfThis, constructorBody, superCalls, uniqueSuperThisName);
-          // Start constructor with `var $jscomp$super$this;`
-          constructorBody.addChildToFront(
+          // Start constructor with `var $jscomp$super$this;`, but place it after any hoisted
+          // function declarations
+          Node declaration =
               IR.var(astFactory.createName(uniqueSuperThisName, typeOfThis))
-                  .srcrefTree(constructorBody));
+                  .srcrefTree(constructorBody);
+          Node insertBeforePoint = getInsertBeforePoint(constructorBody);
+          if (insertBeforePoint != null) {
+            declaration.insertBefore(insertBeforePoint);
+          } else {
+            // functionBody only contains hoisted function declarations
+            constructorBody.addChildToBack(declaration);
+          }
           // End constructor with `return $jscomp$super$this;`
           constructorBody.addChildToBack(
               IR.returnNode(astFactory.createName(uniqueSuperThisName, typeOfThis))
@@ -247,6 +255,24 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
         compiler.reportChangeToEnclosingScope(constructorBody);
       }
     }
+  }
+
+  /**
+   * Gets an insertion point in the function body before which we want to insert the new let
+   * declaration. If there's not good insertion point (e.g. the function is empty or only contains
+   * inner function declarations), return null.
+   */
+  private Node getInsertBeforePoint(Node functionBody) {
+    checkState(functionBody.getParent().isFunction());
+    Node current = functionBody.getFirstChild();
+
+    // Do not insert the let declaration before any hoisted function declarations in this function
+    // body as those function declarations are hoisted by normalization. We must maintain
+    // normalization.
+    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
+      current = current.getNext();
+    }
+    return current;
   }
 
   /**
@@ -299,11 +325,20 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       // `this` -> `$jscomp$super$this` throughout the constructor body,
       // except for super() calls.
       updateThisToSuperThis(typeOfThis, constructorBody, superCalls, uniqueSuperThisName);
-      // Start constructor with `var $jscomp$super$this;`
-      constructorBody.addChildToFront(
+      // Start constructor with `var $jscomp$super$this;`, but place it after any hoisted
+      // function declarations
+      Node declaration =
           astFactory
               .createSingleVarNameDeclaration(uniqueSuperThisName)
-              .srcrefTree(constructorBody));
+              .srcrefTree(constructorBody);
+      Node insertBeforePoint = getInsertBeforePoint(constructorBody);
+      if (insertBeforePoint != null) {
+        declaration.insertBefore(insertBeforePoint);
+      } else {
+        // functionBody only contains hoisted function declarations
+        constructorBody.addChildToBack(declaration);
+      }
+
       // End constructor with `return $jscomp$super$this;`
       constructorBody.addChildToBack(
           astFactory
