@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -126,7 +127,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
       makeTreeNonIndexable(thisVar);
 
       if (context.lastSuperStatement == null) {
-        scopeBody.addChildToFront(thisVar);
+        insertVarDeclaration(thisVar, scopeBody);
       } else {
         // Not safe to reference `this` until after super() has been called.
         // TODO(bradfordcsmith): Some complex cases still aren't covered, like
@@ -140,11 +141,45 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
       Node argumentsVar =
           astFactory.createArgumentsAliasDeclaration(ARGUMENTS_VAR + "$" + context.uniqueId);
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
-      scopeBody.addChildToFront(argumentsVar);
+
+      insertVarDeclaration(argumentsVar, scopeBody);
 
       argumentsVar.srcrefTreeIfMissing(scopeBody);
       compiler.reportChangeToEnclosingScope(argumentsVar);
     }
+  }
+
+  private void insertVarDeclaration(Node varDeclaration, Node scopeBody) {
+    if (scopeBody.getParent().isFunction()) {
+      // for functions, we must find the correct insertion point to preserve normalization
+      Node insertBeforePoint = getInsertBeforePoint(scopeBody);
+      if (insertBeforePoint != null) {
+        varDeclaration.insertBefore(insertBeforePoint);
+      } else {
+        // functionBody only contains hoisted function declarations
+        scopeBody.addChildToBack(varDeclaration);
+      }
+    } else {
+      scopeBody.addChildToFront(varDeclaration);
+    }
+  }
+
+  /**
+   * Gets an insertion point in the function body before which we want to insert the new let
+   * declaration. If there's not good insertion point (e.g. the function is empty or only contains
+   * inner function declarations), return null.
+   */
+  private Node getInsertBeforePoint(Node functionBody) {
+    checkState(functionBody.getParent().isFunction());
+    Node current = functionBody.getFirstChild();
+
+    // Do not insert the let declaration before any hoisted function declarations in this function
+    // body as those function declarations are hoisted by normalization. We must maintain
+    // normalization.
+    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
+      current = current.getNext();
+    }
+    return current;
   }
 
   private void makeTreeNonIndexable(Node n) {

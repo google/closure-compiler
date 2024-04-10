@@ -382,6 +382,32 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGeneratedVariableDeclarations_placedAfterFunctionDeclarations() {
+    testArrowRewriting(
+        lines(
+            "({",
+            "  x: 0,",
+            "  y: 'a',",
+            "  f: function() {",
+            "    function foo() { this.x;}",
+            "    var a2 = () => this.y;",
+            "  },",
+            "})"),
+        lines(
+            "({",
+            "  x: 0,",
+            "  y: 'a',",
+            "  f: function() {",
+            // stays hoisted
+            "    function foo() { this.x; }",
+            // variable declarations placed after function declarations
+            "    const $jscomp$this$UID$1 = this;",
+            "    var a2 = function() { return $jscomp$this$UID$1.y; };",
+            "  },",
+            "})"));
+  }
+
+  @Test
   public void testPassingMultipleArrowsInSameFreeScopeAsMethodParams() {
     testArrowRewriting(
         externs(
