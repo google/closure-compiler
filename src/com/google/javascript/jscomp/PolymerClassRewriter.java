@@ -928,6 +928,13 @@ final class PolymerClassRewriter {
             makeParamSafe(param, paramIndex++);
             param = next;
           }
+          if (behaviorFunction.info == null || behaviorFunction.info.getReturnType() == null) {
+            // Record a return type of ? to avoid the type inferencer assuming this function returns
+            // 'undefined' just because it's a stub.
+            info.recordReturnType(
+                new JSTypeExpression(
+                    new Node(Token.QMARK).srcref(fnValue), fnValue.getSourceFileName()));
+          }
         }
 
         exprResult.getFirstChild().setJSDocInfo(info.build());

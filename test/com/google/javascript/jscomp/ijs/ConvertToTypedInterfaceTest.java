@@ -2325,7 +2325,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "        return \"foo\";",
             "      },",
             "      reflectToAttribute: true,",
-            "      observer: \"bazChanged\"",
+            "      observer: \"bazChanged\",",
+            "      readOnly: true",
             "    }",
             "  },",
             "  observers: [",
@@ -2365,8 +2366,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "    bar: Number,",
             "    /** @type {string|number} */",
             "    baz: {",
-            // If the property definition is an object, only the "type" sub-property matters.
-            "      type: String",
+            // If the property definition is an object, only the "type" and "readOnly"
+            // sub-properties matter.
+            "      type: String,",
+            "      readOnly: true",
             "    }",
             "  },",
             // The "observers" configuration doesn't matter.

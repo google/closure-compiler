@@ -499,7 +499,8 @@ abstract class PotentialDeclaration {
    *     foo: String,
    *     bar: {
    *       type: Number,
-   *       value: 123
+   *       value: 123,
+   *       readOnly: true
    *     }
    *   },
    *   baz: function() {}
@@ -530,13 +531,13 @@ abstract class PotentialDeclaration {
           propKey = propKey.getNext()) {
         Node propDef = propKey.getOnlyChild();
         // A property definition is either a function reference (e.g. String, Number), or another
-        // object literal. If it's an object literal, only the "type" sub-property matters for type
-        // checking, so we can delete everything else (which may include e.g. a "value" sub-property
-        // with a function expression).
+        // object literal. If it's an object literal, only the "type" and "readOnly" sub-properties
+        // matters for type checking, so we can delete everything else (which may include e.g. a
+        // "value" sub-property with a function expression).
         if (propDef.isObjectLit()) {
           for (Node subProp = propDef.getFirstChild(); subProp != null; ) {
             final Node next = subProp.getNext();
-            if (!subProp.getString().equals("type")) {
+            if (!subProp.getString().equals("type") && !subProp.getString().equals("readOnly")) {
               NodeUtil.deleteNode(subProp, compiler);
             }
             subProp = next;
