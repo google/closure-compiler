@@ -137,7 +137,8 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     }
 
     if (context.needsArgumentsVar) {
-      Node argumentsVar = astFactory.createArgumentsAliasDeclaration(ARGUMENTS_VAR);
+      Node argumentsVar =
+          astFactory.createArgumentsAliasDeclaration(ARGUMENTS_VAR + "$" + context.uniqueId);
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       scopeBody.addChildToFront(argumentsVar);
 
@@ -248,7 +249,10 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
       } else if (n.isName() && n.getString().equals("arguments")) {
         context.setNeedsArgumentsVar();
 
-        Node name = astFactory.createName(ARGUMENTS_VAR, AstFactory.type(n)).srcref(n);
+        Node name =
+            astFactory
+                .createName(ARGUMENTS_VAR + "$" + context.uniqueId, AstFactory.type(n))
+                .srcref(n);
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("arguments");
         }

@@ -198,8 +198,8 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
         lines("function f() {", "  var x = () => arguments;", "}"),
         lines(
             "function f() {",
-            "  const $jscomp$arguments = arguments;",
-            "  var x = function() { return $jscomp$arguments; };",
+            "  const $jscomp$arguments$m1146332801$1 = arguments;",
+            "  var x = function() { return $jscomp$arguments$m1146332801$1; };",
             "}"));
   }
 

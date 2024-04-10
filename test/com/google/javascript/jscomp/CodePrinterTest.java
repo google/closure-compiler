@@ -3845,7 +3845,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String code = "(x)=>{arguments[0]();}";
     String expectedCode =
         ""
-            + "var $jscomp$arguments = arguments;\n"
+            + "var $jscomp$arguments$3556498$0 = arguments;\n"
             + "(function(x) {\n"
             + "  arguments[0]();\n"
             + "});\n";
