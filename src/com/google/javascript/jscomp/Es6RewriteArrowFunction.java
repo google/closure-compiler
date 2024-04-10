@@ -103,11 +103,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     n.setIsArrowFunction(false);
 
     Node body = n.getLastChild();
-    if (!body.isBlock()) {
-      body.detach();
-      body = IR.block(IR.returnNode(body)).srcrefTreeIfMissing(body);
-      n.addChildToBack(body);
-    }
+    checkState(body.isBlock(), "Arrow function body must be a block after normalization");
 
     ThisAndArgumentsReferenceUpdater updater =
         new ThisAndArgumentsReferenceUpdater(compiler, context, astFactory);

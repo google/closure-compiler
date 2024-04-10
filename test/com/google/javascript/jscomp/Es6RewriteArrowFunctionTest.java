@@ -39,6 +39,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT3;
 
+    enableNormalize();
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
@@ -280,9 +281,9 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  }",
             "}",
             "class C extends B {",
-            "  constructor(x, y) {",
+            "  constructor(x$jscomp$1, y) {",
             "    console.log('statement before super');",
-            "    super(x);",
+            "    super(x$jscomp$1);",
             "    const $jscomp$this$UID$2 = this;", // Must not use `this` before super() call.
             "    this.wrappedXGetter = function() { return $jscomp$this$UID$2.x; };",
             "    this.y = y;",
@@ -325,11 +326,11 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  }",
             "}",
             "class C extends B {",
-            "  constructor(x, y) {",
-            "    if (x < 1) {",
-            "      super(x);",
+            "  constructor(x$jscomp$1, y) {",
+            "    if (x$jscomp$1 < 1) {",
+            "      super(x$jscomp$1);",
             "    } else {",
-            "      super(-x);",
+            "      super(-x$jscomp$1);",
             "    }",
             "    const $jscomp$this$UID$2 = this;", // Must not use `this` before super() call.
             "    this.wrappedXGetter = function() { return $jscomp$this$UID$2.x; };",
@@ -343,7 +344,8 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   public void testMultipleArrowsInSameFreeScope() {
     testArrowRewriting(
         "var a1 = x => x+1; var a2 = x => x-1;",
-        "var a1 = function(x) { return x+1; }; var a2 = function(x) { return x-1; };");
+        "var a1 = function(x) { return x+1; }; var a2 = function(x$jscomp$1) { return x$jscomp$1-1;"
+            + " };");
   }
 
   @Test
@@ -353,7 +355,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
         lines(
             "function f() {",
             "  var a1 = function(x) { return x+1; };",
-            "  var a2 = function(x) { return x-1; };",
+            "  var a2 = function(x$jscomp$1) { return x$jscomp$1-1; };",
             "}"));
   }
 
@@ -423,7 +425,8 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
         expected(
             lines(
                 "var a = [1,2,3,4];",
-                "var b = a.map(function(x) { return x+1; }).map(function(x) { return x*x; });")));
+                "var b = a.map(function(x) { return x+1; }).map(function(x$jscomp$1) { return"
+                    + " x$jscomp$1*x$jscomp$1; });")));
   }
 
   @Test
@@ -448,7 +451,8 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             lines(
                 "function f() {",
                 "  var a = [1,2,3,4];",
-                "  var b = a.map(function(x) { return x+1; }).map(function(x) { return x*x; });",
+                "  var b = a.map(function(x) { return x+1; }).map(function(x$jscomp$1) { return"
+                    + " x$jscomp$1*x$jscomp$1; });",
                 "}")));
   }
 

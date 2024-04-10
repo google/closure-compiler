@@ -203,9 +203,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
       passes.maybeAdd(rewriteNewDotTarget);
     }
-    if (options.needsTranspilationOf(Feature.ARROW_FUNCTIONS)) {
-      passes.maybeAdd(es6RewriteArrowFunction);
-    }
   }
 
   /**
@@ -218,6 +215,10 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.ARROW_FUNCTIONS)) {
+      passes.maybeAdd(es6RewriteArrowFunction);
+    }
 
     if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6RewriteClass);
