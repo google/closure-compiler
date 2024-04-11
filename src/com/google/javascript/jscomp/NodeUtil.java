@@ -922,6 +922,26 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns the node within the given function body at which something can be inserted such that
+   * it's after all inner function declarations in that function body. We want this because
+   * normalization expects all inner function declarations to be hoisted. If there's not good
+   * insertion point (e.g. the function is empty or only contains inner function declarations),
+   * return null.
+   */
+  static Node getInsertionPointAfterAllInnerFunctionDeclarations(Node functionBody) {
+    checkState(functionBody.getParent().isFunction());
+    Node current = functionBody.getFirstChild();
+
+    // Do not insert the let declaration before any hoisted function declarations in this function
+    // body as those function declarations are hoisted by normalization. We must maintain
+    // normalization.
+    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
+      current = current.getNext();
+    }
+    return current;
+  }
+
+  /**
    * Returns true iff the value associated with the node is a JS string literal, a concatenation
    * thereof or a ternary operator choosing between string literals.
    */

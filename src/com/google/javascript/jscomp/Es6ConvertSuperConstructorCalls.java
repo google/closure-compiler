@@ -228,7 +228,8 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           Node declaration =
               IR.var(astFactory.createName(uniqueSuperThisName, typeOfThis))
                   .srcrefTree(constructorBody);
-          Node insertBeforePoint = getInsertBeforePoint(constructorBody);
+          Node insertBeforePoint =
+              NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(constructorBody);
           if (insertBeforePoint != null) {
             declaration.insertBefore(insertBeforePoint);
           } else {
@@ -255,24 +256,6 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
         compiler.reportChangeToEnclosingScope(constructorBody);
       }
     }
-  }
-
-  /**
-   * Gets an insertion point in the function body before which we want to insert the new let
-   * declaration. If there's not good insertion point (e.g. the function is empty or only contains
-   * inner function declarations), return null.
-   */
-  private Node getInsertBeforePoint(Node functionBody) {
-    checkState(functionBody.getParent().isFunction());
-    Node current = functionBody.getFirstChild();
-
-    // Do not insert the let declaration before any hoisted function declarations in this function
-    // body as those function declarations are hoisted by normalization. We must maintain
-    // normalization.
-    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
-      current = current.getNext();
-    }
-    return current;
   }
 
   /**
@@ -331,7 +314,8 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           astFactory
               .createSingleVarNameDeclaration(uniqueSuperThisName)
               .srcrefTree(constructorBody);
-      Node insertBeforePoint = getInsertBeforePoint(constructorBody);
+      Node insertBeforePoint =
+          NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(constructorBody);
       if (insertBeforePoint != null) {
         declaration.insertBefore(insertBeforePoint);
       } else {

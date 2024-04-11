@@ -107,7 +107,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                     astFactory.createNumber(restIndex),
                     astFactory.createArgumentsReference()))
             .srcrefTreeIfMissing(functionBody);
-    Node insertBeforePoint = getInsertBeforePoint(functionBody);
+    Node insertBeforePoint =
+        NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(functionBody);
     if (insertBeforePoint != null) {
       let.insertBefore(insertBeforePoint);
     } else {
@@ -117,25 +118,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     t.reportCodeChange();
-  }
-
-  /**
-   * Gets an insertion point in the function body before which we want to insert the new let
-   * declaration. If there's not good insertion point (e.g. the function is empty or only contains
-   * inner function declarations), return null.
-   */
-  private Node getInsertBeforePoint(Node functionBody) {
-    checkState(functionBody.getParent().isFunction());
-    Node current = functionBody.getFirstChild();
-
-    // Do not insert the let declaration before any hoisted function declarations in this function
-    // body as those function declarations are hoisted by normalization. We must maintain
-    // normalization.
-    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
-      current = current.getNext();
-    }
-
-    return current;
   }
 
   /**
