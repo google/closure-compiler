@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
@@ -84,7 +82,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     }
 
     // Traverse nodes in preorder to collect `@template` parameter names before their use.
-    visitNode(t, n, checkNotNull(currentModule));
+    visitNode(t, n, currentModule);
     return true;
   }
 
@@ -102,14 +100,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     if (info != null) {
       visitJsDocInfo(t, currentModule, info);
     }
-    if (n.isQualifiedName() && !n.getParent().isGetProp()) {
+    if (!n.getParent().isGetProp() && n.isQualifiedName()) {
       QualifiedName qualifiedName = n.getQualifiedNameObject();
       String root = qualifiedName.getRoot();
       if (root.equals("this") || root.equals("super")) {
         return;
       }
-      visitQualifiedName(
-          t, n, currentModule, n.getQualifiedNameObject(), /* isStrongReference= */ true);
+      visitQualifiedName(t, n, currentModule, qualifiedName, /* isStrongReference= */ true);
     }
   }
 
