@@ -9309,7 +9309,7 @@ google.maps.Symbol = function() {};
  * anchor&#39;s x and y coordinates respectively. The position is expressed in
  * the same coordinate system as the symbol&#39;s path.
  * @default <code>google.maps.Point(0,0)</code>
- * @type {google.maps.Point|null|undefined}
+ * @type {!google.maps.Point|null|undefined}
  */
 google.maps.Symbol.prototype.anchor;
 
@@ -9334,7 +9334,7 @@ google.maps.Symbol.prototype.fillOpacity;
  * supplied by the marker. The origin is expressed in the same coordinate system
  * as the symbol&#39;s path. This property is unused for symbols on polylines.
  * @default <code>google.maps.Point(0,0)</code>
- * @type {google.maps.Point|null|undefined}
+ * @type {!google.maps.Point|null|undefined}
  */
 google.maps.Symbol.prototype.labelOrigin;
 
