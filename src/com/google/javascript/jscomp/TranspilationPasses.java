@@ -200,9 +200,6 @@ public class TranspilationPasses {
       passes.maybeAdd(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
     }
-    if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
-      passes.maybeAdd(rewriteNewDotTarget);
-    }
   }
 
   /**
@@ -215,6 +212,10 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
+      passes.maybeAdd(rewriteNewDotTarget);
+    }
 
     if (options.needsTranspilationOf(Feature.ARROW_FUNCTIONS)) {
       passes.maybeAdd(es6RewriteArrowFunction);
