@@ -89,7 +89,9 @@ public class ConvertToTypedInterface implements CompilerPass {
   private static void maybeReport(
       AbstractCompiler compiler, Node node, DiagnosticType diagnostic, String... fillers) {
     String sourceName = NodeUtil.getSourceName(node);
-    if (sourceName.endsWith("_test.js") || sourceName.endsWith("_test.closure.js")) {
+    if (sourceName.endsWith("_test.js")
+        || sourceName.endsWith("_test.closure.js")
+        || sourceName.endsWith("_test.tsx.cl.js")) {
       // Allow _test.js files and their tsickle generated
       // equivalents to avoid emitting errors at .i.js generation time.
       // We expect these files to not be consumed by any other downstream libraries.

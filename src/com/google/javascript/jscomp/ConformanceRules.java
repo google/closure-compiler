@@ -178,12 +178,15 @@ public final class ConformanceRules {
      * Returns true if the given path matches one of the prefixes or regexps, and false otherwise
      */
     boolean matches(String path) {
-      // If the path ends with .closure.js, it is probably a tsickle-generated file, and there may
-      // be entries in the allow list for the TypeScript path
+      // If the path ends with .closure.js or .tsx.cl.js, it is probably a tsickle-generated file,
+      // and there may be entries in the allow list for the TypeScript path
       String tsPath =
           path.endsWith(".closure.js")
               ? path.substring(0, path.length() - ".closure.js".length()) + ".ts"
-              : null;
+              // TSX
+              : (path.endsWith(".tsx.cl.js")
+                  ? path.substring(0, path.length() - ".cl.js".length())
+                  : null);
       if (prefixes != null) {
         for (String prefix : prefixes) {
           if (!path.isEmpty()
@@ -1951,7 +1954,6 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-
     @Override
     public final Precondition getPrecondition() {
       return Node::isScript;
@@ -1986,7 +1988,6 @@ public final class ConformanceRules {
       }
       return ConformanceResult.CONFORMANCE;
     }
-
 
     @Override
     public final Precondition getPrecondition() {

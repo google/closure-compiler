@@ -327,7 +327,7 @@ class IRFactory {
       ErrorReporter errorReporter,
       SourceFile file) {
     JsDocInfoParser.JsDocSourceKind jsDocSourceKind =
-        sourceFile.getName().endsWith(".closure.js")
+        (sourceFile.isTypeScriptSource())
             ? JsDocInfoParser.JsDocSourceKind.TSICKLE
             : JsDocInfoParser.JsDocSourceKind.NORMAL;
     IRFactory irFactory =

@@ -57,9 +57,7 @@ public interface StaticSourceFile {
     NON_CODE,
   }
 
-  /**
-   * The name of the file. Must be unique across all files in the compilation.
-   */
+  /** The name of the file. Must be unique across all files in the compilation. */
   String getName();
 
   /** The source kind. */
@@ -80,18 +78,27 @@ public interface StaticSourceFile {
     return getKind() == SourceKind.EXTERN;
   }
 
+  /** Whether the source kind is NON_CODE. */
+  default boolean isNonCode() {
+    return getKind() == SourceKind.NON_CODE;
+  }
+
+  default boolean isTypeScriptSource() {
+    String sourceName = getName();
+    return sourceName.endsWith(".closure.js") || sourceName.endsWith(".tsx.cl.js");
+  }
+
   /**
-   * Returns the offset of the given line number relative to the file start.
-   * Line number should be 1-based.
+   * Returns the offset of the given line number relative to the file start. Line number should be
+   * 1-based.
    *
-   * If the source file doesn't have line information, it should return
-   * Integer.MIN_VALUE. The negative offsets will make it more obvious
-   * what happened.
+   * <p>If the source file doesn't have line information, it should return Integer.MIN_VALUE. The
+   * negative offsets will make it more obvious what happened.
    *
    * @param lineNumber the line of the input to get the absolute offset of.
    * @return the absolute offset of the start of the provided line.
-   * @throws IllegalArgumentException if lineno is less than 1 or greater than
-   *         the number of lines in the source.
+   * @throws IllegalArgumentException if lineno is less than 1 or greater than the number of lines
+   *     in the source.
    */
   int getLineOffset(int lineNumber);
 
@@ -99,8 +106,8 @@ public interface StaticSourceFile {
    * Gets the 1-based line number of the given source offset.
    *
    * @param offset An absolute file offset.
-   * @return The 1-based line number of that offset. The behavior is
-   *     undefined if this offset does not exist in the source file.
+   * @return The 1-based line number of that offset. The behavior is undefined if this offset does
+   *     not exist in the source file.
    */
   int getLineOfOffset(int offset);
 
@@ -108,8 +115,8 @@ public interface StaticSourceFile {
    * Gets the 0-based column number of the given source offset.
    *
    * @param offset An absolute file offset.
-   * @return The 0-based column number of that offset. The behavior is
-   *     undefined if this offset does not exist in the source file.
+   * @return The 0-based column number of that offset. The behavior is undefined if this offset does
+   *     not exist in the source file.
    */
   int getColumnOfOffset(int offset);
 }

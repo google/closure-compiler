@@ -40,29 +40,29 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
               + "\nMessage constants must be prefixed with 'MSG_'.");
 
   public static final DiagnosticType MISPLACED_ANNOTATION =
-      DiagnosticType.warning("JSC_MISPLACED_ANNOTATION",
-          "Misplaced {0} annotation. {1}");
+      DiagnosticType.warning("JSC_MISPLACED_ANNOTATION", "Misplaced {0} annotation. {1}");
 
   public static final DiagnosticType ANNOTATION_DEPRECATED =
-      DiagnosticType.warning("JSC_ANNOTATION_DEPRECATED",
-          "The {0} annotation is deprecated. {1}");
+      DiagnosticType.warning("JSC_ANNOTATION_DEPRECATED", "The {0} annotation is deprecated. {1}");
 
   public static final DiagnosticType DISALLOWED_MEMBER_JSDOC =
-      DiagnosticType.warning("JSC_DISALLOWED_MEMBER_JSDOC",
+      DiagnosticType.warning(
+          "JSC_DISALLOWED_MEMBER_JSDOC",
           "Class level JSDocs (@interface, @extends, etc.) are not allowed on class members");
 
-  static final DiagnosticType ARROW_FUNCTION_AS_CONSTRUCTOR = DiagnosticType.error(
-      "JSC_ARROW_FUNCTION_AS_CONSTRUCTOR",
-      "Arrow functions cannot be used as constructors");
+  static final DiagnosticType ARROW_FUNCTION_AS_CONSTRUCTOR =
+      DiagnosticType.error(
+          "JSC_ARROW_FUNCTION_AS_CONSTRUCTOR", "Arrow functions cannot be used as constructors");
 
   static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION =
       DiagnosticType.warning(
           "JSC_BAD_REST_PARAMETER_ANNOTATION",
           "Missing \"...\" in type annotation for rest parameter.");
 
-  static final DiagnosticType DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL = DiagnosticType.error(
-      "JSC_DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL",
-      "Inline JSDoc on default parameters must be marked as optional");
+  static final DiagnosticType DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL =
+      DiagnosticType.error(
+          "JSC_DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL",
+          "Inline JSDoc on default parameters must be marked as optional");
 
   public static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
       DiagnosticType.error(
@@ -256,9 +256,11 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         && !isClassDecl(n)
         && !info.containsFunctionDeclaration()
         && getFunctionDecl(n) == null) {
-        reportMisplaced(n, "template",
-            "@template is only allowed in class, constructor, interface, function "
-            + "or method declarations");
+      reportMisplaced(
+          n,
+          "template",
+          "@template is only allowed in class, constructor, interface, function "
+              + "or method declarations");
     }
   }
 
@@ -283,7 +285,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return n.getLastChild();
     }
 
-    if (n.isStringKey() && n.getGrandparent() != null
+    if (n.isStringKey()
+        && n.getGrandparent() != null
         && ClosureRewriteClass.isGoogDefineClass(n.getGrandparent())
         && n.getFirstChild().isFunction()) {
       return n.getFirstChild();
@@ -312,8 +315,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   private boolean isClass(Node n) {
-    return n.isClass()
-        || (n.isCall() && compiler.getCodingConvention().isClassFactoryCall(n));
+    return n.isClass() || (n.isCall() && compiler.getCodingConvention().isClassFactoryCall(n));
   }
 
   private static boolean isPrototypeOrInstanceDecl(Node n) {
@@ -331,8 +333,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
    * Checks that class-level annotations like @interface/@extends are not used on member functions.
    */
   private void validateClassLevelJsDoc(Node n, JSDocInfo info) {
-    if (info != null && n.isMemberFunctionDef()
-        && hasClassLevelJsDoc(info)) {
+    if (info != null && n.isMemberFunctionDef() && hasClassLevelJsDoc(info)) {
       report(n, DISALLOWED_MEMBER_JSDOC);
     }
   }
@@ -359,7 +360,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
 
     if (!info.isConstructor() && NodeUtil.getFunctionBody(functionNode).hasChildren()) {
       // @abstract annotation on a function with a non-empty body
-      report(n, MISPLACED_ANNOTATION, "@abstract",
+      report(
+          n,
+          MISPLACED_ANNOTATION,
+          "@abstract",
           "function with a non-empty body cannot be abstract");
       return;
     }
@@ -406,8 +410,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   /**
-   * Warns when nocollapse annotations are present on nodes
-   * which are not eligible for property collapsing.
+   * Warns when nocollapse annotations are present on nodes which are not eligible for property
+   * collapsing.
    */
   private void validateNoCollapse(Node n, JSDocInfo info) {
     if (info == null || !info.isNoCollapse()) {
@@ -552,19 +556,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     }
   }
 
-  /**
-   * Check that JSDoc with a {@code @type} annotation is in a valid place.
-   */
+  /** Check that JSDoc with a {@code @type} annotation is in a valid place. */
   private void validateTypeAnnotations(Node n, JSDocInfo info) {
     if (info != null && info.hasType()) {
       boolean valid = false;
       switch (n.getToken()) {
-        // Function declarations are valid
+          // Function declarations are valid
         case FUNCTION:
           valid = NodeUtil.isFunctionDeclaration(n);
           break;
-        // Object literal properties, catch declarations and variable
-        // initializers are valid.
+          // Object literal properties, catch declarations and variable
+          // initializers are valid.
         case NAME:
           valid = isTypeAnnotationAllowedForName(n);
           break;
@@ -575,7 +577,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           //   function f(/** !Array */ [x]) {}
           valid = n.getParent().isParamList();
           break;
-        // Casts, exports, and Object literal properties are valid.
+          // Casts, exports, and Object literal properties are valid.
         case CAST:
         case EXPORT:
         case STRING_KEY:
@@ -585,22 +587,23 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         case COMPUTED_FIELD_DEF:
           valid = true;
           break;
-        // Declarations are valid iff they only contain simple names
-        //   /** @type {number} */ var x = 3; // ok
-        //   /** @type {number} */ var {x} = obj; // forbidden
+          // Declarations are valid iff they only contain simple names
+          //   /** @type {number} */ var x = 3; // ok
+          //   /** @type {number} */ var {x} = obj; // forbidden
         case VAR:
         case LET:
         case CONST:
           valid = !NodeUtil.isDestructuringDeclaration(n);
           break;
-        // Property assignments are valid, if at the root of an expression.
-        case ASSIGN: {
-          Node lvalue = n.getFirstChild();
+          // Property assignments are valid, if at the root of an expression.
+        case ASSIGN:
+          {
+            Node lvalue = n.getFirstChild();
             valid =
                 n.getParent().isExprResult()
                     && (lvalue.isGetProp() || lvalue.isGetElem() || lvalue.matchesName("exports"));
-          break;
-        }
+            break;
+          }
         case GETPROP:
           valid = n.getParent().isExprResult() && n.isQualifiedName();
           break;
@@ -612,8 +615,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       }
 
       if (!valid) {
-        reportMisplaced(n, "type", "Type annotations are not allowed here. "
-            + "Are you missing parentheses?");
+        reportMisplaced(
+            n, "type", "Type annotations are not allowed here. " + "Are you missing parentheses?");
       }
     }
   }
@@ -632,17 +635,14 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   private void reportMisplaced(Node n, String annotationName, String note) {
-    compiler.report(JSError.make(n, MISPLACED_ANNOTATION,
-        annotationName, note));
+    compiler.report(JSError.make(n, MISPLACED_ANNOTATION, annotationName, note));
   }
 
   private void report(Node n, DiagnosticType type, String... arguments) {
     compiler.report(JSError.make(n, type, arguments));
   }
 
-  /**
-   * Check that an arrow function is not annotated with {@constructor}.
-   */
+  /** Check that an arrow function is not annotated with {@constructor}. */
   private void validateArrowFunction(Node n) {
     if (n.isArrowFunction()) {
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
@@ -686,8 +686,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   /**
-   * Check that a parameter with a default value is marked as optional.
-   * TODO(bradfordcsmith): This is redundant. We shouldn't require it.
+   * Check that a parameter with a default value is marked as optional. TODO(bradfordcsmith): This
+   * is redundant. We shouldn't require it.
    */
   private void validateDefaultValue(Node n) {
     if (n.isDefaultValue() && n.getParent().isParamList()) {
@@ -725,9 +725,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     }
   }
 
-  /**
-   * Check that a let declaration is not used with {@defines}
-   */
+  /** Check that a let declaration is not used with {@defines} */
   private void validateDefinesDeclaration(Node n, JSDocInfo info) {
     if (info != null && info.isDefine() && n.isLet()) {
       report(n, INVALID_DEFINE_ON_LET);
@@ -775,7 +773,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   private static boolean isFromTs(Node n) {
-    return n.getSourceFileName().endsWith(".closure.js");
+    return n.getStaticSourceFile().isTypeScriptSource();
   }
 
   private final CheckJsdocTypes checkJsDocTypesVisitor = new CheckJsdocTypes();
