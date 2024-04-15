@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -796,5 +797,58 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     assertThat(warnings).hasSize(1);
     JSError warning = warnings.get(0);
     assertThat(warning.getNode().getString()).isEqualTo("p1");
+  }
+
+  @Test
+  public void testDisambiguationForPolymerElementProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDisambiguateProperties(true);
+    options.setGeneratePseudoNames(true);
+    addPolymerExterns();
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                new TestExternsBuilder()
+                    .addString()
+                    .addConsole()
+                    .buildExternsFile("extra_externs.js"))
+            .build();
+
+    String fooElement =
+        lines(
+            "const FooElement = Polymer({",
+            "  is: \"foo-element\",",
+            "  properties: {",
+            "    longUnusedProperty: String,",
+            "  },",
+            "  longUnusedMethod: function() {",
+            "    return this.longUnusedProperty;",
+            "  },",
+            "});",
+            "class Other { longUnusedProperty() {} }",
+            "console.log(new Other().longUnusedProperty());");
+    test(
+        options,
+        new String[] {fooElement, "function unused() { console.log(FooElement); }"},
+        new String[] {
+          lines(
+              "Polymer({",
+              "  $is$: 'foo-element',",
+              // TODO(lharker): don't rename the references to longUnusedProperty here and in
+              // longUnusedMethod. They may be referenced from templates or computed property
+              // definitions. (It's ok to disambiguate/rename the longUnusedProperty method on the
+              // `class Other {` though.)
+              "  $properties$: { $JSC$34_longUnusedProperty$: String },",
+              "  longUnusedMethod: function(){ return this.$JSC$34_longUnusedProperty$; }",
+              "});",
+              "console.log(void 0);"),
+          ""
+        });
   }
 }
