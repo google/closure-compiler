@@ -643,6 +643,36 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCorrectShortImportSuggestedInJsDoc() {
+    testError(
+        srcs(
+            lines(
+                "goog.module('x.y.z');",
+                "",
+                "var A = goog.require('foo.A');",
+                "var B = goog.require('foo.A.B');",
+                "",
+                "/** @type {foo.A.B} */ var b;")),
+        error(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
+            .withMessageContaining("Please use the short name 'B' instead."));
+  }
+
+  @Test
+  public void testCorrectShortImportSuggestedInJsCode() {
+    testError(
+        srcs(
+            lines(
+                "goog.module('x.y.z');",
+                "",
+                "var A = goog.require('foo.A');",
+                "var B = goog.require('foo.A.B');",
+                "",
+                "ref(foo.A.B);")),
+        error(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
+            .withMessageContaining("Please use the short name 'B' instead."));
+  }
+
+  @Test
   public void testIllegalShortImportReferencedByLongNameInJsDoc() {
     testError(
         lines(
