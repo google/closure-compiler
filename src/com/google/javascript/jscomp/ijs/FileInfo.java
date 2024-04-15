@@ -20,13 +20,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /** Class to keep track of what has been seen so far in a given file. */
 final class FileInfo {
-  private final Set<String> providedNamespaces = new HashSet<>();
-  private final Set<String> requiredLocalNames = new HashSet<>();
+  private final Set<String> providedNamespaces = new LinkedHashSet<>();
+  private final Set<String> requiredLocalNames = new LinkedHashSet<>();
   private final ListMultimap<String, PotentialDeclaration> declarations =
       MultimapBuilder.linkedHashKeys().arrayListValues().build();
 
