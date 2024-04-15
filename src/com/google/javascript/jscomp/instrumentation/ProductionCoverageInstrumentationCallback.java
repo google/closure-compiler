@@ -33,7 +33,6 @@ import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -286,7 +285,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     ParameterMapping() {
       nextUniqueIdentifier = 0;
 
-      paramValueEncodings = new HashMap<>();
+      paramValueEncodings = new LinkedHashMap<>();
 
       // A LinkedHashMap is used so that when keys are printed, keySet() will obtain them in the
       // insertion order which corroborates to the index. This helps to avoid the need of sorting
