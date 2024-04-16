@@ -1386,6 +1386,20 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBlocklessArrowFunction_withinArgs_getBlocks() {
+    // disable type checking to prevent `property map never defined` errors.
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    test(
+        lines(
+            "function sortAndConcatParams(params) {", // arrow fn body missing block
+            "  return [...params].map(((k) => `k`));}"),
+        lines(
+            "function sortAndConcatParams(params) {", // gets block {}
+            "  return [...params].map(((k) => { return `k`; }));}"));
+  }
+
+  @Test
   public void testArrowFunctionInFunction() {
     test(
         lines("function foo() {", "  var x = () => 1;", "  return x();", "}"),
