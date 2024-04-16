@@ -20,8 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
@@ -60,6 +62,24 @@ public final class CompilerOptionsTest {
 
     options.setBrowserFeaturesetYear(2024);
     assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2024);
+  }
+
+  @Test
+  public void testMinimumBrowserFeatureSetYearRequiredFor() {
+    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.GETTER))
+        .isEqualTo(BrowserFeaturesetYear.YEAR_2012);
+    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.CLASSES))
+        .isEqualTo(BrowserFeaturesetYear.YEAR_2018);
+    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE))
+        .isEqualTo(BrowserFeaturesetYear.YEAR_2021);
+  }
+
+  @Test
+  public void testMinimumBrowserFeatureSetYearRequiredFor_returnsUnspecifiedIfUnsupported() {
+    // Newer features, in particular anything in ES_NEXT, may not be part of a browser featureset
+    // year yet.
+    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.PUBLIC_CLASS_FIELDS))
+        .isEqualTo(null);
   }
 
   @Test

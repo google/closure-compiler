@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -30,6 +31,7 @@ import com.google.javascript.jscomp.regex.RegExpTree.NamedCaptureGroup;
 import com.google.javascript.jscomp.regex.RegExpTree.UnicodePropertyEscape;
 import com.google.javascript.rhino.Node;
 import java.util.function.Predicate;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Looks for presence of features that are not supported for transpilation (mostly new RegExp
@@ -43,9 +45,8 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
   public static final DiagnosticType UNTRANSPILABLE_FEATURE_PRESENT =
       DiagnosticType.error(
           "JSC_UNTRANSPILABLE",
-          // TODO(b/123768968) suggest users raise their language level once we support language
-          // output higher than ES5.
-          "Cannot convert {0} feature \"{1}\" to targeted output language.");
+          "Cannot convert feature \"{0}\" to targeted output language. Feature requires at minimum"
+              + " {1}.{2}");
 
   private static final FeatureSet UNTRANSPILABLE_2018_FEATURES =
       FeatureSet.BARE_MINIMUM.with(
@@ -76,12 +77,22 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
           .union(UNTRANSPILABLE_2020_FEATURES);
 
   private final AbstractCompiler compiler;
+  private final @Nullable BrowserFeaturesetYear browserFeatureSetYear;
   private final FeatureSet untranspilableFeaturesToRemove;
 
-  ReportUntranspilableFeatures(AbstractCompiler compiler, FeatureSet outputFeatures) {
+  /**
+   * @param compiler the compiler instance
+   * @param browserFeatureSetYear the given BrowserFeaturesetYear, or null if it was not specified
+   * @param outputFeatures the set of features supported in the given output language.
+   */
+  ReportUntranspilableFeatures(
+      AbstractCompiler compiler,
+      @Nullable BrowserFeaturesetYear browserFeatureSetYear,
+      FeatureSet outputFeatures) {
     checkNotNull(compiler);
     checkNotNull(outputFeatures);
     this.compiler = compiler;
+    this.browserFeatureSetYear = browserFeatureSetYear;
     this.untranspilableFeaturesToRemove =
         ALL_UNTRANSPILABLE_FEATURES // Features that we can't transpile...
             .without(outputFeatures); // and do not exist in the output language features
@@ -100,12 +111,31 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
   }
 
   private void reportUntranspilable(Feature feature, Node node) {
+    // The compiler always has an output featureset configured. Sometimes this is configured
+    // directly or via a LanguageMode, and in this case browserFeatureSetYear is null. Otherwise if
+    // browserFeatureSetYear is not null, the user configured a browserFeatureSetYear specifically.
+    // Report an error message based on the actual API the user invoked: sometimes the year in a
+    // browser featureset year (e.g. 2020) does not correspond to e.g. ECMASCRIPT_2020.
+    String minimum;
+    String suggestion = " Consider targeting a more modern output.";
+    if (browserFeatureSetYear != null) {
+      BrowserFeaturesetYear minimumYear = BrowserFeaturesetYear.minimumRequiredFor(feature);
+      if (minimumYear == null) {
+        minimum =
+            LanguageMode.minimumRequiredFor(feature)
+                + ", which is not yet supported by any browser featureset year";
+        suggestion = "";
+      } else {
+        minimum = "browser featureset year " + minimumYear.getYear();
+        suggestion =
+            suggestion + "\nCurrent browser featureset year: " + browserFeatureSetYear.getYear();
+      }
+    } else {
+      minimum = LanguageMode.minimumRequiredFor(feature).toString();
+    }
     compiler.report(
         JSError.make(
-            node,
-            UNTRANSPILABLE_FEATURE_PRESENT,
-            LanguageMode.minimumRequiredFor(feature).toString(),
-            feature.toString()));
+            node, UNTRANSPILABLE_FEATURE_PRESENT, feature.toString(), minimum, suggestion));
   }
 
   @Override

@@ -459,7 +459,9 @@ public class TranspilationPasses {
           .setInternalFactory(
               (compiler) ->
                   new ReportUntranspilableFeatures(
-                      compiler, compiler.getOptions().getOutputFeatureSet()))
+                      compiler,
+                      compiler.getOptions().getBrowserFeaturesetYearObject(),
+                      compiler.getOptions().getOutputFeatureSet()))
           .build();
 
   /**

@@ -140,50 +140,91 @@ public class CompilerOptions implements Serializable {
    * code that works on the releases of major browsers that were current as of January 1 of the
    * given year, without including transpilation or other workarounds for browsers older than that
    */
-  private class BrowserFeaturesetYear implements Serializable {
+  enum BrowserFeaturesetYear {
+    YEAR_2012(2012, LanguageMode.ECMASCRIPT5_STRICT.toFeatureSet()),
+    YEAR_2018(2018, LanguageMode.ECMASCRIPT_2016.toFeatureSet()),
+    YEAR_2019(2019, LanguageMode.ECMASCRIPT_2017.toFeatureSet()),
+    YEAR_2020(2020, FeatureSet.BROWSER_2020),
+    YEAR_2021(2021, FeatureSet.BROWSER_2021),
+    YEAR_2022(2022, FeatureSet.BROWSER_2022),
+    YEAR_2023(2023, FeatureSet.BROWSER_2023),
+    YEAR_2024(2024, FeatureSet.BROWSER_2024);
 
-    final int year;
+    private final int year;
+    private final FeatureSet featureSet;
+    private static final ImmutableMap<Integer, BrowserFeaturesetYear> YEAR_MAP =
+        ImmutableMap.of(
+            // go/keep-sorted start
+            2012, YEAR_2012,
+            2018, YEAR_2018,
+            2019, YEAR_2019,
+            2020, YEAR_2020,
+            2021, YEAR_2021,
+            2022, YEAR_2022,
+            2023, YEAR_2023,
+            2024, YEAR_2024
+            // go/keep-sorted end
+            );
 
-    BrowserFeaturesetYear(int year) {
-      checkState(
-          year == 2012 || (year >= 2018 && year <= 2024),
-          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2024 only",
-          year);
+    private BrowserFeaturesetYear(int year, FeatureSet featureSet) {
       this.year = year;
+      this.featureSet = featureSet;
     }
 
-    void setDependentValuesFromYear() {
-      if (year == 2024) {
-        setOutputFeatureSet(FeatureSet.BROWSER_2024);
-      } else if (year == 2023) {
-        setOutputFeatureSet(FeatureSet.BROWSER_2023);
-      } else if (year == 2022) {
-        setOutputFeatureSet(FeatureSet.BROWSER_2022);
-      } else if (year == 2021) {
-        setOutputFeatureSet(FeatureSet.BROWSER_2021);
-      } else if (year == 2020) {
-        setOutputFeatureSet(FeatureSet.BROWSER_2020);
-      } else if (year == 2019) {
-        setLanguageOut(LanguageMode.ECMASCRIPT_2017);
-      } else if (year == 2018) {
-        setLanguageOut(LanguageMode.ECMASCRIPT_2016);
-      } else if (year == 2012) {
-        setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+    static BrowserFeaturesetYear from(int year) {
+      checkState(
+          YEAR_MAP.containsKey(year),
+          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2024 only",
+          year);
+      return YEAR_MAP.get(year);
+    }
+
+    void setDependentValuesFromYear(CompilerOptions options) {
+      options.setOutputFeatureSet(featureSet);
+      // All values targeted by browser featureset year are default strict.
+      options.languageOutIsDefaultStrict = Optional.of(true);
+      options.setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
+    }
+
+    FeatureSet getFeatureSet() {
+      return featureSet;
+    }
+
+    int getYear() {
+      return year;
+    }
+
+    /**
+     * Returns the minimum browser featureset year required for the given feature, or null if the
+     * feature is in a language level higher than that corresponding to the most recent
+     * BrowserFeaturesetYear.
+     */
+    static @Nullable BrowserFeaturesetYear minimumRequiredFor(FeatureSet.Feature feature) {
+      // Depends on YEAR_TO_FEATURE_SET being created with keys in increasing order
+      for (int year : BrowserFeaturesetYear.YEAR_MAP.keySet()) {
+        BrowserFeaturesetYear yearObject = BrowserFeaturesetYear.YEAR_MAP.get(year);
+        if (yearObject.getFeatureSet().contains(feature)) {
+          return yearObject;
+        }
       }
-      setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
+      return null;
     }
   }
 
-  /** Represents browserFeaturesetYear to use for compilation */
+  /** Represents BrowserFeaturesetYear to use for compilation */
   private @Nullable BrowserFeaturesetYear browserFeaturesetYear;
 
-  public int getBrowserFeaturesetYear() {
-    return this.browserFeaturesetYear != null ? this.browserFeaturesetYear.year : 0;
+  BrowserFeaturesetYear getBrowserFeaturesetYearObject() {
+    return this.browserFeaturesetYear;
   }
 
   public void setBrowserFeaturesetYear(int year) {
-    this.browserFeaturesetYear = new BrowserFeaturesetYear(year);
-    browserFeaturesetYear.setDependentValuesFromYear();
+    setBrowserFeaturesetYear(BrowserFeaturesetYear.from(year));
+  }
+
+  public void setBrowserFeaturesetYear(BrowserFeaturesetYear year) {
+    this.browserFeaturesetYear = year;
+    browserFeaturesetYear.setDependentValuesFromYear(this);
   }
 
   /**

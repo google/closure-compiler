@@ -18,7 +18,9 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 import static com.google.javascript.jscomp.ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT;
 
+import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,19 +30,26 @@ import org.junit.runners.JUnit4;
 public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
 
   private LanguageMode languageOut;
+  private @Nullable BrowserFeaturesetYear browserFeaturesetYear;
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     languageOut = LanguageMode.ECMASCRIPT3;
+    browserFeaturesetYear = null;
     disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReportUntranspilableFeatures(compiler, languageOut.toFeatureSet());
+    return new ReportUntranspilableFeatures(
+        compiler,
+        browserFeaturesetYear,
+        (browserFeaturesetYear != null
+            ? browserFeaturesetYear.getFeatureSet()
+            : languageOut.toFeatureSet()));
   }
 
   @Test
@@ -57,13 +66,13 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     testError(
         "const a = /asdf/s;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp flag 's'\" to targeted output language.");
+        "Cannot convert feature \"RegExp flag 's'\" to targeted output language. Feature requires"
+            + " at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
     testError(
         "const a = /asdf/gs;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp flag 's'\" to targeted output language.");
+        "Cannot convert feature \"RegExp flag 's'\" to targeted output language. Feature requires"
+            + " at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
   }
 
   @Test
@@ -83,13 +92,13 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     testError(
         "const a = /(?<=asdf)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp Lookbehind\" to targeted output language.");
+        "Cannot convert feature \"RegExp Lookbehind\" to targeted output language. Feature requires"
+            + " at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
     testError(
         "const a = /(?<!asdf)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp Lookbehind\" to targeted output language.");
+        "Cannot convert feature \"RegExp Lookbehind\" to targeted output language. Feature requires"
+            + " at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
   }
 
   @Test
@@ -106,13 +115,15 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     testError(
         "const a = /\\p{Script=Greek}/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp unicode property escape\" to targeted output language.");
+        "Cannot convert feature \"RegExp unicode property escape\" to targeted output language."
+            + " Feature requires at minimum ECMASCRIPT_2018. Consider targeting a more modern"
+            + " output.");
     testError(
         "const a = /\\P{Script=Greek}/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature "
-            + "\"RegExp unicode property escape\" to targeted output language.");
+        "Cannot convert feature \"RegExp unicode property escape\" to targeted output language."
+            + " Feature requires at minimum ECMASCRIPT_2018. Consider targeting a more modern"
+            + " output.");
   }
 
   @Test
@@ -131,13 +142,13 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     testError(
         "const a = /(?<name>)/;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
-            + "to targeted output language.");
+        "Cannot convert feature \"RegExp named groups\" to targeted output language. Feature"
+            + " requires at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
     testError(
         "const a = /(?<$var>).*/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
-            + "to targeted output language.");
+        "Cannot convert feature \"RegExp named groups\" to targeted output language. Feature"
+            + " requires at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
     // test valid regex with '<' or '>' that is not named capture group
     testSame("const a = /(<name>)/;");
     testSame("const a = /(>.>)/u;");
@@ -152,14 +163,46 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     testError(
         "const a = /^(?<half>.*).\\k<half>$/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
-        "Cannot convert ECMASCRIPT_2018 feature \"RegExp named groups\" "
-            + "to targeted output language.");
+        "Cannot convert feature \"RegExp named groups\" to targeted output language. Feature"
+            + " requires at minimum ECMASCRIPT_2018. Consider targeting a more modern output.");
+  }
+
+  @Test
+  public void testEs2018RegexNamedCaptureGroupsBackReferencing_usingBrowserFeaturesetYear() {
+    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2021;
+    testSame("const a = /^(?<half>.*).\\k<half>$/u;");
+
+    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2020;
+    testError(
+        "const a = /^(?<half>.*).\\k<half>$/u;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert feature \"RegExp named groups\" to targeted output language. Feature"
+            + " requires at minimum browser featureset year 2021. Consider targeting a more modern"
+            + " output."
+            + "\nCurrent browser featureset year: 2020");
   }
 
   @Test
   public void reportErrorWithBigIntLiteralTranspilation() {
+    languageOut = LanguageMode.ECMASCRIPT_2021;
+    testSame("1234n");
+
     languageOut = LanguageMode.ECMASCRIPT3;
     testError("1234n", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+  }
+
+  @Test
+  public void reportErrorWithBigIntLiteralTranspilation_browserFeaturesetYear() {
+    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2021;
+    testSame("1234n");
+
+    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2020;
+    testError(
+        "1234n",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert feature \"bigint\" to targeted output language. Feature requires at minimum"
+            + " browser featureset year 2021. Consider targeting a more modern output."
+            + "\nCurrent browser featureset year: 2020");
   }
 
   @Test
@@ -167,5 +210,28 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     // Do not report an error for use of the `BigInt()` method, just the literal form.
     languageOut = LanguageMode.ECMASCRIPT3;
     testSame("BigInt(1234)");
+  }
+
+  @Test
+  public void testEs2022RegexFlagD() {
+    languageOut = LanguageMode.ECMASCRIPT_NEXT;
+    testSame("const a = /^(?<half>.*).\\k<half>$/d;");
+
+    languageOut = LanguageMode.ECMASCRIPT_2021;
+    testError(
+        "const a = /^(?<half>.*).\\k<half>$/d;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert feature \"RegExp flag 'd'\" to targeted output language. Feature requires"
+            + " at minimum ES_NEXT. Consider targeting a more modern output.");
+  }
+
+  @Test
+  public void testEs2022RegexFlagD_usingBrowserFeaturesetYear() {
+    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2024;
+    testError(
+        "const a = /^(?<half>.*).\\k<half>$/d;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert feature \"RegExp flag 'd'\" to targeted output language. Feature requires"
+            + " at minimum ES_NEXT, which is not yet supported by any browser featureset year.");
   }
 }
