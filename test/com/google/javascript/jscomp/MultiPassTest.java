@@ -162,7 +162,7 @@ public final class MultiPassTest extends CompilerTestCase {
         srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
         expected(
             lines(
-                "var x, a, b;",
+                "var x; var a; var b;",
                 "x = function () {",
                 "   let $jscomp$destructuring$var0 = [1,2];",
                 "   var $jscomp$destructuring$var1 = ",
@@ -182,7 +182,7 @@ public final class MultiPassTest extends CompilerTestCase {
         srcs(lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()")),
         expected(
             lines(
-                "var x, a, b;",
+                "var x; var a; var b;",
                 "x = function () {",
                 "   console.log();",
                 "   return function () {",
@@ -208,7 +208,7 @@ public final class MultiPassTest extends CompilerTestCase {
         expected(
             lines(
                 "var foo = function () {",
-                "var x, a, b;",
+                "var x; var a; var b;",
                 " x = function () {",
                 "   let $jscomp$destructuring$var0 = [1,2];",
                 "   var $jscomp$destructuring$var1 = ",
@@ -280,18 +280,19 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
-        srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}")),
+        externs("" + new TestExternsBuilder().addJSCompLibraries().build()),
+        srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "  x;", "}")),
         expected(
             lines(
-                "for (var x = 1; x < 3; function () {",
+                "var x = 1;",
+                "for (; x < 3; function () {",
                 "   let $jscomp$destructuring$var0 = [3,4]",
                 "   var $jscomp$destructuring$var1 = ",
                 "       $jscomp.makeIterator($jscomp$destructuring$var0);",
                 "   x = $jscomp$destructuring$var1.next().value;",
                 "   return $jscomp$destructuring$var0;",
                 " } ()){",
-                "console.log(x);",
+                "x;",
                 "}")));
   }
 
@@ -301,8 +302,10 @@ public final class MultiPassTest extends CompilerTestCase {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
-        "var x = ({a: b, c: d} = foo());",
+        "var b; var d;function foo(){ return {a:1, c:2};} var x = ({a: b, c: d} = foo());",
         lines(
+            "var b;var d;",
+            "function foo(){return {a:1, c:2};}",
             "var x = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -318,8 +321,9 @@ public final class MultiPassTest extends CompilerTestCase {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
-        "var x; var y = ({a: x} = foo());",
+        "function foo(){return {a:1};} var x; var y = ({a: x} = foo());",
         lines(
+            "function foo(){return {a:1};}",
             "var x;",
             "var y = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
@@ -335,8 +339,10 @@ public final class MultiPassTest extends CompilerTestCase {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
-        "var x; var y = (() => {return {a,b} = foo();})();",
+        "var a; var b; function foo(){ return {a:1,b:2};} var x; var y = (() => {return {a,b} ="
+            + " foo();})();",
         lines(
+            "var a; var b; function foo(){return {a:1,b:2};} ",
             "var x;",
             "var y = function () {",
             "   return function () {",
@@ -360,7 +366,17 @@ public final class MultiPassTest extends CompilerTestCase {
     addRenameVariablesInParamListsPass();
     addSplitVariableDeclarationsPass();
     addDestructuringPass();
+    addNormalization(); // adding normalization triggers {@code ValidityCheck.checkVars}
+
     addArrowFunctionPass();
+  }
+
+  private void addNormalization() {
+    passes.add(
+        PassFactory.builder()
+            .setName("normalization")
+            .setInternalFactory(Normalize::createNormalizeForOptimizations)
+            .build());
   }
 
   private void addCollapseObjectLiterals() {

@@ -1893,15 +1893,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     useNoninjectingCompiler = true;
 
     // include externs definitions for the stuff that would have been injected
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.add(
-        SourceFile.fromCode(
-            "extraExterns",
-            new TestExternsBuilder()
-                .addExtra("/** @type {!Global} */ var globalThis;")
-                .addJSCompLibraries()
-                .build()));
-    externs = externsList.build();
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "extraExterns", new TestExternsBuilder().addJSCompLibraries().build()));
 
     test(
         options,

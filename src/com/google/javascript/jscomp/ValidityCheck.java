@@ -67,6 +67,7 @@ class ValidityCheck implements CompilerPass {
 
   private void checkVars(Node externs, Node root) {
     if (compiler.getLifeCycleStage().isNormalized()) {
+      // TODO(rishipal): Why is VarCheck only run when AST is normalized?
       (new VarCheck(compiler, true)).process(externs, root);
     }
   }
