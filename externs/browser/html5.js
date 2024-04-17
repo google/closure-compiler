@@ -5754,6 +5754,12 @@ Navigator.prototype.hardwareConcurrency;
 Navigator.prototype.userActivation;
 
 /**
+ * @type {boolean}
+ * @see https://w3c.github.io/webdriver/#dfn-webdriver
+ */
+Navigator.prototype.webdriver;
+
+/**
  * @constructor
  * @implements NavigatorStorage
  * @see https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
