@@ -55,6 +55,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.jspecify.nullness.Nullable;
 import org.junit.After;
 import org.junit.Before;
@@ -67,6 +68,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
 
   private final Compiler compiler = new Compiler();
 
+  private Consumer<Node> externsCallback;
   private @Nullable CompilerPass processor;
   private ImmutableSet<String> expectedOriginalNameTypes = ImmutableSet.of();
 
@@ -86,6 +88,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     this.enableTypeCheck();
     this.replaceTypesWithColors();
     this.disableCompareJsDoc();
+    this.externsCallback = (Node unused) -> {};
   }
 
   @Override
@@ -466,6 +469,55 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     // "Original name" type clusters are checked during teardown.
   }
 
+  private void clearSourceFileRecursive(Node root) {
+    root.setStaticSourceFile(null);
+    for (Node child : root.children()) {
+      clearSourceFileRecursive(child);
+    }
+  }
+
+  @Test
+  public void externProps_areClusteredTogether_evenIfSourceInformationIsMissingWithinExterns() {
+    // Given
+    this.expectedOriginalNameTypes = ImmutableSet.of("FOO", "BAR", "TUM");
+    // Strip source file information from our externs to ensure they are still put in the
+    // original name cluster. See b/186056977 for a real-world case where externs node are lacking
+    // source info.
+    this.externsCallback =
+        (Node externs) -> {
+          Node externsScript = this.compiler.getRoot().getFirstChild().getLastChild();
+          for (Node externsNode : externsScript.children()) {
+            clearSourceFileRecursive(externsNode);
+          }
+        };
+
+    // When
+    this.propIndex =
+        this.collectProperties(
+            lines(
+                "class Foo { }", // externs
+                "class Bar { }",
+                "class Tum { }",
+                "",
+                "new Foo().a;",
+                "new Bar().a;",
+                "new Tum().notA;"),
+            lines(
+                "class Qux { }", // sources
+                "",
+                "new Qux().a;",
+                "",
+                "FOO: new Foo();",
+                "BAR: new Bar();",
+                "QUX: new Qux();",
+                "TUM: new Tum();"));
+
+    // Then
+    this.assertThatUsesOf("a").containsExactly("FOO", GETPROP, "BAR", GETPROP, "QUX", GETPROP);
+
+    // "Original name" type clusters are checked during teardown.
+  }
+
   @Test
   public void enumsAreClusteredWithExterns() {
     // Given
@@ -555,6 +607,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     labeledStatementMap = HashBiMap.create();
     this.processor =
         (e, s) -> {
+          this.externsCallback.accept(e);
           NodeTraversal.traverse(compiler, s, new LabelledStatementCollector());
           this.flattener = new StubColorGraphNodeFactory();
           this.finder =

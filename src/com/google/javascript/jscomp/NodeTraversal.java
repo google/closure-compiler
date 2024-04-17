@@ -1389,7 +1389,7 @@ public class NodeTraversal {
    *
    * <p>e.g. returns null if {@link #traverseInnerNode(Node, Node, AbstractScope)} was used
    */
-  @Nullable Node getCurrentScript() {
+  public @Nullable Node getCurrentScript() {
     return currentScript;
   }
 

@@ -840,12 +840,12 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
           lines(
               "Polymer({",
               "  $is$: 'foo-element',",
-              // TODO(lharker): don't rename the references to longUnusedProperty here and in
+              // Ensure the compiler doesn't rename the references to longUnusedProperty here and in
               // longUnusedMethod. They may be referenced from templates or computed property
-              // definitions. (It's ok to disambiguate/rename the longUnusedProperty method on the
-              // `class Other {` though.)
-              "  $properties$: { $JSC$34_longUnusedProperty$: String },",
-              "  longUnusedMethod: function(){ return this.$JSC$34_longUnusedProperty$; }",
+              // definitions. It's ok to disambiguate/rename the longUnusedProperty method on the
+              // `class Other {` though.
+              "  $properties$: { longUnusedProperty: String },",
+              "  longUnusedMethod: function(){ return this.longUnusedProperty; }",
               "});",
               "console.log(void 0);"),
           ""
