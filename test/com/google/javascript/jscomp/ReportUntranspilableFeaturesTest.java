@@ -169,10 +169,10 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
 
   @Test
   public void testEs2018RegexNamedCaptureGroupsBackReferencing_usingBrowserFeaturesetYear() {
-    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2021;
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2021;
     testSame("const a = /^(?<half>.*).\\k<half>$/u;");
 
-    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2020;
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2020;
     testError(
         "const a = /^(?<half>.*).\\k<half>$/u;",
         UNTRANSPILABLE_FEATURE_PRESENT,
@@ -193,10 +193,10 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
 
   @Test
   public void reportErrorWithBigIntLiteralTranspilation_browserFeaturesetYear() {
-    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2021;
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2021;
     testSame("1234n");
 
-    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2020;
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2020;
     testError(
         "1234n",
         ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT,
@@ -227,7 +227,7 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
 
   @Test
   public void testEs2022RegexFlagD_usingBrowserFeaturesetYear() {
-    browserFeaturesetYear = CompilerOptions.BrowserFeaturesetYear.YEAR_2024;
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2024;
     testError(
         "const a = /^(?<half>.*).\\k<half>$/d;",
         UNTRANSPILABLE_FEATURE_PRESENT,
