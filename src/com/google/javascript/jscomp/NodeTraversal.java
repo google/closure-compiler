@@ -1385,11 +1385,19 @@ public class NodeTraversal {
   }
 
   /**
-   * Returns the SCRIPT node enclosing the current scope, or `null` if unknown
+   * Returns the SCRIPT node enclosing the current scope
    *
-   * <p>e.g. returns null if {@link #traverseInnerNode(Node, Node, AbstractScope)} was used
+   * @throws UnsupportedOperationException if inside a NodeTraversal that does not support this
+   *     operation, or if called while visiting a ROOT node during a global traversal. Only
+   *     traversals that begin at a ROOT node (which includes most usages of NodeTraversal) will
+   *     support this operation. For example, {@link
+   *     NodeTraversal.Builder#traverseAtScope(AbstractScope<?, ?>)} is unsupported because it can
+   *     begin at any arbitrary scope root like a FUNCTION.
    */
   public @Nullable Node getCurrentScript() {
+    if (currentScript == null) {
+      throw new UnsupportedOperationException("getCurrentScript not supported");
+    }
     return currentScript;
   }
 
