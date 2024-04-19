@@ -1882,6 +1882,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
     }
 
+
     options.setCodingConvention(new ClosureCodingConvention());
 
     options.setExtraAnnotationNames(flags.extraAnnotationName);
