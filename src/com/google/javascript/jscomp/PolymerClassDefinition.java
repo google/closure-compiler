@@ -34,7 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.jspecify.nullness.Nullable;
 
@@ -52,6 +51,8 @@ final class PolymerClassDefinition {
 
   /** The Polymer call or class node which defines the Element. */
   final Node definition;
+
+  final CompilerInput input;
 
   /** The target node (LHS) for the Polymer element definition. */
   final Node target;
@@ -98,7 +99,8 @@ final class PolymerClassDefinition {
       @Nullable Map<MemberDefinition, BehaviorDefinition> behaviorProps,
       List<MemberDefinition> methods,
       @Nullable ImmutableList<BehaviorDefinition> behaviors,
-      @Nullable FeatureSet features) {
+      @Nullable FeatureSet features,
+      CompilerInput input) {
     this.defType = defType;
     this.definition = definition;
     this.target = target;
@@ -112,6 +114,7 @@ final class PolymerClassDefinition {
     this.methods = methods;
     this.behaviors = behaviors;
     this.features = features;
+    this.input = input;
   }
 
   /**
@@ -223,6 +226,7 @@ final class PolymerClassDefinition {
                 NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
       }
     }
+    CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(callNode).getInputId());
 
     return new PolymerClassDefinition(
         DefinitionType.ObjectLiteral,
@@ -237,7 +241,8 @@ final class PolymerClassDefinition {
         behaviorProps,
         methods,
         behaviors,
-        newFeatures);
+        newFeatures,
+        input);
   }
 
   private static boolean isGoogModuleExports(Node assign) {
@@ -353,6 +358,7 @@ final class PolymerClassDefinition {
           new MemberDefinition(
               NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
     }
+    CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(classNode).getInputId());
 
     return new PolymerClassDefinition(
         DefinitionType.ES6Class,
@@ -367,7 +373,8 @@ final class PolymerClassDefinition {
         null,
         methods,
         null,
-        null);
+        null,
+        input);
   }
 
   /**
@@ -447,13 +454,13 @@ final class PolymerClassDefinition {
         .toString();
   }
 
-  String getInterfaceName(Supplier<String> uniqueIdSupplier) {
+  String getInterfaceName(UniqueIdSupplier uniqueIdSupplier) {
     if (interfaceName == null) {
       interfaceName =
           "Polymer"
               + target.getQualifiedName().replace('.', '_')
-              + "Interface"
-              + uniqueIdSupplier.get();
+              + "Interface$"
+              + uniqueIdSupplier.getUniqueId(input);
     }
     return interfaceName;
   }

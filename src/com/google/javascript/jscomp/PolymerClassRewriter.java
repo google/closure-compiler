@@ -410,7 +410,7 @@ final class PolymerClassRewriter {
         || !attributeReflectedProps.isEmpty()) {
       Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(clazz);
       JSDocInfo.Builder classInfo = JSDocInfo.Builder.maybeCopyFrom(jsDocInfoNode.getJSDocInfo());
-      String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
+      String interfaceName = cls.getInterfaceName(compiler.getUniqueIdSupplier());
       JSTypeExpression interfaceType =
           new JSTypeExpression(
               new Node(Token.BANG, IR.string(interfaceName)).srcrefTree(jsDocInfoNode),
@@ -636,7 +636,7 @@ final class PolymerClassRewriter {
             VIRTUAL_FILE);
     constructorDoc.recordBaseType(baseType);
 
-    String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
+    String interfaceName = cls.getInterfaceName(compiler.getUniqueIdSupplier());
     JSTypeExpression interfaceType =
         new JSTypeExpression(
             new Node(Token.BANG, IR.string(interfaceName)).srcrefTree(cls.definition),
@@ -1052,7 +1052,7 @@ final class PolymerClassRewriter {
       List<MemberDefinition> attributeReflectedProps) {
     Node block = IR.block();
 
-    String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
+    String interfaceName = cls.getInterfaceName(compiler.getUniqueIdSupplier());
     Node fnNode = NodeUtil.emptyFunction();
     compiler.reportChangeToChangeScope(fnNode);
     Node varNode = IR.var(NodeUtil.newQName(compiler, interfaceName), fnNode);

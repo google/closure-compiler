@@ -41,6 +41,7 @@ public final class PolymerPassStaticUtilsTest {
             null,
             null,
             null,
+            null,
             null);
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerElement");
   }
@@ -57,6 +58,7 @@ public final class PolymerPassStaticUtilsTest {
             null,
             null,
             "input",
+            null,
             null,
             null,
             null,

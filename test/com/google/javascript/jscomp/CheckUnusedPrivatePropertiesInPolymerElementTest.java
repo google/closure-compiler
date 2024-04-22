@@ -146,7 +146,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
                 "/**",
                 " * @constructor",
                 " * @extends {PolymerElement}",
-                " * @implements {PolymerExampleElemElementInterface0}",
+                " * @implements {PolymerExampleElemElementInterface$m1176578414$0}",
                 " */",
                 "var ExampleElemElement = function() {};",
                 "",
