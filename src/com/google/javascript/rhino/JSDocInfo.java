@@ -342,6 +342,7 @@ public class JSDocInfo implements Serializable {
     MIXIN_CLASS,
     MIXIN_FUNCTION,
     SASS_GENERATED_CSS_TS,
+    CLOSURE_UNAWARE_CODE,
 
     // `@provideGoog` only appears in base.js
     PROVIDE_GOOG,
@@ -1231,6 +1232,11 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.SASS_GENERATED_CSS_TS);
   }
 
+  /** Returns whether JSDoc is annotated with the {@code @thirdPartyCode} annotation. */
+  public boolean isClosureUnawareCode() {
+    return checkBit(Bit.CLOSURE_UNAWARE_CODE);
+  }
+
   /** Gets the description specified by the {@code @license} annotation. */
   public String getLicense() {
     return LICENSE.get(this);
@@ -1652,7 +1658,8 @@ public class JSDocInfo implements Serializable {
                           | Bit.NOCOMPILE.mask
                           | Bit.NOCOVERAGE.mask
                           | Bit.TYPE_SUMMARY.mask
-                          | Bit.ENHANCED_NAMESPACE.mask))
+                          | Bit.ENHANCED_NAMESPACE.mask
+                          | Bit.CLOSURE_UNAWARE_CODE.mask))
                   != 0
               || isModsRecorded());
     }
@@ -2678,6 +2685,16 @@ public class JSDocInfo implements Serializable {
     /** Records that the types of values passed to this method should be logged in the compiler. */
     public boolean recordLogTypeInCompiler() {
       return populateBit(Bit.LOG_TYPE_IN_COMPILER, true);
+    }
+
+    /** Returns whether JSDoc is annotated with the {@code @closureUnaware} annotation. */
+    public boolean isClosureUnawareCode() {
+      return checkBit(Bit.CLOSURE_UNAWARE_CODE);
+    }
+
+    /** Records that this JSDoc was annotated with the {@code @closureUnaware} annotation. */
+    public boolean recordClosureUnawareCode() {
+      return populateBit(Bit.CLOSURE_UNAWARE_CODE, true);
     }
 
     // TODO(sdh): this is a new method - consider removing it in favor of recordType?

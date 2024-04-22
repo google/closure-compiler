@@ -1668,6 +1668,18 @@ public class Node {
     return file == null ? false : file.isExtern();
   }
 
+  /**
+   * Indicates that this node is for source that was written without any understanding of the
+   * compiler's various type-checking or optimization limitations, and should be optimized very
+   * cautiously by the compiler.
+   *
+   * <p>This attribute is per source file, not per node / subset of an source file's AST.
+   */
+  public final boolean isClosureUnawareCode() {
+    StaticSourceFile file = getStaticSourceFile();
+    return file != null && file.isClosureUnawareCode();
+  }
+
   public final int getLength() {
     return this.length;
   }

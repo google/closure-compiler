@@ -89,6 +89,14 @@ public interface StaticSourceFile {
   }
 
   /**
+   * Whether this source file contains code that should be optimized using a minimal set of
+   * known-safe optimizations. In particular, code in this StaticSourceFile is unlikely to be
+   * well-typed (or have types annotated at all), and is likely written by someone unaware of the
+   * limitations of this compiler.
+   */
+  boolean isClosureUnawareCode();
+
+  /**
    * Returns the offset of the given line number relative to the file start. Line number should be
    * 1-based.
    *

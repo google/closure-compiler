@@ -297,6 +297,17 @@ public final class SourceFile implements StaticSourceFile {
     this.kind = kind;
   }
 
+  private boolean isClosureUnawareCode = false;
+
+  @Override
+  public boolean isClosureUnawareCode() {
+    return isClosureUnawareCode;
+  }
+
+  public void markAsClosureUnawareCode() {
+    this.isClosureUnawareCode = true;
+  }
+
   @Override
   public int getLineOfOffset(int offset) {
     findLineOffsets();
@@ -550,6 +561,7 @@ public final class SourceFile implements StaticSourceFile {
     // file when compilation began and parsing ran.
     this.numLines = protoNumLines != -1 ? protoNumLines : this.numLines;
     this.numBytes = protoNumBytes != -1 ? protoNumBytes : this.numBytes;
+    this.isClosureUnawareCode = protoSourceFile.getIsClosureUnawareCode();
   }
 
   @GwtIncompatible("java.io.Reader")
@@ -559,6 +571,9 @@ public final class SourceFile implements StaticSourceFile {
     // Restore the number of lines/bytes, which are offset by 1 in the proto.
     sourceFile.numLines = protoSourceFile.getNumLinesPlusOne() - 1;
     sourceFile.numBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    if (protoSourceFile.getIsClosureUnawareCode()) {
+      sourceFile.markAsClosureUnawareCode();
+    }
     return sourceFile;
   }
 
@@ -899,6 +914,7 @@ public final class SourceFile implements StaticSourceFile {
         .toProtoLocationBuilder(this.getName())
         .setFilename(this.getName())
         .setSourceKind(sourceKindToProto(this.getKind()))
+        .setIsClosureUnawareCode(this.isClosureUnawareCode)
         .setNumLinesPlusOne(this.numLines + 1)
         .setNumBytesPlusOne(this.numBytes + 1)
         .build();

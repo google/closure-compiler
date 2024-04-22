@@ -61,6 +61,11 @@ public final class SimpleSourceFile implements StaticSourceFile, Serializable {
   }
 
   @Override
+  public boolean isClosureUnawareCode() {
+    return false;
+  }
+
+  @Override
   public int getColumnOfOffset(int offset) {
     return 0;
   }

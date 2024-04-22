@@ -2001,6 +2001,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       orderInputs();
+      markClosureUnawareCode();
 
       // If in IDE mode, we ignore the error and keep going.
       if (hasErrors()) {
@@ -2278,6 +2279,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return true;
     }
     return false;
+  }
+
+  /**
+   * Marks source files annotated with `@closureUnaware` with the closureUnawareCode bit on
+   * SourceFile.
+   */
+  private void markClosureUnawareCode() {
+    for (CompilerInput input : chunkGraph.getAllInputs()) {
+      Node root = input.getAstRoot(this);
+      JSDocInfo info = root.getJSDocInfo();
+      if (info != null && info.isClosureUnawareCode()) {
+        input.getSourceFile().markAsClosureUnawareCode();
+      }
+    }
   }
 
   /**

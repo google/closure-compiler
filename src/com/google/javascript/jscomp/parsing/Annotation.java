@@ -93,6 +93,7 @@ enum Annotation {
   STRUCT,
   SUPPRESS,
   TEMPLATE,
+  CLOSURE_UNAWARE_CODE,
   THIS,
   THROWS,
   TYPE,
@@ -112,6 +113,7 @@ enum Annotation {
           .put("argument", Annotation.PARAM)
           .put("author", Annotation.AUTHOR)
           .put("closurePrimitive", Annotation.CLOSURE_PRIMITIVE)
+          .put("closureUnaware", Annotation.CLOSURE_UNAWARE_CODE)
           .put("const", Annotation.CONSTANT)
           .put("collapsibleOrBreakMyCode", Annotation.COLLAPSIBLE_OR_BREAK_MY_CODE)
           .put("constant", Annotation.CONSTANT)

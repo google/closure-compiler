@@ -195,6 +195,10 @@ public final class JSDocInfoPrinter {
       parts.add("@record");
     }
 
+    if (info.isClosureUnawareCode()) {
+      parts.add("@closureUnaware");
+    }
+
     if (info.hasBaseType()) {
       multiline = true;
       Node typeNode = stripBang(info.getBaseType().getRoot());

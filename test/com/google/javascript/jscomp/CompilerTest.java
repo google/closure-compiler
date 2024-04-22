@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -145,6 +146,26 @@ public final class CompilerTest {
     compiler.init(externs, ImmutableList.<SourceFile>of(), options);
     compiler.parseInputs();
     assertThat(compiler.toSource()).isEqualTo("/** @externs */ function alert(x){};");
+  }
+
+  @Test
+  public void testClosureUnawareCodeMarks() {
+    ImmutableList<SourceFile> thirdPartyCode =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "closure_unaware_code.js", "/** @closureUnaware */ function alert(x) {}"));
+    CompilerOptions options = new CompilerOptions();
+    options.setPreserveTypeAnnotations(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.<SourceFile>of(), thirdPartyCode, options);
+    compiler.parseInputs();
+    assertThat(compiler.toSource()).isEqualTo("/** @closureUnaware */ function alert(x){};");
+    assertThat(compiler.getJsRoot().getChildCount()).isEqualTo(1);
+    StaticSourceFile staticSourceFile =
+        compiler.getJsRoot().getChildAtIndex(0).getStaticSourceFile();
+    assertThat(staticSourceFile.getName()).isEqualTo("closure_unaware_code.js");
+    assertThat(staticSourceFile.isClosureUnawareCode()).isTrue();
   }
 
   @Test

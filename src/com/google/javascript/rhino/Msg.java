@@ -53,6 +53,7 @@ public enum Msg {
   JSDOC_CLOSUREPRIMITIVE_EXTRA("conflicting @closurePrimitive tag"),
   JSDOC_CLOSUREPRIMITIVE_INVALID("invalid id in @closurePrimitive tag."),
   JSDOC_CLOSUREPRIMITIVE_MISSING("missing id in @closurePrimitive tag."),
+  JSDOC_CLOSURE_UNAWARE_CODE_EXTRA("extra @closureUnaware tag"),
   JSDOC_COLLAPSIBLEORBREAKMYCODE("extra @collapsibleOrBreakMyCode tag"),
   JSDOC_CONST("conflicting @const tag"),
   JSDOC_CUSTOMELEMENT_EXTRA("extra @customElement tag"),

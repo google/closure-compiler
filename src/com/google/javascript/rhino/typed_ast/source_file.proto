@@ -26,6 +26,10 @@ message SourceFileProto {
   // required
   SourceKind source_kind = 5;
 
+  // required
+  // should be determined by the compiler's  jsdoc annotation scanning.
+  bool is_closure_unaware_code = 8;
+
   // Optional code statistics used for metrics recording. Setting these to "0"
   // indicates they were not computed. Other values are offset by 1 to
   // distinguish between the "0" default value and a empty file with 0

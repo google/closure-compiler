@@ -825,6 +825,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case CLOSURE_UNAWARE_CODE:
+          if (!jsdocBuilder.recordClosureUnawareCode()) {
+            addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case THROWS:
           {
             lineno = stream.getLineno();

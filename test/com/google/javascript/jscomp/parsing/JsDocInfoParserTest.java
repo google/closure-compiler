@@ -2273,6 +2273,21 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseClosureUnawareCode1() {
+    assertThat(parseFileOverview("@closureUnaware*/").isClosureUnawareCode()).isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode2() {
+    parseFileOverview("@closureUnaware\n@closureUnaware*/", "extra @closureUnaware tag");
+  }
+
+  @Test
+  public void testParseNoClosureUnawareCode() {
+    assertThat(parseFileOverview("@fileoverview*/").isClosureUnawareCode()).isFalse();
+  }
+
+  @Test
   public void testParseNoCoverage_fileOverview() {
     assertThat(parseFileOverview("@nocoverage*/").isNoCoverage()).isTrue();
   }
