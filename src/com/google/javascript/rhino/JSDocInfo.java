@@ -100,7 +100,8 @@ public class JSDocInfo implements Serializable {
     @SuppressWarnings("unchecked")
     @Nullable
         // cast to T is unsafe but guaranteed by builder
-        T get(JSDocInfo info) {
+        T
+        get(JSDocInfo info) {
       if ((info.propertyKeysBitset & mask) == 0) {
         return null;
       }
@@ -333,6 +334,7 @@ public class JSDocInfo implements Serializable {
     PURE_OR_BREAK_MY_CODE,
     COLLAPSIBLE_OR_BREAK_MY_CODE,
     NOCOVERAGE,
+    REQUIRE_INLINING,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -863,6 +865,13 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @noinline} annotation is present on this {@link JSDocInfo}. */
   public boolean isNoInline() {
     return checkBit(Bit.NOINLINE);
+  }
+
+  /**
+   * Returns whether the {@code @requireInlining} annotation is present on this {@link JSDocInfo}.
+   */
+  public boolean isRequireInlining() {
+    return checkBit(Bit.REQUIRE_INLINING);
   }
 
   /**
@@ -1669,6 +1678,18 @@ public class JSDocInfo implements Serializable {
       return props.get(DESCRIPTION) != null;
     }
 
+    /** Returns whether the {@code @noinline} annotation is present on this {@link JSDocInfo}. */
+    public boolean isNoInline() {
+      return checkBit(Bit.NOINLINE);
+    }
+
+    /**
+     * Returns whether the {@code @requireInlining} annotation is present on this {@link JSDocInfo}.
+     */
+    public boolean isRequireInlining() {
+      return checkBit(Bit.REQUIRE_INLINING);
+    }
+
     /**
      * Builds a {@link JSDocInfo} object based on the populated information and returns it.
      *
@@ -2329,6 +2350,18 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoInline() {
       return populateBit(Bit.NOINLINE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isRequireInlining()} flag set to {@code true}.
+     *
+     * @return {@code true} if the requireInlining flag was recorded and {@code false} if it was
+     *     already recorded
+     */
+    @CanIgnoreReturnValue
+    public boolean recordRequireInlining() {
+      return populateBit(Bit.REQUIRE_INLINING, true);
     }
 
     /**

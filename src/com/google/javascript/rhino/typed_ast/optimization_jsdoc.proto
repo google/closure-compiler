@@ -80,4 +80,8 @@ enum JsdocTag {
 
   // Used by CoverageInstrumentationCallback
   JSDOC_NO_COVERAGE = 37;
+
+  // Used to require function inlining to enable other optimizations,
+  // especially constant folding of object literals.
+  JSDOC_REQUIRE_INLINING = 38;
 }

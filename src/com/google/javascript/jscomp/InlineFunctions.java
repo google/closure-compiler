@@ -56,6 +56,11 @@ import org.jspecify.nullness.Nullable;
  */
 class InlineFunctions implements CompilerPass {
 
+  static final DiagnosticType FAILED_REQUIRED_INLINING =
+      DiagnosticType.error(
+          "JSC_FAILED_REQUIRED_INLINING",
+          "function {1} annotated @requireInlining could not be inlined here");
+
   // TODO(nicksantos): This needs to be completely rewritten to use scopes
   // to do variable lookups. Right now, it assumes that all functions are
   // uniquely named variables. There's currently a stopgap scope-check
@@ -262,7 +267,18 @@ class InlineFunctions implements CompilerPass {
   void maybeAddFunction(Function fn, JSChunk chunk) {
     String name = fn.getName();
     FunctionState functionState = getOrCreateFunctionState(name);
+    updateFunctionStateForInlining(fn, chunk, name, functionState);
+    if (hasRequireInliningAnnotation(fn.getFunctionNode()) && !functionState.canInline()) {
+      compiler.report(JSError.make(fn.getFunctionNode(), FAILED_REQUIRED_INLINING));
+    }
+  }
 
+  /**
+   * Updates the FunctionState object for the given function. Checks if the given function matches
+   * the criteria for an inlinable function.
+   */
+  void updateFunctionStateForInlining(
+      Function fn, JSChunk chunk, String name, FunctionState functionState) {
     // TODO(johnlenz): Maybe "smarten" FunctionState by adding this logic to it?
 
     // If the function has multiple definitions, don't inline it.
@@ -356,6 +372,11 @@ class InlineFunctions implements CompilerPass {
   private boolean hasNoInlineAnnotation(Node fnNode) {
     JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
     return jsDocInfo != null && jsDocInfo.isNoInline();
+  }
+
+  private boolean hasRequireInliningAnnotation(Node fnNode) {
+    JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
+    return jsDocInfo != null && jsDocInfo.isRequireInlining();
   }
 
   /**
@@ -656,6 +677,9 @@ class InlineFunctions implements CompilerPass {
     Iterator<Entry<String, FunctionState>> i;
     for (i = fns.entrySet().iterator(); i.hasNext(); ) {
       FunctionState functionState = i.next().getValue();
+      if (hasRequireInliningAnnotation(functionState.getFn().getFunctionNode())) {
+        continue;
+      }
       if (functionState.hasReferences()) {
         // Only inline function if it decreases the code size.
         boolean lowersCost = minimizeCost(functionState);

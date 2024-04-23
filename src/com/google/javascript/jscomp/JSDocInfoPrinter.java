@@ -147,6 +147,10 @@ public final class JSDocInfoPrinter {
       parts.add("@noinline");
     }
 
+    if (info.isRequireInlining()) {
+      parts.add("@requireInlining");
+    }
+
     if (info.isProvideAlreadyProvided()) {
       parts.add("@provideAlreadyProvided");
     }

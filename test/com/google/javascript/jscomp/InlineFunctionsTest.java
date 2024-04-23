@@ -85,6 +85,37 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequireInlining() {
+    test(
+        "/** @requireInlining */ function foo() {console.log('hi');console.log('bye');} "
+            + "foo();foo();foo();",
+        "{console.log('hi');console.log('bye');}".repeat(3));
+  }
+
+  @Test
+  public void testEncourageInliningCascades() {
+    disableCompareAsTree();
+    test(
+        "const a = class {constructor() {} setA(value) {this.a = value;} setB(value) {this.b ="
+            + " value;}}; /** @requireInlining */ function fromRecord(rec) { return new"
+            + " a().setA(rec.a).setB(rec.b); }; console.log(fromRecord({a: 1, b: fromRecord({a: 2,"
+            + " b: fromRecord({a: 4, b: 5}) }) }) );",
+        "const"
+            + " a=class{constructor(){}setA(value){this.a=value}setB(value$jscomp$1){this.b=value$jscomp$1}};var"
+            + " JSCompiler_temp_const$jscomp$1=console;var"
+            + " JSCompiler_temp_const$jscomp$0=JSCompiler_temp_const$jscomp$1.log;var"
+            + " JSCompiler_inline_result$jscomp$2;{var"
+            + " rec$jscomp$inline_5={a:4,b:5};JSCompiler_inline_result$jscomp$2=(new"
+            + " a).setA(rec$jscomp$inline_5.a).setB(rec$jscomp$inline_5.b)}var"
+            + " JSCompiler_inline_result$jscomp$3;\n"
+            + "{var rec$jscomp$inline_7={a:2,b:JSCompiler_inline_result$jscomp$2};JSCompiler_inline_result$jscomp$3=(new"
+            + " a).setA(rec$jscomp$inline_7.a).setB(rec$jscomp$inline_7.b)}var"
+            + " JSCompiler_inline_result$jscomp$4;{var"
+            + " rec$jscomp$inline_9={a:1,b:JSCompiler_inline_result$jscomp$3};JSCompiler_inline_result$jscomp$4=(new"
+            + " a).setA(rec$jscomp$inline_9.a).setB(rec$jscomp$inline_9.b)}JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1,JSCompiler_inline_result$jscomp$4)");
+  }
+
+  @Test
   public void testNullableFunctionsNotInlined() {
     testSame("var foo = null; if(x) { foo = function(){}; }; foo();foo();foo();");
     testSame("var foo = null; if(x) { foo = function(){}; }; foo?.();foo?.();foo?.();");

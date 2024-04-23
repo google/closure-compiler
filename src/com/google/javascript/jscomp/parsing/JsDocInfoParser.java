@@ -743,9 +743,21 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case REQUIRE_INLINING:
+          if (!jsdocBuilder.recordRequireInlining()) {
+            addParserWarning(Msg.JSDOC_REQUIRE_INLINING);
+          }
+          if (jsdocBuilder.isNoInline()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case NO_INLINE:
           if (!jsdocBuilder.recordNoInline()) {
             addParserWarning(Msg.JSDOC_NOINLINE);
+          }
+          if (jsdocBuilder.isRequireInlining()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           return eatUntilEOLIfNotAnnotation();
 

@@ -33,6 +33,7 @@ enum Annotation {
   DEPRECATED,
   DESC,
   DICT,
+  REQUIRE_INLINING,
   ENHANCE,
   ENUM,
   EXTENDS,
@@ -124,6 +125,7 @@ enum Annotation {
           .put("deprecated", Annotation.DEPRECATED)
           .put("desc", Annotation.DESC)
           .put("dict", Annotation.DICT)
+          .put("requireInlining", Annotation.REQUIRE_INLINING)
           .put("enum", Annotation.ENUM)
           .put("enhance", Annotation.ENHANCE)
           .put("export", Annotation.EXPORT)
