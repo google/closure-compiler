@@ -107,7 +107,7 @@ public class JSDocInfo implements Serializable {
       return (T) info.getPropertyValueByIndex(Long.bitCount(info.propertyKeysBitset & (mask - 1)));
     }
 
-    T clone(T arg, @Nullable TypeTransform transform) {
+    T clone(T arg, @Nullable TypeTransform unusedTransform) {
       return arg;
     }
 
@@ -122,7 +122,7 @@ public class JSDocInfo implements Serializable {
       return left.equals(right);
     }
 
-    Iterable<JSTypeExpression> getTypeExpressions(T value) {
+    Iterable<JSTypeExpression> getTypeExpressions(T unusedValue) {
       return ImmutableList.of();
     }
 
