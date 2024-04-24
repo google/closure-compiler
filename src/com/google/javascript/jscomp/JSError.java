@@ -44,6 +44,9 @@ public abstract class JSError implements Serializable {
   /** Zero-indexed character number of the error location. */
   public abstract int getCharno();
 
+  /** Length of the error region. */
+  public abstract int getLength();
+
   /** Node where the warning occurred. */
   public abstract @Nullable Node getNode();
 
@@ -55,6 +58,7 @@ public abstract class JSError implements Serializable {
 
   private static final int DEFAULT_LINENO = -1;
   private static final int DEFAULT_CHARNO = -1;
+  private static final int DEFAULT_LENGTH = 0;
   private static final @Nullable String DEFAULT_SOURCENAME = null;
   private static final @Nullable Node DEFAULT_NODE = null;
   private static final @Nullable Requirement DEFAULT_REQUIREMENT = null;
@@ -95,6 +99,18 @@ public abstract class JSError implements Serializable {
   }
 
   /**
+   * Creates a JSError from a file and Node position.
+   *
+   * @param start Determines the line and char position and source file name
+   * @param end Determines the length of the error region
+   * @param type The DiagnosticType
+   * @param arguments Arguments to be incorporated into the message
+   */
+  public static JSError make(Node start, Node end, DiagnosticType type, String... arguments) {
+    return builder(type, arguments).setNodeRange(start, end).build();
+  }
+
+  /**
    * Creates a JSError from a requirement, file and Node position.
    *
    * @param requirement The conformance requirement that fails
@@ -116,6 +132,7 @@ public abstract class JSError implements Serializable {
     private String sourceName = DEFAULT_SOURCENAME;
     private int lineno = DEFAULT_LINENO;
     private int charno = DEFAULT_CHARNO;
+    private int length = DEFAULT_LENGTH;
     private Requirement requirement = DEFAULT_REQUIREMENT;
 
     private Builder(DiagnosticType type, String... args) {
@@ -138,6 +155,23 @@ public abstract class JSError implements Serializable {
       this.sourceName = n.getSourceFileName();
       this.lineno = n.getLineno();
       this.charno = n.getCharno();
+      this.length = n.getLength();
+      return this;
+    }
+
+    Builder setNodeRange(Node start, Node end) {
+      Preconditions.checkState(
+          Objects.equals(DEFAULT_SOURCENAME, this.sourceName),
+          "Cannot provide a Node when there's already a source name");
+      this.n = start;
+      this.sourceName = n.getSourceFileName();
+      this.lineno = n.getLineno();
+      this.charno = n.getCharno();
+      int endOffset = end.getSourceOffset();
+      int startOffset = start.getSourceOffset();
+      if (endOffset != -1 && startOffset != -1) {
+        this.length = (end.getSourceOffset() + end.getLength()) - start.getSourceOffset();
+      }
       return this;
     }
 
@@ -182,7 +216,7 @@ public abstract class JSError implements Serializable {
 
     JSError build() {
       return new AutoValue_JSError(
-          type, type.format(args), sourceName, lineno, charno, n, level, requirement);
+          type, type.format(args), sourceName, lineno, charno, length, n, level, requirement);
     }
   }
 
@@ -238,11 +272,6 @@ public abstract class JSError implements Serializable {
   /** @return the offset of the region the Error applies to, or -1 if the offset is unknown. */
   public final int getNodeSourceOffset() {
     return this.getNode() != null ? this.getNode().getSourceOffset() : -1;
-  }
-
-  /** @return the length of the region the Error applies to, or 0 if the length is unknown. */
-  public final int getNodeLength() {
-    return this.getNode() != null ? this.getNode().getLength() : 0;
   }
 
   /** Alias for {@link #getLineno()}. */

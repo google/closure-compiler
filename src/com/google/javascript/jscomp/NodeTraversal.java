@@ -1373,6 +1373,15 @@ public class NodeTraversal {
     compiler.report(error);
   }
 
+  /**
+   * Reports a diagnostic (error or warning) This variant is particularly useful for reporting on
+   * GETPROP nodes whose length is otherwise just the last component (`abc` in `foo.abc`).
+   */
+  public void report(Node start, Node end, DiagnosticType diagnosticType, String... arguments) {
+    JSError error = JSError.make(start, end, diagnosticType, arguments);
+    compiler.report(error);
+  }
+
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
     checkNotNull(changeScope);

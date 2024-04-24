@@ -85,6 +85,59 @@ public final class NodeTraversalTest {
     assertThat(errors.get(0).getDescription()).isEqualTo("Foo, Bar - Hello");
   }
 
+  @Test
+  public void testReportWithRange() {
+    final List<JSError> errors = new ArrayList<>();
+    DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
+    NodeTraversal.Callback callback =
+        new NodeTraversal.Callback() {
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            if (n.isGetProp() && parent.isExprResult()) {
+              t.report(getRootNode(n), n, dt, "Foo", "Bar", "Hello");
+            }
+            return true;
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {}
+
+          Node getRootNode(Node n) {
+            while (n.isGetProp()) {
+              n = n.getFirstChild();
+            }
+            return n;
+          }
+        };
+
+    Compiler compiler =
+        new Compiler(
+            new BasicErrorManager() {
+
+              @Override
+              public void report(CheckLevel level, JSError error) {
+                errors.add(error);
+              }
+
+              @Override
+              public void println(CheckLevel level, JSError error) {}
+
+              @Override
+              protected void printSummary() {}
+            });
+    compiler.initCompilerOptionsIfTesting();
+    String code = lines("a.b.c;");
+    Node tree = parse(compiler, code);
+
+    NodeTraversal.builder().setCompiler(compiler).setCallback(callback).traverse(tree);
+
+    assertThat(errors).hasSize(1);
+    JSError error = errors.get(0);
+    assertThat(error.getDescription()).isEqualTo("Foo, Bar - Hello");
+    assertThat(error.getNodeSourceOffset()).isEqualTo(0);
+    assertThat(error.getLength()).isEqualTo(5);
+  }
+
   private static final String TEST_EXCEPTION = "test me";
 
   @Test

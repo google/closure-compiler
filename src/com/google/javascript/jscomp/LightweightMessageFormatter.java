@@ -146,21 +146,36 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
   String getExcerptWithPosition(JSError error) {
     return getExcerptWithPosition(
-        error, error.getSourceName(), error.getLineNumber(), error.getCharno(), defaultFormat);
+        error,
+        error.getSourceName(),
+        error.getLineNumber(),
+        error.getCharno(),
+        error.getLength(),
+        defaultFormat);
   }
 
   private String getExcerptWithPosition(
       JSError error, String sourceName, int lineNumber, int charno, SourceExcerpt format) {
+    int nodeLength = error.getLength();
+    return getExcerptWithPosition(error, sourceName, lineNumber, charno, nodeLength, format);
+  }
+
+  private String getExcerptWithPosition(
+      JSError error,
+      String sourceName,
+      int lineNumber,
+      int charno,
+      int length,
+      SourceExcerpt format) {
     StringBuilder b = new StringBuilder();
 
     SourceExcerptProvider source = getSource();
-    int nodeLength = error.getNodeLength();
-    int length = charno >= 0 && nodeLength >= 0 ? charno + nodeLength : -1;
+    int cookedLength = charno >= 0 && length >= 0 ? charno + length : -1;
 
     String sourceExcerpt =
         source == null
             ? null
-            : format.get(source, sourceName, lineNumber, length, excerptFormatter);
+            : format.get(source, sourceName, lineNumber, cookedLength, excerptFormatter);
 
     if (sourceExcerpt != null) {
       if (format.equals(FULL)) {
@@ -177,7 +192,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
         // charno == sourceExcerpt.length() means something is missing
         // at the end of the line
         if (format.equals(LINE) && 0 <= charno && charno <= sourceExcerpt.length()) {
-          padLine(charno, sourceExcerpt, b, error.getNodeLength(), error.getNode());
+          padLine(charno, sourceExcerpt, b, length, error.getNode());
         }
       }
     }
@@ -237,7 +252,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
           charWithLineNumberOffset <= sourceExcerpt.length(),
           "Cannot format source excerpt; unexpected start character for error:\n %s",
           error);
-      padLine(charWithLineNumberOffset, sourceExcerpt, b, -1, errorNode);
+      padLine(charWithLineNumberOffset, sourceExcerpt, b, -1, null);
       return;
     }
     List<String> lines = Splitter.on('\n').splitToList(sourceExcerpt);
