@@ -103,6 +103,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  @SuppressWarnings("RhinoNodeGetFirstFirstChild") // to allow adding separate comments per-child
   public void testConstAnnotationPropagation() {
     test(
         "const x = 3; var a,     b; var y = x + 2;", //
@@ -131,6 +132,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  @SuppressWarnings("RhinoNodeGetFirstFirstChild") // to allow adding separate comments per-child
   public void testRestConstAnnotationPropagation() {
     testSame(
         lines(
@@ -166,6 +168,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  @SuppressWarnings("RhinoNodeGetFirstFirstChild") // to allow adding separate comments per-child
   public void testRestConstAnnotationPropagation_onlyConstVars() {
     testSame(
         lines(

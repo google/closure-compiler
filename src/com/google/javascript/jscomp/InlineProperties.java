@@ -128,7 +128,7 @@ final class InlineProperties implements CompilerPass {
         invalidatingPropRef = true;
       } else if (n.isMemberFieldDef()) {
         propName = n.getString();
-        if (n.getFirstChild() != null) {
+        if (n.hasChildren()) {
           // class field with initialization
           invalidatingPropRef = !maybeRecordCandidateClassFieldDefinition(n);
         } else {
