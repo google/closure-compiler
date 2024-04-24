@@ -3081,6 +3081,24 @@ public class CompilerOptions implements Serializable {
       }
     }
 
+    /** Returns a list of valid names used to select a `LanguageMode` on the command line. */
+    public static List<String> validCommandLineNames() {
+      List<String> names = new ArrayList<>();
+      for (LanguageMode mode : LanguageMode.values()) {
+        if (mode != UNSUPPORTED) {
+          names.add(mode.name());
+          if (mode.name().startsWith("ECMASCRIPT")) {
+            names.add(mode.name().replaceFirst("ECMASCRIPT", "ES"));
+          }
+        }
+      }
+      names.add("ECMASCRIPT6");
+      names.add("ES6");
+      names.add("ECMASCRIPT6_STRICT");
+      names.add("ES6_STRICT");
+      return names;
+    }
+
     public static @Nullable LanguageMode fromString(String value) {
       if (value == null) {
         return null;

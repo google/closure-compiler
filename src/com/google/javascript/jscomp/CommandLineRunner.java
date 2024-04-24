@@ -1172,7 +1172,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 });
             stringWriter.flush();
             String rawOptionUsage = stringWriter.toString();
-            Matcher optionNameMatches = Pattern.compile(" *--([a-z0-9_]+)").matcher(rawOptionUsage);
             int delimiterIndex = rawOptionUsage.indexOf(" : ");
             if (delimiterIndex > 0) {
               outputStream.write(
@@ -1640,6 +1639,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
   }
 
+  @Override
   protected final String getVersionText() {
     return String.join(
         "\n", //
@@ -1812,7 +1812,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         stage1RestoreFile = flags.continueSavedCompilationFile;
       }
       if (stage1RestoreFile != null) {
-        config.setContinueSavedCompilationFileName(stage1RestoreFile, /* stage= */ 1);
+        config.setContinueSavedCompilationFileName(
+            stage1RestoreFile, /* restoredCompilationStage= */ 1);
       }
       String stage2RestoreFile = flags.restoreStage2FromFile;
       if (stage1RestoreFile != null) {
@@ -1867,7 +1868,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       if (languageMode != null) {
         options.setLanguageIn(languageMode);
       } else {
-        throw new FlagUsageException("Unknown language `" + flags.languageIn + "' specified.");
+        throw new FlagUsageException(
+            "Unknown language `"
+                + flags.languageIn
+                + "' specified. Expected one of: "
+                + LanguageMode.validCommandLineNames());
       }
     }
 
@@ -1879,7 +1884,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     if (languageMode != null) {
       options.setLanguageOut(languageMode);
     } else {
-      throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
+      throw new FlagUsageException(
+          "Unknown language `"
+              + flags.languageOut
+              + "' specified. Expected one of: "
+              + LanguageMode.validCommandLineNames());
     }
 
 
