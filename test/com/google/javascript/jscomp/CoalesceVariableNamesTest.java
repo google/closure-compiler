@@ -130,6 +130,22 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCoalesceVariableNamesWronglyUndeclaresOuterName() {
+    disableValidateAstChangeMarking();
+    test(
+        lines(
+            "const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =", //
+            " entries.filter(a => { var b; [, b] = a; return b === c; });",
+            "alert(localKey$jscomp$2);"),
+        // The CoalesceVariableNames pass merges the names `a` and `b` in the arrow function, but in
+        // doing so deletes the const keyword which declared the outer name `localKey$jscomp$2`
+        lines(
+            "[{localKey:localKey$jscomp$2} = {localKey:void 0}] = ", //
+            "entries.filter(a => { [, a] = a; return a === c; })",
+            "alert(localKey$jscomp$2);"));
+  }
+
+  @Test
   public void testMergeThreeVarNames() {
     inFunction("var x,y,z; x=1; x; y=1; y; z=1; z", "var x    ; x=1; x; x=1; x; x=1; x");
   }
