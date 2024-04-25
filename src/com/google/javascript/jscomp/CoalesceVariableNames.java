@@ -214,13 +214,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       // Rename.
       n.setString(coalescedVar.getName());
       compiler.reportChangeToEnclosingScope(n);
-
-      if (NodeUtil.isNameDeclaration(parent)
-          || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
-              && NodeUtil.isLhsByDestructuring(n))) {
-        makeDeclarationVar(coalescedVar);
-        removeVarDeclaration(n);
-      }
+      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
     } else {
       // This code block is slow but since usePseudoName is for debugging,
       // we should not sacrifice performance for non-debugging compilation to
@@ -250,13 +244,49 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       n.setString(pseudoName);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (!vNode.getValue().equals(coalescedVar)
-          && (NodeUtil.isNameDeclaration(parent)
-              || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
-                  && NodeUtil.isLhsByDestructuring(n)))) {
-        makeDeclarationVar(coalescedVar);
-        removeVarDeclaration(n);
+      if (vNode.getValue().equals(coalescedVar)) {
+        return;
       }
+      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
+    }
+  }
+
+  /**
+   * Updates declarations of the given name node and the coalesced variable. Firstly, it converts
+   * the coalesced variable's declaration into a `var` if it is a `const` or a `let`. Secondly, it
+   * removes the declaration of the given name node if it is under a parent which is a name
+   * declaration or if the given name is a destructuring LHS name under a destructuring LHS
+   * declaration.
+   *
+   * <p>For example, when coalescing the names `a` and `b` below, it changes:
+   *
+   * <pre>
+   *   const a = 1;
+   *   const [{prop: b} = {prop: undefined}] = [{prop: 10}]; // declares `b`
+   * </pre>
+   *
+   * to
+   *
+   * <pre>
+   *   var a = 1;
+   *   [{prop: a} = {prop: undefined}] = [{prop: 10}]; // coalescing renames `b` to `a` and this
+   *                                                   // method undeclares it by removing the
+   *                                                   // `const`
+   * </pre>
+   *
+   * @param n The name node which is getting coalesced with the coalescedVar
+   * @param coalescedVar the first declared variable of a group that is being coalesced
+   * @param parent The parent node of the name node n
+   */
+  private void updateDeclarationsPostCoalescing(Node n, Var coalescedVar, Node parent) {
+    checkState(n.isName(), "trying to update the declaration of a non-name node");
+    if (NodeUtil.isNameDeclaration(parent)
+        || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
+            && NodeUtil.isLhsByDestructuring(n))) {
+      // convert the coalesced variable's declaration into a `var` if it is a `const` or a `let`
+      makeDeclarationVar(coalescedVar);
+      // remove the declaration of the given name node as it has been coalesced with coalescedVar
+      removeVarDeclaration(n);
     }
   }
 
