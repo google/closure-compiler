@@ -5213,6 +5213,14 @@ google.maps.Map.prototype.getFeatureLayer = function(featureType) {};
 google.maps.Map.prototype.getHeading = function() {};
 
 /**
+ * Returns whether heading interactions are enabled. This option is only in
+ * effect when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @return {boolean|null}
+ */
+google.maps.Map.prototype.getHeadingInteractionEnabled = function() {};
+
+/**
  * Informs the caller of the current capabilities available to the map based on
  * the Map ID that was provided.
  * @return {!google.maps.MapCapabilities}
@@ -5258,6 +5266,14 @@ google.maps.Map.prototype.getStreetView = function() {};
  * @return {number|undefined}
  */
 google.maps.Map.prototype.getTilt = function() {};
+
+/**
+ * Returns whether tilt interactions are enabled. This option is only in effect
+ * when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @return {boolean|null}
+ */
+google.maps.Map.prototype.getTiltInteractionEnabled = function() {};
 
 /**
  * Returns the zoom of the map. If the zoom has not been set then the result is
@@ -5334,6 +5350,16 @@ google.maps.Map.prototype.setClickableIcons = function(value) {};
 google.maps.Map.prototype.setHeading = function(heading) {};
 
 /**
+ * Sets whether heading interactions are enabled. This option is only in effect
+ * when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @param {boolean} headingInteractionEnabled
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setHeadingInteractionEnabled = function(
+    headingInteractionEnabled) {};
+
+/**
  * @param {!google.maps.MapTypeId|string} mapTypeId
  * @return {undefined}
  */
@@ -5344,6 +5370,13 @@ google.maps.Map.prototype.setMapTypeId = function(mapTypeId) {};
  * @return {undefined}
  */
 google.maps.Map.prototype.setOptions = function(options) {};
+
+/**
+ * Sets the current RenderingType of the map.
+ * @param {!google.maps.RenderingType} renderingType
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setRenderingType = function(renderingType) {};
 
 /**
  * Binds a <code>StreetViewPanorama</code> to the map. This panorama overrides
@@ -5358,9 +5391,9 @@ google.maps.Map.prototype.setStreetView = function(panorama) {};
 
 /**
  * For vector maps, sets the angle of incidence of the map. The allowed values
- * are restricted depending on the zoom level of the map. For raster maps,
- * controls the automatic switching behavior for the angle of incidence of the
- * map. The only allowed values are <code>0</code> and <code>45</code>.
+ * are restricted depending on the zoom level of the map. <br><br> For raster
+ * maps, controls the automatic switching behavior for the angle of incidence of
+ * the map. The only allowed values are <code>0</code> and <code>45</code>.
  * <code>setTilt(0)</code> causes the map to always use a 0&deg; overhead view
  * regardless of the zoom level and viewport. <code>setTilt(45)</code> causes
  * the tilt angle to automatically switch to 45 whenever 45&deg; imagery is
@@ -5376,6 +5409,16 @@ google.maps.Map.prototype.setStreetView = function(panorama) {};
  * @return {undefined}
  */
 google.maps.Map.prototype.setTilt = function(tilt) {};
+
+/**
+ * Sets whether tilt interactions are enabled. This option is only in effect
+ * when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @param {boolean} tiltInteractionEnabled
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setTiltInteractionEnabled = function(
+    tiltInteractionEnabled) {};
 
 /**
  * Sets the zoom of the map.
@@ -5485,6 +5528,13 @@ google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
 
 /**
+ * If true, this map is configured properly to allow for the use of {@link
+ * google.maps.WebGLOverlayView}.
+ * @type {boolean|undefined}
+ */
+google.maps.MapCapabilities.prototype.isWebgGLOverlayViewAvailable;
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * MapElement is an <code>HTMLElement</code> subclass for rendering maps. After
@@ -5514,6 +5564,16 @@ google.maps.MapElement = function(options) {};
 google.maps.MapElement.prototype.center;
 
 /**
+ * Whether the map should allow user control of the camera heading (rotation).
+ * This option is only in effect when the map is a vector map. If not set in
+ * code, then the cloud configuration for the map ID will be used (if
+ * available).
+ * @default <code>false</code>
+ * @type {boolean|null}
+ */
+google.maps.MapElement.prototype.headingInteractionDisabled;
+
+/**
  * A reference to the {@link google.maps.Map} that the MapElement uses
  * internally.
  * @type {!google.maps.Map}
@@ -5521,15 +5581,39 @@ google.maps.MapElement.prototype.center;
 google.maps.MapElement.prototype.innerMap;
 
 /**
- * The Map ID of the map. See the <a
- * href="https://developers.google.com/maps/documentation/get-map-id">Map ID
- * documentation</a> for more information.
+ * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
+ * ID</a> of the map. This parameter cannot be set or changed after a map is
+ * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
+ * features that require a map ID but which do not require cloud enablement.
  * @type {string|null}
  */
 google.maps.MapElement.prototype.mapId;
 
 /**
- * The zoom level of the map.
+ * Whether the map should be a raster or vector map. This parameter cannot be
+ * set or changed after a map is instantiated. If not set, then the cloud
+ * configuration for the map ID will determine the rendering type (if
+ * available). Please note that vector maps may not be available for all devices
+ * and browsers and the map will fall back to a raster map as needed.
+ * @default {@link google.maps.RenderingType.VECTOR}
+ * @type {!google.maps.RenderingType|null}
+ */
+google.maps.MapElement.prototype.renderingType;
+
+/**
+ * Whether the map should allow user control of the camera tilt. This option is
+ * only in effect when the map is a vector map. If not set in code, then the
+ * cloud configuration for the map ID will be used (if available).
+ * @default <code>false</code>
+ * @type {boolean|null}
+ */
+google.maps.MapElement.prototype.tiltInteractionDisabled;
+
+/**
+ * The zoom level of the map. Valid zoom values are numbers from zero up to the
+ * supported <a
+ * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
+ * zoom level</a>. Larger zoom values correspond to a higher resolution.
  * @type {number|null}
  */
 google.maps.MapElement.prototype.zoom;
@@ -5546,24 +5630,37 @@ google.maps.MapElement.prototype.zoom;
 google.maps.MapElementOptions = function() {};
 
 /**
- * The initial Map center.
+ * See {@link google.maps.MapElement.center}.
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.MapElementOptions.prototype.center;
 
 /**
- * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
- * ID</a> of the map. This parameter cannot be set or changed after a map is
- * instantiated.
+ * See {@link google.maps.MapElement.headingInteractionDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.headingInteractionDisabled;
+
+/**
+ * See {@link google.maps.MapElement.mapId}.
  * @type {string|null|undefined}
  */
 google.maps.MapElementOptions.prototype.mapId;
 
 /**
- * The initial Map zoom level. Valid zoom values are numbers from zero up to the
- * supported <a
- * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
- * zoom level</a>. Larger zoom values correspond to a higher resolution.
+ * See {@link google.maps.MapElement.renderingType}.
+ * @type {!google.maps.RenderingType|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.renderingType;
+
+/**
+ * See {@link google.maps.MapElement.tiltInteractionDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.tiltInteractionDisabled;
+
+/**
+ * See {@link google.maps.MapElement.zoom}.
  * @type {number|null|undefined}
  */
 google.maps.MapElementOptions.prototype.zoom;
@@ -5715,6 +5812,16 @@ google.maps.MapOptions.prototype.gestureHandling;
 google.maps.MapOptions.prototype.heading;
 
 /**
+ * Whether the map should allow user control of the camera heading (rotation).
+ * This option is only in effect when the map is a vector map. If not set in
+ * code, then the cloud configuration for the map ID will be used (if
+ * available).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapOptions.prototype.headingInteractionEnabled;
+
+/**
  * Whether the map should allow fractional zoom levels. Listen to
  * <code>isfractionalzoomenabled_changed</code> to know when the default has
  * been set.
@@ -5734,7 +5841,8 @@ google.maps.MapOptions.prototype.keyboardShortcuts;
 /**
  * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
  * ID</a> of the map. This parameter cannot be set or changed after a map is
- * instantiated.
+ * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
+ * features that require a map ID but which do not require cloud enablement.
  * @type {string|null|undefined}
  */
 google.maps.MapOptions.prototype.mapId;
@@ -5782,6 +5890,17 @@ google.maps.MapOptions.prototype.minZoom;
  * @type {boolean|null|undefined}
  */
 google.maps.MapOptions.prototype.noClear;
+
+/**
+ * Whether the map should be a raster or vector map. This parameter cannot be
+ * set or changed after a map is instantiated. If not set, then the cloud
+ * configuration for the map ID will determine the rendering type (if
+ * available). Please note that vector maps may not be available for all devices
+ * and browsers and the map will fall back to a raster map as needed.
+ * @default {@link google.maps.RenderingType.RASTER}
+ * @type {google.maps.RenderingType|null|undefined}
+ */
+google.maps.MapOptions.prototype.renderingType;
 
 /**
  * Defines a boundary that restricts the area of the map accessible to users.
@@ -5852,7 +5971,10 @@ google.maps.MapOptions.prototype.streetViewControlOptions;
 /**
  * Styles to apply to each of the default map types. Note that for
  * <code>satellite</code>/<code>hybrid</code> and <code>terrain</code> modes,
- * these styles will only apply to labels and geometry.
+ * these styles will only apply to labels and geometry. This feature is not
+ * available when using a map ID, or when using vector maps (use <a
+ * href="https://developers.google.com/maps/documentation/cloud-customization">cloud-based
+ * maps styling</a> instead).
  * @type {Array<!google.maps.MapTypeStyle>|null|undefined}
  */
 google.maps.MapOptions.prototype.styles;
@@ -5876,6 +5998,15 @@ google.maps.MapOptions.prototype.styles;
  * @type {number|null|undefined}
  */
 google.maps.MapOptions.prototype.tilt;
+
+/**
+ * Whether the map should allow user control of the camera tilt. This option is
+ * only in effect when the map is a vector map. If not set in code, then the
+ * cloud configuration for the map ID will be used (if available).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapOptions.prototype.tiltInteractionEnabled;
 
 /**
  * The initial Map zoom level. Valid zoom values are numbers from zero up to the
@@ -10084,7 +10215,10 @@ google.maps.WebGLDrawOptions.prototype.transformer;
  * after removing. The <code>onDraw()</code> method will then be called whenever
  * a map property changes that could change the position of the element, such as
  * zoom, center, or map type. WebGLOverlayView may only be added to a vector map
- * having a {@link google.maps.MapOptions.mapId}.
+ * having a {@link google.maps.MapOptions.mapId} (including maps set to
+ * the {@link google.maps.RenderingType.VECTOR} {@link
+ * google.maps.MapOptions.renderingType} and using {@link
+ * google.maps.Map.DEMO_MAP_ID} as the {@link google.maps.MapOptions.mapId}).
  *
  * Access by calling `const {WebGLOverlayView} = await
  * google.maps.importLibrary("maps")`. See
