@@ -109,11 +109,10 @@ class InlineSimpleMethods implements CompilerPass {
         nonInlineableProperties.add(callName);
         return;
       }
-      // Exit early if any definitions are annotated with @noinline, and mark this method as not
-      // inlineable.
-      // NOTE: we could also cache the 'good' result of this method not being marked @noinline and
+      // Exit early if any definitions are incompatible with the InlineSimpleMethods inlining
+      // NOTE: we could also cache the 'good' result of these methods being inlineable to
       // avoid recalculating later, but profile data suggests that's not too useful.
-      if (anyDefinitionsNoInline(definitions)) {
+      if (anyDefinitionsNotInlineable(definitions)) {
         nonInlineableProperties.add(callName);
         return;
       }
@@ -212,8 +211,14 @@ class InlineSimpleMethods implements CompilerPass {
     return true;
   }
 
-  private boolean anyDefinitionsNoInline(Set<Node> definitions) {
+  private boolean anyDefinitionsNotInlineable(Set<Node> definitions) {
     for (Node n : definitions) {
+      if (n.isAsyncFunction() || n.isGeneratorFunction()) {
+        // async and generator functions cannot be trivially inlined because they return a Promise
+        // or generator object, not the return value directly. For now just don't inline them -
+        // it's unclear it's worth the complexity.
+        return true;
+      }
       JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(n.getParent());
       if (jsDocInfo != null && jsDocInfo.isNoInline()) {
         return true;

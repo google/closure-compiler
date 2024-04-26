@@ -48,7 +48,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   @Test
   public void testDoesNotInlineMethodOnBaseClass() {
-    String baseClassJS =
+    String baseClassJs =
         lines(
             "class Base {",
             "  constructor() {",
@@ -74,7 +74,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
             "",
             "(new Derived()).derivedMethod();");
 
-    String source = baseClassJS + derivedClassJS;
+    String source = baseClassJs + derivedClassJS;
     testSame(source);
   }
 
@@ -420,7 +420,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testArrowFunction() {
     // Arrow functions cannot be trivially inlined.
-    // This is only an issue if ES6+ is being targetted,
+    // This is only an issue if ES6+ is being targeted,
     // because otherwise the arrow function is removed before this pass.
     testSame(
         lines(
@@ -535,5 +535,68 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
             "const c = goog.reflect.objectProperty('bar', Foo.prototype);"),
         "var x=new Foo;x.bar()",
         "var x=new Foo;x.bar()");
+  }
+
+  @Test
+  public void testNoInlineOfAsyncMethod_es5Style() {
+    // Don't inline: the bar() call returns a Promise wrapping this.baz.
+    testSame(
+        lines(
+            "function Foo(){}",
+            "Foo.prototype.bar = async function(){return this.baz};",
+            "var x = (new Foo).bar();",
+            "var y = (new Foo).bar();"));
+  }
+
+  @Test
+  public void testNoInlineOfAsyncMethod_es6Style() {
+    // Don't inline: the bar() call returns a Promise wrapping this.baz.
+    testSame(
+        lines(
+            "class Foo { async bar(){return this.baz} }",
+            "var x = (new Foo).bar();",
+            "var y = (new Foo).bar();"));
+  }
+
+  @Test
+  public void testNoInlineOfGeneratorMethod_es5Style() {
+    // Don't inline: the bar() call returns a generator, not this.baz
+    testSame(
+        lines(
+            "function Foo(){}",
+            "Foo.prototype.bar = function*(){return this.baz};",
+            "var x = (new Foo).bar();",
+            "var y = (new Foo).bar();"));
+  }
+
+  @Test
+  public void testNoInlineOfGeneratorMethod_es6Style() {
+    // Don't inline: the bar() call returns a generator, not this.baz
+    testSame(
+        lines(
+            "class Foo { *bar(){return this.baz} }",
+            "var x = (new Foo).bar();",
+            "var y = (new Foo).bar();"));
+  }
+
+  @Test
+  public void testNoInlineOfAsynceneratorMethod_es5Style() {
+    // Don't inline: the bar() call returns an async generator, not this.baz
+    testSame(
+        lines(
+            "function Foo(){}",
+            "Foo.prototype.bar = async function*(){return this.baz};",
+            "var x = (new Foo).bar();",
+            "var y =(new Foo).bar();"));
+  }
+
+  @Test
+  public void testNoInlineOfAsyncGeneratorMethod_es6Style() {
+    // Don't inline: the bar() call returns an async generator, not this.baz
+    testSame(
+        lines(
+            "class Foo { async *bar(){return this.baz} }",
+            "var x = (new Foo).bar();",
+            "var y = (new Foo).bar();"));
   }
 }
