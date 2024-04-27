@@ -5528,13 +5528,6 @@ google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
 
 /**
- * If true, this map is configured properly to allow for the use of {@link
- * google.maps.WebGLOverlayView}.
- * @type {boolean|undefined}
- */
-google.maps.MapCapabilities.prototype.isWebgGLOverlayViewAvailable;
-
-/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * MapElement is an <code>HTMLElement</code> subclass for rendering maps. After
