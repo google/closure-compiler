@@ -81,6 +81,44 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
+    test(
+        lines(
+            "function isDeclaredInLoop(path) {",
+            "  for (let {",
+            "      parentPath,",
+            "      key",
+            "    } = path;",
+            "    parentPath; ({",
+            "      parentPath,",
+            "      key",
+            "    } = parentPath)) {",
+            "    return isDeclaredInLoop(parentPath);",
+            "  }",
+            "  return false;",
+            "}"),
+        lines(
+            "function isDeclaredInLoop(path) {",
+            "  for (let parentPath, key, $jscomp$destructuring$var0$unused = (() => {",
+            "    let $jscomp$destructuring$var1 = path;",
+            "    var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;",
+            "    parentPath = $jscomp$destructuring$var2.parentPath;",
+            "    key = $jscomp$destructuring$var2.key;",
+            "    return $jscomp$destructuring$var1;",
+            "  })(); parentPath; (() => {",
+            "    let $jscomp$destructuring$var3 = parentPath;",
+            "    var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;",
+            "    parentPath = $jscomp$destructuring$var4.parentPath;",
+            "    key = $jscomp$destructuring$var4.key;",
+            "    return $jscomp$destructuring$var3;",
+            "  })()) {",
+            "    return isDeclaredInLoop(parentPath);",
+            "  }",
+            "  return false;",
+            "}"));
+  }
+
+  @Test
   public void testObjectDestructuring() {
     test(
         "var {a: b, c: d} = foo();",

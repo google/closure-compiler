@@ -58,6 +58,56 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "/** @suppress {uselessCode} */",
+            "function isDeclaredInLoop(path) {",
+            "  for (let {",
+            "      parentPath,",
+            "      key",
+            "    } = path;",
+            "    parentPath; {",
+            "      parentPath,",
+            "      key",
+            "    } = parentPath) {",
+            "    return isDeclaredInLoop(parentPath);",
+            "  }",
+            "  return false;",
+            "}",
+            "isDeclaredInLoop({parentPath: 'jh', key: 2});"),
+        lines(
+            "/** @suppress {uselessCode} */",
+            "function isDeclaredInLoop(path) {",
+            "  var $jscomp$loop$98447280$2 = {parentPath:void 0, key:void 0};",
+            "  for (function($jscomp$loop$98447280$2) {",
+            "    return function() {",
+            "      $jscomp$loop$98447280$2.parentPath = path.parentPath;",
+            "      $jscomp$loop$98447280$2.key = path.key;",
+            "      return path;",
+            "    };",
+            "   }($jscomp$loop$98447280$2)(); $jscomp$loop$98447280$2.parentPath;) {",
+            "    return isDeclaredInLoop($jscomp$loop$98447280$2.parentPath);",
+            "   }",
+            "  return !1;",
+            " }",
+            "isDeclaredInLoop({parentPath:\"jh\", key:2});"));
+  }
+
+  @Test
   public void testVariableUsedAsArgumentMultipleTimes() {
     useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
