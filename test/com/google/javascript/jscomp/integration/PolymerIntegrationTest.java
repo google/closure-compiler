@@ -166,13 +166,18 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
-            "var a=function(){};",
+            "var a = a || {};",
+            "a.scope = {};",
+            "a.d = function(d, b) { return b; };",
+            "var c=function(){};",
             "(function(){",
-            "a.prototype.value;",
-            "Polymer({",
-            "a:\"foo\",",
-            "c:{value:Object}})})();",
-            "var b={randomProperty:0,b:1};"));
+            "  c.prototype.value;",
+            "  Polymer({",
+            "    a: \"foo\",",
+            "    c: {value:Object}",
+            "  });",
+            "})();",
+            "var e = {randomProperty:0, b:1};"));
   }
 
   @Test
@@ -204,12 +209,18 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
-            "var a=function(){};",
-            "(function(){a.prototype.value;",
-            "Polymer({",
-            "a:\"foo\",",
-            "c:{value:Object}})})();",
-            "var b={randomProperty:0,b:1};"));
+            "var a = a || {};",
+            "a.scope = {};",
+            "a.d = function(d, b) { return b; };",
+            "var c=function(){};",
+            "(function(){",
+            "  c.prototype.value;",
+            "  Polymer({",
+            "    a:\"foo\",",
+            "    c:{value:Object}",
+            "  });",
+            "})();",
+            "var e = {randomProperty:0,b:1};"));
   }
 
   @Test

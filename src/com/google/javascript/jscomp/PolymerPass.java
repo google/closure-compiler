@@ -48,7 +48,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   private final AbstractCompiler compiler;
   private final ImmutableMap<String, String> tagNameMap;
   private final int polymerVersion;
-  private final PolymerExportPolicy polymerExportPolicy;
   private final boolean propertyRenamingEnabled;
 
   private Node polymerElementExterns;
@@ -59,11 +58,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   private boolean warnedPolymer1ExternsMissing = false;
   private boolean propertySinkExternInjected = false;
 
-  PolymerPass(
-      AbstractCompiler compiler,
-      Integer polymerVersion,
-      PolymerExportPolicy polymerExportPolicy,
-      boolean propertyRenamingEnabled) {
+  PolymerPass(AbstractCompiler compiler, Integer polymerVersion, boolean propertyRenamingEnabled) {
     checkArgument(
         polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
         "Invalid Polymer version: (%s)",
@@ -72,8 +67,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     tagNameMap = TagNameToType.getMap();
     nativeExternsAdded = new LinkedHashSet<>();
     this.polymerVersion = polymerVersion == null ? 1 : polymerVersion;
-    this.polymerExportPolicy =
-        polymerExportPolicy == null ? PolymerExportPolicy.LEGACY : polymerExportPolicy;
     this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
@@ -90,7 +83,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       return;
     }
 
-    if (polymerVersion > 1 && propertyRenamingEnabled) {
+    if (propertyRenamingEnabled) {
       compiler.ensureLibraryInjected("util/reflectobject", false);
     }
 
@@ -160,8 +153,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
         appendPolymerElementExterns(def);
       }
       PolymerClassRewriter rewriter =
-          new PolymerClassRewriter(
-              compiler, polymerVersion, polymerExportPolicy, this.propertyRenamingEnabled);
+          new PolymerClassRewriter(compiler, polymerVersion, this.propertyRenamingEnabled);
       rewriter.rewritePolymerCall(def, traversal);
     }
   }
@@ -171,8 +163,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     PolymerClassDefinition def = PolymerClassDefinition.extractFromClassNode(node, compiler);
     if (def != null) {
       PolymerClassRewriter rewriter =
-          new PolymerClassRewriter(
-              compiler, polymerVersion, polymerExportPolicy, this.propertyRenamingEnabled);
+          new PolymerClassRewriter(compiler, polymerVersion, this.propertyRenamingEnabled);
       rewriter.propertySinkExternInjected = propertySinkExternInjected;
       rewriter.rewritePolymerClassDeclaration(node, traversal, def);
       propertySinkExternInjected = rewriter.propertySinkExternInjected;

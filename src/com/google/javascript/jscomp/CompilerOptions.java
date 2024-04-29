@@ -758,9 +758,6 @@ public class CompilerOptions implements Serializable {
   /** If non-null, processes Polymer code */
   @Nullable Integer polymerVersion;
 
-  /** How to handle exports/externs for Polymer properties and methods. */
-  PolymerExportPolicy polymerExportPolicy;
-
   /** Processes cr.* functions */
   private boolean chromePass;
 
@@ -1378,7 +1375,6 @@ public class CompilerOptions implements Serializable {
     preserveClosurePrimitives = false;
     angularPass = false;
     polymerVersion = null;
-    polymerExportPolicy = PolymerExportPolicy.LEGACY;
     j2clPassMode = J2clPassMode.AUTO;
     j2clMinifierEnabled = true;
     removeAbstractMethods = false;
@@ -1685,9 +1681,11 @@ public class CompilerOptions implements Serializable {
     this.polymerVersion = polymerVersion;
   }
 
-  public void setPolymerExportPolicy(PolymerExportPolicy polymerExportPolicy) {
-    this.polymerExportPolicy = polymerExportPolicy;
-  }
+  /**
+   * @deprecated no-op, remove calls to this method.
+   */
+  @Deprecated
+  public void setPolymerExportPolicy(PolymerExportPolicy polymerExportPolicy) {}
 
   public void setChromePass(boolean chromePass) {
     this.chromePass = chromePass;
@@ -2898,7 +2896,6 @@ public class CompilerOptions implements Serializable {
             parentChunkCanSeeSymbolsDeclaredInChildren)
         .add("parseJsDocDocumentation", isParseJsDocDocumentation())
         .add("pathEscaper", pathEscaper)
-        .add("polymerExportPolicy", polymerExportPolicy)
         .add("polymerVersion", polymerVersion)
         .add("preferSingleQuotes", preferSingleQuotes)
         .add("preferStableNames", preferStableNames)

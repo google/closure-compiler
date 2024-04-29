@@ -639,9 +639,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--polymer_export_policy",
-        usage =
-            "How to handle exports/externs for Polymer properties and methods. "
-                + "Values: LEGACY, EXPORT_ALL.")
+        usage = "Deprecated, has no effect and usages should be removed.")
+    @SuppressWarnings("unused")
     private String polymerExportPolicy = PolymerExportPolicy.LEGACY.name();
 
     @Option(
@@ -1946,13 +1945,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.angularPass = flags.angularPass;
 
     options.polymerVersion = flags.polymerVersion;
-    try {
-      options.polymerExportPolicy =
-          PolymerExportPolicy.valueOf(Ascii.toUpperCase(flags.polymerExportPolicy));
-    } catch (IllegalArgumentException ex) {
-      throw new FlagUsageException(
-          "Unknown PolymerExportPolicy `" + flags.polymerExportPolicy + "' specified.");
-    }
 
     options.setChromePass(flags.chromePass);
 

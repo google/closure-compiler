@@ -45,9 +45,8 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck();
+    enableCreateModuleMap();
     enableGatherExternProperties();
-    enableTranspile();
   }
 
   @Override
@@ -55,7 +54,10 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new PolymerPass(compiler, 1, PolymerExportPolicy.LEGACY, true).process(externs, root);
+        new PolymerPass(compiler, 1, true).process(externs, root);
+        new TypeCheck(
+                compiler, compiler.getReverseAbstractInterpreter(), compiler.getTypeRegistry())
+            .processForTesting(externs, root);
         new CheckUnusedPrivateProperties(compiler).process(externs, root);
       }
     };
@@ -112,7 +114,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
   @Test
   public void testBehaviorPropertyUsedAsObserver() {
     allowExternsChanges();
-    test(
+    testNoWarning(
         srcs(
             lines(
                 "/** @polymerBehavior */",
@@ -127,35 +129,8 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
                 "  /** @private */",
                 "  fooChanged_: function() {},",
                 "};"),
-            lines("Polymer({", "  is: 'example-elem',", "  behaviors: [Behavior],", "});")),
-        expected(
             lines(
-                "/** @polymerBehavior @nocollapse */",
-                "var Behavior = {",
-                "  properties: {",
-                "    foo: {",
-                "      type: Boolean,",
-                "      observer: 'fooChanged_',",
-                "    },",
-                "  },",
-                "",
-                "  /** @suppress {checkTypes|globalThis|visibility} */",
-                "  fooChanged_: function() {},",
-                "};"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {PolymerElement}",
-                " * @implements {PolymerExampleElemElementInterface$m1176578414$0}",
-                " */",
-                "var ExampleElemElement = function() {};",
-                "",
-                "/** @type {boolean} */",
-                "ExampleElemElement.prototype.foo;",
-                "",
-                "/** @private @suppress {unusedPrivateMembers} */",
-                "ExampleElemElement.prototype.fooChanged_ = function() {};",
-                "Polymer(/** @lends {ExampleElemElement.prototype} */ {",
+                "Polymer({", //
                 "  is: 'example-elem',",
                 "  behaviors: [Behavior],",
                 "});")));

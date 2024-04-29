@@ -2706,7 +2706,6 @@ public final class DefaultPassConfig extends PassConfig {
                   new PolymerPass(
                       compiler,
                       compiler.getOptions().polymerVersion,
-                      compiler.getOptions().polymerExportPolicy,
                       compiler.getOptions().propertyRenaming
                           == PropertyRenamingPolicy.ALL_UNQUOTED))
           .build();
