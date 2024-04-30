@@ -861,9 +861,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         report(JSError.make(DUPLICATE_EXTERN_INPUT, input.getName()));
       }
     }
+
     boolean hasZone = false;
     for (CompilerInput input : chunkGraph.getAllInputs()) {
-      if (input.getName().endsWith("packages/zone.js/lib/zone.closure.js")) {
+      if (isZoneInput(input)) {
         hasZone = true;
       }
       CompilerInput previous = putCompilerInput(input);
@@ -871,13 +872,33 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         report(JSError.make(DUPLICATE_INPUT, input.getName()));
       }
     }
+
     if (hasZone
+        && isZoneEnabled(options)
         && !options.allowsZoneJsWithAsyncFunctionsInOutput()
         && options.getOutputFeatureSet().contains(Feature.ASYNC_FUNCTIONS)) {
       throw new UnsupportedOperationException(
           "ZoneJS is incompatible with language level ES2017 or higher (See go/ngissue/31730)\n"
               + "Please set `--language_out=ECMASCRIPT_2016` (or older) in your flags.");
     }
+  }
+
+  /**
+   * Returns whether or not the given file is the Zone.js entry point. By default, we assume no
+   * files are Zone.js and this method can be overridden to identify which input is Zone.js.
+   */
+  boolean isZoneInput(CompilerInput input) {
+    return false;
+  }
+
+  /**
+   * Returns whether or not Zone.js is enabled (not tree-shaken) for this compilation. By default,
+   * we assume Zone.js is always enabled when it is included and this method can be overridden to
+   * optionally disable and tree-shake Zone.js when it is known not to be needed based on compiler
+   * flags.
+   */
+  boolean isZoneEnabled(CompilerOptions options) {
+    return true;
   }
 
   /** Sets up the skeleton of the AST (the externs and root). */
