@@ -1185,9 +1185,7 @@ final class PolymerClassRewriter {
     char nextDelimeter = ',';
     for (int i = 0; i < methodParameters.length(); i++) {
       if (methodParameters.charAt(i) == nextDelimeter) {
-        if (nextDelimeter != ',') {
-          nextDelimeter = ',';
-        }
+        nextDelimeter = ',';
       } else {
         if (methodParameters.charAt(i) == '"' || methodParameters.charAt(i) == '\'') {
           nextDelimeter = methodParameters.charAt(i);
