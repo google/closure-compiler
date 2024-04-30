@@ -755,8 +755,8 @@ public class CompilerOptions implements Serializable {
   /** Processes AngularJS-specific annotations */
   boolean angularPass;
 
-  /** If non-null, processes Polymer code */
-  @Nullable Integer polymerVersion;
+  /** Processes Polymer code */
+  boolean polymerPass;
 
   /** Processes cr.* functions */
   private boolean chromePass;
@@ -1374,7 +1374,7 @@ public class CompilerOptions implements Serializable {
     closurePass = false;
     preserveClosurePrimitives = false;
     angularPass = false;
-    polymerVersion = null;
+    polymerPass = false;
     j2clPassMode = J2clPassMode.AUTO;
     j2clMinifierEnabled = true;
     removeAbstractMethods = false;
@@ -1678,7 +1678,10 @@ public class CompilerOptions implements Serializable {
         polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
         "Invalid Polymer version: (%s)",
         polymerVersion);
-    this.polymerVersion = polymerVersion;
+    // Internally we model the polymerVersion as a boolean. if True, run the PolymerPass; otherwise
+    // don't. The public API is an integer for historical reasons & in case we need to modify it
+    // in the future.
+    this.polymerPass = polymerVersion != null;
   }
 
   /**
@@ -2896,7 +2899,7 @@ public class CompilerOptions implements Serializable {
             parentChunkCanSeeSymbolsDeclaredInChildren)
         .add("parseJsDocDocumentation", isParseJsDocDocumentation())
         .add("pathEscaper", pathEscaper)
-        .add("polymerVersion", polymerVersion)
+        .add("polymerPass", polymerPass)
         .add("preferSingleQuotes", preferSingleQuotes)
         .add("preferStableNames", preferStableNames)
         .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())
@@ -3331,7 +3334,7 @@ public class CompilerOptions implements Serializable {
 
   public char[] getPropertyReservedNamingFirstChars() {
     char[] reservedChars = null;
-    if (polymerVersion != null && polymerVersion > 1) {
+    if (polymerPass) {
       if (reservedChars == null) {
         reservedChars = POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
       } else {
@@ -3349,7 +3352,7 @@ public class CompilerOptions implements Serializable {
 
   public char[] getPropertyReservedNamingNonFirstChars() {
     char[] reservedChars = null;
-    if (polymerVersion != null && polymerVersion > 1) {
+    if (polymerPass) {
       if (reservedChars == null) {
         reservedChars = POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;
       } else {

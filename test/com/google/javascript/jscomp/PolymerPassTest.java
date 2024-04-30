@@ -151,8 +151,6 @@ public class PolymerPassTest extends CompilerTestCase {
           "$jscomp.reflectProperty = function(propName, type) {",
           "  return propName;",
           "};");
-
-  private int polymerVersion = 1;
   private boolean propertyRenamingEnabled = false;
 
   public PolymerPassTest() {
@@ -161,7 +159,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new PolymerPass(compiler, polymerVersion, propertyRenamingEnabled);
+    return new PolymerPass(compiler, propertyRenamingEnabled);
   }
 
   @Override
@@ -1080,7 +1078,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testExtendNonExistentElement() {
-    polymerVersion = 1;
     String js = lines("Polymer({", "  is: 'x-input',", "  extends: 'nonexist',", "});");
 
     testError(js, POLYMER_INVALID_EXTENDS);
@@ -4204,7 +4201,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testObjectReflectionAddedToConfigProperties1() {
     propertyRenamingEnabled = true;
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4251,7 +4247,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4307,7 +4302,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testObjectReflectionAddedToConfigProperties2() {
     propertyRenamingEnabled = true;
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4352,7 +4346,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4406,7 +4399,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testObjectReflectionAddedToConfigProperties3() {
     propertyRenamingEnabled = true;
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4454,7 +4446,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4959,7 +4950,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testParseErrorForComputedPropertyStrings1() {
     propertyRenamingEnabled = true;
 
-    polymerVersion = 2;
     super.testError(
         lines(
             "/** @constructor */",
@@ -4989,7 +4979,6 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testParseErrorForComputedPropertyStrings2() {
     propertyRenamingEnabled = true;
 
-    polymerVersion = 2;
     super.testError(
         lines(
             "/** @constructor */",
@@ -5247,11 +5236,6 @@ public class PolymerPassTest extends CompilerTestCase {
     this.test(srcs(js), expected(expected));
   }
 
-  public void test(int polymerVersion, String js, String expected) {
-    this.polymerVersion = polymerVersion;
-    super.test(srcs(js), getActualExpected(srcs(js), expected(expected)));
-  }
-
   @Override
   public void test(TestPart... testParts) {
     // Override this method so that we can ensure getActualExpected gets called
@@ -5273,53 +5257,16 @@ public class PolymerPassTest extends CompilerTestCase {
       modifiedTestParts.add(getActualExpected(srcs, expected));
     }
     TestPart[] testPartsArray = modifiedTestParts.toArray(new TestPart[0]);
-    polymerVersion = 1;
-    super.test(testPartsArray);
-
-    polymerVersion = 2;
     super.test(testPartsArray);
   }
 
-  protected void testExternChanges(Externs extern, Sources input, Expected expectedExtern) {
-    // Note: we don't call getActualExpected() here and require test cases to hardcode the
-    // full "Interface$m123..456$0" id instead. This is because "Interface$m123..456$0" gets put
-    // in the synthetic externs, but named based on an input source file path, so getActualExpected
-    // doesn't know what file path to use.
-    // TODO(lharker): it would be a minor readability improvement to add a different helper to
-    // support this case.
-    polymerVersion = 1;
-    super.testExternChanges(extern, input, expectedExtern);
-
-    polymerVersion = 2;
-    super.testExternChanges(extern, input, expectedExtern);
-  }
-
-  @Override
-  public void testError(String js, DiagnosticType error) {
-    polymerVersion = 1;
-    super.testError(js, error);
-
-    polymerVersion = 2;
-    super.testError(js, error);
-  }
-
-  @Override
-  public void testError(Externs externs, Sources srcs, Diagnostic error) {
-    polymerVersion = 1;
-    super.testError(externs, srcs, error);
-
-    polymerVersion = 2;
-    super.testError(externs, srcs, error);
-  }
-
-  @Override
-  public void testWarning(String js, DiagnosticType error) {
-    polymerVersion = 1;
-    super.testWarning(js, error);
-
-    polymerVersion = 2;
-    super.testWarning(js, error);
-  }
+  // Note: we don't have a version of testExternChanges that calls getActualExpected() here and
+  // require test cases to hardcode the
+  // full "Interface$m123..456$0" id instead. This is because "Interface$m123..456$0" gets put
+  // in the synthetic externs, but named based on an input source file path, so getActualExpected
+  // doesn't know what file path to use.
+  // TODO(lharker): it would be a minor readability improvement to add a different helper to
+  // support this case.
 
   // Helper to change the generic name string "Interface$UID$0" in the expected code with
   // actual string "Interface$m123..456$0" that will get produced

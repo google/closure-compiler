@@ -1496,7 +1496,7 @@ public abstract class CompilerTestCase {
 
         if (polymerPass && i == 0) {
           recentChange.reset();
-          new PolymerPass(compiler, 1, false).process(externsRoot, mainRoot);
+          new PolymerPass(compiler, false).process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 

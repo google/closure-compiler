@@ -46,7 +46,6 @@ import org.jspecify.nullness.Nullable;
 final class PolymerClassRewriter {
   private static final String VIRTUAL_FILE = "<PolymerClassRewriter.java>";
   private final AbstractCompiler compiler;
-  private final int polymerVersion;
   private final boolean propertyRenamingEnabled;
   @VisibleForTesting static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
@@ -67,11 +66,9 @@ final class PolymerClassRewriter {
   private final Node externsInsertionRef;
   boolean propertySinkExternInjected = false;
 
-  PolymerClassRewriter(
-      AbstractCompiler compiler, int polymerVersion, boolean propertyRenamingEnabled) {
+  PolymerClassRewriter(AbstractCompiler compiler, boolean propertyRenamingEnabled) {
     this.compiler = compiler;
     this.externsInsertionRef = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
-    this.polymerVersion = polymerVersion;
     this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
@@ -347,7 +344,7 @@ final class PolymerClassRewriter {
     // If property renaming is enabled, wrap the properties object literal
     // in a reflection call so that the properties are renamed consistently
     // with the class members.
-    if (polymerVersion > 1 && propertyRenamingEnabled && cls.descriptor != null) {
+    if (propertyRenamingEnabled && cls.descriptor != null) {
       Node props = NodeUtil.getFirstPropMatchingKey(cls.descriptor, "properties");
       if (props != null && props.isObjectLit()) {
         addPropertiesConfigObjectReflection(cls, props);

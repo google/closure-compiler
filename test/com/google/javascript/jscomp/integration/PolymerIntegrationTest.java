@@ -149,6 +149,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
+    options.setGeneratePseudoNames(true); // to make the expected output easier to follow
     addPolymerExterns();
 
     test(
@@ -166,18 +167,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
-            "var a = a || {};",
-            "a.scope = {};",
-            "a.d = function(d, b) { return b; };",
-            "var c=function(){};",
+            "var $$jscomp$$ = $$jscomp$$ || {};",
+            "$$jscomp$$.scope = {};",
+            "$$jscomp$$.$reflectObject$ = function($type$$, $object$$) { return $object$$; };",
+            "var $FooElement$$ = function(){};",
             "(function(){",
-            "  c.prototype.value;",
+            "  $FooElement$$.prototype.value;",
             "  Polymer({",
-            "    a: \"foo\",",
-            "    c: {value:Object}",
+            "    $is$:\"foo\",",
+            "    $properties$: $$jscomp$$.$reflectObject$($FooElement$$, {value:Object})",
             "  });",
             "})();",
-            "var e = {randomProperty:0, b:1};"));
+            // Note that randomProperty is not renamed (no '$' added) while otherProperty is
+            "var $obj$$ = {randomProperty:0, $otherProperty$: 1};"));
   }
 
   @Test
@@ -192,6 +194,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
+    options.setGeneratePseudoNames(true); // to make the expected output easier to follow
     addPolymerExterns();
 
     test(
@@ -209,18 +212,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
-            "var a = a || {};",
-            "a.scope = {};",
-            "a.d = function(d, b) { return b; };",
-            "var c=function(){};",
+            "var $$jscomp$$ = $$jscomp$$ || {};",
+            "$$jscomp$$.scope = {};",
+            "$$jscomp$$.$reflectObject$ = function($type$$, $object$$) { return $object$$; };",
+            "var $FooElement$$ = function(){};",
             "(function(){",
-            "  c.prototype.value;",
+            "  $FooElement$$.prototype.value;",
             "  Polymer({",
-            "    a:\"foo\",",
-            "    c:{value:Object}",
+            "    $is$:\"foo\",",
+            "    $properties$: $$jscomp$$.$reflectObject$($FooElement$$, {value:Object})",
             "  });",
             "})();",
-            "var e = {randomProperty:0,b:1};"));
+            // Note that randomProperty is not renamed (no '$' added) while otherProperty is
+            "var $obj$$ = {randomProperty:0, $otherProperty$: 1};"));
   }
 
   @Test

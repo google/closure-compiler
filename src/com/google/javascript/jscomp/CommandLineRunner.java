@@ -1944,7 +1944,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     options.angularPass = flags.angularPass;
 
-    options.polymerVersion = flags.polymerVersion;
+    options.setPolymerVersion(flags.polymerVersion);
 
     options.setChromePass(flags.chromePass);
 
