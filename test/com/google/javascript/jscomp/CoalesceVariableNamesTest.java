@@ -130,7 +130,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCoalesceVariableNamesWronglyUndeclaresOuterName() {
+  public void testCoalesceVariableNames_doesNotWronglyUndeclareOuterName() {
     disableValidateAstChangeMarking();
     test(
         lines(
@@ -138,11 +138,36 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             " entries.filter(a => { var b; [, b] = a; return b === c; });",
             "alert(localKey$jscomp$2);"),
         // The CoalesceVariableNames pass merges the names `a` and `b` in the arrow function, but in
-        // doing so deletes the const keyword which declared the outer name `localKey$jscomp$2`
+        // doing so does not delete the const keyword which declared the outer name
+        // `localKey$jscomp$2`
         lines(
-            "[{localKey:localKey$jscomp$2} = {localKey:void 0}] = ", //
+            "const [{localKey:localKey$jscomp$2} = {localKey:void 0}] = ", //
             "entries.filter(a => { [, a] = a; return a === c; })",
             "alert(localKey$jscomp$2);"));
+  }
+
+  @Test
+  public void testCoalesceVariableNames_worksInsideExpressionResults() {
+    inFunction(
+        lines(
+            "a.b = function() { ", //
+            "  const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =",
+            "    entries.filter(a => { ",
+            "      var b;",
+            "      [, b] = a;",
+            "      return b === c;",
+            "    });",
+            "  alert(localKey$jscomp$2);",
+            "}"),
+        lines(
+            "a.b = function() { ", //
+            "  const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =",
+            "    entries.filter(a => { ",
+            "      [, a] = a;",
+            "      return a === c;",
+            "    })",
+            "  alert(localKey$jscomp$2);",
+            "}"));
   }
 
   @Test

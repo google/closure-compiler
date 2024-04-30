@@ -282,12 +282,31 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
     checkState(n.isName(), "trying to update the declaration of a non-name node");
     if (NodeUtil.isNameDeclaration(parent)
         || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
-            && NodeUtil.isLhsByDestructuring(n))) {
+            && NodeUtil.isLhsByDestructuring(n)
+            // Consider this to be a destructuring LHS declaration only if we don't hit an
+            // assignment like `[a,b] = [3,4]` first.
+            && !isNameInsideDestructuringAssignment(n))) {
       // convert the coalesced variable's declaration into a `var` if it is a `const` or a `let`
       makeDeclarationVar(coalescedVar);
       // remove the declaration of the given name node as it has been coalesced with coalescedVar
       removeVarDeclaration(n);
     }
+  }
+
+  /**
+   * Is the given name node inside the LHS of a destructuring pattern assignment like `[a,b,c] =
+   * [1,2,3]`.
+   *
+   * <p>Importantly, for this pass, it means that the name is not inside a declaration like `const
+   * [a,b,c] = [1,2,3]` and must not be undeclared.
+   */
+  private boolean isNameInsideDestructuringAssignment(Node n) {
+    Node enclosingTarget = NodeUtil.getRootTarget(n);
+    if (enclosingTarget.isDestructuringPattern() && enclosingTarget.getParent().isAssign()) {
+      // This is a destructuring pattern assignment.
+      return true;
+    }
+    return false;
   }
 
   /**
