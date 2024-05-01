@@ -235,7 +235,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "c.m();",
                 "c.n();",
                 // this call should prevent devirtualizing m() but not n()
-                "use(C.prototype, $jscomp.reflectProperty('m', C.prototype));")),
+                "use(C.prototype, goog.reflect.objectProperty('m', C.prototype));")),
         expected(
             lines(
                 "var JSCompiler_StaticMethods_n = function(JSCompiler_StaticMethods_n$self) {};",
@@ -243,7 +243,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "const c = new C();",
                 "c.m();",
                 "JSCompiler_StaticMethods_n(c);",
-                "use(C.prototype, $jscomp.reflectProperty('m', C.prototype));")));
+                "use(C.prototype, goog.reflect.objectProperty('m', C.prototype));")));
   }
 
   private void testNoRewriteIfDefinitionSiteBetween(String prefix, String suffix) {

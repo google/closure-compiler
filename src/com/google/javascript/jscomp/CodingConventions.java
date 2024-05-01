@@ -291,9 +291,6 @@ public final class CodingConventions {
   @Immutable
   private static class DefaultCodingConvention implements CodingConvention {
 
-    private static final QualifiedName JSCOMP_REFLECT_PROPERTY =
-        QualifiedName.of("$jscomp.reflectProperty");
-
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -482,9 +479,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isPropertyRenameFunction(Node nameNode) {
-      return nameNode.matchesName(NodeUtil.JSC_PROPERTY_NAME_FN)
-          || JSCOMP_REFLECT_PROPERTY.matches(nameNode)
-          || nameNode.matchesName("$jscomp$reflectProperty");
+      return nameNode.matchesName(NodeUtil.JSC_PROPERTY_NAME_FN);
     }
 
     @Override

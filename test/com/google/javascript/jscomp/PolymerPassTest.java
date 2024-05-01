@@ -142,15 +142,7 @@ public class PolymerPassTest extends CompilerTestCase {
           " * @return {T}",
           " * @template T",
           " */",
-          "$jscomp.reflectObject = function (type, object) { return object; };",
-          "/**",
-          " * @param {string} propName",
-          " * @param {?Object} type class, interface, or record",
-          " * @return {string}",
-          " */",
-          "$jscomp.reflectProperty = function(propName, type) {",
-          "  return propName;",
-          "};");
+          "$jscomp.reflectObject = function (type, object) { return object; };");
   private boolean propertyRenamingEnabled = false;
 
   public PolymerPassTest() {
