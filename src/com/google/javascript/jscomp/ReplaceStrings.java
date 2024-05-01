@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  private final Map<String, Config> functions = new HashMap<>();
+  private final Map<String, Config> functions = new LinkedHashMap<>();
   private final DefaultNameGenerator nameGenerator;
   private final Map<String, Result> results = new LinkedHashMap<>();
 

@@ -36,7 +36,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -220,7 +220,7 @@ final class CheckClosureImports implements CompilerPass {
   CheckClosureImports(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     this.compiler = compiler;
     this.checker = new Checker(compiler, moduleMetadataMap);
-    this.namespacesSeen = new HashSet<>();
+    this.namespacesSeen = new LinkedHashSet<>();
     this.chunkGraph = compiler.getChunkGraph();
   }
 

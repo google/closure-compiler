@@ -32,10 +32,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -67,7 +66,7 @@ class InlineFunctions implements CompilerPass {
   // to ensure that this doesn't produce invalid code. But in the long run,
   // this needs a major refactor.
   private final Map<String, FunctionState> fns = new LinkedHashMap<>();
-  private final Map<Node, String> anonFns = new HashMap<>();
+  private final Map<Node, String> anonFns = new LinkedHashMap<>();
 
   private final AbstractCompiler compiler;
 
@@ -794,7 +793,7 @@ class InlineFunctions implements CompilerPass {
 
   /** This functions that may be called directly. */
   private Set<String> findCalledFunctions(Node node) {
-    Set<String> changed = new HashSet<>();
+    Set<String> changed = new LinkedHashSet<>();
     findCalledFunctions(NodeUtil.getFunctionBody(node), changed);
     return changed;
   }

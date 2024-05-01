@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -141,7 +140,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       // TreeMap because ES6 orders the export key using natural ordering.
       exportedNameToLocalQName = new TreeMap<>();
       importRequests = new LinkedHashSet<>();
-      imports = new HashSet<>();
+      imports = new LinkedHashSet<>();
       modulePath = compiler.getInput(script.getInputId()).getPath();
     }
 
@@ -309,7 +308,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
           importDecl.detach();
         }
 
-        Set<String> importedNames = new HashSet<>();
+        Set<String> importedNames = new LinkedHashSet<>();
 
         for (ModuleRequest request : importRequests) {
           String varName = request.varName();

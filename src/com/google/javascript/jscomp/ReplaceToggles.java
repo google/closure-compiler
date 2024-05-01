@@ -20,8 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
@@ -97,7 +97,7 @@ class ReplaceToggles implements CompilerPass {
         }
 
         Map<String, Integer> mapping = new LinkedHashMap<>();
-        Set<Integer> ordinals = new HashSet<>();
+        Set<Integer> ordinals = new LinkedHashSet<>();
         for (Node c = rhs.getFirstChild(); c != null; c = c.getNext()) {
           if (!c.isStringKey() && !c.isStringLit()) {
             compiler.report(JSError.make(c, INVALID_ORDINAL_MAPPING, "non-string key"));

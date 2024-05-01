@@ -25,7 +25,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -107,7 +107,6 @@ class ProcessTweaks implements CompilerPass {
     final Token validNodeTypeB;
     final TweakFunction registerFunction;
 
-
     TweakFunction(String name, String expectedTypeName, Token validNodeTypeA) {
       this(name, expectedTypeName, validNodeTypeA, Token.EMPTY, null);
     }
@@ -173,7 +172,7 @@ class ProcessTweaks implements CompilerPass {
   private static final Map<String, TweakFunction> TWEAK_FUNCTIONS_MAP;
 
   static {
-    TWEAK_FUNCTIONS_MAP = new HashMap<>();
+    TWEAK_FUNCTIONS_MAP = new LinkedHashMap<>();
     for (TweakFunction func : TweakFunction.values()) {
       TWEAK_FUNCTIONS_MAP.put(func.getName(), func);
     }
@@ -252,7 +251,7 @@ class ProcessTweaks implements CompilerPass {
 
   /** Processes all calls to goog.tweak functions. */
   private final class CollectTweaks extends AbstractPostOrderCallback {
-    final Map<String, TweakInfo> allTweaks = new HashMap<>();
+    final Map<String, TweakInfo> allTweaks = new LinkedHashMap<>();
 
     @SuppressWarnings("incomplete-switch")
     @Override

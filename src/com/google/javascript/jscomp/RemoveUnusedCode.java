@@ -38,9 +38,9 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -110,7 +110,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   private final LinkedHashMap<Var, VarInfo> varInfoMap = new LinkedHashMap<>();
 
-  private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
+  private final Set<String> pinnedPropertyNames = new LinkedHashSet<>(IMPLICITLY_USED_PROPERTIES);
 
   /** Stores Removable objects for each property name that is currently considered removable. */
   private final Multimap<String, Removable> removablesForPropertyNames = HashMultimap.create();
@@ -129,7 +129,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Multimap<String, PolyfillInfo> polyfills = HashMultimap.create();
 
-  private final Set<Node> guardedUsages = new HashSet<>();
+  private final Set<Node> guardedUsages = new LinkedHashSet<>();
 
   private final Polyfills polyfillsFromTable;
 

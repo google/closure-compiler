@@ -22,13 +22,12 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Collapses multiple variable declarations into a single one. i.e the
- * following:
+ * Collapses multiple variable declarations into a single one. i.e the following:
  *
  * <pre>
  * var a;
@@ -41,22 +40,19 @@ import java.util.Set;
  * <pre>var a, b = 1, c = 2;</pre>
  *
  * This reduces the generated code size. More optimizations are possible:
- * <li>Group all variable declarations inside a function into one such variable.
- * declaration block.</li>
- * <li>Re-use variables instead of declaring a new one if they are used for
- * only part of a function.</li>
+ * <li>Group all variable declarations inside a function into one such variable. declaration block.
+ * <li>Re-use variables instead of declaring a new one if they are used for only part of a function.
+ *     Similarly, also collapses assigns like:
  *
- * Similarly, also collapses assigns like:
- *
- * <pre>
+ *     <pre>
  * a = true;
  * b = true;
  * var c = true;
  * </pre>
  *
- * becomes:
+ *     becomes:
  *
- * <pre>var c = b = a = true;</pre>
+ *     <pre>var c = b = a = true;</pre>
  */
 class CollapseVariableDeclarations implements CompilerPass {
   /** Reference to JS Compiler */
@@ -64,10 +60,7 @@ class CollapseVariableDeclarations implements CompilerPass {
 
   /** Encapsulation of information about a variable declaration collapse */
   private static class Collapse {
-    /**
-     * Variable declaration that any following var nodes should be
-     * collapsed into
-     */
+    /** Variable declaration that any following var nodes should be collapsed into */
     final Node startNode;
 
     Collapse(Node startNode, Node endNode, Node parent) {
@@ -79,11 +72,11 @@ class CollapseVariableDeclarations implements CompilerPass {
   private final List<Collapse> collapses = new ArrayList<>();
 
   /**
-   * Nodes we've already looked at for collapsing, so that we don't look at them
-   * again (we look ahead when examining what nodes can be collapsed, and the
-   * node traversal may give them to us again)
+   * Nodes we've already looked at for collapsing, so that we don't look at them again (we look
+   * ahead when examining what nodes can be collapsed, and the node traversal may give them to us
+   * again)
    */
-  private final Set<Node> nodesToCollapse = new HashSet<>();
+  private final Set<Node> nodesToCollapse = new LinkedHashSet<>();
 
   CollapseVariableDeclarations(AbstractCompiler compiler) {
     checkState(!compiler.getLifeCycleStage().isNormalized());
@@ -156,8 +149,7 @@ class CollapseVariableDeclarations implements CompilerPass {
       Node var = collapse.startNode;
       compiler.reportChangeToEnclosingScope(var);
 
-      while (var.getNext() != null
-          && (var.getNext().getToken() == var.getToken())) {
+      while (var.getNext() != null && (var.getNext().getToken() == var.getToken())) {
         Node next = var.getNext().detach();
 
         // Move all children of the next var node into the first one.

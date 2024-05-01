@@ -31,8 +31,8 @@ import com.google.javascript.jscomp.parsing.parser.Identifiers;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -115,14 +115,14 @@ public final class GatherModuleMetadata implements CompilerPass {
    * Map from module path to module. These modules represent files and thus will contain all goog
    * namespaces that are in the file. These are not the same modules in modulesByGoogNamespace.
    */
-  private final Map<String, ModuleMetadata> modulesByPath = new HashMap<>();
+  private final Map<String, ModuleMetadata> modulesByPath = new LinkedHashMap<>();
 
   /**
    * Map from Closure namespace to module. These modules represent just the single namespace and
    * thus each module has only one goog namespace in its {@link ModuleMetadata#googNamespaces()}.
    * These are not the same modules in modulesByPath.
    */
-  private final Map<String, ModuleMetadata> modulesByGoogNamespace = new HashMap<>();
+  private final Map<String, ModuleMetadata> modulesByGoogNamespace = new LinkedHashMap<>();
 
   /** The current module being traversed. */
   private ModuleMetadataBuilder currentModule;
@@ -230,8 +230,8 @@ public final class GatherModuleMetadata implements CompilerPass {
     // actually a toggle module (since it could have been shadowed, or may have been defined in a
     // different file), but looking up by only vars is much slower. This way we can do a fast name
     // lookup, followed by a slower var lookup only if the name is known to be a toggle module name.
-    final Set<String> toggleModuleNames = new HashSet<>();
-    final Set<Var> toggleModules = new HashSet<>();
+    final Set<String> toggleModuleNames = new LinkedHashSet<>();
+    final Set<Var> toggleModules = new LinkedHashSet<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {

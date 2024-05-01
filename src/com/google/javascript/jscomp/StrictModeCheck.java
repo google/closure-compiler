@@ -19,7 +19,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 /**
  * Checks that the code obeys the static restrictions of strict mode:
@@ -170,10 +170,10 @@ class StrictModeCheck extends AbstractPostOrderCallback implements CompilerPass 
 
   /** Checks that object literal keys or class method names are valid. */
   private void checkObjectLiteralOrClass(Node n) {
-    HashSet<String> getters = new HashSet<>();
-    HashSet<String> setters = new HashSet<>();
-    HashSet<String> staticGetters = new HashSet<>();
-    HashSet<String> staticSetters = new HashSet<>();
+    LinkedHashSet<String> getters = new LinkedHashSet<>();
+    LinkedHashSet<String> setters = new LinkedHashSet<>();
+    LinkedHashSet<String> staticGetters = new LinkedHashSet<>();
+    LinkedHashSet<String> staticSetters = new LinkedHashSet<>();
 
     /*
      * Iterate backwards because the last duplicate is the one that will be used in sloppy or ES6
@@ -195,14 +195,14 @@ class StrictModeCheck extends AbstractPostOrderCallback implements CompilerPass 
       String keyName = key.getString();
       if (!key.isSetterDef()) {
         // normal property and getter cases
-        HashSet<String> set = key.isStaticMember() ? staticGetters : getters;
+        LinkedHashSet<String> set = key.isStaticMember() ? staticGetters : getters;
         if (!set.add(keyName)) {
           this.report(key, DUPLICATE_MEMBER, keyName);
         }
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
-        HashSet<String> set = key.isStaticMember() ? staticSetters : setters;
+        LinkedHashSet<String> set = key.isStaticMember() ? staticSetters : setters;
         if (!set.add(keyName)) {
           this.report(key, DUPLICATE_MEMBER, keyName);
         }

@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,23 +32,18 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 /**
- * A compiler pass for aliasing strings. String declarations
- * contribute to garbage collection, which becomes a problem in large
- * applications. Strings that should be aliased occur many times in the code,
- * or occur on codepaths that get executed frequently.
+ * A compiler pass for aliasing strings. String declarations contribute to garbage collection, which
+ * becomes a problem in large applications. Strings that should be aliased occur many times in the
+ * code, or occur on codepaths that get executed frequently.
  *
- * 2017/09/17 Notes:
- *     - Turning on this pass usually hurts code size after gzip.
- *     - It was originally written to deal with performance problems on some
- *       older browser VMs.
- *     - However, projects that make heavy use of jslayout may need to enable
- *       this pass even for modern browsers, because jslayout generates so many
- *       duplicate strings.
+ * <p>2017/09/17 Notes: - Turning on this pass usually hurts code size after gzip. - It was
+ * originally written to deal with performance problems on some older browser VMs. - However,
+ * projects that make heavy use of jslayout may need to enable this pass even for modern browsers,
+ * because jslayout generates so many duplicate strings.
  */
 class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
-  private static final Logger logger =
-      Logger.getLogger(AliasStrings.class.getName());
+  private static final Logger logger = Logger.getLogger(AliasStrings.class.getName());
 
   /** Prefix for variable names for the aliased strings */
   private static final String STRING_ALIAS_PREFIX = "$$S_";
@@ -72,10 +67,12 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * Map from chunk to the node in that chunk that should parent any string variable declarations
    * that have to be moved into that chunk
    */
-  private final Map<JSChunk, Node> chunkVarParentMap = new HashMap<>();
+  private final Map<JSChunk, Node> chunkVarParentMap = new LinkedHashMap<>();
 
-  /** package private.  This value is AND-ed with the hash function to allow
-   * unit tests to reduce the range of hash values to test collision cases */
+  /**
+   * package private. This value is AND-ed with the hash function to allow unit tests to reduce the
+   * range of hash values to test collision cases
+   */
   int unitTestHashReductionMask = ~0;
 
   /**
@@ -175,10 +172,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     }
   }
 
-  /**
-   * Looks up the {@link StringInfo} object for a JavaScript string. Creates
-   * it if necessary.
-   */
+  /** Looks up the {@link StringInfo} object for a JavaScript string. Creates it if necessary. */
   private StringInfo getOrCreateStringInfo(String string) {
     StringInfo info = stringInfoMap.get(string);
     if (info == null) {
@@ -188,9 +182,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     return info;
   }
 
- /**
-   * Replace strings with references to alias variables.
-   */
+  /** Replace strings with references to alias variables. */
   private void replaceStringsWithAliases() {
     for (Entry<String, StringInfo> entry : stringInfoMap.entrySet()) {
       String literal = entry.getKey();
@@ -204,8 +196,8 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   }
 
   /**
-   * Creates a var declaration for each aliased string. Var declarations are
-   * inserted as close to the first use of the string as possible.
+   * Creates a var declaration for each aliased string. Var declarations are inserted as close to
+   * the first use of the string as possible.
    */
   private void addAliasDeclarationNodes() {
     for (Entry<String, StringInfo> entry : stringInfoMap.entrySet()) {
@@ -227,10 +219,10 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   }
 
   /**
-   *  Dictates the policy for replacing a string with an alias.
+   * Dictates the policy for replacing a string with an alias.
    *
-   *  @param str The string literal
-   *  @param info Accumulated information about a string
+   * @param str The string literal
+   * @param info Accumulated information about a string
    */
   private static boolean shouldReplaceWithAlias(String str, StringInfo info) {
     // Optimize for code size.  Are aliases smaller than strings?
@@ -266,9 +258,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     compiler.reportChangeToEnclosingScope(nameNode);
   }
 
-  /**
-   * Outputs a log of all strings used more than once in the code.
-   */
+  /** Outputs a log of all strings used more than once in the code. */
   private void outputStringUsage() {
     StringBuilder sb = new StringBuilder("Strings used more than once:\n");
     for (Entry<String, StringInfo> stringInfoEntry : stringInfoMap.entrySet()) {
@@ -287,14 +277,11 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   // -------------------------------------------------------------------------
 
-  /**
-   * A class that holds information about a JavaScript string that might become
-   * aliased.
-   */
+  /** A class that holds information about a JavaScript string that might become aliased. */
   private final class StringInfo {
     final int id;
 
-    boolean isAliased;      // set to 'true' when reference to alias created
+    boolean isAliased; // set to 'true' when reference to alias created
 
     final ArrayList<Node> occurrences = new ArrayList<>();
 
@@ -312,8 +299,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     /** Returns the JS variable name to be substituted for this string. */
     String getVariableName(String stringLiteral) {
       if (aliasName == null) {
-        aliasName =
-            encodeStringAsIdentifier(STRING_ALIAS_PREFIX, stringLiteral);
+        aliasName = encodeStringAsIdentifier(STRING_ALIAS_PREFIX, stringLiteral);
       }
       return aliasName;
     }
@@ -321,21 +307,19 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     /**
      * Returns a legal identifier that uniquely characterizes string 's'.
      *
-     * We want the identifier to be a function of the string value because that
-     * makes the identifiers stable as the program is changed.
+     * <p>We want the identifier to be a function of the string value because that makes the
+     * identifiers stable as the program is changed.
      *
-     * The digits of a good hash function would be adequate, but for short
-     * strings the following algorithm is easier to work with for unit tests.
+     * <p>The digits of a good hash function would be adequate, but for short strings the following
+     * algorithm is easier to work with for unit tests.
      *
-     * ASCII alphanumerics are mapped to themselves.  Other characters are
-     * mapped to $XXX or $XXX_ where XXX is a variable number of hex digits.
-     * The underscore is inserted as necessary to avoid ambiguity when the
-     * character following is a hex digit. E.g. '\n1' maps to '$a_1',
+     * <p>ASCII alphanumerics are mapped to themselves. Other characters are mapped to $XXX or $XXX_
+     * where XXX is a variable number of hex digits. The underscore is inserted as necessary to
+     * avoid ambiguity when the character following is a hex digit. E.g. '\n1' maps to '$a_1',
      * distinguished by the underscore from '\u00A1' which maps to '$a1'.
      *
-     * If the string is short enough, this is sufficient.  Longer strings are
-     * truncated after encoding an initial prefix and appended with a hash
-     * value.
+     * <p>If the string is short enough, this is sufficient. Longer strings are truncated after
+     * encoding an initial prefix and appended with a hash value.
      */
     String encodeStringAsIdentifier(String prefix, String s) {
       // Limit to avoid generating very long identifiers
@@ -351,16 +335,14 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
         char ch = s.charAt(i);
 
         if (protectHex) {
-          if ((ch >= '0' && ch <= '9') ||
-              (ch >= 'a' && ch <= 'f')) { // toHexString generate lowercase
+          if ((ch >= '0' && ch <= '9')
+              || (ch >= 'a' && ch <= 'f')) { // toHexString generate lowercase
             sb.append('_');
           }
           protectHex = false;
         }
 
-        if ((ch >= '0' && ch <= '9') ||
-            (ch >= 'A' && ch <= 'Z') ||
-            (ch >= 'a' && ch <= 'z')) {
+        if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
           sb.append(ch);
         } else {
           sb.append('$');

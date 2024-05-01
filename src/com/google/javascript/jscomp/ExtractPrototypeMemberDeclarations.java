@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -276,7 +276,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   /** Collects all the possible extraction instances in a node traversal. */
   private class GatherExtractionInfo extends AbstractShallowCallback {
-    private final Map<JSChunk, ExtractionInstanceInfo> instancesByChunk = new HashMap<>();
+    private final Map<JSChunk, ExtractionInstanceInfo> instancesByChunk = new LinkedHashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {

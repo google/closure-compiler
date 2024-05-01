@@ -21,25 +21,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
  * Verifies that constants are only assigned a value once.
- * e.g. var XX = 5;
+ *
+ * <p>e.g.
+ *
+ * <pre><code>
  * XX = 3;    // error!
  * XX++;      // error!
+ * </code></pre>
  */
 // TODO(tbreisacher): Consider merging this with CheckAccessControls so that all
 // const-related checks are in the same place.
-class ConstCheck extends AbstractPostOrderCallback
-    implements CompilerPass {
+class ConstCheck extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType CONST_REASSIGNED_VALUE_ERROR =
       DiagnosticType.warning(
           "JSC_CONSTANT_REASSIGNED_VALUE_ERROR",
-          "constant {0} assigned a value more than once.\n" +
-          "Original definition at {1}");
+          "constant {0} assigned a value more than once.\nOriginal definition at {1}");
 
   private final AbstractCompiler compiler;
   private final Set<Var> initializedConstants;
@@ -47,7 +49,7 @@ class ConstCheck extends AbstractPostOrderCallback
   /** Creates an instance. */
   public ConstCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.initializedConstants = new HashSet<>();
+    this.initializedConstants = new LinkedHashSet<>();
   }
 
   @Override

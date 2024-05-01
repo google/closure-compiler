@@ -25,8 +25,8 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,7 +99,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   public ChromePass(AbstractCompiler compiler) {
     this.compiler = compiler;
     // The global variable "cr" is declared in ui/webui/resources/js/cr.js.
-    this.createdObjects = new HashSet<>(Arrays.asList("cr"));
+    this.createdObjects = new LinkedHashSet<>(Arrays.asList("cr"));
   }
 
   @Override
@@ -253,7 +253,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   }
 
   private static Map<String, String> objectLitToMap(Node objectLit) {
-    Map<String, String> res = new HashMap<>();
+    Map<String, String> res = new LinkedHashMap<>();
 
     for (Node keyNode = objectLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       String key = keyNode.getString();

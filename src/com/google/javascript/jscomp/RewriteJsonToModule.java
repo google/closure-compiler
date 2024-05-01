@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +49,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
    */
   public RewriteJsonToModule(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.packageJsonMainEntries = new HashMap<>();
+    this.packageJsonMainEntries = new LinkedHashMap<>();
   }
 
   public ImmutableMap<String, String> getPackageJsonMainEntries() {

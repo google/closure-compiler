@@ -31,8 +31,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -490,10 +490,10 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   ExternExportsPass(AbstractCompiler compiler) {
     this.exports = new ArrayList<>();
     this.compiler = compiler;
-    this.definitionMap = new HashMap<>();
+    this.definitionMap = new LinkedHashMap<>();
     this.externsRoot = IR.script();
-    this.alreadyExportedPaths = new HashSet<>();
-    this.mappedPaths = new HashMap<>();
+    this.alreadyExportedPaths = new LinkedHashSet<>();
+    this.mappedPaths = new LinkedHashMap<>();
 
     initExportMethods();
   }

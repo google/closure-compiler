@@ -25,7 +25,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.jspecify.nullness.Nullable;
 
@@ -59,7 +59,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
               + "Please add a goog.requireType.");
 
   /** The set of template parameter names found so far in the file currently being checked. */
-  private final HashSet<String> templateParamNames = new HashSet<>();
+  private final LinkedHashSet<String> templateParamNames = new LinkedHashSet<>();
 
   /** The mapping from Closure namespace into the module that provides it. */
   private final ImmutableMap<String, ModuleMetadata> moduleByNamespace;
@@ -121,32 +121,32 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     for (String param : info.getParameterNames()) {
       if (info.hasParameterType(param)) {
         visitJsDocExpr(
-            t, currentModule, info.getParameterType(param), /* isStrongReference=*/ false);
+            t, currentModule, info.getParameterType(param), /* isStrongReference= */ false);
       }
     }
     if (info.hasReturnType()) {
-      visitJsDocExpr(t, currentModule, info.getReturnType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getReturnType(), /* isStrongReference= */ false);
     }
     if (info.hasEnumParameterType()) {
-      visitJsDocExpr(t, currentModule, info.getEnumParameterType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getEnumParameterType(), /* isStrongReference= */ false);
     }
     if (info.hasTypedefType()) {
-      visitJsDocExpr(t, currentModule, info.getTypedefType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getTypedefType(), /* isStrongReference= */ false);
     }
     if (info.hasThisType()) {
-      visitJsDocExpr(t, currentModule, info.getThisType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getThisType(), /* isStrongReference= */ false);
     }
     if (info.hasBaseType()) {
       // Note that `@extends` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, currentModule, info.getBaseType(), /* isStrongReference=*/ true);
+      visitJsDocExpr(t, currentModule, info.getBaseType(), /* isStrongReference= */ true);
     }
     for (JSTypeExpression expr : info.getExtendedInterfaces()) {
       // Note that `@extends` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, currentModule, expr, /* isStrongReference=*/ true);
+      visitJsDocExpr(t, currentModule, expr, /* isStrongReference= */ true);
     }
     for (JSTypeExpression expr : info.getImplementedInterfaces()) {
       // Note that `@implements` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, currentModule, expr, /* isStrongReference=*/ true);
+      visitJsDocExpr(t, currentModule, expr, /* isStrongReference= */ true);
     }
   }
 

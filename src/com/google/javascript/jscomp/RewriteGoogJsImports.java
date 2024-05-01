@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -101,7 +100,7 @@ public class RewriteGoogJsImports implements CompilerPass {
   private final ModuleMap moduleMap;
   private final AbstractCompiler compiler;
   private @Nullable Module googModule;
-  private final Map<Module, Module> moduleReplacements = new HashMap<>();
+  private final Map<Module, Module> moduleReplacements = new LinkedHashMap<>();
 
   public RewriteGoogJsImports(AbstractCompiler compiler, Mode mode, ModuleMap moduleMap) {
     checkNotNull(moduleMap);

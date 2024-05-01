@@ -149,7 +149,7 @@ class RenameProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
-        Sets.newHashSetWithExpectedSize(externedNames.size() + quotedNames.size());
+        Sets.newLinkedHashSetWithExpectedSize(externedNames.size() + quotedNames.size());
     reservedNames.addAll(externedNames);
     reservedNames.addAll(quotedNames);
 
