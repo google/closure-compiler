@@ -64,6 +64,13 @@ import org.jspecify.nullness.Nullable;
  * Scope: you may pass in a {@link GlobalNamespace} or similar object which contains fully qualified
  * names, to look up colors for an entire property chain.
  *
+ * <p>IMPORTANT: The methods in this class should never set source reference information. It is the
+ * responsibility of the client code to set the correct source reference information. If we were to
+ * make guesses here, that would lead to client code that sometimes does and sometimes doesn't set
+ * the source reference and force the reader of that code to determine whether the default guess we
+ * have here is really correct or not. It's better to have the decision made explicitly in the
+ * client code.
+ *
  * <p>TODO(b/193800507): delete the methods in this class that only work for JSTypes but not colors.
  */
 final class AstFactory {
@@ -149,6 +156,7 @@ final class AstFactory {
    * AstFactory} to create new nodes.
    */
   Node exprResult(Node expr) {
+    // TODO(bradfordcsmith): This method should not be calling .srcref()
     return IR.exprResult(expr).srcref(expr);
   }
 
