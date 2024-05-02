@@ -385,10 +385,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
-    if (config.emitAsyncFunctionsWithZonejs) {
-      options.setAllowZoneJsWithAsyncFunctionsInOutput(true);
-    }
-
     createDefineReplacements(define, options);
 
     options.setTweakProcessing(config.tweakProcessing);
@@ -3001,15 +2997,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     @CanIgnoreReturnValue
     public CommandLineConfig setBrowserFeaturesetYear(Integer browserFeaturesetYear) {
       this.browserFeaturesetYear = browserFeaturesetYear;
-      return this;
-    }
-
-    private boolean emitAsyncFunctionsWithZonejs = false;
-
-    /** Relax the restriction on disallowing --language_out=ES_2017 together with Zone.js */
-    @CanIgnoreReturnValue
-    public CommandLineConfig setEmitAsyncFunctionsWithZonejs(boolean emitAsyncFunctionsWithZonejs) {
-      this.emitAsyncFunctionsWithZonejs = emitAsyncFunctionsWithZonejs;
       return this;
     }
 
