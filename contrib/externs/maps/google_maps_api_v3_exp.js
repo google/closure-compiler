@@ -4066,6 +4066,25 @@ google.maps.InfoWindowOptions.prototype.content;
 google.maps.InfoWindowOptions.prototype.disableAutoPan;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The content to display in the InfoWindow header row. This can be an HTML
+ * element, or a string containing HTML. The InfoWindow will be sized according
+ * to the content. To set an explicit size for the header content, set
+ * headerContent to be a HTML element with that size.
+ * @type {string|!Element|!Text|null|undefined}
+ */
+google.maps.InfoWindowOptions.prototype.headerContent;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Disables the whole header row in the InfoWindow. When set to true, the header
+ * will be removed so that the header content and the close button will be
+ * hidden.
+ * @type {boolean|null|undefined}
+ */
+google.maps.InfoWindowOptions.prototype.headerDisabled;
+
+/**
  * Maximum width of the InfoWindow, regardless of content&#39;s width. This
  * value is only considered if it is set before a call to <code>open()</code>.
  * To change the maximum width when changing content, call <code>close()</code>,
@@ -5526,6 +5545,13 @@ google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
  * @type {boolean|undefined}
  */
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
+
+/**
+ * If true, this map is configured properly to allow for the use of {@link
+ * google.maps.WebGLOverlayView}.
+ * @type {boolean|undefined}
+ */
+google.maps.MapCapabilities.prototype.isWebGLOverlayViewAvailable;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
