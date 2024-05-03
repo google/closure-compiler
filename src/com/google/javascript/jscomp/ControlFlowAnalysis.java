@@ -24,13 +24,13 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.PriorityQueue;
 import org.jspecify.nullness.Nullable;
@@ -66,7 +66,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
   private ControlFlowGraph<Node> cfg;
 
-  private @Nullable IdentityHashMap<Node, Integer> astPosition;
+  private @Nullable LinkedIdentityHashMap<Node, Integer> astPosition;
 
   // We order CFG nodes by by looking at the AST positions.
   // CFG nodes that come first lexically should be visited first, because
@@ -196,7 +196,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
     Preconditions.checkArgument(
         NodeUtil.isValidCfgRoot(root), "Unexpected control flow graph root %s", root);
     this.root = root;
-    astPosition = new IdentityHashMap<>();
+    astPosition = new LinkedIdentityHashMap<>();
     astPositionCounter = 0;
     cfg = new AstControlFlowGraph(computeFallThrough(root), edgeAnnotations);
 

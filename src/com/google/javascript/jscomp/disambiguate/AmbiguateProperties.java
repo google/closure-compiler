@@ -48,7 +48,6 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -604,7 +603,7 @@ public class AmbiguateProperties implements CompilerPass {
     int numOccurrences;
     boolean skipAmbiguating;
     // All colors upon which this property was directly accessed. For "a.b" this includes "a"'s type
-    @Nullable IdentityHashMap<ColorGraphNode, Integer> relatedColorsSeeds = null;
+    @Nullable LinkedHashMap<ColorGraphNode, Integer> relatedColorsSeeds = null;
     // includes relatedTypesSeeds + all subtypes of those seed colors. For example if this property
     // was accessed off of Iterable, then this bitset will include Array as well.
     final BitSet relatedColors = new BitSet();
@@ -627,7 +626,7 @@ public class AmbiguateProperties implements CompilerPass {
       }
 
       if (relatedColorsSeeds == null) {
-        this.relatedColorsSeeds = new IdentityHashMap<>();
+        this.relatedColorsSeeds = new LinkedHashMap<>();
       }
 
       ColorGraphNode newColorGraphNode = graphNodeFactory.createNode(color);

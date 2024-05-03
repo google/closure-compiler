@@ -23,10 +23,10 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import java.util.IdentityHashMap;
 
 /**
  * Pass to convert JSType objects from TypeChecking that are attached to the AST into Color objects
@@ -66,10 +66,11 @@ public final class ConvertTypesToColors implements CompilerPass {
 
   private static class RemoveTypesAndApplyColors extends RemoveTypes {
     private final ColorPool.ShardView colorPoolShard;
-    private final IdentityHashMap<JSType, Integer> typePointersByJstype;
+    private final LinkedIdentityHashMap<JSType, Integer> typePointersByJstype;
 
     RemoveTypesAndApplyColors(
-        ColorPool.ShardView colorPoolShard, IdentityHashMap<JSType, Integer> typePointersByJstype) {
+        ColorPool.ShardView colorPoolShard,
+        LinkedIdentityHashMap<JSType, Integer> typePointersByJstype) {
       super();
       this.colorPoolShard = colorPoolShard;
       this.typePointersByJstype = typePointersByJstype;

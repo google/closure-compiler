@@ -33,6 +33,7 @@ import com.google.common.collect.Ordering;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -43,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -100,7 +100,8 @@ public final class JSChunkGraph implements Serializable {
    *
    * <p>NOTE: JSChunk has identity semantics so this map implementation is safe
    */
-  private final IdentityHashMap<JSChunk, Set<JSChunk>> dependencyMap = new IdentityHashMap<>();
+  private final LinkedIdentityHashMap<JSChunk, Set<JSChunk>> dependencyMap =
+      new LinkedIdentityHashMap<>();
 
   /** Creates a chunk graph from a list of chunks in dependency order. */
   public JSChunkGraph(JSChunk[] chunksInDepOrder) {
@@ -523,7 +524,7 @@ public final class JSChunkGraph implements Serializable {
         createEntryPointInputs(compiler, dependencyOptions, getAllInputs(), sorter);
 
     // Build a map of symbols to their source file(s). While having multiple source files is invalid
-    // we leave that up to typechecking so that we avoid arbitarily picking a file.
+    // we leave that up to typechecking so that we avoid arbitrarily picking a file.
     LinkedHashMap<String, Set<CompilerInput>> inputsByProvide = new LinkedHashMap<>();
     for (CompilerInput input : originalInputs) {
       for (String provide : input.getKnownProvides()) {

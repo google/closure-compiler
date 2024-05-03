@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
@@ -35,7 +35,6 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -44,7 +43,7 @@ import java.util.Set;
  *
  * <p>Given an invocation of some function with type `F` templated on `T`, this class traverses the
  * arguments of the invocation to determine what type `T` should be. Argument types and `F`'s
- * paramater types are traversed/recursed in parallel to match template types at any depth inside
+ * parameter types are traversed/recursed in parallel to match template types at any depth inside
  * `F`'s signature.
  *
  * <p>Instances of this class are single use. They provide a "scope" for the matching but accumulate
@@ -52,7 +51,8 @@ import java.util.Set;
  */
 final class InvocationTemplateTypeMatcher {
 
-  private final IdentityHashMap<TemplateType, JSType> matchedTypes = Maps.newIdentityHashMap();
+  private final LinkedIdentityHashMap<TemplateType, JSType> matchedTypes =
+      new LinkedIdentityHashMap<>();
   private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
 
   private final JSTypeRegistry registry;
@@ -99,7 +99,7 @@ final class InvocationTemplateTypeMatcher {
       Iterator<Parameter> calleeParameters = this.calleeType.getParameters().iterator();
       if (!calleeParameters.hasNext()) {
         // TypeCheck will warn if there are too few function parameters
-        return ImmutableMap.copyOf(this.matchedTypes);
+        return this.copyMatchedTypes();
       }
 
       // The first argument to the tag function is an array of strings (typed as ITemplateArray)
@@ -116,7 +116,7 @@ final class InvocationTemplateTypeMatcher {
           this.calleeType.getParameters(), NodeUtil.getInvocationArgsAsIterable(this.invocation));
     }
 
-    return ImmutableMap.copyOf(this.matchedTypes);
+    return this.copyMatchedTypes();
   }
 
   private void matchTemplateTypesRecursive(JSType paramType, JSType argType) {
@@ -243,6 +243,12 @@ final class InvocationTemplateTypeMatcher {
 
     // Don't worry about checking bounds here. We'll validate them once they're all collected.
     this.matchedTypes.merge(template, match, JSType::getLeastSupertype);
+  }
+
+  private ImmutableMap<TemplateType, JSType> copyMatchedTypes() {
+    ImmutableMap.Builder<TemplateType, JSType> builder = ImmutableMap.builder();
+    this.matchedTypes.forEach(builder::put);
+    return builder.buildOrThrow();
   }
 
   private final JSType getTypeOrUnknown(Node n) {

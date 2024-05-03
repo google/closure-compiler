@@ -29,6 +29,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
@@ -56,7 +57,6 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -902,9 +902,10 @@ public final class SymbolTable {
     // In this case the map will be {one: 1} => OBJ. Using this map will skip 'alias' when creating
     // property scopes.
     //
-    // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
+    // NOTE: we are using LinkedIdentityHashMap to compare types using == because we need to find
+    // symbols
     // that point to the exact same type instance.
-    IdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
+    LinkedIdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new LinkedIdentityHashMap<>();
     for (Symbol s : allTypes) {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting

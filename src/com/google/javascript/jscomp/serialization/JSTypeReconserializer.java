@@ -31,6 +31,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -42,7 +43,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.function.Predicate;
@@ -69,7 +69,8 @@ final class JSTypeReconserializer {
   private final SeenTypeRecord unknownRecord;
   private final SeenTypeRecord topObjectRecord;
 
-  private final IdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache = new IdentityHashMap<>();
+  private final LinkedIdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache =
+      new LinkedIdentityHashMap<>();
   private final LinkedHashMap<ColorId, SeenTypeRecord> seenTypeRecords = new LinkedHashMap<>();
   private final SetMultimap<Integer, Integer> disambiguateEdges = LinkedHashMultimap.create();
 

@@ -22,11 +22,11 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -54,7 +54,7 @@ class StripCode implements CompilerPass {
   private final AbstractCompiler compiler;
   private final ImmutableSet<String> stripNameSuffixes;
   private final ImmutableSet<String> stripNamePrefixes;
-  private final IdentityHashMap<String, String> varsToRemove = new IdentityHashMap<>();
+  private final LinkedIdentityHashMap<String, String> varsToRemove = new LinkedIdentityHashMap<>();
 
   private final String[] stripTypesList;
   private final String[] stripTypePrefixesList;
@@ -685,7 +685,7 @@ class StripCode implements CompilerPass {
      * @return Whether the variable was removed
      */
     boolean isReferenceToRemovedVar(NodeTraversal t, Node n) {
-      return varsToRemove.containsKey(n.getString());
+      return varsToRemove.get(n.getString()) != null;
     }
 
     /**

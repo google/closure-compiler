@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.TypeMismatch;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.Node;
@@ -43,7 +44,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import org.jspecify.nullness.Nullable;
@@ -58,7 +58,8 @@ final class SerializeTypesToPointers {
   private final AbstractCompiler compiler;
   private final JSTypeReconserializer jstypeReconserializer;
   private final LinkedHashSet<String> propertiesReferencedInAst;
-  private final IdentityHashMap<JSType, Integer> typePointersByJstype = new IdentityHashMap<>();
+  private final LinkedIdentityHashMap<JSType, Integer> typePointersByJstype =
+      new LinkedIdentityHashMap<>();
   private static final Gson GSON = new Gson();
   private @Nullable TypePool typePool = null;
 
@@ -164,7 +165,7 @@ final class SerializeTypesToPointers {
     }
   }
 
-  IdentityHashMap<JSType, Integer> getTypePointersByJstype() {
+  LinkedIdentityHashMap<JSType, Integer> getTypePointersByJstype() {
     return typePointersByJstype;
   }
 
