@@ -23,7 +23,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import java.io.IOException;
@@ -33,6 +32,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -211,8 +211,7 @@ public final class JSChunk implements Serializable, DependencyInfo {
    * Returns the transitive closure of dependencies starting from the dependencies of this chunk.
    */
   public Set<JSChunk> getAllDependencies() {
-    // JSChunk uses identity semantics
-    Set<JSChunk> allDeps = Sets.newIdentityHashSet();
+    LinkedHashSet<JSChunk> allDeps = new LinkedHashSet<>();
     allDeps.addAll(deps);
     ArrayDeque<JSChunk> stack = new ArrayDeque<>(deps);
 

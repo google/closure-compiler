@@ -44,12 +44,11 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import org.jspecify.nullness.Nullable;
 
@@ -73,7 +72,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   private TemplateType keyType;
 
   // initialized to null because it's unused in ~40% of TemplateTypeReplacers
-  private @Nullable Set<JSType> seenTypes = null;
+  private @Nullable LinkedIdentityHashSet<JSType> seenTypes = null;
 
   /** Creates a replacer for use during {@code TypeInference}. */
   public static TemplateTypeReplacer forInference(
@@ -131,7 +130,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   private void initSeenTypes() {
     if (this.seenTypes == null) {
-      this.seenTypes = Sets.newIdentityHashSet();
+      this.seenTypes = new LinkedIdentityHashSet<>();
     }
   }
 

@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
+import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
@@ -36,7 +36,6 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Determines the types that fill any template parameters at a function invocation.
@@ -53,7 +52,7 @@ final class InvocationTemplateTypeMatcher {
 
   private final LinkedIdentityHashMap<TemplateType, JSType> matchedTypes =
       new LinkedIdentityHashMap<>();
-  private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
+  private final LinkedIdentityHashSet<JSType> seenTypes = new LinkedIdentityHashSet<>();
 
   private final JSTypeRegistry registry;
   private final FunctionType calleeType;

@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Precondition;
@@ -40,6 +39,7 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
+import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -1625,7 +1625,7 @@ public final class ConformanceRules {
 
   /** Banned unknown "this" types. */
   public static final class BanUnknownThis extends AbstractTypeRestrictionRule {
-    private final Set<Node> reports = Sets.newIdentityHashSet();
+    private final LinkedIdentityHashSet<Node> reports = new LinkedIdentityHashSet<>();
 
     public BanUnknownThis(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {

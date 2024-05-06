@@ -44,8 +44,8 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -106,8 +106,7 @@ final class PropertyMap {
   }
 
   /** Returns the direct parent of this property map. */
-  @Nullable
-  PropertyMap getPrimaryParent() {
+  @Nullable PropertyMap getPrimaryParent() {
     if (parentSource == null) {
       return null;
     }
@@ -129,8 +128,7 @@ final class PropertyMap {
     return parentSource.getCtorExtendedInterfaces();
   }
 
-  @Nullable
-  OwnedProperty findClosest(String name) {
+  @Nullable OwnedProperty findClosest(String name) {
     // Check primary parents which always has precendence over secondary.
     for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
       Property prop = map.properties.get(name);
@@ -173,7 +171,7 @@ final class PropertyMap {
   }
 
   ImmutableSortedSet<String> keySet() {
-    Set<PropertyMap> ancestors = Sets.newIdentityHashSet();
+    LinkedHashSet<PropertyMap> ancestors = new LinkedHashSet<>();
     this.collectAllAncestors(ancestors);
 
     int maxAncestorCounter = 0;
@@ -207,7 +205,7 @@ final class PropertyMap {
     return this.cachedKeySet;
   }
 
-  private void collectAllAncestors(Set<PropertyMap> ancestors) {
+  private void collectAllAncestors(LinkedHashSet<PropertyMap> ancestors) {
     if (!ancestors.add(this)) {
       return;
     }
@@ -245,6 +243,9 @@ final class PropertyMap {
 
   @Override
   public int hashCode() {
+    // We need to override hashCode so that JSType.hashCode is consistent. JSType uses the hashcode
+    // of its PropertyMap. Otherwise PropertyMap uses identity equality.
+    //
     // Calculate the hash just based on the property names, not their types.
     // Otherwise we can get into an infinite loop because the ObjectType hashCode
     // method calls this one.
