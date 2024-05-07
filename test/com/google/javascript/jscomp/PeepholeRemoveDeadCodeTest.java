@@ -82,8 +82,12 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("a: break a;", "");
     fold("a: { break a; }", "");
 
-    foldSame("a: { break a; console.log('unreachable'); }");
-    foldSame("a: { break a; var x = 1; } x = 2;");
+    fold( //
+        "a: { break a; console.log('unreachable'); }", //
+        "");
+    fold( //
+        "a: { break a; var x = 1; } x = 2;", //
+        "var x; x = 2;");
 
     foldSame("b: { var x = 1; } x = 2;");
     foldSame("a: b: { var x = 1; } x = 2;");
@@ -294,7 +298,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "do { switch (1) { default: foo(); continue} } while(0)",
         "do { foo(); continue } while(0)");
 
-    fold("l1: { do { x = 1; break l1; } while (0); x = 2; }", "l1: { x = 1; break l1; x = 2;}");
+    fold(
+        "l1: { do { x = 1; break l1; } while (0); x = 2; }", //
+        "l1: { x = 1; break l1; }");
 
     fold("do { x = 1; } while (x = 0);", "x = 1; x = 0;");
     fold(
@@ -928,6 +934,60 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTreatSwitchAsExit() {
+    fold(
+        "a: {switch(x){ case 1: case 2: break a; default: foo(); break a;} bar(); }",
+        "a: {switch(x){ case 1: case 2: break a; default: foo(); break a;} }");
+  }
+
+  @Test
+  public void testDontTreatSwitchAsExit() {
+    foldSame("a: {switch(x){ case 1:break a; default: b: {foo(); break b;}} bar(); }");
+
+    foldSame("a: {switch(x){ case 1:break a; default: foo(); break;} bar(); }");
+
+    foldSame("a: {b: switch(x){ case 1:break a; default: foo(); break b;} bar(); }");
+
+    foldSame("a: {switch(x){ case 1: b: { foo(); break b; } default: break a; } bar(); }");
+
+    foldSame("a: {switch(x){ case 1: break a; } bar(); }");
+
+    foldSame("a: {switch(x){ case 1: if (y) { break; } default: break a;} bar(); }");
+
+    foldSame("a: {switch(x){ case 1: if (y) { break; } break a; default: break a;} bar(); }");
+  }
+
+  @Test
+  public void testTreatTryAsExit() {
+    fold(
+        "a: {try { foo(); break a; } catch (e) { foo(); break a; } bar(); }",
+        "a: {try { foo(); break a; } catch (e) { foo(); break a; } }");
+
+    fold(
+        "a: {try { foo(); } finally { foo(); break a; } bar(); }",
+        "a: {try { foo(); } finally { foo(); break a; } }");
+
+    fold(
+        "a: {try { foo(); break a; } finally { foo(); } bar(); }",
+        "a: {try { foo(); break a; } finally { foo(); } }");
+  }
+
+  @Test
+  public void testDontTreatTryAsExit() {
+    foldSame("a: {try { foo(); break a; } catch (e) { foo(); } bar(); }");
+
+    foldSame("a: {try { foo(); break a; } catch (e) { } bar(); }");
+
+    foldSame("a: {try { foo(); } catch (e) { foo(); break a; } bar(); }");
+
+    foldSame("a: {try { foo(); } finally { foo(); } bar(); }");
+
+    foldSame("a: {try { b: { foo(); break b; } } finally { foo(); } bar(); }");
+
+    foldSame("a: { b: try { foo(); break a; } finally { foo(); } bar(); }");
+  }
+
+  @Test
   public void testRemoveNumber() {
     fold("3", "");
   }
@@ -1388,7 +1448,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("try { try {foo()} catch (e) {bar()}} catch (x) {bar()}");
     fold("try {var x = 1} finally {}", "var x = 1;");
     foldSame("try {var x = 1} finally {x()}");
-    fold("function f() { return; try{var x = 1}finally{} }", "function f() { return; var x = 1; }");
+    fold( //
+        "function f() { return; try{ var x = 1; }finally{} }", "function f() { var x; return; }");
     fold("try {} finally {x()}", "x()");
     fold("try {} catch (e) { bar()} finally {x()}", "x()");
     fold("try {} catch (e) { bar()}", "");
@@ -1799,5 +1860,78 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("use(() => void foo());");
 
     fold("void use(() => void foo());", "use(() => void foo());");
+  }
+
+  private void testInFn(String js, String expected) {
+    String pre = "function f() {";
+    String post = "}";
+    test(pre + js + post, pre + expected + post);
+  }
+
+  private void testInLoop(String js, String expected) {
+    testInLoop(js, "", expected);
+  }
+
+  private void testInLoop(String js, String expectedBeforeLoop, String expected) {
+    String pre = "for (;;) {";
+    String post = "}";
+    test(pre + js + post, expectedBeforeLoop + pre + expected + post);
+  }
+
+  @Test
+  public void testRemoveDeadStatements1() {
+    test("throw 1; x;", "throw 1;");
+    test("throw 1; alert(1)", "throw 1;");
+    test("throw 1; var x = 1", "var x; throw 1;");
+  }
+
+  @Test
+  public void testRemoveDeadStatements2() {
+    testInFn("return; x;", "return;");
+    testInFn("return; alert(1)", "return;");
+    testInFn("return; var x = 1", "var x; return;");
+  }
+
+  @Test
+  public void testRemoveDeadStatements3() {
+    testInLoop("break; x;", "break;");
+    testInLoop("break; alert(1)", "break;");
+    testInLoop("break; var x = 1", "var x;", "break;");
+  }
+
+  @Test
+  public void testRemoveDeadStatements4() {
+    testInLoop("continue; x;", "continue;");
+    testInLoop("continue; alert(1)", "continue;");
+    testInLoop("continue; var x = 1", "var x;", "continue;");
+  }
+
+  @Test
+  public void testRemovalRequiresRedeclaration() {
+    test( //
+        "while(1) { break; var x = 1}", //
+        "var x; for(;;) { break }");
+    test( //
+        "while(1) { break; var x=1; var y=1 }", //
+        "var y; var x; for(;;) { break }");
+  }
+
+  @Test
+  public void testRemoveDo() {
+    test("do { print(1); break } while(1)", "do { print(1); break } while(1)");
+    test("while(1) { break; do { print(1); break } while(1) }", "for (;;) { break; }");
+  }
+
+  @Test
+  public void testSwitchCase() {
+    test(
+        "function f() { switch(x) { case 1: break; default: return 5; foo()}}",
+        "function f() { switch(x) { case 1: break; default: return 5;}}");
+    test(
+        "function f() { switch(x) { default: return; case 1: foo(); bar()}}",
+        "function f() { switch(x) { default: return; case 1: foo(); bar()}}");
+    test(
+        "function f() { switch(x) { default: return; case 1: return 5;bar()}}",
+        "function f() { switch(x) { default: return; case 1: return 5;}}");
   }
 }

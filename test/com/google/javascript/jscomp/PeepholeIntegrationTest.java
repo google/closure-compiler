@@ -49,7 +49,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeRemoveDeadCode(),
         new PeepholeFoldConstants(late, false /* useTypes */),
-        new PeepholeReplaceKnownMethods(late, /* useTypes= */ false));
+        new PeepholeReplaceKnownMethods(late, /* useTypes= */ false),
+        new MinimizeExitPoints());
   }
 
   @Override
@@ -69,6 +70,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("x = false", "x = !1");
     testSame("x = !1");
     testSame("x = !0");
+  }
+
+  @Test
+  public void testFoldFollowing() {
+    test("function f(){return; console.log(1);}", "function f(){}");
   }
 
   /** Check that removing blocks with 1 child works */

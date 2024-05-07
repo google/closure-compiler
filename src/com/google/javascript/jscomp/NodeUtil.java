@@ -3771,6 +3771,10 @@ public final class NodeUtil {
    * Then adds a new VAR node at the top of the current scope that redeclares them, if necessary.
    */
   static void redeclareVarsInsideBranch(Node branch) {
+    if (!canContainHoistedVarsDecls(branch)) {
+      return;
+    }
+
     Collection<Node> vars = getVarsDeclaredInBranch(branch);
     if (vars.isEmpty()) {
       return;
@@ -3782,6 +3786,25 @@ public final class NodeUtil {
       copyNameAnnotations(nameNode, var.getFirstChild());
       parent.addChildToFront(var);
     }
+  }
+
+  static boolean canContainHoistedVarsDecls(Node n) {
+    if (NodeUtil.isStatement(n)) {
+      switch (n.getToken()) {
+        case EXPR_RESULT:
+        case RETURN:
+        case THROW:
+        case BREAK:
+        case CONTINUE:
+        case EMPTY:
+        case DEBUGGER:
+          return false;
+        default:
+          // assume anything else can
+          break;
+      }
+    }
+    return true;
   }
 
   /** Copy any annotations that follow a named value. */
