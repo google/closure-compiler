@@ -86,9 +86,7 @@ public final class LinkedIdentityHashMap<K, V> implements Serializable {
 
   public void forEach(BiConsumer<? super K, ? super V> fn) {
     for (Entry<K, V> entry : iterationOrder) {
-      if (entry.value != null) {
-        fn.accept(entry.key, entry.value);
-      }
+      fn.accept(entry.key, entry.value);
     }
   }
 
