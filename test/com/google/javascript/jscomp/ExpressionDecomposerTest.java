@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -87,6 +88,30 @@ public final class ExpressionDecomposerTest {
             "var temp_const$jscomp$1 = window.location;",
             "var temp_const$jscomp$0 = temp_const$jscomp$1.assign;",
             "temp_const$jscomp$0.call(temp_const$jscomp$1, foo());"));
+  }
+
+  @Test
+  public void testObjectDestructuring_withComputedKey_doesNotCrash() {
+    // computed prop is found to be decomposable
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines("var a; ({ [foo()]: a} = obj);"),
+        exprMatchesStr("foo()"));
+
+    // TODO(b/339040894): Fix this crash.
+    IllegalStateException ex =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                helperExposeExpression(
+                    lines("var a; ({ [foo()]: a} = obj);"), //
+                    exprMatchesStr("foo()"),
+                    lines(
+                        "var a;", //
+                        "var temp_const$jscomp$0 = obj;",
+                        "var temp_const$jscomp$1 = foo();",
+                        "({ [temp_const$jscomp$1]: a} = temp_const$jscomp$0);")));
+    assertThat(ex).hasMessageThat().contains("DecomposeExpression depth exceeded on");
   }
 
   @Test
