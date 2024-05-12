@@ -513,7 +513,7 @@ public final class ExpressionDecomposerTest {
             "    JSCOMPILER_PRESERVE(e), [getObj().propName] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
             "  }",
             "});"),
         exprMatchesStr("CN()"),
@@ -522,10 +522,11 @@ public final class ExpressionDecomposerTest {
             "  function zv() {",
             "    var temp_const$jscomp$1 = JSCOMPILER_PRESERVE(e);",
             "    var temp_const$jscomp$0 = getObj().propName;",
+            // TODO(b/338660589): This is a bug. The assignment to obj.propName never happens.
             "    temp_const$jscomp$1, [temp_const$jscomp$0] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
             "  }",
             "});"));
 
