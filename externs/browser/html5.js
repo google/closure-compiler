@@ -5583,6 +5583,25 @@ HTMLMeterElement.prototype.labels;
 
 /**
  * @interface
+ * @see https://www.w3.org/TR/badging/
+ */
+function NavigatorBadge() {};
+
+/**
+ * @see https://www.w3.org/TR/badging/#setappbadge-method
+ * @param {number=} contents
+ * @return {Promise<undefined>}
+ */
+NavigatorBadge.prototype.setAppBadge = function(contents) {};
+
+/**
+ * @see https://www.w3.org/TR/badging/#clearappbadge-method
+ * @return {Promise<undefined>}
+ */
+NavigatorBadge.prototype.clearAppBadge = function() {};
+
+/**
+ * @interface
  * @see https://storage.spec.whatwg.org/#api
  */
 function NavigatorStorage() {};
@@ -5594,6 +5613,7 @@ NavigatorStorage.prototype.storage;
 
 /**
  * @constructor
+ * @implements NavigatorBadge
  * @implements NavigatorStorage
  * @see https://www.w3.org/TR/html5/webappapis.html#navigator
  */
@@ -5760,7 +5780,23 @@ Navigator.prototype.userActivation;
 Navigator.prototype.webdriver;
 
 /**
+ * @see https://www.w3.org/TR/badging/#setappbadge-method
+ * @param {number=} contents
+ * @return {Promise<undefined>}
+ * @override
+ */
+Navigator.prototype.setAppBadge = function(contents) {};
+
+/**
+ * @see https://www.w3.org/TR/badging/#clearappbadge-method
+ * @return {Promise<undefined>}
+ * @override
+ */
+Navigator.prototype.clearAppBadge = function() {};
+
+/**
  * @constructor
+ * @implements NavigatorBadge
  * @implements NavigatorStorage
  * @see https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
  */
@@ -5784,6 +5820,21 @@ WorkerNavigator.prototype.hardwareConcurrency;
  * @see https://storage.spec.whatwg.org
  */
 WorkerNavigator.prototype.storage;
+
+/**
+ * @see https://www.w3.org/TR/badging/#setappbadge-method
+ * @param {number=} contents
+ * @return {Promise<undefined>}
+ * @override
+ */
+WorkerNavigator.prototype.setAppBadge = function(contents) {};
+
+/**
+ * @see https://www.w3.org/TR/badging/#clearappbadge-method
+ * @return {Promise<undefined>}
+ * @override
+ */
+WorkerNavigator.prototype.clearAppBadge = function() {};
 
 /**
  * @record
