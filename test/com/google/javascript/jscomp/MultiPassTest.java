@@ -90,7 +90,7 @@ public final class MultiPassTest extends CompilerTestCase {
   public void testInlineVarsAndDeadCodeElim() {
     passes = new ArrayList<>();
     addInlineVariables();
-    addDeadCodeElimination();
+    addPeephole();
     test("function f() { var x = 1; return x; x = 3; }", "function f() { return 1; }");
   }
 
@@ -387,15 +387,6 @@ public final class MultiPassTest extends CompilerTestCase {
             .setInternalFactory(
                 (compiler) ->
                     new InlineObjectLiterals(compiler, compiler.getUniqueNameIdSupplier()))
-            .build());
-  }
-
-  private void addDeadCodeElimination() {
-    passes.add(
-        PassFactory.builder()
-            .setName("removeUnreachableCode")
-            .setRunInFixedPointLoop(true)
-            .setInternalFactory(UnreachableCodeElimination::new)
             .build());
   }
 

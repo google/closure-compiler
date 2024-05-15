@@ -1531,7 +1531,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();
-    options.setRemoveUnreachableCode(true);
+    options.setFoldConstants(true);
 
     testSame(options, testCode);
 
@@ -1748,7 +1748,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "function f() { return; f(); }";
     testSame(options, code);
 
-    options.setRemoveUnreachableCode(true);
+    options.setFoldConstants(true);
     test(options, code, "function f() {}");
   }
 

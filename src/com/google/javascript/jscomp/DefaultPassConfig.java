@@ -985,10 +985,6 @@ public final class DefaultPassConfig extends PassConfig {
       earlyLoopPasses.maybeAdd(peepholeOptimizations);
     }
 
-    if (options.removeUnreachableCode) {
-      earlyLoopPasses.maybeAdd(removeUnreachableCode);
-    }
-
     earlyLoopPasses.assertAllLoopablePasses();
     return earlyLoopPasses;
   }
@@ -1060,9 +1056,6 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.maybeAdd(peepholeOptimizations);
     }
 
-    if (options.removeUnreachableCode) {
-      loopPasses.maybeAdd(removeUnreachableCode);
-    }
     loopPasses.assertAllLoopablePasses();
     return loopPasses;
   }
@@ -1129,9 +1122,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(peepholeOptimizations);
     }
 
-    if (options.removeUnreachableCode) {
-      passes.maybeAdd(removeUnreachableCode);
-    }
 
     passes.assertAllLoopablePasses();
     return passes;
@@ -2264,14 +2254,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
               (compiler) -> new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY))
-          .build();
-
-  /** Use data flow analysis to remove dead branches. */
-  private final PassFactory removeUnreachableCode =
-      PassFactory.builder()
-          .setName(PassNames.REMOVE_UNREACHABLE_CODE)
-          .setRunInFixedPointLoop(true)
-          .setInternalFactory(UnreachableCodeElimination::new)
           .build();
 
   /** Inlines simple methods, like getters */
