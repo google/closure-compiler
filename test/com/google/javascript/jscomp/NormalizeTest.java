@@ -217,6 +217,42 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstRHSPropagation() {
+    testSame(lines("const obj = function inner() {inner();};"));
+    Node root = getLastCompiler().getRoot();
+    Node scriptNode =
+        root.getLastChild() // ROOT of input sources
+            .getLastChild();
+    Node firstStatement = scriptNode.getFirstChild();
+
+    // `obj` from `const obj = function inner() {inner();};`
+    Node objName = firstStatement.getFirstChild();
+    assertThat(objName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
+
+    Node functionName = objName.getOnlyChild().getFirstChild();
+    assertThat(functionName.isName()).isTrue();
+    assertThat(functionName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
+  }
+
+  @Test
+  public void testConstRHSPropagation2() {
+    testSame(lines("/** @const */ var obj = function inner() {inner();};"));
+    Node root = getLastCompiler().getRoot();
+    Node scriptNode =
+        root.getLastChild() // ROOT of input sources
+            .getLastChild();
+    Node firstStatement = scriptNode.getFirstChild();
+
+    // `obj` from `var obj = function inner() {inner();};`
+    Node objName = firstStatement.getFirstChild();
+    assertThat(objName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
+
+    Node functionName = objName.getOnlyChild().getFirstChild();
+    assertThat(functionName.isName()).isTrue();
+    assertThat(functionName.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
+  }
+
+  @Test
   public void testNullishCoalesce() {
     test("var a = x ?? y, b = foo()", "var a = x ?? y; var b = foo()");
     test(
