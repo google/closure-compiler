@@ -221,13 +221,19 @@ class ExpressionDecomposer {
           Node left = expressionParent.getFirstChild();
           switch (left.getToken()) {
             case ARRAY_PATTERN:
+              // e.g. backoff from exposing expression `getObj()` in `[getObj().propName] = ...` as
+              // the RHS must execute first
+            case OBJECT_PATTERN:
+              // e.g. backoff from exposing expression`getObj()` in `{a: getObj().propName} = ...`
+              // as the RHS must execute first
+              break;
             case GETELEM:
             case GETPROP:
               decomposeSubExpressions(left.getFirstChild(), null, state);
               break;
             default:
               throw new IllegalStateException(
-                  "Expected a property access or array pattern: " + left.toStringTree());
+                  "Expected a property access or destructuring pattern: " + left.toStringTree());
           }
         }
       } else if (expressionParent.isCall()

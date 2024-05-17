@@ -931,7 +931,22 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "    JSCOMPILER_PRESERVE(e), [f] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
+            "  }",
+            "});"),
+        "var Di = I(() => {});");
+  }
+
+  @Test
+  public void testDestructuringAssignInFunction_withObjectPattern_doesNotCrash() {
+    test(
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({f: g} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {f: 1};",
             "  }",
             "});"),
         "var Di = I(() => {});");

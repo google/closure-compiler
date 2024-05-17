@@ -503,8 +503,22 @@ public final class ExpressionDecomposerTest {
     // Default value expressions are conditional, which would make the expressions complex.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
+        // default value inside array pattern
         "[{ [foo()]: a } = goo()] = arr;",
         exprMatchesStr("foo()"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, //
+        // computed property inside object pattern; decomposed
+        "({ [foo()]: a = goo()} = arr);",
+        exprMatchesStr("foo()"));
+
+    // default value expressions are conditional, which would make the expressions complex
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, //
+        // default value inside object pattern
+        "({ [foo()]: a = goo()} = arr);",
+        exprMatchesStr("goo()"));
 
     helperExposeExpression(
         lines(
@@ -520,13 +534,43 @@ public final class ExpressionDecomposerTest {
         lines(
             "var Di = I(() => {",
             "  function zv() {",
-            "    var temp_const$jscomp$1 = JSCOMPILER_PRESERVE(e);",
-            "    var temp_const$jscomp$0 = getObj().propName;",
-            // TODO(b/338660589): This is a bug. The assignment to obj.propName never happens.
-            "    temp_const$jscomp$1, [temp_const$jscomp$0] = CN();",
+            "    var temp_const$jscomp$0 = JSCOMPILER_PRESERVE(e);",
+            // TODO(b/339701959): We decided to back off here because of b/338660589. But we should
+            // optimize this to:
+            //   var temp_const$jscomp$1 = CN();
+            //   var temp_const$jscomp$2 = getObj();
+            //   temp_const$jscomp$0, [temp_const$jscomp$2.propName] = temp_const$jscomp$1;
+            "    temp_const$jscomp$0, [getObj().propName] = CN();",
             "  }",
             "  function CN() {",
             "    return [1];",
+            "  }",
+            "});"));
+
+    helperExposeExpression(
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({x: getObj().propName} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {x: 1};",
+            "  }",
+            "});"),
+        exprMatchesStr("CN()"),
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    var temp_const$jscomp$0 = JSCOMPILER_PRESERVE(e);",
+            // TODO(b/339701959): We decided to back off here because of b/338246627. But we should
+            // optimize this to:
+            //   var temp_const$jscomp$1 = CN();
+            //   var temp_const$jscomp$2 = getObj();
+            //   temp_const$jscomp$0, {x: temp_const$jscomp$2.propName} = temp_const$jscomp$1;
+            "    temp_const$jscomp$0, {x:getObj().propName} = CN();",
+            "  }",
+            "  function CN() {",
+            "    return {x: 1};",
             "  }",
             "});"));
 
@@ -538,10 +582,99 @@ public final class ExpressionDecomposerTest {
             "    JSCOMPILER_PRESERVE(e), [f] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
             "  }",
             "});"),
         exprMatchesStr("CN()"));
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), [f = foo()] = CN();",
+            "  }",
+            "  function CN() {",
+            "    return [1];",
+            "  }",
+            "});"),
+        exprMatchesStr("foo()"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({f: g} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {f: 1};",
+            "  }",
+            "});"),
+        exprMatchesStr("CN()"));
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({f: g = goo()} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {f: 1};",
+            "  }",
+            "});"),
+        exprMatchesStr("goo()"));
+  }
+
+  @Test
+  public void testObjectDestructuring_withDefaultValue_generatesValidAST() {
+    helperExposeExpression(
+        lines("var d; ({c: d = 4} = condition ? y() :  {c: 1});"),
+        exprMatchesStr("y()"),
+        lines(
+            "var d;",
+            "var temp$jscomp$0;",
+            "if (condition) {",
+            "  temp$jscomp$0 = y();",
+            "} else {",
+            "  temp$jscomp$0 = {c: 1};",
+            "}",
+            "({c: d = 4} = temp$jscomp$0);"));
+  }
+
+  @Test
+  public void testObjectDestructuring_withDefaultValue_withComputedKey() {
+    // default value expressions are conditional, which would make the expressions complex
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        exprMatchesStr("bar()"));
+
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE,
+        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        exprMatchesStr("baz()"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        exprMatchesStr("foo()"));
+  }
+
+  @Test
+  public void testArrayDestructuring_withDefaultValue_generatesValidAST() {
+    helperExposeExpression(
+        lines("var [c = 4] = condition ? y() :  [c = 2];"),
+        exprMatchesStr("y()"),
+        lines(
+            "var temp$jscomp$0;",
+            "if (condition) {",
+            "  temp$jscomp$0 = y();",
+            "} else {",
+            "  temp$jscomp$0 = [c = 2];",
+            "}",
+            "var [c = 4] = temp$jscomp$0;"));
   }
 
   @Test
