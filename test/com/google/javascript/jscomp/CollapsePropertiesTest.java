@@ -3110,17 +3110,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // Using destructuring shorthand
     test(
         srcs("var { a, b } = { a: {}, b: {} }; a.a = 5; var c = a.a; "),
-        expected("var {a:a,b:b}={a:{},b:{}};a.a=5;var c=a.a"));
+        expected("var a; var b; ({a:a,b:b}={a:{},b:{}});a.a=5;var c=a.a"));
 
     // Without destructuring shorthand
     test(
         srcs("var { a:a, b:b } = { a: {}, b: {} }; a.a = 5; var c = a.a; "),
-        expected("var {a:a,b:b}={a:{},b:{}};a.a=5;var c=a.a"));
+        expected("var a; var b; ({a:a,b:b}={a:{},b:{}});a.a=5;var c=a.a"));
 
     // Test with greater depth
     test(
         srcs("var { a, b } = { a: {}, b: {} }; a.a.a = 5; var c = a.a; var d = c.a;"),
-        expected("var {a:a,b:b}={a:{},b:{}};a.a.a=5;var c=a.a;var d=c.a"));
+        expected("var a; var b; ({a:a,b:b}={a:{},b:{}});a.a.a=5;var c=a.a;var d=c.a"));
   }
 
   @Test
@@ -3227,14 +3227,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testDontCollapsePropertiesOfRestedNamespace() {
     test(
         srcs("var a = {b: {c: 0}}; var {...d} = a.b; use(a.b.c);"),
-        expected("var a$b = {c: 0}; var {...d} = a$b; use(a$b.c);"));
-    testSame("var a = {b: {c: 0}}; var {...d} = a?.b; use?.(a.b?.c);");
+        expected("var a$b = {c: 0}; var d; ({...d} = a$b); use(a$b.c);"));
+    test(
+        "var a = {b: {c: 0}}; var {...d} = a?.b; use?.(a.b?.c);",
+        "var a = {b: {c: 0}}; var d; ({...d} = a?.b); use?.(a.b?.c);");
 
     // "a.b.c" is not aliased by the REST in this case.
     test(
         srcs("var a = {b: {c: 0}}; var {d: {...d}} = a.b; use(a.b.c);"),
-        expected("var a$b = {c: 0}; var {d: {...d}} = a$b; use(a$b.c);"));
-    testSame("var a = {b: {c: 0}}; var {d: {...d}} = a?.b; use?.(a.b?.c);");
+        expected("var a$b = {c: 0}; var d; ({d: {...d}} = a$b); use(a$b.c);"));
+    test(
+        "var a = {b: {c: 0}}; var {d: {...d}} = a?.b; use?.(a.b?.c);",
+        "var a = {b: {c: 0}}; var d; ({d: {...d}} = a?.b); use?.(a.b?.c);");
   }
 
   @Test

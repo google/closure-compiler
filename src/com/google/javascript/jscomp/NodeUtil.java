@@ -4179,9 +4179,9 @@ public final class NodeUtil {
    */
   public static void visitLhsNodesInNode(Node assigningParent, Consumer<Node> consumer) {
     checkArgument(
-        isNameDeclaration(assigningParent)
-            || assigningParent.isParamList()
-            || isAssignmentOp(assigningParent)
+        isNameDeclaration(assigningParent) // e.g. `var [a,b,c];`
+            || assigningParent.isParamList() // e.g. `function foo([a,b,c]) {}`
+            || isAssignmentOp(assigningParent) // e.g. `[a,b,c] = [4,5,6]`
             || assigningParent.isCatch()
             || assigningParent.isDestructuringLhs()
             || assigningParent.isDefaultValue()
@@ -4190,6 +4190,14 @@ public final class NodeUtil {
             || isEnhancedFor(assigningParent),
         assigningParent);
     getLhsNodesHelper(assigningParent, consumer);
+  }
+
+  /** Retrieves lhs nodes declared or assigned in a given destructuring pattern node. */
+  public static void visitLhsNodesInDestructuringPattern(
+      Node destructuringPattern, Consumer<Node> consumer) {
+    checkArgument(
+        destructuringPattern.isDestructuringPattern(), "Must be a destructuring pattern node.");
+    getLhsNodesHelper(destructuringPattern, consumer);
   }
 
   /** Returns {@code true} if the node is a definition with Object.defineProperties */
@@ -4420,6 +4428,8 @@ public final class NodeUtil {
    */
   static Node newVarNode(Node lhs, Node value) {
     if (lhs.isDestructuringPattern()) {
+      // TODO(b/314005766): Ensure that destructuring declarations are generated as normalized (i.e
+      // individual names get their own stub declarations)
       checkNotNull(value);
       return IR.var(new Node(Token.DESTRUCTURING_LHS, lhs, value).srcref(lhs)).srcref(lhs);
     } else {

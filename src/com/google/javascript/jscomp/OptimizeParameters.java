@@ -26,6 +26,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
@@ -1094,7 +1095,16 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           }
         }
 
-        addVariableToFunction(fn, formalParam, parameters.get(i).getArg());
+        Node value = parameters.get(i).getArg();
+
+        if (formalParam != null) {
+          addVariableDeclarationToFunction(fn, formalParam, value);
+        } else {
+          // no formal param, just add the value to the function body. This is the case when the
+          // parameter is unused in the function body; we can skip declaring it and simply adding
+          // the argument value to the function body.
+          addExpressionToFunction(fn, value);
+        }
       }
     }
   }
@@ -1176,39 +1186,64 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   private void addRestVariableToFunction(Node function, Node lhs, Node value) {
     checkState(lhs.getParent() == null);
-    addVariableToFunction(function, lhs, value);
+    addVariableDeclarationToFunction(function, lhs, value);
   }
 
   /**
-   * Adds a variable to the top of a function block.
+   * Adds a variable to the function block after all hoisted functions.
    *
    * @param function A function node.
    * @param lhs The lhs expression.
    * @param value The initial value of the variable.
    */
-  private void addVariableToFunction(Node function, @Nullable Node lhs, Node value) {
-    checkState(value.getParent() == null);
-    checkState(lhs == null || lhs.getParent() == null);
-    Node block = NodeUtil.getFunctionBody(function);
-    Node stmt;
-    if (lhs != null) {
-      stmt = NodeUtil.newVarNode(lhs, value);
+  private void addVariableDeclarationToFunction(Node function, Node lhs, Node value) {
+    checkState(value.getParent() == null, "Value must be detached");
+    checkState(lhs != null, "formal parameter being declared must not be null");
+    checkState(lhs.getParent() == null, "formal parameter being declared must be detached");
+    List<Node> stmts = new ArrayList<>();
+    if (lhs.isDestructuringPattern()) {
+      rewriteDestructuringPattern(lhs, value, stmts);
     } else {
-      stmt = IR.exprResult(value).srcref(value);
+      stmts.add(NodeUtil.newVarNode(lhs, value));
     }
+    insertStatements(function, stmts);
+  }
 
-    // Insert the statement at the beginning of the function body, but after any
-    // existing function declarations so that the tree stays normalized.
-    Node insertionPoint = block.getFirstChild();
-    while (insertionPoint != null && insertionPoint.isFunction()) {
-      insertionPoint = insertionPoint.getNext();
+  /** Adds an expression to the function block after all hoisted functions. */
+  private void addExpressionToFunction(Node function, Node value) {
+    List<Node> stmts = new ArrayList<>();
+    stmts.add(IR.exprResult(value).srcref(value));
+    insertStatements(function, stmts);
+  }
+
+  /**
+   * Insert the statements at the beginning of the function body, but after any hoisted function
+   * declarations so that the AST stays normalized.
+   */
+  private void insertStatements(Node function, List<Node> stmts) {
+    if (stmts.isEmpty()) {
+      return;
     }
+    Node block = NodeUtil.getFunctionBody(function);
+    Node insertionPoint = NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(block);
     if (insertionPoint == null) {
-      block.addChildToBack(stmt);
+      addStatementsToBack(block, stmts);
     } else {
-      stmt.insertBefore(insertionPoint);
+      addStatementsBefore(insertionPoint, stmts);
     }
-    compiler.reportChangeToEnclosingScope(stmt);
+    compiler.reportChangeToEnclosingScope(stmts.get(0));
+  }
+
+  private void addStatementsToBack(Node block, List<Node> stmts) {
+    for (Node stmt : stmts) {
+      block.addChildToBack(stmt);
+    }
+  }
+
+  private void addStatementsBefore(Node insertionPoint, List<Node> stmts) {
+    for (Node item : Lists.reverse(stmts)) {
+      item.insertBefore(insertionPoint);
+    }
   }
 
   /** Removes all formal parameters starting at argIndex. */
@@ -1225,30 +1260,55 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     if (formal != null) {
       // Keep the args in the same order, do the last first.
       eliminateParamsAfter(fnNode, formal.getNext());
+      List<Node> stmts = new ArrayList<>();
       formal.detach();
-      Node stmt;
       if (formal.isRest()) {
         checkState(formal.getNext() == null);
-        stmt = NodeUtil.newVarNode(formal.removeFirstChild(), IR.arraylit().srcref(formal));
+        Node lhs = formal.getFirstChild().detach();
+        Node value = IR.arraylit().srcref(formal);
+        addVariableDeclarationToFunction(fnNode, lhs, value);
+      } else if (formal.isDefaultValue()) {
+        Node lhs = formal.getFirstChild().detach();
+        Node value = formal.getLastChild().detach();
+        addVariableDeclarationToFunction(fnNode, lhs, value);
+      } else if (formal.isDestructuringPattern()) {
+        // Destructuring declarations must have an rhs.
+        // NOTE: assigning undefined will cause an exception at runtime if this code is evaluated,
+        // which matches the behavior of the input code. It's also possible this method will never
+        // be evaluated at runtime. This pass jointly optimizes all methods with the same name.
+        Node value = NodeUtil.newUndefinedNode(formal);
+        rewriteDestructuringPattern(formal, value, stmts);
+        insertStatements(fnNode, stmts);
       } else {
-        if (formal.isDefaultValue()) {
-          Node lhs = formal.removeFirstChild();
-          Node value = formal.getLastChild().detach();
-          stmt = NodeUtil.newVarNode(lhs, value);
-        } else if (formal.isDestructuringPattern()) {
-          // Destructuring declarations must have an rhs.
-          // NOTE: assigning undefined will cause an exception at runtime if this code is evaluated,
-          // which matches the behavior of the input code. It's also possible this method will never
-          // be evaluated at runtime. This pass jointly optimizes all methods with the same name.
-          Node value = NodeUtil.newUndefinedNode(formal);
-          stmt = NodeUtil.newVarNode(formal, value);
-        } else {
-          stmt = IR.var(formal).srcrefIfMissing(formal);
-        }
+        stmts.add(IR.var(formal).srcrefIfMissing(formal));
+        insertStatements(fnNode, stmts);
       }
-      fnNode.getLastChild().addChildToFront(stmt);
-      compiler.reportChangeToEnclosingScope(stmt);
     }
+  }
+
+  private void rewriteDestructuringPattern(
+      Node destructuringPattern, Node value, List<Node> stmts) {
+    checkState(destructuringPattern.isDestructuringPattern());
+    checkState(
+        !destructuringPattern.hasParent(), "Formal parameter must be detached for rewriting");
+
+    NodeUtil.visitLhsNodesInDestructuringPattern(
+        destructuringPattern,
+        (name) -> {
+          // Add a declaration outside the array pattern for the given name.
+          checkState(
+              name.isName(),
+              // TODO(rishipal): Is this always true? What about var [{a}] = [{a:4}]; ?
+              "lhs in destructuring declaration should be a simple name. (%s)",
+              name);
+          Node newName = IR.name(name.getString()).srcref(name);
+          Node newVar = IR.var(newName).srcref(name);
+          stmts.add(newVar);
+        });
+    Node expr =
+        IR.exprResult(IR.assign(destructuringPattern, value).srcref(destructuringPattern))
+            .srcref(destructuringPattern);
+    stmts.add(expr);
   }
 
   /** Eliminates the parameter from a function call. */

@@ -121,6 +121,20 @@ public final class SyntacticScopeCreatorTest {
   }
 
   @Test
+  public void testVarRedeclaration_withDestructuring() {
+    String js = "function foo() { var x; var [x] = 1; }";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root.getFirstChild().getLastChild(); // BLOCK
+    checkState(block.isBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  @Test
   public void testVarRedeclaration5() {
     String js = "if (true) { var x; var x; }";
     Node root = getRoot(js);

@@ -699,7 +699,7 @@ public final class NormalizeTest extends CompilerTestCase {
     // Verify destructuring var declarations are extracted.
     test(
         "for (var [a, b] = [1, 2]; a < 2; a = b++) foo();",
-        "var [a, b] = [1, 2]; for (; a < 2; a = b++) foo();");
+        "var a; var b; [a, b] = [1, 2]; for (; a < 2; a = b++) foo();");
   }
 
   @Test
@@ -977,16 +977,38 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveDuplicateVarDeclarations_destructuringArrayDeclaration() {
+    test(
+        "function f() { var a = 3; var [a] = [4]; }", //
+        "function f() { var a = 3; [a]= [4]; }");
+  }
+
+  @Test
+  public void testRemoveDuplicateVarDeclarations_destructuringObjectDeclaration() {
+    test(
+        "function f() { var a = 3; var {a} = {a: 4}; }", //
+        "function f() { var a = 3; ({a}= {a: 4});}");
+  }
+
+  @Test
   public void testRemoveDuplicateVarDeclarations1() {
     test("function f() { var a; var a }", "function f() { var a; }");
+
     test("function f() { var a = 1; var a = 2 }", "function f() { var a = 1; a = 2 }");
+    // second declaration not assigned to any rhs, empty reference removed
+    test("function f() { var a = 1; var a; }", "function f() { var a = 1;}");
+
+    // second declaration is a destructuring declaration; converted to assignment
+    test("function f() { var a = 1; var [a] = [2]; }", "function f() { var a = 1; [a]= [2]; }");
+
+    // this should be an error in the parser but isn't
+    test("function f() { var a = 1; const a =2; }", "function f() { var a = 1; const a = 2 }");
     test("var a = 1; function f(){ var a = 2 }", "var a = 1; function f(){ var a$jscomp$1 = 2 }");
     test(
         "function f() { var a = 1; label1:var a = 2 }",
         "function f() { var a = 1; label1:{a = 2}}");
     test("function f() { var a = 1; label1:var a }", "function f() { var a = 1; label1:{} }");
-    test(
-        "function f() { var a = 1; for(var a in b); }", "function f() { var a = 1; for(a in b); }");
+    test("function f() { var a = 1; for(var a in b); }", "function f() { var a = 1; for(a in b);}");
   }
 
   @Test
@@ -1478,28 +1500,28 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testES6ShorthandPropertySyntax05() {
     ignoreWarnings(DiagnosticGroups.GLOBALLY_MISSING_PROPERTIES);
 
-    test("var {a = 5} = obj;", "var {a: a = 5} = obj;");
+    test("var {a = 5} = obj;", "var a; ({a = 5} = obj);");
   }
 
   @Test
   public void testES6ShorthandPropertySyntax06() {
     ignoreWarnings(DiagnosticGroups.GLOBALLY_MISSING_PROPERTIES);
 
-    test("var {a = 5, b = 3} = obj;", "var {a: a = 5, b: b = 3} = obj;");
+    test("var {a = 5, b = 3} = obj;", "var a; var b; ({a = 5, b = 3} = obj);");
   }
 
   @Test
   public void testES6ShorthandPropertySyntax07() {
     ignoreWarnings(DiagnosticGroups.GLOBALLY_MISSING_PROPERTIES);
 
-    test("var {a: a = 5, b = 3} = obj;", "var {a: a = 5, b: b = 3} = obj;");
+    test("var {a: a = 5, b = 3} = obj;", "var a; var b; ({a: a = 5, b: b = 3} = obj);");
   }
 
   @Test
   public void testES6ShorthandPropertySyntax08() {
     ignoreWarnings(DiagnosticGroups.GLOBALLY_MISSING_PROPERTIES);
 
-    test("var {a, b} = obj;", "var {a: a, b: b} = obj;");
+    test("var {a, b} = obj;", "var a; var b; ({a, b} = obj);");
   }
 
   @Test
@@ -1559,12 +1581,15 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testSplitExportDeclarationWithDestructuring() {
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
 
-    test("export var {} = {};", "var {} = {}; export {};");
+    test("export var {} = {};", "({} = {}); export {};");
     test(
-        lines("let obj = {a: 3, b: 2};", "export var {a, b: d, e: f = 2} = obj;"),
         lines(
-            "let obj = {a: 3, b: 2};",
-            "var {a: a, b: d, e: f = 2} = obj;",
+            "let obj = {a: 3, b: 2};", //
+            "export var {a, b: d, e: f = 2} = obj;"),
+        lines(
+            "let obj = {a: 3, b: 2};", //
+            "var a; var d; var f; ",
+            "({a: a, b: d, e: f = 2} = obj);",
             "export {a as a, d as d, f as f};"));
   }
 

@@ -113,11 +113,11 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testDestructuring() {
-    testSame("var {name} = function() {};");
+    testSame("var name; ({name} = function() {});");
     testSame("let {name} = function() {};");
     testSame("const {name} = function() {};");
 
-    testSame("var [x] = function() {};");
+    test("var [x] = function() {};", "var x; [x] = function() {};");
     testSame("let [x] = function() {};");
     testSame("const [x] = function() {};");
   }

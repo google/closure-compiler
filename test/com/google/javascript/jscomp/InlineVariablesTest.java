@@ -2356,9 +2356,13 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "var x = a;",
             "x; x;"),
         lines(
-            "", //
-            "var [a, b, c] = [1, 2, 3]",
-            "a; a;"));
+            "var a;", //
+            "var b;",
+            "var c;",
+            "[a, b, c] = [1, 2, 3]",
+            "var x = a;", // we fail to inline a into x because normalization adds stub declaration
+            // for a. But that's an acceptable compromise.
+            "x; x;"));
 
     testSame("var x = 1; ({[0]: x} = {});");
   }

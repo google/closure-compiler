@@ -2070,7 +2070,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testDestructuringAlias1() {
     // CollapseProperties backs off on destructuring, so it's okay not to inline here.
-    testSame("var a = {x: 5}; var [b] = [a]; use(b.x);");
+    test(
+        "var a = {x: 5}; var [b] = [a]; use(b.x);", //
+        "var a = {x: 5}; var b; [b] = [a]; use(b.x);");
   }
 
   @Test

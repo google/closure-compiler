@@ -1149,7 +1149,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjectRestDoesNotCrash() {
-    testSame("var {...a} = b;");
+    // only normalization changes, nothing else
+    test("var {...a} = b;", "var a; ({...a} = b);");
   }
 
   // See https://github.com/google/closure-compiler/issues/2119

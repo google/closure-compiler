@@ -774,8 +774,9 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     testSame(
         lines(
             "function f(param) {", //
-            "  var {prop1: foo, prop2: bar} = param;",
-            "  alert(foo);",
+            "  var bar;",
+            "  ({prop1:param, prop2:bar} = param);",
+            "  alert(param);",
             "}"));
   }
 
@@ -784,8 +785,9 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     testSame(
         lines(
             "async function f(param) {",
-            "  var {prop1: foo, prop2: bar} = param;",
-            "  alert(foo);",
+            "  var bar;",
+            "  ({prop1:param, prop2:bar} = param);",
+            "  alert(param);",
             "}"));
   }
 
@@ -794,8 +796,9 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     testSame(
         lines(
             "function *f(param) {",
-            "  var {prop1: foo, prop2: bar} = param;",
-            "  alert(foo);",
+            "  var bar;",
+            "  ({prop1:param, prop2:bar} = param);",
+            "  alert(param);",
             "}"));
   }
 
@@ -805,8 +808,9 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     testSame(
         lines(
             "async function *f(param) {",
-            "  var {prop1: foo, prop2: bar} = param;",
-            "  alert(foo);",
+            "  var bar;",
+            "  ({prop1:param, prop2:bar} = param);",
+            "  alert(param);",
             "}"));
   }
 
