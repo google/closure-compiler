@@ -210,6 +210,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   private void ensureArrowFunctionsHaveBlockBodies(NodeTraversal t, Node function) {
     Node body = function.getLastChild();
     if (!body.isBlock()) {
+      // TODO(b/197349249): When all instances of this pass run post normalization, then we can be
+      // sure that any function here has a block and this can be replaced with an assertion.
       body.detach();
       Node replacement = IR.block(IR.returnNode(body)).srcrefTreeIfMissing(body);
       function.addChildToBack(replacement);
@@ -264,7 +266,15 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
                   : IR.var(lhs, rhs);
           newStatement.srcrefTreeIfMissing(param);
           if (insertSpot == null) {
-            body.addChildToFront(newStatement);
+            // insert new declarations only after all inner function declarations in that function
+            // body to preserve normalization
+            insertSpot = NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(body);
+            if (insertSpot != null) {
+              newStatement.insertBefore(insertSpot);
+            } else {
+              // functionBody only contains hoisted function declarations
+              body.addChildToBack(newStatement);
+            }
           } else {
             newStatement.insertAfter(insertSpot);
           }
@@ -309,7 +319,16 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     Node newDecl = IR.var(patternParam, createTempVarNameNode(tempVarName, paramType));
     newDecl.srcrefTreeIfMissing(patternParam);
     if (insertSpot == null) {
-      function.getLastChild().addChildToFront(newDecl);
+      // insert new declarations only after all inner function declarations in that function body to
+      // preserve normalization
+      insertSpot =
+          NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(function.getLastChild());
+      if (insertSpot != null) {
+        newDecl.insertBefore(insertSpot);
+      } else {
+        // functionBody only contains hoisted function declarations
+        function.getLastChild().addChildToBack(newDecl);
+      }
     } else {
       newDecl.insertAfter(insertSpot);
     }

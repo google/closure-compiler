@@ -365,9 +365,8 @@ public final class MultiPassTest extends CompilerTestCase {
     passes = new ArrayList<>();
     addRenameVariablesInParamListsPass();
     addSplitVariableDeclarationsPass();
-    addDestructuringPass();
     addNormalization(); // adding normalization triggers {@code ValidityCheck.checkVars}
-
+    addDestructuringPass();
     addArrowFunctionPass();
   }
 

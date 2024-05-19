@@ -2378,8 +2378,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         expected(
             lines(
                 "function f(a) {",
+                "  var x;",
                 "  var $jscomp$destructuring$var0 = a;",
-                "  var x = $jscomp$destructuring$var0.x;",
+                "  x = $jscomp$destructuring$var0.x;",
                 "  if (a) {",
                 "    var x$jscomp$0 = 2;",
                 "    return x$jscomp$0;",

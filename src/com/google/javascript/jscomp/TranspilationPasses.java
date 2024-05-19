@@ -197,8 +197,6 @@ public class TranspilationPasses {
         FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
       passes.maybeAdd(es6RenameVariablesInParamLists);
       passes.maybeAdd(es6SplitVariableDeclarations);
-      passes.maybeAdd(
-          getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
     }
   }
 
@@ -212,6 +210,12 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
+      passes.maybeAdd(
+          getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
+    }
 
     if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
       passes.maybeAdd(rewriteNewDotTarget);
