@@ -23,3 +23,4 @@
 'require es6/promise/finally';
 'require es6/promise/any';
 'require es6/promise/aggregateerror';
+'require es6/promise/withResolvers';

@@ -1482,6 +1482,36 @@ Promise.allSettled = function(iterable) {};
  */
 Promise.race = function(iterable) {};
 
+/**
+ * Record type representing the return of Promise.withResolvers.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers
+ * @record
+ * @template VALUE
+ */
+Promise.PromiseWithResolvers = function() {};
+
+/**
+ * @type {!Promise<VALUE>}
+ */
+Promise.PromiseWithResolvers.prototype.promise;
+
+/**
+ * @type {function((VALUE|IThenable<VALUE>|Thenable)=)}
+ */
+Promise.PromiseWithResolvers.prototype.resolve;
+
+/**
+ * @type {function(*=)}
+ */
+Promise.PromiseWithResolvers.prototype.reject;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers
+ * @return {!Promise.PromiseWithResolvers<VALUE>}
+ * @template VALUE
+ */
+Promise.withResolvers = function() {};
 
 /**
  * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled
