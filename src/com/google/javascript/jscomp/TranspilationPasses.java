@@ -187,16 +187,12 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_Y));
     }
 
+    // TODO(b/329447979): Merge this with another pass and delete this pass.
     if (options.needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
       passes.maybeAdd(es6NormalizeShorthandProperties);
     }
     if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6ConvertSuper);
-    }
-    if (options.needsTranspilationFrom(
-        FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
-      passes.maybeAdd(es6RenameVariablesInParamLists);
-      passes.maybeAdd(es6SplitVariableDeclarations);
     }
   }
 
@@ -211,12 +207,20 @@ public class TranspilationPasses {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
 
+    // TODO(b/329447979): Delete these as they're redundant with normalization.
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
+      passes.maybeAdd(es6RenameVariablesInParamLists);
+      passes.maybeAdd(es6SplitVariableDeclarations);
+    }
+
     if (options.needsTranspilationFrom(
         FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
       passes.maybeAdd(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
     }
 
+    // TODO(b/329447979): Merge with es6RewriteClass and delete this pass.
     if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
       passes.maybeAdd(rewriteNewDotTarget);
     }
