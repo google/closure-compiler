@@ -60,7 +60,11 @@ public final class SourceMapJsLangTest extends SourceMapTestCase {
   public static ImmutableList<? extends Object> data() {
     ImmutableList.Builder<String> testFiles = ImmutableList.builder();
     for (File testFile : new File(DATA_DIR).listFiles()) {
-      testFiles.add(testFile.getName());
+      if (!testFile.getName().endsWith(".jsdata")) {
+        continue;
+      }
+      testFiles.add(
+          testFile.getName().substring(0, testFile.getName().length() - ".jsdata".length()));
     }
     return testFiles.build();
   }
@@ -72,7 +76,7 @@ public final class SourceMapJsLangTest extends SourceMapTestCase {
 
   public SourceMapJsLangTest(String fileName) throws Exception {
     this.fileName = fileName;
-    this.fileContent = Files.asCharSource(new File(DATA_DIR, fileName), UTF_8).read();
+    this.fileContent = Files.asCharSource(new File(DATA_DIR, fileName + ".jsdata"), UTF_8).read();
     this.prettyPrinted = false;
     this.inputMaps = ImmutableMap.builder();
   }
