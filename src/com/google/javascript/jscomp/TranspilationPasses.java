@@ -186,11 +186,6 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
     }
-
-    // TODO(b/329447979): Merge this with another pass and delete this pass.
-    if (options.needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
-      passes.maybeAdd(es6NormalizeShorthandProperties);
-    }
   }
 
   /**
@@ -203,6 +198,11 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    // TODO(b/329447979): Merge this with another pass and delete this pass.
+    if (options.needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
+      passes.maybeAdd(es6NormalizeShorthandProperties);
+    }
 
     if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6ConvertSuper);
