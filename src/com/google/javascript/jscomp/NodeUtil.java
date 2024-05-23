@@ -3068,9 +3068,7 @@ public final class NodeUtil {
     return n.isClass() && (!isNamedClass(n) || !isDeclarationParent(n.getParent()));
   }
 
-  /**
-   * @return Whether the node is both a function expression and the function is named.
-   */
+  /** Returns whether the node is both a class expression and the class is named. */
   static boolean isNamedClassExpression(Node n) {
     return NodeUtil.isClassExpression(n) && n.getFirstChild().isName();
   }
@@ -5179,7 +5177,73 @@ public final class NodeUtil {
     return jsdocNode == null ? null : jsdocNode.getJSDocInfo();
   }
 
+  /**
+   * Find the best JSDocInfo node for the given node. This version is stricter than {@code
+   * getBestJSDocInfoNode} in that it only accepts a node that is either a lhs "let, const, var"
+   * name node, or a RHS class/function, or a class/function declaration, or an export.
+   *
+   * @throws IllegalStateException if any other input node token is provided.
+   */
+  public static @Nullable Node getBestJsDocInfoNodeStrict(Node n) {
+    boolean isDeclaredName = n.isName() && NodeUtil.isNameDeclaration(n.getParent());
+    if (isDeclaredName) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isDeclaredClass = NodeUtil.isClassDeclaration(n);
+    if (isDeclaredClass) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isDeclaredFunction = NodeUtil.isFunctionDeclaration(n);
+    if (isDeclaredFunction) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsClass = isRhsClass(n);
+    if (isRhsClass) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsFunction = isRhsFunction(n);
+    if (isRhsFunction) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsClassName = n.isName() && isRhsClass(n.getParent());
+    if (isRhsClassName) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsFunctionName = n.isName() && isRhsFunction(n.getParent());
+    if (isRhsFunctionName) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isExport = n.isExport();
+    if (isExport) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    throw new IllegalStateException("Not allowed to get JSDocInfo node for node: " + n);
+  }
+
+  // e.g. `class A` in `/** some */ var x = class A {};`
+  private static boolean isRhsClass(Node n) {
+    return NodeUtil.isNamedClassExpression(n)
+        && (n.getParent().isName() || n.getParent().isAssign());
+  }
+
+  // e.g. `function A` in `/** some */ var x = function A() {};`
+  private static boolean isRhsFunction(Node n) {
+    return NodeUtil.isNamedFunctionExpression(n)
+        && (n.getParent().isName() || n.getParent().isAssign());
+  }
+
+  /**
+   * Find the best JSDocInfo node for the given node.
+   *
+   * @deprecated because we want to control the input node tokens accepted by this function. Use
+   *     {@code getBestJSDocInfoNodeStrict} instead.
+   */
+  @Deprecated
   public static @Nullable Node getBestJSDocInfoNode(Node n) {
+    return getBestJsDocInfoNodeInternal(n);
+  }
+
+  private static @Nullable Node getBestJsDocInfoNodeInternal(Node n) {
     if (n.isExprResult()) {
       return getBestJSDocInfoNode(n.getFirstChild());
     }

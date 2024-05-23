@@ -2691,6 +2691,164 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testGetBestJsDocInfoNodeStrict_declaredName_doesNotThrow() {
+      Node aName = parse("/** some */ let A;").getFirstFirstChild();
+      assertThat(aName.isName()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(aName);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(aName.getParent())).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(aName);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(aName.getParent())).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_classDeclaration_doesNotThrow() {
+      Node classNode = parse("/** some */ class A {}").getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(classNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(classNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(classNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(classNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsNamedClassExpression_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = class A {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node classNode = xName.getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(classNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(classNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsUnnamedClassExpression_throws() {
+      Node constNode = parse("/** some */ const x = class {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node classNode = xName.getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(classNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version rejects an unnamed class expression
+      IllegalStateException e =
+          assertThrows(
+              IllegalStateException.class, () -> NodeUtil.getBestJsDocInfoNodeStrict(classNode));
+      assertThat(e.getMessage().contains("Not allowed to get JSDocInfo node for node")).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsClassName_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = class A {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node classNode = xName.getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+      Node className = classNode.getFirstChild();
+      assertThat(className.isName()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(className);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(className);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsNamedFunctionExpression_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = function A() {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node functionNode = xName.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(functionNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(functionNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_exportedFunction_doesNotThrow() {
+      Node exportNode = parse("/** some */ export function A() {}").getFirstFirstChild();
+      assertThat(exportNode.isExport()).isTrue();
+      Node functionNode = exportNode.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(functionNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      // JSDoc gets attached to the children of export nodes, and there are no warnings.
+      // See https://github.com/google/closure-compiler/issues/781
+      // Hence, the best JSDocInfo node is the function node itself when the search is starting from
+      // it.
+      assertThat(bestJsDocInfoNode.equals(functionNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(functionNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(functionNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_exportNode_doesNotThrow() {
+      Node exportNode = parse("/** some */ export function A() {}").getFirstFirstChild();
+      assertThat(exportNode.isExport()).isTrue();
+      Node functionNode = exportNode.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(exportNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(exportNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(exportNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(exportNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsFunctionName_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = function A() {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node functionNode = xName.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+      Node functionName = functionNode.getFirstChild();
+      assertThat(functionName.isName()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(functionName);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(functionName);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
     public void testIsConstantDeclaration() {
       assertIsConstantDeclaration(false, parse("var x = 1;").getFirstFirstChild());
       assertIsConstantDeclaration(false, parse("let x = 1;").getFirstFirstChild());
