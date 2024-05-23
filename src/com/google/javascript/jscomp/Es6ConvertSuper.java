@@ -35,6 +35,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final SynthesizeExplicitConstructors constructorSynthesizer;
+  // TODO(b/329447979): Run this pass only for scripts containing Feature.SUPER and not for scripts
+  // containing just Feature.CLASSES?
   private static final FeatureSet FEATURES_TO_RUN_FOR =
       FeatureSet.BARE_MINIMUM.with(Feature.SUPER, Feature.CLASSES);
 
