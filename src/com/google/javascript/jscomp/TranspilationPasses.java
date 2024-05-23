@@ -169,6 +169,18 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.EXPONENT_OP)) {
       passes.maybeAdd(rewriteExponentialOperator);
     }
+  }
+
+  /**
+   * Adds transpilation passes that should not be run until after normalization has been done.
+   * Passes added in this method either use {@code TranspilationPasses.processTranspile} or
+   * early-exit by checking their feature in the script's featureset. So they will only get run if
+   * the feature they're responsible for removing exists in the script.
+   */
+  public static void addPostNormalizationTranspilationPasses(
+      PassListBuilder passes, CompilerOptions options) {
+    // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
+    // until that method can be deleted as a no-op.
 
     if (options.needsTranspilationFrom(
         FeatureSet.BARE_MINIMUM.with(
@@ -186,18 +198,6 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
     }
-  }
-
-  /**
-   * Adds transpilation passes that should not be run until after normalization has been done.
-   * Passes added in this method either use {@code TranspilationPasses.processTranspile} or
-   * early-exit by checking their feature in the script's featureset. So they will only get run if
-   * the feature they're responsible for removing exists in the script.
-   */
-  public static void addPostNormalizationTranspilationPasses(
-      PassListBuilder passes, CompilerOptions options) {
-    // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
-    // until that method can be deleted as a no-op.
 
     // TODO(b/329447979): Merge this with another pass and delete this pass.
     if (options.needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
