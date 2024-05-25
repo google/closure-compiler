@@ -418,7 +418,7 @@ public class CodeGenerator {
 
       case BIGINT:
         Preconditions.checkState(childCount == 0, node);
-        cc.add(node.getBigInt() + "n");
+        cc.addBigInt(node.getBigInt());
         break;
 
       case TYPEOF:
