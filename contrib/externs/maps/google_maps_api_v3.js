@@ -40,7 +40,7 @@ google.maps = {};
  * global <code>google.maps</code> namespace, though using the global namespace
  * is not generally recommended.)
  * @param {string} libraryName
- * @return {!Promise<!google.maps.CoreLibrary|!google.maps.MapsLibrary|!google.maps.PlacesLibrary|!google.maps.GeocodingLibrary|!google.maps.RoutesLibrary|!google.maps.MarkerLibrary|!google.maps.GeometryLibrary|!google.maps.ElevationLibrary|!google.maps.StreetViewLibrary|!google.maps.JourneySharingLibrary|!google.maps.DrawingLibrary|!google.maps.VisualizationLibrary>}
+ * @return {!Promise<!google.maps.CoreLibrary|!google.maps.MapsLibrary|!google.maps.Maps3DLibrary|!google.maps.PlacesLibrary|!google.maps.GeocodingLibrary|!google.maps.RoutesLibrary|!google.maps.MarkerLibrary|!google.maps.GeometryLibrary|!google.maps.ElevationLibrary|!google.maps.StreetViewLibrary|!google.maps.JourneySharingLibrary|!google.maps.DrawingLibrary|!google.maps.VisualizationLibrary>}
  */
 google.maps.importLibrary = function(libraryName) {};
 
@@ -4066,6 +4066,25 @@ google.maps.InfoWindowOptions.prototype.content;
 google.maps.InfoWindowOptions.prototype.disableAutoPan;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The content to display in the InfoWindow header row. This can be an HTML
+ * element, or a string containing HTML. The InfoWindow will be sized according
+ * to the content. To set an explicit size for the header content, set
+ * headerContent to be a HTML element with that size.
+ * @type {string|!Element|!Text|null|undefined}
+ */
+google.maps.InfoWindowOptions.prototype.headerContent;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Disables the whole header row in the InfoWindow. When set to true, the header
+ * will be removed so that the header content and the close button will be
+ * hidden.
+ * @type {boolean|null|undefined}
+ */
+google.maps.InfoWindowOptions.prototype.headerDisabled;
+
+/**
  * Maximum width of the InfoWindow, regardless of content&#39;s width. This
  * value is only considered if it is set before a call to <code>open()</code>.
  * To change the maximum width when changing content, call <code>close()</code>,
@@ -5213,6 +5232,14 @@ google.maps.Map.prototype.getFeatureLayer = function(featureType) {};
 google.maps.Map.prototype.getHeading = function() {};
 
 /**
+ * Returns whether heading interactions are enabled. This option is only in
+ * effect when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @return {boolean|null}
+ */
+google.maps.Map.prototype.getHeadingInteractionEnabled = function() {};
+
+/**
  * Informs the caller of the current capabilities available to the map based on
  * the Map ID that was provided.
  * @return {!google.maps.MapCapabilities}
@@ -5258,6 +5285,14 @@ google.maps.Map.prototype.getStreetView = function() {};
  * @return {number|undefined}
  */
 google.maps.Map.prototype.getTilt = function() {};
+
+/**
+ * Returns whether tilt interactions are enabled. This option is only in effect
+ * when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @return {boolean|null}
+ */
+google.maps.Map.prototype.getTiltInteractionEnabled = function() {};
 
 /**
  * Returns the zoom of the map. If the zoom has not been set then the result is
@@ -5334,6 +5369,16 @@ google.maps.Map.prototype.setClickableIcons = function(value) {};
 google.maps.Map.prototype.setHeading = function(heading) {};
 
 /**
+ * Sets whether heading interactions are enabled. This option is only in effect
+ * when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @param {boolean} headingInteractionEnabled
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setHeadingInteractionEnabled = function(
+    headingInteractionEnabled) {};
+
+/**
  * @param {!google.maps.MapTypeId|string} mapTypeId
  * @return {undefined}
  */
@@ -5344,6 +5389,13 @@ google.maps.Map.prototype.setMapTypeId = function(mapTypeId) {};
  * @return {undefined}
  */
 google.maps.Map.prototype.setOptions = function(options) {};
+
+/**
+ * Sets the current RenderingType of the map.
+ * @param {!google.maps.RenderingType} renderingType
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setRenderingType = function(renderingType) {};
 
 /**
  * Binds a <code>StreetViewPanorama</code> to the map. This panorama overrides
@@ -5358,9 +5410,9 @@ google.maps.Map.prototype.setStreetView = function(panorama) {};
 
 /**
  * For vector maps, sets the angle of incidence of the map. The allowed values
- * are restricted depending on the zoom level of the map. For raster maps,
- * controls the automatic switching behavior for the angle of incidence of the
- * map. The only allowed values are <code>0</code> and <code>45</code>.
+ * are restricted depending on the zoom level of the map. <br><br> For raster
+ * maps, controls the automatic switching behavior for the angle of incidence of
+ * the map. The only allowed values are <code>0</code> and <code>45</code>.
  * <code>setTilt(0)</code> causes the map to always use a 0&deg; overhead view
  * regardless of the zoom level and viewport. <code>setTilt(45)</code> causes
  * the tilt angle to automatically switch to 45 whenever 45&deg; imagery is
@@ -5376,6 +5428,16 @@ google.maps.Map.prototype.setStreetView = function(panorama) {};
  * @return {undefined}
  */
 google.maps.Map.prototype.setTilt = function(tilt) {};
+
+/**
+ * Sets whether tilt interactions are enabled. This option is only in effect
+ * when the map is a vector map. If not set in code, then the cloud
+ * configuration for the map ID will be used (if available).
+ * @param {boolean} tiltInteractionEnabled
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setTiltInteractionEnabled = function(
+    tiltInteractionEnabled) {};
 
 /**
  * Sets the zoom of the map.
@@ -5485,6 +5547,13 @@ google.maps.MapCapabilities.prototype.isAdvancedMarkersAvailable;
 google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
 
 /**
+ * If true, this map is configured properly to allow for the use of {@link
+ * google.maps.WebGLOverlayView}.
+ * @type {boolean|undefined}
+ */
+google.maps.MapCapabilities.prototype.isWebGLOverlayViewAvailable;
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * MapElement is an <code>HTMLElement</code> subclass for rendering maps. After
@@ -5514,6 +5583,16 @@ google.maps.MapElement = function(options) {};
 google.maps.MapElement.prototype.center;
 
 /**
+ * Whether the map should allow user control of the camera heading (rotation).
+ * This option is only in effect when the map is a vector map. If not set in
+ * code, then the cloud configuration for the map ID will be used (if
+ * available).
+ * @default <code>false</code>
+ * @type {boolean|null}
+ */
+google.maps.MapElement.prototype.headingInteractionDisabled;
+
+/**
  * A reference to the {@link google.maps.Map} that the MapElement uses
  * internally.
  * @type {!google.maps.Map}
@@ -5521,15 +5600,39 @@ google.maps.MapElement.prototype.center;
 google.maps.MapElement.prototype.innerMap;
 
 /**
- * The Map ID of the map. See the <a
- * href="https://developers.google.com/maps/documentation/get-map-id">Map ID
- * documentation</a> for more information.
+ * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
+ * ID</a> of the map. This parameter cannot be set or changed after a map is
+ * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
+ * features that require a map ID but which do not require cloud enablement.
  * @type {string|null}
  */
 google.maps.MapElement.prototype.mapId;
 
 /**
- * The zoom level of the map.
+ * Whether the map should be a raster or vector map. This parameter cannot be
+ * set or changed after a map is instantiated. If not set, then the cloud
+ * configuration for the map ID will determine the rendering type (if
+ * available). Please note that vector maps may not be available for all devices
+ * and browsers and the map will fall back to a raster map as needed.
+ * @default {@link google.maps.RenderingType.VECTOR}
+ * @type {!google.maps.RenderingType|null}
+ */
+google.maps.MapElement.prototype.renderingType;
+
+/**
+ * Whether the map should allow user control of the camera tilt. This option is
+ * only in effect when the map is a vector map. If not set in code, then the
+ * cloud configuration for the map ID will be used (if available).
+ * @default <code>false</code>
+ * @type {boolean|null}
+ */
+google.maps.MapElement.prototype.tiltInteractionDisabled;
+
+/**
+ * The zoom level of the map. Valid zoom values are numbers from zero up to the
+ * supported <a
+ * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
+ * zoom level</a>. Larger zoom values correspond to a higher resolution.
  * @type {number|null}
  */
 google.maps.MapElement.prototype.zoom;
@@ -5546,24 +5649,37 @@ google.maps.MapElement.prototype.zoom;
 google.maps.MapElementOptions = function() {};
 
 /**
- * The initial Map center.
+ * See {@link google.maps.MapElement.center}.
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.MapElementOptions.prototype.center;
 
 /**
- * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
- * ID</a> of the map. This parameter cannot be set or changed after a map is
- * instantiated.
+ * See {@link google.maps.MapElement.headingInteractionDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.headingInteractionDisabled;
+
+/**
+ * See {@link google.maps.MapElement.mapId}.
  * @type {string|null|undefined}
  */
 google.maps.MapElementOptions.prototype.mapId;
 
 /**
- * The initial Map zoom level. Valid zoom values are numbers from zero up to the
- * supported <a
- * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
- * zoom level</a>. Larger zoom values correspond to a higher resolution.
+ * See {@link google.maps.MapElement.renderingType}.
+ * @type {!google.maps.RenderingType|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.renderingType;
+
+/**
+ * See {@link google.maps.MapElement.tiltInteractionDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.tiltInteractionDisabled;
+
+/**
+ * See {@link google.maps.MapElement.zoom}.
  * @type {number|null|undefined}
  */
 google.maps.MapElementOptions.prototype.zoom;
@@ -5715,6 +5831,16 @@ google.maps.MapOptions.prototype.gestureHandling;
 google.maps.MapOptions.prototype.heading;
 
 /**
+ * Whether the map should allow user control of the camera heading (rotation).
+ * This option is only in effect when the map is a vector map. If not set in
+ * code, then the cloud configuration for the map ID will be used (if
+ * available).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapOptions.prototype.headingInteractionEnabled;
+
+/**
  * Whether the map should allow fractional zoom levels. Listen to
  * <code>isfractionalzoomenabled_changed</code> to know when the default has
  * been set.
@@ -5734,7 +5860,8 @@ google.maps.MapOptions.prototype.keyboardShortcuts;
 /**
  * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
  * ID</a> of the map. This parameter cannot be set or changed after a map is
- * instantiated.
+ * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
+ * features that require a map ID but which do not require cloud enablement.
  * @type {string|null|undefined}
  */
 google.maps.MapOptions.prototype.mapId;
@@ -5782,6 +5909,17 @@ google.maps.MapOptions.prototype.minZoom;
  * @type {boolean|null|undefined}
  */
 google.maps.MapOptions.prototype.noClear;
+
+/**
+ * Whether the map should be a raster or vector map. This parameter cannot be
+ * set or changed after a map is instantiated. If not set, then the cloud
+ * configuration for the map ID will determine the rendering type (if
+ * available). Please note that vector maps may not be available for all devices
+ * and browsers and the map will fall back to a raster map as needed.
+ * @default {@link google.maps.RenderingType.RASTER}
+ * @type {google.maps.RenderingType|null|undefined}
+ */
+google.maps.MapOptions.prototype.renderingType;
 
 /**
  * Defines a boundary that restricts the area of the map accessible to users.
@@ -5852,7 +5990,10 @@ google.maps.MapOptions.prototype.streetViewControlOptions;
 /**
  * Styles to apply to each of the default map types. Note that for
  * <code>satellite</code>/<code>hybrid</code> and <code>terrain</code> modes,
- * these styles will only apply to labels and geometry.
+ * these styles will only apply to labels and geometry. This feature is not
+ * available when using a map ID, or when using vector maps (use <a
+ * href="https://developers.google.com/maps/documentation/cloud-customization">cloud-based
+ * maps styling</a> instead).
  * @type {Array<!google.maps.MapTypeStyle>|null|undefined}
  */
 google.maps.MapOptions.prototype.styles;
@@ -5876,6 +6017,15 @@ google.maps.MapOptions.prototype.styles;
  * @type {number|null|undefined}
  */
 google.maps.MapOptions.prototype.tilt;
+
+/**
+ * Whether the map should allow user control of the camera tilt. This option is
+ * only in effect when the map is a vector map. If not set in code, then the
+ * cloud configuration for the map ID will be used (if available).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.MapOptions.prototype.tiltInteractionEnabled;
 
 /**
  * The initial Map zoom level. Valid zoom values are numbers from zero up to the
@@ -6206,6 +6356,68 @@ google.maps.MapTypeStyle.prototype.featureType;
 google.maps.MapTypeStyle.prototype.stylers;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * @record
+ */
+google.maps.Maps3DLibrary = function() {};
+
+/**
+ * @type {typeof google.maps.maps3d.AltitudeMode}
+ */
+google.maps.Maps3DLibrary.prototype.AltitudeMode;
+
+/**
+ * @type {typeof google.maps.maps3d.CenterChangeEvent}
+ */
+google.maps.Maps3DLibrary.prototype.CenterChangeEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.ClickEvent}
+ */
+google.maps.Maps3DLibrary.prototype.ClickEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.HeadingChangeEvent}
+ */
+google.maps.Maps3DLibrary.prototype.HeadingChangeEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.Map3DElement}
+ */
+google.maps.Maps3DLibrary.prototype.Map3DElement;
+
+/**
+ * @type {typeof google.maps.maps3d.Polygon3DElement}
+ */
+google.maps.Maps3DLibrary.prototype.Polygon3DElement;
+
+/**
+ * @type {typeof google.maps.maps3d.Polyline3DElement}
+ */
+google.maps.Maps3DLibrary.prototype.Polyline3DElement;
+
+/**
+ * @type {typeof google.maps.maps3d.RangeChangeEvent}
+ */
+google.maps.Maps3DLibrary.prototype.RangeChangeEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.RollChangeEvent}
+ */
+google.maps.Maps3DLibrary.prototype.RollChangeEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.SteadyChangeEvent}
+ */
+google.maps.Maps3DLibrary.prototype.SteadyChangeEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.TiltChangeEvent}
+ */
+google.maps.Maps3DLibrary.prototype.TiltChangeEvent;
+
+/**
  * An event listener, created by <code><a
  * href="#event">google.maps.event.addListener</a>()</code> and friends.
  * @record
@@ -6514,6 +6726,18 @@ google.maps.MapsServerError = function() {};
  * @param {google.maps.MarkerOptions=} opts Named optional arguments
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated As of February 21st, 2024, google.maps.Marker is deprecated.
+ *     Please use {@link google.maps.marker.AdvancedMarkerElement} instead. At
+ *     this time, google.maps.Marker is not scheduled to be discontinued,
+ *     but {@link google.maps.marker.AdvancedMarkerElement} is recommended over
+ *     google.maps.Marker. While google.maps.Marker will continue to receive bug
+ *     fixes for any major regressions, existing bugs in google.maps.Marker will
+ *     not be addressed. At least 12 months notice will be given before support
+ *     is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ *     for additional details and <a
+ *     href="https://developers.google.com/maps/documentation/javascript/advanced-markers/migration">https://developers.google.com/maps/documentation/javascript/advanced-markers/migration</a>
+ *     for the migration guide.
  */
 google.maps.Marker = function(opts) {};
 
@@ -6815,6 +7039,13 @@ google.maps.MarkerLibrary.prototype.PinElement;
  * MarkerOptions object used to define the properties that can be set on a
  * Marker.
  * @record
+ * @deprecated As of February 21st, 2024, google.maps.Marker is deprecated.
+ *     Please use google.maps.marker.AdvancedMarkerElement instead. Please see
+ *     <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ *     for deprecation details and <a
+ *     href="https://developers.google.com/maps/documentation/javascript/advanced-markers/migration">https://developers.google.com/maps/documentation/javascript/advanced-markers/migration</a>
+ *     for the migration guide.
  */
 google.maps.MarkerOptions = function() {};
 
@@ -7405,6 +7636,16 @@ google.maps.PlacesLibrary.prototype.OpeningHoursPeriod;
 google.maps.PlacesLibrary.prototype.OpeningHoursPoint;
 
 /**
+ * @type {typeof google.maps.places.ParkingOptions}
+ */
+google.maps.PlacesLibrary.prototype.ParkingOptions;
+
+/**
+ * @type {typeof google.maps.places.PaymentOptions}
+ */
+google.maps.PlacesLibrary.prototype.PaymentOptions;
+
+/**
  * @type {typeof google.maps.places.Photo}
  */
 google.maps.PlacesLibrary.prototype.Photo;
@@ -7453,6 +7694,11 @@ google.maps.PlacesLibrary.prototype.SearchBox;
  * @type {typeof google.maps.places.SearchByTextRankPreference}
  */
 google.maps.PlacesLibrary.prototype.SearchByTextRankPreference;
+
+/**
+ * @type {typeof google.maps.places.SearchNearbyRankPreference}
+ */
+google.maps.PlacesLibrary.prototype.SearchNearbyRankPreference;
 
 /**
  *
@@ -9275,7 +9521,7 @@ google.maps.Symbol = function() {};
  * anchor&#39;s x and y coordinates respectively. The position is expressed in
  * the same coordinate system as the symbol&#39;s path.
  * @default <code>google.maps.Point(0,0)</code>
- * @type {google.maps.Point|null|undefined}
+ * @type {!google.maps.Point|null|undefined}
  */
 google.maps.Symbol.prototype.anchor;
 
@@ -9300,7 +9546,7 @@ google.maps.Symbol.prototype.fillOpacity;
  * supplied by the marker. The origin is expressed in the same coordinate system
  * as the symbol&#39;s path. This property is unused for symbols on polylines.
  * @default <code>google.maps.Point(0,0)</code>
- * @type {google.maps.Point|null|undefined}
+ * @type {!google.maps.Point|null|undefined}
  */
 google.maps.Symbol.prototype.labelOrigin;
 
@@ -10050,7 +10296,10 @@ google.maps.WebGLDrawOptions.prototype.transformer;
  * after removing. The <code>onDraw()</code> method will then be called whenever
  * a map property changes that could change the position of the element, such as
  * zoom, center, or map type. WebGLOverlayView may only be added to a vector map
- * having a {@link google.maps.MapOptions.mapId}.
+ * having a {@link google.maps.MapOptions.mapId} (including maps set to
+ * the {@link google.maps.RenderingType.VECTOR} {@link
+ * google.maps.MapOptions.renderingType} and using {@link
+ * google.maps.Map.DEMO_MAP_ID} as the {@link google.maps.MapOptions.mapId}).
  *
  * Access by calling `const {WebGLOverlayView} = await
  * google.maps.importLibrary("maps")`. See
@@ -10222,7 +10471,7 @@ google.maps.event.clearListeners = function(instance, eventName) {};
 
 /**
  * Returns if there are listeners for the given event on the given instance. Can
- * be used to to save the computation of expensive event details.
+ * be used to save the computation of expensive event details.
  * @param {!Object} instance
  * @param {string} eventName
  * @return {boolean}
@@ -14624,6 +14873,759 @@ google.maps.localContext.PlaceTypePreference;
 /**
  * @const
  */
+google.maps.maps3d = {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Specifies how altitude components in the coordinates are interpreted.
+ *
+ * Access by calling `const {AltitudeMode} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.AltitudeMode = {
+  /**
+   * Allows to express objects relative to the average mean sea level. That also
+   * means that if the terrain level of detail changes underneath the object,
+   * its absolute position will remain the same.
+   */
+  ABSOLUTE: 'ABSOLUTE',
+  /**
+   * Allows to express objects placed on the ground. They will remain at ground
+   * level following the terrain regardless of what altitude is provided. If the
+   * object is positioned over a major body of water, it will be placed at sea
+   * level.
+   */
+  CLAMP_TO_GROUND: 'CLAMP_TO_GROUND',
+  /**
+   * Allows to express objects relative to the ground surface. If the terrain
+   * level of detail changes, the position of the object will remain constant
+   * relative to the ground. When over water, the altitude will be interpreted
+   * as a value in meters above sea level.
+   */
+  RELATIVE_TO_GROUND: 'RELATIVE_TO_GROUND',
+  /**
+   * Allows to express objects relative to the highest of ground+building+water
+   * surface. When over water, this will be water surface; when over terrain,
+   * this will be the building surface (if present) or ground surface (if no
+   * buildings).
+   */
+  RELATIVE_TO_MESH: 'RELATIVE_TO_MESH',
+};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from monitoring center change on
+ * <code>Map3DElement</code>.
+ *
+ * Access by calling `const {CenterChangeEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.CenterChangeEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from clicking a Map3DElement.
+ *
+ * Access by calling `const {ClickEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.ClickEvent = function() {};
+
+/**
+ * The latitude/longitude/altitude that was below the cursor when the event
+ * occurred. Please note, that at coarser levels, less accurate data will be
+ * returned. Also, sea floor elevation may be returned for the altitude value
+ * when clicking at the water surface from higher camera positions.
+ * @type {!google.maps.LatLngAltitude|null}
+ */
+google.maps.maps3d.ClickEvent.prototype.position;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from monitoring heading change on
+ * <code>Map3DElement</code>.
+ *
+ * Access by calling `const {HeadingChangeEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.HeadingChangeEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Map3DElement is an HTML interface for the 3D Map view.
+ *
+ * Access by calling `const {Map3DElement} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Map3DElementOptions=} options
+ * @implements {google.maps.maps3d.Map3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.Map3DElement = function(options) {};
+
+/**
+ * When set, restricts the position of the camera within the specified lat/lng
+ * bounds. Note that objects outside the bounds are still rendered. Bounds can
+ * restrict both longitude and latitude, or can restrict either latitude or
+ * longitude only. For latitude-only bounds use west and east longitudes of
+ * <code>-180</code> and <code>180</code>, respectively. For longitude-only
+ * bounds use north and south latitudes of <code>90</code> and <code>-90</code>,
+ * respectively.
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.bounds;
+
+/**
+ * The center of the map given as a LatLngAltitude, where altitude is in meters
+ * above ground level. Note that this is not necessarily where the camera is
+ * located, as the <code>range</code> field affects the camera&#39;s distance
+ * from the map center. If not set, defaults to <code>{lat: 0, lng: 0, altitude:
+ * 63170000}</code>. 63170000 meters is a maximum allowed altitude (Earth radius
+ * multiplied by 10).
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.center;
+
+/**
+ * When <code>true</code>, default map labels aren&#39;t rendered.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.defaultLabelsDisabled;
+
+/**
+ * The compass heading of the map, in degrees, where due north is zero. When
+ * there is no tilt, any roll will be interpreted as heading.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.heading;
+
+/**
+ * The maximum altitude above the ground which will be displayed on the map. A
+ * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
+ * radius multiplied by 10).
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.maxAltitude;
+
+/**
+ * The maximum angle of heading (rotation) of the map. A valid value is between
+ * <code>0</code> and <code>360</code> degrees. <code>minHeading</code> and
+ * <code>maxHeading</code> represent an interval of &lt;= <code>360</code>
+ * degrees in which heading gestures will be allowed. <code>minHeading =
+ * 180</code> and <code>maxHeading = 90</code> will allow heading in <code>[0,
+ * 90]</code> and heading in <code>[180, 360]</code>. <code>minHeading =
+ * 90</code> and <code>maxHeading = 180</code> will allow heading in <code>[90,
+ * 180]</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.maxHeading;
+
+/**
+ * The maximum angle of incidence of the map. A valid value is between
+ * <code>0</code> and <code>90</code> degrees.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.maxTilt;
+
+/**
+ * The minimum altitude above the ground which will be displayed on the map. A
+ * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
+ * radius multiplied by 10).
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.minAltitude;
+
+/**
+ * The minimum angle of heading (rotation) of the map. A valid value is between
+ * <code>0</code> and <code>360</code> degrees. <code>minHeading</code> and
+ * <code>maxHeading</code> represent an interval of &lt;= <code>360</code>
+ * degrees in which heading gestures will be allowed. <code>minHeading =
+ * 180</code> and <code>maxHeading = 90</code> will allow heading in <code>[0,
+ * 90]</code> and heading in <code>[180, 360]</code>. <code>minHeading =
+ * 90</code> and <code>maxHeading = 180</code> will allow heading in <code>[90,
+ * 180]</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.minHeading;
+
+/**
+ * The minimum angle of incidence of the map. A valid value is between
+ * <code>0</code> and <code>90</code> degrees.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.minTilt;
+
+/**
+ * The distance from camera to the center of the map, in meters.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.range;
+
+/**
+ * The roll of the camera around the view vector in degrees. To resolve
+ * ambiguities, when there is no tilt, any roll will be interpreted as heading.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.roll;
+
+/**
+ * The tilt of the camera&#39;s view vector in degrees. A view vector looking
+ * directly down at the earth would have a tilt of zero degrees. A view vector
+ * pointing away from the earth would have a tilt of <code>180</code> degrees.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.tilt;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Map3DElementOptions object used to define the properties that can be set on a
+ * Map3DElement.
+ * @record
+ */
+google.maps.maps3d.Map3DElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.bounds}.
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.bounds;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.center}.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.center;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.defaultLabelsDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.defaultLabelsDisabled;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.heading}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.heading;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.maxAltitude}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.maxAltitude;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.maxHeading}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.maxHeading;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.maxTilt}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.maxTilt;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.minAltitude}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.minAltitude;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.minHeading}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.minHeading;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.minTilt}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.minTilt;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.range}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.range;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.roll}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.roll;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.tilt}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.tilt;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A 3D polygon (like a 3D polyline) defines a series of connected coordinates
+ * in an ordered sequence. Additionally, polygons form a closed loop and define
+ * a filled region.
+ *
+ * Access by calling `const {Polygon3DElement} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Polygon3DElementOptions=} options
+ * @implements {google.maps.maps3d.Polygon3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.Polygon3DElement = function(options) {};
+
+/**
+ * Specifies how altitude components in the coordinates are interpreted.
+ * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.altitudeMode;
+
+/**
+ * Specifies whether parts of the polygon which could be occluded are drawn or
+ * not. Polygons can be occluded by map geometry (e.g. buildings).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.drawsOccludedSegments;
+
+/**
+ * Specifies whether to connect the polygon to the ground. To extrude a polygon,
+ * the <code>altitudeMode</code> must be either <code>RELATIVE_TO_GROUND</code>
+ * or <code>ABSOLUTE</code>.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.extruded;
+
+/**
+ * The fill color. All CSS3 colors are supported except for extended named
+ * colors.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.fillColor;
+
+/**
+ * The fill opacity between 0.0 and 1.0.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.fillOpacity;
+
+/**
+ * When <code>true</code>, edges of the polygon are interpreted as geodesic and
+ * will follow the curvature of the Earth. When <code>false</code>, edges of the
+ * polygon are rendered as straight lines in screen space.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.geodesic;
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. Unlike
+ * polylines, a polygon may consist of one or more paths, which create multiple
+ * cut-outs inside the polygon.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. Altitude
+ * is ignored in certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
+
+/**
+ * The stroke color. All CSS3 colors are supported except for extended named
+ * colors.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.strokeColor;
+
+/**
+ * The stroke opacity between <code>0.0</code> and <code>1.0</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.strokeOpacity;
+
+/**
+ * The stroke width in pixels.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.strokeWidth;
+
+/**
+ * The zIndex compared to other polys.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.zIndex;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Polygon3DElementOptions object used to define the properties that can be set
+ * on a Polygon3DElement.
+ * @record
+ */
+google.maps.maps3d.Polygon3DElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.altitudeMode}.
+ * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.drawsOccludedSegments}.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.drawsOccludedSegments;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.extruded}.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.extruded;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.fillColor}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.fillColor;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.fillOpacity}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.fillOpacity;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.geodesic}.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.geodesic;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.innerCoordinates}.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.innerCoordinates;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.outerCoordinates}.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.outerCoordinates;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.strokeColor}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.strokeColor;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.strokeOpacity}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.strokeOpacity;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.strokeWidth}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.strokeWidth;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.zIndex}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.zIndex;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A 3D polyline is a linear overlay of connected line segments on a 3D map.
+ *
+ * Access by calling `const {Polyline3DElement} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Polyline3DElementOptions=} options
+ * @implements {google.maps.maps3d.Polyline3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.Polyline3DElement = function(options) {};
+
+/**
+ * Specifies how altitude components in the coordinates are interpreted.
+ * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.altitudeMode;
+
+/**
+ * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
+ * certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.coordinates;
+
+/**
+ * Specifies whether parts of the polyline which could be occluded are drawn or
+ * not. Polylines can be occluded by map geometry (e.g. buildings).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.drawsOccludedSegments;
+
+/**
+ * Specifies whether to connect the polyline to the ground. To extrude a
+ * polyline, the <code>altitudeMode</code> must be either
+ * <code>RELATIVE_TO_GROUND</code> or <code>ABSOLUTE</code>.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.extruded;
+
+/**
+ * When <code>true</code>, edges of the polyline are interpreted as geodesic and
+ * will follow the curvature of the Earth. When <code>false</code>, edges of the
+ * polyline are rendered as straight lines in screen space.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.geodesic;
+
+/**
+ * The outer color. All CSS3 colors are supported except for extended named
+ * colors.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.outerColor;
+
+/**
+ * The outer opacity between <code>0.0</code> and <code>1.0</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.outerOpacity;
+
+/**
+ * The outer width is between <code>0.0</code> and <code>1.0</code>. This is a
+ * percentage of the <code>strokeWidth</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
+
+/**
+ * The stroke color. All CSS3 colors are supported except for extended named
+ * colors.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.strokeColor;
+
+/**
+ * The stroke opacity between <code>0.0</code> and <code>1.0</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.strokeOpacity;
+
+/**
+ * The stroke width in pixels.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.strokeWidth;
+
+/**
+ * The zIndex compared to other polys.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.zIndex;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Polyline3DElementOptions object used to define the properties that can be set
+ * on a Polyline3DElement.
+ * @record
+ */
+google.maps.maps3d.Polyline3DElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.altitudeMode}.
+ * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.coordinates}.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.coordinates;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.drawsOccludedSegments}.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.drawsOccludedSegments;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.extruded}.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.extruded;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.geodesic}.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.geodesic;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.outerColor}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.outerColor;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.outerOpacity}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.outerOpacity;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.outerWidth}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.outerWidth;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.strokeColor}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.strokeColor;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.strokeOpacity}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.strokeOpacity;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.strokeWidth}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.strokeWidth;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.zIndex}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from monitoring range change on
+ * <code>Map3DElement</code>.
+ *
+ * Access by calling `const {RangeChangeEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.RangeChangeEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from monitoring roll change on
+ * <code>Map3DElement</code>.
+ *
+ * Access by calling `const {RollChangeEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.RollChangeEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from monitoring a steady state of
+ * <code>Map3DElement</code>.
+ *
+ * Access by calling `const {SteadyChangeEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.SteadyChangeEvent = function() {};
+
+/**
+ * Indicates whether Map3DElement is steady (i.e. all rendering for the current
+ * scene has completed) or not.
+ * @type {boolean}
+ */
+google.maps.maps3d.SteadyChangeEvent.prototype.isSteady;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from monitoring tilt change on
+ * <code>Map3DElement</code>.
+ *
+ * Access by calling `const {TiltChangeEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.TiltChangeEvent = function() {};
+
+/**
+ * @const
+ */
 google.maps.marker = {};
 
 /**
@@ -15683,6 +16685,112 @@ google.maps.places.OpeningHoursPoint.prototype.hour;
 google.maps.places.OpeningHoursPoint.prototype.minute;
 
 /**
+ *
+ * Access by calling `const {ParkingOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ParkingOptions = function() {};
+
+/**
+ * Whether a place offers free garage parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasFreeGarageParking;
+
+/**
+ * Whether a place offers free parking lots. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasFreeParkingLot;
+
+/**
+ * Whether a place offers free street parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasFreeStreetParking;
+
+/**
+ * Whether a place offers paid garage parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasPaidGarageParking;
+
+/**
+ * Whether a place offers paid parking lots. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasPaidParkingLot;
+
+/**
+ * Whether a place offers paid street parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasPaidStreetParking;
+
+/**
+ * Whether a place offers valet parking. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.ParkingOptions.prototype.hasValetParking;
+
+/**
+ *
+ * Access by calling `const {PaymentOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.PaymentOptions = function() {};
+
+/**
+ * Whether a place only accepts payment via cash. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.PaymentOptions.prototype.acceptsCashOnly;
+
+/**
+ * Whether a place accepts payment via credit card. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.PaymentOptions.prototype.acceptsCreditCards;
+
+/**
+ * Whether a place accepts payment via debit card. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.PaymentOptions.prototype.acceptsDebitCards;
+
+/**
+ * Whether a place accepts payment via NFC. Returns &#39;true&#39; or
+ * &#39;false&#39; if the value is known. Returns &#39;null&#39; if the value is
+ * unknown.
+ * @type {boolean|null}
+ */
+google.maps.places.PaymentOptions.prototype.acceptsNFC;
+
+/**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  *
@@ -15769,6 +16877,11 @@ google.maps.places.Place.prototype.addressComponents;
 google.maps.places.Place.prototype.adrFormatAddress;
 
 /**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.allowsDogs;
+
+/**
  * Attribution text to be displayed for this Place result.
  * @type {!Array<!google.maps.places.Attribution>|undefined}
  */
@@ -15844,12 +16957,37 @@ google.maps.places.Place.prototype.hasDelivery;
 google.maps.places.Place.prototype.hasDineIn;
 
 /**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.hasLiveMusic;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.hasMenuForChildren;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.hasOutdoorSeating;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.hasRestroom;
+
+/**
  * Whether a place has takeout. Returns &#39;true&#39; or &#39;false&#39; if the
  * value is known. Returns &#39;null&#39; if the value is unknown. Returns
  * &#39;undefined&#39; if this field has not yet been requested.
  * @type {boolean|null|undefined}
  */
 google.maps.places.Place.prototype.hasTakeout;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.hasWiFi;
 
 /**
  * The default HEX color code for the place&#39;s category.
@@ -15869,6 +17007,21 @@ google.maps.places.Place.prototype.id;
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.internationalPhoneNumber;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.isGoodForChildren;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.isGoodForGroups;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.isGoodForWatchingSports;
 
 /**
  * Whether a place is reservable. Returns &#39;true&#39; or &#39;false&#39; if
@@ -15891,6 +17044,20 @@ google.maps.places.Place.prototype.location;
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.nationalPhoneNumber;
+
+/**
+ * Options of parking provided by the place. <code>undefined</code> if the
+ * parking options data have not been called for from the server.
+ * @type {google.maps.places.ParkingOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.parkingOptions;
+
+/**
+ * Payment options provided by the place. <code>undefined</code> if the payment
+ * options data have not been called for from the server.
+ * @type {google.maps.places.PaymentOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.paymentOptions;
 
 /**
  * Photos of this Place. The collection will contain up to ten {@link
@@ -15965,6 +17132,21 @@ google.maps.places.Place.prototype.servesBreakfast;
  * @type {boolean|null|undefined}
  */
 google.maps.places.Place.prototype.servesBrunch;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.servesCocktails;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.servesCoffee;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.Place.prototype.servesDessert;
 
 /**
  * Whether a place serves dinner. Returns &#39;true&#39; or &#39;false&#39; if
@@ -16060,6 +17242,13 @@ google.maps.places.Place.prototype.openingHours;
 google.maps.places.Place.searchByText = function(request) {};
 
 /**
+ * Search for nearby places.
+ * @param {!google.maps.places.SearchNearbyRequest} request
+ * @return {!Promise<{places:!Array<!google.maps.places.Place>}>}
+ */
+google.maps.places.Place.searchNearby = function(request) {};
+
+/**
  * @param {!google.maps.places.FetchFieldsRequest} options
  * @return {!Promise<{place:!google.maps.places.Place}>}
  */
@@ -16115,17 +17304,12 @@ google.maps.places.PlaceAspectRating.prototype.type;
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
- * <ul>
-<li>PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
-provides a UI component for the Places Autocomplete API. After loading the
-<code>places</code> library, an input with autocomplete functionality can be
-created in HTML. For example: <pre><code>&lt;gmp-placeautocomplete
-&gt;&lt;/gmp-placeautocomplete&gt;</code></pre></li>
-</ul>
+ * PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
+ * provides a UI component for the Places Autocomplete API.
  *
  * Access by calling `const {PlaceAutocompleteElement} = await
-google.maps.importLibrary("places")`. See
-https://developers.google.com/maps/documentation/javascript/libraries.
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
  * @implements {google.maps.places.PlaceAutocompleteElementOptions}
  * @extends {HTMLElement}
@@ -17560,6 +18744,120 @@ google.maps.places.SearchByTextRequest.prototype.query;
  * @deprecated Please use rankPreference instead.
  */
 google.maps.places.SearchByTextRequest.prototype.rankBy;
+
+/**
+ * RankPreference enum for SearchNearbyRequest.
+ *
+ * Access by calling `const {SearchNearbyRankPreference} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.SearchNearbyRankPreference = {
+  /**
+   * Ranks results by distance.
+   */
+  DISTANCE: 'DISTANCE',
+  /**
+   * Ranks results by popularity.
+   */
+  POPULARITY: 'POPULARITY',
+};
+
+/**
+ * Request interface for {@link google.maps.places.Place.searchNearby}. For more
+ * information on the request, see <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places/searchNearby">Places
+ * API reference</a>.
+ * @record
+ */
+google.maps.places.SearchNearbyRequest = function() {};
+
+/**
+ * Excluded primary place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can only have a single primary type. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
+
+/**
+ * Fields to be included in the response, <a
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
+ * available fields will be returned and billed for (this is not recommended for
+ * production deployments). For a list of fields see {@link
+ * google.maps.places.PlaceResult}. Nested fields can be specified with
+ * dot-paths (for example, <code>"geometry.location"</code>).
+ * @type {!Array<string>}
+ */
+google.maps.places.SearchNearbyRequest.prototype.fields;
+
+/**
+ * Included primary place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can only have a single primary type. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.includedPrimaryTypes;
+
+/**
+ * Included place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can have many different place types. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.includedTypes;
+
+/**
+ * Place details will be displayed with the preferred language if available.
+ * Will default to the browser&#39;s language preference. Current list of
+ * supported languages: <a
+ * href="https://developers.google.com/maps/faq#languagesupport">https://developers.google.com/maps/faq#languagesupport</a>.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.language;
+
+/**
+ * The region to search, specified as a circle with center and radius. Results
+ * outside given location are not returned.
+ * @type {!google.maps.Circle|!google.maps.CircleLiteral}
+ */
+google.maps.places.SearchNearbyRequest.prototype.locationRestriction;
+
+/**
+ * Maximum number of results to return. It must be between 1 and 20,
+ * inclusively.
+ * @type {number|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.maxResultCount;
+
+/**
+ * How results will be ranked in the response.
+ * @default <code>SearchNearbyRankPreference.DISTANCE</code>
+ * @type {!google.maps.places.SearchNearbyRankPreference|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.rankPreference;
+
+/**
+ * The Unicode country/region code (CLDR) of the location where the request is
+ * coming from. This parameter is used to display the place details, like
+ * region-specific place name, if available. The parameter can affect results
+ * based on applicable law. For more information, see <a
+ * href="https://www.unicode.org/cldr/charts/latest/supplemental/territory_language_information.html">https://www.unicode.org/cldr/charts/latest/supplemental/territory_language_information.html</a>.
+ * Note that 3-digit region codes are not currently supported.
+ * @type {string|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.region;
 
 /**
  * Contains structured information about the place&#39;s description, divided
