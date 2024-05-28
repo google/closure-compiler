@@ -371,7 +371,6 @@ public abstract class CodeConsumer {
   void addBigInt(BigInteger bi) {
     String hexEncoded = "0x" + bi.toString(16) + "n";
     String decimalEncoded = bi.toString() + "n";
-    // The exact threshold is when bi >= 10n ** 17n
     addConstant(hexEncoded.length() < decimalEncoded.length() ? hexEncoded : decimalEncoded);
   }
 

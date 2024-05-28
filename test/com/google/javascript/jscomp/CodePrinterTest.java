@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,6 +48,39 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("-0b110n", "-6n");
     assertPrint("-0o7n", "-7n");
     assertPrint("-0x8n", "-8n");
+    assertPrintSame("1000000000n");
+    assertPrintSame("-10000000000n");
+
+    // Normalize the results to lowercase so the tests do not enfore the output is lowercase but
+    // instead the capitalization is left to the compiler.
+    Function<String, String> normalizeBigInt = s ->
+        s.substring(0, s.length() - 1).toLowerCase() + s.substring(s.length() - 1);
+    assertPrintAfterNormalization(
+        "7182582809266874004429817360811601465721521679690913024666851123813995272999n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        normalizeBigInt);
+    assertPrintAfterNormalization(
+        "0x000000fe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        normalizeBigInt);
+    assertPrintAfterNormalization(
+        "-7182582809266874004429817360811601465721521679690913024666851123813995272999n",
+        "-0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        normalizeBigInt);
+    assertPrintAfterNormalization(
+        "-0o00774114521526730576223631215443757451360052750070365011677201040647213506301316055447n",
+        "-0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        normalizeBigInt);
+    assertPrintAfterNormalization(
+        "0o774114521526730576223631215443757451360052750070365011677201040647213506301316055447n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        normalizeBigInt);
+    assertPrintAfterNormalization(
+        "0b111111100001001100101010001101010110111011000101111110010010011110011001010001101100100" +
+            "0111111011111001010010111100000001010101111010000001110000111101010000010011101111110" +
+            "10000001000100000110100111010001011101000110011000001011001110000101101100100111n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        normalizeBigInt);
   }
 
   @Test
