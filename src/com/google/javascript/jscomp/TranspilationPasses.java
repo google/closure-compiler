@@ -157,8 +157,6 @@ public class TranspilationPasses {
         // declarations, we need to normalize them a bit first.
         passes.maybeAdd(es6RenameVariablesInParamLists);
         passes.maybeAdd(es6SplitVariableDeclarations);
-        passes.maybeAdd(
-            getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
       }
     }
   }
@@ -173,6 +171,15 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
+        || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+      if (!options.needsTranspilationOf(Feature.OBJECT_DESTRUCTURING)
+          && options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+        passes.maybeAdd(
+            getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
+      }
+    }
 
     if (options.needsTranspilationOf(Feature.ASYNC_FUNCTIONS)) {
       passes.maybeAdd(rewriteAsyncFunctions);
