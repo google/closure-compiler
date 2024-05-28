@@ -161,10 +161,6 @@ public class TranspilationPasses {
             getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
       }
     }
-
-    if (options.needsTranspilationOf(Feature.ASYNC_FUNCTIONS)) {
-      passes.maybeAdd(rewriteAsyncFunctions);
-    }
   }
 
   /**
@@ -177,6 +173,10 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.ASYNC_FUNCTIONS)) {
+      passes.maybeAdd(rewriteAsyncFunctions);
+    }
 
     if (options.needsTranspilationOf(Feature.EXPONENT_OP)) {
       passes.maybeAdd(rewriteExponentialOperator);
