@@ -15,10 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -190,6 +193,34 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "  }",
             "}",
             "alert(i);"));
+  }
+
+  @Test
+  public void testConstnessPreservedInNewDeclarations() {
+    testForOf(
+        "for (let CID of [1, 2, 3]) { alert(CID); }",
+        lines(
+            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3])",
+            "var $jscomp$key$m1146332801$0$CID = $jscomp$iter$0.next();",
+            "for (;",
+            "    !$jscomp$key$m1146332801$0$CID.done; $jscomp$key$m1146332801$0$CID ="
+                + " $jscomp$iter$0.next()) {",
+            "  let CID = $jscomp$key$m1146332801$0$CID.value;",
+            "  {",
+            "    alert(CID);",
+            "  }",
+            "}"));
+    Node script = getLastCompiler().getJsRoot().getOnlyChild();
+    checkState(script.isScript(), script.getToken());
+    Node forLoop = script.getLastChild();
+    checkState(forLoop.isVanillaFor());
+    Node forBody = forLoop.getLastChild();
+    checkState(forBody.isBlock());
+    Node declaration = forBody.getFirstChild();
+    checkState(declaration.isLet());
+    Node name = declaration.getFirstChild();
+    checkState(name.getString().equals("CID"));
+    checkState(name.getBooleanProp(Node.IS_CONSTANT_NAME) == true);
   }
 
   @Test

@@ -134,6 +134,12 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
               declarationType,
               variable.getFirstChild().getString(),
               astFactory.createGetProp(iterResult.cloneTree(), "value", type));
+      if (variable.getFirstChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        // if the original name was const, then the new name should be too
+        // e.g. `for(let CID of []) {}` where `CID` was originally marked constant by coding
+        // convention
+        declarationOrAssign.getFirstChild().putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      }
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
