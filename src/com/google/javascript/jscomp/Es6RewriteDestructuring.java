@@ -372,6 +372,11 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
               "lhs in destructuring declaration should be a simple name. (%s)",
               name);
           Node newName = IR.name(name.getString()).srcref(name);
+          if (name.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+            // if old name was a const, new name should be too
+            // e.g. when rewriting `{VALUE} = ...` the `VALUE` is const by coding convention
+            newName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          }
           Node newVar = IR.var(newName).srcref(name);
           newVar.insertBefore(var);
         });
