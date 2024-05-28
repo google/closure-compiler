@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.testing.CodeSubTree.findClassDefiniti
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
@@ -38,6 +39,15 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
       new TestExternsBuilder().addArguments().addJSCompLibraries().build();
+
+  private static final ImmutableMap<String, String> REPLACEMENTS_MAP =
+      ImmutableMap.of(
+          "ASYNC_THIS",
+          "$jscomp$async$this$",
+          "ASYNC_ARGUMENTS",
+          "$jscomp$async$arguments$",
+          "ASYNC_SUPER_GET",
+          "$jscomp$async$super$get$");
 
   public RewriteAsyncFunctionsTest() {
     super(EXTERNS_BASE);
@@ -84,7 +94,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testDefaultParameterUsingThis() {
-    test(
+    testAsyncRewriting(
         lines(
             "class X {",
             "  /**",
@@ -107,10 +117,10 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "    /** @const */ this.a = a;",
             "  }",
             "  m(b = this.a) {", // this in parameter default value doesn't get changed
-            "    const $jscomp$async$this = this;",
+            "    const ASYNC_THIS$3 = this;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
-            "            return $jscomp$async$this.a + b;",
+            "            return ASYNC_THIS$3.a + b;",
             "        });",
             "  }",
             "}"));
@@ -120,23 +130,24 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     ImmutableList<Node> thisAliasNameReferences =
         findClassDefinition(getLastCompiler(), "X")
             .findMethodDefinition("m")
-            .findMatchingQNameReferences("$jscomp$async$this");
+            .findMatchingQNameReferences("$jscomp$async$this$m1146332801$3");
     assertThat(thisAliasNameReferences).hasSize(2);
 
-    // const $jscomp$async$this = this;
-    // confirm that `this` and `$jscomp$async$this` nodes have the right types in declaration
+    // const ASYNC_THIS$3 = this;
+    // confirm that `this` and `ASYNC_THIS$3` nodes have the right types in
+    // declaration
     Node aliasDeclarationReference = thisAliasNameReferences.get(0);
     assertNode(aliasDeclarationReference).hasColorThat().isEqualTo(classXInstanceType);
     Node thisNode = aliasDeclarationReference.getOnlyChild();
     assertNode(thisNode).isThis().hasColorThat().isEqualTo(classXInstanceType);
 
-    // make sure the single reference to $jscomp$async$this has the right type
+    // make sure the single reference to ASYNC_THIS$3 has the right type
     assertNode(thisAliasNameReferences.get(1)).hasColorThat().isEqualTo(classXInstanceType);
   }
 
   @Test
   public void testInnerArrowFunctionUsingThis() {
-    test(
+    testAsyncRewriting(
         lines(
             "class X {",
             "  async m() {",
@@ -148,11 +159,11 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         lines(
             "class X {",
             "  m() {",
-            "    const $jscomp$async$this = this;",
+            "    const ASYNC_THIS$1 = this;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
             "          return new Promise((resolve, reject) => {",
-            "            return $jscomp$async$this;",
+            "            return ASYNC_THIS$1;",
             "          });",
             "        });",
             "  }",
@@ -163,23 +174,24 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     ImmutableList<Node> thisAliasNameReferences =
         findClassDefinition(getLastCompiler(), "X")
             .findMethodDefinition("m")
-            .findMatchingQNameReferences("$jscomp$async$this");
+            .findMatchingQNameReferences("$jscomp$async$this$m1146332801$1");
     assertThat(thisAliasNameReferences).hasSize(2);
 
-    // const $jscomp$async$this = this;
-    // confirm that `this` and `$jscomp$async$this` nodes have the right types in declaration
+    // const ASYNC_THIS$1 = this;
+    // confirm that `this` and `ASYNC_THIS$1` nodes have the right types in
+    // declaration
     Node aliasDeclarationReference = thisAliasNameReferences.get(0);
     assertNode(aliasDeclarationReference).hasColorThat().isEqualTo(classXInstanceType);
     Node thisNode = aliasDeclarationReference.getOnlyChild();
     assertNode(thisNode).isThis().hasColorThat().isEqualTo(classXInstanceType);
 
-    // make sure the single reference to $jscomp$async$this has the right type
+    // make sure the single reference to ASYNC_THIS$1 has the right type
     assertNode(thisAliasNameReferences.get(1)).hasColorThat().isEqualTo(classXInstanceType);
   }
 
   @Test
   public void testInnerSuperCall() {
-    test(
+    testAsyncRewriting(
         externs(new TestExternsBuilder().addPromise().addJSCompLibraries().build()),
         srcs(
             lines(
@@ -202,13 +214,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "}",
                 "class X extends A {",
                 "  m() {",
-                "    const $jscomp$async$this = this;",
-                "    const $jscomp$async$super$get$m = () => {",
+                "    const ASYNC_THIS$3 = this;",
+                "    const ASYNC_SUPER_GET$5$m = () => {",
                 "      return super.m;",
                 "    };",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function* () {",
-                "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
+                "          return" + " ASYNC_SUPER_GET$5$m().call(ASYNC_THIS$3);",
                 "        });",
                 "  }",
                 "}")));
@@ -226,12 +238,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
     // Check type information on wrapper function for `super.m`
     ImmutableList<Node> superMethodWrapperNameNodes =
-        classXMethodMDefinition.findMatchingQNameReferences("$jscomp$async$super$get$m");
+        classXMethodMDefinition.findMatchingQNameReferences(
+            "$jscomp$async$super$get$m1146332801$5$m");
     // one declaration and one reference
     assertThat(superMethodWrapperNameNodes).hasSize(2);
 
     // first name node is declaration
-    // const $jscomp$async$super$get$m = () => super.m;
+    // const ASYNC_SUPER_GET$m = () => super.m;
     Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
     Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
     // optimization colors don't track function signatures
@@ -253,15 +266,15 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertNode(superNode).isSuper().hasColorThat().isEqualTo(classAInstanceType);
 
     // second name node is reference
-    // return $jscomp$async$super$get$m().call($jscomp$async$this);
+    // return ASYNC_SUPER_GET$m().call(ASYNC_THIS$1);
     Node wrapperReferenceNameNode = superMethodWrapperNameNodes.get(1);
     // optimization colors don't track function signatures
     assertNode(wrapperArrowFunction).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
-    // `$jscomp$async$super$get$m()`
+    // `ASYNC_SUPER_GET$m()`
     Node wrapperCallNode = wrapperReferenceNameNode.getParent();
     assertNode(wrapperCallNode).isCall().hasColorThat().isEqualTo(classAPropertyMType);
 
-    // `$jscomp$async$super$get$m().call($jscomp$async$this)`
+    // `ASYNC_SUPER_GET$m().call(ASYNC_THIS$1)`
     Node methodCallNode = wrapperCallNode.getGrandparent();
     // optimization colors don't track .call types
     assertNode(methodCallNode).isCall().hasColorThat().isEqualTo(StandardColors.UNKNOWN);
@@ -269,7 +282,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerSuperReference() {
-    test(
+    testAsyncRewriting(
         externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
             lines(
@@ -293,12 +306,12 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "}",
                 "class X extends A {",
                 "  m() {",
-                "    const $jscomp$async$super$get$m = () => {",
+                "    const ASYNC_SUPER_GET$5$m = () => {",
                 "      return super.m;",
                 "    };",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function* () {",
-                "          const tmp = $jscomp$async$super$get$m();",
+                "          const tmp = ASYNC_SUPER_GET$5$m();",
                 // type of tmp will indicate it requires `this` be provided, but will allow null.
                 "          return tmp.call(null);",
                 "        });",
@@ -318,12 +331,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
     // Check type information on wrapper function for `super.m`
     ImmutableList<Node> superMethodWrapperNameNodes =
-        classXMethodMDefinition.findMatchingQNameReferences("$jscomp$async$super$get$m");
+        classXMethodMDefinition.findMatchingQNameReferences(
+            "$jscomp$async$super$get$m1146332801$5$m");
     // one declaration and one reference
     assertThat(superMethodWrapperNameNodes).hasSize(2);
 
     // first name node is declaration
-    // const $jscomp$async$super$get$m = () => super.m;
+    // const ASYNC_SUPER_GET$m = () => super.m;
     Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
     // arrow function has a Color representing a object
     Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
@@ -345,18 +359,18 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertNode(superNode).hasColorThat().isEqualTo(classAInstanceType);
 
     // second name node is reference
-    // const tmp = $jscomp$async$super$get$m();
+    // const tmp = ASYNC_SUPER_GET$m();
     Node wrapperReferenceNameNode = superMethodWrapperNameNodes.get(1);
     // optimization colors don't track function signatures
     assertNode(wrapperReferenceNameNode).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
-    // `$jscomp$async$super$get$m()`
+    // `ASYNC_SUPER_GET$m()`
     Node wrapperCallNode = wrapperReferenceNameNode.getParent();
     assertNode(wrapperCallNode).isCall().hasColorThat().isEqualTo(classAPropertyMType);
   }
 
   @Test
   public void testMultipleSuperAccessesInAsyncFunction_havingNonIdenticalUnknownTypes() {
-    test(
+    testAsyncRewriting(
         lines(
             "class UpdatingElement {",
             "  getUpdateComplete() {",
@@ -377,13 +391,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}",
             "class TextFieldBase extends UpdatingElement {",
             "  _getUpdateComplete() {",
-            "    const $jscomp$async$this = this;",
-            "    const $jscomp$async$super$get$getUpdateComplete = () => {",
+            "    const ASYNC_THIS$3 = this;",
+            "    const ASYNC_SUPER_GET$5$getUpdateComplete = () => {",
             "      return super.getUpdateComplete;",
             "    };",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
-            "      if ($jscomp$async$super$get$getUpdateComplete()) {",
-            "        yield $jscomp$async$super$get$getUpdateComplete().call($jscomp$async$this);",
+            "      if (ASYNC_SUPER_GET$5$getUpdateComplete()) {",
+            "        yield" + " ASYNC_SUPER_GET$5$getUpdateComplete().call(ASYNC_THIS$3);",
             "      }",
             "    });",
             "  }",
@@ -392,7 +406,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testNestedArrowFunctionUsingThis() {
-    test(
+    testAsyncRewriting(
         lines(
             "class X {", //
             "  m() {",
@@ -403,11 +417,11 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "class X {",
             "  m() {",
             "    return () => {",
-            "      const $jscomp$async$this = this;",
+            "      const ASYNC_THIS$3 = this;",
             "      return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "          function* () {",
             "            return () => {",
-            "              return $jscomp$async$this;",
+            "              return ASYNC_THIS$3;",
             "            };",
             "          })",
             "    }",
@@ -417,7 +431,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerArrowFunctionUsingArguments() {
-    test(
+    testAsyncRewriting(
         externs(new TestExternsBuilder().addArguments().addJSCompLibraries().build()),
         srcs(
             lines(
@@ -432,11 +446,11 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             lines(
                 "class X {",
                 "  m() {",
-                "    const $jscomp$async$arguments = arguments;",
+                "    const ASYNC_ARGUMENTS$1 = arguments;",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function* () {",
                 "          return new Promise((resolve, reject) => {",
-                "            return $jscomp$async$arguments",
+                "            return ASYNC_ARGUMENTS$1",
                 "          });",
                 "        });",
                 "  }",
@@ -445,13 +459,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     ImmutableList<Node> argumentsAliasRefs =
         findClassDefinition(getLastCompiler(), "X")
             .findMethodDefinition("m")
-            .findMatchingQNameReferences("$jscomp$async$arguments");
+            .findMatchingQNameReferences("$jscomp$async$arguments$m1146332801$1");
     assertThat(argumentsAliasRefs).hasSize(2); // one declaration and 1 use
 
     Color argumentsColor = getGlobalColor(StandardColors.ARGUMENTS_ID);
 
     // declaration reference
-    // const $jscomp$async$arguments = arguments;
+    // const ASYNC_ARGUMENTS$1 = arguments;
     Node argumentsAliasDeclaration = argumentsAliasRefs.get(0);
     Node argumentsValue = argumentsAliasDeclaration.getOnlyChild();
     assertNode(argumentsValue)
@@ -459,22 +473,22 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         .hasColorThat()
         .isEqualTo(argumentsColor);
     assertNode(argumentsAliasDeclaration)
-        .matchesQualifiedName("$jscomp$async$arguments")
+        .matchesQualifiedName("$jscomp$async$arguments$m1146332801$1")
         .hasColorThat()
         .isEqualTo(argumentsColor);
 
     // usage reference
-    // return $jscomp$async$arguments;
+    // return ASYNC_ARGUMENTS$1;
     Node argumentsAliasUsage = argumentsAliasRefs.get(1);
     assertNode(argumentsAliasUsage)
-        .matchesQualifiedName("$jscomp$async$arguments")
+        .matchesQualifiedName("$jscomp$async$arguments$m1146332801$1")
         .hasColorThat()
         .isEqualTo(argumentsColor);
   }
 
   @Test
   public void testAwaitReplacement() {
-    test(
+    testAsyncRewriting(
         "async function foo(promise) { return await promise; }",
         lines(
             "function foo(promise) {",
@@ -497,21 +511,21 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArgumentsReplacement_asyncFunction() {
-    test(
+    testAsyncRewriting(
         "async function f(a, b, ...rest) { return arguments.length; }",
         lines(
             "function f(a, b, ...rest) {",
-            "  const $jscomp$async$arguments = arguments;",
+            "  const ASYNC_ARGUMENTS$1 = arguments;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
-            "          return $jscomp$async$arguments.length;", // arguments replaced
+            "          return ASYNC_ARGUMENTS$1.length;", // arguments replaced
             "        });",
             "}"));
   }
 
   @Test
   public void testArgumentsReplacement_asyncClosure() {
-    test(
+    testAsyncRewriting(
         lines(
             "function outer() {",
             "  /**",
@@ -524,10 +538,10 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         lines(
             "function outer() {",
             "  function f(varArgs) {",
-            "    const $jscomp$async$arguments = arguments;",
+            "    const ASYNC_ARGUMENTS$3 = arguments;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
-            "          return $jscomp$async$arguments.length;", // arguments replaced
+            "          return ASYNC_ARGUMENTS$3.length;", // arguments replaced
             "        });",
             "  }",
             "  return f(arguments)", // unchanged
@@ -536,7 +550,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArgumentsReplacement_normalClosureInAsync() {
-    test(
+    testAsyncRewriting(
         externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
             lines(
@@ -549,20 +563,20 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         expected(
             lines(
                 "function a() {",
-                "  const $jscomp$async$arguments = arguments;",
+                "  const ASYNC_ARGUMENTS$1 = arguments;",
                 "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "        function* () {",
                 "          function inner() {",
                 "            return arguments.length;", // unchanged
                 "          }",
-                "          return inner.apply(undefined, $jscomp$async$arguments);",
+                "          return inner.apply(undefined, ASYNC_ARGUMENTS$1);",
                 "        });",
                 "}")));
   }
 
   @Test
   public void testClassMethod() {
-    test(
+    testAsyncRewriting(
         lines(
             "class A {",
             "  /**",
@@ -581,10 +595,10 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "    this.x = x;",
             "  }",
             "  f() {",
-            "    const $jscomp$async$this = this;",
+            "    const ASYNC_THIS$3 = this;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function *() {",
-            "          return $jscomp$async$this.x;", // this replaced
+            "          return ASYNC_THIS$3.x;", // this replaced
             "        });",
             "  }",
             "}"));
@@ -592,7 +606,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testAsyncClassMethodWithAsyncArrow() {
-    test(
+    testAsyncRewriting(
         externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
             lines(
@@ -606,14 +620,14 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             lines(
                 "class A {",
                 "  f() {",
-                "    const $jscomp$async$this = this;",
-                "    const $jscomp$async$arguments = arguments;",
+                "    const ASYNC_THIS$1 = this;",
+                "    const ASYNC_ARGUMENTS$1 = arguments;",
                 "      return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "          function *() {",
                 "            let g = () => {",
                 "              return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "                  function *() {",
-                "                    console.log($jscomp$async$this, $jscomp$async$arguments);",
+                "                    console.log(ASYNC_THIS$1," + " ASYNC_ARGUMENTS$1);",
                 "                  });",
                 "            };",
                 "            g();",
@@ -624,7 +638,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testNonAsyncClassMethodWithAsyncArrow() {
-    test(
+    testAsyncRewriting(
         externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
             lines(
@@ -639,11 +653,11 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "class A {",
                 "  f() {",
                 "    let g = () => {",
-                "      const $jscomp$async$this = this;",
-                "      const $jscomp$async$arguments = arguments;",
+                "      const ASYNC_THIS$3 = this;",
+                "      const ASYNC_ARGUMENTS$3 = arguments;",
                 "      return $jscomp.asyncExecutePromiseGeneratorFunction(",
                 "          function *() {",
-                "            console.log($jscomp$async$this, $jscomp$async$arguments);",
+                "            console.log(ASYNC_THIS$3," + " ASYNC_ARGUMENTS$3);",
                 "          });",
                 "    };",
                 "    g();",
@@ -653,7 +667,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunctionExpressionBody() {
-    test(
+    testAsyncRewriting(
         "let f = async () => 1;",
         lines(
             "let f = () => {",
@@ -666,21 +680,21 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testGlobalScopeArrowFunctionRefersToThis() {
-    test(
+    testAsyncRewriting(
         "let f = async () => this;",
         lines(
             "let f = () => {",
-            "    const $jscomp$async$this = this;",
+            "    const ASYNC_THIS$1 = this;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "        function* () {",
-            "          return $jscomp$async$this;",
+            "          return ASYNC_THIS$1;",
             "        });",
             "}"));
   }
 
   @Test
   public void testGlobalScopeAsyncArrowFunctionDefaultParamValueRefersToThis() {
-    test(
+    testAsyncRewriting(
         "let f = async (t = this) => t;",
         lines(
             "let f = (t = this) => {",
@@ -693,16 +707,16 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testNestedAsyncArrowFunctionDefaultParamValueRefersToThis() {
-    test(
+    testAsyncRewriting(
         lines("let f = async function(outerT = this) {", "  return async (t = this) => t;", "};"),
         lines(
             // `this` is not aliased here
             "let f = function(outerT = this) {",
-            "  const $jscomp$async$this = this;",
+            "  const ASYNC_THIS$1 = this;",
             "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "      function* () {",
             // `this` is aliased here
-            "        return (t = $jscomp$async$this) => {",
+            "        return (t = ASYNC_THIS$1) => {",
             "          return $jscomp.asyncExecutePromiseGeneratorFunction(",
             "              function* () {",
             "                return t;",
@@ -711,5 +725,21 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "      });",
             "};",
             ""));
+  }
+
+  private void testAsyncRewriting(Externs externs, Sources sources, Expected expected) {
+    Expected updatedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) sources, expected, REPLACEMENTS_MAP));
+    test(externs, sources, updatedExpected);
+  }
+
+  private void testAsyncRewriting(String source, String expected) {
+    Expected updatedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs(source), expected(expected), REPLACEMENTS_MAP));
+    test(srcs(source), updatedExpected);
   }
 }

@@ -61,8 +61,8 @@ import org.jspecify.nullness.Nullable;
  */
 public final class RewriteAsyncFunctions implements NodeTraversal.Callback, CompilerPass {
 
-  private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments";
-  private static final String ASYNC_THIS = "$jscomp$async$this";
+  private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments$";
+  private static final String ASYNC_THIS = "$jscomp$async$this$";
   private static final String ASYNC_SUPER_PROP_GETTER_PREFIX = "$jscomp$async$super$get$";
   private final StaticScope namespace;
 
@@ -143,7 +143,13 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     private SuperPropertyWrapperInfo createNewInfo(Node firstSuperDotPropertyNode) {
       checkArgument(firstSuperDotPropertyNode.isGetProp(), firstSuperDotPropertyNode);
       String propertyName = firstSuperDotPropertyNode.getString();
-      final String wrapperFunctionName = ASYNC_SUPER_PROP_GETTER_PREFIX + propertyName;
+      final String wrapperFunctionName =
+          ASYNC_SUPER_PROP_GETTER_PREFIX
+              + compiler
+                  .getUniqueIdSupplier()
+                  .getUniqueId(compiler.getInput(NodeUtil.getInputId(firstSuperDotPropertyNode)))
+              + "$"
+              + propertyName;
       return new SuperPropertyWrapperInfo(
           firstSuperDotPropertyNode, wrapperFunctionName, type(firstSuperDotPropertyNode));
     }
@@ -159,9 +165,14 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
    */
   private abstract static class LexicalContext {
     final Node contextRootNode;
+    // precomputed unique id to append to names in this context. This is used to ensure that names
+    // in different contexts don't collide (e.g. 2 functions don't get the same `let
+    // $jscomp$async$this` name declared in their bodies)
+    final String uniqueId;
 
-    LexicalContext(Node contextRootNode) {
+    LexicalContext(Node contextRootNode, String uniqueId) {
       this.contextRootNode = checkNotNull(contextRootNode);
+      this.uniqueId = uniqueId;
     }
 
     Node getContextRootNode() {
@@ -174,7 +185,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
      * @param n This context's root node or one of its descendents.
      * @return this context or a new one for a child context
      */
-    public abstract LexicalContext getContextForNode(Node n);
+    public abstract LexicalContext getContextForNode(NodeTraversal t, Node n);
 
     public abstract void visit(NodeTraversal t, Node n);
   }
@@ -182,14 +193,15 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
   /** Defines behavior for nodes in the root scope, outside of any functions. */
   private final class RootContext extends LexicalContext {
 
-    private RootContext(Node contextRootNode) {
-      super(contextRootNode);
+    private RootContext(Node contextRootNode, String uniqueId) {
+      super(contextRootNode, uniqueId);
     }
 
     @Override
-    public LexicalContext getContextForNode(Node n) {
+    public LexicalContext getContextForNode(NodeTraversal t, Node n) {
       if (n.isFunction()) {
-        return new FunctionContext(n);
+        String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+        return new FunctionContext(n, uniqueId);
       } else {
         return this;
       }
@@ -205,18 +217,20 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
   private final class ParameterListContext extends LexicalContext {
     final FunctionContext functionContext;
 
-    public ParameterListContext(FunctionContext functionContext, Node contextRootNode) {
-      super(contextRootNode);
+    public ParameterListContext(
+        FunctionContext functionContext, Node contextRootNode, String uniqueId) {
+      super(contextRootNode, uniqueId);
       this.functionContext = checkNotNull(functionContext);
     }
 
     @Override
-    public LexicalContext getContextForNode(Node n) {
+    public LexicalContext getContextForNode(NodeTraversal t, Node n) {
       if (n.isFunction()) {
         // Function defined within a parameter list.
         // e.g. `() => something`
         // function someFunc(callback = () => something) {}
-        return new FunctionContext(functionContext, n);
+        String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+        return new FunctionContext(functionContext, n, uniqueId);
       } else {
         return this;
       }
@@ -257,8 +271,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     AstFactory.@Nullable Type typeOfThis;
     boolean mustAddAsyncArgumentsVariable = false;
 
-    FunctionContext(Node contextRootNode) {
-      super(contextRootNode);
+    FunctionContext(Node contextRootNode, String uniqueId) {
+      super(contextRootNode, uniqueId);
       if (contextRootNode.isAsyncFunction()) {
         asyncThisAndArgumentsContext = this;
       } else {
@@ -266,8 +280,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       }
     }
 
-    FunctionContext(FunctionContext outer, Node contextRootNode) {
-      super(contextRootNode);
+    FunctionContext(FunctionContext outer, Node contextRootNode, String uniqueId) {
+      super(contextRootNode, uniqueId);
       checkState(contextRootNode.isFunction(), contextRootNode);
       if (contextRootNode.isAsyncFunction()) {
         if (contextRootNode.isArrowFunction()) {
@@ -294,13 +308,15 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     }
 
     @Override
-    public LexicalContext getContextForNode(Node n) {
+    public LexicalContext getContextForNode(NodeTraversal t, Node n) {
       if (n == contextRootNode) {
         return this;
       } else if (n.isFunction()) {
-        return new FunctionContext(this, n);
+        String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+        return new FunctionContext(this, n, uniqueId);
       } else if (n.isParamList()) {
-        return new ParameterListContext(this, n);
+        String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+        return new ParameterListContext(this, n, uniqueId);
       } else {
         return this;
       }
@@ -326,7 +342,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
      */
     private Node createThisVariableReference(AstFactory.Type typeOfThis) {
       recordAsyncThisReplacementWasDone(typeOfThis);
-      return astFactory.createName(ASYNC_THIS, typeOfThis);
+      return astFactory.createName(ASYNC_THIS + asyncThisAndArgumentsContext.uniqueId, typeOfThis);
     }
 
     private Node createWrapperArrowFunction(SuperPropertyWrapperInfo wrapperInfo) {
@@ -350,8 +366,10 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
         switch (n.getToken()) {
           case NAME:
             if (n.matchesName("arguments")) {
-              n.setString(ASYNC_ARGUMENTS);
+              n.setString(ASYNC_ARGUMENTS + asyncThisAndArgumentsContext.uniqueId);
               if (compiler.getLifeCycleStage().isNormalized()) {
+                // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() to decide
+                // constness
                 n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
               }
               asyncThisAndArgumentsContext.recordAsyncArgumentsReplacementWasDone();
@@ -389,7 +407,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
                 Node thisAlias =
                     astFactory
                         .createThisAliasReferenceForEs6Class(
-                            ASYNC_THIS,
+                            ASYNC_THIS + asyncThisAndArgumentsContext.uniqueId,
                             NodeUtil.getEnclosingClass(
                                 asyncThisAndArgumentsContext.getContextRootNode()))
                         .srcref(superDotProperty);
@@ -443,13 +461,14 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (parent == null) {
       checkState(contextStack.isEmpty());
-      contextStack.push(new RootContext(n));
+      String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+      contextStack.push(new RootContext(n, uniqueId));
     } else {
       LexicalContext parentContext = contextStack.peek();
-      LexicalContext nodeContext = parentContext.getContextForNode(n);
+      LexicalContext nodeContext = parentContext.getContextForNode(t, n);
       if (nodeContext != parentContext) {
         contextStack.push(nodeContext);
       }
@@ -488,12 +507,15 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       // const this$ = this;
       newBody.addChildToBack(
           astFactory.createSingleConstNameDeclaration(
-              ASYNC_THIS, astFactory.createThis(functionContext.typeOfThis)));
+              ASYNC_THIS + functionContext.asyncThisAndArgumentsContext.uniqueId,
+              astFactory.createThis(functionContext.typeOfThis)));
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
     }
     if (functionContext.mustAddAsyncArgumentsVariable) {
       // const arguments$ = arguments;
-      newBody.addChildToBack(astFactory.createArgumentsAliasDeclaration(ASYNC_ARGUMENTS));
+      newBody.addChildToBack(
+          astFactory.createArgumentsAliasDeclaration(
+              ASYNC_ARGUMENTS + functionContext.asyncThisAndArgumentsContext.uniqueId));
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
     }
     for (SuperPropertyWrapperInfo superPropertyWrapperInfo :
