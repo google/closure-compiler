@@ -2752,7 +2752,7 @@ public final class NodeUtilTest {
       IllegalStateException e =
           assertThrows(
               IllegalStateException.class, () -> NodeUtil.getBestJsDocInfoNodeStrict(classNode));
-      assertThat(e.getMessage().contains("Not allowed to get JSDocInfo node for node")).isTrue();
+      assertThat(e).hasMessageThat().contains("Not allowed to get JSDocInfo node for node");
     }
 
     @Test
