@@ -146,8 +146,9 @@ public final class MultiPassTest extends CompilerTestCase {
         lines(
             "var foo = function(x,y) {return x===y;};",
             "var f = function ($jscomp$destructuring$var0) {",
+            "   var value;",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   var value = $jscomp$destructuring$var1.key;",
+            "   value = $jscomp$destructuring$var1.key;",
             "   return foo('v', value);",
             "};",
             "f({key:'v'})"));
