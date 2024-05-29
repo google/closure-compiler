@@ -120,10 +120,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.BIGINT)) {
       passes.maybeAdd(createFeatureRemovalPass("markBigintsRemoved", Feature.BIGINT));
     }
-
-    if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
-      passes.maybeAdd(rewriteNullishCoalesceOperator);
-    }
   }
 
   /**
@@ -137,6 +133,11 @@ public class TranspilationPasses {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
 
+    if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
+      passes.maybeAdd(rewriteNullishCoalesceOperator);
+    }
+
+    // TODO(b/197349249): Can this be done conditionally as part of another pass?
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.maybeAdd(rewriteCatchWithNoBinding);
     }
