@@ -124,10 +124,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
       passes.maybeAdd(rewriteNullishCoalesceOperator);
     }
-
-    if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
-      passes.maybeAdd(rewriteCatchWithNoBinding);
-    }
   }
 
   /**
@@ -141,6 +137,9 @@ public class TranspilationPasses {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
 
+    if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
+      passes.maybeAdd(rewriteCatchWithNoBinding);
+    }
     if (options.getChunkOutputType() != ChunkOutputType.ES_MODULES) {
       // Default output mode of JSCompiler is a script, unless chunkOutputType is set to
       // `ES_MODULES` where each output chunk is an ES module.
