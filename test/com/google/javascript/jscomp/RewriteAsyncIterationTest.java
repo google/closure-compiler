@@ -391,10 +391,11 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         "async function* baz() { yield this; }",
         lines(
             "function baz() {",
-            "  const $jscomp$asyncIter$this = this;",
+            "  const $jscomp$asyncIter$this$m1146332801$0 = this;",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
             "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, $jscomp$asyncIter$this);",
+            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,"
+                + " $jscomp$asyncIter$this$m1146332801$0);",
             "  })());",
             "}"));
   }
@@ -417,13 +418,13 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
             // `this` in parameter list shouldn't be aliased
             "            function(innerT = this) {",
-            "              const $jscomp$asyncIter$this = this;",
+            "              const $jscomp$asyncIter$this$m1146332801$1 = this;",
             "              return new $jscomp.AsyncGeneratorWrapper(",
             "                  (function*() {",
             "                    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
             "                        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
             // `this` in body should be aliased
-            "                        innerT || $jscomp$asyncIter$this);",
+            "                        innerT || $jscomp$asyncIter$this$m1146332801$1);",
             "                  })());",
             "            });",
             "      })());",
@@ -440,12 +441,12 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"),
         lines(
             "function baz() {",
-            "  const $jscomp$asyncIter$this = this;",
+            "  const $jscomp$asyncIter$this$m1146332801$0 = this;",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
             "    return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
             "        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "        (t = $jscomp$asyncIter$this) => {",
-            "         return t || $jscomp$asyncIter$this});",
+            "        (t = $jscomp$asyncIter$this$m1146332801$0) => {",
+            "         return t || $jscomp$asyncIter$this$m1146332801$0});",
             "  })());",
             "}",
             ""));
@@ -469,13 +470,13 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines("async function* baz() {  return () => this; }"),
         lines(
             "function baz() {",
-            "  const $jscomp$asyncIter$this = this;",
+            "  const $jscomp$asyncIter$this$m1146332801$0 = this;",
             "  return new $jscomp.AsyncGeneratorWrapper(",
             "      (function*() {",
             "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
             "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
             "            () => { ",
-            "               return $jscomp$asyncIter$this;",
+            "               return $jscomp$asyncIter$this$m1146332801$0;",
             "             });",
             "      })());",
             "}"));
@@ -540,7 +541,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}",
             "class X extends A {",
             "  m() {",
-            "    const $jscomp$asyncIter$this = this;",
+            "    const $jscomp$asyncIter$this$m1146332801$1 = this;",
             "    const $jscomp$asyncIter$super$get$m = () => {",
             "         return super.m;",
             "    };",
@@ -548,7 +549,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "        function* () {",
             "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
             "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "              $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this));",
+            "             "
+                + " $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this$m1146332801$1));",
             "        }());",
             "  }",
             "}"));

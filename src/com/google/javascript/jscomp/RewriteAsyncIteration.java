@@ -82,7 +82,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   private final AbstractCompiler compiler;
 
   private final ArrayDeque<LexicalContext> contextStack;
-  private static final String THIS_VAR_NAME = "$jscomp$asyncIter$this";
+  private static final String THIS_VAR_NAME = "$jscomp$asyncIter$this$";
   private static final String ARGUMENTS_VAR_NAME = "$jscomp$asyncIter$arguments";
   private static final String SUPER_PROP_GETTER_PREFIX = "$jscomp$asyncIter$super$get$";
   private final AstFactory astFactory;
@@ -102,7 +102,8 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     private LexicalContext(Node contextRoot) {
       this.contextRoot = checkNotNull(contextRoot);
       this.function = null;
-      this.thisSuperArgsContext = null;
+      this.thisSuperArgsContext =
+          null; // no need for global context to have a this/super/args context
     }
 
     /**
@@ -112,7 +113,8 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
      * @param contextRoot FUNCTION or PARAM_LIST node
      * @param function same as contextRoot or the FUNCTION containing the PARAM_LIST
      */
-    private LexicalContext(LexicalContext parent, Node contextRoot, Node function) {
+    private LexicalContext(
+        LexicalContext parent, Node contextRoot, Node function, AbstractCompiler compiler) {
       checkNotNull(parent);
       checkNotNull(contextRoot);
       checkArgument(contextRoot == function || contextRoot.isParamList(), contextRoot);
@@ -127,7 +129,11 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
         this.thisSuperArgsContext = parent.thisSuperArgsContext;
       } else if (contextRoot.isFunction()) {
         // Non-arrow function gets its own context defining `this`, `arguments`, and `super`.
-        this.thisSuperArgsContext = new ThisSuperArgsContext(this);
+        String newUniqueId =
+            compiler
+                .getUniqueIdSupplier()
+                .getUniqueId(compiler.getInput(NodeUtil.getInputId(contextRoot)));
+        this.thisSuperArgsContext = new ThisSuperArgsContext(this, newUniqueId);
       } else {
         // contextRoot is a parameter list.
         // Never alias `this`, `arguments`, or `super` for normal function parameter lists.
@@ -140,20 +146,22 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       return new LexicalContext(contextRoot);
     }
 
-    static LexicalContext newContextForFunction(LexicalContext parent, Node function) {
+    static LexicalContext newContextForFunction(
+        LexicalContext parent, Node function, AbstractCompiler compiler) {
       // Functions need their own context because:
       //     - async generator functions must be transpiled
       //     - non-async generator functions must NOT be transpiled
       //     - arrow functions inside of async generator functions need to have
       //       `this`, `arguments`, and `super` references aliased, including in their
       //       parameter lists
-      return new LexicalContext(parent, function, function);
+      return new LexicalContext(parent, function, function, compiler);
     }
 
-    static LexicalContext newContextForParamList(LexicalContext parent, Node paramList) {
+    static LexicalContext newContextForParamList(
+        LexicalContext parent, Node paramList, AbstractCompiler compiler) {
       // Parameter lists need their own context because `this`, `arguments`, and `super` must NOT be
       // aliased for non-arrow function parameter lists, even for async generator functions.
-      return new LexicalContext(parent, paramList, parent.function);
+      return new LexicalContext(parent, paramList, parent.function, compiler);
     }
 
     Node getFunctionDeclaringThisArgsSuper() {
@@ -179,9 +187,14 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     private final Set<Node> usedSuperProperties = new LinkedHashSet<>();
     @Nullable Node thisNodeToAdd = null;
     private boolean usedArguments = false;
+    // unique id to append to names in this context. This is used to ensure that names
+    // in different contexts don't collide (e.g. 2 functions don't get the same `let
+    // $jscomp$async$this` name declared in their bodies)
+    private final String uniqueId;
 
-    ThisSuperArgsContext(LexicalContext ctx) {
+    ThisSuperArgsContext(LexicalContext ctx, String uniqueId) {
       this.ctx = ctx;
+      this.uniqueId = uniqueId;
     }
   }
 
@@ -213,9 +226,11 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     if (n.isFunction()) {
-      contextStack.push(LexicalContext.newContextForFunction(contextStack.element(), n));
+      contextStack.push(
+          LexicalContext.newContextForFunction(contextStack.element(), n, this.compiler));
     } else if (n.isParamList()) {
-      contextStack.push(LexicalContext.newContextForParamList(contextStack.element(), n));
+      contextStack.push(
+          LexicalContext.newContextForParamList(contextStack.element(), n, this.compiler));
     }
     return true;
   }
@@ -808,7 +823,10 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(THIS_VAR_NAME, type(n)).srcref(n));
+    n.replaceWith(
+        astFactory
+            .createName(THIS_VAR_NAME + ctx.thisSuperArgsContext.uniqueId, type(n))
+            .srcref(n));
     ctx.thisSuperArgsContext.thisNodeToAdd = astFactory.createThis(type(n));
     compiler.reportChangeToChangeScope(ctx.function);
   }
@@ -853,7 +871,9 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       ctx.thisSuperArgsContext.thisNodeToAdd =
           astFactory.createThisForEs6ClassMember(ctx.contextRoot.getParent());
       astFactory
-          .createName(THIS_VAR_NAME, type(ctx.thisSuperArgsContext.thisNodeToAdd))
+          .createName(
+              THIS_VAR_NAME + ctx.thisSuperArgsContext.uniqueId,
+              type(ctx.thisSuperArgsContext.thisNodeToAdd))
           .srcref(parent)
           .insertAfter(parent);
     }
@@ -903,7 +923,8 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       // }
       prefixBlock.addChildToBack(
           astFactory
-              .createSingleConstNameDeclaration(THIS_VAR_NAME, thisSuperArgsCtx.thisNodeToAdd)
+              .createSingleConstNameDeclaration(
+                  THIS_VAR_NAME + thisSuperArgsCtx.uniqueId, thisSuperArgsCtx.thisNodeToAdd)
               .srcrefTree(block));
     }
     if (thisSuperArgsCtx.usedArguments) {

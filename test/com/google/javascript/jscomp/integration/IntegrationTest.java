@@ -2898,11 +2898,12 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "class Baz extends Foo {",
             "  bar() {",
-            "    const $jscomp$asyncIter$this = this,",
+            "    const $jscomp$asyncIter$this$98447280$1 = this,",
             "          $jscomp$asyncIter$super$get$bar =",
             "              () => super.bar;",
             "    return new $jscomp.AsyncGeneratorWrapper(function*() {",
-            "      $jscomp$asyncIter$super$get$bar().call($jscomp$asyncIter$this).next();",
+            "     "
+                + " $jscomp$asyncIter$super$get$bar().call($jscomp$asyncIter$this$98447280$1).next();",
             "    }());",
             "  }",
             "}"));
