@@ -220,7 +220,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     checkState(declaration.isLet());
     Node name = declaration.getFirstChild();
     checkState(name.getString().equals("CID"));
-    checkState(name.getBooleanProp(Node.IS_CONSTANT_NAME) == true);
+    checkState(name.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
   @Test
