@@ -140,11 +140,6 @@ public class TranspilationPasses {
       // ES_MODULES
       passes.maybeAdd(createFeatureRemovalPass("markDynamicImportRemoved", Feature.DYNAMIC_IMPORT));
     }
-
-    if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
-        || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
-      passes.maybeAdd(rewriteAsyncIteration);
-    }
   }
 
   /**
@@ -157,6 +152,11 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
+        || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
+      passes.maybeAdd(rewriteAsyncIteration);
+    }
 
     if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
