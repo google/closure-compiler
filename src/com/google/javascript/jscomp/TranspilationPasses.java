@@ -116,10 +116,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.maybeAdd(rewriteOptionalChainingOperator);
     }
-
-    if (options.needsTranspilationOf(Feature.BIGINT)) {
-      passes.maybeAdd(createFeatureRemovalPass("markBigintsRemoved", Feature.BIGINT));
-    }
   }
 
   /**
@@ -132,6 +128,10 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.BIGINT)) {
+      passes.maybeAdd(createFeatureRemovalPass("markBigintsRemoved", Feature.BIGINT));
+    }
 
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
       passes.maybeAdd(rewriteNullishCoalesceOperator);
