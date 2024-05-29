@@ -145,11 +145,6 @@ public class TranspilationPasses {
         || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
       passes.maybeAdd(rewriteAsyncIteration);
     }
-
-    if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
-        || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
-      passes.maybeAdd(rewriteObjectSpread);
-    }
   }
 
   /**
@@ -165,6 +160,7 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+      passes.maybeAdd(rewriteObjectSpread);
       if (!options.needsTranspilationOf(Feature.OBJECT_DESTRUCTURING)
           && options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
         // We only need to transpile away object destructuring that uses `...`, rather than
