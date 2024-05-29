@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import java.nio.charset.Charset;
-import java.util.function.Function;
 import org.jspecify.nullness.Nullable;
 import org.junit.Before;
 
@@ -167,11 +166,10 @@ public abstract class CodePrinterTestBase {
     assertThat(prettyPrintNode(ast)).isEqualTo(expectedJs);
   }
 
-  protected void assertPrintAfterNormalization(String js, String expected,
-      Function<String, String> normalize) {
+  protected void assertPrint(String js, String expected) {
     parse(expected); // validate the expected string is valid JS
     assertThat(
-            normalize.apply(parsePrint(
+            parsePrint(
                 js,
                 newCompilerOptions(
                     new CompilerOptionBuilder() {
@@ -181,12 +179,8 @@ public abstract class CodePrinterTestBase {
                         options.setLineLengthThreshold(
                             CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
                       }
-                    }))))
+                    })))
         .isEqualTo(expected);
-  }
-
-  protected void assertPrint(String js, String expected) {
-    assertPrintAfterNormalization(js, expected, Function.identity());
   }
 
   protected void assertPrintSame(String js) {
