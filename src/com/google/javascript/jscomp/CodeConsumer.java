@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.Node;
+import java.math.BigInteger;
 
 /**
  * Abstracted consumer of the CodeGenerator output.
@@ -365,6 +366,12 @@ public abstract class CodeConsumer {
     } else {
       addConstant(decValueString);
     }
+  }
+
+  void addBigInt(BigInteger bi) {
+    String hexEncoded = "0x" + bi.toString(16) + "n";
+    String decimalEncoded = bi + "n";
+    addConstant(hexEncoded.length() < decimalEncoded.length() ? hexEncoded : decimalEncoded);
   }
 
   void addConstant(String newcode) {
