@@ -70,10 +70,7 @@ public class TranspilationPasses {
    * they're responsible for removing exists in the script.
    */
   public static void addEarlyOptimizationTranspilationPasses(
-      PassListBuilder passes, CompilerOptions options) {
-
-    passes.maybeAdd(reportUntranspilableFeatures);
-  }
+      PassListBuilder passes, CompilerOptions options) {}
 
   /**
    * Adds transpilation passes that should not be run until after normalization has been done.
@@ -85,6 +82,8 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    passes.maybeAdd(reportUntranspilableFeatures);
 
     // Note that we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
