@@ -100,14 +100,6 @@ public class TranspilationPasses {
         || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)) {
       passes.maybeAdd(rewriteClassMembers);
     }
-
-    if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
-      // Numeric separators are flagged as present by the parser,
-      // but never actually represented in the AST.
-      // The only thing we need to do is mark them as not present in the AST.
-      passes.maybeAdd(
-          createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
-    }
   }
 
   /**
@@ -120,6 +112,14 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
+      // Numeric separators are flagged as present by the parser,
+      // but never actually represented in the AST.
+      // The only thing we need to do is mark them as not present in the AST.
+      passes.maybeAdd(
+          createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
+    }
 
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
       passes.maybeAdd(rewriteLogicalAssignmentOperatorsPass);
