@@ -85,15 +85,6 @@ public class TranspilationPasses {
           createFeatureRemovalPass(
               "markEs2022FeaturesNotRequiringTranspilationAsRemoved", Feature.REGEXP_FLAG_D));
     }
-
-    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
-        || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)
-        || options.needsTranspilationOf(Feature.CLASSES)) {
-      // Make sure that a variable is created to hold every class definition.
-      // This allows us to add static properties and methods by adding properties
-      // to that variable.
-      passes.maybeAdd(es6RewriteClassExtends);
-    }
   }
 
   /**
@@ -113,6 +104,7 @@ public class TranspilationPasses {
       // Make sure that a variable is created to hold every class definition.
       // This allows us to add static properties and methods by adding properties
       // to that variable.
+      passes.maybeAdd(es6RewriteClassExtends);
       passes.maybeAdd(es6ExtractClasses);
     }
 
