@@ -73,18 +73,6 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
 
     passes.maybeAdd(reportUntranspilableFeatures);
-
-    // Note that we detect feature by feature rather than by yearly languages
-    // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
-    // However, RegExp features are not transpiled, and this does not imply that we allow arbitrary
-    // selection of features to transpile.  They still must be done in chronological order based on.
-    // This greatly simplifies testing and the requirements for the transpilation passes.
-
-    if (options.needsTranspilationOf(Feature.REGEXP_FLAG_D)) {
-      passes.maybeAdd(
-          createFeatureRemovalPass(
-              "markEs2022FeaturesNotRequiringTranspilationAsRemoved", Feature.REGEXP_FLAG_D));
-    }
   }
 
   /**
@@ -97,6 +85,18 @@ public class TranspilationPasses {
       PassListBuilder passes, CompilerOptions options) {
     // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
     // until that method can be deleted as a no-op.
+
+    // Note that we detect feature by feature rather than by yearly languages
+    // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    // However, RegExp features are not transpiled, and this does not imply that we allow arbitrary
+    // selection of features to transpile.  They still must be done in chronological order based on.
+    // This greatly simplifies testing and the requirements for the transpilation passes.
+
+    if (options.needsTranspilationOf(Feature.REGEXP_FLAG_D)) {
+      passes.maybeAdd(
+          createFeatureRemovalPass(
+              "markEs2022FeaturesNotRequiringTranspilationAsRemoved", Feature.REGEXP_FLAG_D));
+    }
 
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
         || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)
