@@ -129,9 +129,9 @@ $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
  * @param {function(*): *} polyfill A function that takes the current browser
  *     implementation of the target and returns an optional new polyfill
  *     implementation.
- * @param {string} fromLang The language level in which the target is expected
+ * @param {string=} fromLang The language level in which the target is expected
  *     to already be present in the browser.
- * @param {string} toLang The language level required by the polyfill
+ * @param {string=} toLang The language level required by the polyfill
  *     implementation.
  * @suppress {reportUnknownTypes}
  * @see $jscomp.polyfill for more documentation

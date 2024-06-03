@@ -81,6 +81,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
           "    /** string */ name, /** Function */ func, /** string */ from, /** string */ to) {};",
           "");
 
+  private static final String JSCOMP_PATCH =
+      lines(
+          "var $jscomp = {};",
+          "$jscomp.patch = function(/** string */ name, /** Function */ func) {};",
+          "");
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -3009,6 +3015,29 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "  console.log(Map);",
             "}",
             "console.log(Map);"));
+  }
+
+  @Test
+  public void testRemoveUnusedPatches() {
+    final String mapPatch = "$jscomp.patch('Map', function() {});";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder().addConsole().addExtra(JSCOMP_PATCH).addMap().build())
+            .addPolyfill(mapPatch);
+
+    // unused polyfill is removed
+    tester.expectPolyfillsRemovedTest("console.log()", mapPatch);
+    // used polyfill is not removed
+    tester.expectNoRemovalTest("console.log(new Map())");
+
+    // Local names shadowing global polyfills are not themselves polyfill references.
+    tester.expectPolyfillsRemovedTest(
+        lines(
+            "console.log(function(Map$jscomp$1) {", //
+            "  console.log(new Map$jscomp$1());",
+            "});"),
+        mapPatch);
   }
 
   @Test

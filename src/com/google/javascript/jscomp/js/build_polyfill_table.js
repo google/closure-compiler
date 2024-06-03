@@ -28,7 +28,7 @@ const fs = require('fs');
  */
 const ORDER = [
   'es3', 'es5', 'es6', 'es7', 'es8', 'es9', 'es_2019', 'es_2020', 'es_2021',
-  'es_next'
+  'es_next', 'es_unstable'
 ];
 
 /**
