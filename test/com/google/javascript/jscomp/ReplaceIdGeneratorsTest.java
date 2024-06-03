@@ -351,6 +351,10 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     testNonPseudoSupportingGenerator(
         lines("/** @idGenerator {xid} */ id = function() {};", "f1 = id('foo');", "f1 = id('foo')"),
         lines("/** @idGenerator {xid} */ id = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
+
+    testNonPseudoSupportingGenerator(
+        lines("/** @idGenerator {xid} */ id = function() {};", "f1 = id(`foo`);", "f1 = id(`foo`)"),
+        lines("/** @idGenerator {xid} */ id = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
   }
 
   @Test
@@ -627,6 +631,14 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   public void testBadGenerator2() {
     testSame(
         "/** @idGenerator {consistent} */ id = function() {};" + "foo.bar = id()",
+        INVALID_GENERATOR_PARAMETER);
+  }
+
+  @Test
+  public void testBadGenerator3() {
+    testSame(
+        "/** @idGenerator {consistent} */ id = function() {};"
+            + "foo.bar = id(`hello${ ' '}world`)",
         INVALID_GENERATOR_PARAMETER);
   }
 

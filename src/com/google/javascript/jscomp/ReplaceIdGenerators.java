@@ -348,6 +348,15 @@ class ReplaceIdGenerators implements CompilerPass {
         String rename = getObfuscatedName(arg, callName, nameGenerator, arg.getString());
         n.replaceWith(IR.string(rename));
         t.reportCodeChange();
+      } else if (arg.isTemplateLit() && arg.hasOneChild()) {
+        var cooked = arg.getFirstChild().getCookedString();
+        if (cooked == null) {
+          compiler.report(JSError.make(n, INVALID_GENERATOR_PARAMETER));
+        } else {
+          String rename = getObfuscatedName(arg, callName, nameGenerator, cooked);
+          n.replaceWith(IR.string(rename));
+          t.reportCodeChange();
+        }
       } else if (arg.isObjectLit()) {
         for (Node key = arg.getFirstChild(); key != null; key = key.getNext()) {
           if (key.isMemberFunctionDef()) {
@@ -377,8 +386,9 @@ class ReplaceIdGenerators implements CompilerPass {
         Node id, String callName, NameSupplier nameGenerator, String name) {
       String rename = null;
       Map<String, String> idGeneratorMap = idGeneratorMaps.get(callName);
-      String instanceId = getIdForGeneratorNode(
-          nameGenerator.getRenameStrategy() != RenameStrategy.INCONSISTENT, id);
+      String instanceId =
+          getIdForGeneratorNode(
+              nameGenerator.getRenameStrategy() != RenameStrategy.INCONSISTENT, id, name);
       if (nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT) {
         Map<String, String> entry = consistNameMap.get(callName);
         rename = entry.get(instanceId);
@@ -403,10 +413,9 @@ class ReplaceIdGenerators implements CompilerPass {
     return IdMappingUtil.generateSerializedIdMappings(idGeneratorMaps);
   }
 
-  static String getIdForGeneratorNode(boolean consistent, Node n) {
-    checkState(n.isStringLit() || n.isStringKey(), n);
+  private static String getIdForGeneratorNode(boolean consistent, Node n, String name) {
     if (consistent) {
-      return n.getString();
+      return name;
     } else {
       return n.getSourceFileName() + ':' + n.getLineno() + ":" + n.getCharno();
     }
