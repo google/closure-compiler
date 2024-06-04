@@ -3109,7 +3109,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "if (((x < 1 || x > 1) || 1 < x) || 1 > x) { alert(x) }",
-        "   (((1 > x || 1 < x) || 1 < x) || 1 > x) && alert(x) ");
+        "   (((x < 1 || x > 1) || 1 < x) || 1 > x) && alert(x) ");
   }
 
   @Test
@@ -3728,7 +3728,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "if (/** @type {Array|undefined} */ (window['c']) === null) {",
             "  window['d'] = 12;",
             "}"),
-        "null===window['c']&&(window['d']=12)");
+        "window['c']===null&&(window['d']=12)");
   }
 
   @Test

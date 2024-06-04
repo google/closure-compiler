@@ -1221,7 +1221,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "",
             "isFunction = function(a){",
             "  var b={};",
-            "  return a && '[object Function]' === b.toString.apply(a);",
+            "  return a && b.toString.apply(a) === '[object Function]';",
             "}",
             "");
 
@@ -1411,7 +1411,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}",
             "",
             "a(input);"),
-        "'log' != input && alert('Hi!')");
+        "input != 'log' && alert('Hi!')");
   }
 
   // http://blickly.github.io/closure-compiler-issues/#1131
@@ -2093,7 +2093,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  return a + b.foo;",
             "}",
             "alert(foo(3, {foo: 9}));"),
-        "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
+        "var a={a:9}; a=a===void 0?{a:5}:a;alert(3+a.a)");
   }
 
   @Ignore("b/78345133")
@@ -2487,7 +2487,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     externs =
         ImmutableList.of(new TestExternsBuilder().addExtra("var x, y").buildExternsFile("externs"));
 
-    test(options, "x ?? y", "let a; null != (a = x) ? a : y");
+    test(options, "x ?? y", "let a; (a = x) != null ? a : y");
   }
 
   @Test
@@ -2501,7 +2501,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         ImmutableList.of(
             new TestExternsBuilder().addExtra("var x, y, z").buildExternsFile("externs"));
 
-    test(options, "x ?? y ?? z", "let a, b; null != (b = null != (a = x) ? a : y) ? b : z");
+    test(options, "x ?? y ?? z", "let a, b; (b = (a = x) != null ? a : y) != null ? b : z");
   }
 
   @Test

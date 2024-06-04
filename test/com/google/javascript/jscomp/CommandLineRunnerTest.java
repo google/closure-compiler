@@ -941,7 +941,7 @@ public final class CommandLineRunnerTest {
             + "}",
         "function f(b) {"
             + " var a;"
-            + " return ((a=b.id) && (a=parseInt(a.substr(1)))) && 0<a;"
+            + " return ((a=b.id) && (a=parseInt(a.substr(1)))) && a>0;"
             + "}");
   }
 
@@ -2781,8 +2781,8 @@ public final class CommandLineRunnerTest {
     test(
         "function foo(){ const answerToAll = 42; }",
         lines(
-            "(function(a){a.window||(a.window=a,a.window.top=a)})(\"undefined\"!==typeof"
-                + " self?self:globalThis);var __jscov=window.top.__jscov||",
+            "(function(a){a.window||(a.window=a,a.window.top=a)})(typeof"
+                + " self!==\"undefined\"?self:globalThis);var __jscov=window.top.__jscov||",
             "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),",
             "JSCompiler_lcov_data_input0=[];",
             "__jscov.executedLines.push(JSCompiler_lcov_data_input0);",
@@ -2798,8 +2798,8 @@ public final class CommandLineRunnerTest {
     test(
         "function foo(){ const answerToAll = 42; }",
         lines(
-            "(function(a){a.window||(a.window=a,a.window.top=a)})(\"undefined\"!==typeof"
-                + " self?self:globalThis);",
+            "(function(a){a.window||(a.window=a,a.window.top=a)})(typeof"
+                + " self!==\"undefined\"?self:globalThis);",
             "var __jscov=window.top.__jscov||(window.top.__jscov= ",
             "{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]}); ",
             "function foo(){}"));

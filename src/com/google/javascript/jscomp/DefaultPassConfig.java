@@ -1719,8 +1719,7 @@ public final class DefaultPassConfig extends PassConfig {
                     new PeepholeMinimizeConditions(late),
                     new PeepholeSubstituteAlternateSyntax(late),
                     new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-                    new PeepholeFoldConstants(late, useTypesForOptimization),
-                    new PeepholeReorderConstantExpression());
+                    new PeepholeFoldConstants(late, useTypesForOptimization));
               })
           .build();
 
