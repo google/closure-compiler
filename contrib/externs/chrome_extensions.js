@@ -3137,6 +3137,10 @@ chrome.runtime.onConnectExternal;
 chrome.runtime.onConnectNative;
 
 
+/** @type {!chrome.runtime.PortEvent} */
+chrome.runtime.onUserScriptConnect;
+
+
 /** @type {!ChromeObjectEvent} */
 chrome.runtime.onInstalled;
 
@@ -3147,6 +3151,10 @@ chrome.runtime.onMessage;
 
 /** @type {!chrome.runtime.MessageSenderEvent} */
 chrome.runtime.onMessageExternal;
+
+
+/** @type {!chrome.runtime.MessageSenderEvent} */
+chrome.runtime.onUserScriptMessage;
 
 
 /** @type {!ChromeEvent} */
