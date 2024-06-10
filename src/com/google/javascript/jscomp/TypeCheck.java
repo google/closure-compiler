@@ -384,6 +384,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           UNKNOWN_PROTOTYPAL_OVERRIDE,
           WRONG_ARGUMENT_COUNT);
 
+  public static final DiagnosticGroup ES5_INHERITANCE_DIAGNOSTIC_GROUP =
+      new DiagnosticGroup(ES5_CLASS_EXTENDING_ES6_CLASS);
+
   private final AbstractCompiler compiler;
   private final TypeValidator validator;
 

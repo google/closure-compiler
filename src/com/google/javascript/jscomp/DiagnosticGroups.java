@@ -300,6 +300,10 @@ public class DiagnosticGroups {
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
           DiagnosticGroups.GLOBAL_THIS);
 
+  public static final DiagnosticGroup ES5_INHERITANCE_DIAGNOSTIC_GROUP =
+      DiagnosticGroups.registerGroup(
+          "checkEs5InheritanceCorrectnessConditions", TypeCheck.ES5_INHERITANCE_DIAGNOSTIC_GROUP);
+
   public static final DiagnosticGroup CHECK_PROTOTYPAL_TYPES =
       DiagnosticGroups.registerGroup(
           "checkPrototypalTypes",
