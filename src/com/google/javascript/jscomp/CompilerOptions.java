@@ -865,6 +865,9 @@ public class CompilerOptions implements Serializable {
   /** Isolates injected polyfills from the global scope. */
   private boolean isolatePolyfills = false;
 
+  /** Whether to instrument reentrant functions for AsyncContext. */
+  private boolean instrumentAsyncContext = false;
+
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
 
@@ -2633,6 +2636,15 @@ public class CompilerOptions implements Serializable {
 
   public boolean getIsolatePolyfills() {
     return this.isolatePolyfills;
+  }
+
+  /** Sets whether to isolate polyfills from the global scope. */
+  public void setInstrumentAsyncContext(boolean isolateAsyncContext) {
+    this.instrumentAsyncContext = isolateAsyncContext;
+  }
+
+  public boolean getInstrumentAsyncContext() {
+    return this.instrumentAsyncContext;
   }
 
   /** Sets list of libraries to always inject, even if not needed. */

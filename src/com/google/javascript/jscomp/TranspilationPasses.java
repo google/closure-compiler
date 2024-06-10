@@ -273,6 +273,11 @@ public class TranspilationPasses {
     passes.maybeAdd(rewritePolyfills);
   }
 
+  /** Adds a pass to wrap `await` and `yield` to preserve AsyncContext correctly. */
+  public static void addInstrumentAsyncContextPass(PassListBuilder passes) {
+    passes.maybeAdd(instrumentAsyncContext);
+  }
+
   /** Rewrites ES6 modules */
   private static final PassFactory es6RewriteModuleToCjs =
       PassFactory.builder()
@@ -385,6 +390,19 @@ public class TranspilationPasses {
                       compiler,
                       compiler.getOptions().getRewritePolyfills(),
                       compiler.getOptions().getIsolatePolyfills()))
+          .build();
+
+  static final PassFactory instrumentAsyncContext =
+      PassFactory.builder()
+          .setName("InstrumentAsyncContext")
+          .setInternalFactory(
+              (compiler) ->
+                  new InstrumentAsyncContext(
+                      compiler,
+                      compiler
+                          .getOptions()
+                          .getOutputFeatureSet()
+                          .contains(Feature.ASYNC_FUNCTIONS)))
           .build();
 
   static final PassFactory es6SplitVariableDeclarations =
