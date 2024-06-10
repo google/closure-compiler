@@ -294,6 +294,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "const Foo = function() {};",
             "/** @abstract */",
             "Foo.prototype.something = function() {}"));
+    testSame(
+        lines(
+            "/** @constructor */",
+            "const Foo = function() {",
+            "  /** @abstract @return {string} */",
+            "  this.something;",
+            "};"));
   }
 
   @Test

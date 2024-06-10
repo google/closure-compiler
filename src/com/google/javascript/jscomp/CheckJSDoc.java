@@ -346,10 +346,30 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
 
-    Node functionNode = getFunctionDecl(n);
+    // @abstract annotation on a function written as a class field.
+    if (n.isGetProp()) {
+      if (!(n.getFirstChild().isThis() && info.getReturnType() != null)) {
+        report(
+            n,
+            MISPLACED_ANNOTATION,
+            "@abstract",
+            "abstract undeclared methods can only be written as class fields");
+      } else if (!(n.getParent().isExprResult()
+          && n.getParent().getParent().isBlock()
+          && n.getParent().getParent().getParent().isFunction())) {
+        report(
+            n,
+            MISPLACED_ANNOTATION,
+            "@abstract",
+            "abstract methods without an initializer must be declared in a constructor function.");
+        return;
+      }
+      return;
+    }
 
+    // @abstract annotation on a non-function
+    Node functionNode = getFunctionDecl(n);
     if (functionNode == null) {
-      // @abstract annotation on a non-function
       report(
           n,
           MISPLACED_ANNOTATION,
