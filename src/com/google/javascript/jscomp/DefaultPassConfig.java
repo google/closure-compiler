@@ -517,6 +517,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
       passes.maybeAdd(inlineAndCollapseProperties);
       passes.maybeAdd(closureOptimizePrimitives);
+      // If side-effects were protected, remove the protection now.
+      passes.maybeAdd(stripSideEffectProtection);
       return passes;
     }
 
