@@ -20,6 +20,7 @@
  */
 'require es6/array';
 'require es6/async_generator_wrapper';
+'require es6/dispose';
 'require es6/execute_async_generator';
 'require es6/generator_engine';
 'require es6/globalthis';

@@ -113,8 +113,11 @@ String.prototype.trimLeft es_2019 es3 es6/string/trimstart
 String.prototype.trimRight es_2019 es3 es6/string/trimend
 String.prototype.trimStart es_2019 es3 es6/string/trimstart
 String.raw es6 es3 es6/string/raw
+SuppressedError es_next es3 es6/dispose
 Symbol es6 es3 es6/symbol
+Symbol.asyncDispose es_next es3 es6/dispose
 Symbol.asyncIterator es9 es3 es6/symbol
+Symbol.dispose es_next es3 es6/dispose
 Symbol.iterator es6 es3 es6/symbol
 Uint16Array.prototype.at es_next es5 es6/typedarray/at
 Uint16Array.prototype.copyWithin es6 es5 es6/typedarray/copywithin
