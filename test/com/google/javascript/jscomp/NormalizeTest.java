@@ -459,6 +459,47 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlock_innerFunctionHoisted() {
+    test(
+        lines(
+            "var x;",
+            "class Foo {", //
+            "  static {",
+            "    this.x;",
+            "    function f1() {}",
+            "  }",
+            "  static {",
+            "    let y;",
+            "    function f2() {}",
+            "  }",
+            "}",
+            "class Bar {",
+            "  static {",
+            "    var z;",
+            "    function f3() {}",
+            "  }",
+            "}"),
+        lines(
+            "var x;",
+            "class Foo {", //
+            "  static {",
+            "    function f1() {}",
+            "    this.x;",
+            "  }",
+            "  static {",
+            "    function f2() {}",
+            "    let y;",
+            "  }",
+            "}",
+            "class Bar {",
+            "  static {",
+            "    function f3() {}",
+            "    var z;",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testClassInForLoop() {
     testSame("for (class a {};;) { break; }");
   }

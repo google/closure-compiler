@@ -501,6 +501,10 @@ final class Normalize implements CompilerPass {
         moveNamedFunctions(n.getLastChild());
       }
 
+      if (NodeUtil.isClassStaticBlock(n)) {
+        moveNamedFunctions(n);
+      }
+
       if (n.isExport()) {
         // Perform the split in pre-order traversal to accurately normalize destructuring
         // declarations.
@@ -751,12 +755,12 @@ final class Normalize implements CompilerPass {
 
     /**
      * Move all the functions that are valid at the execution of the first statement of the function
-     * to the beginning of the function definition.
+     * or static block to the beginning of the function definition or class static block.
      */
-    private void moveNamedFunctions(Node functionBody) {
-      checkState(functionBody.getParent().isFunction());
+    private void moveNamedFunctions(Node body) {
+      checkState(body.getParent().isFunction() || NodeUtil.isClassStaticBlock(body));
       Node insertAfter = null;
-      Node current = functionBody.getFirstChild();
+      Node current = body.getFirstChild();
       // Skip any declarations at the beginning of the function body, they
       // are already in the right place.
       while (current != null && NodeUtil.isFunctionDeclaration(current)) {
@@ -774,8 +778,9 @@ final class Normalize implements CompilerPass {
 
           // Read the function at the top of the function body (after any
           // previous declarations).
-          insertAfter = addToFront(functionBody, current, insertAfter);
-          reportCodeChange("Move function declaration not at top of function", functionBody);
+          insertAfter = addToFront(body, current, insertAfter);
+          reportCodeChange(
+              "Move function declaration not at top of function or class static block", body);
         }
         current = next;
       }
