@@ -43,6 +43,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
@@ -217,14 +218,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "}")),
         expected(
             lines(
-                "let C = class {}, D = class extends C {",
+                "let C = class {}",
+                "C.prop = 5;",
+                "let D = class extends C {",
                 "  /** @nocollapse */ ",
                 "  static STATIC$BLOCK$0() {",
                 "    this.prop = 10;",
                 "  }",
                 "}",
-                "D.STATIC$BLOCK$0();",
-                "C.prop = 5;"))); // defines classes in the same let statement
+                "D.STATIC$BLOCK$0();"))); // defines classes in the same let statement
   }
 
   @Test
@@ -460,8 +462,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "}")),
         expected(
             lines(
-                "var $jscomp$compfield$m1146332801$0 = x += 1;",
-                "var $jscomp$compfield$m1146332801$1 = x += 2;",
+                "var $jscomp$compfield$m1146332801$0 = x = x + 1;",
+                "var $jscomp$compfield$m1146332801$1 = x = x + 2;",
                 "class C {",
                 "  constructor() {",
                 "    this[$jscomp$compfield$m1146332801$0];",
@@ -905,7 +907,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "    } else {",
                 "      z = 2;",
                 "    }",
-                "    while (x - z > 10) {",
+                "    for (; x - z > 10;) {",
                 "      z++;",
                 "    }",
                 "    for (;;) {",
@@ -995,15 +997,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "class C {", //
                 "  /** @nocollapse */ ",
                 "  static STATIC$BLOCK$0() {",
+                "    function a() {",
+                "      return 3;",
+                "    }",
                 "    let x = function() {",
                 "      return 1;",
                 "    };",
                 "    const y = () => {",
                 "      return 2;",
                 "    };",
-                "    function a() {",
-                "      return 3;",
-                "    }",
                 "    let z = (() => {",
                 "      return 4;",
                 "    })();",
@@ -2050,10 +2052,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "}",
             "class C {",
             "  constructor() {",
-            "    this.y = f();",
             "    function f$jscomp$1() {",
             "      return 'str';",
             "    }",
+            "    this.y = f();",
             "  }",
             "}"));
 

@@ -460,7 +460,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   /**
    * Finds the location of super() call in the constructor and add a temporary empty node after the
    * super() call. If there is no super() call, add a temporary empty node at the beginning of the
-   * constructor body.
+   * constructor body after all function declarations.
    *
    * <p>Returns the added temporary empty node
    */
@@ -472,7 +472,13 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         return tempNode;
         }
       }
-    ctorBlock.addChildToFront(tempNode);
+    Node insertionPoint = NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(ctorBlock);
+    if (insertionPoint != null) {
+      tempNode.insertBefore(insertionPoint);
+    } else {
+      // functionBody only contains hoisted function declarations
+      ctorBlock.addChildToBack(tempNode);
+    }
     return tempNode;
   }
 
