@@ -250,7 +250,7 @@ message Requirement {
     // Currently treated the same as WARNING.
     UNSPECIFIED = 0;
     // Allows the build to continue. Can be turned into an error by setting the
-    // jscomp_error=conformanceConfig flag.
+    // jscomp_error=conformanceViolations flag.
     WARNING = 1;
     // The build fails if we are confident this is an error.
     // This causes an error even on possible violations, e.g. when the type
