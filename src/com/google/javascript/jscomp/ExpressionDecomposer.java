@@ -752,13 +752,19 @@ class ExpressionDecomposer {
     //   "a['b'].c" from "a['b'].c()"
     Node getVarNode = extractExpression(first, state.extractBeforeStatement);
     state.extractBeforeStatement = getVarNode;
+    final Node functionNameNode = getVarNode.getFirstChild().cloneNode();
+
+    if (call.getBooleanProp(Node.FREE_CALL)) {
+      // For a free call, we don't need to extract the receiver
+      call.getFirstChild().replaceWith(functionNameNode);
+      return;
+    }
 
     // Extracts the object reference to be used as "this". For example:
     //   "a['b']" from "a['b'].c"
     Node getExprNode = getVarNode.getFirstFirstChild();
     checkArgument(NodeUtil.isNormalGet(getExprNode), getExprNode);
     final Node origThisValue = getExprNode.getFirstChild();
-    final Node functionNameNode = getVarNode.getFirstChild().cloneNode();
     final Node receiverNode;
 
     if (origThisValue.isThis()) {
@@ -1196,11 +1202,14 @@ class ExpressionDecomposer {
       // constant function, as decomposing it may mess up InlineFunction's bookkeeping if it is
       // attempting to inline "fn".
       Node parent = tree.getParent();
-      if (NodeUtil.isObjectCallMethod(parent, "call")
-          && tree.isFirstChildOf(parent)
-          && (isTempConstantValueName(tree.getFirstChild())
-              || knownConstantFunctions.contains(tree.getFirstChild().getQualifiedName()))) {
-        return false;
+      if (NodeUtil.isObjectCallMethod(parent, "call") || parent.getBooleanProp(Node.FREE_CALL)) {
+        Node callee =
+            tree.isGetProp() && tree.getString().equals("call") ? tree.getFirstChild() : tree;
+        if (tree.isFirstChildOf(parent)
+            && (isTempConstantValueName(callee)
+                || knownConstantFunctions.contains(callee.getQualifiedName()))) {
+          return false;
+        }
       }
 
       if (enabledWorkarounds.contains(Workaround.BROKEN_IE11_LOCATION_ASSIGN)

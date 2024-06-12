@@ -1579,6 +1579,14 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testExposeFreeCall() {
+    helperExposeExpression(
+        "(0,x.foo)(y())",
+        exprMatchesStr("y()"),
+        lines("var temp_const$jscomp$0 = x.foo;", "temp_const$jscomp$0(y());"));
+  }
+
+  @Test
   public void testExposeTemplateLiteralFreeCall() {
     helperExposeExpression(
         "foo`${x()}${y()}`",
