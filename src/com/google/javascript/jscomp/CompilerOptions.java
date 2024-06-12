@@ -33,7 +33,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.errorprone.annotations.InlineMe;
 import com.google.errorprone.annotations.RestrictedApi;
 import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
@@ -492,9 +491,6 @@ public class CompilerOptions implements Serializable {
 
   /** Removes code associated with unused global names */
   public boolean smartNameRemoval;
-
-  /** Removes code that will never execute */
-  public boolean removeUnreachableCode;
 
   public enum ExtractPrototypeMemberDeclarationsMode {
     OFF,
@@ -1338,7 +1334,6 @@ public class CompilerOptions implements Serializable {
     inlineVariables = false;
     inlineLocalVariables = false;
     smartNameRemoval = false;
-    removeUnreachableCode = false;
     extractPrototypeMemberDeclarations = ExtractPrototypeMemberDeclarationsMode.OFF;
     removeUnusedPrototypeProperties = false;
     removeUnusedClassProperties = false;
@@ -2110,19 +2105,6 @@ public class CompilerOptions implements Serializable {
       this.removeUnusedVars = true;
       this.removeUnusedPrototypeProperties = true;
     }
-  }
-
-  /**
-   * @deprecated Use {@link #setRemoveUnreachableCode} instead.
-   */
-  @InlineMe(replacement = "this.setRemoveUnreachableCode(removeUnreachableCode)")
-  @Deprecated
-  public final void setRemoveDeadCode(boolean removeUnreachableCode) {
-    setRemoveUnreachableCode(removeUnreachableCode);
-  }
-
-  public void setRemoveUnreachableCode(boolean removeUnreachableCode) {
-    this.removeUnreachableCode = removeUnreachableCode;
   }
 
   public void setExtractPrototypeMemberDeclarations(boolean enabled) {
@@ -2919,7 +2901,6 @@ public class CompilerOptions implements Serializable {
         .add("removeAbstractMethods", removeAbstractMethods)
         .add("removeClosureAsserts", removeClosureAsserts)
         .add("removeJ2clAsserts", removeJ2clAsserts)
-        .add("removeUnreachableCode", removeUnreachableCode)
         .add("removeUnusedClassProperties", removeUnusedClassProperties)
         .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
         .add("removeUnusedLocalVars", removeUnusedLocalVars)

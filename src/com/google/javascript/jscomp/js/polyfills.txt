@@ -14,6 +14,8 @@ Array.prototype.flatMap es9 es5 es6/array/flatmap
 Array.prototype.includes es7 es3 es6/array/includes
 Array.prototype.keys es6 es3 es6/array/keys
 Array.prototype.values es8 es3 es6/array/values
+AsyncContext es_unstable es3 es6/asynccontext/namespace
+AsyncContext.Snapshot es_unstable es3 es6/asynccontext/snapshot
 Float32Array.prototype.at es_next es5 es6/typedarray/at
 Float32Array.prototype.copyWithin es6 es5 es6/typedarray/copywithin
 Float32Array.prototype.fill es6 es5 es6/typedarray/fill

@@ -692,13 +692,11 @@ public enum CompilationParam {
   /** Removes code that will never execute */
   REMOVE_DEAD_CODE(ParamGroup.OPTIMIZATION) {
     @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setRemoveUnreachableCode(value);
-    }
+    public void apply(CompilerOptions options, boolean value) {}
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.removeUnreachableCode;
+      return false;
     }
   },
 
