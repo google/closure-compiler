@@ -34,11 +34,6 @@ import org.jspecify.nullness.Nullable;
  */
 class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
-  // TODO(dcc): Some (all) of these can probably be better achieved
-  // using the control flow graph (like CheckUnreachableCode).
-  // There is an existing CFG pass (UnreachableCodeElimination) that
-  // could be changed to use code from CheckUnreachableCode to do this.
-
   @Override
   Node optimizeSubtree(Node subtree) {
     switch (subtree.getToken()) {
