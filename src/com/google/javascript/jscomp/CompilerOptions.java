@@ -2621,8 +2621,9 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Sets whether to isolate polyfills from the global scope. */
-  public void setInstrumentAsyncContext(boolean isolateAsyncContext) {
-    this.instrumentAsyncContext = isolateAsyncContext;
+  public void setInstrumentAsyncContext(boolean instrumentAsyncContext) {
+    this.instrumentAsyncContext = instrumentAsyncContext;
+    this.setDefineToBooleanLiteral("$jscomp.INSTRUMENT_ASYNC_CONTEXT", instrumentAsyncContext);
   }
 
   public boolean getInstrumentAsyncContext() {

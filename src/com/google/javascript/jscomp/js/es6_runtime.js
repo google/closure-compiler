@@ -19,7 +19,6 @@
  * @suppress {uselessCode}
  */
 'require es6/array';
-'require es6/asynccontext/snapshot';
 'require es6/async_generator_wrapper';
 'require es6/dispose';
 'require es6/execute_async_generator';

@@ -55,7 +55,11 @@ class ProcessDefines implements CompilerPass {
    * always set these defines, even when they might not be in the binary.
    */
   private static final ImmutableSet<String> KNOWN_DEFINES =
-      ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
+      ImmutableSet.of(
+          "COMPILED",
+          "goog.DEBUG",
+          "$jscomp.ISOLATE_POLYFILLS",
+          "$jscomp.INSTRUMENT_ASYNC_CONTEXT");
 
   private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
 

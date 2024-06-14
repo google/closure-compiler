@@ -68,3 +68,10 @@ $jscomp.FORCE_POLYFILL_PROMISE = false;
  * @define {boolean}
  */
 $jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION = false;
+
+/**
+ * Whether to instrument async/await and monkey-patch language built-ins to
+ * propagate AsyncContext.
+ * @define {boolean}
+ */
+$jscomp.INSTRUMENT_ASYNC_CONTEXT = false;
