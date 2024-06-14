@@ -53,6 +53,29 @@ google.maps.importLibrary = function(libraryName) {};
 google.maps.version;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * A relational description of a location. Includes a ranked set of nearby
+ * landmarks and the areas containing the target location.
+ * @record
+ */
+google.maps.AddressDescriptor = function() {};
+
+/**
+ * A ranked list of containing or adjacent areas. The most useful (recognizable
+ * and precise) areas are ranked first.
+ * @type {!Array<!google.maps.Area>}
+ */
+google.maps.AddressDescriptor.prototype.areas;
+
+/**
+ * A ranked list of nearby landmarks. The most useful (recognizable and nearby)
+ * landmarks are ranked first.
+ * @type {!Array<!google.maps.Landmark>}
+ */
+google.maps.AddressDescriptor.prototype.landmarks;
+
+/**
  * Animations that can be played on a marker. Use the {@link
  * google.maps.Marker.setAnimation} method on Marker or the {@link
  * google.maps.MarkerOptions.animation} option to play an animation.
@@ -76,6 +99,40 @@ google.maps.Animation = {
    */
   DROP: 1,
 };
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * A place that is a small region, such as a neighborhood, sublocality, or large
+ * complex that contains the target location.
+ * @record
+ */
+google.maps.Area = function() {};
+
+/**
+ * Defines the spatial relationship between the target location and the area.
+ * @type {!google.maps.Containment}
+ */
+google.maps.Area.prototype.containment;
+
+/**
+ * The name for the area.
+ * @type {string}
+ */
+google.maps.Area.prototype.display_name;
+
+/**
+ * The language of the name for the area.
+ * @type {string}
+ */
+google.maps.Area.prototype.display_name_language_code;
+
+/**
+ * The Place ID of the underlying area. Can be used to resolve more information
+ * about the area through Place Details or Place ID Lookup.
+ * @type {string}
+ */
+google.maps.Area.prototype.place_id;
 
 /**
  * A layer showing bike lanes and paths.
@@ -409,6 +466,32 @@ google.maps.CollisionBehavior = {
    * the marker.
    */
   REQUIRED_AND_HIDES_OPTIONAL: 'REQUIRED_AND_HIDES_OPTIONAL',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * An enum representing the spatial relationship between the area and the target
+ * location.
+ *
+ * Access by calling `const {Containment} = await
+ * google.maps.importLibrary("geocoding")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.Containment = {
+  /**
+   * The target location is outside the area region, but close by.
+   */
+  NEAR: 'NEAR',
+  /**
+   * The target location is within the area region, close to the edge.
+   */
+  OUTSKIRTS: 'OUTSKIRTS',
+  /**
+   * The target location is within the area region, close to the center.
+   */
+  WITHIN: 'WITHIN',
 };
 
 /**
@@ -2998,6 +3081,23 @@ google.maps.ErrorEvent = function() {};
 google.maps.ErrorEvent.prototype.error;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Extra computations to perform while completing a geocoding request.
+ *
+ * Access by calling `const {ExtraGeocodeComputation} = await
+ * google.maps.importLibrary("geocoding")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.ExtraGeocodeComputation = {
+  /**
+   * Generate an address descriptor.
+   */
+  ADDRESS_DESCRIPTORS: 'ADDRESS_DESCRIPTORS',
+};
+
+/**
  * An interface representing a vector map tile feature. These are inputs to the
  * <code>FeatureStyleFunction</code>. Do not save a reference to a particular
  * <code>Feature</code> object because the reference will not be stable.
@@ -3377,6 +3477,22 @@ google.maps.GeocoderRequest.prototype.bounds;
 google.maps.GeocoderRequest.prototype.componentRestrictions;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A list of extra computations which may be used to complete the request. Note:
+ * These extra computations may return extra fields on the response.
+ * @type {!Array<!google.maps.ExtraGeocodeComputation>|undefined}
+ */
+google.maps.GeocoderRequest.prototype.extraComputations;
+
+/**
+ * Fulfill the promise on a ZERO_RESULT status in the response. This may be
+ * desired because even with zero geocoding results there may still be
+ * additional response level fields returned.
+ * @type {boolean|null|undefined}
+ */
+google.maps.GeocoderRequest.prototype.fulfillOnZeroResults;
+
+/**
  * A language identifier for the language in which results should be returned,
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
@@ -3427,6 +3543,22 @@ google.maps.GeocoderRequest.prototype.region;
 google.maps.GeocoderResponse = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A relational description of a location. Includes a ranked set of nearby
+ * landmarks and the areas containing the target location. It is only populated
+ * for reverse geocoding requests and only when {@link
+ * google.maps.ExtraGeocodeComputation.ADDRESS_DESCRIPTORS} is enabled.
+ * @type {!google.maps.AddressDescriptor|undefined}
+ */
+google.maps.GeocoderResponse.prototype.address_descriptor;
+
+/**
+ * The plus code associated with the location.
+ * @type {!google.maps.places.PlacePlusCode|undefined}
+ */
+google.maps.GeocoderResponse.prototype.plus_code;
+
+/**
  * The list of {@link google.maps.GeocoderResult}s.
  * @type {!Array<!google.maps.GeocoderResult>}
  */
@@ -3446,6 +3578,18 @@ google.maps.GeocoderResult = function() {};
  * @type {!Array<!google.maps.GeocoderAddressComponent>}
  */
 google.maps.GeocoderResult.prototype.address_components;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A relational description of the location associated with this geocode.
+ * Includes a ranked set of nearby landmarks and the areas containing the target
+ * location. This will only be populated for forward geocoding and place ID
+ * lookup requests, only when {@link
+ * google.maps.ExtraGeocodeComputation.ADDRESS_DESCRIPTORS} is enabled, and only
+ * for certain localized places.
+ * @type {!google.maps.AddressDescriptor|undefined}
+ */
+google.maps.GeocoderResult.prototype.address_descriptor;
 
 /**
  * A string containing the human-readable address of this location.
@@ -3548,6 +3692,16 @@ google.maps.GeocoderStatus = {
 google.maps.GeocodingLibrary = function() {};
 
 /**
+ * @type {typeof google.maps.Containment}
+ */
+google.maps.GeocodingLibrary.prototype.Containment;
+
+/**
+ * @type {typeof google.maps.ExtraGeocodeComputation}
+ */
+google.maps.GeocodingLibrary.prototype.ExtraGeocodeComputation;
+
+/**
  * @type {typeof google.maps.Geocoder}
  */
 google.maps.GeocodingLibrary.prototype.Geocoder;
@@ -3561,6 +3715,11 @@ google.maps.GeocodingLibrary.prototype.GeocoderLocationType;
  * @type {typeof google.maps.GeocoderStatus}
  */
 google.maps.GeocodingLibrary.prototype.GeocoderStatus;
+
+/**
+ * @type {typeof google.maps.SpatialRelationship}
+ */
+google.maps.GeocodingLibrary.prototype.SpatialRelationship;
 
 /**
  * @record
@@ -3921,6 +4080,12 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
 google.maps.InfoWindow = function(opts) {};
 
 /**
+ * Checks if the InfoWindow is open.
+ * @type {boolean}
+ */
+google.maps.InfoWindow.prototype.isOpen;
+
+/**
  * Closes this InfoWindow by removing it from the DOM structure.
  * @return {undefined}
  */
@@ -3940,6 +4105,18 @@ google.maps.InfoWindow.prototype.focus = function() {};
  *     The same as what was previously set as the content.
  */
 google.maps.InfoWindow.prototype.getContent = function() {};
+
+/**
+ * @return {string|Element|Text|null|undefined} The header content of this
+ *     InfoWindow. See {@link google.maps.InfoWindowOptions.headerContent}.
+ */
+google.maps.InfoWindow.prototype.getHeaderContent = function() {};
+
+/**
+ * @return {boolean|undefined} Whether the whole header row is disabled or not.
+ *     See {@link google.maps.InfoWindowOptions.headerDisabled}.
+ */
+google.maps.InfoWindow.prototype.getHeaderDisabled = function() {};
 
 /**
  * @return {google.maps.LatLng|null|undefined} The LatLng position of this
@@ -3982,6 +4159,22 @@ google.maps.InfoWindow.prototype.open = function(options, anchor) {};
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
+
+/**
+ * @param {(string|Element|Text|null)=} headerContent The header content to be
+ *     displayed by this InfoWindow. See {@link
+ *     google.maps.InfoWindowOptions.headerContent}.
+ * @return {undefined}
+ */
+google.maps.InfoWindow.prototype.setHeaderContent = function(headerContent) {};
+
+/**
+ * @param {?boolean=} headerDisabled Specifies whether to disable the whole
+ *     header row. See {@link google.maps.InfoWindowOptions.headerDisabled}.
+ * @return {undefined}
+ */
+google.maps.InfoWindow.prototype.setHeaderDisabled = function(
+    headerDisabled) {};
 
 /**
  * @param {?google.maps.InfoWindowOptions=} options
@@ -4066,17 +4259,15 @@ google.maps.InfoWindowOptions.prototype.content;
 google.maps.InfoWindowOptions.prototype.disableAutoPan;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The content to display in the InfoWindow header row. This can be an HTML
- * element, or a string containing HTML. The InfoWindow will be sized according
- * to the content. To set an explicit size for the header content, set
+ * element, or a string of plain text. The InfoWindow will be sized according to
+ * the content. To set an explicit size for the header content, set
  * headerContent to be a HTML element with that size.
  * @type {string|!Element|!Text|null|undefined}
  */
 google.maps.InfoWindowOptions.prototype.headerContent;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Disables the whole header row in the InfoWindow. When set to true, the header
  * will be removed so that the header content and the close button will be
  * hidden.
@@ -4538,6 +4729,64 @@ google.maps.KmlMouseEvent.prototype.latLng;
  * @type {google.maps.Size}
  */
 google.maps.KmlMouseEvent.prototype.pixelOffset;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * A place that represents a point of reference for the address.
+ * @record
+ */
+google.maps.Landmark = function() {};
+
+/**
+ * The name for the landmark.
+ * @type {string}
+ */
+google.maps.Landmark.prototype.display_name;
+
+/**
+ * The language of the name for the landmark.
+ * @type {string}
+ */
+google.maps.Landmark.prototype.display_name_language_code;
+
+/**
+ * The Place ID of the underlying establishment serving as the landmark. Can be
+ * used to resolve more information about the landmark through Place Details or
+ * Place Id Lookup.
+ * @type {string}
+ */
+google.maps.Landmark.prototype.place_id;
+
+/**
+ * Defines the spatial relationship between the target location and the
+ * landmark.
+ * @type {!google.maps.SpatialRelationship}
+ */
+google.maps.Landmark.prototype.spatial_relationship;
+
+/**
+ * The straight line distance between the target location and the landmark.
+ * @type {number}
+ */
+google.maps.Landmark.prototype.straight_line_distance_meters;
+
+/**
+ * The travel distance along the road network between the target location and
+ * the landmark. This can be unpopulated if the landmark is disconnected from
+ * the part of the road network the target is closest to OR if the target
+ * location was not actually considered to be on the road network.
+ * @type {number|undefined}
+ */
+google.maps.Landmark.prototype.travel_distance_meters;
+
+/**
+ * One or more values indicating the type of the returned result. Please see <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/supported_types">Types
+ * </a> for more detail.
+ * @type {!Array<string>}
+ */
+google.maps.Landmark.prototype.types;
 
 /**
  * A <code>LatLng</code> is a point in geographical coordinates: latitude and
@@ -8595,6 +8844,49 @@ google.maps.Size.prototype.equals = function(other) {};
  * @override
  */
 google.maps.Size.prototype.toString = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * An enum representing the relationship in space between the landmark and the
+ * target.
+ *
+ * Access by calling `const {SpatialRelationship} = await
+ * google.maps.importLibrary("geocoding")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.SpatialRelationship = {
+  /**
+   * The target is directly opposite the landmark on the other side of the road.
+   */
+  ACROSS_THE_ROAD: 'ACROSS_THE_ROAD',
+  /**
+   * Not on the same route as the landmark but a single turn away.
+   */
+  AROUND_THE_CORNER: 'AROUND_THE_CORNER',
+  /**
+   * Close to the landmark&#39;s structure but further away from its access
+   * point.
+   */
+  BEHIND: 'BEHIND',
+  /**
+   * The target is directly adjacent to the landmark.
+   */
+  BESIDE: 'BESIDE',
+  /**
+   * On the same route as the landmark but not besides or across.
+   */
+  DOWN_THE_ROAD: 'DOWN_THE_ROAD',
+  /**
+   * This is the default relationship when nothing more specific below applies.
+   */
+  NEAR: 'NEAR',
+  /**
+   * The landmark has a spatial geometry and the target is within its bounds.
+   */
+  WITHIN: 'WITHIN',
+};
 
 /**
  * Options for the rendering of the Street View address control.
@@ -17949,8 +18241,7 @@ google.maps.places.PlacePrediction = function() {};
 google.maps.places.PlacePrediction.prototype.distanceMeters;
 
 /**
- * Represents additional disambiguating features (such as a city or region) to
- * further identify the Place or refine the query.
+ * Represents the name of the Place.
  * @type {!google.maps.places.FormattableText|null}
  */
 google.maps.places.PlacePrediction.prototype.mainText;
@@ -17964,14 +18255,18 @@ google.maps.places.PlacePrediction.prototype.placeId;
 
 /**
  * Represents additional disambiguating features (such as a city or region) to
- * further identify the Place or refine the query.
+ * further identify the Place.
  * @type {!google.maps.places.FormattableText|null}
  */
 google.maps.places.PlacePrediction.prototype.secondaryText;
 
 /**
  * Contains the human-readable name for the returned result. For establishment
- * results, this is usually the business name and address.
+ * results, this is usually the business name and address. <br/><br/>
+ * <code>text</code> is recommended for developers who wish to show a single UI
+ * element. Developers who wish to show two separate, but related, UI elements
+ * may want to use {@link google.maps.places.PlacePrediction.mainText}
+ * and {@link google.maps.places.PlacePrediction.secondaryText} instead.
  * @type {!google.maps.places.FormattableText}
  */
 google.maps.places.PlacePrediction.prototype.text;
