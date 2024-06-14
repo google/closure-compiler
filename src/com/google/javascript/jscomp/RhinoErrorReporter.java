@@ -122,6 +122,11 @@ class RhinoErrorReporter {
           "Bounded generic type error. "
               + "{0} assigned to template type {1} is not a subtype of bound {2}");
 
+  static final DiagnosticType CLOSURE_UNAWARE_ANNOTATION_PRESENT =
+      DiagnosticType.disabled(
+          "JSC_CLOSURE_UNAWARE_ANNOTATION_PRESENT",
+          Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID.format());
+
   // A map of Rhino messages to their DiagnosticType.
   private static final ImmutableMap<Pattern, DiagnosticType> typeMap =
       ImmutableMap.<Pattern, DiagnosticType>builder()
@@ -177,6 +182,9 @@ class RhinoErrorReporter {
               Pattern.compile("Bounded generic semantics are currently still in development"),
               UNSUPPORTED_BOUNDED_GENERIC_TYPES)
           .put(Pattern.compile("^Bounded generic type error.*"), BOUNDED_GENERIC_TYPE_ERROR)
+          .put(
+              replacePlaceHolders(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID.format()),
+              CLOSURE_UNAWARE_ANNOTATION_PRESENT)
           .buildOrThrow();
 
   private final ErrorHandler internalReporter;

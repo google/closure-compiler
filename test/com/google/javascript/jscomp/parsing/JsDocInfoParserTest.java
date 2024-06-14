@@ -2274,12 +2274,20 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseClosureUnawareCode1() {
-    assertThat(parseFileOverview("@closureUnaware*/").isClosureUnawareCode()).isTrue();
+    assertThat(
+            parseFileOverview(
+                    "@closureUnaware*/",
+                    "@closureUnaware annotation is not allowed in this compilation")
+                .isClosureUnawareCode())
+        .isTrue();
   }
 
   @Test
   public void testParseClosureUnawareCode2() {
-    parseFileOverview("@closureUnaware\n@closureUnaware*/", "extra @closureUnaware tag");
+    parseFileOverview(
+        "@closureUnaware\n@closureUnaware*/",
+        "@closureUnaware annotation is not allowed in this compilation",
+        "extra @closureUnaware tag");
   }
 
   @Test

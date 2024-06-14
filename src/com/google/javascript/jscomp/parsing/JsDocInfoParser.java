@@ -840,6 +840,11 @@ public final class JsDocInfoParser {
         case CLOSURE_UNAWARE_CODE:
           if (!jsdocBuilder.recordClosureUnawareCode()) {
             addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
+          } else {
+            // This warning that is always reported is translated into an off-by-default error,
+            // and that is conditionally elevated into a build-blocking error using the relevant
+            // DiagnosticGroup flags.
+            addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID);
           }
           return eatUntilEOLIfNotAnnotation();
 
