@@ -779,7 +779,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(IR.root(newExternsRoot, newSourceRoot));
     consumer = null;
-    return new Result(ast, registry, newExternsRoot, newSourceRoot, deserializingCompiler);
+    return new Result(ast, registry, newSourceRoot, deserializingCompiler);
   }
 
   private ImmutableList<SourceFile> collectSourceFilesFromScripts(Node root) {
@@ -796,12 +796,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     final Node sourceRoot;
     final Compiler compiler;
 
-    Result(
-        DeserializedAst ast,
-        ColorRegistry registry,
-        Node externRoot,
-        Node sourceRoot,
-        Compiler compiler) {
+    Result(DeserializedAst ast, ColorRegistry registry, Node sourceRoot, Compiler compiler) {
       this.ast = ast;
       this.registry = registry;
       this.sourceRoot = sourceRoot;
