@@ -498,6 +498,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract CompilerInput getSynthesizedExternsInput();
 
+  /**
+   * Returns a CompilerInput that can be modified to add additional type summary definitions to the
+   * beginning of the externs AST (note that the externs AST includes type summary input).
+   */
+  abstract CompilerInput getSynthesizedTypeSummaryInput();
+
   /** Gets the last pass name set by setProgress. */
   abstract String getLastPassName();
 
@@ -519,6 +525,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    *     been injected, then null is returned.
    */
   abstract Node ensureLibraryInjected(String resourceName, boolean force);
+
+  abstract ImmutableList<String> getInjectedLibraries();
 
   /**
    * Sets the names of the properties defined in externs.

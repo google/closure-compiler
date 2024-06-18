@@ -114,7 +114,11 @@ public class TypedAstSerializerTest extends CompilerTestCase {
 
       final TypedAstSerializer typedAstSerializer =
           new TypedAstSerializer(
-              compiler, SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
+              compiler,
+              SerializationOptions.builder()
+                  .setIncludeDebugInfo(true)
+                  .setRunValidation(true)
+                  .build());
       testResult = typedAstSerializer.serializeRoots(externs, root);
     };
   }

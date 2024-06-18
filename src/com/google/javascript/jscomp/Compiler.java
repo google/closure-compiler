@@ -679,6 +679,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.colorRegistry = astData.getColorRegistry().orNull();
     this.setTypeCheckingHasRun(deserializeTypes);
 
+    for (String library : astData.getRuntimeLibraries()) {
+      this.ensureLibraryInjected(library, false);
+    }
+
     this.getSynthesizedExternsInput(); // Force lazy creation.
 
     runInCompilerThread(
@@ -3059,6 +3063,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private @Nullable CompilerInput syntheticExternsInput; // matches SYNTHETIC_EXTERNS_FILE
 
+  /**
+   * Non-static because this file represents different content for every Compiler (and TSAN
+   * complains if one instance is shared by all threads).
+   */
+  private final SourceFile syntheticTypeSummaryFile =
+      SourceFile.fromCode(SYNTHETIC_FILE_NAME_PREFIX + "typeSummary] ", "", SourceKind.EXTERN);
+
+  private @Nullable CompilerInput syntheticTypeSummaryInput; // matches syntheticTypeSummaryFile
+
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
   private final Map<Class<?>, IndexProvider<?>> indexProvidersByType = new LinkedHashMap<>();
@@ -3776,6 +3789,26 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  CompilerInput getSynthesizedTypeSummaryInput() {
+    if (syntheticTypeSummaryInput != null) {
+      return syntheticTypeSummaryInput;
+    }
+
+    CompilerInput input = new CompilerInput(syntheticTypeSummaryFile, /* isExtern= */ true);
+    Node root = checkNotNull(input.getAstRoot(this));
+    putCompilerInput(input);
+    this.syntheticTypeSummaryInput = input;
+    externsRoot.addChildToFront(root);
+    externs.add(0, input);
+    scriptNodeByFilename.put(input.getSourceFile().getName(), root);
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordTypeSummary();
+    root.setJSDocInfo(builder.build());
+
+    return input;
+  }
+
+  @Override
   InputId getSyntheticCodeInputId() {
     return SYNTHETIC_CODE_INPUT_ID;
   }
@@ -3944,7 +3977,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Handle require-only libraries.
       return lastInjectedLibrary;
     }
-    Node parent = getNodeForCodeInsertion(null);
+
+    // For stage 2 optimizing builds, insert runtime libraries as actual code in the AST.
+    // For library builds that outputs a TypedAST, the runtime libraries are injected to a synthetic
+    // @typeSummary (.i.js) node so that the types are available.
+    Node parent;
+    if (options.getTypedAstOutputFile() == null) {
+      parent = getNodeForCodeInsertion(null);
+    } else {
+      parent = getSynthesizedTypeSummaryInput().getAstRoot(this);
+    }
+
     if (lastInjectedLibrary == null) {
       parent.addChildrenToFront(firstChild);
     } else {
@@ -3955,6 +3998,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     reportChangeToEnclosingScope(parent);
     return lastChild;
+  }
+
+  @Override
+  ImmutableList<String> getInjectedLibraries() {
+    return ImmutableList.copyOf(injectedLibraries);
   }
 
   @Override
@@ -4128,9 +4176,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           SerializeTypedAstPass.createFromOutputStream(
                   this,
                   gzipStream,
-                  this.getOptions().shouldSerializeExtraDebugInfo()
-                      ? SerializationOptions.INCLUDE_DEBUG_INFO
-                      : SerializationOptions.SKIP_DEBUG_INFO)
+                  SerializationOptions.builder()
+                      .setRuntimeLibraries(ImmutableList.of())
+                      .setIncludeDebugInfo(this.getOptions().shouldSerializeExtraDebugInfo())
+                      .build())
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
           // Finish will flush all zip buffers and write out zip trailing bytes but it will not
@@ -4256,6 +4305,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         putCompilerInput(input); // overwrite the old input
         deserializedModule.add(input);
       }
+    }
+
+    for (String library : deserializedAst.getRuntimeLibraries()) {
+      this.ensureLibraryInjected(library, false);
     }
 
     this.typedAstFilesystem = null; // allow garbage collection

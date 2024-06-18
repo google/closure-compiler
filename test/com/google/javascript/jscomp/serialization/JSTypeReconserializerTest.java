@@ -90,7 +90,10 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                   .build(),
               this.stringPoolBuilder,
               this.shouldSerializeProperty,
-              SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
+              SerializationOptions.builder()
+                  .setIncludeDebugInfo(true)
+                  .setRunValidation(true)
+                  .build());
 
       NodeTraversal.traverseRoots(
           compiler,

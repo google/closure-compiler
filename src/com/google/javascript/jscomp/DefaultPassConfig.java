@@ -2790,9 +2790,10 @@ public final class DefaultPassConfig extends PassConfig {
                   (externs, js) -> {
                     new ConvertTypesToColors(
                             compiler,
-                            compiler.getOptions().shouldSerializeExtraDebugInfo()
-                                ? SerializationOptions.INCLUDE_DEBUG_INFO
-                                : SerializationOptions.SKIP_DEBUG_INFO)
+                            SerializationOptions.builder()
+                                .setIncludeDebugInfo(
+                                    compiler.getOptions().shouldSerializeExtraDebugInfo())
+                                .build())
                         .process(externs, js);
 
                     compiler.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
@@ -2808,9 +2809,12 @@ public final class DefaultPassConfig extends PassConfig {
                   SerializeTypedAstPass.createFromPath(
                       compiler,
                       options.getTypedAstOutputFile(),
-                      compiler.getOptions().shouldSerializeExtraDebugInfo()
-                          ? SerializationOptions.INCLUDE_DEBUG_INFO
-                          : SerializationOptions.SKIP_DEBUG_INFO))
+                      SerializationOptions.builder()
+                          .setIncludeDebugInfo(
+                              compiler.getOptions().shouldSerializeExtraDebugInfo())
+                          // set the runtime libraries to serialize in the TypedAST proto
+                          .setRuntimeLibraries(compiler.getInjectedLibraries())
+                          .build()))
           .build();
 
   private final PassFactory removeUnnecessarySyntheticExterns =

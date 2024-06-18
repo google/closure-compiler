@@ -106,7 +106,8 @@ public class AstFactoryTest {
 
   private Node parseAndAddColors(String externs, String source) {
     parseAndAddTypes(externs, source);
-    new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+    new ConvertTypesToColors(
+            compiler, SerializationOptions.builder().setIncludeDebugInfo(true).build())
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
     return compiler.getJsRoot();
   }

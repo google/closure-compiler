@@ -70,10 +70,17 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean includeTypes;
   private boolean resolveSourceMapAnnotations;
   private boolean parseInlineSourceMaps;
+  private ImmutableList<String> runtimeLibraries = null;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(compiler, consumer, SerializationOptions.SKIP_DEBUG_INFO);
+    return new SerializeTypedAstPass(
+        compiler,
+        consumer,
+        SerializationOptions.builder()
+            .setIncludeDebugInfo(false)
+            .setRuntimeLibraries(this.runtimeLibraries)
+            .build());
   }
 
   @Override
@@ -86,6 +93,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     this.includeTypes = true;
     this.resolveSourceMapAnnotations = true;
     this.parseInlineSourceMaps = true;
+    this.runtimeLibraries = ImmutableList.of();
   }
 
   @Test
@@ -704,6 +712,16 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             expected(""));
 
     assertThat(result.ast.getExternProperties()).containsAtLeast("method", "arg");
+  }
+
+  @Test
+  public void includesRuntimeLibraryPaths() throws IOException {
+    enableGatherExternProperties();
+    this.runtimeLibraries = ImmutableList.of("base", "es6/string");
+
+    Result result = this.testAndReturnResult(externs(""), srcs(""), expected(""));
+
+    assertThat(result.ast.getRuntimeLibraries()).containsExactly("base", "es6/string");
   }
 
   @Override

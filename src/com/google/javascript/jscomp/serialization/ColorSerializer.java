@@ -119,9 +119,9 @@ class ColorSerializer {
    * to this method.
    *
    * @param getDisambiguationSupertypesFn Given a `Color` return a set of `Color`s it inherits from.
-   * @param getMismatchSourceRefsFn May be `null` if this `serializationMode` is `SKIP_DEBUG_INFO`.
-   *     Otherwise, this function must provide a set of all the source reference strings indicating
-   *     code locations where the given `Color` encountered a type mismatch.
+   * @param getMismatchSourceRefsFn May be `null` if this `serializationMode` does not include debug
+   *     info. Otherwise, this function must provide a set of all the source reference strings
+   *     indicating code locations where the given `Color` encountered a type mismatch.
    * @return a new `TypePool` proto
    */
   TypePool generateTypePool(
@@ -145,7 +145,7 @@ class ColorSerializer {
       }
     }
 
-    if (serializationMode != SerializationOptions.SKIP_DEBUG_INFO) {
+    if (serializationMode.getIncludeDebugInfo()) {
       checkNotNull(getMismatchSourceRefsFn);
       final TypePool.DebugInfo.Builder debugInfoBuilder = typePoolBuilder.getDebugInfoBuilder();
 

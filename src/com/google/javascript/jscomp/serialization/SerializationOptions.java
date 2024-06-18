@@ -16,30 +16,35 @@
 
 package com.google.javascript.jscomp.serialization;
 
-/**
- * Congiguration options for serialization time.
- *
- * <p>Currently, this consists of whether or not type names (not used for optimizations) should be
- * included in the serialized output to make it more human readable.
- */
-public enum SerializationOptions {
-  SKIP_DEBUG_INFO(false, false),
-  INCLUDE_DEBUG_INFO(true, false),
-  INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS(true, true);
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 
-  private final boolean includeDebugInfo;
-  private final boolean runValidation;
+/** Configuration options for serialization time. */
+@AutoValue
+public abstract class SerializationOptions {
 
-  private SerializationOptions(boolean includeDebugInfo, boolean runValidation) {
-    this.includeDebugInfo = includeDebugInfo;
-    this.runValidation = runValidation;
+  public static Builder builder() {
+    return new AutoValue_SerializationOptions.Builder()
+        .setRunValidation(false)
+        .setIncludeDebugInfo(false)
+        .setRuntimeLibraries(ImmutableList.of());
   }
 
-  public boolean includeDebugInfo() {
-    return this.includeDebugInfo;
+  /** Builder for {@link SerializationOptions}. */
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder setIncludeDebugInfo(boolean includeDebugInfo);
+
+    public abstract Builder setRunValidation(boolean runValidation);
+
+    public abstract Builder setRuntimeLibraries(ImmutableList<String> runtimeLibraries);
+
+    public abstract SerializationOptions build();
   }
 
-  public boolean runValidation() {
-    return this.runValidation;
-  }
+  public abstract boolean getIncludeDebugInfo();
+
+  public abstract boolean getRunValidation();
+
+  public abstract ImmutableList<String> getRuntimeLibraries();
 }

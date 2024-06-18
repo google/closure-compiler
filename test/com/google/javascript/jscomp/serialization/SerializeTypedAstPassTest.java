@@ -73,7 +73,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(compiler, astConsumer, SerializationOptions.SKIP_DEBUG_INFO);
+    return new SerializeTypedAstPass(
+        compiler, astConsumer, SerializationOptions.builder().setIncludeDebugInfo(false).build());
   }
 
   @Override

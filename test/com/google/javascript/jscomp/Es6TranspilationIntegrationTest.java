@@ -105,7 +105,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("convertTypesToColors")
             .setInternalFactory(
-                (c) -> new ConvertTypesToColors(c, SerializationOptions.INCLUDE_DEBUG_INFO))
+                (c) ->
+                    new ConvertTypesToColors(
+                        c, SerializationOptions.builder().setIncludeDebugInfo(true).build()))
             .build());
 
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compilerOptions);

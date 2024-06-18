@@ -1586,7 +1586,8 @@ public abstract class CompilerTestCase {
           } else if (replaceTypesWithColors) {
             recentChange.reset();
             new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
-            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+            new ConvertTypesToColors(
+                    compiler, SerializationOptions.builder().setIncludeDebugInfo(true).build())
                 .process(externsRoot, mainRoot);
 
             compiler.setLifeCycleStage(AbstractCompiler.LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);

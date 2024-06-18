@@ -56,7 +56,9 @@ public final class SerializeTypesToPointersTest {
 
     SerializeTypesToPointers serializer =
         SerializeTypesToPointers.create(
-            compiler, stringPoolBuilder, SerializationOptions.INCLUDE_DEBUG_INFO);
+            compiler,
+            stringPoolBuilder,
+            SerializationOptions.builder().setIncludeDebugInfo(true).build());
     serializer.gatherTypesOnAst(src);
 
     assertThat(serializer.getTypePointersByJstype().get(fooCtorType)).isNotNull();
@@ -78,7 +80,9 @@ public final class SerializeTypesToPointersTest {
 
     SerializeTypesToPointers serializer =
         SerializeTypesToPointers.create(
-            compiler, stringPoolBuilder, SerializationOptions.INCLUDE_DEBUG_INFO);
+            compiler,
+            stringPoolBuilder,
+            SerializationOptions.builder().setIncludeDebugInfo(true).build());
     serializer.gatherTypesOnAst(src);
 
     assertThat(serializer.getTypePointersByJstype().get(fooPrototypeType)).isNotNull();
@@ -102,7 +106,9 @@ public final class SerializeTypesToPointersTest {
 
     SerializeTypesToPointers serializer =
         SerializeTypesToPointers.create(
-            compiler, stringPoolBuilder, SerializationOptions.INCLUDE_DEBUG_INFO);
+            compiler,
+            stringPoolBuilder,
+            SerializationOptions.builder().setIncludeDebugInfo(true).build());
     serializer.gatherTypesOnAst(root);
 
     assertThat(serializer.getTypePointersByJstype().get(fooPrototypeType)).isNotNull();
@@ -130,7 +136,9 @@ public final class SerializeTypesToPointersTest {
 
     SerializeTypesToPointers serializer =
         SerializeTypesToPointers.create(
-            compiler, stringPoolBuilder, SerializationOptions.INCLUDE_DEBUG_INFO);
+            compiler,
+            stringPoolBuilder,
+            SerializationOptions.builder().setIncludeDebugInfo(true).build());
     serializer.gatherTypesOnAst(root);
 
     assertThat(serializer.getTypePointersByJstype().get(fooPrototypeType)).isNotNull();
