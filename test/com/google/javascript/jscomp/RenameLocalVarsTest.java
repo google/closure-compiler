@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

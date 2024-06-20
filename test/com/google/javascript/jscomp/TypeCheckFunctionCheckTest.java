@@ -21,7 +21,7 @@ import static com.google.javascript.jscomp.FunctionTypeBuilder.VAR_ARGS_MUST_BE_
 import static com.google.javascript.jscomp.TypeCheck.WRONG_ARGUMENT_COUNT;
 
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

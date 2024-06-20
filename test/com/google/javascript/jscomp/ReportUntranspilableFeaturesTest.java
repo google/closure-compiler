@@ -20,7 +20,7 @@ import static com.google.javascript.jscomp.ReportUntranspilableFeatures.UNTRANSP
 
 import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

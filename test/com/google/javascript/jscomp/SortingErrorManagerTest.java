@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.SortingErrorManager.LeveledJSErrorComparator;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

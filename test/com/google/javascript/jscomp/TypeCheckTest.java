@@ -47,7 +47,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;

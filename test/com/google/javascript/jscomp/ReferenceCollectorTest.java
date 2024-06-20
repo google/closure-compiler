@@ -24,7 +24,7 @@ import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

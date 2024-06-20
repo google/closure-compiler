@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import java.nio.charset.Charset;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 
 /** Base class for tests that exercise {@link CodePrinter}. */

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

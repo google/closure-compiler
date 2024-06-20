@@ -22,7 +22,7 @@ import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

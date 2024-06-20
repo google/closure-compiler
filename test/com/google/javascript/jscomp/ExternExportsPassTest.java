@@ -19,7 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.function.Consumer;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
