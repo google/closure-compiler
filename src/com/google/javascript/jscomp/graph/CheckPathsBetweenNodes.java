@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.graph;
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * See constructor, {@link #CheckPathsBetweenNodes(DiGraph,

@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Computes all the reachable nodes. Upon execution of {@link #compute(Object)},

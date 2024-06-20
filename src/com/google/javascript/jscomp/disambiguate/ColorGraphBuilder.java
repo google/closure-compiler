@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import java.util.Collection;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Builds a graph of the {@link Color}s on the AST from a specified set of seed colors. */
 final class ColorGraphBuilder {

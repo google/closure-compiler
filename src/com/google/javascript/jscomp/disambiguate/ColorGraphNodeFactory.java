@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import java.util.LinkedHashMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A factory and cache for {@link ColorGraphNode} instances. */
 class ColorGraphNodeFactory {

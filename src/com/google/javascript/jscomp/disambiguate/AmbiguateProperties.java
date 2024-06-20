@@ -56,7 +56,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Renames unrelated properties to the same name, using {@link Color}s provided by the typechecker.

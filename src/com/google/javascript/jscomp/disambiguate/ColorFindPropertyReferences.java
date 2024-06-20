@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.LinkedHashMap;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Traverses the AST, collecting connections between {@link JSType}s, property accesses, and their
