@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.Node.Prop;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A translator for converting between Rhino node properties and TypedAST proto node properties used

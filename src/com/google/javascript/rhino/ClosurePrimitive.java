@@ -40,7 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Enum of primitive functions that the compiler recognizes

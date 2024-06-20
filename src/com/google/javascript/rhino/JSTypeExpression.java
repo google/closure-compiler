@@ -49,7 +49,7 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * When parsing a jsdoc, a type-annotation string is parsed to a type AST. Somewhat confusingly, we

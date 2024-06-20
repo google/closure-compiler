@@ -52,7 +52,7 @@ import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Objects;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A Truth Subject for the JSType interface. Usage:

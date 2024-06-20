@@ -56,7 +56,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.After;
 
 /** A base class for tests on {@code JSType}s. */

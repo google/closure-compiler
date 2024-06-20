@@ -58,7 +58,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A Truth Subject for the Node class. Usage:

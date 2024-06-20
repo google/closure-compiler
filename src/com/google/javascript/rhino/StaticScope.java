@@ -39,7 +39,7 @@
 
 package com.google.javascript.rhino;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The {@code StaticScope} interface must be implemented by any object that defines variables for

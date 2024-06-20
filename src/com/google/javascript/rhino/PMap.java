@@ -40,7 +40,7 @@ package com.google.javascript.rhino;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.function.BiPredicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A minimal interface for null-hostile, persistent immutable maps. */
 public interface PMap<K, V> {

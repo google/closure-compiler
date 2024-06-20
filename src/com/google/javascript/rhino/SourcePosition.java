@@ -39,7 +39,7 @@
 
 package com.google.javascript.rhino;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a position in some piece of source code, with an associated item of type T found at

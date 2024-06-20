@@ -42,7 +42,7 @@ package com.google.javascript.rhino;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Builder interface for declaring properties on class-like (nominal) types. Nominal types consist
