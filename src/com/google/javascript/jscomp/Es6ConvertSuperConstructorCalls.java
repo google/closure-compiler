@@ -34,7 +34,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Converts {@code super()} calls. */
 public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Callback {

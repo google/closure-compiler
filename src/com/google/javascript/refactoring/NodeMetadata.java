@@ -18,7 +18,7 @@ package com.google.javascript.refactoring;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeTraversal;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Class that holds metadata (or meta objects) for use by JsFlume that aren't

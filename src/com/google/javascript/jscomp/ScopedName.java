@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A name together with a scope root node.  This is suitable for use as a

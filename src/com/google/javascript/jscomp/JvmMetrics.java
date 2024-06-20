@@ -27,7 +27,7 @@ import java.lang.management.MemoryUsage;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A class to report jvm/jmx statistics. Borrowed from:

@@ -24,7 +24,7 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Utility class for resolving source maps and files referenced in source maps. */
 @GwtIncompatible("Accesses the file system")

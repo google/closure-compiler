@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** An optimization pass to re-write J2CL Equality.$same. */
 public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {

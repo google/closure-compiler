@@ -33,7 +33,7 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Simple static utility functions shared between the {@link PolymerPass} and its helper classes.

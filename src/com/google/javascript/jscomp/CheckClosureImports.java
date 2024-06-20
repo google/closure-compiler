@@ -38,7 +38,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Checks all goog.requires, goog.module.gets, goog.forwardDeclares, and goog.requireTypes in all

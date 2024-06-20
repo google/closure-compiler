@@ -35,7 +35,7 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Primary driver of a refactoring. This class collects the inputs, runs the refactoring over

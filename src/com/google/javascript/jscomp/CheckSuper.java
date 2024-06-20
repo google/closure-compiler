@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Check for errors related to the `super` keyword.

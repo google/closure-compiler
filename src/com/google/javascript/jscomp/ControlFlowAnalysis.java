@@ -33,7 +33,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.PriorityQueue;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class computes a {@link ControlFlowGraph} for a given AST

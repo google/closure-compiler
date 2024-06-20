@@ -45,7 +45,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Reuse variable names if possible.

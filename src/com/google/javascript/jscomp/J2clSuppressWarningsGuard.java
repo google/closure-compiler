@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A warnings guard that suppresses some warnings incompatible with J2CL. */
 public final class J2clSuppressWarningsGuard extends WarningsGuard {

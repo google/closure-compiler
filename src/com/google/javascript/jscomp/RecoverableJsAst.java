@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.JsAst.RhinoError;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An implementation of {@link SourceAst} that avoids re-creating the AST unless it was manually

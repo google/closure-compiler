@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Base class for algorithms that resolve JavaScript module references to input files. */
 public abstract class ModuleResolver {

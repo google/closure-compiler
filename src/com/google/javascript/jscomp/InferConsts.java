@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Attaches the CONST_VAR annotation to any variable that's

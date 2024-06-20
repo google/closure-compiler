@@ -25,7 +25,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Utilities for serializing and deserializing JSDoc necessary for optimzations. */
 public final class JSDocSerializer {

@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A warnings guard that suppresses warnings for a particular diagnostic group for a file that

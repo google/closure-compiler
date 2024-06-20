@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** All warnings should be reported as errors. */
 public final class StrictWarningsGuard extends WarningsGuard {

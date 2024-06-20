@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * ReplaceMessages replaces user-visible messages with alternatives. It uses Google specific

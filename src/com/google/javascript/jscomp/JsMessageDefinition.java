@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Container class that holds a {@link JsMessage} and information about the {@code goog.getMsg()}

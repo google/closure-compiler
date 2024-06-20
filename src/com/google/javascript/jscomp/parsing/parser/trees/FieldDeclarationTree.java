@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Tree for public property fields */
 public class FieldDeclarationTree extends ParseTree {

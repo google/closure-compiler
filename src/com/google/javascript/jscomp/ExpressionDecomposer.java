@@ -35,7 +35,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Partially or fully decomposes an expression with respect to some sub-expression. Initially this

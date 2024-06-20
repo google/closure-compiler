@@ -31,7 +31,7 @@ import com.google.javascript.jscomp.regex.RegExpTree.NamedCaptureGroup;
 import com.google.javascript.jscomp.regex.RegExpTree.UnicodePropertyEscape;
 import com.google.javascript.rhino.Node;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Looks for presence of features that are not supported for transpilation (mostly new RegExp

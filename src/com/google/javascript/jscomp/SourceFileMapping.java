@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A SourceFileMapping maps a source file, line, and column into an {@link OriginalMapping}.

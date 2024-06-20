@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import java.util.Map;
 import java.util.TreeMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A DependencyInfo class that determines load flags by parsing the AST just-in-time. */
 public class LazyParsedDependencyInfo implements DependencyInfo {

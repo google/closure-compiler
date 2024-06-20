@@ -68,7 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** NodeUtil contains generally useful AST utilities. */
 public final class NodeUtil {

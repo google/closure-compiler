@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A class that represents a minimized conditional expression.

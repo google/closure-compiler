@@ -24,7 +24,7 @@ import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import java.io.Serializable;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a single declaration or reference to a variable. Note that references can only be used

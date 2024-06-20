@@ -35,7 +35,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A compiler pass to run the type inference analysis. */
 class TypeInferencePass {

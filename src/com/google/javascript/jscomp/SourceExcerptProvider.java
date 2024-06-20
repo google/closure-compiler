@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A source excerpt provider is responsible for building source code excerpt

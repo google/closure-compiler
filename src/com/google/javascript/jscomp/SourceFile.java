@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An abstract representation of a source file that provides access to language-neutral features.

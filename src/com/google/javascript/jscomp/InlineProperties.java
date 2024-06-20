@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * InlineProperties attempts to find references to properties that are known to be constants and

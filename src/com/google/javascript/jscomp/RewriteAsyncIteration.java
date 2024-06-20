@@ -29,7 +29,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Converts async generator functions into a function returning a new $jscomp.AsyncGenWrapper around

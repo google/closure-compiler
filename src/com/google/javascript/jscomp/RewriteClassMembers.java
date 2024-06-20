@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Replaces the ES2022 class fields and class static blocks with constructor declaration. */
 public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, CompilerPass {

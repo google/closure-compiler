@@ -21,7 +21,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import com.google.common.annotations.GwtIncompatible;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Output charset encoder for {@code CodeGenerator} that delegates to a CharsetEncoder.

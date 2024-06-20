@@ -28,7 +28,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Instruments {@code await} and {@code yield} for the {@code AsyncContext} polyfill. */
 public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callback {

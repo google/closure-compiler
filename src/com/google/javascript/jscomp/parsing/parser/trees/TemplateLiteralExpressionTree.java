@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Template literal production in ES6.

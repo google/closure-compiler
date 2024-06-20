@@ -34,7 +34,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Just to fold known methods when they are called with constants. */
 class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {

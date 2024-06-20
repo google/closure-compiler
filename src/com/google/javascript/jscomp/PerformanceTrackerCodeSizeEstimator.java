@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Node;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A class to get a raw and gzip'ed size estimate; it doesn't generate code. */
 final class PerformanceTrackerCodeSizeEstimator extends CodeConsumer {

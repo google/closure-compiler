@@ -28,7 +28,7 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Checks that all variables are declared, that file-private variables are accessed only in the file

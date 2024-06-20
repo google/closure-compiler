@@ -14,7 +14,7 @@ MAVEN_ARTIFACTS = [
     "com.google.truth.extensions:truth-proto-extension:1.1",
     "io.github.java-diff-utils:java-diff-utils:4.12",
     "org.apache.ant:ant:1.10.11",
-    "org.jspecify:jspecify:0.2.0",
+    "org.jspecify:jspecify:0.3.0",
 ]
 
 ORDERED_POM_OR_GRADLE_FILE_LIST = [

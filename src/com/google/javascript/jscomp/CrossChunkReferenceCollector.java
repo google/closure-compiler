@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Collects global variable references for use by {@link CrossChunkCodeMotion}. */
 public final class CrossChunkReferenceCollector implements ScopedCallback, CompilerPass {

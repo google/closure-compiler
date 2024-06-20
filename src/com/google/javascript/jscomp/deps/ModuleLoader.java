@@ -37,7 +37,7 @@ import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Provides compile-time locate semantics for ES6 and CommonJS modules.

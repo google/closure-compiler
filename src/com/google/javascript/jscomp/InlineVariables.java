@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Using the infrastructure provided by {@link ReferenceCollector}, identify variables that are used

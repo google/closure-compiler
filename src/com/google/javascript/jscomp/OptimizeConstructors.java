@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Optimize class declarations by removing explicit constructor declarations if the implicit

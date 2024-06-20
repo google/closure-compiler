@@ -36,7 +36,7 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A class for processing type transformation expressions

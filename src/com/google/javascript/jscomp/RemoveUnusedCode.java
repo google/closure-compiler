@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Garbage collection for variable and function definitions. Basically performs a mark-and-sweep

@@ -29,7 +29,7 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A symbol table for references that are removed by preprocessor passes (like {@code

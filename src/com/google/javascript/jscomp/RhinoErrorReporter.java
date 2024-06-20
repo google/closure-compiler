@@ -21,7 +21,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Msg;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An error reporter for serializing Rhino errors into our error format.

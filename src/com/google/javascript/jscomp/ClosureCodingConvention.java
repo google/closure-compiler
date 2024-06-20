@@ -28,7 +28,7 @@ import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.FunctionType;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This describes the Closure-specific JavaScript coding conventions.

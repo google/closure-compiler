@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A pass for stripping a list of provided JavaScript object types.

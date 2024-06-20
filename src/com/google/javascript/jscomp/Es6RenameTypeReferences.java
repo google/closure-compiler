@@ -22,7 +22,7 @@ import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Renames references in JSDoc. */
 final class Es6RenameTypeReferences extends AbstractPostOrderCallback {

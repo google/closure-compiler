@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The syntactic scope creator scans the parse tree to create a Scope object containing all the

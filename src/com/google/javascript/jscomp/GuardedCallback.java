@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An AST traverser that keeps track of whether access to a generic resource are "guarded" or not. A

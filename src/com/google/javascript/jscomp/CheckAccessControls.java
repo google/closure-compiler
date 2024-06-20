@@ -35,7 +35,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A compiler pass that checks that the programmer has obeyed all the access control restrictions

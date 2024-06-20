@@ -31,7 +31,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Helper classes for dealing with coding conventions.

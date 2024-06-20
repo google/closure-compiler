@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenUtil;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Lightweight message formatter. The format of messages this formatter

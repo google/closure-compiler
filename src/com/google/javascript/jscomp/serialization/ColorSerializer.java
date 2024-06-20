@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Serializes `Color`s and information about them into a `TypePool`.
