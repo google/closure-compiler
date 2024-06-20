@@ -49,7 +49,7 @@ import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents the computation of a single equality relationship.

@@ -52,7 +52,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents the computation of a single supertype-subtype relationship.

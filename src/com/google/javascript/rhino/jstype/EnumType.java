@@ -48,7 +48,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An enum type representing a branded collection of elements. Each element is referenced by its

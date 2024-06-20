@@ -42,7 +42,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A type visitor that traverse through the referenced types of "forwaring types" to search for a

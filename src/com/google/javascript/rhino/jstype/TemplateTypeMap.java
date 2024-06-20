@@ -46,7 +46,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility methods for

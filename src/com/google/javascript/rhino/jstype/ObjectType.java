@@ -55,7 +55,7 @@ import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Object type.

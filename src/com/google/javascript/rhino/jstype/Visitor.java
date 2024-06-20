@@ -40,7 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.errorprone.annotations.ForOverride;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A vistor for {@code JSType}s.
