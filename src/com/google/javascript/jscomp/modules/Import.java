@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.modules;
 import com.google.auto.value.AutoValue;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An <code>import</code>ed name in a module.

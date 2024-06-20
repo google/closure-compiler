@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.modules;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The result of resolving an export, which can be a valid binding, ambiguous, not found, or an
