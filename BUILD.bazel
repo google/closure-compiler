@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
-load("//:bazel/oss_java_library.bzl", "oss_java_library")
-load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
-load("//:bazel/typedast.bzl", "typedast")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
 # Produce an unshaded export jar based on :compiler_lib
 load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
+load("//:bazel/oss_java_library.bzl", "oss_java_library")
+load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
+load("//:bazel/typedast.bzl", "typedast")
 
 package(licenses = ["notice"])
 
@@ -115,12 +115,12 @@ java_export(
 
 java_library(
     name = "compiler_unshaded_lib",
+    srcs = [
+        ":CommandLineRunnerVersion",
+    ],
     resources = [
         ":LICENSE",
         ":THIRD_PARTY_NOTICES",
-    ],
-    srcs = [
-        ":CommandLineRunnerVersion",
     ],
     deps = [
         "//:compiler_lib",
@@ -147,8 +147,8 @@ java_library(
 java_library(
     name = "compiler_lib",
     resources = [
-        "src/com/google/javascript/jscomp/js/polyfills.txt",
-        ":runtime_lib_typedast_srcs",
+        ":polyfills.txt",
+        ":runtime_libs_srcs",
         ":runtime_libs_typedast",
     ],
     exports = [":compiler_lib_no_runtime_libs"],
@@ -156,12 +156,22 @@ java_library(
 
 typedast(
     name = "runtime_libs_typedast",
-    srcs = [":runtime_lib_typedast_srcs"],
+    srcs = [":runtime_libs_srcs"],
     compiler = ":compiler_unshaded_no_runtime_libs",
 )
 
+genrule(
+    name = "gen_polyfill_table",
+    srcs = [":runtime_libs_srcs"],
+    outs = ["polyfills.txt"],
+    cmd = "node $(location src/com/google/javascript/jscomp/js/build_polyfill_table.js) $(SRCS) | sed 's,[^ ]*jscomp/js/,,g' > $@",
+    tools = [
+        "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
+    ],
+)
+
 filegroup(
-    name = "runtime_lib_typedast_srcs",
+    name = "runtime_libs_srcs",
     srcs = glob(
         ["src/com/google/javascript/jscomp/js/**/*.js"],
         exclude = [
