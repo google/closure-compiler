@@ -29,7 +29,7 @@ import com.google.javascript.jscomp.deps.DependencyInfo;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** An abstract representation of a source file. */
 @AutoValue

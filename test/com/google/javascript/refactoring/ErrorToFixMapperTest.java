@@ -34,7 +34,7 @@ import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

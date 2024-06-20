@@ -23,7 +23,7 @@ import java.util.IdentityHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A deterministic drop-in replacement for {@link IdentityHashMap}.

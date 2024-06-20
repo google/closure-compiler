@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.ErrorFormat;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An unchecked exception thrown when transpilation fails due to one or

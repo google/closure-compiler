@@ -23,7 +23,7 @@ import com.google.common.base.Ascii;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Arrays;
 import java.util.Date;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This is a hacked apart version of the Apache Harmony String.format class

@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.colors.Color;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Fail-fast replacement for `ColorSerializer`.

@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.io.BaseEncoding;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.nio.charset.StandardCharsets;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * GWT/J2CL replacement of SourceMapResolver. Utility class for resolving source maps and files

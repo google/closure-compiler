@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
