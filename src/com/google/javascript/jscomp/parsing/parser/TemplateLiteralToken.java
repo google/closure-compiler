@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A token representing a javascript template literal substring.

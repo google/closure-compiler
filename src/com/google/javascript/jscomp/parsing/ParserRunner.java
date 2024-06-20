@@ -38,7 +38,7 @@ import com.google.javascript.rhino.StaticSourceFile;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** parser runner */
 public final class ParserRunner {

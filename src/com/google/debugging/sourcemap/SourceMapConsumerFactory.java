@@ -16,7 +16,7 @@
 
 package com.google.debugging.sourcemap;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Detect and parse the provided source map. */
 public final class SourceMapConsumerFactory {

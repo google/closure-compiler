@@ -25,7 +25,7 @@ import com.google.gson.JsonParseException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Java implementation of the source map parser.

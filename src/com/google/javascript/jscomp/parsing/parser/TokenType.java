@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 // 7.5 Tokens
 public enum TokenType {
