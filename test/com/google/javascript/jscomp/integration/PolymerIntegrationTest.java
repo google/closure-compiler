@@ -56,6 +56,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
+    options.setClosurePass(true);
     return options;
   }
 
@@ -124,16 +125,18 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "});",
             "})();"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var XFooElement=function(){};",
             "var MyTypedef;",
             "(function(){",
             "XFooElement.prototype.value;",
             "Polymer({",
-            "is:'x-foo',",
-            "properties: {",
-            "value:string}",
-            "}",
-            ")",
+            "  is:'x-foo',",
+            "  properties: $jscomp.reflectObject(XFooElement, {",
+            "    value:string})",
+            "  });",
             "})()"));
   }
 
@@ -251,11 +254,17 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "});",
             "})();"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var XFooElement=function(){};",
             "(function(){",
             "XFooElement.prototype.value;",
             "var localTypeDef;",
-            "Polymer({is:'x-foo',properties:{value:string}})})()"));
+            "Polymer({",
+            "  is:'x-foo',",
+            "  properties: $jscomp.reflectObject(XFooElement, {value:string})",
+            "})})()"));
   }
 
   @Test
@@ -281,10 +290,16 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "});",
             "})();"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var XFooElement=function(){};",
             "(function(){",
             "XFooElement.prototype.value;",
-            "Polymer({is:'x-foo',properties:{value:string}})})()"));
+            "Polymer({",
+            "  is:'x-foo',",
+            "  properties: $jscomp.reflectObject(XFooElement, {value:string}) })",
+            "})()"));
   }
 
   @Test
@@ -312,11 +327,17 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "},",
             "});"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var module$exports$a={};",
             "var module$contents$a_MyTypedef;",
             "var XFooElement=function(){};",
             "XFooElement.prototype.value;",
-            "Polymer({is:\"x-foo\",properties:{value:number}})"));
+            "Polymer({",
+            "is:\"x-foo\",",
+            "properties: $jscomp.reflectObject(XFooElement, {value:number})",
+            "})"));
   }
 
   @Test

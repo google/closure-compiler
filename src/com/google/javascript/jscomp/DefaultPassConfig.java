@@ -2686,15 +2686,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Rewrites Polymer({}) */
   private final PassFactory polymerPass =
-      PassFactory.builder()
-          .setName("polymerPass")
-          .setInternalFactory(
-              (compiler) ->
-                  new PolymerPass(
-                      compiler,
-                      compiler.getOptions().propertyRenaming
-                          == PropertyRenamingPolicy.ALL_UNQUOTED))
-          .build();
+      PassFactory.builder().setName("polymerPass").setInternalFactory(PolymerPass::new).build();
 
   private final PassFactory chromePass =
       PassFactory.builder().setName("chromePass").setInternalFactory(ChromePass::new).build();

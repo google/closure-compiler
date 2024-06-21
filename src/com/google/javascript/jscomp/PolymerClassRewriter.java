@@ -46,7 +46,6 @@ import org.jspecify.annotations.Nullable;
 final class PolymerClassRewriter {
   private static final String VIRTUAL_FILE = "<PolymerClassRewriter.java>";
   private final AbstractCompiler compiler;
-  private final boolean propertyRenamingEnabled;
   @VisibleForTesting static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
   static final DiagnosticType IMPLICIT_GLOBAL_CONFLICT =
@@ -66,10 +65,9 @@ final class PolymerClassRewriter {
   private final Node externsInsertionRef;
   boolean propertySinkExternInjected = false;
 
-  PolymerClassRewriter(AbstractCompiler compiler, boolean propertyRenamingEnabled) {
+  PolymerClassRewriter(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.externsInsertionRef = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
-    this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
   static boolean isIIFE(Node n) {
@@ -150,7 +148,7 @@ final class PolymerClassRewriter {
    */
   private Node getNodeForInsertion(Node enclosingScript) {
     if (NodeUtil.isFromTypeSummary(enclosingScript)) {
-      return externsInsertionRef;
+      return compiler.getSynthesizedTypeSummaryInput().getAstRoot(compiler);
     } else {
       return compiler.getNodeForCodeInsertion(null);
     }
@@ -344,7 +342,7 @@ final class PolymerClassRewriter {
     // If property renaming is enabled, wrap the properties object literal
     // in a reflection call so that the properties are renamed consistently
     // with the class members.
-    if (propertyRenamingEnabled && cls.descriptor != null) {
+    if (cls.descriptor != null) {
       Node props = NodeUtil.getFirstPropMatchingKey(cls.descriptor, "properties");
       if (props != null && props.isObjectLit()) {
         addPropertiesConfigObjectReflection(cls, props);
@@ -431,7 +429,7 @@ final class PolymerClassRewriter {
     //
     // Also add reflection and sinks for computed properties and complex observers
     // and switch simple observers to direct function references.
-    if (propertyRenamingEnabled && cls.descriptor != null) {
+    if (cls.descriptor != null) {
       convertSimpleObserverStringsToReferences(cls);
       addPropertiesConfigObjectReflection(cls, cls.descriptor);
     }
@@ -474,6 +472,7 @@ final class PolymerClassRewriter {
             .srcrefTreeIfMissing(propertiesLiteral);
     parent.addChildToFront(objReflectCall);
     compiler.reportChangeToEnclosingScope(parent);
+    compiler.ensureLibraryInjected("util/reflectobject", false);
   }
 
   /** Adds an @this annotation to all functions in the objLit. */
@@ -1033,9 +1032,17 @@ final class PolymerClassRewriter {
       block.addChildToBack(setterExprNode);
     }
 
-    block.srcrefTreeIfMissing(externsInsertionRef);
-    Node stmts = block.removeChildren();
-    externsInsertionRef.addChildrenToBack(stmts);
+    Node stmts;
+    if (NodeUtil.isFromTypeSummary(cls.input.getAstRoot(compiler))) {
+      Node typeSummaryInsertionRef = compiler.getSynthesizedTypeSummaryInput().getAstRoot(compiler);
+      block.srcrefTreeIfMissing(typeSummaryInsertionRef);
+      stmts = block.removeChildren();
+      typeSummaryInsertionRef.addChildrenToBack(stmts);
+    } else {
+      block.srcrefTreeIfMissing(externsInsertionRef);
+      stmts = block.removeChildren();
+      externsInsertionRef.addChildrenToBack(stmts);
+    }
 
     compiler.reportChangeToEnclosingScope(stmts);
   }
