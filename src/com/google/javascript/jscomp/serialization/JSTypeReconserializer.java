@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.function.Predicate;
-import org.jspecify.annotations.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Takes {@link JSType}s produced by JSCompiler's typechecker and deduplicates and serializes them

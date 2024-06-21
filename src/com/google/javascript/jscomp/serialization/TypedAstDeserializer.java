@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.jspecify.annotations.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Deserializes a list of TypedAst protos into the JSCompiler AST structure. */
 @GwtIncompatible("protobuf.lite")

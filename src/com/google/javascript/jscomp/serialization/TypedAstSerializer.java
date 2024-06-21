@@ -36,7 +36,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
-import org.jspecify.annotations.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
 @GwtIncompatible("protobuf.lite")

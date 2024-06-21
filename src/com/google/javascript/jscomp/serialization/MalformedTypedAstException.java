@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import org.jspecify.annotations.Nullable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Emitted when deserialization sees a TypedAst with semantic errors.
