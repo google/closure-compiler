@@ -625,11 +625,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
 
-    // Optimizes references to the arguments variable.
-    if (options.optimizeArgumentsArray) {
-      passes.maybeAdd(optimizeArgumentsArray);
-    }
-
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
     if (options.closurePass && (options.removeAbstractMethods || options.removeClosureAsserts)) {
@@ -2104,13 +2099,6 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.setStringMap(pass.getStringMap());
                     }
                   })
-          .build();
-
-  /** Optimizes the "arguments" array. */
-  private final PassFactory optimizeArgumentsArray =
-      PassFactory.builder()
-          .setName(PassNames.OPTIMIZE_ARGUMENTS_ARRAY)
-          .setInternalFactory(OptimizeArgumentsArray::new)
           .build();
 
   /** Remove variables set to goog.abstractMethod. */

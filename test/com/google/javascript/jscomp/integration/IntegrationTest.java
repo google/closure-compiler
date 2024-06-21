@@ -1350,18 +1350,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testOptimizeArgumentsArray() {
-    String code = "function f() { return arguments[0]; }";
-
-    CompilerOptions options = createCompilerOptions();
-    testSame(options, code);
-
-    options.setOptimizeArgumentsArray(true);
-    String argName = "JSCompiler_OptimizeArgumentsArray_p0";
-    test(options, code, "function f(" + argName + ") { return " + argName + "; }");
-  }
-
-  @Test
   public void testOptimizeParameters() {
     String code = "function f(a) {} f(true);";
 
