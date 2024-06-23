@@ -88,6 +88,11 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return new TemplateTypeReplacer(registry, map, true, true, true);
   }
 
+  public static TemplateTypeReplacer forInference(
+      JSTypeRegistry registry, TemplateTypeMap bindings) {
+    return new TemplateTypeReplacer(registry, bindings, true, true, true);
+  }
+
   /**
    * Creates a replacer that will always totally eliminate {@link TemplateType}s from the
    * definitions of the types it performs replacement on.

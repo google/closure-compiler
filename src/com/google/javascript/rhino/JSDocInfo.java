@@ -1883,8 +1883,7 @@ public class JSDocInfo implements Serializable {
         bound = JSTypeExpression.IMPLICIT_TEMPLATE_BOUND;
       }
       Map<String, Node> transformations = getProp(TYPE_TRANSFORMATIONS);
-      if ((transformations != null && transformations.containsKey(name))
-          || props.containsKey(TYPEDEF_TYPE)) {
+      if ((transformations != null && transformations.containsKey(name))) {
         return false;
       }
       return populatePropEntry(TEMPLATE_TYPE_NAMES, RhinoStringPool.addOrGet(name), bound);

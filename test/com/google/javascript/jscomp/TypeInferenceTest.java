@@ -2940,6 +2940,45 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testTypedefsWithTemplates() {
+    inFunction(
+        lines(
+             "/** @typedef {!ABC<TT>} @template TT */",
+             "var MyType",
+             "/** @constructor @template TT */",
+             "function ABC(){}",
+             "/** @type {TT} */",
+             "ABC.prototype.abc",
+             "/** @typedef {function(new:ABC<TT>,TT)} @template TT */",
+             "var MyType2",
+             "/** @type {MyType2<number>}*/",
+             "function Test() {}",
+             "const test=new Test('123')", // could test for warning also
+             "const t=test.abc"));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsTypeofsWithTemplates() {
+    // Functions are not types, but we might want to define them as such in externs via typedefs
+    inFunction(
+        lines(
+             // e.g., externs
+             "/** @return {T} @template T */",
+             "function _genericFunction() {}",
+             "/** @typedef {typeof _genericFunction} */",
+             "var genericFunction",
+
+             // e.g., code
+             "/** @type {genericFunction<number>}*/",
+             "function test() { return '123' }", // could test for return type warning
+             "const t=test(123)"));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
   public void testBackwardsInferenceNew() {
     inFunction(
         "/**\n"
