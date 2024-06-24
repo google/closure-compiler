@@ -926,6 +926,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTypedefWithTemplate() {
+    testSame("/** @const */ var goog;/** @typedef {function(T)} @template T */ goog.test");
+    testSame("/** @typedef {function(T)} @template T */ var test");
+  }
+
+  @Test
   public void testGoodTypedef() {
     testSame("/** @typedef {string} */ var x;");
     testSame("/** @typedef {string} */ let x;");
