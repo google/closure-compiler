@@ -2941,7 +2941,7 @@ public final class TypeInferenceTest {
 
   @Test
   public void testTypedefsWithTemplates() {
-    inFunction(
+    inScript(
         lines(
              "/** @typedef {!ABC<TT>} @template TT */",
              "var MyType",
@@ -2953,7 +2953,7 @@ public final class TypeInferenceTest {
              "var MyType2",
              "/** @type {MyType2<number>}*/",
              "function Test() {}",
-             "const test=new Test('123')", // could test for warning also
+             "const test=new Test('123')",
              "const t=test.abc"));
 
     assertThat(getType("t").toString()).isEqualTo("number");
@@ -2962,7 +2962,7 @@ public final class TypeInferenceTest {
   @Test
   public void testTypedefsTypeofsWithTemplates() {
     // Functions are not types, but we might want to define them as such in externs via typedefs
-    inFunction(
+    inScript(
         lines(
              // e.g., externs
              "/** @return {T} @template T */",
@@ -2972,7 +2972,7 @@ public final class TypeInferenceTest {
 
              // e.g., code
              "/** @type {genericFunction<number>}*/",
-             "function test() { return '123' }", // could test for return type warning
+             "function test() { return '123' }",
              "const t=test(123)"));
 
     assertThat(getType("t").toString()).isEqualTo("number");
