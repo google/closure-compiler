@@ -46,6 +46,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
   private final AbstractCompiler compiler;
   private final ImmutableMap<String, String> tagNameMap;
+  private final boolean propertyRenamingEnabled;
 
   private Node polymerElementExterns;
   private final Set<String> nativeExternsAdded;
@@ -55,10 +56,11 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   private boolean warnedPolymer1ExternsMissing = false;
   private boolean propertySinkExternInjected = false;
 
-  PolymerPass(AbstractCompiler compiler) {
+  PolymerPass(AbstractCompiler compiler, boolean propertyRenamingEnabled) {
     this.compiler = compiler;
     tagNameMap = TagNameToType.getMap();
     nativeExternsAdded = new LinkedHashSet<>();
+    this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
   @Override
@@ -67,6 +69,10 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     NodeTraversal.traverse(compiler, externs, externsCallback);
     polymerElementExterns = externsCallback.getPolymerElementExterns();
     polymerElementProps = externsCallback.getPolymerElementProps();
+
+    if (propertyRenamingEnabled) {
+      compiler.ensureLibraryInjected("util/reflectobject", false);
+    }
 
     globalNames = new GlobalNamespace(compiler, externs, root);
     behaviorExtractor =
@@ -133,7 +139,8 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       if (def.nativeBaseElement != null) {
         appendPolymerElementExterns(def);
       }
-      PolymerClassRewriter rewriter = new PolymerClassRewriter(compiler);
+      PolymerClassRewriter rewriter =
+          new PolymerClassRewriter(compiler, this.propertyRenamingEnabled);
       rewriter.rewritePolymerCall(def, traversal);
     }
   }
@@ -142,7 +149,8 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   private void rewritePolymer2ClassDefinition(Node node, NodeTraversal traversal) {
     PolymerClassDefinition def = PolymerClassDefinition.extractFromClassNode(node, compiler);
     if (def != null) {
-      PolymerClassRewriter rewriter = new PolymerClassRewriter(compiler);
+      PolymerClassRewriter rewriter =
+          new PolymerClassRewriter(compiler, this.propertyRenamingEnabled);
       rewriter.propertySinkExternInjected = propertySinkExternInjected;
       rewriter.rewritePolymerClassDeclaration(node, traversal, def);
       propertySinkExternInjected = rewriter.propertySinkExternInjected;
