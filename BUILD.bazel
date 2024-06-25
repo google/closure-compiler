@@ -147,7 +147,7 @@ java_library(
 java_library(
     name = "compiler_lib",
     resources = [
-        ":polyfills.txt",
+        ":src/java/com/google/javascript/jscomp/js/polyfills.txt",
         ":runtime_libs_srcs",
         ":runtime_libs_typedast",
     ],
@@ -163,7 +163,7 @@ typedast(
 genrule(
     name = "gen_polyfill_table",
     srcs = [":runtime_libs_srcs"],
-    outs = ["polyfills.txt"],
+    outs = ["src/java/com/google/javascript/jscomp/js/polyfills.txt"],
     cmd = "node $(location src/com/google/javascript/jscomp/js/build_polyfill_table.js) $(SRCS) | sed 's,[^ ]*jscomp/js/,,g' > $@",
     tools = [
         "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
