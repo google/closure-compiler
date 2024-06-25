@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,10 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   public static TemplateTypeReplacer forInference(
       JSTypeRegistry registry, TemplateTypeMap bindings) {
     return new TemplateTypeReplacer(registry, bindings, true, true, true);
+  }
+  public static TemplateTypeReplacer forPartialInference(
+      JSTypeRegistry registry, TemplateTypeMap bindings) {
+    return new TemplateTypeReplacer(registry, bindings, true, false, false);
   }
 
   /**
@@ -401,8 +406,21 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   @Override
   public JSType caseNamedType(NamedType type) {
-    // The internals of a named type aren't interesting.
-    return type;
+    if(type.getTemplateTypes().size()==0) return type;
+    var a=new ArrayList<JSType>();
+    boolean hasChanged=false;
+    for(JSType t : type.getTemplateTypes()) {
+      var newT=t.visit(this);
+      if(newT != t) {
+        hasChanged=true;
+      }
+      a.add(newT);
+    }
+    if(!hasChanged) return type;
+
+    return type.toRevisitBuilder()
+        .setTemplateTypes(ImmutableList.copyOf(a))
+        .build();
   }
 
   @Override

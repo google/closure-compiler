@@ -76,8 +76,9 @@ import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -178,7 +179,7 @@ public final class JSTypeRegistry {
   private final JSType[] nativeTypes;
 
   private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
-  private final Map<JSType, Iterable<TemplateType>> templatedTypedefs = new HashMap<>();
+  private final Map<JSType, Iterable<TemplateType>> typedefTemplateKeys = new IdentityHashMap<>();
 
   // Only needed for type resolution at the moment
   private final transient Map<String, ClosureNamespace> closureNamespaces = new LinkedHashMap<>();
@@ -2002,7 +2003,7 @@ public final class JSTypeRegistry {
    * @return If no items were replaced, returns the same type.
    */
   JSType bindTemplates(JSType type, TemplateTypeMap typeMap) {
-    TemplateTypeReplacer replacer = TemplateTypeReplacer.forInference(this, typeMap);
+    TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialInference(this, typeMap);
     var boundType = type.visit(replacer);
     return boundType;
   }
@@ -2100,6 +2101,7 @@ public final class JSTypeRegistry {
           // functions below are built without templates slots.
           // It might be better to pass immediate/(propagated?) template keys to
           // `createTypeFromCommentNode` instead & handle individual cases in this switch.
+          var templates=typedefTemplateKeys.get(nominalType);
           var templates=templatedTypedefs.get(nominalType);
           TemplateTypeMap typeMap = null;
 
@@ -2362,8 +2364,12 @@ public final class JSTypeRegistry {
     }
   }
 
-  public void registerTypedefedTemplates(Iterable<TemplateType> keys, JSType type) {
-    templatedTypedefs.put(type, keys);
+  public void registerTypedefTemplateKeysForType(Iterable<TemplateType> keys, JSType type) {
+    typedefTemplateKeys.put(type, keys);
+  }
+
+  public Iterable<TemplateType> getTypedefTemplateKeysForType(JSType type) {
+    return typedefTemplateKeys.get(type);
   }
 
   /** Returns a new scope that includes the given template names for type resolution purposes. */

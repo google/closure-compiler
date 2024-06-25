@@ -2951,14 +2951,45 @@ public final class TypeInferenceTest {
              "ABC.prototype.abc",
              "/** @typedef {function(new:ABC<TT>,TT)} @template TT */",
              "var MyType2",
-             "/** @type {MyType2<number>}*/",
+             "/** @type {MyType2<number>} */",
              "function Test() {}",
              "const test=new Test('123')",
              "const t=test.abc"));
 
     assertThat(getType("t").toString()).isEqualTo("number");
   }
+  
+  @Test
+  public void testDeepTypedefsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Array<U>|!Object<U,U>} @template U */",
+             "var _BackwardType",
+             "/** @typedef {_BackwardType<S>|ReadonlyArray<S>} @template S */",
+             "var BackwardType",
+             "/** @typedef {BackwardType<T>} @template T */",
+             "var TestType",
+             "var test = /** @type {!TestType<string>} */([])"
+             ));
 
+    assertThat(getType("test").toString()).isEqualTo("(Array<string>|Object<string,string>|ReadonlyArray<string>)");
+  }
+
+  @Test
+  public void testUnionForwardTypedefsWithTemplates1() {
+    inScript(
+        lines(
+             "/** @typedef {!ForwardType<U>} @template U */",
+             "var DeepTestType",
+
+             "/** @typedef {!Object<symbol,S>|ReadonlyArray<string>} @template S */",
+             "var ForwardType",
+             "var deepForwardTest = /** @type {!DeepTestType<string>} */([])"
+           )
+        );
+
+    assertThat(getType("deepForwardTest").toString()).isEqualTo("(Object<symbol,string>|ReadonlyArray<string>)");
+  }
   @Test
   public void testTypedefsTypeofsWithTemplates() {
     // Functions are not types, but we might want to define them as such in externs via typedefs

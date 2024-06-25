@@ -3098,7 +3098,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         report(JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
       } else {
         if(templates!=null) {
-          typeRegistry.registerTypedefedTemplates(templates,realType);
+          typeRegistry.registerTypedefTemplateKeysForType(templates,realType);
         }
         candidate.setTypedefTypeProp(realType);
       }

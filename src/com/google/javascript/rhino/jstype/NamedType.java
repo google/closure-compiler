@@ -255,12 +255,16 @@ public final class NamedType extends ProxyObjectType {
       // there's nothing to look up, so just resolve the referenced type.
       return super.resolveInternal(reporter);
     }
-    checkState(
-        getReferencedType().isUnknownType(),
+    if(!resolutionKind.equals(ResolutionKind.REVISIT)) {
+      checkState(
+          getReferencedType().isUnknownType(),
+          "NamedTypes given a referenced type pre-resolution should have ResolutionKind.NONE");      
         "NamedTypes given a referenced type pre-resolution should have ResolutionKind.NONE");
-
-    if (resolutionScope == null) {
-      return this;
+          "NamedTypes given a referenced type pre-resolution should have ResolutionKind.NONE");      
+      
+      if (resolutionScope == null || isSuccessfullyResolved()) {
+        return this;
+      }
     }
 
     // TODO(user): Investigate whether it is really necessary to keep two
@@ -286,6 +290,19 @@ public final class NamedType extends ProxyObjectType {
         return result;
       }
 
+      if(resolutionKind.equals(ResolutionKind.REVISIT) && !resolvedTypeArgs.isEmpty() && resultAsObject.isTemplatizedType()) {
+        var keys=registry.getTypedefTemplateKeysForType(result);
+        TemplateTypeMap map = null;
+        if(keys!=null) {
+          map = registry.getEmptyTemplateTypeMap().copyWithExtension(ImmutableList.copyOf(keys), resolvedTypeArgs);
+        }
+        if(map!=null) {
+          TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialInference(this.registry, map);
+          var boundType = result.visit(replacer);
+          setReferencedType(boundType.resolve(reporter));
+          return boundType;
+        }
+      }
       if (resolvedTypeArgs.isEmpty() || !resultAsObject.isRawTypeOfTemplatizedType()) {
         // No template parameters need to be resolved.
         return result;
@@ -491,7 +508,8 @@ public final class NamedType extends ProxyObjectType {
   enum ResolutionKind {
     NONE,
     TYPE_NAME,
-    TYPEOF
+    TYPEOF,
+    REVISIT
   }
 
   Builder toBuilder() {
@@ -504,6 +522,16 @@ public final class NamedType extends ProxyObjectType {
         .setReferencedType(getReferencedType())
         .setRestrictByNull(this.restrictByNull);
   }
+
+  Builder toRevisitBuilder() {
+    return new Builder(this.registry, this.reference)
+      .setScope(this.resolutionScope)
+      .setResolutionKind(ResolutionKind.REVISIT)
+      .setErrorReportingLocation(this.sourceName, this.lineno, this.charno)
+      .setTemplateTypes(this.templateTypes)
+      .setReferencedType(getReferencedType())
+      .setRestrictByNull(this.restrictByNull);
+}
 
   static final class Builder {
     private final JSTypeRegistry registry;
