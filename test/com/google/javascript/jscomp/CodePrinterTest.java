@@ -3600,6 +3600,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class f{}");
     assertPrintSame("if(a){class f{}}");
     assertPrintSame("if(a)(class{})");
+
+    assertPrintSame("class P extends(_Component=Component){}");
   }
 
   @Test

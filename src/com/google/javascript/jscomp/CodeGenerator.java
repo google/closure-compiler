@@ -589,7 +589,7 @@ public class CodeGenerator {
           if (!superClass.isEmpty()) {
             add("extends");
 
-            // Parentheses are required for a comma expression
+            // Parentheses are required for a comma expression or an assignment expression.
             addExpr(superClass, 1, Context.OTHER);
           }
 
@@ -1875,6 +1875,9 @@ public class CodeGenerator {
         || isNullishCoalesceChildOfLogicalANDorLogicalOR(n)) {
       // precedence is not enough here since using && or || with ?? without parentheses
       // is a syntax error as ?? expands directly to |
+      return true;
+    } else if (n.isAssign() && n.getParent().isClass()) {
+      // Class declarations with assignments should be wrapped in parentheses.
       return true;
     } else {
       return precedence(n) < minPrecedence;
