@@ -544,13 +544,6 @@ public abstract class JSType {
   public TemplateTypeMap getTemplateTypeMap() {
     return templateTypeMap;
   }
-  /**
-   * Whether generic parameters (even with unknown values) were set up on the
-   * type.
-   */
-  public boolean isGeneric() {
-    return templateTypeMap.size() > 0;
-  }
 
   /**
    * Return, in order, the sequence of type parameters declared for this type.
