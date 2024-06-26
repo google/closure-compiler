@@ -2372,7 +2372,6 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       if (instantiatedType.isTemplatizedType()) {
         instantiatedType = instantiatedType.toMaybeTemplatizedType().getRawType();
       }
-      // TODO: in function(new:C<string>), the "<string>" might get cleared despite being bound already.
       // If necessary, templatized the instance type based on the the constructor parameters.
       ImmutableMap<TemplateType, JSType> inferredTypes =
           new InvocationTemplateTypeMatcher(this.registry, ctorFnType, scope.getTypeOfThis(), n)

@@ -46,7 +46,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
+import com.google.javascript.rhino.jstype.TemplateType;
+
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
@@ -166,9 +169,17 @@ public final class JSTypeExpression implements Serializable {
     return root.getToken() == Token.ITER_REST;
   }
 
-  /** Evaluates the type expression into a {@code JSType} object. */
-  public JSType evaluate(@Nullable StaticTypedScope scope, JSTypeRegistry registry) {
-    JSType type = registry.createTypeFromCommentNode(root, sourceName, scope);
+
+  /** Evaluates the type expression into a {@code JSType} object.
+   * @param templates */
+  public JSType evaluate(StaticTypedScope scope, JSTypeRegistry registry) {
+    return this.evaluate(scope, registry, null);
+  }
+
+  /** Evaluates the type expression into a {@code JSType} object.
+   * @param templates */
+  public JSType evaluate(StaticTypedScope scope, JSTypeRegistry registry, HashMap<String, TemplateType> typedefTemplateTypes) {
+    JSType type = registry.createTypeFromCommentNode(root, sourceName, scope, typedefTemplateTypes);
     root.setJSType(type);
     return type;
   }

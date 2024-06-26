@@ -129,6 +129,25 @@ public final class TemplateTypeMap {
   }
 
   /**
+   * Create a new map in which the incoming values override existing ones in the linear iteration order.
+   *  
+   * <p>If the new value is `null`, the override is skipped.
+   */
+  TemplateTypeMap copyWithOverride(ImmutableList<JSType> values) {
+     ArrayList<JSType> newValues = new ArrayList<>();
+    newValues.addAll(this.templateValues);
+    padToSameLength(this.templateKeys, newValues);
+    for(var i=0; i<values.size(); i++) {
+      var newVal=values.get(i);
+      if(newVal == null) continue;
+      newValues.set(i, newVal);
+    }
+
+    return new TemplateTypeMap(
+        this.registry, this.templateKeys, ImmutableList.copyOf(newValues));
+  }
+
+  /**
    * Create a new map in which the keys and values have been extended by {@code extension}.
    *
    * <p>Before extension, any unfilled values in the initial map will be filled with `?`.

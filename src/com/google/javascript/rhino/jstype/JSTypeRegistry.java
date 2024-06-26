@@ -1964,6 +1964,15 @@ public final class JSTypeRegistry {
     return createTemplatizedType(baseType, ImmutableList.copyOf(templatizedTypes));
   }
 
+  /**
+   * Creates a templatized type that itself can be parameterised, e.g., `@typedef Array<T> @template T`.
+   */
+  public TemplatizedType createTemplatizedType(ObjectType baseType, ImmutableList<JSType> templatizedTypes,
+      HashMap<String, TemplateType> typedefTemplateTypes) {
+    checkNotNull(baseType);
+    return new TemplatizedType(this, baseType, templatizedTypes, typedefTemplateTypes);
+  }
+
   /** Creates a named type. */
   @VisibleForTesting
   public NamedType createNamedType(
@@ -2002,10 +2011,23 @@ public final class JSTypeRegistry {
    * happens when creating types from JSDoc comments (e.g., `@type {Type<string,number>}`) only.
    * @return If no items were replaced, returns the same type.
    */
-  JSType bindTemplates(JSType type, TemplateTypeMap typeMap) {
+  JSType bindTemplatesWithMap(JSType type, TemplateTypeMap typeMap) {
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialInference(this, typeMap);
     var boundType = type.visit(replacer);
     return boundType;
+  }
+
+  /**
+   * Creates a bound type for parameterized templatized types.
+   */
+  public TemplatizedType bindTemplatizedTemplates(TemplatizedType type, ImmutableList<JSType> templateArgs) {
+    var t=type.getOwnTemplateTypes();
+    if(t == null || t.size() == 0) return type;
+
+    TemplateTypeMap bindingTypeMap = this.getEmptyTemplateTypeMap()
+        .copyWithExtension(ImmutableList.copyOf(t.values()), templateArgs);
+
+    return (TemplatizedType) bindTemplatesWithMap(type,bindingTypeMap);
   }
 
   /**
@@ -2015,15 +2037,30 @@ public final class JSTypeRegistry {
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
+
   public JSType createTypeFromCommentNode(
       Node n, String sourceName, @Nullable StaticTypedScope scope) {
+    return this.createTypeFromCommentNode(n,sourceName,scope,null);
+  }
+
+  /**
+   * Creates a JSType from the nodes representing a type.
+   *
+   * @param n The node with type info.
+   * @param sourceName The source file name.
+   * @param scope A scope for doing type name lookups.
+   * @param typedefTemplateTypes If the type is being created from typedef, holds the template types against their keys.
+   */
+  public JSType createTypeFromCommentNode(
+      Node n, String sourceName, @Nullable StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
+    System.out.println(n);
     switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
 
       case BANG: // Not nullable
         {
-          JSType child = createTypeFromCommentNode(n.getFirstChild(), sourceName, scope);
+          JSType child = createTypeFromCommentNode(n.getFirstChild(), sourceName, scope, typedefTemplateTypes);
           if (child instanceof NamedType) {
             return ((NamedType) child).getBangType();
           }
@@ -2035,14 +2072,14 @@ public final class JSTypeRegistry {
         if (firstChild == null) {
           return getNativeType(UNKNOWN_TYPE);
         }
-        return createNullableType(createTypeFromCommentNode(firstChild, sourceName, scope));
+        return createNullableType(createTypeFromCommentNode(firstChild, sourceName, scope,typedefTemplateTypes));
 
       case EQUALS: // Optional
         // TODO(b/117162687): stop automatically converting {string=} to {(string|undefined)]}
-        return createOptionalType(createTypeFromCommentNode(n.getFirstChild(), sourceName, scope));
+        return createOptionalType(createTypeFromCommentNode(n.getFirstChild(), sourceName, scope, typedefTemplateTypes));
 
       case ITER_REST: // Var args
-        return createTypeFromCommentNode(n.getFirstChild(), sourceName, scope);
+        return createTypeFromCommentNode(n.getFirstChild(), sourceName, scope, typedefTemplateTypes);
 
       case STAR: // The AllType
         return getNativeType(ALL_TYPE);
@@ -2093,34 +2130,11 @@ public final class JSTypeRegistry {
         {
           JSType nominalType =
               getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
-          ImmutableList<JSType> templateArgs = null;
-              parseTemplateArgs(nominalType, n, sourceName, scope);
-
-          // Check if the nominal type was defined with a @typedef + @template`s,
-          // as those types might not always have an accurate template type map, e.g.,
-          // functions below are built without templates slots.
-          // It might be better to pass immediate/(propagated?) template keys to
-          // `createTypeFromCommentNode` instead & handle individual cases in this switch.
-          var templates=typedefTemplateKeys.get(nominalType);
-          var templates=templatedTypedefs.get(nominalType);
-          TemplateTypeMap typeMap = null;
-
-          if(templates!=null) {
-            var templateArgsList=extractTemplateArgs(n,sourceName,scope);
-            if(templateArgsList != null) {
-              templateArgs=ImmutableList.copyOf(templateArgsList);
-              typeMap=this
-                  .getEmptyTemplateTypeMap()
-                  .copyWithExtension(ImmutableList.copyOf(templates), templateArgs);
-            }
-          }else {
-            templateArgs=parseTemplateArgs(nominalType, n, sourceName, scope);
-            if(nominalType.canBeTemplated() && templateArgs != null && templateArgs.size() > 0) {
-              typeMap=nominalType
-                  .getTemplateTypeMap()
-                  .copyFilledWithValues(templateArgs);
-            }
+          if(n.toString().startsWith("STRINGLIT ForwardDeepType")) {
+            System.out.println(" + "+n.toString());
           }
+
+          ImmutableList<JSType> templateArgs = parseTemplateArgs(nominalType, n, sourceName, scope);
 
           // Handle forward declared types
           if (nominalType.isNamedType() && !nominalType.isResolved()) {
@@ -2131,8 +2145,23 @@ public final class JSTypeRegistry {
             return addNullabilityBasedOnParseContext(n, nominalType, scope);
           }
 
-          if(!(nominalType instanceof InstanceObjectType) && typeMap != null) {
-            return bindTemplates(nominalType,typeMap);
+          if(templateArgs != null && templateArgs.size() > 0) {
+            if(nominalType instanceof FunctionType) {
+              TemplateTypeMap bindingTypeMap = nominalType
+                  .getTemplateTypeMap()
+                  .copyWithOverride(templateArgs);
+
+              var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
+              b = ((FunctionType) b).toBuilder()
+                  .setTemplateTypeMap(null) // prevents parameterisation of constructors in TypeInference.traverseInstantiation
+                  .setTemplateParamCount(0).build();
+              return addNullabilityBasedOnParseContext(n, b, scope);
+            }
+
+            if(nominalType instanceof TemplatizedType) {
+              var b = bindTemplatizedTemplates((TemplatizedType) nominalType, templateArgs);
+              return addNullabilityBasedOnParseContext(n, b, scope);
+            }
           }
 
           if (!(nominalType instanceof ObjectType) || isNonNullableName(scope, n.getString())) {
@@ -2145,8 +2174,8 @@ public final class JSTypeRegistry {
             return addNullabilityBasedOnParseContext(n, nominalType, scope);
           }
 
-          return addNullabilityBasedOnParseContext(
-              n, createTemplatizedType((ObjectType) nominalType, templateArgs), scope);
+          var templatizedType=createTemplatizedType((ObjectType) nominalType, templateArgs, typedefTemplateTypes);
+          return addNullabilityBasedOnParseContext(n, templatizedType, scope);
         }
 
       case FUNCTION:
@@ -2216,6 +2245,7 @@ public final class JSTypeRegistry {
             .withParameters(paramBuilder.build())
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
+            .withTemplateKeys(typedefTemplateTypes!=null?ImmutableList.copyOf(typedefTemplateTypes.values()):null)
             .withKind(isConstructor ? FunctionType.Kind.CONSTRUCTOR : FunctionType.Kind.ORDINARY)
             .build();
 
@@ -2244,10 +2274,10 @@ public final class JSTypeRegistry {
   }
 
   /**
-   * Finds the binding generic parameters, like MyType<string,number> -> string,number
+   * Finds generic parameters, e.g. MyType<string,number> -> string,number and converts them to template types.
    */
-  private ArrayList<JSType> extractTemplateArgs(Node typeNode,String sourceName, StaticTypedScope scope) {
-    Node typeList = typeNode.getFirstChild();
+  private ArrayList<JSType> extractTemplateArgs(Node typeNode, String sourceName, StaticTypedScope scope) {
+    Node typeList = typeNode.getFirstChild(); // only <GENERICS> block can be a child node of a Type
     if (typeList == null) {
       return null;
     }
@@ -2300,7 +2330,7 @@ public final class JSTypeRegistry {
           firstExtraTemplateParam.getLineno(),
           firstExtraTemplateParam.getCharno());
     }
-    return ImmutableList.copyOf(templateArgs.subList(0, requiredTemplateArgCount));
+    return ImmutableList.copyOf(nominalType.isUnionType() ? templateArgs : templateArgs.subList(0, requiredTemplateArgCount));
   }
 
   /**
@@ -2362,14 +2392,6 @@ public final class JSTypeRegistry {
     for (TemplateType key : keys) {
       scopedNameTable.put(scopeRoot, key.getReferenceName(), key);
     }
-  }
-
-  public void registerTypedefTemplateKeysForType(Iterable<TemplateType> keys, JSType type) {
-    typedefTemplateKeys.put(type, keys);
-  }
-
-  public Iterable<TemplateType> getTypedefTemplateKeysForType(JSType type) {
-    return typedefTemplateKeys.get(type);
   }
 
   /** Returns a new scope that includes the given template names for type resolution purposes. */

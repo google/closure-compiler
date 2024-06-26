@@ -545,9 +545,10 @@ public abstract class JSType {
     return templateTypeMap;
   }
   /**
-   * Whether there are generic params for this type.
+   * Whether generic parameters (even with unknown values) were set up on the
+   * type.
    */
-  public boolean canBeTemplated() {
+  public boolean isGeneric() {
     return templateTypeMap.size() > 0;
   }
 

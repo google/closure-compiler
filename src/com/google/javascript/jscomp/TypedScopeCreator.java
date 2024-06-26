@@ -3077,15 +3077,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       ImmutableMap<String, JSTypeExpression> infoTypeKeys = info.getTemplateTypes();
 
-      List<TemplateType> templates = null;
+      HashMap<String, TemplateType> typedefTemplateTypes=null;
+      
       if(infoTypeKeys.size()>0) {
-        // what about bound templates (see FunctionTypeBuilder.buildTemplateTypesFromJSDocInfo)
-        templates = new ArrayList<>();
+        // what about bound templates (eg. see FunctionTypeBuilder.buildTemplateTypesFromJSDocInfo)
+        typedefTemplateTypes = new HashMap<String, TemplateType>();
         for (String templateKey : infoTypeKeys.keySet()) {
-          templates.add(typeRegistry.createTemplateType(templateKey));
+          var type=typeRegistry.createTemplateType(templateKey);
+          typedefTemplateTypes.put(templateKey,type);
         }
-        templateScope = typeRegistry.createScopeWithTemplates(currentScope, templates);
-        typeRegistry.registerTemplateTypeNamesInScope(templates, candidate);
+        templateScope = typeRegistry.createScopeWithTemplates(currentScope, typedefTemplateTypes.values());
+        typeRegistry.registerTemplateTypeNamesInScope(typedefTemplateTypes.values(), candidate);
       }
 
       // TODO(nicksantos|user): This is a terrible, terrible hack
@@ -3093,13 +3095,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // to handle these properly.
       typeRegistry.declareType(currentScope, typedef, unknownType);
 
-      JSType realType = info.getTypedefType().evaluate(templateScope!=null?templateScope:currentScope, typeRegistry);
+      JSType realType = info.getTypedefType().evaluate(templateScope!=null?templateScope:currentScope, typeRegistry, typedefTemplateTypes);
       if (realType == null) {
         report(JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
       } else {
-        if(templates!=null) {
-          typeRegistry.registerTypedefTemplateKeysForType(templates,realType);
-        }
         candidate.setTypedefTypeProp(realType);
       }
 

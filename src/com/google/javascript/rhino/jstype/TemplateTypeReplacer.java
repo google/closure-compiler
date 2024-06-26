@@ -47,7 +47,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -293,10 +295,39 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       builder.add(afterTemplateType);
     }
 
+    HashMap<String, TemplateType> afterOwnTemplateTypes = replaceOwnTemplateTypes(type);
+    if(afterOwnTemplateTypes == null) afterOwnTemplateTypes = type.getOwnTemplateTypes();
+
     if (changed) {
-      type = registry.createTemplatizedType(afterBaseType, builder.build());
+      type = registry.createTemplatizedType(afterBaseType, builder.build(), afterOwnTemplateTypes);
     }
     return type;
+  }
+
+  /**
+   * Updates the own template types (added with `@typedef` notation in root JSDoc) of templatized types.
+   */
+  private HashMap<String, TemplateType> replaceOwnTemplateTypes(TemplatizedType type) {
+    var ownTemplateTypes = type.getOwnTemplateTypes();
+    if(ownTemplateTypes == null) return null;
+
+    boolean changed = false;
+    HashMap<String, TemplateType> afterOwnTemplateTypes = new HashMap<>();
+
+    for (String ownTemplateTypeKey : ownTemplateTypes.keySet()) {
+      var beforeOwnTemplateType = ownTemplateTypes.get(ownTemplateTypeKey);
+      var afterOwnTemplateType = beforeOwnTemplateType.visit(this);
+      if (!identical(beforeOwnTemplateType, afterOwnTemplateType)) {
+        changed = true;
+      }
+      if(afterOwnTemplateType.toMaybeTemplateType() == null) {
+         afterOwnTemplateType=beforeOwnTemplateType;//registry.createTemplateType("NULL");
+      }
+      afterOwnTemplateTypes.put(ownTemplateTypeKey, (TemplateType) afterOwnTemplateType);
+    }
+
+    if(!changed) return null;
+    return afterOwnTemplateTypes;
   }
 
   @Override
@@ -406,21 +437,14 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   @Override
   public JSType caseNamedType(NamedType type) {
-    if(type.getTemplateTypes().size()==0) return type;
-    var a=new ArrayList<JSType>();
-    boolean hasChanged=false;
-    for(JSType t : type.getTemplateTypes()) {
-      var newT=t.visit(this);
-      if(newT != t) {
-        hasChanged=true;
+    if(type.isResolved()) {
+      var ref=type.getReferencedType();
+      if(ref != null) {
+        return ref.visit(this);
       }
-      a.add(newT);
     }
-    if(!hasChanged) return type;
-
-    return type.toRevisitBuilder()
-        .setTemplateTypes(ImmutableList.copyOf(a))
-        .build();
+    // The internals of a named type aren't interesting.
+    return type;
   }
 
   @Override
