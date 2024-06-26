@@ -298,13 +298,13 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       builder.add(afterTemplateType);
     }
 
-    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes(); 
+    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
     if(afterOwnTemplateTypes != null) {
       var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
       if(replaced != null) {
         afterOwnTemplateTypes = replaced;
         changed = true;
-      }      
+      }
     }
 
     if (changed) {
@@ -327,7 +327,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
         changed = true;
       }
       if(afterOwnTemplateType.toMaybeTemplateType() == null) {
-         afterOwnTemplateType=beforeOwnTemplateType;//registry.createTemplateType("NULL");
+         afterOwnTemplateType=beforeOwnTemplateType;
       }
       afterOwnTemplateTypes.put(ownTemplateTypeKey, (TemplateType) afterOwnTemplateType);
     }
@@ -389,14 +389,14 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       }
       results.add(replacement);
     }
-    
-    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes(); 
+
+    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
     if(afterOwnTemplateTypes != null) {
       var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
       if(replaced != null) {
         afterOwnTemplateTypes = replaced;
         changed = true;
-      }      
+      }
     }
 
     if (changed) {

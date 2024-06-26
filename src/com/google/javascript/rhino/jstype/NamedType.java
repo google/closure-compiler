@@ -255,7 +255,6 @@ public final class NamedType extends ProxyObjectType {
       // there's nothing to look up, so just resolve the referenced type.
       return super.resolveInternal(reporter);
     }
-
     checkState(
         getReferencedType().isUnknownType(),
         "NamedTypes given a referenced type pre-resolution should have ResolutionKind.NONE");
@@ -288,7 +287,7 @@ public final class NamedType extends ProxyObjectType {
             return newResult;
           }
         }
-        
+
         var unionType=result.toMaybeUnionType();
         if(unionType != null) {
           var newResult=registry.bindUnionTemplates(unionType, resolvedTypeArgs);

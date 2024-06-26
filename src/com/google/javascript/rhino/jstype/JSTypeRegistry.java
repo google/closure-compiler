@@ -179,7 +179,6 @@ public final class JSTypeRegistry {
   private final JSType[] nativeTypes;
 
   private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
-  private final Map<JSType, Iterable<TemplateType>> typedefTemplateKeys = new IdentityHashMap<>();
 
   // Only needed for type resolution at the moment
   private final transient Map<String, ClosureNamespace> closureNamespaces = new LinkedHashMap<>();
