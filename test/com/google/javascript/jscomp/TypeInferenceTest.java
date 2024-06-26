@@ -3061,6 +3061,23 @@ public final class TypeInferenceTest {
     assertThat(getType("array").toString()).isEqualTo("(Array<number>|null)");
     assertThat(getType("deep").toString()).isEqualTo("Object<symbol,(Array<number>|null)>");
   }
+  
+  @Test
+  public void testTypedefsRecursiveObjectTypesWithTemplates() {
+    inScript(
+        lines(
+             "/**\n"
+             + " * @constructor\n"
+             + " * @extends {Array<(T|!RecursiveArray<T>)>}\n"
+             + " * @template T\n"
+             + " */\n"
+             + "var RecursiveArray = function() {}",
+
+             "const res=/** @type {RecursiveArray<string>} */ ({})"
+           ));
+
+    assertThat(getType("res").toString()).isEqualTo("(RecursiveArray<string>|null)");
+  }
 
   @Test
   public void testTypedefsForwardObjectTypesWithTemplates() {

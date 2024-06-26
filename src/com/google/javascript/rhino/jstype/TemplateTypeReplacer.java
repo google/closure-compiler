@@ -46,7 +46,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -450,16 +449,18 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return type.isNativeObjectType();
   }
 
+  public JSType caseNamedTypeRefUnguarded(JSType ref) {
+    return ref.visit(this);
+  }
+  
   @Override
   public JSType caseNamedType(NamedType type) {
-    if(type.isResolved()) {
-      var ref=type.getReferencedType();
-      if(ref != null) {
-        return ref.visit(this);
-      }
+    if(!type.isResolved() || type.getReferencedType() == null) {
+      // The internals of a named type aren't interesting.
+      return type;
     }
-    // The internals of a named type aren't interesting.
-    return type;
+    var ref=type.getReferencedType();
+    return guardAgainstCycles(ref, this::caseNamedTypeRefUnguarded);
   }
 
   @Override
