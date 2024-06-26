@@ -288,6 +288,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (JSType beforeTemplateType : type.getTemplateTypes()) {
+      if(beforeTemplateType instanceof NamedType && beforeTemplateType.isResolved()) {
+        beforeTemplateType = ((NamedType) beforeTemplateType).getReferencedType();
+      }
       JSType afterTemplateType = beforeTemplateType.visit(this);
       if (!identical(beforeTemplateType, afterTemplateType)) {
         changed = true;
@@ -295,8 +298,14 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       builder.add(afterTemplateType);
     }
 
-    HashMap<String, TemplateType> afterOwnTemplateTypes = replaceOwnTemplateTypes(type);
-    if(afterOwnTemplateTypes == null) afterOwnTemplateTypes = type.getOwnTemplateTypes();
+    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes(); 
+    if(afterOwnTemplateTypes != null) {
+      var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
+      if(replaced != null) {
+        afterOwnTemplateTypes = replaced;
+        changed = true;
+      }      
+    }
 
     if (changed) {
       type = registry.createTemplatizedType(afterBaseType, builder.build(), afterOwnTemplateTypes);
@@ -305,12 +314,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   /**
-   * Updates the own template types (added with `@typedef` notation in root JSDoc) of templatized types.
+   * Updates the own template types (added with `@typedef` notation in root JSDoc) of templatized/union types.
    */
-  private HashMap<String, TemplateType> replaceOwnTemplateTypes(TemplatizedType type) {
-    var ownTemplateTypes = type.getOwnTemplateTypes();
-    if(ownTemplateTypes == null) return null;
-
+  private HashMap<String, TemplateType> replaceOwnTemplateTypes(HashMap<String, TemplateType> ownTemplateTypes, JSType type) {
     boolean changed = false;
     HashMap<String, TemplateType> afterOwnTemplateTypes = new HashMap<>();
 
@@ -383,9 +389,18 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       }
       results.add(replacement);
     }
+    
+    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes(); 
+    if(afterOwnTemplateTypes != null) {
+      var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
+      if(replaced != null) {
+        afterOwnTemplateTypes = replaced;
+        changed = true;
+      }      
+    }
 
     if (changed) {
-      return registry.createUnionType(results); // maybe not a union
+      return registry.createUnionType(results, afterOwnTemplateTypes); // maybe not a union
     }
 
     return type;

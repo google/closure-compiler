@@ -2960,7 +2960,7 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testDeepUnionTypedefsWithTemplates() {
+  public void testTypedefsDeepUnionWithTemplates() {
     inScript(
         lines(
              "/** @typedef {!Array<U>|!Object<U,U>} @template U */",
@@ -2976,7 +2976,7 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testUnionForwardTypedefsWithTemplates1() {
+  public void testTypedefsDeepUnionForwardWithTemplates() {
     inScript(
         lines(
              "/** @typedef {!ForwardType<U>} @template U */",
@@ -2992,7 +2992,7 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testUnionForwardTypedefsWithTemplates() {
+  public void testTypedefsUnionForwardWithTemplates() {
     inScript(
         lines(
              "var forwardTest = /** @type {!TestType<string>} */([])",
@@ -3021,11 +3021,15 @@ public final class TypeInferenceTest {
 
   @Test
   public void testTypedefsTypeofsWithTemplates() {
-    // Functions are not types, but we might want to define them as such in externs via typedefs
+    // Functions are not types, but we might want to define them as such in externs via typedefs for comments 
     inScript(
         lines(
              // e.g., externs
-             "/** @param {T} @return {T} @template T */",
+             "/**",
+             " * @param {T} The param.",
+             " * @return {T} The updated param.",
+             " * @template T",
+             " */",
              "function _genericFunction() {}",
              "/** @typedef {typeof _genericFunction} */",
              "var genericFunction",
@@ -3046,7 +3050,7 @@ public final class TypeInferenceTest {
              "var ObjectType",
              "const object=/** @type {ObjectType<number>} */ ({})",
 
-             "/** @typedef {!Array<T>} @template T */", // creates |null union
+             "/** @typedef {Array<T>} @template T */", // creates |null union
              "var ArrayType",
              "const array=/** @type {ArrayType<number>} */ ({})",
 
@@ -3054,8 +3058,8 @@ public final class TypeInferenceTest {
            ));
 
     assertThat(getType("object").toString()).isEqualTo("Object<symbol,number>");
-    assertThat(getType("array").toString()).isEqualTo("Array<number>");
-    assertThat(getType("deep").toString()).isEqualTo("Object<symbol,Array<number>>");
+    assertThat(getType("array").toString()).isEqualTo("(Array<number>|null)");
+    assertThat(getType("deep").toString()).isEqualTo("Object<symbol,(Array<number>|null)>");
   }
 
   @Test
@@ -3091,12 +3095,12 @@ public final class TypeInferenceTest {
   public void testTypedefsUnionsWithTemplates() {
     inScript(
         lines(
-             "/** @typedef {T|S} @template T,S */",
+             "/** @typedef {T|!Array<S>} @template T,S */",
              "var Type",
              "const t=/** @type {Type<number,string>} */(void 5)"
            ));
 
-    assertThat(getType("t").toString()).isEqualTo("number|string");
+    assertThat(getType("t").toString()).isEqualTo("(Array<number>|string)");
   }
 
 

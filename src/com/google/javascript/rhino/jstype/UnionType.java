@@ -58,6 +58,7 @@ import com.google.javascript.rhino.Outcome;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -101,6 +102,8 @@ public final class UnionType extends JSType {
    */
   private boolean alternatesResolvedBeforeBuild;
 
+  private HashMap<String, TemplateType> typedefTemplateTypes = null;
+
   /**
    * Creates a union.
    *
@@ -119,6 +122,14 @@ public final class UnionType extends JSType {
     return TYPE_CLASS;
   }
 
+  /**
+   * The template types of the union type itself rather than its alternates.
+   * E.g., in `@typedef {Array<T>|Set<T>} @template T`, `T` is the own template type.
+   */
+  public HashMap<String, TemplateType> getOwnTemplateTypes() {
+    return this.typedefTemplateTypes;
+  }
+
   /** Creates a {@link Builder} for a new {@link UnionType}. */
   public static Builder builder(JSTypeRegistry registry) {
     return new Builder(registry);
@@ -131,7 +142,7 @@ public final class UnionType extends JSType {
    */
   public ImmutableList<JSType> getAlternates() {
     if (!this.isResolved() && !this.alternatesResolvedBeforeBuild) {
-      Builder b = new Builder(this).addAlternates(this.alternates);
+      Builder b = new Builder(this).addAlternates(this.alternates).withTypedefTemplateTypes(typedefTemplateTypes);
       // Double checked rebuilds, in case the union is involved in a cycle.
       if (!this.isResolved() && !this.alternatesResolvedBeforeBuild) {
         b.build();
@@ -145,6 +156,7 @@ public final class UnionType extends JSType {
     checkState(!builder.finalAlternates.isEmpty());
     this.alternates = builder.finalAlternates;
     this.alternatesResolvedBeforeBuild = builder.alternatesResolvedBeforeBuild;
+    this.typedefTemplateTypes = builder.typedefTemplateTypes;
   }
 
   /**
@@ -568,7 +580,7 @@ public final class UnionType extends JSType {
     for (int i = 0; i < this.alternates.size(); i++) {
       this.alternates.get(i).resolve(reporter);
     }
-    return new Builder(this).addAlternates(this.alternates).build();
+    return new Builder(this).addAlternates(this.alternates).withTypedefTemplateTypes(typedefTemplateTypes).build();
   }
 
   @Override
@@ -631,6 +643,7 @@ public final class UnionType extends JSType {
 
     private final List<JSType> alternates = new ArrayList<>();
     private @Nullable ImmutableList<JSType> finalAlternates = null;
+    private HashMap<String, TemplateType> typedefTemplateTypes;
 
     // If a union has ? or *, we do not care about any other types, except for undefined (for
     // optional properties).
@@ -690,6 +703,11 @@ public final class UnionType extends JSType {
       for (int i = 0; i < list.size(); i++) {
         addAlternate(list.get(i));
       }
+      return this;
+    }
+
+    public Builder withTypedefTemplateTypes(HashMap<String, TemplateType> typedefTemplateTypes) {
+      this.typedefTemplateTypes = typedefTemplateTypes;
       return this;
     }
 

@@ -1642,6 +1642,15 @@ public final class JSTypeRegistry {
   }
 
   /**
+   * Creates a type representing nullable values of the given type.
+   *
+   * @return the union of the type and the Null type
+   */
+  public JSType createNullableType(JSType type, HashMap<String, TemplateType> typedefTemplateTypes) {
+    return createUnionType(List.of(type, getNativeType(JSTypeNative.NULL_TYPE)), typedefTemplateTypes);
+  }
+
+  /**
    * Creates a nullable and undefine-able value of the given type.
    *
    * @return The union of the type and null and undefined.
@@ -1658,6 +1667,10 @@ public final class JSTypeRegistry {
 
   public JSType createUnionType(List<? extends JSType> variants) {
     return UnionType.builder(this).addAlternates(variants).build();
+  }
+
+  public JSType createUnionType(List<? extends JSType> variants, HashMap<String, TemplateType> typedefTemplateTypes) {
+    return UnionType.builder(this).addAlternates(variants).withTypedefTemplateTypes(typedefTemplateTypes).build();
   }
 
   /** Creates a union type whose variants are the built-in types specified by the arguments. */
@@ -2022,12 +2035,27 @@ public final class JSTypeRegistry {
    */
   public TemplatizedType bindTemplatizedTemplates(TemplatizedType type, ImmutableList<JSType> templateArgs) {
     var t=type.getOwnTemplateTypes();
+    return (TemplatizedType) this.bindOwnTemplates(t, type, templateArgs);
+  }
+
+  /**
+   * Creates a bound type for parameterized union types.
+   */
+  public UnionType bindUnionTemplates(UnionType type, ImmutableList<JSType> templateArgs) {
+    var t=type.getOwnTemplateTypes();
+    return (UnionType) this.bindOwnTemplates(t, type, templateArgs);
+  }
+
+  /**
+   * Creates a bound type for parameterized types.
+   */
+  public JSType bindOwnTemplates(HashMap<String, TemplateType> t, JSType type, ImmutableList<JSType> templateArgs) {
     if(t == null || t.size() == 0) return type;
 
     TemplateTypeMap bindingTypeMap = this.getEmptyTemplateTypeMap()
         .copyWithExtension(ImmutableList.copyOf(t.values()), templateArgs);
 
-    return (TemplatizedType) bindTemplatesWithMap(type,bindingTypeMap);
+    return bindTemplatesWithMap(type,bindingTypeMap);
   }
 
   /**
@@ -2053,7 +2081,6 @@ public final class JSTypeRegistry {
    */
   public JSType createTypeFromCommentNode(
       Node n, String sourceName, @Nullable StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
-    System.out.println(n);
     switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
@@ -2089,7 +2116,8 @@ public final class JSTypeRegistry {
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           builder.add(createTypeFromCommentNode(child, sourceName, scope));
         }
-        return createUnionType(builder.build());
+        var unionType = createUnionType(builder.build(), typedefTemplateTypes); // all optimisations on union type need to preserve typedefTemplateTypes
+        return unionType;
 
       case EMPTY: // When the return value of a function is not specified
         return getNativeType(UNKNOWN_TYPE);
@@ -2130,9 +2158,6 @@ public final class JSTypeRegistry {
         {
           JSType nominalType =
               getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
-          if(n.toString().startsWith("STRINGLIT ForwardDeepType")) {
-            System.out.println(" + "+n.toString());
-          }
 
           ImmutableList<JSType> templateArgs = parseTemplateArgs(nominalType, n, sourceName, scope);
 
@@ -2142,7 +2167,9 @@ public final class JSTypeRegistry {
               nominalType =
                   nominalType.toMaybeNamedType().toBuilder().setTemplateTypes(templateArgs).build();
             }
-            return addNullabilityBasedOnParseContext(n, nominalType, scope);
+            return addNullabilityBasedOnParseContext(n, nominalType, scope, typedefTemplateTypes);
+          } else if(nominalType.isNamedType()) {
+            nominalType = ((NamedType) nominalType).getReferencedType();
           }
 
           if(templateArgs != null && templateArgs.size() > 0) {
@@ -2155,12 +2182,17 @@ public final class JSTypeRegistry {
               b = ((FunctionType) b).toBuilder()
                   .setTemplateTypeMap(null) // prevents parameterisation of constructors in TypeInference.traverseInstantiation
                   .setTemplateParamCount(0).build();
-              return addNullabilityBasedOnParseContext(n, b, scope);
+              return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
+            }
+
+            if(nominalType instanceof UnionType) {
+              var b = bindUnionTemplates((UnionType) nominalType, templateArgs);
+              return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
             }
 
             if(nominalType instanceof TemplatizedType) {
               var b = bindTemplatizedTemplates((TemplatizedType) nominalType, templateArgs);
-              return addNullabilityBasedOnParseContext(n, b, scope);
+              return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
             }
           }
 
@@ -2171,11 +2203,11 @@ public final class JSTypeRegistry {
           if (templateArgs == null || !nominalType.isRawTypeOfTemplatizedType()) {
             // TODO(nickreid): This case leaves template parameters unbound if users fail to
             // specify any arguments, allowing raw types to leak into programs.
-            return addNullabilityBasedOnParseContext(n, nominalType, scope);
+            return addNullabilityBasedOnParseContext(n, nominalType, scope, typedefTemplateTypes);
           }
 
           var templatizedType=createTemplatizedType((ObjectType) nominalType, templateArgs, typedefTemplateTypes);
-          return addNullabilityBasedOnParseContext(n, templatizedType, scope);
+          return addNullabilityBasedOnParseContext(n, templatizedType, scope, typedefTemplateTypes);
         }
 
       case FUNCTION:
@@ -2254,7 +2286,7 @@ public final class JSTypeRegistry {
     }
   }
 
-  private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope) {
+  private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
     // Other node types may be appropriate in the future.
     checkState(n.isName() || n.isStringLit(), n);
     checkNotNull(type);
@@ -2269,7 +2301,7 @@ public final class JSTypeRegistry {
       // Names parsed from beneath a BANG never need nullability added.
       return type;
     } else {
-      return createNullableType(type);
+      return createNullableType(type, typedefTemplateTypes);
     }
   }
 
