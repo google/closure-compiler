@@ -770,6 +770,71 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     assertThat(source).contains("longUnusedMethod");
   }
 
+  @Test
+  public void testDisambiguationForPolymerElementProperties() throws IOException {
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDependencyOptions(DependencyOptions.none());
+    options.setGeneratePseudoNames(true);
+    options.setDisambiguateProperties(true);
+
+    SourceFile closureBase = code("/** @const */ var goog = {};" + EXPORT_PROPERTY_DEF);
+    SourceFile polymerExterns =
+        extern(
+            new TestExternsBuilder()
+                .addString()
+                .addConsole()
+                .addPolymer()
+                .addExtra("/** @type {!Global} */ var globalThis;")
+                .build());
+    SourceFile fooElement =
+        code(
+            lines(
+                "const FooElement = Polymer({",
+                "  is: \"foo-element\",",
+                "  properties: {",
+                "    longProperty: String,",
+                "  },",
+                "  longUnusedMethod: function() {",
+                "    return this.longProperty;",
+                "  },",
+                "});",
+                "class Other { longProperty() {} }",
+                "console.log(new Other().longProperty());"));
+    precompileLibrary(closureBase); // base library
+    precompileLibrary( // polymer dependency library
+        typeSummary(closureBase), polymerExterns, fooElement);
+    precompileLibrary(
+        typeSummary(polymerExterns),
+        typeSummary(fooElement),
+        code(
+            "function unused() { console.log(FooElement); }",
+            "/** @param {!FooElement} fooElement */",
+            "globalThis['test'] = function(fooElement) {",
+            "  console.log(fooElement.longProperty);",
+            "}"));
+
+    Compiler compiler = compileTypedAstShards(options);
+    assertCompiledCodeEquals(
+        compiler,
+        "",
+        // Verify that the references to 'longProperty' off the FooElement are never renamed or
+        // disambiguated, even when referenced in a differet file, although longProperty on
+        // `class Other {` can be renamed/inlined.
+        lines(
+            "Polymer({",
+            "  $is$: 'foo-element',",
+            "  $properties$: {longProperty: String},",
+            "  longUnusedMethod: function(){return this.longProperty}",
+            "});",
+            "console.log(void 0);"),
+        lines(
+            "globalThis.test = function($fooElement$$) {",
+            "  console.log($fooElement$$.longProperty);",
+            "}"));
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
