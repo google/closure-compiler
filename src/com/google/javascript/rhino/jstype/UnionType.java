@@ -58,7 +58,7 @@ import com.google.javascript.rhino.Outcome;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -126,7 +126,7 @@ public final class UnionType extends JSType {
    * The template types of the union type itself rather than its alternates.
    * E.g., in `@typedef {Array<T>|Set<T>} @template T`, `T` is the own template type.
    */
-  public HashMap<String, TemplateType> getOwnTemplateTypes() {
+  public LinkedHashMap<String, TemplateType> getOwnTemplateTypes() {
     return this.typedefTemplateTypes;
   }
 
@@ -643,7 +643,7 @@ public final class UnionType extends JSType {
 
     private final List<JSType> alternates = new ArrayList<>();
     private @Nullable ImmutableList<JSType> finalAlternates = null;
-    private HashMap<String, TemplateType> typedefTemplateTypes;
+    private LinkedHashMap<String, TemplateType> typedefTemplateTypes;
 
     // If a union has ? or *, we do not care about any other types, except for undefined (for
     // optional properties).
@@ -706,7 +706,7 @@ public final class UnionType extends JSType {
       return this;
     }
 
-    public Builder withTypedefTemplateTypes(HashMap<String, TemplateType> typedefTemplateTypes) {
+    public Builder withTypedefTemplateTypes(LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
       this.typedefTemplateTypes = typedefTemplateTypes;
       return this;
     }

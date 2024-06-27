@@ -45,7 +45,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -60,7 +60,7 @@ public final class TemplatizedType extends ProxyObjectType {
 
   /** A cache of the type parameter values for this specialization. */
   private final ImmutableList<JSType> templateTypes;
-  private HashMap<String, TemplateType> typedefTemplateTypes = null;
+  private LinkedHashMap<String, TemplateType> typedefTemplateTypes = null;
   /** Whether all type parameter values for this specialization are `?`. */
   private final boolean isSpecializedOnlyWithUnknown;
 
@@ -92,7 +92,7 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   public TemplatizedType(JSTypeRegistry jsTypeRegistry, ObjectType baseType, ImmutableList<JSType> templatizedTypes,
-      HashMap<String, TemplateType> typedefTemplateTypes) {
+      LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     this(jsTypeRegistry, baseType, templatizedTypes);
     this.typedefTemplateTypes=typedefTemplateTypes;
   }
@@ -101,7 +101,7 @@ public final class TemplatizedType extends ProxyObjectType {
    * The template types of the templatized type itself rather than its reference object.
    * E.g., in `@typedef {Object<string,T>} @template T`, the `string,T` are the template types and T is the own template type. 
    */
-  public HashMap<String, TemplateType> getOwnTemplateTypes() {
+  public LinkedHashMap<String, TemplateType> getOwnTemplateTypes() {
     return this.typedefTemplateTypes;
   }
 

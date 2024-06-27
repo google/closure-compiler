@@ -2048,7 +2048,7 @@ public final class JSTypeRegistry {
   /**
    * Creates a bound type for parameterized types.
    */
-  public JSType bindOwnTemplates(HashMap<String, TemplateType> t, JSType type, ImmutableList<JSType> templateArgs) {
+  public JSType bindOwnTemplates(LinkedHashMap<String, TemplateType> t, JSType type, ImmutableList<JSType> templateArgs) {
     if(t == null || t.size() == 0) return type;
 
     TemplateTypeMap bindingTypeMap = this.getEmptyTemplateTypeMap()

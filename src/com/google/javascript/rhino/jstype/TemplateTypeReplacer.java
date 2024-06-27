@@ -48,7 +48,7 @@ import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -297,7 +297,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       builder.add(afterTemplateType);
     }
 
-    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
+    LinkedHashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
     if(afterOwnTemplateTypes != null) {
       var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
       if(replaced != null) {
@@ -315,9 +315,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   /**
    * Updates the own template types (added with `@typedef` notation in root JSDoc) of templatized/union types.
    */
-  private HashMap<String, TemplateType> replaceOwnTemplateTypes(HashMap<String, TemplateType> ownTemplateTypes, JSType type) {
+  private LinkedHashMap<String, TemplateType> replaceOwnTemplateTypes(LinkedHashMap<String, TemplateType> ownTemplateTypes, JSType type) {
     boolean changed = false;
-    HashMap<String, TemplateType> afterOwnTemplateTypes = new HashMap<>();
+    LinkedHashMap<String, TemplateType> afterOwnTemplateTypes = new LinkedHashMap<>();
 
     for (String ownTemplateTypeKey : ownTemplateTypes.keySet()) {
       var beforeOwnTemplateType = ownTemplateTypes.get(ownTemplateTypeKey);
@@ -389,7 +389,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       results.add(replacement);
     }
 
-    HashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
+    LinkedHashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
     if(afterOwnTemplateTypes != null) {
       var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
       if(replaced != null) {
@@ -452,7 +452,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   public JSType caseNamedTypeRefUnguarded(JSType ref) {
     return ref.visit(this);
   }
-  
+
   @Override
   public JSType caseNamedType(NamedType type) {
     if(!type.isResolved() || type.getReferencedType() == null) {
