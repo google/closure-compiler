@@ -67,6 +67,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2369,15 +2370,19 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     if (ctorFnType == registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE)) {
       // TODO(b/138617950): Delete this case when `Object` and `Object<?, ?> are sparate.
     } else if (ctorFnType.hasAnyTemplateTypes()) {
-      if (instantiatedType.isTemplatizedType()) {
-        instantiatedType = instantiatedType.toMaybeTemplatizedType().getRawType();
-      }
-      // If necessary, templatized the instance type based on the the constructor parameters.
       ImmutableMap<TemplateType, JSType> inferredTypes =
           new InvocationTemplateTypeMatcher(this.registry, ctorFnType, scope.getTypeOfThis(), n)
-              .match();
-      instantiatedType =
-          registry.createTemplatizedType(instantiatedType, inferredTypes).toMaybeObjectType();
+          .match();
+      if (instantiatedType.isTemplatizedType()) {
+        if(!inferredTypes.isEmpty()) {
+          var map = registry.getEmptyTemplateTypeMap().copyWithExtension(inferredTypes);
+          instantiatedType = (ObjectType) registry.bindTemplatesWithMap(instantiatedType, map);
+        }
+      }else {
+        // If necessary, templatized the instance type based on the the constructor parameters.
+        instantiatedType =
+            registry.createTemplatizedType(instantiatedType, inferredTypes).toMaybeObjectType();
+      }
     }
 
     n.setJSType(instantiatedType != null ? instantiatedType : unknownType);

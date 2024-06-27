@@ -3021,7 +3021,7 @@ public final class TypeInferenceTest {
 
   @Test
   public void testTypedefsTypeofsWithTemplates() {
-    // Functions are not types, but we might want to define them as such in externs via typedefs for comments 
+    // Functions are not types, but we might want to define them as such in externs via typedefs for comments
     inScript(
         lines(
              // e.g., externs
@@ -3061,7 +3061,7 @@ public final class TypeInferenceTest {
     assertThat(getType("array").toString()).isEqualTo("(Array<number>|null)");
     assertThat(getType("deep").toString()).isEqualTo("Object<symbol,(Array<number>|null)>");
   }
-  
+
   @Test
   public void testTypedefsRecursiveObjectTypesWithTemplates() {
     inScript(
@@ -3112,12 +3112,12 @@ public final class TypeInferenceTest {
   public void testTypedefsUnionsWithTemplates() {
     inScript(
         lines(
-             "/** @typedef {T|!Array<S>} @template T,S */",
+             "/** @typedef {N|!Array<S>} @template N,S */",
              "var Type",
              "const t=/** @type {Type<number,string>} */(void 5)"
            ));
 
-    assertThat(getType("t").toString()).isEqualTo("(Array<number>|string)");
+    assertThat(getType("t").toString()).isEqualTo("(Array<string>|number)");
   }
 
 
@@ -3140,7 +3140,7 @@ public final class TypeInferenceTest {
     inScript(
         lines(
              // ALL template keys will be propagated to inner types but that seems to be OK
-             // It's possible to determine keys for each inner type however it's not required  
+             // It's possible to determine keys for each inner type however it's not required
              "/** @typedef {!Array<(function(T):T)|string>} @template T,K */",
              "var TestArray",
              "const[test] = /** @type {TestArray} */([])", // not parameterised
@@ -3148,6 +3148,32 @@ public final class TypeInferenceTest {
            ));
 
     assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsBackwardInferedConstructorsFromParameterizedTypesWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Array<(function(new:ReadonlyArray<T>,T))|string>} @template T,K */",
+             "var TestArray",
+             "const[Test] = /** @type {TestArray<number>} */([])",
+             "const t=new Test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("ReadonlyArray<number>");
+  }
+
+  @Test
+  public void testTypedefsBackwardInferedConstructorsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Array<(function(new:ReadonlyArray<T>,T))|string>} @template T,K */",
+             "var TestArray",
+             "const[Test] = /** @type {TestArray} */([])",
+             "const t=new Test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("ReadonlyArray<number>");
   }
 
   @Test

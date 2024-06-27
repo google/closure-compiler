@@ -49,7 +49,7 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
@@ -178,7 +178,7 @@ public final class JSTypeExpression implements Serializable {
 
   /** Evaluates the type expression into a {@code JSType} object.
    * @param templates */
-  public JSType evaluate(StaticTypedScope scope, JSTypeRegistry registry, HashMap<String, TemplateType> typedefTemplateTypes) {
+  public JSType evaluate(StaticTypedScope scope, JSTypeRegistry registry, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     JSType type = registry.createTypeFromCommentNode(root, sourceName, scope, typedefTemplateTypes);
     root.setJSType(type);
     return type;

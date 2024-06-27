@@ -79,6 +79,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -2023,7 +2024,7 @@ public final class JSTypeRegistry {
    * happens when creating types from JSDoc comments (e.g., `@type {Type<string,number>}`) only.
    * @return If no items were replaced, returns the same type.
    */
-  JSType bindTemplatesWithMap(JSType type, TemplateTypeMap typeMap) {
+  public JSType bindTemplatesWithMap(JSType type, TemplateTypeMap typeMap) {
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialInference(this, typeMap);
     var boundType = type.visit(replacer);
     return boundType;
@@ -2079,7 +2080,7 @@ public final class JSTypeRegistry {
    * @param typedefTemplateTypes If the type is being created from typedef, holds the template types against their keys.
    */
   public JSType createTypeFromCommentNode(
-      Node n, String sourceName, @Nullable StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
+      Node n, String sourceName, @Nullable StaticTypedScope scope, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
@@ -2178,9 +2179,6 @@ public final class JSTypeRegistry {
                   .copyWithOverride(templateArgs);
 
               var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
-              b = ((FunctionType) b).toBuilder()
-                  .setTemplateTypeMap(null) // prevents parameterisation of constructors in TypeInference.traverseInstantiation
-                  .setTemplateParamCount(0).build();
               return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
             }
 
@@ -2306,9 +2304,9 @@ public final class JSTypeRegistry {
 
   /**
    * Finds generic parameters, e.g. MyType<string,number> -> string,number and converts them to template types.
-   * @param typedefTemplateTypes 
+   * @param typedefTemplateTypes
    */
-  private ArrayList<JSType> extractTemplateArgs(Node typeNode, String sourceName, StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
+  private ArrayList<JSType> extractTemplateArgs(Node typeNode, String sourceName, StaticTypedScope scope, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     Node typeList = typeNode.getFirstChild(); // only <GENERICS> block can be a child node of a Type
     if (typeList == null) {
       return null;
@@ -2324,7 +2322,7 @@ public final class JSTypeRegistry {
   }
 
   private @Nullable ImmutableList<JSType> parseTemplateArgs(
-      JSType nominalType, Node typeNode, String sourceName, StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
+      JSType nominalType, Node typeNode, String sourceName, StaticTypedScope scope, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     var templateArgs=extractTemplateArgs(typeNode, sourceName, scope, typedefTemplateTypes);
     if(templateArgs == null) return null;
 

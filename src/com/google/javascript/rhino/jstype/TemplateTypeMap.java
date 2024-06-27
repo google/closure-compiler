@@ -44,7 +44,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -156,6 +159,15 @@ public final class TemplateTypeMap {
     return copyWithExtension(extension.templateKeys, extension.templateValues);
   }
 
+  /**
+   * Create a new map in which the keys and values have been extended by {@code keys} and {@code
+   * values} respectively.
+   *
+   * <p>Before extension, any unfilled values in the initial map will be filled with `?`.
+   */
+  public TemplateTypeMap copyWithExtension(Map<TemplateType, JSType> map) {
+    return copyWithExtension(ImmutableList.copyOf(map.keySet()), ImmutableList.copyOf(map.values()));
+  }
   /**
    * Create a new map in which the keys and values have been extended by {@code keys} and {@code
    * values} respectively.

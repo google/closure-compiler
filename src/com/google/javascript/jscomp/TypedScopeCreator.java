@@ -3077,11 +3077,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       ImmutableMap<String, JSTypeExpression> infoTypeKeys = info.getTemplateTypes();
 
-      HashMap<String, TemplateType> typedefTemplateTypes=null;
-      
+      LinkedHashMap<String, TemplateType> typedefTemplateTypes = null;
+
       if(infoTypeKeys.size()>0) {
         // what about bound templates (eg. see FunctionTypeBuilder.buildTemplateTypesFromJSDocInfo)
-        typedefTemplateTypes = new HashMap<String, TemplateType>();
+        typedefTemplateTypes = new LinkedHashMap<String, TemplateType>();
         for (String templateKey : infoTypeKeys.keySet()) {
           var type=typeRegistry.createTemplateType(templateKey);
           typedefTemplateTypes.put(templateKey,type);
