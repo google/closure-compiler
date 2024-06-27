@@ -2113,7 +2113,7 @@ public final class JSTypeRegistry {
       case PIPE: // Union type
         ImmutableList.Builder<JSType> builder = ImmutableList.builder();
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          builder.add(createTypeFromCommentNode(child, sourceName, scope));
+          builder.add(createTypeFromCommentNode(child, sourceName, scope, typedefTemplateTypes));
         }
         var unionType = createUnionType(builder.build(), typedefTemplateTypes); // all optimisations on union type need to preserve typedefTemplateTypes
         return unionType;
@@ -2158,7 +2158,7 @@ public final class JSTypeRegistry {
           JSType nominalType =
               getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
 
-          ImmutableList<JSType> templateArgs = parseTemplateArgs(nominalType, n, sourceName, scope);
+          ImmutableList<JSType> templateArgs = parseTemplateArgs(nominalType, n, sourceName, scope, typedefTemplateTypes);
 
           // Handle forward declared types
           if (nominalType.isNamedType() && !nominalType.isResolved()) {
@@ -2216,7 +2216,7 @@ public final class JSTypeRegistry {
         if (current.isThis() || current.isNew()) {
           Node contextNode = current.getFirstChild();
 
-          JSType candidateThisType = createTypeFromCommentNode(contextNode, sourceName, scope);
+          JSType candidateThisType = createTypeFromCommentNode(contextNode, sourceName, scope, typedefTemplateTypes);
 
           // Allow null/undefined 'this' types to indicate that
           // the function is not called in a deliberate context,
@@ -2249,10 +2249,10 @@ public final class JSTypeRegistry {
                 paramBuilder.addVarArgs(getNativeType(UNKNOWN_TYPE));
               } else {
                 paramBuilder.addVarArgs(
-                    createTypeFromCommentNode(arg.getFirstChild(), sourceName, scope));
+                    createTypeFromCommentNode(arg.getFirstChild(), sourceName, scope, typedefTemplateTypes));
               }
             } else {
-              JSType type = createTypeFromCommentNode(arg, sourceName, scope);
+              JSType type = createTypeFromCommentNode(arg, sourceName, scope, typedefTemplateTypes);
               if (arg.getToken() == Token.EQUALS) {
                 boolean addSuccess = paramBuilder.addOptionalParams(type);
                 if (!addSuccess) {
@@ -2270,7 +2270,7 @@ public final class JSTypeRegistry {
           current = current.getNext();
         }
 
-        JSType returnType = createTypeFromCommentNode(current, sourceName, scope);
+        JSType returnType = createTypeFromCommentNode(current, sourceName, scope, typedefTemplateTypes);
 
         return FunctionType.builder(this)
             .withParameters(paramBuilder.build())
@@ -2306,8 +2306,9 @@ public final class JSTypeRegistry {
 
   /**
    * Finds generic parameters, e.g. MyType<string,number> -> string,number and converts them to template types.
+   * @param typedefTemplateTypes 
    */
-  private ArrayList<JSType> extractTemplateArgs(Node typeNode, String sourceName, StaticTypedScope scope) {
+  private ArrayList<JSType> extractTemplateArgs(Node typeNode, String sourceName, StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
     Node typeList = typeNode.getFirstChild(); // only <GENERICS> block can be a child node of a Type
     if (typeList == null) {
       return null;
@@ -2317,14 +2318,14 @@ public final class JSTypeRegistry {
     for (Node templateNode = typeList.getFirstChild();
         templateNode != null;
         templateNode = templateNode.getNext()) {
-      templateArgs.add(createTypeFromCommentNode(templateNode, sourceName, scope));
+      templateArgs.add(createTypeFromCommentNode(templateNode, sourceName, scope, typedefTemplateTypes));
     }
     return templateArgs;
   }
 
   private @Nullable ImmutableList<JSType> parseTemplateArgs(
-      JSType nominalType, Node typeNode, String sourceName, StaticTypedScope scope) {
-    var templateArgs=extractTemplateArgs(typeNode, sourceName, scope);
+      JSType nominalType, Node typeNode, String sourceName, StaticTypedScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
+    var templateArgs=extractTemplateArgs(typeNode, sourceName, scope, typedefTemplateTypes);
     if(templateArgs == null) return null;
 
     // TODO(b/138617950): Eliminate the special case for `Object`.

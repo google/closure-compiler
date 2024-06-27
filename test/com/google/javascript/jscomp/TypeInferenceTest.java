@@ -3136,6 +3136,21 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testTypedefsBackwardInferedFunctionsWithTemplates() {
+    inScript(
+        lines(
+             // ALL template keys will be propagated to inner types but that seems to be OK
+             // It's possible to determine keys for each inner type however it's not required  
+             "/** @typedef {!Array<(function(T):T)|string>} @template T,K */",
+             "var TestArray",
+             "const[test] = /** @type {TestArray} */([])", // not parameterised
+             "const t=test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
   public void testTypedefsConstructorFunctionsWithTemplates() {
     inScript(
         lines(

@@ -19495,6 +19495,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {!Schema} */ var k;")
         .run();
   }
+  
+  @Test
+  @Disabled // Printing warnings for recursive types need addressing
+  public void testCheckObjectKeyRecursiveTypeDoesNotStackOverflowOnWarning() {
+    newTest()
+        .addSource(
+            "/** @typedef {!Object<string, !Predicate>} */ var Schema;\n"
+                + "/** @typedef {function(*): boolean|!Schema} */ var Predicate;\n"
+                + "/** @type {!Schema} */ var k; k = 123")
+        .run();
+  }
 
   @Test
   public void testDontOverrideNativeScalarTypes() {
