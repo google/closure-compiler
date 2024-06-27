@@ -5223,6 +5223,73 @@ public class PolymerPassTest extends CompilerTestCase {
         PolymerClassRewriter.POLYMER_ELEMENT_CONFLICT);
   }
 
+  @Test
+  public void testBrokenPolyerObjectPropertiesAccessedBeforeDefinition() {
+    // This is broken code, PolymerPass generates code where it is accessing
+    // `PtTestComponentElement.prototype` before the definition of `PtTestComponentElement`
+    test(
+        srcs(
+            TestExternsBuilder.getClosureExternsAsSource(),
+            lines(
+                "/** @polymerBehavior */", //
+                "var PtGaUXBehavior = {",
+                " _abc: function() { ",
+                "    if (true) {}",
+                " }",
+                "}",
+                "function func() {",
+                " if (true) {",
+                "   Polymer({",
+                "     is: 'pt-test-component',",
+                "     behaviors: [PtGaUXBehavior],",
+                "     properties: {disabled: Boolean}",
+                "   });",
+                " }",
+                "}")),
+        expected(
+            TestExternsBuilder.getClosureExternsAsSource(),
+            lines(
+                "/** @type {boolean} */ ",
+                "PtTestComponentElement.prototype.disabled;",
+                "/**",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "PtTestComponentElement.prototype._abc = function() {",
+                "  if (true) {",
+                "  }",
+                "};",
+                "/**",
+                " * @constructor",
+                " * @extends {PolymerElement}",
+                " * @implements {PolymerPtTestComponentElementInterface$m1176578414$0}",
+                " */",
+                // `var PtTestComponentElement = ...` should be placed before the
+                // `PtTestComponentElement.prototype.<...>` calls above
+                "var PtTestComponentElement = function() {",
+                "};",
+                "/**",
+                " * @polymerBehavior",
+                " * @nocollapse",
+                " * @polymerBehavior",
+                " */",
+                "var PtGaUXBehavior = {/**",
+                " * @suppress {checkTypes,globalThis,visibility}",
+                " */",
+                "_abc:function() {",
+                "  if (true) {",
+                "  }",
+                "}};",
+                "function func() {",
+                "  if (true) {",
+                "    Polymer(/** @lends {PtTestComponentElement.prototype} */ ",
+                "    {is:\"pt-test-component\", behaviors:[PtGaUXBehavior], "
+                    + "properties:{disabled:Boolean}});",
+                "    /** @export */",
+                "    PtTestComponentElement.prototype._abc;",
+                "  }",
+                "}")));
+  }
+
   @Override
   public void test(String js, String expected) {
     this.test(srcs(js), expected(expected));
