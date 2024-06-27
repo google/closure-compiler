@@ -76,7 +76,6 @@ import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -1646,7 +1645,7 @@ public final class JSTypeRegistry {
    *
    * @return the union of the type and the Null type
    */
-  public JSType createNullableType(JSType type, HashMap<String, TemplateType> typedefTemplateTypes) {
+  public JSType createNullableType(JSType type, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     return createUnionType(List.of(type, getNativeType(JSTypeNative.NULL_TYPE)), typedefTemplateTypes);
   }
 
@@ -1669,7 +1668,7 @@ public final class JSTypeRegistry {
     return UnionType.builder(this).addAlternates(variants).build();
   }
 
-  public JSType createUnionType(List<? extends JSType> variants, HashMap<String, TemplateType> typedefTemplateTypes) {
+  public JSType createUnionType(List<? extends JSType> variants, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     return UnionType.builder(this).addAlternates(variants).withTypedefTemplateTypes(typedefTemplateTypes).build();
   }
 
@@ -1981,7 +1980,7 @@ public final class JSTypeRegistry {
    * Creates a templatized type that itself can be parameterised, e.g., `@typedef Array<T> @template T`.
    */
   public TemplatizedType createTemplatizedType(ObjectType baseType, ImmutableList<JSType> templatizedTypes,
-      HashMap<String, TemplateType> typedefTemplateTypes) {
+      LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     checkNotNull(baseType);
     return new TemplatizedType(this, baseType, templatizedTypes, typedefTemplateTypes);
   }
@@ -2283,7 +2282,7 @@ public final class JSTypeRegistry {
     }
   }
 
-  private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope, HashMap<String, TemplateType> typedefTemplateTypes) {
+  private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     // Other node types may be appropriate in the future.
     checkState(n.isName() || n.isStringLit(), n);
     checkNotNull(type);
