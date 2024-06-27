@@ -5224,9 +5224,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testBrokenPolyerObjectPropertiesAccessedBeforeDefinition() {
-    // This is broken code, PolymerPass generates code where it is accessing
-    // `PtTestComponentElement.prototype` before the definition of `PtTestComponentElement`
+  public void testPolyerObjectPropertiesAccessedBeforeDefinition() {
     test(
         srcs(
             TestExternsBuilder.getClosureExternsAsSource(),
@@ -5249,22 +5247,14 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             TestExternsBuilder.getClosureExternsAsSource(),
             lines(
-                "/** @type {boolean} */ ",
-                "PtTestComponentElement.prototype.disabled;",
-                "/**",
-                " * @suppress {unusedPrivateMembers}",
-                " */",
-                "PtTestComponentElement.prototype._abc = function() {",
-                "  if (true) {",
-                "  }",
-                "};",
                 "/**",
                 " * @constructor",
                 " * @extends {PolymerElement}",
                 " * @implements {PolymerPtTestComponentElementInterface$m1176578414$0}",
                 " */",
-                // `var PtTestComponentElement = ...` should be placed before the
-                // `PtTestComponentElement.prototype.<...>` calls above
+                // This `var PtTestComponentElement = ...` is placed before any
+                // `PtTestComponentElement.prototype.<...>` calls. We don't want to access
+                // properties on `PtTestComponentElement` before it is defined.
                 "var PtTestComponentElement = function() {",
                 "};",
                 "/**",
@@ -5287,7 +5277,16 @@ public class PolymerPassTest extends CompilerTestCase {
                 "    /** @export */",
                 "    PtTestComponentElement.prototype._abc;",
                 "  }",
-                "}")));
+                "}",
+                "/** @type {boolean} */ ",
+                "PtTestComponentElement.prototype.disabled;",
+                "/**",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "PtTestComponentElement.prototype._abc = function() {",
+                "  if (true) {",
+                "  }",
+                "};")));
   }
 
   @Override

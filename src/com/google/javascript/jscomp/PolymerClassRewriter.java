@@ -177,7 +177,10 @@ final class PolymerClassRewriter {
         }
         break;
       case SCRIPT:
-        enclosingNode.addChildrenToFront(statements);
+        // If children are added to front, it will cause runtime error in the code because Polymer's
+        // properties will be accessed before the Polymer object is defined. The Polymer object gets
+        // defined in `insertGeneratedDeclarationCodeToGlobalScope`.
+        enclosingNode.addChildrenToBack(statements);
         compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
         break;
       case CALL:
