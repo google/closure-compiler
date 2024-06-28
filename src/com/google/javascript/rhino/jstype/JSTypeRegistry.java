@@ -2018,6 +2018,38 @@ public final class JSTypeRegistry {
     return createTypeFromCommentNode(n, "[internal]", null);
   }
 
+  public JSType maybeBindTemplates(JSType nominalType, ImmutableList<JSType> templateArgs) {
+    if(nominalType instanceof RecordType) {
+      TemplateTypeMap bindingTypeMap = nominalType
+          .getTemplateTypeMap()
+          .copyWithOverride(templateArgs);
+
+      var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
+      return b;
+    }
+
+    if(nominalType instanceof FunctionType) {
+      TemplateTypeMap bindingTypeMap = nominalType
+          .getTemplateTypeMap()
+          .copyWithOverride(templateArgs);
+
+      var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
+      return b;
+    }
+
+    if(nominalType instanceof UnionType) {
+      var b = bindUnionTemplates((UnionType) nominalType, templateArgs);
+      return b;
+    }
+
+    if(nominalType instanceof TemplatizedType) {
+      var b = bindTemplatizedTemplates((TemplatizedType) nominalType, templateArgs);
+      return b;
+    }
+
+    return null;
+  }
+
   /**
    * Produces a new type where all templates' keys were replaced with values from the map. This
    * happens when creating types from JSDoc comments (e.g., `@type {Type<string,number>}`) only.
@@ -2172,31 +2204,9 @@ public final class JSTypeRegistry {
           }
 
           if(templateArgs != null && templateArgs.size() > 0) {
-            if(nominalType instanceof RecordType) {
-              TemplateTypeMap bindingTypeMap = nominalType
-                  .getTemplateTypeMap()
-                  .copyWithOverride(templateArgs);
-
-              var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
-              return b;
-            }
-            if(nominalType instanceof FunctionType) {
-              TemplateTypeMap bindingTypeMap = nominalType
-                  .getTemplateTypeMap()
-                  .copyWithOverride(templateArgs);
-
-              var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
-              return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
-            }
-
-            if(nominalType instanceof UnionType) {
-              var b = bindUnionTemplates((UnionType) nominalType, templateArgs);
-              return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
-            }
-
-            if(nominalType instanceof TemplatizedType) {
-              var b = bindTemplatizedTemplates((TemplatizedType) nominalType, templateArgs);
-              return addNullabilityBasedOnParseContext(n, b, scope, typedefTemplateTypes);
+            var b = maybeBindTemplates(nominalType, templateArgs);
+            if(b != null) {
+              return addNullabilityBasedOnParseContext(n, (JSType) b, scope, typedefTemplateTypes);
             }
           }
 

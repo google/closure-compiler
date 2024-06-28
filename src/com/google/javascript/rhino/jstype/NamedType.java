@@ -278,23 +278,11 @@ public final class NamedType extends ProxyObjectType {
     if (isSuccessfullyResolved()) {
       this.resolutionScope = null;
 
-      if(resolvedTypeArgs.size() > 0) {
-        var templatizedType=result.toMaybeTemplatizedType();
-        if(templatizedType != null) {
-          var newResult=registry.bindTemplatizedTemplates(templatizedType, resolvedTypeArgs);
-          if(result != newResult) {
-            setReferencedType(newResult.resolve(reporter));
-            return newResult;
-          }
-        }
-
-        var unionType=result.toMaybeUnionType();
-        if(unionType != null) {
-          var newResult=registry.bindUnionTemplates(unionType, resolvedTypeArgs);
-          if(result != newResult) {
-            setReferencedType(newResult.resolve(reporter));
-            return newResult;
-          }
+      if(!resolvedTypeArgs.isEmpty()) {
+        var b = registry.maybeBindTemplates(result, resolvedTypeArgs);
+        if(b != null) {
+          setReferencedType(b.resolve(reporter));
+          return b;
         }
       }
 
