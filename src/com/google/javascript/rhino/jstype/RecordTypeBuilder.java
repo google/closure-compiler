@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
@@ -52,6 +53,8 @@ public final class RecordTypeBuilder {
   private boolean isDeclared = true;
   private final JSTypeRegistry registry;
   private final LinkedHashMap<String, RecordProperty> properties = new LinkedHashMap<>();
+  private TemplateTypeMap templateTypeMap;
+  private int templateParamCount;
 
   public RecordTypeBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -89,7 +92,10 @@ public final class RecordTypeBuilder {
     }
     ImmutableSortedMap.Builder<String, RecordProperty> m = ImmutableSortedMap.naturalOrder();
     m.putAll(this.properties);
-    return new RecordType(registry, m.buildOrThrow(), isDeclared);
+    var builder = PrototypeObjectType.builder(registry)
+        .setTemplateTypeMap(templateTypeMap)
+        .setTemplateParamCount(templateParamCount);
+    return new RecordType(registry, m.buildOrThrow(), isDeclared, builder);
   }
 
   static class RecordProperty {
@@ -113,5 +119,19 @@ public final class RecordTypeBuilder {
     public String toString() {
       return "RecordProperty{type: " + this.type + ", node: " + this.propertyNode + "}";
     }
+  }
+
+  /** Set the template name. */
+  public RecordTypeBuilder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
+    if (templateKeys == null) {
+      templateKeys = ImmutableList.of();
+    }
+
+    templateTypeMap = registry
+      .getEmptyTemplateTypeMap()
+      .copyWithExtension(templateKeys, ImmutableList.of());
+
+    templateParamCount = templateKeys.size();
+    return this;
   }
 }

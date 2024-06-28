@@ -2049,7 +2049,7 @@ public final class JSTypeRegistry {
    * Creates a bound type for parameterized types.
    */
   public JSType bindOwnTemplates(LinkedHashMap<String, TemplateType> t, JSType type, ImmutableList<JSType> templateArgs) {
-    if(t == null || t.size() == 0) return type;
+    if(t == null || t.isEmpty()) return type;
 
     TemplateTypeMap bindingTypeMap = this.getEmptyTemplateTypeMap()
         .copyWithExtension(ImmutableList.copyOf(t.values()), templateArgs);
@@ -2082,7 +2082,7 @@ public final class JSTypeRegistry {
       Node n, String sourceName, @Nullable StaticTypedScope scope, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     switch (n.getToken()) {
       case LC: // Record type.
-        return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
+        return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope, typedefTemplateTypes);
 
       case BANG: // Not nullable
         {
@@ -2172,6 +2172,14 @@ public final class JSTypeRegistry {
           }
 
           if(templateArgs != null && templateArgs.size() > 0) {
+            if(nominalType instanceof RecordType) {
+              TemplateTypeMap bindingTypeMap = nominalType
+                  .getTemplateTypeMap()
+                  .copyWithOverride(templateArgs);
+
+              var b = bindTemplatesWithMap(nominalType, bindingTypeMap);
+              return b;
+            }
             if(nominalType instanceof FunctionType) {
               TemplateTypeMap bindingTypeMap = nominalType
                   .getTemplateTypeMap()
@@ -2368,9 +2376,9 @@ public final class JSTypeRegistry {
    * @param n The node with type info.
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
+   * @param typedefTemplateTypes Any template types from `@typedef` definition.
    */
-  private JSType createRecordTypeFromNodes(Node n, String sourceName, StaticTypedScope scope) {
-
+  private JSType createRecordTypeFromNodes(Node n, String sourceName, StaticTypedScope scope, LinkedHashMap<String, TemplateType> typedefTemplateTypes) {
     RecordTypeBuilder builder = new RecordTypeBuilder(this);
 
     // For each of the fields in the record type.
@@ -2401,7 +2409,7 @@ public final class JSTypeRegistry {
 
       if (hasType) {
         // We have a declared type.
-        fieldType = createTypeFromCommentNode(fieldTypeNode.getLastChild(), sourceName, scope);
+        fieldType = createTypeFromCommentNode(fieldTypeNode.getLastChild(), sourceName, scope, typedefTemplateTypes);
       } else {
         // Otherwise, the type is UNKNOWN.
         fieldType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
@@ -2409,6 +2417,8 @@ public final class JSTypeRegistry {
 
       builder.addProperty(fieldName, fieldType, fieldNameNode);
     }
+
+    builder.withTemplateKeys(typedefTemplateTypes != null ? ImmutableList.copyOf(typedefTemplateTypes.values()) : null);
 
     return builder.build();
   }

@@ -3120,7 +3120,57 @@ public final class TypeInferenceTest {
     assertThat(getType("t").toString()).isEqualTo("(Array<string>|number)");
   }
 
+  @Test
+  public void testTypedefsRecordsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {{f:function():{r:T}}} @template T */",
+             "var Record",
+             "var record = /** @type {Record<number>} */ ({})",
+             "const t=record.f().r"
+           ));
 
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsInferedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {{f:function(T):{r:T}}} @template T */",
+             "var Record",
+             "var record = /** @type {Record} */ ({})",
+             "const t=record.f(123).r"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsForwardRecordsWithTemplates() {
+    inScript(
+        lines(
+             "var record = /** @type {Record<number>} */ ({})",
+             "const t=record.f().r",
+             "/** @typedef {{f:function():{r:T}}} @template T */",
+             "var Record"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsForwardInferedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "var record = /** @type {Record} */ ({})",
+             "const t=record.f(123).r",
+             "/** @typedef {{f:function(T):{r:T}}} @template T */",
+             "var Record"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
   @Test
   public void testTypedefsFunctionsWithTemplates() {
     inScript(
