@@ -44,7 +44,6 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
-
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -96,10 +95,10 @@ public final class TemplatizedType extends ProxyObjectType {
     this(jsTypeRegistry, baseType, templatizedTypes);
     this.typedefTemplateTypes=typedefTemplateTypes;
   }
-  
+
   /**
    * The template types of the templatized type itself rather than its reference object.
-   * E.g., in `@typedef {Object<string,T>} @template T`, the `string,T` are the template types and T is the own template type. 
+   * E.g., in `@typedef {Object<string,T>} @template T`, the `string,T` are the template types and T is the own template type.
    */
   public LinkedHashMap<String, TemplateType> getOwnTemplateTypes() {
     return this.typedefTemplateTypes;
