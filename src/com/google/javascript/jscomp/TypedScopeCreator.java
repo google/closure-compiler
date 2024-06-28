@@ -3073,14 +3073,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /** Declares a typedef'd name in the {@link JSTypeRegistry}. */
     void declareTypedefType(Node candidate, JSDocInfo info) {
       String typedef = candidate.getQualifiedName();
-      StaticTypedScope templateScope=null;
+      StaticTypedScope templateScope = null;
 
       ImmutableMap<String, JSTypeExpression> infoTypeKeys = info.getTemplateTypes();
 
       LinkedHashMap<String, TemplateType> typedefTemplateTypes = null;
 
-      if(infoTypeKeys.size()>0) {
-        // what about bound templates (eg. see FunctionTypeBuilder.buildTemplateTypesFromJSDocInfo)
+      if(!infoTypeKeys.isEmpty()) {
         typedefTemplateTypes = new LinkedHashMap<String, TemplateType>();
         for (String templateKey : infoTypeKeys.keySet()) {
           var type=typeRegistry.createTemplateType(templateKey);
