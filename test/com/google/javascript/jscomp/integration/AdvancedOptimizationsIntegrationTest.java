@@ -413,7 +413,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  var $$jscomp$forAwait$retFn0$$;",
             "  try {",
             "    for (var $$jscomp$forAwait$tempIterator0$$ ="
-                + " $jscomp.makeAsyncIterator(asyncIterator);;) {",
+                + " (0, $jscomp.makeAsyncIterator)(asyncIterator);;) {",
             "      var $$jscomp$forAwait$tempResult0$$ = await"
                 + " $$jscomp$forAwait$tempIterator0$$.next();",
             "      if ($$jscomp$forAwait$tempResult0$$.done) {",
@@ -2375,6 +2375,40 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "({$aa$: $ac$$.$acc$} = a);",
             "",
             "alert($ac$$.$acc$);"));
+  }
+
+  @Test
+  public void testArrayDestructuringAndAwait_inlineAndCollapseProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addPromise()
+                .addExtra("var window; function bar() {}")
+                .buildExternsFile("externs.js"));
+
+    // Test that the compiler can optimize out most of this code and that
+    // InlineAndCollapseProperties does not report
+    // "JSC_PARTIAL_NAMESPACE. Partial alias created for namespace $jscomp"
+    test(
+        options,
+        lines(
+            "window['Foo'] = class Foo {",
+            "async method() {",
+            "          const [resultA, resultB] = await Promise.all([",
+            "            bar(),",
+            "            bar(),",
+            "          ]);",
+            "  }",
+            "",
+            "}"),
+        lines("window.Foo = function() {};"));
   }
 
   @Test

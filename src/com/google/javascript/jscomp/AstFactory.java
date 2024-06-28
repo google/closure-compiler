@@ -1357,7 +1357,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIteratorName, type, iterable);
+    Node call = createCall(makeIteratorName, type, iterable);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   Node createJscompArrayFromIteratorCall(Node iterator, StaticScope scope) {
@@ -1392,7 +1394,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIteratorName, resultType, iterator);
+    Node call = createCall(makeIteratorName, resultType, iterator);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   Node createJscompArrayFromIterableCall(Node iterable, StaticScope scope) {
@@ -1429,7 +1433,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIterableName, resultType, iterable);
+    Node call = createCall(makeIterableName, resultType, iterable);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   /**
@@ -1474,7 +1480,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIteratorAsyncName, resultType, iterable);
+    Node call = createCall(makeIteratorAsyncName, resultType, iterable);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   private JSType replaceTemplate(JSType templatedType, ImmutableList<JSType> templateTypes) {
@@ -1542,7 +1550,10 @@ final class AstFactory {
     } else if (isAddingColors()) {
       resultType = type(colorRegistry.get(StandardColors.PROMISE_ID));
     }
-    return createCall(jscompDotAsyncExecutePromiseGeneratorFunction, resultType, generatorFunction);
+    Node call =
+        createCall(jscompDotAsyncExecutePromiseGeneratorFunction, resultType, generatorFunction);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   private JSType getNativeType(JSTypeNative nativeType) {

@@ -2820,7 +2820,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines(
             "class Foo {",
             "  bar() {",
-            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {",
             "      console.log(\"bar\");",
             "    });",
             "  }",
@@ -2830,7 +2830,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    const $jscomp$async$this$98447280$3 = this, $jscomp$async$super$get$98447280$5$bar"
                 + " =",
             "        () => super.bar;",
-            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {",
             "      yield Promise.resolve();",
             "      $jscomp$async$super$get$98447280$5$bar().call($jscomp$async$this$98447280$3);",
             "    });",
@@ -3815,7 +3815,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function foo() {",
             "  var JSCompiler_temp_const;",
             "  var JSCompiler_temp_const$jscomp$0;",
-            "  return $jscomp.asyncExecutePromiseGeneratorProgram(",
+            "  return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
             "      function ($jscomp$generator$context$98447280$5) {",
             "        if ($jscomp$generator$context$98447280$5.nextAddress == 1) {",
             "          JSCompiler_temp_const = A;",
@@ -3925,7 +3925,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "async function abc() {",
             "  var $jscomp$forAwait$retFn0;",
             "  try {",
-            "    for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    for (var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());;)"
+                + " {",
             "      var $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "      if ($jscomp$forAwait$tempResult0.done) {",
             "        break;",

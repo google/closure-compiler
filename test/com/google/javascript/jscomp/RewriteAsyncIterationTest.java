@@ -103,7 +103,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  var $jscomp$forAwait$tempResult0;",
             "  var $jscomp$forAwait$retFn0;",
             "  try {",
-            "var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(source());",
+            "var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(source());",
             "    for (;;)" + " {",
             "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "      if ($jscomp$forAwait$tempResult0.done) {",
@@ -159,7 +159,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
                 "  var $jscomp$forAwait$retFn0;",
                 "  try {",
                 "var $jscomp$forAwait$tempIterator0 ="
-                    + " $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);",
+                    + " (0, $jscomp.makeAsyncIterator)(window[\"unknownAsyncIterable\"]);",
                 "    for (;;) {",
                 "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
                 "      if ($jscomp$forAwait$tempResult0.done) {",
@@ -204,7 +204,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
                 "  var $jscomp$forAwait$retFn0;",
                 "  try {",
                 "var $jscomp$forAwait$tempIterator0 ="
-                    + " $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);",
+                    + " (0, $jscomp.makeAsyncIterator)(window[\"unknownAsyncIterable\"]);",
                 "    for (;;) {",
                 "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
                 "      if ($jscomp$forAwait$tempResult0.done) {",
@@ -623,7 +623,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  var $jscomp$forAwait$tempResult0;",
             "  var $jscomp$forAwait$retFn0;",
             "  try {",
-            "    var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());",
+            "    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
             "    for (;;) {",
             "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "      if ($jscomp$forAwait$tempResult0.done) {",
@@ -667,7 +667,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             .getFirstFirstChild() // var
             .getFirstChild(); // name
     assertNode(tempIterator0).hasToken(Token.NAME);
-    // Find $jscomp.makeAsyncIterator(foo())
+    // Find (0, $jscomp.makeAsyncIterator)(foo())
     Node makeAsyncIteratorCall = tempIterator0.getFirstChild();
     Node block = forNode.getLastChild();
     assertNode(block).isBlock();
@@ -704,7 +704,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             " var $jscomp$forAwait$tempResult0;",
             " var $jscomp$forAwait$retFn0;",
             " try {",
-            "   var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo()); ",
+            "   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo()); ",
             "   for (;;) {",
             "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "     if ($jscomp$forAwait$tempResult0.done) {",
@@ -739,7 +739,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             " var $jscomp$forAwait$tempResult0;",
             " var $jscomp$forAwait$retFn0;",
             " try {",
-            "   var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());",
+            "   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
             "   for (;;) {",
             "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "     if ($jscomp$forAwait$tempResult0.done) {",
@@ -774,7 +774,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             " var $jscomp$forAwait$tempResult0;",
             " var $jscomp$forAwait$retFn0;",
             " try {",
-            "   var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());",
+            "   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
             "   for (;;) {",
             "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "     if ($jscomp$forAwait$tempResult0.done) {",
@@ -812,7 +812,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  var $jscomp$forAwait$tempResult0;",
             "  var $jscomp$forAwait$retFn0;",
             "  try {",
-            "var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());",
+            "var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
             "    for (;;) {",
             "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "      if ($jscomp$forAwait$tempResult0.done) {",
@@ -857,7 +857,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  var $jscomp$forAwait$retFn0;",
             "  try {",
             // rewriting does not lose the label with the for await of statement
-            "  var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());",
+            "  var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
             "    label: for (;;) {",
             "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "      if ($jscomp$forAwait$tempResult0.done) {",
@@ -901,7 +901,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "    var $jscomp$forAwait$tempResult0;",
             "    var $jscomp$forAwait$retFn0;",
             "    try {",
-            "var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(bar());",
+            "var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(bar());",
             "      for (;;) {",
             "        $jscomp$forAwait$tempResult0 = yield new"
                 + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,"

@@ -171,7 +171,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         srcs(
             lines(
                 "f = function() {",
-                "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
+                "  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
                 "      function *() {",
                 "        var x = 6;",
                 "        yield x;",
@@ -181,7 +181,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             lines(
                 "f = function () {",
                 "  var x;",
-                "  return $jscomp.asyncExecutePromiseGeneratorProgram(",
+                "  return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
                 "      function (GEN_CONTEXT$0) {",
                 "         x = 6;",
                 "         return GEN_CONTEXT$0.yield(x, 0);",
@@ -200,7 +200,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 "  }",
                 "  {",
                 "    var bla$0 = $jscomp$restParams;",
-                "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+                "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
                 "        function *() {",
                 "          var y = bla$0[0];",
                 "          yield y;",
@@ -220,7 +220,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 "  {",
                 "    var bla$0 = $jscomp$restParams;",
                 "    var y;",
-                "    return $jscomp.asyncExecutePromiseGeneratorProgram(",
+                "    return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
                 "        function (GEN_CONTEXT$0) {",
                 "          y = bla$0[0];",
                 "          return GEN_CONTEXT$0.yield(y, 0);",
@@ -352,7 +352,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             lines(
                 "function f(o) {",
                 "  use(o);",
-                "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
+                "  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
                 "      function *() {", //
                 "        var i = 0",
                 "        var pp;",
@@ -386,7 +386,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 "  var i",
                 "  var pp;",
                 "  var GEN_FORIN$0$0;",
-                "  return $jscomp.asyncExecutePromiseGeneratorProgram(",
+                "  return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
                 "      function (GEN_CONTEXT$0) {",
                 "         if (GEN_CONTEXT$0.nextAddress == 1) {",
                 "           i = 0;",

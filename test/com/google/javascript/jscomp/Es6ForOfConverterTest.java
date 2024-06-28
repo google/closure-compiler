@@ -74,7 +74,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of [1,2,3]) { console.log(i); }",
         lines(
             "var i;",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -88,7 +88,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         "for (i of [1,2,3]) { console.log(i); }",
         lines(
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3])",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -103,7 +103,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of arr) { console.log(i); }",
         lines(
             "var i;",
-            "var $jscomp$iter$0 = $jscomp.makeIterator(arr)",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)(arr)",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -117,7 +117,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         "for (const i of [1,2,3]) { console.log(i); }",
         lines(
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -131,7 +131,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         "for (const i of [1,2,3]) { console.log(i); } for (const i of [4,5,6]) { console.log(i); }",
         lines(
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -140,7 +140,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "    console.log(i);",
             "  }",
             "}",
-            "var $jscomp$iter$1 = $jscomp.makeIterator([4, 5, 6]);",
+            "var $jscomp$iter$1 = (0, $jscomp.makeIterator)([4, 5, 6]);",
             "var KEY$1$i$jscomp$1 = $jscomp$iter$1.next();",
             "for (;",
             "    !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = $jscomp$iter$1.next())" + " {",
@@ -155,7 +155,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of [1,2,3]);",
         lines(
             "var i;",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3])",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -168,7 +168,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of [1,2,3]) console.log(i);",
         lines(
             "var i;",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -183,7 +183,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
         lines(
             "var i = 'outer';",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3])",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])",
             "var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 = $jscomp$iter$0.next())" + " {",
@@ -200,7 +200,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         "for (let CID of [1, 2, 3]) { alert(CID); }",
         lines(
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3])",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])",
             "var $jscomp$key$m1146332801$0$CID = $jscomp$iter$0.next();",
             "for (;",
             "    !$jscomp$key$m1146332801$0$CID.done; $jscomp$key$m1146332801$0$CID ="
@@ -228,7 +228,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         lines("for (let x of []) {", "  let x = 0;", "}"),
         lines(
-            "var $jscomp$iter$0=$jscomp.makeIterator([]);",
+            "var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);",
             "var KEY$0$x=$jscomp$iter$0.next();",
             "for(;",
             "    !KEY$0$x.done; KEY$0$x=$jscomp$iter$0.next()) {",
@@ -244,7 +244,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         "for (/** @type {string} */ let x of []) {}",
         lines(
-            "var $jscomp$iter$0=$jscomp.makeIterator([]);",
+            "var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);",
             "var KEY$0$x=$jscomp$iter$0.next();",
             "for(;",
             "    !KEY$0$x.done;KEY$0$x=$jscomp$iter$0.next()) {",
@@ -254,7 +254,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     testForOf(
         "for (/** @type {string} */ x of []) {}",
         lines(
-            "var $jscomp$iter$0=$jscomp.makeIterator([]);",
+            "var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);",
             "var KEY$0$x=$jscomp$iter$0.next(); ",
             "for(;",
             "    !KEY$0$x.done;KEY$0$x=$jscomp$iter$0.next()) {",
@@ -283,7 +283,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "a: for(var i of [1,2]){console.log(i)}",
         lines(
             "var i;",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2]);",
             "var KEY$0$i = $jscomp$iter$0.next();",
             "a: for (;",
             "    !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {",
@@ -297,7 +297,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "a: b: for(var x of [1,2]){console.log(x)}",
         lines(
             "var x;",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2]);",
             "var KEY$0$x = $jscomp$iter$0.next();",
             "a: b: for(;",
             "    !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {",
@@ -314,7 +314,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "var obj = {a: 0}; for (obj.a of [1,2,3]) { console.log(obj.a); }",
         lines(
             "var obj = {a: 0};",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3])",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])",
             "var KEY$0$a = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$a.done; KEY$0$a = $jscomp$iter$0.next()) {",
@@ -331,7 +331,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "function f() { return {}; } for (f()['x' + 1] of [1,2,3]) {}",
         lines(
             "function f() { return {}; }",
-            "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+            "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);",
             "var KEY$0$a = $jscomp$iter$0.next();",
             "for (;",
             "    !KEY$0$a.done; KEY$0$a = $jscomp$iter$0.next()) {",
@@ -356,7 +356,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         srcs("for (let x of [1, 2, 3]) {}"),
         expected(
             lines(
-                "var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]);",
+                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);",
                 "var KEY$0$x = $jscomp$iter$0.next();",
                 "for (;",
                 "    !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {",
