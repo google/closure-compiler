@@ -134,4 +134,14 @@ public final class RecordTypeBuilder {
     templateParamCount = templateKeys.size();
     return this;
   }
+
+  /** Set the template map. */
+  public RecordTypeBuilder withTemplateHashMap(LinkedHashMap<TemplateType,JSType> map) {
+    templateTypeMap = registry
+      .getEmptyTemplateTypeMap()
+      .copyWithExtension(map);
+
+    templateParamCount = map.size();
+    return this;
+  }
 }

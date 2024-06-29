@@ -221,8 +221,7 @@ public final class UnionType extends JSType {
     return anyTypeMatches(JSType::matchesObjectContext, this);
   }
 
-  @Override
-  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected JSType findUnionPropertyType(String propertyName, boolean forInference) {
     JSType propertyType = null;
 
     for (JSType alternate : alternates) {
@@ -231,7 +230,7 @@ public final class UnionType extends JSType {
         continue;
       }
 
-      JSType altPropertyType = alternate.findPropertyType(propertyName);
+      JSType altPropertyType = alternate.findPropertyType(propertyName, forInference);
       if (altPropertyType == null) {
         continue;
       }
@@ -244,6 +243,16 @@ public final class UnionType extends JSType {
     }
 
     return propertyType;
+  }
+  
+  @Override
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+    return findUnionPropertyType(propertyName, false);
+  }
+  
+  @Override
+  protected JSType findPropertyTypeConsideringTemplateTypes(String propertyName) {
+    return findUnionPropertyType(propertyName, true);
   }
 
   @Override

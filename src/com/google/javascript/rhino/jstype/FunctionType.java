@@ -1528,6 +1528,15 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
           .setTemplateParamCount(templateKeys.size());
     }
 
+    /** Set the template map. */
+    public Builder withTemplateHashMap(LinkedHashMap<TemplateType, JSType> map) {
+       return this.setTemplateTypeMap(
+              registry
+                  .getEmptyTemplateTypeMap()
+                  .copyWithExtension(map))
+          .setTemplateParamCount(map.size());
+    }
+
     /** Set the template name. */
     public Builder withTemplateKeys(TemplateType... templateKeys) {
       return withTemplateKeys(ImmutableList.copyOf(templateKeys));

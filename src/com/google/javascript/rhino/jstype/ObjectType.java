@@ -470,6 +470,11 @@ public abstract class ObjectType extends JSType {
     return hasProperty(propertyName) ? getPropertyType(propertyName) : null;
   }
 
+  @Override
+  protected @Nullable JSType findPropertyTypeConsideringTemplateTypes(String propertyName) {
+    return hasProperty(propertyName) ? getPropertyType(propertyName) : null;
+  }
+
   /**
    * Gets the property type of the property whose name is given. If the
    * underlying object does not have this property, the Unknown type is

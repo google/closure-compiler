@@ -3127,10 +3127,24 @@ public final class TypeInferenceTest {
              "/** @typedef {{f:function():{r:T}}} @template T */",
              "var Record",
              "var record = /** @type {Record<number>} */ ({})",
-             "const t=record.f().r"
+             "const t=record.f().r",
+
+             "var forwardRecord = /** @type {ForwardRecord<string>} */ ({})",
+             "var deepForwardRecord = /** @type {ForwardRecord<DeepForwardRecord<boolean>>} */ ({})",
+
+             "const f=forwardRecord.f().r",
+             "const d=deepForwardRecord.f().r.f().r",
+
+             "/** @typedef {{f:function():{r:F}}} @template F */",
+             "var ForwardRecord",
+
+             "/** @typedef {{f:function():{r:D}}} @template D */",
+             "var DeepForwardRecord"
            ));
 
     assertThat(getType("t").toString()).isEqualTo("number");
+    assertThat(getType("f").toString()).isEqualTo("string");
+    assertThat(getType("d").toString()).isEqualTo("boolean");
   }
 
   @Test
@@ -3147,16 +3161,28 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testTypedefsForwardRecordsWithTemplates() {
+  public void testTypedefsInheritedRecordsFunctionsWithTemplates() {
     inScript(
         lines(
-             "var record = /** @type {Record<number>} */ ({})",
-             "const t=record.f().r",
-             "/** @typedef {{f:function():{r:T}}} @template T */",
-             "var Record"
+             "/** @typedef {{f:function(T):{r:T}}} @template T */",
+             "var Record",
+
+             "/** @constructor @extends {Record<string>} @template A */",
+             "function Abc() {}",
+             "var t = /** @type {Abc} */({}).f().r",
+
+             "/** @constructor @extends {Record<A>} @template A */",
+             "function Def() {}",
+             "var d = /** @type {Def<boolean>} */({}).f().r",
+
+             "/** @constructor @extends {Record} */",
+             "function Ghi() {}",
+             "var i = /** @type {Ghi} */({}).f(true).r"
            ));
 
-    assertThat(getType("t").toString()).isEqualTo("number");
+    assertThat(getType("t").toString()).isEqualTo("string");
+    assertThat(getType("d").toString()).isEqualTo("boolean");
+    assertThat(getType("i").toString()).isEqualTo("boolean");
   }
 
   @Test

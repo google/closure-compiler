@@ -228,6 +228,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
           .withParameters(paramsChanged ? paramBuilder.build() : type.getParameters())
           .withReturnType(afterReturn)
           .withTypeOfThis(afterThis)
+          .withTemplateHashMap(mapTemplateMap(type))
           .withIsAbstract(false) // TODO(b/187989034): Copy this from the source function.
           .build();
     }
@@ -263,12 +264,35 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       }
       builder.addProperty(prop, afterType, propertyNode);
     }
+    
+    var newTemplateTypeMap = mapTemplateMap(objType);
+    builder.withTemplateHashMap(newTemplateTypeMap);
 
     if (changed) {
       return builder.build();
     }
 
     return objType;
+  }
+  
+  private LinkedHashMap<TemplateType, JSType> mapTemplateMap(JSType objType) {
+//    var templateMapChanged = false;
+    var newTemplateTypeHashMap = new LinkedHashMap<TemplateType, JSType>();
+    for(var t : objType.templateTypeMap.getTemplateKeys()) {
+      var val = objType.templateTypeMap.getUnresolvedOriginalTemplateType(t);
+      var newT = t.visit(this);
+      if (newT instanceof TemplateType && !identical(t, newT)) {
+        newTemplateTypeHashMap.put((TemplateType) newT, val);
+//        templateMapChanged = true;
+      }else {
+        newTemplateTypeHashMap.put(t, val);
+      }
+    }
+//    if(templateMapChanged) {
+//      return newTemplateTypeMap;
+//    }
+    return newTemplateTypeHashMap;
+//    return null;
   }
 
   @Override

@@ -45,6 +45,7 @@ import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.RecordType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.ArrayList;
@@ -1029,7 +1030,9 @@ final class FunctionTypeBuilder {
     }
 
     fnType.setPrototypeBasedOn(baseType);
-    fnType.getInstanceType().mergeSupertypeTemplateTypes(baseType);
+    if(!(baseType instanceof RecordType)) { // inherited record types have been bound to our templates when creating their type in @extends
+      fnType.getInstanceType().mergeSupertypeTemplateTypes(baseType);
+    }
   }
 
   private FunctionType.Builder createDefaultBuilder() {

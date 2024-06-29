@@ -205,6 +205,11 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
+  protected JSType findPropertyTypeConsideringTemplateTypes(String propertyName) {
+    return primitiveType.findPropertyType(propertyName, true);
+  }
+
+  @Override
   public @Nullable FunctionType getConstructor() {
     // TODO(b/147236174): This should always return null.
     return primitiveObjectType == null ? null : primitiveObjectType.getConstructor();

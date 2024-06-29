@@ -166,6 +166,9 @@ public final class TemplateTypeMap {
    * <p>Before extension, any unfilled values in the initial map will be filled with `?`.
    */
   public TemplateTypeMap copyWithExtension(Map<TemplateType, JSType> map) {
+    if(map == null) {
+      return copyWithExtension(ImmutableList.of(), ImmutableList.of());
+    }
     return copyWithExtension(ImmutableList.copyOf(map.keySet()), ImmutableList.copyOf(map.values()));
   }
   /**

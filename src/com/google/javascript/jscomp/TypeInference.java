@@ -2643,7 +2643,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     }
 
     if (propertyType == null && objType != null) {
-      JSType foundType = objType.findPropertyType(propName);
+      JSType foundType = objType.findPropertyType(propName, true);
       if (foundType != null) {
         propertyType = foundType;
       }
