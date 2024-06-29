@@ -256,6 +256,7 @@ final class FunctionTypeBuilder {
     this.typeRegistry = compiler.getTypeRegistry();
     this.errorRoot = errorRoot;
     this.compiler = compiler;
+    this.templateScope = scope;
   }
 
   /** Format the function name for use in warnings. */
