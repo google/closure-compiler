@@ -256,8 +256,6 @@ final class FunctionTypeBuilder {
     this.typeRegistry = compiler.getTypeRegistry();
     this.errorRoot = errorRoot;
     this.compiler = compiler;
-
-    this.typeBuilder = new TypeBuilder(scope, typeRegistry, (Compiler) compiler, errorRoot);
   }
 
   /** Format the function name for use in warnings. */
