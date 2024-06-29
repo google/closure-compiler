@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 
 /**
  * A builder for record types.
