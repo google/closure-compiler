@@ -644,6 +644,9 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
 
     this.extendedInterfaces = ImmutableList.copyOf(extendedInterfaces);
     for (ObjectType extendedInterface : extendedInterfaces) {
+      if(extendedInterface instanceof RecordType) {
+        continue; // records (LC) would have been bound at the point when their type is created in @extends tag 
+      }
       typeOfThis.mergeSupertypeTemplateTypes(extendedInterface);
     }
   }

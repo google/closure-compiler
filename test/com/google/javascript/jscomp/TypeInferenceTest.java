@@ -3170,18 +3170,30 @@ public final class TypeInferenceTest {
              "/** @constructor @extends {Record<string>} @template A */",
              "function Abc() {}",
              "var t = /** @type {Abc} */({}).f().r",
+             
+             "/** @record @extends {Record<string>} @template A */",
+             "function Rabc() {}",
+             "var rt = /** @type {Rabc} */({}).f().r",
 
              "/** @constructor @extends {Record<A>} @template A */",
              "function Def() {}",
              "var d = /** @type {Def<boolean>} */({}).f().r",
+             
+             "/** @record @extends {Record<A>} @template A */",
+             "function Rdef() {}",
+             "var rd = /** @type {Rdef<boolean>} */({}).f().r",
 
              "/** @constructor @extends {Record} */",
              "function Ghi() {}",
-             "var i = /** @type {Ghi} */({}).f(true).r"
+             "var i = /** @type {Ghi} */({}).f(true).r",
+             
+             ""
            ));
 
     assertThat(getType("t").toString()).isEqualTo("string");
+    assertThat(getType("rt").toString()).isEqualTo("string");
     assertThat(getType("d").toString()).isEqualTo("boolean");
+    assertThat(getType("rd").toString()).isEqualTo("boolean");
     assertThat(getType("i").toString()).isEqualTo("boolean");
   }
 
