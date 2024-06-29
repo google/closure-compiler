@@ -2377,7 +2377,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
           var map = registry.getEmptyTemplateTypeMap().copyWithExtension(inferredTypes);
           instantiatedType = (ObjectType) registry.bindTemplatesWithMap(instantiatedType, map);
         }
-      }else {
+      } else {
         // If necessary, templatized the instance type based on the the constructor parameters.
         instantiatedType =
             registry.createTemplatizedType(instantiatedType, inferredTypes).toMaybeObjectType();

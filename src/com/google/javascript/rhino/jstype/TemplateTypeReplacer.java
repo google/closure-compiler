@@ -474,15 +474,32 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   public JSType caseNamedTypeRefUnguarded(JSType ref) {
     return ref.visit(this);
+    
+  }
+  public JSType caseNamedTypeUnguarded(NamedType type) {
+    var newTemplateTypes = new ArrayList<JSType>();
+    var changed = false;
+    for(var t : type.getTemplateTypes()) {
+      var newTemplateType = t.visit(this);
+      if(!identical(t, newTemplateType)) {
+        changed = true;
+      }
+      newTemplateTypes.add(newTemplateType);
+    }
+    if(changed) {
+      var b = type.toBuilder().setTemplateTypes(ImmutableList.copyOf(newTemplateTypes)).build();
+      return b;
+    }
+    return type;
   }
 
   @Override
   public JSType caseNamedType(NamedType type) {
     if(!type.isResolved() || type.getReferencedType() == null) {
-      // The internals of a named type aren't interesting.
-      return type;
+      return guardAgainstCycles(type, this::caseNamedTypeUnguarded);      
     }
-    var ref=type.getReferencedType();
+    
+    var ref=type.getReferencedType(); // yes we cannot guard both at the same time.
     return guardAgainstCycles(ref, this::caseNamedTypeRefUnguarded);
   }
 

@@ -3170,7 +3170,7 @@ public final class TypeInferenceTest {
              "/** @constructor @extends {Record<string>} @template A */",
              "function Abc() {}",
              "var t = /** @type {Abc} */({}).f().r",
-             
+
              "/** @record @extends {Record<string>} @template A */",
              "function Rabc() {}",
              "var rt = /** @type {Rabc} */({}).f().r",
@@ -3178,7 +3178,7 @@ public final class TypeInferenceTest {
              "/** @constructor @extends {Record<A>} @template A */",
              "function Def() {}",
              "var d = /** @type {Def<boolean>} */({}).f().r",
-             
+
              "/** @record @extends {Record<A>} @template A */",
              "function Rdef() {}",
              "var rd = /** @type {Rdef<boolean>} */({}).f().r",
@@ -3186,7 +3186,7 @@ public final class TypeInferenceTest {
              "/** @constructor @extends {Record} */",
              "function Ghi() {}",
              "var i = /** @type {Ghi} */({}).f(true).r",
-             
+
              ""
            ));
 
@@ -3195,6 +3195,68 @@ public final class TypeInferenceTest {
     assertThat(getType("d").toString()).isEqualTo("boolean");
     assertThat(getType("rd").toString()).isEqualTo("boolean");
     assertThat(getType("i").toString()).isEqualTo("boolean");
+  }
+
+  @Test
+  public void testTypedefsSemiforwardInheritedRecordsFunctionsWithTemplates2() {
+    inScript(
+        lines(
+             "/** @typedef {{run:testFn<TT>}} @template TT */", // testFn not known yet
+             "var Record",
+
+             "/** @typedef {function(T):{t:T}} @template T */",
+             "var testFn",
+
+             "/** @record @extends {Record<A>} @template A */", // Record resolved, but with named testFn despite it being declared
+             "function Rdef() {}",
+
+             "/** @typedef {string|function(new:Rdef<T>)} @template T */ ",
+             "var Factory",
+
+             "const F=/** @type {!Factory<string>} */({})",
+             "var f = new F()",
+             "var ff = f.run().t",
+
+             "const _F=/** @type {!Factory} */({})",
+             "var _f = new _F()",
+             "var _ff = _f.run(true).t",
+
+             ""
+           ));
+
+    assertThat(getType("ff").toString()).isEqualTo("string");
+    assertThat(getType("_ff").toString()).isEqualTo("boolean");
+  }
+
+  @Test
+  public void testTypedefsForwardInheritedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {string|function(new:Rdef<T>)} @template T */ ",
+             "var Factory",
+
+             "/** @record @extends {Record<A>} @template A */", // Record not defined yet, creates NamedType which is resolved later
+             "function Rdef() {}",
+
+             "/** @typedef {{run:testFn<T>}} @template T */", // testFn not known yet
+             "var Record",
+
+             "/** @typedef {function(T,R):{t:T,r:R}} @template T,R */",
+             "var testFn",
+
+             "const F=/** @type {!Factory<string>} */({})",
+             "var f = new F()",
+             "var ff = f.run().t",
+
+             "const _F=/** @type {!Factory} */({})",
+             "var _f = new _F()",
+             "var _ff = _f.run(true).t",
+
+             ""
+           ));
+
+    assertThat(getType("ff").toString()).isEqualTo("string");
+    assertThat(getType("_ff").toString()).isEqualTo("boolean");
   }
 
   @Test
