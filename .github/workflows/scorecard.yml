@@ -36,25 +36,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: "Run analysis"
-        uses: ossf/scorecard-action@v2
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          # (Optional) "write" PAT token. Uncomment the `repo_token` line below if:
-          # - you want to enable the Branch-Protection check on a *public* repository, or
-          # - you are installing Scorecard on a *private* repository
-          # To create the PAT, follow the steps in https://github.com/ossf/scorecard-action#authentication-with-pat.
-          # repo_token: ${{ secrets.SCORECARD_TOKEN }}
-
-          # Public repositories:
-          #   - Publish results to OpenSSF REST API for easy access by consumers
-          #   - Allows the repository to include the Scorecard badge.
-          #   - See https://github.com/ossf/scorecard-action#publishing-results.
-          # For private repositories:
-          #   - `publish_results` will always be set to `false`, regardless
-          #     of the value entered here.
-          publish_results: true
+      # - name: "Run analysis"
+      #   uses: ossf/scorecard-action@v2
+      #   with:
+      #     results_file: results.sarif
+      #     results_format: sarif
+      #     # (Optional) "write" PAT token. Uncomment the `repo_token` line below if:
+      #     # - you want to enable the Branch-Protection check on a *public* repository, or
+      #     # - you are installing Scorecard on a *private* repository
+      #     # To create the PAT, follow the steps in https://github.com/ossf/scorecard-action#authentication-with-pat.
+      #     # repo_token: ${{ secrets.SCORECARD_TOKEN }}
+      #
+      #     # Public repositories:
+      #     #   - Publish results to OpenSSF REST API for easy access by consumers
+      #     #   - Allows the repository to include the Scorecard badge.
+      #     #   - See https://github.com/ossf/scorecard-action#publishing-results.
+      #     # For private repositories:
+      #     #   - `publish_results` will always be set to `false`, regardless
+      #     #     of the value entered here.
+      #     publish_results: true
 
       # Upload the results as artifacts (optional). Commenting out will disable uploads of run results in SARIF
       # format to the repository Actions tab.
