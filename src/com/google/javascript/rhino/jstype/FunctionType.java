@@ -644,6 +644,9 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
 
     this.extendedInterfaces = ImmutableList.copyOf(extendedInterfaces);
     for (ObjectType extendedInterface : extendedInterfaces) {
+      if(extendedInterface instanceof RecordType) {
+        continue; // records (LC) would have been bound at the point when their type is created in @extends tag 
+      }
       typeOfThis.mergeSupertypeTemplateTypes(extendedInterface);
     }
   }
@@ -1526,6 +1529,15 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
                   .copyWithExtension(templateKeys, ImmutableList.of()))
           // TODO(nickreid): This value should only consider ctor only keys.
           .setTemplateParamCount(templateKeys.size());
+    }
+
+    /** Set the template map. */
+    public Builder withTemplateHashMap(LinkedHashMap<TemplateType, JSType> map) {
+       return this.setTemplateTypeMap(
+              registry
+                  .getEmptyTemplateTypeMap()
+                  .copyWithExtension(map))
+          .setTemplateParamCount(map.size());
     }
 
     /** Set the template name. */

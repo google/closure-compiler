@@ -60,6 +60,10 @@ public final class RecordType extends PrototypeObjectType {
   private final boolean declared;
   private boolean isFrozen = false;
 
+  RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties,
+      boolean declared) {
+    this(registry, properties, declared, PrototypeObjectType.builder(registry));
+  }
   /**
    * Creates a record type.
    *
@@ -73,8 +77,8 @@ public final class RecordType extends PrototypeObjectType {
    *         with a property is null.
    */
   RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties,
-      boolean declared) {
-    super(PrototypeObjectType.builder(registry));
+      boolean declared, Builder builder) {
+    super(builder);
     setPrettyPrint(true);
     this.declared = declared;
 

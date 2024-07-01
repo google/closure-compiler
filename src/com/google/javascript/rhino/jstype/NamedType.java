@@ -278,6 +278,14 @@ public final class NamedType extends ProxyObjectType {
     if (isSuccessfullyResolved()) {
       this.resolutionScope = null;
 
+      if(!resolvedTypeArgs.isEmpty()) {
+        var b = registry.maybeBindTemplates(result, resolvedTypeArgs);
+        if(b != null) {
+          setReferencedType(b.resolve(reporter));
+          return b;
+        }
+      }
+
       ObjectType resultAsObject = result.toMaybeObjectType();
 
       if (resultAsObject == null) {

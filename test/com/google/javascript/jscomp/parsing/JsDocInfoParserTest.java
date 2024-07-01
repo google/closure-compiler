@@ -2662,14 +2662,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testInvalidTemplatedTypedef2() {
-    parse(
-        "@typedef {Array<T>} \n * @template T */",
-        "Bad type annotation. Type name(s) for @template annotation declared twice."
-            + BAD_TYPE_WIKI_LINK);
-  }
-
-  @Test
   public void testParseImplements() {
     List<JSTypeExpression> interfaces =
         parse("@implements {SomeInterface}*/").getImplementedInterfaces();

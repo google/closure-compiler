@@ -44,7 +44,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -129,6 +132,25 @@ public final class TemplateTypeMap {
   }
 
   /**
+   * Create a new map in which the incoming values override existing ones in the linear iteration order.
+   *  
+   * <p>If the new value is `null`, the override is skipped.
+   */
+  TemplateTypeMap copyWithOverride(ImmutableList<JSType> values) {
+     ArrayList<JSType> newValues = new ArrayList<>();
+    newValues.addAll(this.templateValues);
+    padToSameLength(this.templateKeys, newValues);
+    for(var i=0; i<values.size(); i++) {
+      var newVal=values.get(i);
+      if(newVal == null) continue;
+      newValues.set(i, newVal);
+    }
+
+    return new TemplateTypeMap(
+        this.registry, this.templateKeys, ImmutableList.copyOf(newValues));
+  }
+
+  /**
    * Create a new map in which the keys and values have been extended by {@code extension}.
    *
    * <p>Before extension, any unfilled values in the initial map will be filled with `?`.
@@ -137,6 +159,18 @@ public final class TemplateTypeMap {
     return copyWithExtension(extension.templateKeys, extension.templateValues);
   }
 
+  /**
+   * Create a new map in which the keys and values have been extended by {@code keys} and {@code
+   * values} respectively.
+   *
+   * <p>Before extension, any unfilled values in the initial map will be filled with `?`.
+   */
+  public TemplateTypeMap copyWithExtension(Map<TemplateType, JSType> map) {
+    if(map == null) {
+      return copyWithExtension(ImmutableList.of(), ImmutableList.of());
+    }
+    return copyWithExtension(ImmutableList.copyOf(map.keySet()), ImmutableList.copyOf(map.values()));
+  }
   /**
    * Create a new map in which the keys and values have been extended by {@code keys} and {@code
    * values} respectively.

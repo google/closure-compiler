@@ -2940,6 +2940,406 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testTypedefsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!ABC<TT>} @template TT */",
+             "var MyType",
+             "/** @constructor @template TT */",
+             "function ABC(){}",
+             "/** @type {TT} */",
+             "ABC.prototype.abc",
+             "/** @typedef {function(new:ABC<TT>,TT)} @template TT */",
+             "var MyType2",
+             "/** @type {MyType2<number>} */",
+             "function Test() {}",
+             "const test=new Test('123')",
+             "const t=test.abc"));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsDeepUnionWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Array<U>|!Object<U,U>} @template U */",
+             "var _BackwardType",
+             "/** @typedef {_BackwardType<S>|ReadonlyArray<S>} @template S */",
+             "var BackwardType",
+             "/** @typedef {BackwardType<T>} @template T */",
+             "var TestType",
+             "var test = /** @type {!TestType<string>} */([])"
+             ));
+
+    assertThat(getType("test").toString()).isEqualTo("(Array<string>|Object<string,string>|ReadonlyArray<string>)");
+  }
+
+  @Test
+  public void testTypedefsDeepUnionForwardWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!ForwardType<U>} @template U */",
+             "var DeepTestType",
+
+             "/** @typedef {!Object<symbol,S>|!ReadonlyArray<string>} @template S */",
+             "var ForwardType",
+             "var deepForwardTest = /** @type {!DeepTestType<string>} */([])"
+           )
+        );
+
+    assertThat(getType("deepForwardTest").toString()).isEqualTo("(Object<symbol,string>|ReadonlyArray<string>)");
+  }
+
+  @Test
+  public void testTypedefsUnionForwardWithTemplates() {
+    inScript(
+        lines(
+             "var forwardTest = /** @type {!TestType<string>} */([])",
+             "var deepForwardTest = /** @type {!DeepTestType<string>} */([])",
+
+             "/** @typedef {!Array<T>|!Object<symbol,T>} @template T */",
+             "var TestType",
+
+             "/** @typedef {!ForwardType<U>|!ReadonlyArray<U>} @template U */",
+             "var DeepTestType",
+
+             "/** @typedef {!Object<symbol,S>|!Array<S>} @template S */",
+             "var ForwardType",
+
+             "var postForwardTest = /** @type {!TestType<string>} */([])",
+             "var deepPostForwardTest = /** @type {!DeepTestType<string>} */([])"
+             )
+        );
+
+    assertThat(getType("forwardTest").toString()).isEqualTo("(Array<string>|Object<symbol,string>)");
+    assertThat(getType("deepForwardTest").toString()).isEqualTo("(Array<string>|Object<symbol,string>|ReadonlyArray<string>)");
+
+    assertThat(getType("postForwardTest").toString()).isEqualTo("(Array<string>|Object<symbol,string>)");
+    assertThat(getType("deepPostForwardTest").toString()).isEqualTo("(Array<string>|Object<symbol,string>|ReadonlyArray<string>)");
+  }
+
+  @Test
+  public void testTypedefsTypeofsWithTemplates() {
+    // Functions are not types, but we might want to define them as such in externs via typedefs for comments
+    inScript(
+        lines(
+             // e.g., externs
+             "/**",
+             " * @param {T} The param.",
+             " * @return {T} The updated param.",
+             " * @template T",
+             " */",
+             "function _genericFunction() {}",
+             "/** @typedef {typeof _genericFunction} */",
+             "var genericFunction",
+
+             // e.g., code
+             "/** @type {genericFunction<number>}*/",
+             "function test(n) { return n + 10 }",
+             "const t=test(123)"));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsObjectTypesWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Object<symbol,T>} @template T */",
+             "var ObjectType",
+             "const object=/** @type {ObjectType<number>} */ ({})",
+
+             "/** @typedef {Array<T>} @template T */", // creates |null union
+             "var ArrayType",
+             "const array=/** @type {ArrayType<number>} */ ({})",
+
+             "const deep=/** @type {ObjectType<ArrayType<number>>} */ ({})"
+           ));
+
+    assertThat(getType("object").toString()).isEqualTo("Object<symbol,number>");
+    assertThat(getType("array").toString()).isEqualTo("(Array<number>|null)");
+    assertThat(getType("deep").toString()).isEqualTo("Object<symbol,(Array<number>|null)>");
+  }
+
+  @Test
+  public void testTypedefsRecursiveObjectTypesWithTemplates() {
+    inScript(
+        lines(
+             "/**\n"
+             + " * @constructor\n"
+             + " * @extends {Array<(T|!RecursiveArray<T>)>}\n"
+             + " * @template T\n"
+             + " */\n"
+             + "var RecursiveArray = function() {}",
+
+             "const res=/** @type {RecursiveArray<string>} */ ({})"
+           ));
+
+    assertThat(getType("res").toString()).isEqualTo("(RecursiveArray<string>|null)");
+  }
+
+  @Test
+  public void testTypedefsForwardObjectTypesWithTemplates() {
+    inScript(
+        lines(
+             "const forwardObject=/** @type {ForwardObjectType<number>} */ ({})",
+             "/** @typedef {!Object<symbol,T>} @template T */",
+             "var ForwardObjectType",
+
+             "const forwardArray=/** @type {ForwardArrayType<number>} */ ({})",
+             "/** @typedef {!Array<T>} @template T */",
+             "var ForwardArrayType",
+
+             "const forwardDeep=/** @type {ForwardDeepType<number>} */ ({})",
+             "const semiforwardDeep=/** @type {SemiforwardDeepType<number>} */ ({})",
+
+             "/** @typedef {!Object<symbol,ForwardDeepArrayType<F>>} @template F */",
+             "var ForwardDeepType",
+             "/** @typedef {!Object<symbol,ForwardArrayType<T>>} @template T */",
+             "var SemiforwardDeepType",
+             "/** @typedef {!Array<T>} @template T */",
+             "var ForwardDeepArrayType"
+           ));
+
+    assertThat(getType("forwardObject").toString()).isEqualTo("Object<symbol,number>");
+    assertThat(getType("forwardArray").toString()).isEqualTo("Array<number>");
+    assertThat(getType("forwardDeep").toString()).isEqualTo("Object<symbol,Array<number>>");
+    assertThat(getType("semiforwardDeep").toString()).isEqualTo("Object<symbol,Array<number>>");
+  }
+
+  @Test
+  public void testTypedefsUnionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {N|!Array<S>} @template N,S */",
+             "var Type",
+             "const t=/** @type {Type<number,string>} */(void 5)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("(Array<string>|number)");
+  }
+
+  @Test
+  public void testTypedefsRecordsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {{f:function():{r:T}}} @template T */",
+             "var Record",
+             "var record = /** @type {Record<number>} */ ({})",
+             "const t=record.f().r",
+
+             "var forwardRecord = /** @type {ForwardRecord<string>} */ ({})",
+             "var deepForwardRecord = /** @type {ForwardRecord<DeepForwardRecord<boolean>>} */ ({})",
+
+             "const f=forwardRecord.f().r",
+             "const d=deepForwardRecord.f().r.f().r",
+
+             "/** @typedef {{f:function():{r:F}}} @template F */",
+             "var ForwardRecord",
+
+             "/** @typedef {{f:function():{r:D}}} @template D */",
+             "var DeepForwardRecord"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+    assertThat(getType("f").toString()).isEqualTo("string");
+    assertThat(getType("d").toString()).isEqualTo("boolean");
+  }
+
+  @Test
+  public void testTypedefsInferedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {{f:function(T):{r:T}}} @template T */",
+             "var Record",
+             "var record = /** @type {Record} */ ({})",
+             "const t=record.f(123).r"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsInheritedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {{f:function(T):{r:T}}} @template T */",
+             "var Record",
+
+             "/** @constructor @extends {Record<string>} @template A */",
+             "function Abc() {}",
+             "var t = /** @type {Abc} */({}).f().r",
+
+             "/** @record @extends {Record<string>} @template A */",
+             "function Rabc() {}",
+             "var rt = /** @type {Rabc} */({}).f().r",
+
+             "/** @constructor @extends {Record<A>} @template A */",
+             "function Def() {}",
+             "var d = /** @type {Def<boolean>} */({}).f().r",
+
+             "/** @record @extends {Record<A>} @template A */",
+             "function Rdef() {}",
+             "var rd = /** @type {Rdef<boolean>} */({}).f().r",
+
+             "/** @constructor @extends {Record} */",
+             "function Ghi() {}",
+             "var i = /** @type {Ghi} */({}).f(true).r",
+
+             ""
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("string");
+    assertThat(getType("rt").toString()).isEqualTo("string");
+    assertThat(getType("d").toString()).isEqualTo("boolean");
+    assertThat(getType("rd").toString()).isEqualTo("boolean");
+    assertThat(getType("i").toString()).isEqualTo("boolean");
+  }
+
+  @Test
+  public void testTypedefsSemiforwardInheritedRecordsFunctionsWithTemplates2() {
+    inScript(
+        lines(
+             "/** @typedef {{run:testFn<TT>}} @template TT */", // testFn not known yet
+             "var Record",
+
+             "/** @typedef {function(T):{t:T}} @template T */",
+             "var testFn",
+
+             "/** @record @extends {Record<A>} @template A */", // Record resolved, but with named testFn despite it being declared
+             "function Rdef() {}",
+
+             "/** @typedef {string|function(new:Rdef<T>)} @template T */ ",
+             "var Factory",
+
+             "const F=/** @type {!Factory<string>} */({})",
+             "var f = new F()",
+             "var ff = f.run().t",
+
+             "const _F=/** @type {!Factory} */({})",
+             "var _f = new _F()",
+             "var _ff = _f.run(true).t",
+
+             ""
+           ));
+
+    assertThat(getType("ff").toString()).isEqualTo("string");
+    assertThat(getType("_ff").toString()).isEqualTo("boolean");
+  }
+
+  @Test
+  public void testTypedefsForwardInheritedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {string|function(new:Rdef<T>)} @template T */ ",
+             "var Factory",
+
+             "/** @record @extends {Record<A>} @template A */", // Record not defined yet, creates NamedType which is resolved later
+             "function Rdef() {}",
+
+             "/** @typedef {{run:testFn<T>}} @template T */", // testFn not known yet
+             "var Record",
+
+             "/** @typedef {function(T,R):{t:T,r:R}} @template T,R */",
+             "var testFn",
+
+             "const F=/** @type {!Factory<string>} */({})",
+             "var f = new F()",
+             "var ff = f.run().t",
+
+             "const _F=/** @type {!Factory} */({})",
+             "var _f = new _F()",
+             "var _ff = _f.run(true).t",
+
+             ""
+           ));
+
+    assertThat(getType("ff").toString()).isEqualTo("string");
+    assertThat(getType("_ff").toString()).isEqualTo("boolean");
+  }
+
+  @Test
+  public void testTypedefsForwardInferedRecordsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "var record = /** @type {Record} */ ({})",
+             "const t=record.f(123).r",
+             "/** @typedef {{f:function(T):{r:T}}} @template T */",
+             "var Record"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+  @Test
+  public void testTypedefsFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {function():{a:!Array<T>}} @template T */",
+             "var functionType",
+             "/** @type {functionType<number>} */",
+             "function test() {}",
+             "const t=test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("{a: Array<number>}");
+  }
+
+  @Test
+  public void testTypedefsBackwardInferedFunctionsWithTemplates() {
+    inScript(
+        lines(
+             // ALL template keys will be propagated to inner types but that seems to be OK
+             // It's possible to determine keys for each inner type however it's not required
+             "/** @typedef {!Array<(function(T):T)|string>} @template T,K */",
+             "var TestArray",
+             "const[test] = /** @type {TestArray} */([])", // not parameterised
+             "const t=test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("number");
+  }
+
+  @Test
+  public void testTypedefsBackwardInferedConstructorsFromParameterizedTypesWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Array<(function(new:ReadonlyArray<T>,T))|string>} @template T,K */",
+             "var TestArray",
+             "const[Test] = /** @type {TestArray<number>} */([])",
+             "const t=new Test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("ReadonlyArray<number>");
+  }
+
+  @Test
+  public void testTypedefsBackwardInferedConstructorsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {!Array<(function(new:ReadonlyArray<T>,T))|string>} @template T,K */",
+             "var TestArray",
+             "const[Test] = /** @type {TestArray} */([])",
+             "const t=new Test(123)"
+           ));
+
+    assertThat(getType("t").toString()).isEqualTo("ReadonlyArray<number>");
+  }
+
+  @Test
+  public void testTypedefsConstructorFunctionsWithTemplates() {
+    inScript(
+        lines(
+             "/** @typedef {function(new:Array<T>,T)} @template T */",
+             "var ConstructorType",
+             "/** @type {ConstructorType<number>} */",
+             "function Test(val) { if(new.target) return [val] }",
+             "const t=new Test(123)"));
+
+    assertThat(getType("t").toString()).isEqualTo("Array<number>");
+  }
+
+  @Test
   public void testBackwardsInferenceNew() {
     inFunction(
         "/**\n"

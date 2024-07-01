@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -86,6 +87,15 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     TemplateTypeMap map =
         registry.getEmptyTemplateTypeMap().copyWithExtension(keys, values.build());
     return new TemplateTypeReplacer(registry, map, true, true, true);
+  }
+
+  public static TemplateTypeReplacer forInference(
+      JSTypeRegistry registry, TemplateTypeMap bindings) {
+    return new TemplateTypeReplacer(registry, bindings, true, true, true);
+  }
+  public static TemplateTypeReplacer forPartialInference(
+      JSTypeRegistry registry, TemplateTypeMap bindings) {
+    return new TemplateTypeReplacer(registry, bindings, true, false, false);
   }
 
   /**
@@ -218,6 +228,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
           .withParameters(paramsChanged ? paramBuilder.build() : type.getParameters())
           .withReturnType(afterReturn)
           .withTypeOfThis(afterThis)
+          .withTemplateHashMap(mapTemplateMap(type))
           .withIsAbstract(false) // TODO(b/187989034): Copy this from the source function.
           .build();
     }
@@ -253,12 +264,35 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       }
       builder.addProperty(prop, afterType, propertyNode);
     }
+    
+    var newTemplateTypeMap = mapTemplateMap(objType);
+    builder.withTemplateHashMap(newTemplateTypeMap);
 
     if (changed) {
       return builder.build();
     }
 
     return objType;
+  }
+  
+  private LinkedHashMap<TemplateType, JSType> mapTemplateMap(JSType objType) {
+//    var templateMapChanged = false;
+    var newTemplateTypeHashMap = new LinkedHashMap<TemplateType, JSType>();
+    for(var t : objType.templateTypeMap.getTemplateKeys()) {
+      var val = objType.templateTypeMap.getUnresolvedOriginalTemplateType(t);
+      var newT = t.visit(this);
+      if (newT instanceof TemplateType && !identical(t, newT)) {
+        newTemplateTypeHashMap.put((TemplateType) newT, val);
+//        templateMapChanged = true;
+      }else {
+        newTemplateTypeHashMap.put(t, val);
+      }
+    }
+//    if(templateMapChanged) {
+//      return newTemplateTypeMap;
+//    }
+    return newTemplateTypeHashMap;
+//    return null;
   }
 
   @Override
@@ -276,6 +310,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (JSType beforeTemplateType : type.getTemplateTypes()) {
+      if(beforeTemplateType instanceof NamedType && beforeTemplateType.isResolved()) {
+        beforeTemplateType = ((NamedType) beforeTemplateType).getReferencedType();
+      }
       JSType afterTemplateType = beforeTemplateType.visit(this);
       if (!identical(beforeTemplateType, afterTemplateType)) {
         changed = true;
@@ -283,10 +320,42 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       builder.add(afterTemplateType);
     }
 
+    LinkedHashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
+    if(afterOwnTemplateTypes != null) {
+      var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
+      if(replaced != null) {
+        afterOwnTemplateTypes = replaced;
+        changed = true;
+      }
+    }
+
     if (changed) {
-      type = registry.createTemplatizedType(afterBaseType, builder.build());
+      type = registry.createTemplatizedType(afterBaseType, builder.build(), afterOwnTemplateTypes);
     }
     return type;
+  }
+
+  /**
+   * Updates the own template types (added with `@typedef` notation in root JSDoc) of templatized/union types.
+   */
+  private LinkedHashMap<String, TemplateType> replaceOwnTemplateTypes(LinkedHashMap<String, TemplateType> ownTemplateTypes, JSType type) {
+    boolean changed = false;
+    LinkedHashMap<String, TemplateType> afterOwnTemplateTypes = new LinkedHashMap<>();
+
+    for (String ownTemplateTypeKey : ownTemplateTypes.keySet()) {
+      var beforeOwnTemplateType = ownTemplateTypes.get(ownTemplateTypeKey);
+      var afterOwnTemplateType = beforeOwnTemplateType.visit(this);
+      if (!identical(beforeOwnTemplateType, afterOwnTemplateType)) {
+        changed = true;
+      }
+      if(afterOwnTemplateType.toMaybeTemplateType() == null) {
+         afterOwnTemplateType=beforeOwnTemplateType;
+      }
+      afterOwnTemplateTypes.put(ownTemplateTypeKey, (TemplateType) afterOwnTemplateType);
+    }
+
+    if(!changed) return null;
+    return afterOwnTemplateTypes;
   }
 
   @Override
@@ -343,8 +412,17 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       results.add(replacement);
     }
 
+    LinkedHashMap<String, TemplateType> afterOwnTemplateTypes = type.getOwnTemplateTypes();
+    if(afterOwnTemplateTypes != null) {
+      var replaced = replaceOwnTemplateTypes(afterOwnTemplateTypes, type);
+      if(replaced != null) {
+        afterOwnTemplateTypes = replaced;
+        changed = true;
+      }
+    }
+
     if (changed) {
-      return registry.createUnionType(results); // maybe not a union
+      return registry.createUnionType(results, afterOwnTemplateTypes); // maybe not a union
     }
 
     return type;
@@ -394,10 +472,35 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return type.isNativeObjectType();
   }
 
+  public JSType caseNamedTypeRefUnguarded(JSType ref) {
+    return ref.visit(this);
+    
+  }
+  public JSType caseNamedTypeUnguarded(NamedType type) {
+    var newTemplateTypes = new ArrayList<JSType>();
+    var changed = false;
+    for(var t : type.getTemplateTypes()) {
+      var newTemplateType = t.visit(this);
+      if(!identical(t, newTemplateType)) {
+        changed = true;
+      }
+      newTemplateTypes.add(newTemplateType);
+    }
+    if(changed) {
+      var b = type.toBuilder().setTemplateTypes(ImmutableList.copyOf(newTemplateTypes)).build();
+      return b;
+    }
+    return type;
+  }
+
   @Override
   public JSType caseNamedType(NamedType type) {
-    // The internals of a named type aren't interesting.
-    return type;
+    if(!type.isResolved() || type.getReferencedType() == null) {
+      return guardAgainstCycles(type, this::caseNamedTypeUnguarded);      
+    }
+    
+    var ref=type.getReferencedType(); // yes we cannot guard both at the same time.
+    return guardAgainstCycles(ref, this::caseNamedTypeRefUnguarded);
   }
 
   @Override
