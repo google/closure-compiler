@@ -15,10 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -89,21 +85,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  private ImmutableSet<String> getInjected() {
-    return ((NoninjectingCompiler) getLastCompiler()).getInjected();
-  }
-
-  @Test
-  public void testEmpty() {
-    testSame("");
-    assertThat(getInjected()).isEmpty();
-  }
-
   @Test
   public void testAwait() {
     test(
@@ -125,7 +106,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -155,7 +135,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -188,7 +167,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -226,7 +204,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -245,7 +222,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "var $jscomp$context = $jscomp.asyncContextEnter();",
             "(0, $jscomp.asyncContextReenter)(",
             "    await (0, $jscomp.asyncContextExit)(1, $jscomp$context), $jscomp$context);"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -272,7 +248,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -305,7 +280,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -342,7 +316,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -375,7 +348,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -388,7 +360,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "async function f() {",
             "  return await 1;",
             "}"));
-    assertThat(getInjected()).isEmpty();
   }
 
   @Test
@@ -422,7 +393,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -456,7 +426,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -467,7 +436,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "(async () => await 1)();"));
-    assertThat(getInjected()).isEmpty();
   }
 
   @Test
@@ -489,7 +457,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "  }",
             "})();"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -516,7 +483,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -561,7 +527,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -600,7 +565,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -646,7 +610,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -674,7 +637,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -700,7 +662,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -711,7 +672,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function* f() {}"));
-    assertThat(getInjected()).isEmpty();
   }
 
   @Test
@@ -741,7 +701,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -773,7 +732,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    })();",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -806,7 +764,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    })();",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -840,7 +797,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    })();",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -876,7 +832,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -909,7 +864,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -942,7 +896,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -977,7 +930,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1010,7 +962,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1046,7 +997,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1079,7 +1029,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1113,7 +1062,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1146,7 +1094,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1178,7 +1125,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1214,7 +1160,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    })();",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1251,7 +1196,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1264,7 +1208,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "async function f() {",
             "  await 1;",
             "}"));
-    assertThat(getInjected()).isEmpty();
   }
 
   @Test
@@ -1279,7 +1222,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    use(x);",
             "  }",
             "}"));
-    assertThat(getInjected()).isEmpty();
   }
 
   @Test
@@ -1308,7 +1250,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 
   @Test
@@ -1337,6 +1278,5 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "  }();",
             "}"));
-    assertThat(getInjected()).containsExactly("es6/asynccontext/runtime");
   }
 }

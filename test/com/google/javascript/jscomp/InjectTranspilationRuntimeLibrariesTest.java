@@ -33,11 +33,13 @@ public class InjectTranspilationRuntimeLibrariesTest {
 
   private NoninjectingCompiler compiler;
   private LanguageMode languageOut;
+  private boolean instrumentAsyncContext;
 
   @Before
   public void setup() {
     compiler = new NoninjectingCompiler();
     languageOut = LanguageMode.ECMASCRIPT5;
+    instrumentAsyncContext = false;
   }
 
   /**
@@ -49,6 +51,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
   private ImmutableSet<String> parseAndRunInjectionPass(String js) {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(this.languageOut);
+    options.setInstrumentAsyncContext(instrumentAsyncContext);
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", "")),

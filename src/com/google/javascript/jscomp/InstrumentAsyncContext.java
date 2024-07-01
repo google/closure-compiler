@@ -56,7 +56,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private final Deque<Node> tryFunctionStack = new ArrayDeque<>();
   private final Set<Node> needsInstrumentation = new LinkedHashSet<>();
   private final Set<Node> hasSuper = new LinkedHashSet<>();
-  private boolean instrumented = false;
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
     this.compiler = compiler;
@@ -68,9 +67,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   public void process(Node externs, Node root) {
     // Scan through code and find uses of AsyncContext. Look specifically for Variable.run.
     NodeTraversal.traverse(compiler, root, this);
-    if (instrumented) {
-      compiler.ensureLibraryInjected("es6/asynccontext/runtime", true);
-    }
   }
 
   @Override
@@ -143,7 +139,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
     // At this point, instrumentation is required, both for the immediate node, as well as for any
     // enclosing function or try block.
-    instrumented = true;
     needsInstrumentation.add(enclosingFunction);
     if (enclosingTry != null) {
       needsInstrumentation.add(enclosingTry);
@@ -499,7 +494,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   private Node createExit(Node inner) {
-    instrumented = true;
     Node call =
         astFactory.createCall(
             astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(EXIT)),
@@ -512,7 +506,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   private Node createReenter(Node inner) {
-    instrumented = true;
     Node call =
         astFactory.createCall(
             astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(REENTER)),

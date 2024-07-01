@@ -128,6 +128,16 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     if (mustBeCompiledAway.contains(Feature.REST_PARAMETERS)) {
       compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     }
+
+    if (compiler.getOptions().getInstrumentAsyncContext()
+        // NOTE: async functions only matter for output features, since we don't bother
+        // instrumenting them if they're being transpiled away.  Generators are relevant
+        // regardless of whether they're transpiled or not.
+        && (outputFeatures.contains(Feature.ASYNC_FUNCTIONS)
+            || used.contains(Feature.GENERATORS)
+            || used.contains(Feature.ASYNC_GENERATORS))) {
+      compiler.ensureLibraryInjected("es6/asynccontext/runtime", /* force= */ false);
+    }
   }
 
   private static FeatureSet getScriptFeatures(Node script) {
