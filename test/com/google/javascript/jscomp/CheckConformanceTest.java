@@ -968,6 +968,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(srcs(inputs));
   }
 
+  private void testConformance(String src1, String src2, String src3) {
+    ImmutableList<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("SRC1", src1),
+            SourceFile.fromCode("SRC2", src2),
+            SourceFile.fromCode("SRC3", src3));
+    testNoWarning(srcs(inputs));
+  }
+
   private void testConformance(String src1, String src2, DiagnosticType warning) {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("SRC1", src1), SourceFile.fromCode("SRC2", src2));
@@ -991,7 +1000,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String dDecl =
         lines("/** @constructor */ function D() {}", "/** @type {string} */", "D.prototype.p;");
 
-    testConformance(cDecl, dDecl);
+    String typedefDecl =
+        lines(
+            "/** @typedef {{p: string}} */ let E;",
+            "/** @const {!E} */ const value = {p: 'foo'};",
+            "/** @type {string} */ const s = value.p;");
+
+    testConformance(cDecl, dDecl, typedefDecl);
   }
 
   @Test

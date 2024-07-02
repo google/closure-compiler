@@ -813,13 +813,15 @@ public final class ConformanceRules {
           || foundType.isTemplateType()
           || foundType.isEmptyType()
           || foundType.isAllType()
-          || foundType.equals(this.registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+          || isLooseObject(foundType, this.registry)) {
         if (reportLooseTypeViolations) {
           return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
         }
       } else if (foundType.isSubtypeOf(checkType)) {
         return ConformanceResult.VIOLATION;
-      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)) {
+      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)
+          // TODO(b/350086590): remove this exclusion once the subtyping relation above is fixed.
+          && !isObjectTypedef(foundType)) {
         if (matchesPrototype(checkType, foundType)) {
           return ConformanceResult.VIOLATION;
         } else if (reportLooseTypeViolations) {
@@ -1302,8 +1304,7 @@ public final class ConformanceRules {
       Node lhs = isCallInvocation ? n.getFirstFirstChild() : n.getFirstChild();
       if (methodClassType != null && lhs.getJSType() != null) {
         JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
-        if (ConformanceUtil.isLooseType(targetType)
-            || targetType.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+        if (ConformanceUtil.isLooseType(targetType) || isLooseObject(targetType, registry)) {
           if (reportLooseTypeViolations
               && !ConformanceUtil.validateCall(
                   compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
@@ -2811,5 +2812,23 @@ public final class ConformanceRules {
       Node parent = n.getParent();
       return parent != null && parent.isMemberFunctionDef() && parent.isStaticMember();
     }
+  }
+
+  private static boolean isLooseObject(JSType type, JSTypeRegistry registry) {
+    return type.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
+  }
+
+  /**
+   * Returns true if the given type is a typedef of a record.
+   *
+   * <p>Example: @typedef {{foo: string}}
+   *
+   * <p>This can behave differently from ordinary records as the resulting type will not have a
+   * constructor.
+   */
+  private static boolean isObjectTypedef(JSType type) {
+    // The JSCompiler models object literals as 'anonymous records'.
+    ObjectType objType = type.toMaybeObjectType();
+    return objType != null && objType.getConstructor() == null && type.isRecordType();
   }
 }
