@@ -255,6 +255,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(closureGoogScopeAliasesForIjs);
       checks.maybeAdd(closureRewriteClass);
       checks.maybeAdd(generateIjs);
+      checks.maybeAdd(removeExtraRequires);
       if (options.wrapGoogModulesForWhitespaceOnly) {
         checks.maybeAdd(whitespaceWrapGoogModules);
       }
@@ -1366,6 +1367,16 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("generateIjs")
           .setInternalFactory(ConvertToTypedInterface::new)
+          .build();
+
+  /**
+   * Prunes unnecessary goog.requires and in .i.js files
+   * (go/exclude-unnecessary-goog-requires-in-ijs)
+   */
+  private final PassFactory removeExtraRequires =
+      PassFactory.builder()
+          .setName("removeExtraRequires")
+          .setInternalFactory(ExtraRequireRemover::new)
           .build();
 
   /** Generates exports for functions associated with JsUnit. */
