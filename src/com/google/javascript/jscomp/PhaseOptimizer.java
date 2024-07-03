@@ -69,7 +69,7 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   static final ImmutableList<String> CODE_REMOVING_PASSES =
-      ImmutableList.of(PassNames.PEEPHOLE_OPTIMIZATIONS, PassNames.REMOVE_UNREACHABLE_CODE);
+      ImmutableList.of(PassNames.PEEPHOLE_OPTIMIZATIONS);
 
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
