@@ -355,8 +355,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
             "@abstract",
             "abstract undeclared methods can only be written as class fields");
       } else if (!(n.getParent().isExprResult()
-          && n.getParent().getParent().isBlock()
-          && n.getParent().getParent().getParent().isFunction())) {
+          && n.getGrandparent().isBlock()
+          && n.getParent().getGrandparent().isFunction())) {
         report(
             n,
             MISPLACED_ANNOTATION,

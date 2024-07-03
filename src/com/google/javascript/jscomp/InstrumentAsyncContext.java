@@ -221,7 +221,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   void instrumentGeneratorFunction(NodeTraversal t, Node f) {
     // If a function is completely empty then there's no need to instrument it
     // because there's nothing within that can observe the state of any variables.
-    if (f.getLastChild().getChildCount() == 0) {
+    if (!f.getLastChild().hasChildren()) {
       return;
     }
     // NOTE: if `f` is a generator _method_ then we need to be more careful.
@@ -398,14 +398,14 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     if (param.isRest()) {
       // Replace REST with SPREAD.  For arguments, we know it has to be ITER_REST and ITER_SPREAD.
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SPREAD_EXPRESSIONS, compiler);
-      Node paramElement = param.getFirstChild().detach();
+      Node paramElement = param.removeFirstChild();
       ArgParamPair simplified = simplifyParameter(paramElement, t);
       return new ArgParamPair(
           IR.iterSpread(simplified.argument).srcrefTreeIfMissing(param),
           IR.iterRest(simplified.parameter).srcrefTreeIfMissing(param));
     } else if (param.isDefaultValue()) {
       // Ignore any initializers; replace with just the name.
-      return simplifyParameter(param.getFirstChild().detach(), t);
+      return simplifyParameter(param.removeFirstChild(), t);
     } else if (param.isArrayPattern() || param.isObjectPattern()) {
       // Replace destructuring patterns with a synthesized name.
       return simplifyParameter(

@@ -1264,11 +1264,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       formal.detach();
       if (formal.isRest()) {
         checkState(formal.getNext() == null);
-        Node lhs = formal.getFirstChild().detach();
+        Node lhs = formal.removeFirstChild();
         Node value = IR.arraylit().srcref(formal);
         addVariableDeclarationToFunction(fnNode, lhs, value);
       } else if (formal.isDefaultValue()) {
-        Node lhs = formal.getFirstChild().detach();
+        Node lhs = formal.removeFirstChild();
         Node value = formal.getLastChild().detach();
         addVariableDeclarationToFunction(fnNode, lhs, value);
       } else if (formal.isDestructuringPattern()) {
