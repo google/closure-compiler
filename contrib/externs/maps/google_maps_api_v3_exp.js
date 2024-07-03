@@ -7875,9 +7875,44 @@ google.maps.PlacesLibrary.prototype.AutocompleteSuggestion;
 google.maps.PlacesLibrary.prototype.BusinessStatus;
 
 /**
+ * @type {typeof google.maps.places.ConnectorAggregation}
+ */
+google.maps.PlacesLibrary.prototype.ConnectorAggregation;
+
+/**
+ * @type {typeof google.maps.places.EVChargeOptions}
+ */
+google.maps.PlacesLibrary.prototype.EVChargeOptions;
+
+/**
+ * @type {typeof google.maps.places.EVConnectorType}
+ */
+google.maps.PlacesLibrary.prototype.EVConnectorType;
+
+/**
  * @type {typeof google.maps.places.FormattableText}
  */
 google.maps.PlacesLibrary.prototype.FormattableText;
+
+/**
+ * @type {typeof google.maps.places.FuelOptions}
+ */
+google.maps.PlacesLibrary.prototype.FuelOptions;
+
+/**
+ * @type {typeof google.maps.places.FuelPrice}
+ */
+google.maps.PlacesLibrary.prototype.FuelPrice;
+
+/**
+ * @type {typeof google.maps.places.FuelType}
+ */
+google.maps.PlacesLibrary.prototype.FuelType;
+
+/**
+ * @type {typeof google.maps.places.Money}
+ */
+google.maps.PlacesLibrary.prototype.Money;
 
 /**
  * @type {typeof google.maps.places.OpeningHours}
@@ -16938,6 +16973,152 @@ google.maps.places.ComponentRestrictions = function() {};
 google.maps.places.ComponentRestrictions.prototype.country;
 
 /**
+ * EV charging information, aggregated for connectors of the same type and the
+ * same charge rate.
+ *
+ * Access by calling `const {ConnectorAggregation} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ConnectorAggregation = function() {};
+
+/**
+ * The time when the connector availability information in this aggregation was
+ * last updated.
+ * @type {!Date|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.availabilityLastUpdateTime;
+
+/**
+ * Number of connectors in this aggregation that are currently available.
+ * @type {number|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.availableCount;
+
+/**
+ * Number of connectors in this aggregation.
+ * @type {number}
+ */
+google.maps.places.ConnectorAggregation.prototype.count;
+
+/**
+ * The static max charging rate in kw of each connector of the aggregation.
+ * @type {number}
+ */
+google.maps.places.ConnectorAggregation.prototype.maxChargeRateKw;
+
+/**
+ * Number of connectors in this aggregation that are currently out of service.
+ * @type {number|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.outOfServiceCount;
+
+/**
+ * The connector type of this aggregation.
+ * @type {!google.maps.places.EVConnectorType|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.type;
+
+/**
+ * Information about the EV charging station hosted in the place.
+ *
+ * Access by calling `const {EVChargeOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.EVChargeOptions = function() {};
+
+/**
+ * A list of EV charging connector aggregations that contain connectors of the
+ * same type and same charge rate.
+ * @type {!Array<!google.maps.places.ConnectorAggregation>}
+ */
+google.maps.places.EVChargeOptions.prototype.connectorAggregations;
+
+/**
+ * Number of connectors at this station. Because some ports can have multiple
+ * connectors but only be able to charge one car at a time, the number of
+ * connectors may be greater than the total number of cars which can charge
+ * simultaneously.
+ * @type {number}
+ */
+google.maps.places.EVChargeOptions.prototype.connectorCount;
+
+/**
+ * EV charging connector types.
+ *
+ * Access by calling `const {EVConnectorType} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.EVConnectorType = {
+  /**
+   * Combined Charging System (AC and DC). Based on SAE Type-1 J-1772 connector.
+   */
+  CCS_COMBO_1: 'CCS_COMBO_1',
+  /**
+   * Combined Charging System (AC and DC). Based on Type-2 Mennekes connector.
+   */
+  CCS_COMBO_2: 'CCS_COMBO_2',
+  /**
+   * CHAdeMO type connector.
+   */
+  CHADEMO: 'CHADEMO',
+  /**
+   * J1772 type 1 connector.
+   */
+  J1772: 'J1772',
+  /**
+   * Other connector types.
+   */
+  OTHER: 'OTHER',
+  /**
+   * The generic TESLA connector. This is NACS in the North America but can be
+   * non-NACS in other parts of the world (e.g. CCS Combo 2 (CCS2) or GB/T).
+   * This value is less representative of an actual connector type, and more
+   * represents the ability to charge a Tesla brand vehicle at a Tesla owned
+   * charging station.
+   */
+  TESLA: 'TESLA',
+  /**
+   * IEC 62196 type 2 connector. Often referred to as MENNEKES.
+   */
+  TYPE_2: 'TYPE_2',
+  /**
+   * GB/T type corresponds to the GB/T standard in China. This type covers all
+   * GB_T types.
+   */
+  UNSPECIFIED_GB_T: 'UNSPECIFIED_GB_T',
+  /**
+   * Unspecified wall outlet.
+   */
+  UNSPECIFIED_WALL_OUTLET: 'UNSPECIFIED_WALL_OUTLET',
+};
+
+/**
+ * EV-related options that can be specified for a place search request.
+ * @record
+ */
+google.maps.places.EVSearchOptions = function() {};
+
+/**
+ * The list of preferred EV connector types. A place that does not support any
+ * of the listed connector types is filtered out.
+ * @type {!Array<!google.maps.places.EVConnectorType>|undefined}
+ */
+google.maps.places.EVSearchOptions.prototype.connectorTypes;
+
+/**
+ * Minimum required charging rate in kilowatts. A place with a charging rate
+ * less than the specified rate is filtered out.
+ * @type {number|undefined}
+ */
+google.maps.places.EVSearchOptions.prototype.minimumChargingRateKw;
+
+/**
  * Options for fetching Place fields.
  * @record
  */
@@ -17064,6 +17245,135 @@ google.maps.places.FormattableText.prototype.matches;
 google.maps.places.FormattableText.prototype.text;
 
 /**
+ * The most recent information about fuel options in a gas station. This
+ * information is updated regularly.
+ *
+ * Access by calling `const {FuelOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.FuelOptions = function() {};
+
+/**
+ * A list of fuel prices for each type of fuel this station has, one entry per
+ * fuel type.
+ * @type {!Array<!google.maps.places.FuelPrice>}
+ */
+google.maps.places.FuelOptions.prototype.fuelPrices;
+
+/**
+ * Fuel price information for a given type of fuel.
+ *
+ * Access by calling `const {FuelPrice} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.FuelPrice = function() {};
+
+/**
+ * The price of the fuel.
+ * @type {!google.maps.places.Money|null}
+ */
+google.maps.places.FuelPrice.prototype.price;
+
+/**
+ * The type of fuel.
+ * @type {!google.maps.places.FuelType|null}
+ */
+google.maps.places.FuelPrice.prototype.type;
+
+/**
+ * The time the fuel price was last updated.
+ * @type {!Date|null}
+ */
+google.maps.places.FuelPrice.prototype.updateTime;
+
+/**
+ * Types of fuel.
+ *
+ * Access by calling `const {FuelType} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.FuelType = {
+  /**
+   * Bio-diesel.
+   */
+  BIO_DIESEL: 'BIO_DIESEL',
+  /**
+   * Diesel fuel.
+   */
+  DIESEL: 'DIESEL',
+  /**
+   * E 80.
+   */
+  E80: 'E80',
+  /**
+   * E 85.
+   */
+  E85: 'E85',
+  /**
+   * LPG.
+   */
+  LPG: 'LPG',
+  /**
+   * Methane.
+   */
+  METHANE: 'METHANE',
+  /**
+   * Midgrade.
+   */
+  MIDGRADE: 'MIDGRADE',
+  /**
+   * Premium.
+   */
+  PREMIUM: 'PREMIUM',
+  /**
+   * Regular unleaded.
+   */
+  REGULAR_UNLEADED: 'REGULAR_UNLEADED',
+  /**
+   * SP 100.
+   */
+  SP100: 'SP100',
+  /**
+   * SP 91.
+   */
+  SP91: 'SP91',
+  /**
+   * SP 91 E10.
+   */
+  SP91_E10: 'SP91_E10',
+  /**
+   * SP 92.
+   */
+  SP92: 'SP92',
+  /**
+   * SP 95.
+   */
+  SP95: 'SP95',
+  /**
+   * SP95 E10.
+   */
+  SP95_E10: 'SP95_E10',
+  /**
+   * SP 98.
+   */
+  SP98: 'SP98',
+  /**
+   * SP 99.
+   */
+  SP99: 'SP99',
+  /**
+   * Truck diesel.
+   */
+  TRUCK_DIESEL: 'TRUCK_DIESEL',
+};
+
+/**
  * @typedef {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|!google.maps.Circle|!google.maps.CircleLiteral|string}
  */
 google.maps.places.LocationBias;
@@ -17072,6 +17382,43 @@ google.maps.places.LocationBias;
  * @typedef {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  */
 google.maps.places.LocationRestriction;
+
+/**
+ * A representation of an amount of money with its currency type.
+ *
+ * Access by calling `const {Money} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.Money = function() {};
+
+/**
+ * The three-letter currency code, defined in ISO 4217.
+ * @type {string}
+ */
+google.maps.places.Money.prototype.currencyCode;
+
+/**
+ * Number of nano (10^-9) units of the amount.
+ * @type {number}
+ */
+google.maps.places.Money.prototype.nanos;
+
+/**
+ * The whole units of the amount. For example, if {@link
+ * google.maps.places.Money.currencyCode} is &quot;USD&quot;, then 1 unit is 1
+ * US dollar.
+ * @type {number}
+ */
+google.maps.places.Money.prototype.units;
+
+/**
+ * Returns a human-readable representation of the amount of money with its
+ * currency symbol.
+ * @return {string}
+ */
+google.maps.places.Money.prototype.toString = function() {};
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -17391,10 +17738,24 @@ google.maps.places.Place.prototype.editorialSummary;
 google.maps.places.Place.prototype.editorialSummaryLanguageCode;
 
 /**
+ * EV Charge options provided by the place. <code>undefined</code> if the EV
+ * charge options have not been called for from the server.
+ * @type {google.maps.places.EVChargeOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.evChargeOptions;
+
+/**
  * The locations’s full address.
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.formattedAddress;
+
+/**
+ * Fuel options provided by the place. <code>undefined</code> if the fuel
+ * options have not been called for from the server.
+ * @type {google.maps.places.FuelOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.fuelOptions;
 
 /**
  * URL of the official Google page for this place. This is the Google-owned page
@@ -19155,6 +19516,12 @@ google.maps.places.SearchByTextRankPreference = {
  * @record
  */
 google.maps.places.SearchByTextRequest = function() {};
+
+/**
+ * EV-related options that can be specified for a place search request.
+ * @type {!google.maps.places.EVSearchOptions|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.evSearchOptions;
 
 /**
  * Fields to be included in the response, <a
