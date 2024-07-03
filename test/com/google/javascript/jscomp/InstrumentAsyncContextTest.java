@@ -460,6 +460,18 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAsyncFunctionWithNoAwait() {
+    // NOTE: Instrumentation is tied to `await`, not `async`.
+    testSame(
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "async function f() {",
+            "  return 1;",
+            "}"));
+  }
+
+  @Test
   public void testGenerator() {
     test(
         lines(
@@ -735,6 +747,35 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGeneratorMethodWithNoYield() {
+    test(
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "class Foo {",
+            "  *f() {",
+            "    console.log(42);",
+            "  }",
+            "}"),
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "class Foo {",
+            "  f() {",
+            "    var $jscomp$context = $jscomp.asyncContextEnter();",
+            "    return (function*() {",
+            "      (0, $jscomp.asyncContextReenter)(void 0, $jscomp$context);",
+            "      try {",
+            "        console.log(42);",
+            "      } finally {",
+            "        (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
+            "      }",
+            "    })();",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testGeneratorMethodWithThis() {
     test(
         lines(
@@ -859,6 +900,36 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "      (0, $jscomp.asyncContextReenter)(",
             "          yield (0, $jscomp.asyncContextExit)(",
             "              super.f(), $jscomp$context), $jscomp$context);",
+            "    } finally {",
+            "      (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testGeneratorMethodSuperWithNoYield() {
+    test(
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "class Foo {",
+            "  *f() {",
+            "    return super.f();",
+            "  }",
+            "}"),
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "class Foo {",
+            "  f() {",
+            "    var $jscomp$context = $jscomp.asyncContextEnter();",
+            "    return this.f$jscomp$m1146332801$0($jscomp$context);",
+            "  }",
+            "  *f$jscomp$m1146332801$0($jscomp$context) {",
+            "    (0, $jscomp.asyncContextReenter)(void 0, $jscomp$context);",
+            "    try {",
+            "      return super.f();",
             "    } finally {",
             "      (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "    }",
@@ -1120,6 +1191,31 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "                  $jscomp$context),",
             "              $jscomp$context),",
             "          $jscomp$context);",
+            "    } finally {",
+            "      (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
+            "    }",
+            "  }();",
+            "}"));
+  }
+
+  @Test
+  public void testAsyncGeneratorWithNoYieldNorAwait() {
+    test(
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "async function* f() {",
+            "  return 1;",
+            "}"),
+        lines(
+            "const v = new AsyncContext.Variable('name', 42);",
+            "v.run(100, () => {});",
+            "function f() {",
+            "  var $jscomp$context = $jscomp.asyncContextEnter();",
+            "  return async function*() {",
+            "    (0, $jscomp.asyncContextReenter)(void 0, $jscomp$context);",
+            "    try {",
+            "      return 1;",
             "    } finally {",
             "      (0, $jscomp.asyncContextExit)(void 0, $jscomp$context);",
             "    }",
