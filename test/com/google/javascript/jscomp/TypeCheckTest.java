@@ -5333,6 +5333,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypedefTemplate() {
+    newTest()
+        .addSource(
+            "/** @param {string} x */ function g(x) {}"
+                + "/** @typedef {function(T):T} @template T */"
+                + "var genericFunction;"
+                
+                + "/** @type {genericFunction<number>} */"
+                + "function test() { return '123' }"
+                + "const t=test(123);"
+                + "g(t);")
+        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            "actual parameter 1 of g does not match formal parameter\n"
+                + "found   : number\n"
+                + "required: string")
+        .run();
+  }
+
+  @Test
   public void testBackwardsConstructor1() {
     newTest()
         .addSource(
@@ -19473,6 +19493,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @typedef {!Object<string, !Predicate>} */ var Schema;\n"
                 + "/** @typedef {function(*): boolean|!Schema} */ var Predicate;\n"
                 + "/** @type {!Schema} */ var k;")
+        .run();
+  }
+  
+  @Test
+  @Disabled // Printing warnings for recursive types need addressing
+  public void testCheckObjectKeyRecursiveTypeDoesNotStackOverflowOnWarning() {
+    newTest()
+        .addSource(
+            "/** @typedef {!Object<string, !Predicate>} */ var Schema;\n"
+                + "/** @typedef {function(*): boolean|!Schema} */ var Predicate;\n"
+                + "/** @type {!Schema} */ var k; k = 123")
         .run();
   }
 

@@ -795,6 +795,9 @@ public abstract class JSType {
     return false;
   }
 
+  public final @Nullable JSType findPropertyType(String propertyName) {
+    return findPropertyType(propertyName, false);
+  }
   /**
    * Coerces this type to an Object type, then gets the type of the property whose name is given.
    *
@@ -803,8 +806,8 @@ public abstract class JSType {
    * @return The property's type. {@code null} if the current type cannot have properties, or if the
    *     type is not found.
    */
-  public final @Nullable JSType findPropertyType(String propertyName) {
-    @Nullable JSType propertyType = findPropertyTypeWithoutConsideringTemplateTypes(propertyName);
+  public final @Nullable JSType findPropertyType(String propertyName, boolean forInference) {
+    @Nullable JSType propertyType = forInference ? findPropertyTypeConsideringTemplateTypes(propertyName) : findPropertyTypeWithoutConsideringTemplateTypes(propertyName);
     if (propertyType == null) {
       return null;
     }
@@ -816,7 +819,7 @@ public abstract class JSType {
     }
 
     TemplateTypeMap typeMap = getTemplateTypeMap();
-    TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
+    TemplateTypeReplacer replacer = forInference ? TemplateTypeReplacer.forPartialInference(registry, typeMap) : TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
     return propertyType.visit(replacer);
   }
 
@@ -834,6 +837,15 @@ public abstract class JSType {
     ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
     if (autoboxObjType != null) {
       return autoboxObjType.findPropertyType(propertyName);
+    }
+    return null;
+  }
+
+  @ForOverride
+  protected @Nullable JSType findPropertyTypeConsideringTemplateTypes(String propertyName) {
+    ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
+    if (autoboxObjType != null) {
+      return autoboxObjType.findPropertyType(propertyName, true);
     }
     return null;
   }

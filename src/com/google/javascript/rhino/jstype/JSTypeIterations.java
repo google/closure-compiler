@@ -104,6 +104,7 @@ final class JSTypeIterations {
   static JSType mapTypes(Function<? super JSType, ? extends JSType> mapper, UnionType union) {
     return UnionType.builder(union.registry)
         .addAlternates(mapTypes(mapper, union.getAlternates()))
+        .withTypedefTemplateTypes(union.getOwnTemplateTypes())
         .build();
   }
 

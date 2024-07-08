@@ -254,6 +254,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         && !info.getTemplateTypeNames().isEmpty()
         && !info.isConstructorOrInterface()
         && !isClassDecl(n)
+        && info.getTypedefType() == null
         && !info.containsFunctionDeclaration()
         && getFunctionDecl(n) == null) {
       reportMisplaced(

@@ -311,6 +311,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  protected JSType findPropertyTypeConsideringTemplateTypes(String propertyName) {
+    return referencedType.findPropertyType(propertyName, true);
+  }
+
+  @Override
   public final JSDocInfo getJSDocInfo() {
     return referencedType.getJSDocInfo();
   }

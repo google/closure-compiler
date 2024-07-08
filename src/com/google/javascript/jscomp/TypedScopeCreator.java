@@ -78,6 +78,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.QualifiedName;
@@ -3072,13 +3073,28 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /** Declares a typedef'd name in the {@link JSTypeRegistry}. */
     void declareTypedefType(Node candidate, JSDocInfo info) {
       String typedef = candidate.getQualifiedName();
+      StaticTypedScope templateScope = null;
+
+      ImmutableMap<String, JSTypeExpression> infoTypeKeys = info.getTemplateTypes();
+
+      LinkedHashMap<String, TemplateType> typedefTemplateTypes = null;
+
+      if(!infoTypeKeys.isEmpty()) {
+        typedefTemplateTypes = new LinkedHashMap<String, TemplateType>();
+        for (String templateKey : infoTypeKeys.keySet()) {
+          var type=typeRegistry.createTemplateType(templateKey);
+          typedefTemplateTypes.put(templateKey,type);
+        }
+        templateScope = typeRegistry.createScopeWithTemplates(currentScope, typedefTemplateTypes.values());
+        typeRegistry.registerTemplateTypeNamesInScope(typedefTemplateTypes.values(), candidate);
+      }
 
       // TODO(nicksantos|user): This is a terrible, terrible hack
       // to bail out on recursive typedefs. We'll eventually need
       // to handle these properly.
       typeRegistry.declareType(currentScope, typedef, unknownType);
 
-      JSType realType = info.getTypedefType().evaluate(currentScope, typeRegistry);
+      JSType realType = info.getTypedefType().evaluate(templateScope!=null?templateScope:currentScope, typeRegistry, typedefTemplateTypes);
       if (realType == null) {
         report(JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
       } else {
