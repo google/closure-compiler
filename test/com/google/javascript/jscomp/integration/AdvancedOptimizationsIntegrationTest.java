@@ -58,6 +58,64 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testGoogProvideAndRequire_used() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.provide('goog.string.Const');",
+              "/** @constructor */goog.string.Const = function() {};",
+              "goog.string.Const.from = function(x) { console.log(x)};"),
+          lines(
+              "goog.module('test');",
+              "const Const = goog.require('goog.string.Const');",
+              "Const.from('foo');")
+        },
+        new String[] {
+          lines(
+              "goog.string = {};",
+              "goog.string.Const = function() {};",
+              "goog.string.Const.from = function() { console.log('foo')};"),
+          lines("goog.string.Const.from();")
+        });
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.provide('goog.string.Const');",
+              "/** @constructor */goog.string.Const = function() {};",
+              "goog.string.Const.from = function(x) { console.log(x)};"),
+          lines(
+              "goog.module('test');",
+              "const {from} = goog.require('goog.string.Const');",
+              "from('foo');")
+        },
+        new String[] {
+          lines(
+              "goog.string = {};",
+              "goog.string.Const = function() {};",
+              "goog.string.Const.from = function() { console.log('foo')};"),
+          lines("(0,goog.string.Const.from)();")
+        });
+  }
+
+  @Test
   public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
     useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();

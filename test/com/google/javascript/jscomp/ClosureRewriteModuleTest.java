@@ -116,6 +116,51 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProvidedNamespaceGetsRequiredAndUsed() {
+    test(
+        srcs(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "goog.module('myModule');",
+                "var const1 = goog.require('goog.string.Const');",
+                "console.log(const1.from());")),
+        expected(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "/** @const */ var module$exports$myModule = {};",
+                "goog.require('goog.string.Const');",
+                "console.log(goog.string.Const.from());")));
+  }
+
+  @Test
+  public void testProvidedNamespaceGetsRequiredAndUsed_destructuringImport() {
+    test(
+        srcs(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "goog.module('myModule');",
+                "var {from} = goog.require('goog.string.Const');",
+                "console.log(from());")),
+        expected(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "/** @const */ var module$exports$myModule = {};",
+                "console.log((0, goog.string.Const.from)());")));
+  }
+
+  @Test
   public void testOutOfOrderRequireType() {
     test(
         srcs(

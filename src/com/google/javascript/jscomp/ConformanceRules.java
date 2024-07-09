@@ -1696,6 +1696,63 @@ public final class ConformanceRules {
   }
 
   /**
+   * Banned non-literal arguments passed to {@code goog.string.Const.from}. Possible calls to
+   * goog.string.Const in user code could look like:
+   *
+   * <pre>
+   * `goog.string.Const.from('foo');`
+   * `const alias = goog.string.Const.from; alias(foo);`
+   * `const {from} = goog.require('goog.string.Const'); from(foo);`
+   * `const alias = goog.require('goog.string.Const'); alias.from(foo);`
+   * </pre>
+   */
+  public static final class BanNonLiteralArgsToGoogStringConstFrom extends AbstractRule {
+
+    private static final QualifiedName GOOG_STRING_CONST_FROM =
+        QualifiedName.of("goog.string.Const.from");
+
+    public BanNonLiteralArgsToGoogStringConstFrom(
+        AbstractCompiler compiler, Requirement requirement) throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node node) {
+      if (node.isCall()) {
+        Node name = node.getFirstChild();
+        Node argument = name.getNext();
+        if (argument == null) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        // If the name is a qualified name, it must be goog.string.Const.from or an alias of it.
+        if (name.isName()) {
+          Scope scope = t.getScope();
+          Var var = scope.getVar(name.getString());
+          if (var == null) {
+            return ConformanceResult.CONFORMANCE;
+          }
+          name = var.getInitialValue();
+          if (name == null) {
+            return ConformanceResult.CONFORMANCE;
+          }
+        }
+
+        if (GOOG_STRING_CONST_FROM.matches(name)) {
+          if (!isAllowed(argument)) {
+            return ConformanceResult.VIOLATION;
+          }
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isAllowed(Node argument) {
+      return argument.isStringLit() || (argument.isTemplateLit() && argument.hasOneChild());
+    }
+  }
+
+  /**
    * Banned unknown type references of the form "instance.prop" unless
    * <li>(a) it is immediately cast/asserted, or
    * <li>(b) it is a @template type (until template type restrictions are enabled), or

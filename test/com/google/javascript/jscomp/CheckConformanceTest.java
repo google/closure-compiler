@@ -3256,6 +3256,145 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("goog.dom.createElement(goog.dom.TagName.SCRIPT);");
   }
 
+  private String getBannedNonLiteralArgsConfiguration() {
+    return lines(
+        "requirement: {",
+        "  type: CUSTOM",
+        "  java_class:'com.google.javascript.jscomp.ConformanceRules$BanNonLiteralArgsToGoogStringConstFrom'",
+        "  error_message: 'BanNonLiteralArgsToGoogStringConstFrom Message'",
+        "}");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_directCall() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    // test direct calls to goog.string.Const.from
+    testNoWarning("goog.string.Const.from('foo');");
+    testNoWarning("goog.string.Const.from(`foo`);");
+
+    testWarning(
+        "const foo = 42; goog.string.Const.from(foo);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+    testWarning(
+        "const foo = 42; goog.string.Const.from(`literal_with_interpolation_${foo}`);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_alias() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    // test aliases
+    testNoWarning("const foo = goog.string.Const.from; foo('foo');");
+    testWarning(
+        "const foo = goog.string.Const.from; const bar = ''; foo(bar);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+
+    // test alias of alias
+    testNoWarning("const foo = goog.string.Const.from; const bar = foo; bar('foo');");
+    // this should be a warning, but it isn't.
+    testNoWarning("const foo = goog.string.Const.from; const bar = foo; const baz = ''; bar(baz);");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_googRequire_noAlias() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    Externs externs =
+        externs(
+            lines(
+                DEFAULT_EXTERNS,
+                lines(
+                    "goog.provide('goog.string.Const');",
+                    "/** @constructor */ goog.string.Const = function() {};",
+                    "goog.string.Const.from = function(x) {};")));
+    testNoWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "goog.require('goog.string.Const'); ",
+                "goog.string.Const.from('');")));
+
+    testWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "goog.require('goog.string.Const'); ",
+                "const bar = '';",
+                "goog.string.Const.from(bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_googRequired_localAlias() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    Externs externs =
+        externs(
+            lines(
+                DEFAULT_EXTERNS,
+                lines(
+                    "goog.provide('goog.string.Const');",
+                    "/** @constructor */ goog.string.Const = function() {};",
+                    "goog.string.Const.from = function(x) {};")));
+    testNoWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const const1 = goog.require('goog.string.Const'); ",
+                "const1.from('');")));
+
+    testWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const const1 = goog.require('goog.string.Const'); ",
+                "const bar = '';",
+                "const1.from(bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_googRequired_destructuringImport() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    Externs externs =
+        externs(
+            lines(
+                DEFAULT_EXTERNS,
+                lines(
+                    "goog.provide('goog.string.Const');",
+                    "/** @constructor */ goog.string.Const = function() {};",
+                    "goog.string.Const.from = function(x) {};")));
+    testNoWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const {from} = goog.require('goog.string.Const'); ",
+                "from('');")));
+    testWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const {from} = goog.require('goog.string.Const'); ",
+                "const bar = '';",
+                "from(bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
   @Test
   public void testBanCreateDom() {
     configuration =
