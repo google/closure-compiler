@@ -44,11 +44,13 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 
@@ -71,8 +73,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   private boolean hasMadeReplacement = false;
   private TemplateType keyType;
 
-  // initialized to null because it's unused in ~40% of TemplateTypeReplacers
-  private @Nullable LinkedIdentityHashSet<JSType> seenTypes = null;
+  // Initialize data structures to `null` because these are unused in ~40% of TemplateTypeReplacers.
+  private @Nullable Set<JSType> seenTypes = null;
+  private @Nullable Map<JSType, JSType> visitedObjectTypes = null;
 
   /** Creates a replacer for use during {@code TypeInference}. */
   public static TemplateTypeReplacer forInference(
@@ -128,9 +131,11 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return this.hasMadeReplacement;
   }
 
+  // determinism is unnecessary for seenTypes, because we only call contains/add/remove.
+  @SuppressWarnings("DeterministicDatastructure")
   private void initSeenTypes() {
     if (this.seenTypes == null) {
-      this.seenTypes = new LinkedIdentityHashSet<>();
+      this.seenTypes = Sets.newIdentityHashSet();
     }
   }
 
@@ -242,6 +247,12 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       return objType;
     }
 
+    // If we've visited this object type, we don't need to walk it again.
+    JSType cached = getVisitedObjectTypeOrNull(objType);
+    if (cached != null) {
+      return cached;
+    }
+
     boolean changed = false;
     RecordTypeBuilder builder = new RecordTypeBuilder(registry);
     for (String prop : objType.getOwnPropertyNames()) {
@@ -254,11 +265,10 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       builder.addProperty(prop, afterType, propertyNode);
     }
 
-    if (changed) {
-      return builder.build();
-    }
-
-    return objType;
+    // Use our new type if anything changed, and be sure to update the cache.
+    JSType result = changed ? builder.build() : objType;
+    visitedObjectTypes.put(objType, result);
+    return result;
   }
 
   @Override
@@ -487,5 +497,16 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     } finally {
       this.seenTypes.remove(type);
     }
+  }
+
+  // determinism is unnecessary for visitedObjectTypes, because we only call get/set
+  @SuppressWarnings("DeterministicDatastructure")
+  private @Nullable JSType getVisitedObjectTypeOrNull(JSType type) {
+    // If we've visited this object type, we don't need to walk it again.
+    if (visitedObjectTypes == null) {
+      visitedObjectTypes = new IdentityHashMap<>();
+      return null;
+    }
+    return visitedObjectTypes.get(type);
   }
 }
