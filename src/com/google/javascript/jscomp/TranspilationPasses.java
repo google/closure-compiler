@@ -152,6 +152,11 @@ public class TranspilationPasses {
       passes.maybeAdd(createFeatureRemovalPass("markDynamicImportRemoved", Feature.DYNAMIC_IMPORT));
     }
 
+    // NOTE: This needs to be _before_ await and yield are transpiled away.
+    if (options.getInstrumentAsyncContext()) {
+      passes.maybeAdd(instrumentAsyncContext);
+    }
+
     if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
         || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
       passes.maybeAdd(rewriteAsyncIteration);
@@ -273,11 +278,6 @@ public class TranspilationPasses {
     passes.maybeAdd(rewritePolyfills);
   }
 
-  /** Adds a pass to wrap `await` and `yield` to preserve AsyncContext correctly. */
-  public static void addInstrumentAsyncContextPass(PassListBuilder passes) {
-    passes.maybeAdd(instrumentAsyncContext);
-  }
-
   /** Rewrites ES6 modules */
   private static final PassFactory es6RewriteModuleToCjs =
       PassFactory.builder()
@@ -292,13 +292,13 @@ public class TranspilationPasses {
           .setInternalFactory(Es6RelativizeImportPaths::new)
           .build();
 
-  private static final PassFactory rewriteAsyncFunctions =
+  static final PassFactory rewriteAsyncFunctions =
       PassFactory.builder()
           .setName("rewriteAsyncFunctions")
           .setInternalFactory(RewriteAsyncFunctions::create)
           .build();
 
-  private static final PassFactory rewriteAsyncIteration =
+  static final PassFactory rewriteAsyncIteration =
       PassFactory.builder()
           .setName("rewriteAsyncIteration")
           .setInternalFactory(RewriteAsyncIteration::create)
@@ -394,7 +394,7 @@ public class TranspilationPasses {
 
   static final PassFactory instrumentAsyncContext =
       PassFactory.builder()
-          .setName("InstrumentAsyncContext")
+          .setName("instrumentAsyncContext")
           .setInternalFactory(
               (compiler) ->
                   new InstrumentAsyncContext(

@@ -152,10 +152,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
-    if (options.getInstrumentAsyncContext()) {
-      TranspilationPasses.addInstrumentAsyncContextPass(passes);
-    }
-
     if (options.needsTranspilationFrom(ES2015)) {
       if (options.getRewritePolyfills()) {
         if (options.getIsolatePolyfills()) {
@@ -554,18 +550,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
-
-    // NOTE: This pass is conceptually similar to RewritePolyfills, since it's required by usage
-    // of a particular runtime value (AsyncContext.Variable), rather than by any recognizable
-    // syntax.  But it differs because it makes syntax transformations, rather than simply injecting
-    // runtime library code.  It should run _before_ `await` is tranfsormed to `yield` for
-    // pre-ES2017 output versions, since in that case instrumenting `await` is not required, and the
-    // corresponding `yield`s can also be skipped.  It should also run before generators are
-    // rewritten since it needs to recognize the `yield` syntax.  Both of these happen during the
-    // post-normalization passes.
-    if (options.getInstrumentAsyncContext()) {
-      TranspilationPasses.addInstrumentAsyncContextPass(passes);
-    }
 
     if (options.rewritePolyfills || options.getIsolatePolyfills()) {
       TranspilationPasses.addRewritePolyfillPass(passes);
@@ -1307,6 +1291,21 @@ public final class DefaultPassConfig extends PassConfig {
         isolatePolyfills,
         "Polyfill isolation should be done after RemovedUnusedCode. Otherwise unused polyfill"
             + " removal will not find any polyfill usages and will delete all polyfills.");
+
+    optimizations.assertPassOrder(
+        TranspilationPasses.instrumentAsyncContext,
+        TranspilationPasses.rewriteAsyncIteration,
+        "AsyncContext should be instrumentated before await and/or yield is transpiled away");
+
+    optimizations.assertPassOrder(
+        TranspilationPasses.instrumentAsyncContext,
+        TranspilationPasses.rewriteAsyncFunctions,
+        "AsyncContext should be instrumentated before await and/or yield is transpiled away");
+
+    optimizations.assertPassOrder(
+        TranspilationPasses.instrumentAsyncContext,
+        TranspilationPasses.rewriteGenerators,
+        "AsyncContext should be instrumentated before await and/or yield is transpiled away");
   }
 
   /** Checks that all goog.require()s are used. */
