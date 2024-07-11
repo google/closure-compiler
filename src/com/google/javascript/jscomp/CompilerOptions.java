@@ -543,9 +543,6 @@ public class CompilerOptions implements Serializable {
   /** Removes trivial constructors where ES class implicit constructors are sufficient. */
   boolean optimizeESClassConstructors;
 
-  /** Provide formal names for elements of arguments array. */
-  public boolean optimizeArgumentsArray;
-
   /** Use type information to enable additional optimization opportunities. */
   boolean useTypesForLocalOptimization;
 
@@ -2195,10 +2192,6 @@ public class CompilerOptions implements Serializable {
     this.optimizeESClassConstructors = optimizeESClassConstructors;
   }
 
-  public void setOptimizeArgumentsArray(boolean optimizeArgumentsArray) {
-    this.optimizeArgumentsArray = optimizeArgumentsArray;
-  }
-
   public void setVariableRenaming(VariableRenamingPolicy variableRenaming) {
     this.variableRenaming = variableRenaming;
   }
@@ -2867,7 +2860,6 @@ public class CompilerOptions implements Serializable {
         .add("moduleRoots", moduleRoots)
         .add("nameGenerator", nameGenerator)
         .add("numParallelThreads", numParallelThreads)
-        .add("optimizeArgumentsArray", optimizeArgumentsArray)
         .add("optimizeCalls", optimizeCalls)
         .add("optimizeESClassConstructors", optimizeESClassConstructors)
         .add("outputCharset", outputCharset)

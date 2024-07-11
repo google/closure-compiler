@@ -133,7 +133,6 @@ public final class CompilerOptionsTest {
     options.setDefineToBooleanLiteral("falseVar", false);
     options.setDefineToNumberLiteral("threeVar", 3);
     options.setDefineToStringLiteral("strVar", "str");
-    options.setOptimizeArgumentsArray(true);
     options.setAmbiguateProperties(false);
     options.setOutputCharset(US_ASCII);
 
@@ -149,7 +148,6 @@ public final class CompilerOptionsTest {
     assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
     assertEquivalent(Node.newString("str"), actual.get("strVar"));
     assertThat(options.shouldAmbiguateProperties()).isFalse();
-    assertThat(options.optimizeArgumentsArray).isTrue();
     assertThat(options.getOutputCharset()).isEqualTo(US_ASCII);
   }
 

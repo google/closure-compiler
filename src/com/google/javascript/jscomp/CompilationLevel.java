@@ -130,7 +130,6 @@ public enum CompilationLevel {
     options.setCollapseVariableDeclarations(true);
     options.convertToDottedProperties = true;
     options.labelRenaming = true;
-    options.setOptimizeArgumentsArray(true);
     options.setRemoveUnusedVariables(Reach.LOCAL_ONLY);
     options.collapseObjectLiterals = true;
     options.setProtectHiddenSideEffects(true);
@@ -160,7 +159,6 @@ public enum CompilationLevel {
     options.setCollapseVariableDeclarations(true);
     options.setConvertToDottedProperties(true);
     options.setLabelRenaming(true);
-    options.setOptimizeArgumentsArray(true);
     options.setCollapseObjectLiterals(true);
     options.setProtectHiddenSideEffects(true);
 

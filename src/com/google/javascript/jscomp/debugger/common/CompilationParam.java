@@ -667,12 +667,11 @@ public enum CompilationParam {
   OPTIMIZE_ARGUMENTS_ARRAY(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setOptimizeArgumentsArray(value);
     }
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.optimizeArgumentsArray;
+      return false;
     }
   },
 
