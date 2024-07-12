@@ -694,6 +694,11 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup INVALID_CONST_PARAM =
       DiagnosticGroups.registerUnsuppressibleGroup(ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
 
+  public static final DiagnosticGroup INVALID_CLOSURE_UNAWARE_ANNOTATED_CODE =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE,
+          ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
+
   public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
       DiagnosticGroups.registerUnsuppressibleGroup(
           TranspilationUtil.CANNOT_CONVERT, TranspilationUtil.CANNOT_CONVERT_YET);

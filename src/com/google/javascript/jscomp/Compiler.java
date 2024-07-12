@@ -524,6 +524,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     ImmutableList.Builder<WarningsGuard> guards = ImmutableList.builder();
     guards
         .add(new J2clSuppressWarningsGuard())
+        .add(new ClosureUnawareCodeWarningsGuard())
         .add(new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()))
         .add(warningsGuard);
 

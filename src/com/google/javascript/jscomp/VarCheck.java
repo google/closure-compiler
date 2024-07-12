@@ -162,6 +162,16 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // VarCheck is one of the few passes that runs after unwrapping closure-unaware code during
+    // finalization, and unfortunately that kind of code can contain all sorts of references.
+    // We could adjust the pass order so that unwrapping happens after this pass, but that would
+    // move VarCheck before AST Validity checking. Instead, we will just teach VarCheck to skip
+    // closure-unaware code.
+    // TODO: b/321233583 - once NodeTraversal supports skipping closure unaware code as a feature,
+    // replace this check with that.
+    if (n.isClosureUnawareCode()) {
+      return false;
+    }
     return true;
   }
 

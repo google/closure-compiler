@@ -1,0 +1,19 @@
+/** @closureUnaware */
+goog.module('a.b.c');
+
+(function() {
+   class ClazzWithStatic {
+     constructor() {}
+
+     /** @nosideeffects */
+     static Create() {
+       if (Math.random() > .5) {
+         throw new Error('Bad input');
+       }
+       return new ClazzWithStatic();
+     }
+   }
+
+   const xUnused = ClazzWithStatic.Create();
+   globalThis['a_b'] = xUnused;
+}).call(globalThis);

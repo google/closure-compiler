@@ -244,6 +244,7 @@ class IRFactory {
 
   private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private Node resultNode;
+  private boolean isClosureUnawareCode = false;
 
   private IRFactory(
       StaticSourceFile sourceFile,
@@ -263,7 +264,14 @@ class IRFactory {
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
 
     this.config = config;
-    this.errorReporter = errorReporter;
+    // We can't just use the existing error reporter, because we might be parsing code that is
+    // closure-unaware, and there is a conceptually-circular dependency that makes suppressing
+    // spurious errors difficult: we need to be able to parse a file to determine if the JSDoc was
+    // annotated as closure-unaware, but that parsing hasn't finished when the existing error
+    // reporter is called with the parse errors from that code. Instead, we have to locally track
+    /// whether the parser has seen the relevant closure-unaware annotation, and locally drop the
+    // errors, handing any other errors off to the provided error reporter.
+    this.errorReporter = new ClosureUnawareCodeSkippingJsDocInfoErroReporter(this, errorReporter);
     this.transformDispatcher = new TransformDispatcher();
 
     if (config.strictMode().isStrict()) {
@@ -639,6 +647,9 @@ class IRFactory {
     }
 
     JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
+    if (newFileoverview != null && newFileoverview.isClosureUnawareCode()) {
+      this.isClosureUnawareCode = true;
+    }
     if (identical(newFileoverview, this.firstFileoverview)) {
       return false;
     }
@@ -1058,6 +1069,34 @@ class IRFactory {
 
   void setLengthFrom(Node node, Node ref) {
     node.setLength(ref.getLength());
+  }
+
+  private static final class ClosureUnawareCodeSkippingJsDocInfoErroReporter
+      implements ErrorReporter {
+    private final ErrorReporter delegate;
+    private final IRFactory host;
+
+    private ClosureUnawareCodeSkippingJsDocInfoErroReporter(
+        IRFactory host, ErrorReporter delegate) {
+      this.delegate = delegate;
+      this.host = host;
+    }
+
+    @Override
+    public void error(String message, String sourceName, int line, int lineOffset) {
+      if (host.isClosureUnawareCode) {
+        return;
+      }
+      delegate.error(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void warning(String message, String sourceName, int line, int lineOffset) {
+      if (host.isClosureUnawareCode) {
+        return;
+      }
+      delegate.warning(message, sourceName, line, lineOffset);
+    }
   }
 
   private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");

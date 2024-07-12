@@ -565,6 +565,13 @@ public final class AstValidator implements CompilerPass {
    *     a BLOCK or IF)
    */
   private void validateTypeInformation(Node n) {
+    if (n.isClosureUnawareCode()) {
+      // We don't expect closure-unaware code to have type information.
+      // TODO: b/321233583 - Maybe this should be a separate validation step, to ensure that nothing
+      // tries to infer type information where we are mostly unsure of it?
+
+      return;
+    }
     if (typeValidationMode.equals(TypeInfoValidation.NONE)) {
       return;
     }
@@ -2267,6 +2274,13 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
+    if (n.isClosureUnawareCode()) {
+      // Closure-unaware code is currently hidden from transpilation passes in the compiler, so it
+      // might still contain features that should have been transpiled.
+      // TODO: b/321233583 - Once JSCompiler can transpile closure-unaware code, remove this
+      // early-return to validate that all closure-unaware code is transpiled properly.
+      return;
+    }
     FeatureSet allowbleFeatures = compiler.getAllowableFeatures();
     // Checks that feature present in the AST is recorded in the compiler's featureSet.
     if (!n.isFromExterns() && !allowbleFeatures.has(feature)) {
