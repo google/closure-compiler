@@ -38,6 +38,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -62,6 +63,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private static final String ICU_MSG_FUNCTION_QNAME =
       "goog.i18n.messages." + ICU_MSG_FUNCTION_NAME;
   private static final String MSG_FALLBACK_FUNCTION_NAME = "goog.getMsgWithFallback";
+
+  /**
+   * Expose a list of functions that are used in message extraction. Standalone tools that run
+   * message extraction can use this list to filter out files that do not contain any of these
+   * functions.
+   */
+  public static final List<String> FUNCTIONS_USED_IN_MESSAGE_EXTRACTION =
+      ImmutableList.of(MSG_FUNCTION_NAME, ICU_MSG_FUNCTION_NAME);
 
   /**
    * Identifies a message with a specific ID which doesn't get extracted from the JS code containing
