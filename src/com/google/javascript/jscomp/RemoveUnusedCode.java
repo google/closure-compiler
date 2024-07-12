@@ -15,6 +15,7 @@
  */
 
 package com.google.javascript.jscomp;
+import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -735,17 +736,6 @@ class RemoveUnusedCode implements CompilerPass {
       String classVarName = null;
       boolean classDefiningCall = false;
 
-      boolean isPureOrBreakMyCode = false;
-      JSDocInfo jsDocInfo = callNode.getJSDocInfo();
-      if (jsDocInfo != null && jsDocInfo.isPureOrBreakMyCode()) {
-        isPureOrBreakMyCode = true;
-      }
-
-      if (isPureOrBreakMyCode && parent.isExprResult()) {
-        removeExpressionCompletely(callNode);
-        return;
-      }
-
       // A call that is a statement unto itself or the left side of a comma expression might be
       // a call to a known method for doing class setup
       // e.g. $jscomp.inherits(Class, BaseClass) or goog.addSingletonGetter(Class)
@@ -772,6 +762,14 @@ class RemoveUnusedCode implements CompilerPass {
       }
 
       if (classVar == null || !classVar.isGlobal()) {
+        if(!mayHaveSideEffects(callNode) && parent.isExprResult()) {
+          RemovableBuilder builder = new RemovableBuilder();
+          for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
+            builder.addContinuation(new Continuation(child, scope));
+          }
+          builder.buildClassSetupCall(callNode).remove(compiler);
+          return;
+        }
         // The call we are traversing does not modify a class definition,
         // or the class is not specified with a simple variable name,
         // or the variable name is not global.
