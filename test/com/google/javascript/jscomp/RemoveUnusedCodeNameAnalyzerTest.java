@@ -2954,5 +2954,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     test("let a = /** @pureOrBreakMyCode */(alert());", "");
     test("var a = /** @pureOrBreakMyCode */(alert());", "");
     test("/** @pureOrBreakMyCode */(alert());", "");
+    test("/** @pureOrBreakMyCode */(alert(alert()));", "alert()");
   }
 }
