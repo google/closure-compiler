@@ -541,7 +541,6 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "function f() { while(x) { if (y) { return x } x = 1} return x}",
         "function f() { while(x) { if (y) { break    } x = 1} return x}");
 
-    // RemoveUnreachableCode would take care of the useless breaks.
     fold(
         "function f() { while(x) { if (y) { return x } return x} return x}",
         "function f() { while(x) { if (y) {} break }return x}");
@@ -621,7 +620,6 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "function f() { while(x) { if (y) { throw x } x = 1} throw x}",
         "function f() { while(x) { if (y) { break    } x = 1} throw x}");
 
-    // RemoveUnreachableCode would take care of the useless breaks.
     fold(
         "function f() { while(x) { if (y) { throw x } throw x} throw x}",
         "function f() { while(x) { if (y) {} break }throw x}");
