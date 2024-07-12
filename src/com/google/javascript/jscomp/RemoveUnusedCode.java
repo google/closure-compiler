@@ -761,7 +761,7 @@ class RemoveUnusedCode implements CompilerPass {
       }
 
       if (classVar == null || !classVar.isGlobal()) {
-        if(!mayHaveSideEffects(callNode) && parent.isExprResult()) {
+        if (!mayHaveSideEffects(callNode) && parent.isExprResult()) {
           RemovableBuilder builder = new RemovableBuilder();
           for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
             builder.addContinuation(new Continuation(child, scope));
