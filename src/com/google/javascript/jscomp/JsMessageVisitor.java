@@ -58,7 +58,8 @@ import org.jspecify.annotations.Nullable;
 @GwtIncompatible("JsMessage, java.util.regex")
 public abstract class JsMessageVisitor extends AbstractPostOrderCallback implements CompilerPass {
 
-  private static final String MSG_FUNCTION_NAME = "goog.getMsg";
+  private static final String MSG_FUNCTION_NAME = "getMsg";
+  private static final String MSG_FUNCTION_QNAME = "goog." + MSG_FUNCTION_NAME;
   private static final String ICU_MSG_FUNCTION_NAME = "declareIcuTemplate";
   private static final String ICU_MSG_FUNCTION_QNAME =
       "goog.i18n.messages." + ICU_MSG_FUNCTION_NAME;
@@ -113,7 +114,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       DiagnosticType.warning(
           "JSC_MSG_NOT_INITIALIZED_CORRECTLY",
           "Message must be initialized using a call to "
-              + MSG_FUNCTION_NAME
+              + MSG_FUNCTION_QNAME
               + " or "
               + ICU_MSG_FUNCTION_QNAME);
 
@@ -323,7 +324,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         trackMessage(traversal, possiblyObfuscatedMessageKey, msgNode, extractedMessage);
         reportErrorIfEmptyMessage(node, extractedMessage);
         processIcuTemplateDefinition(icuTemplateDefinition);
-      } else if (fnNameNode.matchesQualifiedName(MSG_FUNCTION_NAME)) {
+      } else if (fnNameNode.matchesQualifiedName(MSG_FUNCTION_QNAME)) {
         final JsMessageDefinition jsMessageDefinition =
             extractJsMessageDefinition(msgNode, jsDocInfo, messageKeyFromLhs, sourceName);
         final JsMessage extractedMessage = jsMessageDefinition.getMessage();
@@ -344,7 +345,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
                 msgNode,
                 MESSAGE_TREE_MALFORMED,
                 "Message must be initialized using a call to "
-                    + MSG_FUNCTION_NAME
+                    + MSG_FUNCTION_QNAME
                     + " or "
                     + ICU_MSG_FUNCTION_NAME
                     + " (from goog.i18n.messages)."));
@@ -510,7 +511,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     // goog.getMsg()
     final Node callee = call.getFirstChild();
-    if (callee.matchesQualifiedName(MSG_FUNCTION_NAME) || isDeclareIcuTemplateCallee(callee)) {
+    if (callee.matchesQualifiedName(MSG_FUNCTION_QNAME) || isDeclareIcuTemplateCallee(callee)) {
       googMsgNodes.add(call);
     } else if (callee.matchesQualifiedName(MSG_FALLBACK_FUNCTION_NAME)) {
       visitFallbackFunctionCall(traversal, call);
