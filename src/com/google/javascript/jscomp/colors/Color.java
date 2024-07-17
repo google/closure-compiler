@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import com.google.javascript.rhino.ClosurePrimitive;
 import org.jspecify.annotations.Nullable;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
@@ -57,11 +59,14 @@ public abstract class Color {
    */
   public abstract boolean isClosureAssert();
 
+  public abstract @Nullable ClosurePrimitive getClosurePrimitive();
+
   public abstract ImmutableSet<Color> getUnionElements();
 
   public static Builder singleBuilder() {
     return new AutoValue_Color.Builder()
         .setClosureAssert(false)
+        .setClosurePrimitive(null)
         .setConstructor(false)
         .setInstanceColors(ImmutableSet.of())
         .setInvalidating(false)
@@ -180,6 +185,8 @@ public abstract class Color {
     public abstract Builder setOwnProperties(ImmutableSet<String> x);
 
     public abstract Builder setClosureAssert(boolean x);
+
+    public abstract Builder setClosurePrimitive(ClosurePrimitive x);
 
     public abstract Builder setInstanceColors(ImmutableSet<Color> x);
 

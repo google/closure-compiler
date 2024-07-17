@@ -38,6 +38,8 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.rhino.ClosurePrimitive;
+
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -284,6 +286,7 @@ public final class ColorPool {
       boolean isConstructor = false;
       boolean isInvalidating = false;
       boolean propertiesKeepOriginalName = false;
+      ClosurePrimitive primitive = null;
 
       for (Map.Entry<ShardView, TypeProto> entry : viewToProto.entrySet()) {
         ShardView shard = entry.getKey();
@@ -294,6 +297,9 @@ public final class ColorPool {
 
         for (Integer p : objProto.getInstanceTypeList()) {
           instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));
+        }
+        if (objProto.hasClosurePrimitive()) {
+          primitive = ClosurePrimitive.values()[objProto.getClosurePrimitive()];
         }
 
         boolean isClosureAssertBool = objProto.getClosureAssert();
@@ -320,6 +326,7 @@ public final class ColorPool {
           .setPrototypes(prototypes.build())
           .setOwnProperties(ownProperties.build())
           .setClosureAssert(isClosureAssert.toBoolean(false))
+          .setClosurePrimitive(primitive)
           .setConstructor(isConstructor)
           .setInvalidating(isInvalidating)
           .setPropertiesKeepOriginalName(propertiesKeepOriginalName)

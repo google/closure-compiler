@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import java.io.IOException;
@@ -366,12 +367,18 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
-                    ObjectTypeProto.newBuilder().setClosureAssert(true).setIsInvalidating(true))
+                    ObjectTypeProto.newBuilder()
+                        .setClosureAssert(true)
+                        .setClosurePrimitive(ClosurePrimitive.ASSERTS_TRUTHY.ordinal())
+                        .setIsInvalidating(true))
                 .build(),
             TypeProto.newBuilder()
                 .setObject(
                     // ClosurePrimitive.ASSERTS_FAIL is not a removable Closure assertion
-                    ObjectTypeProto.newBuilder().setClosureAssert(false).setIsInvalidating(true))
+                    ObjectTypeProto.newBuilder()
+                        .setClosureAssert(false)
+                        .setClosurePrimitive(ClosurePrimitive.ASSERTS_FAIL.ordinal())
+                        .setIsInvalidating(true))
                 .build());
   }
 
@@ -639,7 +646,10 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         .ignoringFieldDescriptors(IS_INVALIDATING)
         .contains(
             TypeProto.newBuilder()
-                .setObject(ObjectTypeProto.newBuilder().setClosureAssert(true))
+                .setObject(
+                    ObjectTypeProto.newBuilder()
+                        .setClosureAssert(true)
+                        .setClosurePrimitive(ClosurePrimitive.ASSERTS_TRUTHY.ordinal()))
                 .build());
   }
 

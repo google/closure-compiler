@@ -22,10 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.NominalTypeBuilder;
-import com.google.javascript.rhino.QualifiedName;
+import com.google.javascript.rhino.*;
 import com.google.javascript.rhino.jstype.FunctionType;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
@@ -328,7 +325,12 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     if (super.isPropertyRenameFunction(nameNode)) {
       return true;
     }
-    return GOOG_REFLECT_OBJECTPROPERTY.matches(nameNode)
+    ClosurePrimitive primitive =
+        nameNode != null
+            ? nameNode.getColor() != null ? nameNode.getColor().getClosurePrimitive() : null
+            : null;
+    return ClosurePrimitive.REFLECT_OBJECT_PROPERTY == primitive
+        || GOOG_REFLECT_OBJECTPROPERTY.matches(nameNode)
         || GOOG_REFLECT_OBJECTPROPERTY_MANGLED.matches(nameNode);
   }
 
@@ -351,6 +353,10 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     Node callName = callNode.getFirstChild();
+    ClosurePrimitive primitive =
+        callName != null
+            ? callName.getColor() != null ? callName.getColor().getClosurePrimitive() : null
+            : null;
     if (!(GOOG_REFLECT_OBJECT.matches(callName) || JSCOMP_REFLECTOBJECT.matches(callName))
         || !callNode.hasXChildren(3)) {
       return null;
@@ -454,6 +460,13 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   static final Node googCacheReflect = IR.getprop(IR.name("goog"), "reflect", "cache");
 
   private boolean matchesCacheMethodName(Node target) {
+    ClosurePrimitive primitive =
+        target != null
+            ? target.getColor() != null ? target.getColor().getClosurePrimitive() : null
+            : null;
+    if (primitive == ClosurePrimitive.REFLECT_CACHE) {
+      return true;
+    }
     if (target.isGetProp()) {
       return target.matchesQualifiedName(googCacheReflect);
     } else if (target.isName()) {

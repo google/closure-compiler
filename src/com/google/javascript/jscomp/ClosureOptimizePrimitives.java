@@ -20,10 +20,8 @@ import static com.google.javascript.rhino.dtoa.DToA.numberToString;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.QualifiedName;
-import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.*;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -59,15 +57,19 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node fn = n.getFirstChild();
+        ClosurePrimitive primitive =
+            fn != null ? fn.getColor() != null ? fn.getColor().getClosurePrimitive() : null : null;
         // TODO(user): Once goog.object becomes a goog.module, remove "goog$object$create" and
         // related checks.
         if (compiler.getCodingConvention().isPropertyRenameFunction(fn)) {
           processRenamePropertyCall(n);
-        } else if (fn.matchesName("goog$object$create")
+        } else if (ClosurePrimitive.OBJECT_CREATE == primitive
+            || fn.matchesName("goog$object$create")
             || fn.matchesName("module$contents$goog$object_create")
             || GOOG_OBJECT_CREATE.matches(fn)) {
           processObjectCreateCall(n);
-        } else if (fn.matchesName("goog$object$createSet")
+        } else if (ClosurePrimitive.OBJECT_CREATE_SET == primitive
+            || fn.matchesName("goog$object$createSet")
             || fn.matchesName("module$contents$goog$object_createSet")
             || GOOG_OBJECT_CREATESET.matches(fn)) {
           processObjectCreateSetCall(n);

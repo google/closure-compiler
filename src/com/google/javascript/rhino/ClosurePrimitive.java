@@ -56,7 +56,12 @@ import org.jspecify.annotations.Nullable;
 public enum ClosurePrimitive {
   ASSERTS_FAIL, // A function that always throws an error
   ASSERTS_MATCHES_RETURN, // A function that asserts its first parameter matches the return type
-  ASSERTS_TRUTHY; // A function that asserts its first parameter is truthy and returns the param
+  ASSERTS_TRUTHY, // A function that asserts its first parameter is truthy and returns the param
+  OBJECT_CREATE,
+  OBJECT_CREATE_SET,
+  REFLECT_CACHE,
+  REFLECT_OBJECT,
+  REFLECT_OBJECT_PROPERTY;
 
   /**
    * Maps human-readable ids to enum members.
@@ -71,7 +76,17 @@ public enum ClosurePrimitive {
           "asserts.truthy",
           ASSERTS_TRUTHY,
           "asserts.matchesReturn",
-          ASSERTS_MATCHES_RETURN);
+          ASSERTS_MATCHES_RETURN,
+          "object.create",
+          OBJECT_CREATE,
+          "object.createSet",
+          OBJECT_CREATE_SET,
+          "reflect.object",
+          REFLECT_CACHE,
+          "reflect.cache",
+          REFLECT_OBJECT,
+          "reflect.objectProperty",
+          REFLECT_OBJECT_PROPERTY);
 
   /**
    * Returns the ClosurePrimitive corresponding to the given string id.

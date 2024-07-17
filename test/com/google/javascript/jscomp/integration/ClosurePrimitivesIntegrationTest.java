@@ -44,6 +44,18 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
           "  return propName;",
           "};");
 
+  private static final String ES6_RENAME_FN_DEFINITION =
+      lines(
+          "/**",
+          " * @param {string} propName",
+          " * @param {Object} type",
+          " * @return {string}",
+          " * @closurePrimitive {reflect.objectProperty}",
+          " */",
+          "export function objectProperty(propName, type) {",
+          "  return propName;",
+          "};");
+
   private static final String EXTERNS =
       lines(
           "/**",
@@ -75,6 +87,37 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         new String[] {
           "",
           "goog.b = {};",
+          lines(
+              "function a() {}",
+              "window.Foo = a;",
+              "a.prototype.a = function(b) { console.log(b) };",
+              "a.prototype.log = a.prototype.a;",
+              "var c = new a;",
+              "console.log('a');",
+              "c.a('foobar');")
+        });
+  }
+
+  @Test
+  public void testEs6PrototypePropRename() {
+    test(
+        createCompilerOptions(),
+        new String[] {
+          EXTERNS,
+          ES6_RENAME_FN_DEFINITION,
+          lines(
+              "import * as reflect from './i1.js';",
+              "/** @constructor */ function Foo() {}",
+              "window['Foo'] = Foo;",
+              "Foo.prototype.log = function(input) { console.log(input) };",
+              "Foo.prototype['log'] = Foo.prototype.log;",
+              "var foo = new Foo;",
+              "console.log(reflect.objectProperty('log', foo));",
+              "foo.log('foobar');")
+        },
+        new String[] {
+          "",
+          "",
           lines(
               "function a() {}",
               "window.Foo = a;",

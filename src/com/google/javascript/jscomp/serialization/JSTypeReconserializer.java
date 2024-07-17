@@ -311,6 +311,7 @@ final class JSTypeReconserializer {
     boolean isConstructor = false;
     boolean isInvalidating = false;
     boolean propertiesKeepOriginalName = false;
+    ClosurePrimitive primitive = null;
 
     for (JSType type : seen.jstypes) {
       ObjectType objType = checkNotNull(type.toMaybeObjectType(), type);
@@ -327,6 +328,9 @@ final class JSTypeReconserializer {
         }
 
         isClosureAssert |= isClosureAssert(fnType.getClosurePrimitive());
+        if (fnType.getClosurePrimitive() != null) {
+          primitive = fnType.getClosurePrimitive();
+        }
       }
 
       for (String ownProperty : objType.getOwnPropertyNames()) {
@@ -347,7 +351,7 @@ final class JSTypeReconserializer {
       propertiesKeepOriginalName |= objType.isEnumType();
     }
 
-    ObjectTypeProto objectProto =
+    ObjectTypeProto.Builder objectProtoBuilder =
         ObjectTypeProto.newBuilder()
             .addAllInstanceType(instancePointers)
             .addAllOwnProperty(ownProperties)
@@ -356,9 +360,11 @@ final class JSTypeReconserializer {
             .setIsInvalidating(isInvalidating)
             .setMarkedConstructor(isConstructor)
             .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
-            .setUuid(seen.colorId.asByteString())
-            .build();
-    return TypeProto.newBuilder().setObject(objectProto).build();
+            .setUuid(seen.colorId.asByteString());
+    if (primitive != null) {
+      objectProtoBuilder.setClosurePrimitive(primitive.ordinal());
+    }
+    return TypeProto.newBuilder().setObject(objectProtoBuilder).build();
   }
 
   /**
@@ -536,6 +542,12 @@ final class JSTypeReconserializer {
         return true;
 
       case ASSERTS_FAIL: // technically an assertion function, but not removed by ClosureCodeRemoval
+        return false;
+      case OBJECT_CREATE:
+      case OBJECT_CREATE_SET:
+      case REFLECT_CACHE:
+      case REFLECT_OBJECT:
+      case REFLECT_OBJECT_PROPERTY:
         return false;
     }
     throw new AssertionError();

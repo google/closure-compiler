@@ -80,6 +80,8 @@ message ObjectTypeProto {
     // offsets into the associated StringPool
     repeated int32 typename_pointer = 1;
   }
+
+  optional int32 closure_primitive = 16;
 }
 
 /**
