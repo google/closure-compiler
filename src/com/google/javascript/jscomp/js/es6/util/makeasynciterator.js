@@ -69,15 +69,22 @@ $jscomp.AsyncIteratorFromSyncWrapper = function(iterator) {
     return Promise.resolve(iterator.next(param));
   };
 
-  if (iterator['throw'] !== undefined) {
-    /**
-     * @param {?} param
-     * @return {!Promise<!IIterableResult<T>>}
-     */
-    this['throw'] = function(param) {
-      return Promise.resolve(iterator['throw'](param));
-    };
-  }
+  /**
+   * @param {?} param
+   * @return {!Promise<!IIterableResult<T>>}
+   */
+  this['throw'] = function(param) {
+    return new Promise(function(resolve, reject) {
+      var rethrow = iterator['throw'];
+      if (rethrow !== undefined) {
+        resolve(rethrow.call(iterator, param));
+      } else {
+        var close = iterator['return'];
+        if (close !== undefined) close.call(iterator);
+        reject(new TypeError('no `throw` method'));
+      }
+    });
+  };
 
   if (iterator['return'] !== undefined) {
     /**
