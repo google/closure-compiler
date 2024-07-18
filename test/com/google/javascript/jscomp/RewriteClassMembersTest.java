@@ -58,180 +58,128 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     };
   }
 
-  private void rewriteFieldOrBlockTest(Sources srcs, Expected originalExpected) {
+  private void computedFieldTest(Sources srcs, Expected originalExpected) {
     Expected modifiedExpected =
         expected(
             UnitTestUtils.updateGenericVarNamesInExpectedFiles(
                 (FlatSources) srcs,
                 originalExpected,
-                ImmutableMap.of(
-                    "COMPFIELD",
-                    "$jscomp$compfield$",
-                    "STATIC$BLOCK",
-                    "$jscomp$static$block$",
-                    "STATIC$FIELD",
-                    "$jscomp$static$init$")));
+                ImmutableMap.of("COMPFIELD", "$jscomp$compfield$")));
     test(srcs, modifiedExpected);
   }
 
   @Test
   public void testClassStaticBlock() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = 2;",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();"))); // uses `this` in static block
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = 2",
+            "    this.y = x",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  let x = 2;",
+            "  C.y = x",
+            "}")); // uses `this` in static block
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = 2",
-                "    this.y = x",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "/** @nocollapse */ ",
-                "static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "    this.y = x;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();"))); // uses `this` in static block
+    test(
+        lines(
+            "class B {",
+            "  static y = 3;",
+            "}",
+            "class C extends B {", //
+            "  static {",
+            "    let x = super.y;",
+            "  }",
+            "}"),
+        lines(
+            "class B {}",
+            "B.y = 3;",
+            "class C extends B {}", //
+            "{",
+            // TODO (user): Object.getPrototypeOf(C) is the technically correct way.
+            //  We are not doing this for code size reasons.
+            "  let x = B.y", /* Object.getPrototypeOf(C).y */
+            "}")); // uses `super`
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class B {",
-                "  static y = 3;",
-                "}",
-                "class C extends B {", //
-                "  static {",
-                "    let x = super.y;",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class B {}",
-                "B.y = 3;",
-                "class C extends B {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = super.y;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();"))); // uses `super`
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    C.x = 2",
+            "    const y = this.x",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  C.x = 2;",
+            "  const y = C.x",
+            "}")); // uses `this` in static block
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    C.x = 2",
-                "    const y = this.x",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    C.x = 2;",
-                "    const y = this.x;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();"))); // uses `this` in static block
+    test(
+        lines(
+            "var z = 1", //
+            "class C {",
+            "  static {",
+            "    let x = 2",
+            "    var z = 3;",
+            "  }",
+            "}"),
+        lines(
+            "var z = 1", //
+            "class C {}",
+            "{",
+            "  let x = 2",
+            "  var z$jscomp$1 = 3;",
+            "}")); // `var` in static block
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "var z = 1", //
-                "class C {",
-                "  static {",
-                "    let x = 2",
-                "    var z = 3;",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "var z = 1", //
-                "class C {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "    var z$jscomp$1 = 3;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();"))); // `var` in static block
-
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let C = class {",
-                "  static prop = 5;",
-                "};",
-                "let D = class extends C {",
-                "  static {",
-                "    this.prop = 10;",
-                "  }",
-                "};")),
-        expected(
-            lines(
-                "let C = class {}",
-                "C.prop = 5;",
-                "let D = class extends C {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    this.prop = 10;",
-                "  }",
-                "}",
-                "D.STATIC$BLOCK$0();"))); //
+    test(
+        lines(
+            "let C = class {",
+            "  static prop = 5;",
+            "};",
+            "let D = class extends C {",
+            "  static {",
+            "    this.prop = 10;",
+            "  }",
+            "};"),
+        lines(
+            "let C = class {}",
+            "C.prop = 5;",
+            "let D = class extends C {}",
+            "{",
+            "  D.prop = 10;",
+            "}")); //
 
     // TODO (user): This will be fixed by moving the RewriteClassMembers pass after
     // normalization, because normalization will split these two declarations into separate let
     // assignments.
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let C = class {",
-                "  static prop = 5;",
-                "},",
-                "D = class extends C {",
-                "  static {",
-                "    this.prop = 10;",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "let C = class {}",
-                "C.prop = 5;",
-                "let D = class extends C {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    this.prop = 10;",
-                "  }",
-                "}",
-                "D.STATIC$BLOCK$0();"))); // defines classes in the same let statement
+    test(
+        lines(
+            "let C = class {",
+            "  static prop = 5;",
+            "},",
+            "D = class extends C {",
+            "  static {",
+            "    this.prop = 10;",
+            "  }",
+            "}"),
+        lines(
+            "let C = class {}",
+            "C.prop = 5;", 
+            "let D = class extends C {}",
+            "{",
+            "  D.prop = 10;",
+            "}")); // defines classes in the same let statement
   }
 
   @Test
   public void testMultipleStaticBlocks() {
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "var z = 1", //
@@ -251,21 +199,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             lines(
                 "var z = 1", //
                 "var COMPFIELD$0 = z;",
-                "class C {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$1() {",
-                "    z = z + this.x;",
-                "  }",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$2() {",
-                "    z = z + this.w;",
-                "   }",
-                "}",
+                "class C {}",
                 "C.x = 2;",
-                "C.STATIC$BLOCK$1();",
+                "{",
+                "    z = z + C.x;",
+                "}",
                 "C[COMPFIELD$0] = 3;",
                 "C.w = 5;",
-                "C.STATIC$BLOCK$2();"))); //
+                "{",
+                "    z = z + C.w;",
+                "}"))); //
   }
 
   @Test
@@ -359,100 +302,74 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testThisInStaticField() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2;",
-                "  static y = () => this.x;",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$FIELD$0$y() {",
-                "    return () => {",
-                "      return this.x;",
-                "    };",
-                "  }",
-                "}",
-                "C.x = 2;",
-                "C.y = C.STATIC$FIELD$0$y();")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2;",
+            "  static y = () => this.x;",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "C.y = () => { return C.x; }"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class F {", //
-                "  static a = 'there';",
-                "  static b = this.c() + this.a;",
-                "  static c() { return 'hi'; }",
-                "}")),
-        expected(
-            lines(
-                "class F {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$FIELD$0$b() {",
-                "    return this.c() + this.a;",
-                "  }",
-                "  static c() { return 'hi'; }",
-                "}",
-                "F.a = 'there';",
-                "F.b = F.STATIC$FIELD$0$b();")));
+    test(
+        lines(
+            "class F {", //
+            "  static a = 'there';",
+            "  static b = this.c() + this.a;",
+            "  static c() { return 'hi'; }",
+            "}"),
+        lines(
+            "class F {", //
+            "  static c() { return 'hi'; }",
+            "}",
+            "F.a = 'there';",
+            "F.b = F.c() + F.a;"));
   }
 
   @Test
   public void testSuperInStaticField() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class Foo {",
-                "  static x() {",
-                "    return 5;",
-                "  }",
-                "  static y() {",
-                "    return 20;",
-                "  }",
-                "}",
-                "class Bar extends Foo {",
-                "  static z = () => super.x() + 12 + super.y();",
-                "}")),
-        expected(
-            lines(
-                "class Foo {",
-                "  static x() {",
-                "    return 5;",
-                "  }",
-                "  static y() {",
-                "    return 20;",
-                "  }",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$FIELD$0$z() {",
-                "    return () => {",
-                "      return super.x() + 12 + super.y();",
-                "    };",
-                "  }",
-                "}",
-                "Bar.z = Bar.STATIC$FIELD$0$z();")));
+    test(
+        lines(
+            "class Foo {",
+            "  static x() {",
+            "    return 5;",
+            "  }",
+            "  static y() {",
+            "    return 20;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  static z = () => super.x() + 12 + super.y();",
+            "}"),
+        lines(
+            "class Foo {",
+            "  static x() {",
+            "    return 5;",
+            "  }",
+            "  static y() {",
+            "    return 20;",
+            "  }",
+            "}",
+            "class Bar extends Foo {}",
+            "Bar.z = () => { return Foo.x() + 12 + Foo.y(); }"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class Bar {",
-                "  static a = { method1() {} };",
-                "  static b = { method2() { super.method1(); } };",
-                "}")),
-        expected(
-            lines(
-                "class Bar {}",
-                "Bar.a = { method1() {} };",
-                "Bar.b = { method2() { super.method1(); } };")));
+    test(
+        lines(
+            "class Bar {",
+            "  static a = { method1() {} };",
+            "  static b = { method2() { super.method1(); } };",
+            "}"),
+        lines(
+            "class Bar {}",
+            "Bar.a = { method1() {} };",
+            "Bar.b = { method2() { super.method1(); } };"));
   }
 
   @Test
   public void testComputedPropInNonStaticField() {
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "/** @unrestricted */",
@@ -471,209 +388,171 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "   }",
                 "}")));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "class C {", //
-                "  [1] = 1;",
-                "  [2] = this[1];",
-                "}")),
-        expected(
-            lines(
-                "class C {",
-                "  constructor() {",
-                "    this[1] = 1;",
-                "    this[2] = this[1];",
-                "  }",
-                "}")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  [1] = 1;",
+            "  [2] = this[1];",
+            "}"),
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    this[1] = 1;",
+            "    this[2] = this[1];",
+            "  }",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "let c = class C {", //
-                "  static [1] = 2;",
-                "  [2] = C[1]",
-                "}")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {",
-                "  constructor() {",
-                "    this[2] = testcode$classdecl$var0[1];",
-                "  }",
-                "};",
-                "testcode$classdecl$var0[1] = 2;",
-                "/** @constructor */ ",
-                "let c = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "let c = class C {", //
+            "  static [1] = 2;",
+            "  [2] = C[1]",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this[2] = testcode$classdecl$var0[1];",
+            "  }",
+            "};",
+            "testcode$classdecl$var0[1] = 2;",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(/** @unrestricted */ class C {", //
-                "  static [1] = 2;",
-                "  [2] = C[1]",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {",
-                "  constructor() {",
-                "    this[2] = testcode$classdecl$var0[1];",
-                "  }",
-                "};",
-                "testcode$classdecl$var0[1] = 2;",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(/** @unrestricted */ class C {", //
+            "  static [1] = 2;",
+            "  [2] = C[1]",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this[2] = testcode$classdecl$var0[1];",
+            "  }",
+            "};",
+            "testcode$classdecl$var0[1] = 2;",
+            "foo(testcode$classdecl$var0);"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let c = class {", //
-                "  x = 1",
-                "  y = this.x",
-                "}",
-                "/** @unrestricted */",
-                "class B {",
-                "  [1] = 2;",
-                "  [2] = this[1]",
-                "}")),
-        expected(
-            lines(
-                "let c = class {",
-                "  constructor() {",
-                "    this.x = 1;",
-                "    this.y = this.x;",
-                "  }",
-                "};",
-                "class B {",
-                "  constructor() {",
-                "    this[1] = 2;",
-                "    this[2] = this[1];",
-                "  }",
-                "}")));
+    test(
+        lines(
+            "let c = class {", //
+            "  x = 1",
+            "  y = this.x",
+            "}",
+            "/** @unrestricted */",
+            "class B {",
+            "  [1] = 2;",
+            "  [2] = this[1]",
+            "}"),
+        lines(
+            "let c = class {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = this.x;",
+            "  }",
+            "};",
+            "class B {",
+            "  constructor() {",
+            "    this[1] = 2;",
+            "    this[2] = this[1];",
+            "  }",
+            "}"));
   }
 
   @Test
   public void testComputedPropInStaticField() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "class C {", //
-                "  static ['x'];",
-                "  static ['y'] = 2;",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "}",
-                "C['x'];",
-                "C['y'] = 2;")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  static ['x'];",
+            "  static ['y'] = 2;",
+            "}"),
+        lines(
+            "class C {}", //
+            "C['x'];",
+            "C['y'] = 2;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "class C {", //
-                "  static [1] = 1;",
-                "  static [2] = this[1];",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$FIELD$0() {",
-                "    return this[1];",
-                "  }",
-                "}",
-                "C[1] = 1;",
-                "C[2] = C.STATIC$FIELD$0();")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class C {", //
+            "  static [1] = 1;",
+            "  static [2] = this[1];",
+            "}"),
+        lines(
+            "class C {}", //
+            "C[1] = 1;",
+            "C[2] = C[1];"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "const C = class {", //
-                "  static [1] = 1;",
-                "  static [2] = this[1];",
-                "}")),
-        expected(
-            lines(
-                "const C = class {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$FIELD$0() {",
-                "    return this[1];",
-                "  }",
-                "}",
-                "C[1] = 1;",
-                "C[2] = C.STATIC$FIELD$0();")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "const C = class {", //
+            "  static [1] = 1;",
+            "  static [2] = this[1];",
+            "}"),
+        lines(
+            "const C = class {}", //
+            "C[1] = 1;",
+            "C[2] = C[1];"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "const C = class InnerC {", //
-                "  static [1] = 1;",
-                "  static [2] = this[1];",
-                "}")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$FIELD$0() {",
-                "    return this[1];",
-                "  }",
-                "}",
-                "testcode$classdecl$var0[1] = 1;",
-                "testcode$classdecl$var0[2] = testcode$classdecl$var0.STATIC$FIELD$0();",
-                "/** @constructor */",
-                "const C = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "const C = class InnerC {", //
+            "  static [1] = 1;",
+            "  static [2] = this[1];",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {}", //
+            "testcode$classdecl$var0[1] = 1;",
+            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
+            "/** @constructor */",
+            "const C = testcode$classdecl$var0;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "/** @unrestricted */",
-                "let c = class C {", //
-                "  static [1] = 2;",
-                "  static [2] = C[1]",
-                "}")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0[1] = 2;",
-                "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
-                "/** @constructor */ ",
-                "let c = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "/** @unrestricted */",
+            "let c = class C {", //
+            "  static [1] = 2;",
+            "  static [2] = C[1]",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0[1] = 2;",
+            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(/** @unrestricted */ class C {", //
-                "  static [1] = 2;",
-                "  static [2] = C[1]",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0[1] = 2;",
-                "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(/** @unrestricted */ class C {", //
+            "  static [1] = 2;",
+            "  static [2] = C[1]",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0[1] = 2;",
+            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
+            "foo(testcode$classdecl$var0);"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(/** @unrestricted */ class {", //
-                "  static [1] = 1",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0[1] = 1;",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(/** @unrestricted */ class {", //
+            "  static [1] = 1",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0[1] = 1;",
+            "foo(testcode$classdecl$var0);"));
   }
 
   @Test
   public void testSideEffectsInComputedField() {
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "function bar() {",
@@ -697,7 +576,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  }",
                 "}")));
 
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "class E {",
@@ -727,7 +606,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "  }",
                 "}")));
 
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "function bar(num) {}",
@@ -750,7 +629,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "Foo.b = bar(3);",
                 "Foo[COMPFIELD$1] = bar(4);")));
 
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "let x = 'hello';",
@@ -766,7 +645,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "Foo.n = x = 5;",
                 "Foo[COMPFIELD$0] = 'world';")));
 
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "function foo(num) {}",
@@ -797,285 +676,176 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                 "}",
                 "Baz.x = foo(6);",
                 "Baz[COMPFIELD$2] = foo(7);")));
-
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class Baz {",
-                "  z = 1;",
-                "  func(x) {",
-                "    x.a = 'y';",
-                "    return {",
-                "      [x.a]:'aa'", // computed property in an object literal remains unchanged
-                "    }",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class Baz {",
-                "  constructor() {",
-                "    this.z = 1;",
-                "  }",
-                "  func(x) {",
-                "    x.a = 'y';",
-                "    return {",
-                "      [x.a]:'aa'",
-                "    }",
-                "  }",
-                "}")));
-
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "x.a = 'b';",
-                "y = { [x.a]:'aa' };", // computed property not in a class body
-                "class Baz {",
-                "  z = 1;",
-                "}")),
-        expected(
-            lines(
-                "x.a = 'b';",
-                "y = {[x.a]:'aa'};",
-                "class Baz {",
-                "  constructor() {",
-                "    this.z = 1;",
-                "  }",
-                "}")));
   }
 
   @Test
   public void testClassStaticBlocksNoFieldAssign() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "}",
+            "{}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = 2",
-                "    const y = x",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "    const y = x;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = 2",
+            "    const y = x",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  let x = 2;",
+            "  const y = x",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = 2",
-                "    const y = x",
-                "    let z;",
-                "    if (x - y == 0) {z = 1} else {z = 2}",
-                "    while (x - z > 10) {z++;}",
-                "    for (;;) {break;}",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "    const y = x;",
-                "    let z;",
-                "    if (x - y == 0) {",
-                "      z = 1;",
-                "    } else {",
-                "      z = 2;",
-                "    }",
-                "    for (; x - z > 10;) {",
-                "      z++;",
-                "    }",
-                "    for (;;) {",
-                "      break;",
-                "    }",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = 2",
+            "    const y = x",
+            "    let z;",
+            "    if (x - y == 0) {z = 1} else {z = 2}",
+            "    while (x - z > 10) {z++;}",
+            "    for (;;) {break;}",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  let x = 2;",
+            "  const y = x",
+            "  let z;",
+            "    if (x - y == 0) {",
+            "      z = 1;",
+            "    } else {",
+            "      z = 2;",
+            "    }",
+            "    for (; x - z > 10;) {",
+            "      z++;",
+            "    }",
+            "  for (;;) {break;}",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = 2",
-                "  }",
-                "  static {",
-                "    const y = x",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "  }",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$1() {",
-                "    const y = x;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();",
-                "C.STATIC$BLOCK$1();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = 2",
+            "  }",
+            "  static {",
+            "    const y = x",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  let x = 2;",
+            "}",
+            "{",
+            "  const y = x",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = 2",
-                "  }",
-                "  static {",
-                "    const y = x",
-                "  }",
-                "}",
-                "class D {",
-                "  static {",
-                "    let z = 1",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 2;",
-                "  }",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$1() {",
-                "    const y = x;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();",
-                "C.STATIC$BLOCK$1();",
-                "class D {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$2() {",
-                "    let z = 1;",
-                "  }",
-                "}",
-                "D.STATIC$BLOCK$2();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = 2",
+            "  }",
+            "  static {",
+            "    const y = x",
+            "  }",
+            "}",
+            "class D {",
+            "  static {",
+            "    let z = 1",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  let x = 2;",
+            "}",
+            "{",
+            "  const y = x",
+            "}",
+            "class D {}",
+            "{",
+            "  let z = 1;",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    let x = function () {return 1;}",
-                "    const y = () => {return 2;}",
-                "    function a() {return 3;}",
-                "    let z = (() => {return 4;})();",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    function a() {",
-                "      return 3;",
-                "    }",
-                "    let x = function() {",
-                "      return 1;",
-                "    };",
-                "    const y = () => {",
-                "      return 2;",
-                "    };",
-                "    let z = (() => {",
-                "      return 4;",
-                "    })();",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = function () {return 1;}",
+            "    const y = () => {return 2;}",
+            "    function a() {return 3;}",
+            "    let z = (() => {return 4;})();",
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  function a() {return 3;}",
+            "  let x = function () {return 1;}",
+            "  const y = () => {return 2;}",
+            "  let z = (() => {return 4;})();",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static {",
-                "    C.x = 2",
-                // "    const y = C.x", //TODO(b/235871861) blocked on typechecking, gets
-                // JSC_INEXISTENT_PROPERTY
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    C.x = 2;",
-                "  }",
-                "}",
-                "C.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    C.x = 2",
+            // "    const y = C.x", //TODO(b/235871861) blocked on typechecking, gets
+            // JSC_INEXISTENT_PROPERTY
+            "  }",
+            "}"),
+        lines(
+            "class C {}", //
+            "{",
+            "  C.x = 2;",
+            // "  const y = C.x",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class Foo {",
-                "  static {",
-                "    let x = 5;",
-                "    class Bar {",
-                "      static {",
-                "        let x = 'str';",
-                "      }",
-                "    }",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class Foo {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$1() {",
-                "    let x = 5;",
-                "    class Bar {",
-                "      /** @nocollapse */ ",
-                "      static STATIC$BLOCK$0() {",
-                "        let x$jscomp$1 = \"str\";",
-                "      }",
-                "    }",
-                "    Bar.STATIC$BLOCK$0();",
-                "  }",
-                "}",
-                "Foo.STATIC$BLOCK$1();")));
+    test(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    let x = 5;",
+            "    class Bar {",
+            "      static {",
+            "        let x = 'str';",
+            "      }",
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "class Foo {}", //
+            "{",
+            "  let x = 5;",
+            "  class Bar {}",
+            "  {let x$jscomp$1 = 'str';}",
+            "}"));
   }
 
   @Test
   public void testStaticNoncomputed() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2",
-                "}")),
-        expected(
-            lines(
-                "class C {}", //
-                "C.x = 2;")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "}"),
+        lines("class C {}", "C.x = 2;"));
 
     test(
         lines(
@@ -1084,86 +854,67 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "}"),
         lines("class C {}", "C.x;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2;",
-                "  static y = 'hi';",
-                "  static z;",
-                "}")),
-        expected(
-            lines(
-                "class C {}", //
-                "C.x = 2;",
-                "C.y = 'hi';",
-                "C.z;")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static y = 'hi'",
+            "  static z;",
+            "}"),
+        lines("class C {}", "C.x = 2;", "C.y = 'hi'", "C.z;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2",
-                "  static y = 3",
-                "}",
-                "class D {",
-                "  static z = 1",
-                "}")),
-        expected(
-            lines(
-                "class C {}", //
-                "C.x = 2;",
-                "C.y = 3;",
-                "class D {}",
-                "D.z = 1;")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static y = 3",
+            "}",
+            "class D {",
+            "  static z = 1",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "C.y = 3",
+            "class D {}",
+            "D.z = 1;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static w = function () {return 1;};",
-                "  static x = () => {return 2;};",
-                "  static y = (function a() {return 3;})();",
-                "  static z = (() => {return 4;})();",
-                "}")),
-        expected(
-            lines(
-                "class C {}", //
-                "C.w = function () {return 1;};",
-                "C.x = () => {return 2;};",
-                "C.y = (function a() {return 3;})();",
-                "C.z = (() => {return 4;})();")));
+    test(
+        lines(
+            "class C {", //
+            "  static w = function () {return 1;};",
+            "  static x = () => {return 2;};",
+            "  static y = (function a() {return 3;})();",
+            "  static z = (() => {return 4;})();",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.w = function () {return 1;};",
+            "C.x = () => {return 2;};",
+            "C.y = (function a() {return 3;})();",
+            "C.z = (() => {return 4;})();"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2;",
-                "  static y = C.x;",
-                "}")),
-        expected(
-            lines(
-                "class C {}", //
-                "C.x = 2;",
-                "C.y = C.x;")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static y = C.x",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "C.y = C.x"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2;",
-                "  static {let y = C.x}",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let y = C.x;",
-                "  }",
-                "}",
-                "C.x = 2;",
-                "C.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static {let y = C.x}",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "{let y = C.x}"));
   }
 
   @Test
@@ -1296,7 +1047,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   @Test
   public void testInstanceComputedWithNonemptyConstructorAndSuper() {
 
-    rewriteFieldOrBlockTest(
+    computedFieldTest(
         srcs(
             lines(
                 "class A { constructor() { alert(1); } }",
@@ -1493,47 +1244,41 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2;",
-                "  constructor() {}",
-                "  y = C.x",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  constructor() { this.y = C.x; }",
-                "}",
-                "C.x = 2;")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  constructor() {}",
+            "  y = C.x",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() { this.y = C.x; }",
+            "}",
+            "C.x = 2;"));
   }
 
   @Test
   public void testInstanceNoncomputedNoConstructor() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  x = 2;",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  constructor() {this.x=2;}",
-                "}")));
+    test(
+        lines(
+            "class C {", //
+            "  x = 2;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {this.x=2;}",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  x;",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  constructor() {this.x;}",
-                "}")));
+    test(
+        lines(
+            "class C {", //
+            "  x;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {this.x;}",
+            "}"));
 
     test(
         lines(
@@ -1558,21 +1303,17 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  foo() {}",
             "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class C {", //
-                "  static x = 2",
-                "  y = C.x",
-                "}")),
-        expected(
-            lines(
-                "class C {", //
-                "  constructor() {",
-                "    this.y = C.x",
-                "  }",
-                "}",
-                "C.x = 2;")));
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  y = C.x",
+            "}"),
+        lines(
+            "class C {constructor() {",
+            "this.y = C.x",
+            "}}", //
+            "C.x = 2;"));
 
     test(
         lines(
@@ -1635,226 +1376,179 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testClassExpressionsStaticBlocks() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let c = class C {", //
-                "  static {",
-                "    C.y = 2;",
-                "    let x = C.y",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    testcode$classdecl$var0.y = 2;",
-                "    let x = testcode$classdecl$var0.y;",
-                "  }",
-                "};",
-                "testcode$classdecl$var0.STATIC$BLOCK$0();",
-                "/** @constructor */ ",
-                "let c = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "let c = class C {", //
+            "  static {",
+            "    C.y = 2;",
+            "    let x = C.y",
+            "  }",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  testcode$classdecl$var0.y = 2;",
+            "  let x = testcode$classdecl$var0.y;",
+            "}",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(class C {", //
-                "  static {",
-                "    C.y = 2;",
-                "    let x = C.y",
-                "  }",
-                "})")),
-        expected(
-            lines(
-                "var JSCompiler_temp_const$jscomp$0 = foo;",
-                "const testcode$classdecl$var0 = class {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    testcode$classdecl$var0.y = 2;",
-                "    let x = testcode$classdecl$var0.y;",
-                "  }",
-                "};",
-                "testcode$classdecl$var0.STATIC$BLOCK$0();",
-                "JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(class C {", //
+            "  static {",
+            "    C.y = 2;",
+            "    let x = C.y",
+            "  }",
+            "})"),
+        lines(
+            "var JSCompiler_temp_const$jscomp$0 = foo;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  testcode$classdecl$var0.y = 2;",
+            "  let x = testcode$classdecl$var0.y;",
+            "}",
+            "JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class A { static b; }",
-                "foo(A.b.c = class C {", //
-                "  static {",
-                "    C.y = 2;",
-                "    let x = C.y",
-                "  }",
-                "})")),
-        expected(
-            lines(
-                "class A {}",
-                "A.b;",
-                "var JSCompiler_temp_const$jscomp$1 = foo;",
-                "var JSCompiler_temp_const$jscomp$0 = A.b;",
-                "const testcode$classdecl$var0 = class {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    testcode$classdecl$var0.y = 2;",
-                "    let x = testcode$classdecl$var0.y;",
-                "  }",
-                "};",
-                "testcode$classdecl$var0.STATIC$BLOCK$0();",
-                "JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =",
-                "testcode$classdecl$var0);")));
+    test(
+        lines(
+            "class A { static b; }",
+            "foo(A.b.c = class C {", //
+            "  static {",
+            "    C.y = 2;",
+            "    let x = C.y",
+            "  }",
+            "})"),
+        lines(
+            "class A {}",
+            "A.b;",
+            "var JSCompiler_temp_const$jscomp$1 = foo;",
+            "var JSCompiler_temp_const$jscomp$0 = A.b;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  testcode$classdecl$var0.y = 2;",
+            "  let x = testcode$classdecl$var0.y;",
+            "}",
+            "JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =",
+            "testcode$classdecl$var0);"));
   }
 
   @Test
   public void testNonClassDeclarationsStaticBlocks() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let c = class {", //
-                "  static {",
-                "    let x = 1",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "let c = class {", //
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 1;",
-                "  }",
-                "}",
-                "c.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "let c = class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "}"),
+        lines(
+            "let c = class {}", //
+            "{",
+            "  let x = 1",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class A {}",
-                "A.c = class {", //
-                "  static {",
-                "    let x = 1",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class A {}", //
-                "A.c = class {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 1;",
-                "  }",
-                "}",
-                "A.c.STATIC$BLOCK$0();")));
+    test(
+        lines(
+            "class A {}",
+            "A.c = class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "}"),
+        lines(
+            "class A {}", //
+            "A.c = class {}",
+            "{",
+            "  let x = 1",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class A {}",
-                "A[1] = class {", //
-                "  static {",
-                "    let x = 1",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "class A {}",
-                "var JSCompiler_temp_const$jscomp$0 = A;",
-                "const testcode$classdecl$var0 = class {",
-                "  /** @nocollapse */ ",
-                "  static STATIC$BLOCK$0() {",
-                "    let x = 1;",
-                "  }",
-                "};",
-                "testcode$classdecl$var0.STATIC$BLOCK$0();",
-                "JSCompiler_temp_const$jscomp$0[1] = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "class A {}",
+            "A[1] = class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "}"),
+        lines(
+            "class A {}",
+            "var JSCompiler_temp_const$jscomp$0 = A;",
+            "const testcode$classdecl$var0 = class {};",
+            "{",
+            "  let x = 1;",
+            "}",
+            "JSCompiler_temp_const$jscomp$0[1] = testcode$classdecl$var0;"));
   }
 
   @Test
   public void testNonClassDeclarationsStaticNoncomputedFields() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let c = class {", //
-                "  static x = 1;",
-                "}")),
-        expected(
-            lines(
-                "let c = class {}", //
-                "c.x = 1;")));
+    test(
+        lines(
+            "let c = class {", //
+            "  static x = 1",
+            "}"),
+        lines("let c = class {}", "c.x = 1"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class A {}",
-                "A.c = class {", //
-                "  static x = 1;",
-                "}")),
-        expected(
-            lines(
-                "class A {}", //
-                "A.c = class {}",
-                "A.c.x = 1;")));
+    test(
+        lines(
+            "class A {}",
+            "A.c = class {", //
+            "  static x = 1",
+            "}"),
+        lines("class A {}", "A.c = class {}", "A.c.x = 1"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "class A {}",
-                "A[1] = class {", //
-                "  static x = 1;",
-                "}")),
-        expected(
-            lines(
-                "class A {}",
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0.x = 1;",
-                "A[1] = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "class A {}",
+            "A[1] = class {", //
+            "  static x = 1",
+            "}"),
+        lines(
+            "class A {}",
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x = 1;",
+            "A[1] = testcode$classdecl$var0;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let c = class C {", //
-                "  static y = 2;",
-                "  static x = C.y",
-                "}")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0.y = 2;",
-                "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
-                "/** @constructor */ ",
-                "let c = testcode$classdecl$var0;")));
+    test(
+        lines(
+            "let c = class C {", //
+            "  static y = 2;",
+            "  static x = C.y",
+            "}"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.y = 2;",
+            "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
+            "/** @constructor */ ",
+            "let c = testcode$classdecl$var0;"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(class C {", //
-                "  static y = 2;",
-                "  static x = C.y",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0.y = 2;",
-                "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(class C {", //
+            "  static y = 2;",
+            "  static x = C.y",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.y = 2;",
+            "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
+            "foo(testcode$classdecl$var0);"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(class C {", //
-                "  static y = 2;",
-                "  x = C.y",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {",
-                "  constructor() {",
-                "    this.x = testcode$classdecl$var0.y;",
-                "  }",
-                "};",
-                "testcode$classdecl$var0.y = 2;",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(class C {", //
+            "  static y = 2;",
+            "  x = C.y",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.x = testcode$classdecl$var0.y;",
+            "  }",
+            "};",
+            "testcode$classdecl$var0.y = 2;",
+            "foo(testcode$classdecl$var0);"));
   }
 
   @Test
@@ -1971,21 +1665,19 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testConstuctorAndStaticFieldDontConflict() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "let x = 2;", //
-                "class C {",
-                "  static y = x",
-                "  constructor(x) {}",
-                "}")),
-        expected(
-            lines(
-                "let x = 2;", //
-                "class C {",
-                "  constructor(x$jscomp$1) {}",
-                "}",
-                "C.y = x;")));
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  static y = x",
+            "  constructor(x) {}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor(x$jscomp$1) {}",
+            "}",
+            "C.y = x"));
   }
 
   @Test
@@ -2240,52 +1932,46 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testAnonymousClassExpression() {
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "function foo() {", //
-                "  return class {",
-                "    y;",
-                "    static x;",
-                "  }",
-                "}")),
-        expected(
-            lines(
-                "function foo() {",
-                "  const testcode$classdecl$var0 = class {",
-                "    constructor() {",
-                "      this.y;",
-                "    }",
-                "  };",
-                "  testcode$classdecl$var0.x;",
-                "  return testcode$classdecl$var0;",
-                "}")));
+    test(
+        lines(
+            "function foo() {", //
+            "  return class {",
+            "    y;",
+            "    static x;",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {",
+            "  const testcode$classdecl$var0 = class {",
+            "    constructor() {",
+            "      this.y;",
+            "    }",
+            "  };",
+            "  testcode$classdecl$var0.x;",
+            "  return testcode$classdecl$var0;",
+            "}"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(class {", //
-                "  y = 2;",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {",
-                "  constructor() {",
-                "    this.y = 2;",
-                "  }",
-                "};",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(class {", //
+            "  y = 2;",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "};",
+            "foo(testcode$classdecl$var0);"));
 
-    rewriteFieldOrBlockTest(
-        srcs(
-            lines(
-                "foo(class {", //
-                "  static x = 1;",
-                "})")),
-        expected(
-            lines(
-                "const testcode$classdecl$var0 = class {};",
-                "testcode$classdecl$var0.x = 1;",
-                "foo(testcode$classdecl$var0);")));
+    test(
+        lines(
+            "foo(class {", //
+            "  static x = 1;",
+            "})"),
+        lines(
+            "const testcode$classdecl$var0 = class {};",
+            "testcode$classdecl$var0.x = 1;",
+            "foo(testcode$classdecl$var0);"));
   }
 }
