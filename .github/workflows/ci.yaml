@@ -133,7 +133,8 @@ jobs:
   deploy-snapshots:
     name: Deploy Snapshot Bundles to Sonatype
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'schedule' }}
+    # Disable daily snapshot deployments. This will be later replaced with lower cadence releases.
+    if: false
     needs:
       - build-and-test
       - test-closure-compiler-npm
