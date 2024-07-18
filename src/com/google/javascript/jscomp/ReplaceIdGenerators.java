@@ -103,10 +103,20 @@ class ReplaceIdGenerators implements CompilerPass {
       for (Entry<String, RenamingMap> gen : idGens.entrySet()) {
         String name = gen.getKey();
         RenamingMap map = gen.getValue();
-        if (map instanceof UniqueRenamingToken) {
-          nameGenerators.put(name,
-              createNameSupplier(
-                  RenameStrategy.INCONSISTENT, previousMap.get(name)));
+        if (map instanceof RenamingToken) {
+          switch ((RenamingToken) map) {
+            case DISABLE:
+              nameGenerators.put(name, null);
+              continue; // don't put an entry in idGeneratorsMap
+            case INCONSISTENT:
+              nameGenerators.put(
+                  name, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(name)));
+              break;
+            case STABLE:
+              nameGenerators.put(
+                  name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
+              break;
+          }
         } else {
           nameGenerators.put(name,
               createNameSupplier(
@@ -269,6 +279,11 @@ class ReplaceIdGenerators implements CompilerPass {
         }
       }
 
+      if (nameGenerators.containsKey(name)) {
+        // This generator is already registered from our constructor.
+        // Don't override it.
+        return;
+      }
       if (doc.isConsistentIdGenerator()) {
         consistNameMap.put(name, new LinkedHashMap<String, String>());
         nameGenerators.put(

@@ -15,7 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
-class UniqueRenamingToken implements RenamingMap {
+/**
+ * A marker object for the command line api to pass special values to the ReplaceIdGenerators pass.
+ */
+enum RenamingToken implements RenamingMap {
+  INCONSISTENT,
+  STABLE,
+  DISABLE;
+
   @Override public String get(String value) {
     return null;
   }

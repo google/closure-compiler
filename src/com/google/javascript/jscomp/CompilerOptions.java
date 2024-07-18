@@ -1520,10 +1520,9 @@ public class CompilerOptions implements Serializable {
 
   /** Sets the id generators to replace. */
   public void setIdGenerators(Set<String> idGenerators) {
-    RenamingMap gen = new UniqueRenamingToken();
     ImmutableMap.Builder<String, RenamingMap> builder = ImmutableMap.builder();
     for (String name : idGenerators) {
-      builder.put(name, gen);
+      builder.put(name, RenamingToken.INCONSISTENT);
     }
     this.idGenerators = builder.buildOrThrow();
   }
