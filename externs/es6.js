@@ -406,8 +406,9 @@ ArrayBuffer.isView = function(arg) {};
 
 
 /**
- * @constructor
+ * @interface
  * @template TArrayBuffer (unused)
+ * @see https://webidl.spec.whatwg.org/#ArrayBufferView
  */
 function ArrayBufferView() {}
 
@@ -453,13 +454,14 @@ var AllowSharedBufferSource;
 
 
 /**
- * @constructor
+ * @interface
  * @implements {IArrayLike<number>}
  * @implements {Iterable<number>}
- * @extends {ArrayBufferView}
+ * @implements {ArrayBufferView}
  * @template TArrayBuffer (unused)
+ * @see https://tc39.es/ecma262/multipage/indexed-collections.html#sec-typedarray-objects
  */
-function TypedArray() {};
+function TypedArray() {}
 
 /** @const {number} */
 TypedArray.prototype.BYTES_PER_ELEMENT;
@@ -771,7 +773,7 @@ TypedArray.prototype[Symbol.iterator] = function() {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments} If the user passes a backing array, then indexed
  *     accesses will modify the backing array. JSCompiler does not model
@@ -818,7 +820,7 @@ Int8Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -855,7 +857,7 @@ Uint8Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -901,7 +903,7 @@ var CanvasPixelArray;
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -938,7 +940,7 @@ Int16Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -975,7 +977,7 @@ Uint16Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1012,7 +1014,7 @@ Int32Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1082,7 +1084,7 @@ Float16Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1119,7 +1121,7 @@ Float32Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1156,7 +1158,7 @@ Float64Array.of = function(var_args) {};
  * @param {number=} bufferLength
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1226,7 +1228,7 @@ BigInt64Array.prototype.with = function(index, value) {};
  * @param {number=} bufferLength
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1291,7 +1293,7 @@ BigUint64Array.prototype.with = function(index, value) {};
  * @param {number=} opt_byteOffset
  * @param {number=} opt_byteLength
  * @constructor
- * @extends {ArrayBufferView}
+ * @implements {ArrayBufferView}
  * @throws {Error}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays/DataView
  */
