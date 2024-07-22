@@ -69,7 +69,15 @@ public class TestExternsBuilder {
           "goog.inherits = function(childCtor, parentCtor) {",
           "  childCtor.superClass_ = parentCtor.prototype;",
           "};",
-          "goog.getMsg = function(str) {};");
+          "goog.getMsg = function(str) {};",
+          "/**",
+          " * @param {T} symbol",
+          " * @return {T|undefined}",
+          " * @template T",
+          " * @noinline",
+          " */",
+          "goog.weakUsage = function(symbol) {};",
+          "");
 
   /**
    * There are some rare cases where we want to use the closure externs defined above as if they

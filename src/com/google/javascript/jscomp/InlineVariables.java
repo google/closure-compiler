@@ -376,6 +376,16 @@ class InlineVariables implements CompilerPass {
         }
       }
 
+      private final InitiallyUnknown<Boolean> isReferencedWeakly = new InitiallyUnknown<>();
+
+      private boolean isReferencedWeakly() {
+        if (isReferencedWeakly.isKnown()) {
+          return isReferencedWeakly.getKnownValue();
+        } else {
+          return isReferencedWeakly.setKnownValueOnce(referenceInfo.isReferencedWeakly());
+        }
+      }
+
       private final InitiallyUnknown<Boolean> isWellDefinedAssignedOnce = new InitiallyUnknown<>();
 
       /**
@@ -442,7 +452,7 @@ class InlineVariables implements CompilerPass {
 
       @Override
       public InlineVarAnalysis analyze() {
-        if (hasNoInlineAnnotation(v)) {
+        if (hasNoInlineAnnotation(v) || isReferencedWeakly()) {
           return getNegativeInlineVarAnalysis();
         }
         final Reference initialization = getInitialization();

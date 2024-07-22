@@ -730,6 +730,19 @@ class RemoveUnusedCode implements CompilerPass {
       polyfills.put(info.key, info);
       // Only traverse the callee (to mark it as used).  The arguments may be traversed later.
       traverseNode(callNode.getFirstChild(), scope);
+    } else if (NodeUtil.isGoogWeakUsageCall(callNode)) {
+      // goog.weakUsage() should have exactly one argument, and it should be a name.  This is
+      // checked in ProcessClosurePrimitives.java. If it is not a name, we don't need to traverse
+      // it.
+      if (callNode.getChildCount() == 2) {
+        Node arg = callNode.getSecondChild();
+        if (arg.isName()) {
+          // Mark this call as removable if the var is not otherwise referenced.
+          VarInfo varInfo = traverseNameNode(arg, scope);
+          RemovableBuilder builder = new RemovableBuilder();
+          varInfo.addRemovable(builder.buildWeakUsageCall(callNode));
+        }
+      }
     } else {
       Node parent = callNode.getParent();
       String classVarName = null;
@@ -2033,6 +2046,10 @@ class RemoveUnusedCode implements CompilerPass {
     public Removable buildInstanceofName(Node instanceofNode) {
       return new InstanceofName(this, instanceofNode);
     }
+
+    public Removable buildWeakUsageCall(Node weakUsageCall) {
+      return new WeakUsageCall(this, weakUsageCall);
+    }
   }
 
   /** Represents a read reference whose value is not used. */
@@ -2110,6 +2127,34 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     public String toString() {
       return "InstanceofName:" + instanceofNode;
+    }
+  }
+
+  /**
+   * Represents `goog.weakUsage(varName)`.
+   *
+   * <p>If `varName` is removed, this expression can be replaced with `undefined`.
+   */
+  private class WeakUsageCall extends Removable {
+    final Node weakCallNode;
+
+    WeakUsageCall(RemovableBuilder builder, Node weakCallNode) {
+      super(/* targetNode= */ null, builder);
+      checkArgument(weakCallNode.isCall(), weakCallNode);
+      this.weakCallNode = weakCallNode;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      if (!alreadyRemoved(weakCallNode)) {
+        Node undefinedNode = NodeUtil.newUndefinedNode(weakCallNode);
+        replaceNodeWith(weakCallNode, undefinedNode);
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "weakUsageCall:" + weakCallNode;
     }
   }
 

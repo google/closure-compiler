@@ -54,7 +54,13 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    if (subtree.isCall()) {
+    if (NodeUtil.isGoogWeakUsageCall(subtree) && late) {
+      // goog.weakUsage(x) -> x.
+      Node name = subtree.getSecondChild().cloneNode();
+      subtree.replaceWith(name);
+      reportChangeToEnclosingScope(name);
+      return name;
+    } else if (subtree.isCall()) {
       return tryFoldKnownMethods(subtree);
     }
     return subtree;

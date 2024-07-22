@@ -99,6 +99,9 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_REQUIRE_DYNAMIC = QualifiedName.of("goog.requireDynamic");
 
+  private static final QualifiedName GOOG_WEAK_USAGE = QualifiedName.of("goog.weakUsage");
+  private static final QualifiedName GOOG_WEAK_USAGE_MANGLED = QualifiedName.of("goog$weakUsage");
+
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
@@ -5664,6 +5667,14 @@ public final class NodeUtil {
     if (call.isCall()) {
       Node target = call.getFirstChild();
       return GOOG_REQUIRE_DYNAMIC.matches(target);
+    }
+    return false;
+  }
+
+  static boolean isGoogWeakUsageCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_WEAK_USAGE.matches(target) || GOOG_WEAK_USAGE_MANGLED.matches(target);
     }
     return false;
   }

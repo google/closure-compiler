@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_GOOG_WEAK_USAGE_CALL;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_RENAME_FUNCTION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_STYLE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
@@ -442,6 +443,15 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         lines(
             "goog.module('d');", //
             "goog.addDependency('C.D');"));
+  }
+
+  @Test
+  public void testInvalidGoogWeakUsage() {
+    // Error: the argument must be a name.
+    testError("goog.weakUsage(1);", INVALID_GOOG_WEAK_USAGE_CALL);
+
+    // Error: there must be exactly one argument.
+    testError("a = 1; b = 1; goog.weakUsage(a, b);", INVALID_GOOG_WEAK_USAGE_CALL);
   }
 
   @Test

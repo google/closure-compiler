@@ -1118,6 +1118,38 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testGoogWeakUsage() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addClosureExterns()
+                .addExtra("function use(x) {}")
+                .buildExternsFile("externs.js"));
+
+    String code =
+        lines(
+            "var noStrongRefs = 123;",
+            "function getValue() { return 456; }",
+            "var hasStrongRefs = getValue();",
+            "use(hasStrongRefs);",
+            "use(goog.weakUsage(hasStrongRefs));",
+            "use(goog.weakUsage(noStrongRefs));"); //
+
+    // RemoveUnusedCode rewrites `goog.weakUsage(noStrongRefs)` to `void 0`.
+    // PeepholeReplaceKnownMethods rewrites `goog.weakUsage(a)` to `a`.
+    //
+    // InlineVariables has a special check that prevents the value of `a` from getting inlined into
+    // `use(a)`, because that would interfere with RemoveUnusedCode's analysis of the weak usage.
+    // But the getValue() function can still be inlined into `a`.
+    String result = lines("var a = 456;", "use(a);", "use(a);", "use(void 0);");
+
+    test(options, code, result);
+  }
+
+  @Test
   public void testExternsProvideIsAllowed() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

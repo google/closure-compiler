@@ -117,6 +117,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
   static final DiagnosticType INVALID_RENAME_FUNCTION =
       DiagnosticType.error("JSC_INVALID_RENAME_FUNCTION", "{0} call is invalid: {1}");
 
+  static final DiagnosticType INVALID_GOOG_WEAK_USAGE_CALL =
+      DiagnosticType.error("JSC_INVALID_GOOG_WEAK_USAGE", "{0} call is invalid: {1}");
+
   /** The root Closure namespace */
   static final String GOOG = "goog";
 
@@ -276,7 +279,33 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
           processForwardDeclare(call);
         }
         break;
+      case "weakUsage":
+        validateWeakUsageCall(call);
+        break;
       default: // fall out
+    }
+  }
+
+  private void validateWeakUsageCall(Node call) {
+    // goog.weakUsage() should have exactly one argument, and it should be a name.
+    int childCount = call.getChildCount();
+    Node arg = call.getSecondChild();
+    String calleeName = call.getFirstChild().getQualifiedName();
+    if (childCount != 2) {
+      compiler.report(
+          JSError.make(
+              call,
+              INVALID_GOOG_WEAK_USAGE_CALL,
+              calleeName,
+              "should have exactly one argument, not " + (childCount - 1)));
+    }
+    if (childCount >= 2 && !call.getSecondChild().isName()) {
+      compiler.report(
+          JSError.make(
+              call,
+              INVALID_GOOG_WEAK_USAGE_CALL,
+              calleeName,
+              "argument should be a name, not " + arg));
     }
   }
 

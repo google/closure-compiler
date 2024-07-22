@@ -58,6 +58,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "goog.reflect = {};",
             "goog.reflect.object = function(obj, propertiesObj) {};",
             "goog.reflect.objectProperty = function(prop, obj) {};",
+            "goog.weakUsage = function(nameArg) {};",
             "function goog$inherits(subClass, superClass) {}",
             "function valueType$mixin(dstPrototype, srcPrototype, flags, ...args) {}",
             "function alert() {}",
@@ -1169,6 +1170,23 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     test(
         "var b = 0; var z; z = z = b = 1; alert(b);", //
         "var b = 0; b = 1; alert(b);");
+  }
+
+  @Test
+  public void testWeakUsageRemoved() {
+    // There are no other references to `a`, so it can be removed.
+    test(
+        "var a=function(){return}; use(goog.weakUsage(a));", //
+        "use(void 0);");
+  }
+
+  @Test
+  public void testWeakUsageNotRemoved() {
+    // There is another reference to `a`, so it cannot be removed.
+    //
+    // Normally the PeepholeReplaceKnownMethods pass would remove the call to `goog.weakUsage`
+    // entirely, but in this unit test we are only testing RemoveUnusedCode.
+    testSame("var a=function(){return}; use(goog.weakUsage(a)); use(a);");
   }
 
   @Test

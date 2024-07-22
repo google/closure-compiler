@@ -181,6 +181,16 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
     return true;
   }
 
+  /** Returns whether the variable is ever referenced weakly. */
+  boolean isReferencedWeakly() {
+    for (Reference ref : references) {
+      if (NodeUtil.isGoogWeakUsageCall(ref.getParent())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * @return The one and only assignment. Returns null if the number of assignments is not exactly
    *     one.
