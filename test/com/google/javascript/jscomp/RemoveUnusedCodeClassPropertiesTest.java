@@ -31,6 +31,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase {
 
+  private boolean keepLocals = true;
+  private boolean keepGlobals = true;
   private static final String EXTERNS =
       lines(
           "/**",
@@ -89,6 +91,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RemoveUnusedCode.Builder(compiler)
+        .removeLocalVars(!keepLocals)
+        .removeGlobals(!keepGlobals)
         .removeUnusedPrototypeProperties(true)
         .removeUnusedThisProperties(true)
         .removeUnusedObjectDefinePropertiesDefinitions(true)
@@ -815,6 +819,48 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         lines(
             "class C {", //
             "         ",
+            "}"));
+  }
+
+  @Test
+  public void testStaticFieldReferencingClassName() {
+    this.keepGlobals = false;
+    this.keepLocals = false;
+
+    test(
+        lines(
+            "const C = class {",
+            "  constructor() {",
+            "  }",
+            "  static x = new C();",
+            "  static method() {",
+            "    return C.x;",
+            "  }",
+            "}"),
+        lines(
+            "const C = class {", //
+            "  constructor() {",
+            "  }",
+            "  static x = new C();",
+            "}"));
+
+    test(
+        lines(
+            "const C = class {",
+            "  constructor() {",
+            "  }",
+            "  static x = new C();",
+            "  static y = alert();",
+            "  static method() {",
+            "    return C.x;",
+            "  }",
+            "}"),
+        lines(
+            "const C = class {", //
+            "  constructor() {",
+            "  }",
+            "  static x = new C();",
+            "  static y = alert();",
             "}"));
   }
 

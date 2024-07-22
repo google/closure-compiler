@@ -1375,6 +1375,10 @@ class RemoveUnusedCode implements CompilerPass {
                     .addContinuation(new Continuation(member, scope))
                     .buildClassOrPrototypeNamedProperty(member));
           }
+          // TODO: b/354704593 - remove the entire class when it is not referenced
+          if (member.isStaticMember() && member.getFirstChild() != null) {
+            traverseChildren(member, scope);
+          }
           break;
 
         case COMPUTED_PROP:
