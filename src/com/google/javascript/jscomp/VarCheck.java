@@ -169,10 +169,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
     // closure-unaware code.
     // TODO: b/321233583 - once NodeTraversal supports skipping closure unaware code as a feature,
     // replace this check with that.
-    if (n.isClosureUnawareCode()) {
-      return false;
-    }
-    return true;
+    return !n.isClosureUnawareCode();
   }
 
   @Override
