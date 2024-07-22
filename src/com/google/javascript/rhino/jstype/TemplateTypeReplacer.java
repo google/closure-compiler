@@ -75,7 +75,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   // Initialize data structures to `null` because these are unused in ~40% of TemplateTypeReplacers.
   private @Nullable Set<JSType> seenTypes = null;
-  private @Nullable Map<JSType, JSType> visitedObjectTypes = null;
+  private @Nullable IdentityHashMap<JSType, JSType> visitedObjectTypes = null;
 
   /** Creates a replacer for use during {@code TypeInference}. */
   public static TemplateTypeReplacer forInference(
