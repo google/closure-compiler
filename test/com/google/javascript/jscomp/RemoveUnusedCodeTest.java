@@ -3059,6 +3059,23 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveUnusedPatches_guardedUsage() {
+    final String mapPatch = "$jscomp.patch('Map', function() {});";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder().addConsole().addExtra(JSCOMP_PATCH).addMap().build())
+            .addPolyfill(mapPatch);
+
+    // Map is not removed because it is a patch.
+    tester.expectNoRemovalTest(
+        lines(
+            "if (typeof Map == 'undefined') {", //
+            "  console.log(Map);",
+            "}"));
+  }
+
+  @Test
   public void testNoCatchBinding() {
     testSame("function doNothing() {} try { doNothing(); } catch { doNothing(); }");
     testSame("function doNothing() {} try { throw 0; } catch { doNothing(); }");
