@@ -1678,12 +1678,6 @@ public class CompilerOptions implements Serializable {
     this.polymerPass = polymerVersion != null;
   }
 
-  /**
-   * @deprecated no-op, remove calls to this method.
-   */
-  @Deprecated
-  public void setPolymerExportPolicy(PolymerExportPolicy polymerExportPolicy) {}
-
   public void setChromePass(boolean chromePass) {
     this.chromePass = chromePass;
   }

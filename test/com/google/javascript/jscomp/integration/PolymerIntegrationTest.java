@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PolymerExportPolicy;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -149,7 +148,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setGeneratePseudoNames(true); // to make the expected output easier to follow
@@ -194,7 +192,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setGeneratePseudoNames(true); // to make the expected output easier to follow
@@ -701,7 +698,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
@@ -742,7 +738,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setRemoveUnusedVariables(Reach.ALL);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
@@ -777,10 +772,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    // By setting the EXPORT_ALL export policy, all properties will be added to an interface that
-    // is injected into the externs. We need to make sure the types of the properties on this
-    // interface aligns with the types we declared in the constructor, or else we'll get an error.
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     addPolymerExterns();
 
     Compiler compiler =
@@ -840,7 +831,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setDisambiguateProperties(true);
     options.setGeneratePseudoNames(true);

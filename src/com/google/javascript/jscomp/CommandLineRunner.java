@@ -632,12 +632,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private @Nullable Integer polymerVersion = null;
 
     @Option(
-        name = "--polymer_export_policy",
-        usage = "Deprecated, has no effect and usages should be removed.")
-    @SuppressWarnings("unused")
-    private String polymerExportPolicy = PolymerExportPolicy.LEGACY.name();
-
-    @Option(
         name = "--chrome_pass",
         handler = BooleanOptionHandler.class,
         usage = "Enable Chrome-specific options for handling cr.* functions.",
