@@ -449,9 +449,9 @@ var BufferSource;
 
 /**
  * @interface
- * @implements {IArrayLike<number>}
- * @implements {Iterable<number>}
- * @implements {ArrayBufferView}
+ * @extends {IArrayLike<number>}
+ * @extends {Iterable<number>}
+ * @extends {ArrayBufferView}
  * @see https://tc39.es/ecma262/multipage/indexed-collections.html#sec-typedarray-objects
  */
 function TypedArray() {}
