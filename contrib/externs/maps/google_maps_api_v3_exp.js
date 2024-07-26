@@ -17722,6 +17722,14 @@ google.maps.places.Place.prototype.businessStatus;
 google.maps.places.Place.prototype.displayName;
 
 /**
+ * The language of the location&#39;s display name. <code>null</code> if there
+ * is no name. <code>undefined</code> if the name data has not been loaded from
+ * the server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.displayNameLanguageCode;
+
+/**
  * The editorial summary for this place. <code>null</code> if there is no
  * editorial summary. <code>undefined</code> if this field has not yet been
  * requested.
@@ -17912,6 +17920,29 @@ google.maps.places.Place.prototype.plusCode;
  * @type {google.maps.places.PriceLevel|null|undefined}
  */
 google.maps.places.Place.prototype.priceLevel;
+
+/**
+ * The location&#39;s primary type. <code>null</code> if there is no type.
+ * <code>undefined</code> if the type data has not been loaded from the server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.primaryType;
+
+/**
+ * The location&#39;s primary type display name. <code>null</code> if there is
+ * no type. <code>undefined</code> if the type data has not been loaded from the
+ * server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.primaryTypeDisplayName;
+
+/**
+ * The language of the location&#39;s primary type display name.
+ * <code>null</code> if there is no type. <code>undefined</code> if the type
+ * data has not been loaded from the server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.primaryTypeDisplayNameLanguageCode;
 
 /**
  * A rating, between 1.0 to 5.0, based on user reviews of this Place.
