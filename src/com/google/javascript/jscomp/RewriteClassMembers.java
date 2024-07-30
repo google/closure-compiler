@@ -46,10 +46,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
 
   @Override
   public void process(Node externs, Node root) {
-    // Make all declared names unique to ensure that name shadowing can't occur in classes and
-    // public fields don't share names with constructor parameters
-    MakeDeclaredNamesUnique renamer = MakeDeclaredNamesUnique.builder().build();
-    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
+    // All declared names are already unique post normalization to ensure that name shadowing can't
+    // occur in classes and public fields don't share names with constructor parameters
     NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
         compiler, root, Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK);
