@@ -112,13 +112,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                         c, SerializationOptions.builder().setIncludeDebugInfo(true).build()))
             .build());
 
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compilerOptions);
     passes.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
             .setInternalFactory((abstractCompiler) -> Normalize.builder(abstractCompiler).build())
             .build());
-    TranspilationPasses.addPostNormalizationTranspilationPasses(passes, compilerOptions);
+    TranspilationPasses.addTranspilationPasses(passes, compilerOptions);
     // Since we're testing the transpile-only case, we need to put back the original variable names
     // where possible once transpilation is complete. This matches the behavior in
     // DefaultPassConfig. See comments there for further explanation.

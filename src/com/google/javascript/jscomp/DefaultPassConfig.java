@@ -166,14 +166,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(injectRuntimeLibraries);
 
-    // NOTE: Any new transpiler passes added outside of
-    // {@code addEarlyOptimizationTranspilationPasses} also need to update
-    // {@code CompilerTestCase.transpileToEs5}
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
-
     // Passes below this point may rely on normalization and must maintain normalization.
     passes.maybeAdd(normalize);
-    TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
+    TranspilationPasses.addTranspilationPasses(passes, options);
     // The transpilation passes may rely on normalize making all variables unique,
     // but we're doing only transpilation, so we want to put back the original variable names
     // wherever we can to meet user expectations.
@@ -512,9 +507,8 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
       passes.maybeAdd(closureProvidesRequires);
       passes.maybeAdd(processDefinesOptimize);
-      TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
       passes.maybeAdd(normalize);
-      TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
+      TranspilationPasses.addTranspilationPasses(passes, options);
       passes.maybeAdd(gatherExternPropertiesOptimize);
       passes.maybeAdd(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
       passes.maybeAdd(inlineAndCollapseProperties);
@@ -595,12 +589,11 @@ public final class DefaultPassConfig extends PassConfig {
     // Defines in code always need to be processed.
     passes.maybeAdd(processDefinesOptimize);
     passes.maybeAdd(createEmptyPass(PassNames.BEFORE_EARLY_OPTIMIZATIONS_TRANSPILATION));
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     passes.maybeAdd(normalize);
 
     // TODO(b/329447979): Add an early removeUnusedCode pass here
-    TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
+    TranspilationPasses.addTranspilationPasses(passes, options);
 
     passes.maybeAdd(gatherGettersAndSetters);
 

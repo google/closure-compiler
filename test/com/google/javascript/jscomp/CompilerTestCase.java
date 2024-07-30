@@ -1875,14 +1875,13 @@ public abstract class CompilerTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addTranspilationRuntimeLibraries(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
     // Transpilation requires normalization.
     factories.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.NORMALIZE)
             .setInternalFactory(abstractCompiler -> Normalize.builder(abstractCompiler).build())
             .build());
-    TranspilationPasses.addPostNormalizationTranspilationPasses(factories, options);
+    TranspilationPasses.addTranspilationPasses(factories, options);
     // We need to put back the original variable names where possible once transpilation is
     // complete. This matches the behavior in DefaultPassConfig. See comments there for further
     // explanation.

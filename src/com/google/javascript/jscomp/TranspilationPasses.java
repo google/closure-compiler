@@ -64,24 +64,13 @@ public class TranspilationPasses {
   }
 
   /**
-   * Adds transpilation passes that should run at the beginning of the optimization phase. Passes
-   * added in this method either use {@code TranspilationPasses.processTranspile} or early-exit by
-   * checking their feature in the script's featureset. So they will only get run if the feature
+   * Adds transpilation passes.
+   *
+   * <p>Passes added in this method either use {@code TranspilationPasses.processTranspile} or
+   * early-exit by checking their feature in the script's featureset. So they get run if the feature
    * they're responsible for removing exists in the script.
    */
-  public static void addEarlyOptimizationTranspilationPasses(
-      PassListBuilder passes, CompilerOptions options) {}
-
-  /**
-   * Adds transpilation passes that should not be run until after normalization has been done.
-   * Passes added in this method either use {@code TranspilationPasses.processTranspile} or
-   * early-exit by checking their feature in the script's featureset. So they will only get run if
-   * the feature they're responsible for removing exists in the script.
-   */
-  public static void addPostNormalizationTranspilationPasses(
-      PassListBuilder passes, CompilerOptions options) {
-    // TODO(b/197349249): Move passes from `addEarlyOptimizationTranspilationPasses()` to here
-    // until that method can be deleted as a no-op.
+  public static void addTranspilationPasses(PassListBuilder passes, CompilerOptions options) {
 
     passes.maybeAdd(reportUntranspilableFeatures);
 
