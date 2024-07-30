@@ -50,7 +50,9 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     // occur in classes and public fields don't share names with constructor parameters
     NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
-        compiler, root, Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK);
+        compiler,
+        root,
+        FeatureSet.BARE_MINIMUM.with(Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK));
   }
 
   @Override

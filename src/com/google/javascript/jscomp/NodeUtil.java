@@ -6163,6 +6163,22 @@ public final class NodeUtil {
   }
 
   /**
+   * Removes the given featureSet from the SCRIPT node's FeatureSet property.
+   *
+   * <p>Removing a feature from a single script does not mean that it's removed from all scripts.
+   * Hence this method does not remove it from the compiler's featureSet. The caller must remove it
+   * from the compiler's featureSet using {@code AbstractCompiler.markFeatureSetNotAllowed} or
+   * {@code AbstractCompiler.markFeatureNotAllowed} if it's calling this method for each script.
+   */
+  static void removeFeaturesFromScript(Node scriptNode, FeatureSet featureSet) {
+    FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
+    if (currentFeatures != null) {
+      currentFeatures = currentFeatures.without(featureSet);
+      scriptNode.putProp(Node.FEATURE_SET, currentFeatures);
+    }
+  }
+
+  /**
    * Removes the given feature from the FEATURE_SET prop of all SCRIPT nodes under root.
    *
    * <p>Also updates the compiler's FeatureSet.
@@ -6176,6 +6192,23 @@ public final class NodeUtil {
       NodeUtil.removeFeatureFromScript(childNode, feature);
     }
     compiler.markFeatureNotAllowed(feature);
+  }
+
+  /**
+   * Removes the given feature from the FEATURE_SET prop of all SCRIPT nodes under root.
+   *
+   * <p>Also updates the compiler's FeatureSet.
+   */
+  static void removeFeaturesFromAllScripts(
+      Node root, FeatureSet featureSet, AbstractCompiler compiler) {
+    checkArgument(root.isRoot(), root);
+    for (Node childNode = root.getFirstChild();
+        childNode != null;
+        childNode = childNode.getNext()) {
+      checkState(childNode.isScript());
+      NodeUtil.removeFeaturesFromScript(childNode, featureSet);
+    }
+    compiler.markFeatureSetNotAllowed(featureSet);
   }
 
   /** Adds the given feature to the FEATURE_SET prop of all scripts under externs and root. */

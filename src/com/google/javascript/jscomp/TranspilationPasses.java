@@ -85,17 +85,7 @@ public class TranspilationPasses {
 
     passes.maybeAdd(reportUntranspilableFeatures);
 
-    // Note that we detect feature by feature rather than by yearly languages
-    // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
-    // However, RegExp features are not transpiled, and this does not imply that we allow arbitrary
-    // selection of features to transpile.  They still must be done in chronological order based on.
-    // This greatly simplifies testing and the requirements for the transpilation passes.
-
-    if (options.needsTranspilationOf(Feature.REGEXP_FLAG_D)) {
-      passes.maybeAdd(
-          createFeatureRemovalPass(
-              "markEs2022FeaturesNotRequiringTranspilationAsRemoved", Feature.REGEXP_FLAG_D));
-    }
+    passes.maybeAdd(createUnifiedFeatureRemovalPass("featureRemovalPasses", options));
 
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
         || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)
@@ -112,24 +102,12 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteClassMembers);
     }
 
-    if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
-      // Numeric separators are flagged as present by the parser,
-      // but never actually represented in the AST.
-      // The only thing we need to do is mark them as not present in the AST.
-      passes.maybeAdd(
-          createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
-    }
-
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
       passes.maybeAdd(rewriteLogicalAssignmentOperatorsPass);
     }
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.maybeAdd(rewriteOptionalChainingOperator);
-    }
-
-    if (options.needsTranspilationOf(Feature.BIGINT)) {
-      passes.maybeAdd(createFeatureRemovalPass("markBigintsRemoved", Feature.BIGINT));
     }
 
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
@@ -139,17 +117,6 @@ public class TranspilationPasses {
     // TODO(b/197349249): Can this be done conditionally as part of another pass?
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.maybeAdd(rewriteCatchWithNoBinding);
-    }
-    if (options.getChunkOutputType() != ChunkOutputType.ES_MODULES) {
-      // Default output mode of JSCompiler is a script, unless chunkOutputType is set to
-      // `ES_MODULES` where each output chunk is an ES module.
-      passes.maybeAdd(createFeatureRemovalPass("markModulesRemoved", Feature.MODULES));
-      // Since import.meta cannot be transpiled, it is passed-through when the output format
-      // is a module. Otherwise it must be marked removed.
-      passes.maybeAdd(createFeatureRemovalPass("markImportMetaRemoved", Feature.IMPORT_META));
-      // Dynamic imports are preserved for open source output only when the chunk output type is
-      // ES_MODULES
-      passes.maybeAdd(createFeatureRemovalPass("markDynamicImportRemoved", Feature.DYNAMIC_IMPORT));
     }
 
     // NOTE: This needs to be _before_ await and yield are transpiled away.
@@ -178,23 +145,6 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationOf(Feature.EXPONENT_OP)) {
       passes.maybeAdd(rewriteExponentialOperator);
-    }
-
-    if (options.needsTranspilationFrom(
-        FeatureSet.BARE_MINIMUM.with(
-            Feature.BINARY_LITERALS,
-            Feature.OCTAL_LITERALS,
-            Feature.REGEXP_FLAG_U,
-            Feature.REGEXP_FLAG_Y))) {
-      // Binary and octal literals are effectively transpiled by the parser.
-      // There's no transpilation we can do for the new regexp flags.
-      passes.maybeAdd(
-          createFeatureRemovalPass(
-              "markEs6FeaturesNotRequiringTranspilationAsRemoved",
-              Feature.BINARY_LITERALS,
-              Feature.OCTAL_LITERALS,
-              Feature.REGEXP_FLAG_U,
-              Feature.REGEXP_FLAG_Y));
     }
 
     // TODO(b/329447979): Merge this with another pass and delete this pass.
@@ -544,31 +494,13 @@ public class TranspilationPasses {
    * from the compiler's featureset.
    */
   static void maybeMarkFeaturesAsTranspiledAway(
-      AbstractCompiler compiler,
-      Node root,
-      Feature transpiledFeature,
-      Feature... moreTranspiledFeatures) {
-    if (!compiler.hasHaltingErrors()) {
-      maybeMarkFeatureAsTranspiledAway(compiler, root, transpiledFeature);
-      for (Feature feature : moreTranspiledFeatures) {
-        maybeMarkFeatureAsTranspiledAway(compiler, root, feature);
-      }
-    }
-  }
-
-  /**
-   * Removes the given features from the FEATURE_SET prop of all scripts under root. Also removes
-   * from the compiler's featureset.
-   */
-  // TODO: b/293467820 - Potentially have a single method that accepts a Collection<Feature>
-  static void maybeMarkFeaturesAsTranspiledAway(
       AbstractCompiler compiler, Node root, FeatureSet transpiledFeatures) {
     // We don't bother to do this if the compiler has halting errors, which avoids unnecessary
     // warnings from AstValidator warning that the features are still there.
     if (!compiler.hasHaltingErrors()) {
-      for (Feature feature : transpiledFeatures.getFeatures()) {
-        maybeMarkFeatureAsTranspiledAway(compiler, root, feature);
-      }
+      // remove the features from the compiler's featureSet and remove the features from every
+      // script's featureset
+      NodeUtil.removeFeaturesFromAllScripts(root, transpiledFeatures, compiler);
     }
   }
 
@@ -607,14 +539,13 @@ public class TranspilationPasses {
    * no longer of concern for some other reason.
    */
   private static PassFactory createFeatureRemovalPass(
-      String passName, final Feature featureToRemove, final Feature... moreFeaturesToRemove) {
+      String passName, final FeatureSet featuresToRemove) {
     return PassFactory.builder()
         .setName(passName)
         .setInternalFactory(
             (compiler) ->
                 ((Node externs, Node root) ->
-                    maybeMarkFeaturesAsTranspiledAway(
-                        compiler, root, featureToRemove, moreFeaturesToRemove)))
+                    maybeMarkFeaturesAsTranspiledAway(compiler, root, featuresToRemove)))
         .build();
   }
 
@@ -629,5 +560,60 @@ public class TranspilationPasses {
                 ((Node externs, Node root) ->
                     postTranspileCheckUnsupportedFeaturesRemoved(compiler)))
         .build();
+  }
+
+  /**
+   * Create a single pass to mark all transpiled features as removed from the source scripts'
+   * FeatureSet and the compiler's featureset.
+   *
+   * <p>Doing this indicates that the AST no longer contains uses of the features, or that they are
+   * no longer of concern for some other reason.
+   */
+  private static PassFactory createUnifiedFeatureRemovalPass(
+      String passName, CompilerOptions options) {
+
+    FeatureSet featuresToMarkRemoved = FeatureSet.BARE_MINIMUM;
+
+    // The compiler doesn't transpile regex features.
+    if (options.needsTranspilationOf(Feature.REGEXP_FLAG_D)) {
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.REGEXP_FLAG_D);
+    }
+    if (options.needsTranspilationOf(Feature.BIGINT)) {
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.BIGINT);
+    }
+    if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
+      // Numeric separators are flagged as present by the parser,
+      // but never actually represented in the AST.
+      // The only thing we need to do is mark them as not present in the AST.
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.NUMERIC_SEPARATOR);
+    }
+    if (options.getChunkOutputType() != ChunkOutputType.ES_MODULES) {
+      // Default output mode of JSCompiler is a script, unless chunkOutputType is set to
+      // `ES_MODULES` where each output chunk is an ES module.
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.MODULES);
+      // Since import.meta cannot be transpiled, it is passed-through when the output format
+      // is a module. Otherwise it must be marked removed.
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.IMPORT_META);
+      // Dynamic imports are preserved for open source output only when the chunk output type is
+      // ES_MODULES
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.DYNAMIC_IMPORT);
+    }
+
+    if (options.needsTranspilationFrom(
+        FeatureSet.BARE_MINIMUM.with(
+            Feature.BINARY_LITERALS,
+            Feature.OCTAL_LITERALS,
+            Feature.REGEXP_FLAG_U,
+            Feature.REGEXP_FLAG_Y))) {
+      // Binary and octal literals are effectively transpiled by the parser.
+      // There's no transpilation we can do for the new regexp flags.
+      featuresToMarkRemoved =
+          featuresToMarkRemoved.with(
+              Feature.BINARY_LITERALS,
+              Feature.OCTAL_LITERALS,
+              Feature.REGEXP_FLAG_U,
+              Feature.REGEXP_FLAG_Y);
+    }
+    return createFeatureRemovalPass(passName, featuresToMarkRemoved);
   }
 }
