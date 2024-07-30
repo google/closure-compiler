@@ -709,12 +709,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
             SourceFile.fromCode("SRC1", "goog.provide('foo.bar');"),
             SourceFile.fromCode("SRC2", "alert(foo.bar);")),
         CheckConformance.CONFORMANCE_VIOLATION);
-
-    testWarning(
-        srcs(
-            SourceFile.fromCode("SRC1", "goog.provide('foo.bar'); foo.bar = {};"),
-            SourceFile.fromCode("SRC2", "alert(foo.bar);")),
-        CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   @Test

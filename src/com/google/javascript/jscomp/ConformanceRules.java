@@ -569,6 +569,11 @@ public final class ConformanceRules {
 
   /** Banned name rule */
   static final class BannedName extends AbstractRule {
+    private static final ImmutableSet<String> JS_BANNED_EXTERNAL_CDNS =
+        ImmutableSet.of("jsdeliver.net", "unpkg.com");
+    private static final ImmutableSet<String> JS_INTERNAL_HOSTS = ImmutableSet.of("gstatic.com");
+    private static final ImmutableSet<String> FORBIDDEN_SCRIPTS =
+        ImmutableSet.of("lottie_light.js");
     private final Requirement.Type requirementType;
     private final ImmutableList<Node> qualifiedNames;
     private final ImmutableSet<String> shortNames;
