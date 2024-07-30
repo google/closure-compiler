@@ -614,6 +614,28 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y);
     }
+
+    if (options.needsTranspilationFrom(FeatureSet.ES5)) {
+      // this means we're transpiling to ES3 output
+      featuresToMarkRemoved =
+          featuresToMarkRemoved.with(
+              // TODO(b/354075108): Stop tracking these 2 features. These don't get transpiled and
+              // are not supported in ES3. But they get possibly inlined / renamed by the optimizer.
+              Feature.ES3_KEYWORDS_AS_IDENTIFIERS, // does not get transpiled
+              Feature.KEYWORDS_AS_PROPERTIES, // does not get transpiled
+              // GETTERs and SETTERs get reported in lateConvertEs6ToEs3 for ES3 output. If
+              // we're here it means that GETTERs and SETTERs don't exist.
+              Feature.GETTER,
+              Feature.SETTER);
+    }
+
+    // these ES5 features are transpiled away unconditionally regardless of output level.
+    featuresToMarkRemoved =
+        featuresToMarkRemoved.with(
+            Feature.STRING_CONTINUATION, // transpiled away during parsing
+            Feature.TRAILING_COMMA // transpiled away during Normalization
+            );
+
     return createFeatureRemovalPass(passName, featuresToMarkRemoved);
   }
 }

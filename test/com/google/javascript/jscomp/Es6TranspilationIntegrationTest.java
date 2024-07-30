@@ -22,6 +22,8 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
@@ -1167,6 +1169,63 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var testcode$classdecl$var0 = function(){};",
             "/** @constructor */",
             "F = testcode$classdecl$var0;"));
+  }
+
+  @Test
+  public void testOutputLevelES3_compilerFeatureSetIsUpdated() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    test(
+        "class C { f() { class D {} } }",
+        lines(
+            "/** @constructor */",
+            "var C = function() {};",
+            "C.prototype.f = function() {",
+            "  /** @constructor */",
+            "  var D = function() {}",
+            "};"));
+    // The compiler feature set gets updated to ES3.
+    assertThat(getLastCompiler().getAllowableFeatures()).isEqualTo(FeatureSet.ES3);
+  }
+
+  @Test
+  public void testOutputLevelES3_gettersSettersAreReported() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    testError("class C { get x() { return 1; }}", TranspilationUtil.CANNOT_CONVERT);
+    testError("class C { set x(value) {}}", TranspilationUtil.CANNOT_CONVERT);
+  }
+
+  @Test
+  public void testES5FeatureTrailingCommaIsRemovedUnconditionally() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    // trailing comma is removed
+    test("let obj = {a: 1, b: 2,};", "var obj = {a: 1, b: 2};");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures()).isEqualTo(FeatureSet.ES3);
+
+    // also removed for ES5 output
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // trailing comma is removed unconditionally regardless of output level
+    test("let obj = {a: 1, b: 2,};", "var obj = {a: 1, b: 2};");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.TRAILING_COMMA)).isFalse();
+  }
+
+  @Test
+  public void testES5FeatureMultiLineStringContinuationIsRemovedUnconditionally() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    // string continuation is removed
+    test("let obj = 'a\\\nb';", "var obj = 'ab';");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.STRING_CONTINUATION))
+        .isFalse();
+
+    // also removed for ES5 output
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // string continuation is removed
+    test("let obj = 'a\\\nb';", "var obj = 'ab';");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.STRING_CONTINUATION))
+        .isFalse();
   }
 
   @Test

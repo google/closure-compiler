@@ -1603,7 +1603,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  FeatureSet getAllowableFeatures() {
+  public FeatureSet getAllowableFeatures() {
     return this.allowableFeatures;
   }
 
