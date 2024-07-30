@@ -1825,6 +1825,7 @@ public class Parser {
   private ParseTree parseRegularExpressionLiteral() {
     SourcePosition start = getTreeStartLocation();
     LiteralToken literal = nextRegularExpressionLiteralToken();
+    recordFeatureUsed(Feature.REGEXP_SYNTAX);
     return new LiteralExpressionTree(getTreeLocation(start), literal);
   }
 

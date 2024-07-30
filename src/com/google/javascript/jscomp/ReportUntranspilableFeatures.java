@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -38,8 +37,7 @@ import org.jspecify.annotations.Nullable;
  * features and bigint literal). Reports errors for any features are present in the root and not
  * present in the targeted output language.
  */
-public final class ReportUntranspilableFeatures extends AbstractPostOrderCallback
-    implements CompilerPass {
+public final class ReportUntranspilableFeatures implements NodeTraversal.Callback, CompilerPass {
 
   @VisibleForTesting
   public static final DiagnosticType UNTRANSPILABLE_FEATURE_PRESENT =
@@ -100,11 +98,6 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
 
   @Override
   public void process(Node externs, Node root) {
-    checkForUntranspilable(root);
-  }
-
-  private void checkForUntranspilable(Node root) {
-    // Non-flag RegExp features are not attached to nodes, so we must force traversal.
     NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
         compiler, root, untranspilableFeaturesToRemove);
@@ -136,6 +129,25 @@ public final class ReportUntranspilableFeatures extends AbstractPostOrderCallbac
     compiler.report(
         JSError.make(
             node, UNTRANSPILABLE_FEATURE_PRESENT, feature.toString(), minimum, suggestion));
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal t, Node n, @Nullable Node parent) {
+    if (n.isScript()) {
+      // only run this pass if the script contains regexp_syntax, bigint or unescaped unicode line
+      // or paragraph separator
+      if (TranspilationPasses.doesScriptHaveAnyOfTheseFeatures(
+          n,
+          FeatureSet.BARE_MINIMUM.with(
+              Feature.REGEXP_SYNTAX,
+              Feature.BIGINT,
+              Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP))) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override

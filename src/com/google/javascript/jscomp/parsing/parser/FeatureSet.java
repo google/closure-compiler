@@ -166,6 +166,9 @@ public final class FeatureSet implements Serializable {
 
   /** Specific features that can be included in a FeatureSet. */
   public enum Feature {
+    // ES3 features
+    REGEXP_SYNTAX("RegExp syntax", LangVersion.ES3),
+
     // ES5 features
     ES3_KEYWORDS_AS_IDENTIFIERS("ES3 keywords as identifiers", LangVersion.ES5),
     GETTER("getters", LangVersion.ES5),
