@@ -37,7 +37,7 @@ import org.jspecify.annotations.Nullable;
  * features and bigint literal). Reports errors for any features are present in the root and not
  * present in the targeted output language.
  */
-public final class ReportUntranspilableFeatures implements NodeTraversal.Callback, CompilerPass {
+public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspilation {
 
   @VisibleForTesting
   public static final DiagnosticType UNTRANSPILABLE_FEATURE_PRESENT =
@@ -97,10 +97,61 @@ public final class ReportUntranspilableFeatures implements NodeTraversal.Callbac
   }
 
   @Override
-  public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
-        compiler, root, untranspilableFeaturesToRemove);
+  FeatureSet getTranspiledAwayFeatures() {
+    return untranspilableFeaturesToRemove;
+  }
+
+  @Override
+  FeatureSet getAdditionalFeaturesToRunOn() {
+    /*
+     * This pass needs to run on all ES3 REGEXP_SYNTAX because it checks for the presence of
+     * non-flag RegExp features that are not parsed and not attached to nodes.
+     */
+    return FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_SYNTAX);
+  }
+
+  private void checkForUntranspilable(Node root) {
+    // Non-flag RegExp features are not attached to nodes, so we must force traversal.
+    switch (root.getToken()) {
+      case REGEXP:
+        {
+          String pattern = root.getFirstChild().getString();
+          String flags = root.hasTwoChildren() ? root.getLastChild().getString() : "";
+          RegExpTree reg;
+          try {
+            reg = RegExpTree.parseRegExp(pattern, flags);
+          } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
+            compiler.report(JSError.make(root, MALFORMED_REGEXP, ex.getMessage()));
+            break;
+          }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_S)) {
+            checkForRegExpSFlag(root);
+          }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_LOOKBEHIND)) {
+            checkForLookbehind(root, reg);
+          }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_NAMED_GROUPS)) {
+            checkForNamedGroups(root, reg);
+          }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE)) {
+            checkForUnicodePropertyEscape(root, reg);
+          }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_D)) {
+            checkForRegExpDFlag(root);
+          }
+          break;
+        }
+      case BIGINT:
+        {
+          // Transpilation of BigInt is not supported
+          if (untranspilableFeaturesToRemove.contains(Feature.BIGINT)) {
+            reportUntranspilable(Feature.BIGINT, root);
+          }
+          break;
+        }
+      default:
+        break;
+    }
   }
 
   private void reportUntranspilable(Feature feature, Node node) {
@@ -129,69 +180,6 @@ public final class ReportUntranspilableFeatures implements NodeTraversal.Callbac
     compiler.report(
         JSError.make(
             node, UNTRANSPILABLE_FEATURE_PRESENT, feature.toString(), minimum, suggestion));
-  }
-
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, @Nullable Node parent) {
-    if (n.isScript()) {
-      // only run this pass if the script contains regexp_syntax, bigint or unescaped unicode line
-      // or paragraph separator
-      if (TranspilationPasses.doesScriptHaveAnyOfTheseFeatures(
-          n,
-          FeatureSet.BARE_MINIMUM.with(
-              Feature.REGEXP_SYNTAX,
-              Feature.BIGINT,
-              Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP))) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case REGEXP:
-        {
-          String pattern = n.getFirstChild().getString();
-          String flags = n.hasTwoChildren() ? n.getLastChild().getString() : "";
-          RegExpTree reg;
-          try {
-            reg = RegExpTree.parseRegExp(pattern, flags);
-          } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
-            t.report(n, MALFORMED_REGEXP, ex.getMessage());
-            break;
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_S)) {
-            checkForRegExpSFlag(n);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_LOOKBEHIND)) {
-            checkForLookbehind(n, reg);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_NAMED_GROUPS)) {
-            checkForNamedGroups(n, reg);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE)) {
-            checkForUnicodePropertyEscape(n, reg);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_D)) {
-            checkForRegExpDFlag(n);
-          }
-          break;
-        }
-      case BIGINT:
-        {
-          // Transpilation of BigInt is not supported
-          if (untranspilableFeaturesToRemove.contains(Feature.BIGINT)) {
-            reportUntranspilable(Feature.BIGINT, n);
-          }
-          break;
-        }
-      default:
-        break;
-    }
   }
 
   private void checkForRegExpSFlag(Node regexpNode) {
@@ -241,5 +229,12 @@ public final class ReportUntranspilableFeatures implements NodeTraversal.Callbac
       }
     }
     return false;
+  }
+
+  @Override
+  @SuppressWarnings("CanIgnoreReturnValueSuggester")
+  Node transpileSubtree(Node subtree) {
+    checkForUntranspilable(subtree);
+    return subtree;
   }
 }

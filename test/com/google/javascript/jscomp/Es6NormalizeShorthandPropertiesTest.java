@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.rhino.Node;
@@ -59,7 +60,8 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new Es6NormalizeShorthandProperties(compiler);
+    return PeepholeTranspilationsPass.create(
+        compiler, ImmutableList.of(new Es6NormalizeShorthandProperties(compiler)));
   }
 
   @Test

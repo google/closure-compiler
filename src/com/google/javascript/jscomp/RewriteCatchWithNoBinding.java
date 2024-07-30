@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -41,9 +40,7 @@ import com.google.javascript.rhino.Node;
  * }
  * }</pre>
  */
-final class RewriteCatchWithNoBinding implements CompilerPass {
-  private static final FeatureSet TRANSPILED_FEATURES =
-      FeatureSet.BARE_MINIMUM.with(Feature.OPTIONAL_CATCH_BINDING);
+final class RewriteCatchWithNoBinding extends AbstractPeepholeTranspilation {
   private static final String BINDING_NAME = "$jscomp$unused$catch$";
 
   private final AbstractCompiler compiler;
@@ -56,24 +53,23 @@ final class RewriteCatchWithNoBinding implements CompilerPass {
     this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
   }
 
-  private class AddBindings extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isCatch() || !n.getFirstChild().isEmpty()) {
-        return;
-      }
-
-      Node name =
-          astFactory.createNameWithUnknownType(
-              BINDING_NAME + uniqueIdSupplier.getUniqueId(t.getInput()));
-      n.getFirstChild().replaceWith(name.srcrefTree(n.getFirstChild()));
-      t.reportCodeChange();
-    }
+  @Override
+  FeatureSet getTranspiledAwayFeatures() {
+    return FeatureSet.BARE_MINIMUM.with(Feature.OPTIONAL_CATCH_BINDING);
   }
 
   @Override
-  public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, new AddBindings());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, TRANSPILED_FEATURES);
+  @SuppressWarnings("CanIgnoreReturnValueSuggester")
+  Node transpileSubtree(Node n) {
+    if (!n.isCatch() || !n.getFirstChild().isEmpty()) {
+      return n;
+    }
+
+    Node name =
+        astFactory.createNameWithUnknownType(
+            BINDING_NAME + uniqueIdSupplier.getUniqueId(compiler.getInput(NodeUtil.getInputId(n))));
+    n.getFirstChild().replaceWith(name.srcrefTree(n.getFirstChild()));
+    compiler.reportChangeToEnclosingScope(name);
+    return n;
   }
 }

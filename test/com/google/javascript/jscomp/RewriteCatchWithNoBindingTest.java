@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -46,7 +47,8 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteCatchWithNoBinding(compiler);
+    return PeepholeTranspilationsPass.create(
+        compiler, ImmutableList.of(new RewriteCatchWithNoBinding(compiler)));
   }
 
   @Override

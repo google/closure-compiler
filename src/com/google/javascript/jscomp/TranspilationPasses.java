@@ -23,6 +23,8 @@ import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringR
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Provides a single place to manage transpilation passes. */
 public class TranspilationPasses {
@@ -72,7 +74,8 @@ public class TranspilationPasses {
    */
   public static void addTranspilationPasses(PassListBuilder passes, CompilerOptions options) {
 
-    passes.maybeAdd(reportUntranspilableFeatures);
+    // bag of small, local, independent rewritings being done in a single traversal
+    passes.maybeAdd(peepholeTranspilationsPasses);
 
     passes.maybeAdd(createUnifiedFeatureRemovalPass("featureRemovalPasses", options));
 
@@ -103,10 +106,6 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteNullishCoalesceOperator);
     }
 
-    // TODO(b/197349249): Can this be done conditionally as part of another pass?
-    if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
-      passes.maybeAdd(rewriteCatchWithNoBinding);
-    }
 
     // NOTE: This needs to be _before_ await and yield are transpiled away.
     if (options.getInstrumentAsyncContext()) {
@@ -136,11 +135,6 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteExponentialOperator);
     }
 
-    // TODO(b/329447979): Merge this with another pass and delete this pass.
-    if (options.needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
-      passes.maybeAdd(es6NormalizeShorthandProperties);
-    }
-
     if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6ConvertSuper);
     }
@@ -149,11 +143,6 @@ public class TranspilationPasses {
         FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
       passes.maybeAdd(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
-    }
-
-    // TODO(b/329447979): Merge with es6RewriteClass and delete this pass.
-    if (options.needsTranspilationOf(Feature.NEW_TARGET)) {
-      passes.maybeAdd(rewriteNewDotTarget);
     }
 
     if (options.needsTranspilationOf(Feature.ARROW_FUNCTIONS)) {
@@ -198,6 +187,30 @@ public class TranspilationPasses {
             "postTranspileUnsupportedFeaturesRemovedCheck"));
   }
 
+  private static final PassFactory peepholeTranspilationsPasses =
+      PassFactory.builder()
+          .setName("peepholeTranspilationsPasses")
+          .setInternalFactory(
+              (compiler) -> {
+                List<AbstractPeepholeTranspilation> peepholeTranspilations = new ArrayList<>();
+                peepholeTranspilations.add(
+                    new ReportUntranspilableFeatures(
+                        compiler,
+                        compiler.getOptions().getBrowserFeaturesetYearObject(),
+                        compiler.getOptions().getOutputFeatureSet()));
+                if (compiler.getOptions().needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
+                  peepholeTranspilations.add(new RewriteCatchWithNoBinding(compiler));
+                }
+                if (compiler.getOptions().needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
+                  peepholeTranspilations.add(new Es6NormalizeShorthandProperties(compiler));
+                }
+                if (compiler.getOptions().needsTranspilationOf(Feature.NEW_TARGET)) {
+                  peepholeTranspilations.add(new RewriteNewDotTarget(compiler));
+                }
+                return PeepholeTranspilationsPass.create(compiler, peepholeTranspilations);
+              })
+          .build();
+
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */
   public static void addRewritePolyfillPass(PassListBuilder passes) {
     passes.maybeAdd(rewritePolyfills);
@@ -235,28 +248,10 @@ public class TranspilationPasses {
           .setInternalFactory(RewriteObjectSpread::new)
           .build();
 
-  private static final PassFactory rewriteCatchWithNoBinding =
-      PassFactory.builder()
-          .setName("rewriteCatchWithNoBinding")
-          .setInternalFactory(RewriteCatchWithNoBinding::new)
-          .build();
-
-  private static final PassFactory rewriteNewDotTarget =
-      PassFactory.builder()
-          .setName("rewriteNewDotTarget")
-          .setInternalFactory(RewriteNewDotTarget::new)
-          .build();
-
   private static final PassFactory rewriteExponentialOperator =
       PassFactory.builder()
           .setName("rewriteExponentialOperator")
           .setInternalFactory(Es7RewriteExponentialOperator::new)
-          .build();
-
-  private static final PassFactory es6NormalizeShorthandProperties =
-      PassFactory.builder()
-          .setName("es6NormalizeShorthandProperties")
-          .setInternalFactory(Es6NormalizeShorthandProperties::new)
           .build();
 
   static final PassFactory es6RewriteClassExtends =
@@ -403,17 +398,6 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
-          .build();
-
-  static final PassFactory reportUntranspilableFeatures =
-      PassFactory.builder()
-          .setName("reportUntranspilableFeatures")
-          .setInternalFactory(
-              (compiler) ->
-                  new ReportUntranspilableFeatures(
-                      compiler,
-                      compiler.getOptions().getBrowserFeaturesetYearObject(),
-                      compiler.getOptions().getOutputFeatureSet()))
           .build();
 
   /**

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 import static com.google.javascript.jscomp.ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.jspecify.annotations.Nullable;
@@ -44,12 +45,15 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReportUntranspilableFeatures(
+    return PeepholeTranspilationsPass.create(
         compiler,
-        browserFeaturesetYear,
-        (browserFeaturesetYear != null
-            ? browserFeaturesetYear.getFeatureSet()
-            : languageOut.toFeatureSet()));
+        ImmutableList.of(
+            new ReportUntranspilableFeatures(
+                compiler,
+                browserFeaturesetYear,
+                (browserFeaturesetYear != null
+                    ? browserFeaturesetYear.getFeatureSet()
+                    : languageOut.toFeatureSet()))));
   }
 
   @Test

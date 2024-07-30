@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,8 @@ public class RewriteNewDotTargetTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteNewDotTarget(compiler);
+    return PeepholeTranspilationsPass.create(
+        compiler, ImmutableList.of(new RewriteNewDotTarget(compiler)));
   }
 
   @Override
