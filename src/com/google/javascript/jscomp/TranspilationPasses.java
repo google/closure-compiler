@@ -167,13 +167,6 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteObjectSpread);
       if (!options.needsTranspilationOf(Feature.OBJECT_DESTRUCTURING)
           && options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
-        // We only need to transpile away object destructuring that uses `...`, rather than
-        // all destructuring.
-        // For this to work correctly for object destructuring in parameter lists and variable
-        // declarations, we need to normalize them a bit first.
-        // TODO(b/197349249): Delete these as they're redundant with normalization.
-        passes.maybeAdd(es6RenameVariablesInParamLists);
-        passes.maybeAdd(es6SplitVariableDeclarations);
         passes.maybeAdd(
             getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
       }
@@ -211,13 +204,6 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationOf(Feature.CLASSES)) {
       passes.maybeAdd(es6ConvertSuper);
-    }
-
-    // TODO(b/197349249): Delete these as they're redundant with normalization.
-    if (options.needsTranspilationFrom(
-        FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING))) {
-      passes.maybeAdd(es6RenameVariablesInParamLists);
-      passes.maybeAdd(es6SplitVariableDeclarations);
     }
 
     if (options.needsTranspilationFrom(

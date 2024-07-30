@@ -30,7 +30,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Extracts ES6 classes defined in function calls to local constants.
@@ -75,12 +74,6 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
 
   @Override
   public void process(Node externs, Node root) {
-    if (compiler.getAllowableFeatures().contains(Feature.ARROW_FUNCTIONS)) {
-      // Normalize hasn't run yet if class transpilation is forced. Normalize arrows here to make
-      // sure class extraction generates legitimate code (b/262387538).
-      // TODO(b/197349249): Remove once b/197349249 is fixed.
-      NodeTraversal.traverse(compiler, root, new NormalizeArrows());
-    }
     NodeTraversal.traverseRoots(compiler, this, externs, root);
     NodeTraversal.traverseRoots(compiler, new SelfReferenceRewriter(), externs, root);
   }
@@ -152,36 +145,6 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
             return;
           }
         }
-      }
-    }
-  }
-
-  private final class NormalizeArrows extends NodeTraversal.AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-      switch (n.getToken()) {
-        case FUNCTION:
-          visitFunction(n);
-          break;
-        default:
-          break;
-      }
-    }
-
-    /**
-     * Rewrite blockless arrow functions to have a block with a single return statement.
-     *
-     * <p>For example: {@code (x) => x} becomes {@code (x) => { return x; }}.
-     */
-    void visitFunction(Node n) {
-      checkState(n.isFunction(), n);
-      if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
-        Node returnValue = NodeUtil.getFunctionBody(n);
-        Node body = IR.block(IR.returnNode(returnValue.detach()));
-        body.srcrefTreeIfMissing(returnValue);
-        n.addChildToBack(body);
-        compiler.reportChangeToEnclosingScope(body);
       }
     }
   }
