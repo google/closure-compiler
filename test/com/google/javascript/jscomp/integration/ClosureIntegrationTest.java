@@ -284,43 +284,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         lines(CLOSURE_COLLAPSED, "var FOO$BAR = 3;"));
   }
 
-  /**
-   * Tests that calls to goog.string.Const.from() with non-constant arguments are detected with and
-   * without collapsed properties.
-   */
-  @Test
-  public void testBug22684459_invalidConstFromParamCompatibleWithPropertyCollapsing() {
-    String source =
-        lines(
-            "goog.string = {};",
-            "goog.string.Const = {};",
-            "goog.string.Const.from = function(x) {};",
-            "var x = window.document.location;",
-            "goog.string.Const.from(x);");
-
-    // Without collapsed properties.
-    CompilerOptions options = createCompilerOptions();
-    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
-
-    // With collapsed properties.
-    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
-  }
-
-  @Test
-  public void testBug31301233_invalidConstFromParamFiresForUnusedLocal() {
-    String source =
-        lines(
-            "function Foo() {",
-            "  var x = window.document.location;",
-            "  goog.string.Const.from(x);",
-            "};");
-
-    CompilerOptions options = createCompilerOptions();
-    options.setSmartNameRemoval(true);
-    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
-  }
-
   @Test
   public void testBug2410122() {
     CompilerOptions options = createCompilerOptions();
@@ -392,30 +355,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
           "/** @define {foo.bar} */ foo.bar = {};"),
     };
     test(options, input, output, warnings);
-  }
-
-  /**
-   * Tests that calls to goog.string.Const.from() with non-constant arguments are detected with and
-   * without collapsed properties, even when goog.string.Const.from has been aliased.
-   */
-  @Test
-  public void testBug22684459_aliased() {
-    String source =
-        ""
-            + "goog.string = {};"
-            + "goog.string.Const = {};"
-            + "goog.string.Const.from = function(x) {};"
-            + "var mkConst = goog.string.Const.from;"
-            + "var x = window.document.location;"
-            + "mkConst(x);";
-
-    // Without collapsed properties.
-    CompilerOptions options = createCompilerOptions();
-    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
-
-    // With collapsed properties.
-    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 
   @Test

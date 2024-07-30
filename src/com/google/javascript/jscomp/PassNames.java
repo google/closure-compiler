@@ -31,11 +31,11 @@ public final class PassNames {
   public static final String BEFORE_EARLY_OPTIMIZATIONS_TRANSPILATION =
       "beforeEarlyOptimizationsTranspilation";
   public static final String BEFORE_STANDARD_OPTIMIZATIONS = "beforeStandardOptimizations";
+  public static final String OBFUSCATION_PASS_MARKER = "obfuscationPassMarker";
   public static final String BEFORE_MAIN_OPTIMIZATIONS = "beforeMainOptimizations";
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";
   public static final String BEFORE_SERIALIZATION = "beforeSerialization";
   public static final String CHECK_CONFORMANCE = "checkConformance";
-  public static final String CHECK_CONST_PARAMS = "checkConstParams";
   public static final String CHECK_REG_EXP = "checkRegExp";
   public static final String CHECK_TYPES = "checkTypes";
   public static final String CHECK_VARIABLE_REFERENCES = "checkVariableReferences";

@@ -599,6 +599,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(normalize);
 
+    // TODO(b/329447979): Add an early removeUnusedCode pass here
     TranspilationPasses.addPostNormalizationTranspilationPasses(passes, options);
 
     passes.maybeAdd(gatherGettersAndSetters);
@@ -651,11 +652,9 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(inferConsts);
     }
 
-    // Detects whether invocations of the method goog.string.Const.from are done with an argument
-    // which is a string literal. Needs to happen after inferConsts and collapseProperties.
-    // TODO(b/160616664): this should be in getChecks() instead of getOptimizations(). But
-    // for that the pass needs to understand constant properties as well. See b/31301233#comment10
-    passes.maybeAdd(checkConstParams);
+    // A marker pass to allow {@code ExtraPassConfig} passes to order themselves before
+    // RemoveUnusedCode.
+    passes.maybeAdd(createEmptyPass(PassNames.OBFUSCATION_PASS_MARKER));
 
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
     // more effective if code that would prevent disambiguation can be removed.
@@ -2062,13 +2061,6 @@ public final class DefaultPassConfig extends PassConfig {
   /** Checks that all constants are not modified */
   private final PassFactory checkConsts =
       PassFactory.builder().setName("checkConsts").setInternalFactory(ConstCheck::new).build();
-
-  /** Checks that the arguments are constants */
-  private final PassFactory checkConstParams =
-      PassFactory.builder()
-          .setName(PassNames.CHECK_CONST_PARAMS)
-          .setInternalFactory(ConstParamCheck::new)
-          .build();
 
   /** Replaces goog.toggle calls with toggle lookups. */
   private final PassFactory replaceToggles =
