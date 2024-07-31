@@ -387,8 +387,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   private Node createTempVarNameNode(String name, AstFactory.Type type) {
     // NOTE: This does not really create a constant node as this pass runs before normalization. See
     // b/322009741.
-    Node ret = astFactory.createConstantName(name, type);
-    return ret;
+    return astFactory.createConstantName(name, type);
   }
 
   /** Creates a new unique name to use for a pattern we need to rewrite. */
