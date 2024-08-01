@@ -2969,7 +2969,6 @@ chrome.runtime.Manifest.ExternallyConnectable.prototype.accepts_tls_channel_id;
 
 /**
  * https://developer.chrome.com/extensions/runtime.html#method-getManifest
- * https://developer.chrome.com/apps/runtime#method-getManifest
  * @return {!chrome.runtime.Manifest} The full manifest file of the app or
  *     extension.
  */
@@ -3000,7 +2999,7 @@ chrome.runtime.reload = function() {};
 
 
 /**
- * @see https://developer.chrome.com/apps/runtime#method-requestUpdateCheck
+ * @see https://developer.chrome.com/extensions/runtime#method-requestUpdateCheck
  * @param {function(string, !{version: string}=): void} callback Called with
  *     "throttled", "no_update", or "update_available". If an update is
  *     available, the object contains more information about the available
@@ -3056,7 +3055,7 @@ chrome.runtime.sendNativeMessage = function(
 
 /**
  * The operating system chrome is running on.
- * @see https://developer.chrome.com/apps/runtime#type-PlatformOs
+ * @see https://developer.chrome.com/extensions/runtime#type-PlatformOs
  * @enum {string}
  */
 chrome.runtime.PlatformOs = {
@@ -3072,7 +3071,7 @@ chrome.runtime.PlatformOs = {
 
 /**
  * The machine's processor architecture.
- * @see https://developer.chrome.com/apps/runtime#type-PlatformArch
+ * @see https://developer.chrome.com/extensions/runtime#type-PlatformArch
  * @enum {string}
  */
 chrome.runtime.PlatformArch = {
@@ -3087,7 +3086,7 @@ chrome.runtime.PlatformArch = {
 
 /**
  * The native client architecture.
- * @see https://developer.chrome.com/apps/runtime#type-PlatformNaclArch
+ * @see https://developer.chrome.com/extensions/runtime#type-PlatformNaclArch
  * @enum {string}
  */
 chrome.runtime.PlatformNaclArch = {
@@ -3100,7 +3099,7 @@ chrome.runtime.PlatformNaclArch = {
 
 
 /**
- * @see https://developer.chrome.com/apps/runtime#type-PlatformInfo
+ * @see https://developer.chrome.com/extensions/runtime#type-PlatformInfo
  * @typedef {{
  *   os: !chrome.runtime.PlatformOs,
  *   arch: !chrome.runtime.PlatformArch,
