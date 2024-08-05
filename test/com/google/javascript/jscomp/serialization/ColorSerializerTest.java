@@ -640,14 +640,14 @@ public class ColorSerializerTest {
     public abstract @Nullable TypeProto getNullableExpectedTypeProto();
 
     // The Integer we expect ColorSerializer to create for this Color.
-    public abstract Integer getExpectedTypePointer();
+    public abstract int getExpectedTypePointer();
 
     public TypeProto getExpectedTypeProto() {
       return checkNotNull(getNullableExpectedTypeProto());
     }
 
     static TestColor create(
-        Color color, @Nullable TypeProto expectedTypeProto, Integer nullableExpectedTypePointer) {
+        Color color, @Nullable TypeProto expectedTypeProto, int nullableExpectedTypePointer) {
       return new AutoValue_ColorSerializerTest_TestColor(
           color, expectedTypeProto, nullableExpectedTypePointer);
     }
