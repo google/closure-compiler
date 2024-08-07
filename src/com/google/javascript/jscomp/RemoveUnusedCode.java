@@ -774,6 +774,14 @@ class RemoveUnusedCode implements CompilerPass {
       }
 
       if (classVar == null || !classVar.isGlobal()) {
+        if (!mayHaveSideEffects(callNode) && parent.isExprResult()) {
+          RemovableBuilder builder = new RemovableBuilder();
+          for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
+            builder.addContinuation(new Continuation(child, scope));
+          }
+          builder.buildClassSetupCall(callNode).remove(compiler);
+          return;
+        }
         // The call we are traversing does not modify a class definition,
         // or the class is not specified with a simple variable name,
         // or the variable name is not global.
