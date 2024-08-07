@@ -25,6 +25,13 @@
 var Intl = {};
 
 /**
+ * @param {string} key
+ * @return {Array<string>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf
+ */
+Intl.supportedValuesOf = function(key) {};
+
+/**
  * NOTE: this API is not from ecma402 and is subject to change.
  * @param {string|Array<string>=} locales
  * @param {{type: (string|undefined)}=}
@@ -229,7 +236,7 @@ Intl.DisplayNames = function(locales, options) {};
  * @param {!Array<string>} locales
  * @param {{localeMatcher: string}=} options
  * @return {!Array<string>}
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames/supportedLocalesOf
  */
 Intl.DisplayNames.supportedLocalesOf = function(locales, options) {};
 
