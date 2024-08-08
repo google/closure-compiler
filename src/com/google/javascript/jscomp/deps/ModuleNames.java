@@ -62,6 +62,7 @@ public class ModuleNames {
         .replace('\\', '$')
         .replace('@', '$')
         .replace('+', '$')
+        .replace('!', '$')
         .replace('-', '_')
         .replace(':', '_')
         .replace('.', '_')
