@@ -471,6 +471,33 @@ google.maps.CollisionBehavior = {
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
+ * Identifiers for map color schemes. Specify these by value, or by using the
+ * constant&#39;s name. For example, <code>'FOLLOW_SYSTEM'</code> or
+ * <code>google.maps.ColorScheme.FOLLOW_SYSTEM</code>.
+ *
+ * Access by calling `const {ColorScheme} = await
+ * google.maps.importLibrary("core")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.ColorScheme = {
+  /**
+   * The dark color scheme for a map.
+   */
+  DARK: 'DARK',
+  /**
+   * The color scheme is selected based on system preferences.
+   */
+  FOLLOW_SYSTEM: 'FOLLOW_SYSTEM',
+  /**
+   * The light color scheme for a map. Default value for legacy Maps JS.
+   */
+  LIGHT: 'LIGHT',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
  * An enum representing the spatial relationship between the area and the target
  * location.
  *
@@ -678,6 +705,12 @@ google.maps.CoordinateTransformer.prototype.getCameraParams = function() {};
  * @record
  */
 google.maps.CoreLibrary = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.ColorScheme}
+ */
+google.maps.CoreLibrary.prototype.ColorScheme;
 
 /**
  * @type {typeof google.maps.ControlPosition}
@@ -3548,13 +3581,13 @@ google.maps.GeocoderResponse = function() {};
  * landmarks and the areas containing the target location. It is only populated
  * for reverse geocoding requests and only when {@link
  * google.maps.ExtraGeocodeComputation.ADDRESS_DESCRIPTORS} is enabled.
- * @type {!google.maps.AddressDescriptor|undefined}
+ * @type {!google.maps.AddressDescriptor|null|undefined}
  */
 google.maps.GeocoderResponse.prototype.address_descriptor;
 
 /**
  * The plus code associated with the location.
- * @type {!google.maps.places.PlacePlusCode|undefined}
+ * @type {!google.maps.places.PlacePlusCode|null|undefined}
  */
 google.maps.GeocoderResponse.prototype.plus_code;
 
@@ -5992,6 +6025,15 @@ google.maps.MapOptions.prototype.center;
  * @type {boolean|null|undefined}
  */
 google.maps.MapOptions.prototype.clickableIcons;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The initial Map color scheme. This option can only be set when the map is
+ * initialized.
+ * @default {@link google.maps.ColorScheme.LIGHT}
+ * @type {google.maps.ColorScheme|string|null|undefined}
+ */
+google.maps.MapOptions.prototype.colorScheme;
 
 /**
  * Size in pixels of the controls appearing on the map. This value must be
@@ -15266,7 +15308,7 @@ google.maps.maps3d.AltitudeMode = {
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring center change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {CenterChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15293,7 +15335,8 @@ google.maps.maps3d.ClickEvent = function() {};
  * The latitude/longitude/altitude that was below the cursor when the event
  * occurred. Please note, that at coarser levels, less accurate data will be
  * returned. Also, sea floor elevation may be returned for the altitude value
- * when clicking at the water surface from higher camera positions.
+ * when clicking at the water surface from higher camera positions. This event
+ * bubbles up through the DOM tree.
  * @type {!google.maps.LatLngAltitude|null}
  */
 google.maps.maps3d.ClickEvent.prototype.position;
@@ -15302,7 +15345,7 @@ google.maps.maps3d.ClickEvent.prototype.position;
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring heading change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {HeadingChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15572,8 +15615,7 @@ google.maps.maps3d.Polygon3DElement.prototype.drawsOccludedSegments;
 google.maps.maps3d.Polygon3DElement.prototype.extruded;
 
 /**
- * The fill color. All CSS3 colors are supported except for extended named
- * colors.
+ * The fill color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.fillColor;
@@ -15609,8 +15651,7 @@ google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
 google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
 
 /**
- * The stroke color. All CSS3 colors are supported except for extended named
- * colors.
+ * The stroke color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.strokeColor;
@@ -15776,8 +15817,7 @@ google.maps.maps3d.Polyline3DElement.prototype.extruded;
 google.maps.maps3d.Polyline3DElement.prototype.geodesic;
 
 /**
- * The outer color. All CSS3 colors are supported except for extended named
- * colors.
+ * The outer color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.outerColor;
@@ -15796,8 +15836,7 @@ google.maps.maps3d.Polyline3DElement.prototype.outerOpacity;
 google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
 
 /**
- * The stroke color. All CSS3 colors are supported except for extended named
- * colors.
+ * The stroke color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.strokeColor;
@@ -15911,7 +15950,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring range change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {RangeChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15925,7 +15964,7 @@ google.maps.maps3d.RangeChangeEvent = function() {};
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring roll change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {RollChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15939,7 +15978,7 @@ google.maps.maps3d.RollChangeEvent = function() {};
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring a steady state of
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {SteadyChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15960,7 +15999,7 @@ google.maps.maps3d.SteadyChangeEvent.prototype.isSteady;
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring tilt change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {TiltChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -16623,7 +16662,7 @@ google.maps.places.AutocompleteRequest = function() {};
 
 /**
  * Included primary <a
- * href="https://developers.google.com/maps/documentation/places/javascript/place-types">Place
+ * href="https://developers.google.com/maps/documentation/javascript/place-types">Place
  * type</a> (for example, &quot;restaurant&quot; or &quot;gas_station&quot;).
  * <br/><br/> A Place is only returned if its primary type is included in this
  * list. Up to 5 values can be specified. If no types are specified, all Place
