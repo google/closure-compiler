@@ -263,7 +263,7 @@ public final class ModuleLoaderTest {
   @Test
   public void testToJSIdentifier() {
     assertThat(ModuleNames.toJSIdentifier("com/example/test")).isEqualTo("com$example$test");
-    assertThat(ModuleNames.toJSIdentifier("file://a/b.jar!com/example/test")).isEqualTo("file_$a$b_jar$com$example$test");
+    assertThat(ModuleNames.toJSIdentifier("file://a/b.jar!com/example/test")).isEqualTo("file_$$a$b_jar$com$example$test");
   }
 
   @Test
