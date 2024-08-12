@@ -1089,6 +1089,65 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testGoogWeakUsageQualifiedName() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addClosureExterns()
+                .addExtra("function use(x) {}")
+                .buildExternsFile("externs.js"));
+
+    String code =
+        lines(
+            "var noStrongRefs = {prop: 123};",
+            "function getValue() { return 456; }",
+            "var hasStrongRefs = {prop: getValue()};",
+            "use(hasStrongRefs.prop);",
+            "use(goog.weakUsage(hasStrongRefs.prop));",
+            "use(goog.weakUsage(noStrongRefs.prop));"); //
+
+    // RemoveUnusedCode rewrites `goog.weakUsage(noStrongRefs)` to `void 0`.
+    // PeepholeReplaceKnownMethods rewrites `goog.weakUsage(a)` to `a`.
+    //
+    // InlineVariables has a special check that prevents the value of `a` from getting inlined into
+    // `use(a)`, because that would interfere with RemoveUnusedCode's analysis of the weak usage.
+    // But the getValue() function can still be inlined into `a`.
+    String result = lines("var a = 456;", "use(a);", "use(a);", "use(void 0);");
+
+    test(options, code, result);
+  }
+
+  @Test
+  public void testGoogWeakUsageNocollapse() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addClosureExterns()
+                .addExtra("function use(x) {}")
+                .buildExternsFile("externs.js"));
+
+    String code =
+        lines(
+            "var noStrongRefs = { /** @nocollapse */ prop: 123};",
+            "function getValue() { return 456; }",
+            "var hasStrongRefs = { /** @nocollapse */ prop: getValue()};",
+            "use(hasStrongRefs.prop);",
+            "use(goog.weakUsage(hasStrongRefs.prop));",
+            "use(goog.weakUsage(noStrongRefs.prop));"); //
+
+    // @nocollapse prevents goog.weakUsage from having an effect.
+    String result = lines("var a = {a:456};", "use(a.a);", "use(a.a);", "use(123);");
+
+    test(options, code, result);
+  }
+
+  @Test
   public void testExternsProvideIsAllowed() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

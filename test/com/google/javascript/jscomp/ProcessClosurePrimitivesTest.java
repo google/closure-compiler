@@ -452,6 +452,12 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
     // Error: there must be exactly one argument.
     testError("a = 1; b = 1; goog.weakUsage(a, b);", INVALID_GOOG_WEAK_USAGE_CALL);
+
+    // Regular name is allowed.
+    testSame("a = 1; goog.weakUsage(a);");
+
+    // Qualified name is allowed.
+    testSame("a = {b:1}; goog.weakUsage(a.b);");
   }
 
   @Test

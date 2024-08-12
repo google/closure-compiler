@@ -730,19 +730,24 @@ class RemoveUnusedCode implements CompilerPass {
       polyfills.put(info.key, info);
       // Only traverse the callee (to mark it as used).  The arguments may be traversed later.
       traverseNode(callNode.getFirstChild(), scope);
-    } else if (NodeUtil.isGoogWeakUsageCall(callNode)) {
-      // goog.weakUsage() should have exactly one argument, and it should be a name.  This is
-      // checked in ProcessClosurePrimitives.java. If it is not a name, we don't need to traverse
-      // it.
-      if (callNode.getChildCount() == 2) {
-        Node arg = callNode.getSecondChild();
-        if (arg.isName()) {
-          // Mark this call as removable if the var is not otherwise referenced.
-          VarInfo varInfo = traverseNameNode(arg, scope);
-          RemovableBuilder builder = new RemovableBuilder();
-          varInfo.addRemovable(builder.buildWeakUsageCall(callNode));
-        }
-      }
+    } else if (NodeUtil.isGoogWeakUsageCall(callNode)
+        && callNode.hasTwoChildren()
+        && callNode.getSecondChild().isName()) {
+      // goog.weakUsage() should have exactly one argument, and it should be either a name or a
+      // qualified name (this is checked in ProcessClosurePrimitives.java).
+      //
+      // If it is a qualified name, then we do not attempt to remove it at this time (see condition
+      // above). We rely on CollapseProperties to turn qualified names into simple names where
+      // possible.
+
+      // Mark this call as removable if the var is not otherwise referenced.
+      VarInfo varInfo = traverseNameNode(callNode.getSecondChild(), scope);
+      RemovableBuilder builder = new RemovableBuilder();
+      varInfo.addRemovable(builder.buildWeakUsageCall(callNode));
+
+      // We need to traverse the goog.weakUsage function itself (to mark it as used, in case our
+      // usage of it is not removed).
+      traverseNode(callNode.getFirstChild(), scope);
     } else {
       Node parent = callNode.getParent();
       String classVarName = null;

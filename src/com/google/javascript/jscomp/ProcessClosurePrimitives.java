@@ -287,7 +287,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
   }
 
   private void validateWeakUsageCall(Node call) {
-    // goog.weakUsage() should have exactly one argument, and it should be a name.
+    // goog.weakUsage() should have exactly one argument, and it should be a name (possibly
+    // qualified).
     int childCount = call.getChildCount();
     Node arg = call.getSecondChild();
     String calleeName = call.getFirstChild().getQualifiedName();
@@ -299,13 +300,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
               calleeName,
               "should have exactly one argument, not " + (childCount - 1)));
     }
-    if (childCount >= 2 && !call.getSecondChild().isName()) {
+    if (childCount >= 2 && !call.getSecondChild().isQualifiedName()) {
       compiler.report(
           JSError.make(
               call,
               INVALID_GOOG_WEAK_USAGE_CALL,
               calleeName,
-              "argument should be a name, not " + arg));
+              "argument should be a name or qualified name, not " + arg));
     }
   }
 
