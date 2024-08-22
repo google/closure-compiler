@@ -53,6 +53,29 @@ google.maps.importLibrary = function(libraryName) {};
 google.maps.version;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * A relational description of a location. Includes a ranked set of nearby
+ * landmarks and the areas containing the target location.
+ * @record
+ */
+google.maps.AddressDescriptor = function() {};
+
+/**
+ * A ranked list of containing or adjacent areas. The most useful (recognizable
+ * and precise) areas are ranked first.
+ * @type {!Array<!google.maps.Area>}
+ */
+google.maps.AddressDescriptor.prototype.areas;
+
+/**
+ * A ranked list of nearby landmarks. The most useful (recognizable and nearby)
+ * landmarks are ranked first.
+ * @type {!Array<!google.maps.Landmark>}
+ */
+google.maps.AddressDescriptor.prototype.landmarks;
+
+/**
  * Animations that can be played on a marker. Use the {@link
  * google.maps.Marker.setAnimation} method on Marker or the {@link
  * google.maps.MarkerOptions.animation} option to play an animation.
@@ -76,6 +99,40 @@ google.maps.Animation = {
    */
   DROP: 1,
 };
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * A place that is a small region, such as a neighborhood, sublocality, or large
+ * complex that contains the target location.
+ * @record
+ */
+google.maps.Area = function() {};
+
+/**
+ * Defines the spatial relationship between the target location and the area.
+ * @type {!google.maps.Containment}
+ */
+google.maps.Area.prototype.containment;
+
+/**
+ * The name for the area.
+ * @type {string}
+ */
+google.maps.Area.prototype.display_name;
+
+/**
+ * The language of the name for the area.
+ * @type {string}
+ */
+google.maps.Area.prototype.display_name_language_code;
+
+/**
+ * The Place ID of the underlying area. Can be used to resolve more information
+ * about the area through Place Details or Place ID Lookup.
+ * @type {string}
+ */
+google.maps.Area.prototype.place_id;
 
 /**
  * A layer showing bike lanes and paths.
@@ -412,6 +469,59 @@ google.maps.CollisionBehavior = {
 };
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Identifiers for map color schemes. Specify these by value, or by using the
+ * constant&#39;s name. For example, <code>'FOLLOW_SYSTEM'</code> or
+ * <code>google.maps.ColorScheme.FOLLOW_SYSTEM</code>.
+ *
+ * Access by calling `const {ColorScheme} = await
+ * google.maps.importLibrary("core")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.ColorScheme = {
+  /**
+   * The dark color scheme for a map.
+   */
+  DARK: 'DARK',
+  /**
+   * The color scheme is selected based on system preferences.
+   */
+  FOLLOW_SYSTEM: 'FOLLOW_SYSTEM',
+  /**
+   * The light color scheme for a map. Default value for legacy Maps JS.
+   */
+  LIGHT: 'LIGHT',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * An enum representing the spatial relationship between the area and the target
+ * location.
+ *
+ * Access by calling `const {Containment} = await
+ * google.maps.importLibrary("geocoding")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.Containment = {
+  /**
+   * The target location is outside the area region, but close by.
+   */
+  NEAR: 'NEAR',
+  /**
+   * The target location is within the area region, close to the edge.
+   */
+  OUTSKIRTS: 'OUTSKIRTS',
+  /**
+   * The target location is within the area region, close to the center.
+   */
+  WITHIN: 'WITHIN',
+};
+
+/**
  * Identifiers used to specify the placement of controls on the map. Controls
  * are positioned relative to other controls in the same layout position.
  * Controls that are added first are positioned closer to the edge of the map.
@@ -595,6 +705,12 @@ google.maps.CoordinateTransformer.prototype.getCameraParams = function() {};
  * @record
  */
 google.maps.CoreLibrary = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.ColorScheme}
+ */
+google.maps.CoreLibrary.prototype.ColorScheme;
 
 /**
  * @type {typeof google.maps.ControlPosition}
@@ -2998,6 +3114,23 @@ google.maps.ErrorEvent = function() {};
 google.maps.ErrorEvent.prototype.error;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Extra computations to perform while completing a geocoding request.
+ *
+ * Access by calling `const {ExtraGeocodeComputation} = await
+ * google.maps.importLibrary("geocoding")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.ExtraGeocodeComputation = {
+  /**
+   * Generate an address descriptor.
+   */
+  ADDRESS_DESCRIPTORS: 'ADDRESS_DESCRIPTORS',
+};
+
+/**
  * An interface representing a vector map tile feature. These are inputs to the
  * <code>FeatureStyleFunction</code>. Do not save a reference to a particular
  * <code>Feature</code> object because the reference will not be stable.
@@ -3377,6 +3510,22 @@ google.maps.GeocoderRequest.prototype.bounds;
 google.maps.GeocoderRequest.prototype.componentRestrictions;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A list of extra computations which may be used to complete the request. Note:
+ * These extra computations may return extra fields on the response.
+ * @type {!Array<!google.maps.ExtraGeocodeComputation>|undefined}
+ */
+google.maps.GeocoderRequest.prototype.extraComputations;
+
+/**
+ * Fulfill the promise on a ZERO_RESULT status in the response. This may be
+ * desired because even with zero geocoding results there may still be
+ * additional response level fields returned.
+ * @type {boolean|null|undefined}
+ */
+google.maps.GeocoderRequest.prototype.fulfillOnZeroResults;
+
+/**
  * A language identifier for the language in which results should be returned,
  * when possible. See the <a
  * href="https://developers.google.com/maps/faq#languagesupport">list of
@@ -3427,6 +3576,22 @@ google.maps.GeocoderRequest.prototype.region;
 google.maps.GeocoderResponse = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A relational description of a location. Includes a ranked set of nearby
+ * landmarks and the areas containing the target location. It is only populated
+ * for reverse geocoding requests and only when {@link
+ * google.maps.ExtraGeocodeComputation.ADDRESS_DESCRIPTORS} is enabled.
+ * @type {!google.maps.AddressDescriptor|null|undefined}
+ */
+google.maps.GeocoderResponse.prototype.address_descriptor;
+
+/**
+ * The plus code associated with the location.
+ * @type {!google.maps.places.PlacePlusCode|null|undefined}
+ */
+google.maps.GeocoderResponse.prototype.plus_code;
+
+/**
  * The list of {@link google.maps.GeocoderResult}s.
  * @type {!Array<!google.maps.GeocoderResult>}
  */
@@ -3446,6 +3611,18 @@ google.maps.GeocoderResult = function() {};
  * @type {!Array<!google.maps.GeocoderAddressComponent>}
  */
 google.maps.GeocoderResult.prototype.address_components;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A relational description of the location associated with this geocode.
+ * Includes a ranked set of nearby landmarks and the areas containing the target
+ * location. This will only be populated for forward geocoding and place ID
+ * lookup requests, only when {@link
+ * google.maps.ExtraGeocodeComputation.ADDRESS_DESCRIPTORS} is enabled, and only
+ * for certain localized places.
+ * @type {!google.maps.AddressDescriptor|undefined}
+ */
+google.maps.GeocoderResult.prototype.address_descriptor;
 
 /**
  * A string containing the human-readable address of this location.
@@ -3548,6 +3725,16 @@ google.maps.GeocoderStatus = {
 google.maps.GeocodingLibrary = function() {};
 
 /**
+ * @type {typeof google.maps.Containment}
+ */
+google.maps.GeocodingLibrary.prototype.Containment;
+
+/**
+ * @type {typeof google.maps.ExtraGeocodeComputation}
+ */
+google.maps.GeocodingLibrary.prototype.ExtraGeocodeComputation;
+
+/**
  * @type {typeof google.maps.Geocoder}
  */
 google.maps.GeocodingLibrary.prototype.Geocoder;
@@ -3561,6 +3748,11 @@ google.maps.GeocodingLibrary.prototype.GeocoderLocationType;
  * @type {typeof google.maps.GeocoderStatus}
  */
 google.maps.GeocodingLibrary.prototype.GeocoderStatus;
+
+/**
+ * @type {typeof google.maps.SpatialRelationship}
+ */
+google.maps.GeocodingLibrary.prototype.SpatialRelationship;
 
 /**
  * @record
@@ -3921,6 +4113,12 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
 google.maps.InfoWindow = function(opts) {};
 
 /**
+ * Checks if the InfoWindow is open.
+ * @type {boolean}
+ */
+google.maps.InfoWindow.prototype.isOpen;
+
+/**
  * Closes this InfoWindow by removing it from the DOM structure.
  * @return {undefined}
  */
@@ -3940,6 +4138,18 @@ google.maps.InfoWindow.prototype.focus = function() {};
  *     The same as what was previously set as the content.
  */
 google.maps.InfoWindow.prototype.getContent = function() {};
+
+/**
+ * @return {string|Element|Text|null|undefined} The header content of this
+ *     InfoWindow. See {@link google.maps.InfoWindowOptions.headerContent}.
+ */
+google.maps.InfoWindow.prototype.getHeaderContent = function() {};
+
+/**
+ * @return {boolean|undefined} Whether the whole header row is disabled or not.
+ *     See {@link google.maps.InfoWindowOptions.headerDisabled}.
+ */
+google.maps.InfoWindow.prototype.getHeaderDisabled = function() {};
 
 /**
  * @return {google.maps.LatLng|null|undefined} The LatLng position of this
@@ -3982,6 +4192,22 @@ google.maps.InfoWindow.prototype.open = function(options, anchor) {};
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
+
+/**
+ * @param {(string|Element|Text|null)=} headerContent The header content to be
+ *     displayed by this InfoWindow. See {@link
+ *     google.maps.InfoWindowOptions.headerContent}.
+ * @return {undefined}
+ */
+google.maps.InfoWindow.prototype.setHeaderContent = function(headerContent) {};
+
+/**
+ * @param {?boolean=} headerDisabled Specifies whether to disable the whole
+ *     header row. See {@link google.maps.InfoWindowOptions.headerDisabled}.
+ * @return {undefined}
+ */
+google.maps.InfoWindow.prototype.setHeaderDisabled = function(
+    headerDisabled) {};
 
 /**
  * @param {?google.maps.InfoWindowOptions=} options
@@ -4066,17 +4292,15 @@ google.maps.InfoWindowOptions.prototype.content;
 google.maps.InfoWindowOptions.prototype.disableAutoPan;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The content to display in the InfoWindow header row. This can be an HTML
- * element, or a string containing HTML. The InfoWindow will be sized according
- * to the content. To set an explicit size for the header content, set
+ * element, or a string of plain text. The InfoWindow will be sized according to
+ * the content. To set an explicit size for the header content, set
  * headerContent to be a HTML element with that size.
  * @type {string|!Element|!Text|null|undefined}
  */
 google.maps.InfoWindowOptions.prototype.headerContent;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Disables the whole header row in the InfoWindow. When set to true, the header
  * will be removed so that the header content and the close button will be
  * hidden.
@@ -4538,6 +4762,64 @@ google.maps.KmlMouseEvent.prototype.latLng;
  * @type {google.maps.Size}
  */
 google.maps.KmlMouseEvent.prototype.pixelOffset;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * A place that represents a point of reference for the address.
+ * @record
+ */
+google.maps.Landmark = function() {};
+
+/**
+ * The name for the landmark.
+ * @type {string}
+ */
+google.maps.Landmark.prototype.display_name;
+
+/**
+ * The language of the name for the landmark.
+ * @type {string}
+ */
+google.maps.Landmark.prototype.display_name_language_code;
+
+/**
+ * The Place ID of the underlying establishment serving as the landmark. Can be
+ * used to resolve more information about the landmark through Place Details or
+ * Place Id Lookup.
+ * @type {string}
+ */
+google.maps.Landmark.prototype.place_id;
+
+/**
+ * Defines the spatial relationship between the target location and the
+ * landmark.
+ * @type {!google.maps.SpatialRelationship}
+ */
+google.maps.Landmark.prototype.spatial_relationship;
+
+/**
+ * The straight line distance between the target location and the landmark.
+ * @type {number}
+ */
+google.maps.Landmark.prototype.straight_line_distance_meters;
+
+/**
+ * The travel distance along the road network between the target location and
+ * the landmark. This can be unpopulated if the landmark is disconnected from
+ * the part of the road network the target is closest to OR if the target
+ * location was not actually considered to be on the road network.
+ * @type {number|undefined}
+ */
+google.maps.Landmark.prototype.travel_distance_meters;
+
+/**
+ * One or more values indicating the type of the returned result. Please see <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/supported_types">Types
+ * </a> for more detail.
+ * @type {!Array<string>}
+ */
+google.maps.Landmark.prototype.types;
 
 /**
  * A <code>LatLng</code> is a point in geographical coordinates: latitude and
@@ -5743,6 +6025,15 @@ google.maps.MapOptions.prototype.center;
  * @type {boolean|null|undefined}
  */
 google.maps.MapOptions.prototype.clickableIcons;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The initial Map color scheme. This option can only be set when the map is
+ * initialized.
+ * @default {@link google.maps.ColorScheme.LIGHT}
+ * @type {google.maps.ColorScheme|string|null|undefined}
+ */
+google.maps.MapOptions.prototype.colorScheme;
 
 /**
  * Size in pixels of the controls appearing on the map. This value must be
@@ -7616,9 +7907,54 @@ google.maps.PlacesLibrary.prototype.AutocompleteService;
 google.maps.PlacesLibrary.prototype.AutocompleteSessionToken;
 
 /**
+ * @type {typeof google.maps.places.AutocompleteSuggestion}
+ */
+google.maps.PlacesLibrary.prototype.AutocompleteSuggestion;
+
+/**
  * @type {typeof google.maps.places.BusinessStatus}
  */
 google.maps.PlacesLibrary.prototype.BusinessStatus;
+
+/**
+ * @type {typeof google.maps.places.ConnectorAggregation}
+ */
+google.maps.PlacesLibrary.prototype.ConnectorAggregation;
+
+/**
+ * @type {typeof google.maps.places.EVChargeOptions}
+ */
+google.maps.PlacesLibrary.prototype.EVChargeOptions;
+
+/**
+ * @type {typeof google.maps.places.EVConnectorType}
+ */
+google.maps.PlacesLibrary.prototype.EVConnectorType;
+
+/**
+ * @type {typeof google.maps.places.FormattableText}
+ */
+google.maps.PlacesLibrary.prototype.FormattableText;
+
+/**
+ * @type {typeof google.maps.places.FuelOptions}
+ */
+google.maps.PlacesLibrary.prototype.FuelOptions;
+
+/**
+ * @type {typeof google.maps.places.FuelPrice}
+ */
+google.maps.PlacesLibrary.prototype.FuelPrice;
+
+/**
+ * @type {typeof google.maps.places.FuelType}
+ */
+google.maps.PlacesLibrary.prototype.FuelType;
+
+/**
+ * @type {typeof google.maps.places.Money}
+ */
+google.maps.PlacesLibrary.prototype.Money;
 
 /**
  * @type {typeof google.maps.places.OpeningHours}
@@ -7654,6 +7990,11 @@ google.maps.PlacesLibrary.prototype.Photo;
  * @type {typeof google.maps.places.Place}
  */
 google.maps.PlacesLibrary.prototype.Place;
+
+/**
+ * @type {typeof google.maps.places.PlacePrediction}
+ */
+google.maps.PlacesLibrary.prototype.PlacePrediction;
 
 /**
  * @type {typeof google.maps.places.PlacesService}
@@ -7699,6 +8040,11 @@ google.maps.PlacesLibrary.prototype.SearchByTextRankPreference;
  * @type {typeof google.maps.places.SearchNearbyRankPreference}
  */
 google.maps.PlacesLibrary.prototype.SearchNearbyRankPreference;
+
+/**
+ * @type {typeof google.maps.places.StringRange}
+ */
+google.maps.PlacesLibrary.prototype.StringRange;
 
 /**
  *
@@ -8575,6 +8921,49 @@ google.maps.Size.prototype.equals = function(other) {};
  * @override
  */
 google.maps.Size.prototype.toString = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * An enum representing the relationship in space between the landmark and the
+ * target.
+ *
+ * Access by calling `const {SpatialRelationship} = await
+ * google.maps.importLibrary("geocoding")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.SpatialRelationship = {
+  /**
+   * The target is directly opposite the landmark on the other side of the road.
+   */
+  ACROSS_THE_ROAD: 'ACROSS_THE_ROAD',
+  /**
+   * Not on the same route as the landmark but a single turn away.
+   */
+  AROUND_THE_CORNER: 'AROUND_THE_CORNER',
+  /**
+   * Close to the landmark&#39;s structure but further away from its access
+   * point.
+   */
+  BEHIND: 'BEHIND',
+  /**
+   * The target is directly adjacent to the landmark.
+   */
+  BESIDE: 'BESIDE',
+  /**
+   * On the same route as the landmark but not besides or across.
+   */
+  DOWN_THE_ROAD: 'DOWN_THE_ROAD',
+  /**
+   * This is the default relationship when nothing more specific below applies.
+   */
+  NEAR: 'NEAR',
+  /**
+   * The landmark has a spatial geometry and the target is within its bounds.
+   */
+  WITHIN: 'WITHIN',
+};
 
 /**
  * Options for the rendering of the Street View address control.
@@ -14919,7 +15308,7 @@ google.maps.maps3d.AltitudeMode = {
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring center change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {CenterChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -14946,7 +15335,8 @@ google.maps.maps3d.ClickEvent = function() {};
  * The latitude/longitude/altitude that was below the cursor when the event
  * occurred. Please note, that at coarser levels, less accurate data will be
  * returned. Also, sea floor elevation may be returned for the altitude value
- * when clicking at the water surface from higher camera positions.
+ * when clicking at the water surface from higher camera positions. This event
+ * bubbles up through the DOM tree.
  * @type {!google.maps.LatLngAltitude|null}
  */
 google.maps.maps3d.ClickEvent.prototype.position;
@@ -14955,7 +15345,7 @@ google.maps.maps3d.ClickEvent.prototype.position;
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring heading change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {HeadingChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15225,8 +15615,7 @@ google.maps.maps3d.Polygon3DElement.prototype.drawsOccludedSegments;
 google.maps.maps3d.Polygon3DElement.prototype.extruded;
 
 /**
- * The fill color. All CSS3 colors are supported except for extended named
- * colors.
+ * The fill color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.fillColor;
@@ -15262,8 +15651,7 @@ google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
 google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
 
 /**
- * The stroke color. All CSS3 colors are supported except for extended named
- * colors.
+ * The stroke color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.strokeColor;
@@ -15429,8 +15817,7 @@ google.maps.maps3d.Polyline3DElement.prototype.extruded;
 google.maps.maps3d.Polyline3DElement.prototype.geodesic;
 
 /**
- * The outer color. All CSS3 colors are supported except for extended named
- * colors.
+ * The outer color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.outerColor;
@@ -15449,8 +15836,7 @@ google.maps.maps3d.Polyline3DElement.prototype.outerOpacity;
 google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
 
 /**
- * The stroke color. All CSS3 colors are supported except for extended named
- * colors.
+ * The stroke color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.strokeColor;
@@ -15564,7 +15950,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring range change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {RangeChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15578,7 +15964,7 @@ google.maps.maps3d.RangeChangeEvent = function() {};
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring roll change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {RollChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15592,7 +15978,7 @@ google.maps.maps3d.RollChangeEvent = function() {};
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring a steady state of
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {SteadyChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -15613,7 +15999,7 @@ google.maps.maps3d.SteadyChangeEvent.prototype.isSteady;
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * This event is created from monitoring tilt change on
- * <code>Map3DElement</code>.
+ * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {TiltChangeEvent} = await
  * google.maps.importLibrary("maps3d")`. See
@@ -16268,6 +16654,113 @@ google.maps.places.AutocompletePrediction.prototype.terms;
 google.maps.places.AutocompletePrediction.prototype.types;
 
 /**
+ * Request interface for {@link
+ * google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions}.
+ * @record
+ */
+google.maps.places.AutocompleteRequest = function() {};
+
+/**
+ * Included primary <a
+ * href="https://developers.google.com/maps/documentation/javascript/place-types">Place
+ * type</a> (for example, &quot;restaurant&quot; or &quot;gas_station&quot;).
+ * <br/><br/> A Place is only returned if its primary type is included in this
+ * list. Up to 5 values can be specified. If no types are specified, all Place
+ * types are returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.includedPrimaryTypes;
+
+/**
+ * Only include results in the specified regions, specified as up to 15 CLDR
+ * two-character region codes. An empty set will not restrict the results. If
+ * both <code>locationRestriction</code> and <code>includedRegionCodes</code>
+ * are set, the results will be located in the area of intersection.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.includedRegionCodes;
+
+/**
+ * The text string on which to search.
+ * @type {string}
+ */
+google.maps.places.AutocompleteRequest.prototype.input;
+
+/**
+ * A zero-based Unicode character offset of <code>input</code> indicating the
+ * cursor position in <code>input</code>. The cursor position may influence what
+ * predictions are returned. If not specified, defaults to the length of
+ * <code>input</code>.
+ * @type {number|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.inputOffset;
+
+/**
+ * The language in which to return results. Will default to the browser&#39;s
+ * language preference. The results may be in mixed languages if the language
+ * used in <code>input</code> is different from <code>language</code>, or if the
+ * returned Place does not have a translation from the local language to
+ * <code>language</code>.
+ * @type {string|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.language;
+
+/**
+ * Bias results to a specified location. <br/><br/> At most one of
+ * <code>locationBias</code> or <code>locationRestriction</code> should be set.
+ * If neither are set, the results will be biased by IP address, meaning the IP
+ * address will be mapped to an imprecise location and used as a biasing signal.
+ * @type {!google.maps.places.LocationBias|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.locationBias;
+
+/**
+ * Restrict results to a specified location. <br/><br/> At most one of
+ * <code>locationBias</code> or <code>locationRestriction</code> should be set.
+ * If neither are set, the results will be biased by IP address, meaning the IP
+ * address will be mapped to an imprecise location and used as a biasing signal.
+ * @type {!google.maps.places.LocationRestriction|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.locationRestriction;
+
+/**
+ * The origin point from which to calculate geodesic distance to the destination
+ * (returned as {@link google.maps.places.PlacePrediction.distanceMeters}). If
+ * this value is omitted, geodesic distance will not be returned.
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.origin;
+
+/**
+ * The region code, specified as a CLDR two-character region code. This affects
+ * address formatting, result ranking, and may influence what results are
+ * returned. This does not restrict results to the specified region.
+ * @type {string|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.region;
+
+/**
+ * A token which identifies an Autocomplete session for billing purposes.
+ * Generate a new session token via {@link
+ * google.maps.places.AutocompleteSessionToken}. <br/><br/> The session begins
+ * when the user starts typing a query, and concludes when they select a place
+ * and call {@link google.maps.places.Place.fetchFields}. Each session can have
+ * multiple queries, followed by one <code>fetchFields</code> call. The
+ * credentials used for each request within a session must belong to the same
+ * Google Cloud Console project. Once a session has concluded, the token is no
+ * longer valid; your app must generate a fresh token for each session. If the
+ * <code>sessionToken</code> parameter is omitted, or if you reuse a session
+ * token, the session is charged as if no session token was provided (each
+ * request is billed separately). <br/><br/> We recommend the following
+ * guidelines: <ul><li>Use session tokens for all Place Autocomplete calls.</li>
+ * <li>Generate a fresh token for each session.</li> <li>Be sure to pass a
+ * unique session token for each new session. Using the same token for more than
+ * one session will result in each request being billed individually.</li> </ul>
+ * @type {!google.maps.places.AutocompleteSessionToken|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.sessionToken;
+
+/**
  * An Autocomplete response returned by the call to {@link
  * google.maps.places.AutocompleteService.getPlacePredictions} containing a list
  * of {@link google.maps.places.AutocompletePrediction}s.
@@ -16320,10 +16813,7 @@ google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
     request, callback) {};
 
 /**
- * Represents a session token used for tracking an autocomplete session, which
- * can be a series of {@link
- * google.maps.places.AutocompleteService.getPlacePredictions} calls followed by
- * a single {@link google.maps.places.PlacesService.getDetails} call.
+ * Represents a session token used for tracking an autocomplete session.
  *
  * Access by calling `const {AutocompleteSessionToken} = await
  * google.maps.importLibrary("places")`. See
@@ -16331,6 +16821,31 @@ google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
  * @constructor
  */
 google.maps.places.AutocompleteSessionToken = function() {};
+
+/**
+ * An Autocomplete suggestion result.
+ *
+ * Access by calling `const {AutocompleteSuggestion} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.AutocompleteSuggestion = function() {};
+
+/**
+ * Contains the human-readable name for the returned result. For establishment
+ * results, this is usually the business name and address.
+ * @type {!google.maps.places.PlacePrediction|null}
+ */
+google.maps.places.AutocompleteSuggestion.prototype.placePrediction;
+
+/**
+ * Fetches a list of AutocompleteSuggestions.
+ * @param {!google.maps.places.AutocompleteRequest} autocompleteRequest
+ * @return {!Promise<!{suggestions:!Array<!google.maps.places.AutocompleteSuggestion>}>}
+ */
+google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions =
+    function(autocompleteRequest) {};
 
 /**
  * An Autocompletion request to be sent to {@link
@@ -16497,6 +17012,152 @@ google.maps.places.ComponentRestrictions = function() {};
 google.maps.places.ComponentRestrictions.prototype.country;
 
 /**
+ * EV charging information, aggregated for connectors of the same type and the
+ * same charge rate.
+ *
+ * Access by calling `const {ConnectorAggregation} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ConnectorAggregation = function() {};
+
+/**
+ * The time when the connector availability information in this aggregation was
+ * last updated.
+ * @type {!Date|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.availabilityLastUpdateTime;
+
+/**
+ * Number of connectors in this aggregation that are currently available.
+ * @type {number|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.availableCount;
+
+/**
+ * Number of connectors in this aggregation.
+ * @type {number}
+ */
+google.maps.places.ConnectorAggregation.prototype.count;
+
+/**
+ * The static max charging rate in kw of each connector of the aggregation.
+ * @type {number}
+ */
+google.maps.places.ConnectorAggregation.prototype.maxChargeRateKw;
+
+/**
+ * Number of connectors in this aggregation that are currently out of service.
+ * @type {number|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.outOfServiceCount;
+
+/**
+ * The connector type of this aggregation.
+ * @type {!google.maps.places.EVConnectorType|null}
+ */
+google.maps.places.ConnectorAggregation.prototype.type;
+
+/**
+ * Information about the EV charging station hosted in the place.
+ *
+ * Access by calling `const {EVChargeOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.EVChargeOptions = function() {};
+
+/**
+ * A list of EV charging connector aggregations that contain connectors of the
+ * same type and same charge rate.
+ * @type {!Array<!google.maps.places.ConnectorAggregation>}
+ */
+google.maps.places.EVChargeOptions.prototype.connectorAggregations;
+
+/**
+ * Number of connectors at this station. Because some ports can have multiple
+ * connectors but only be able to charge one car at a time, the number of
+ * connectors may be greater than the total number of cars which can charge
+ * simultaneously.
+ * @type {number}
+ */
+google.maps.places.EVChargeOptions.prototype.connectorCount;
+
+/**
+ * EV charging connector types.
+ *
+ * Access by calling `const {EVConnectorType} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.EVConnectorType = {
+  /**
+   * Combined Charging System (AC and DC). Based on SAE Type-1 J-1772 connector.
+   */
+  CCS_COMBO_1: 'CCS_COMBO_1',
+  /**
+   * Combined Charging System (AC and DC). Based on Type-2 Mennekes connector.
+   */
+  CCS_COMBO_2: 'CCS_COMBO_2',
+  /**
+   * CHAdeMO type connector.
+   */
+  CHADEMO: 'CHADEMO',
+  /**
+   * J1772 type 1 connector.
+   */
+  J1772: 'J1772',
+  /**
+   * Other connector types.
+   */
+  OTHER: 'OTHER',
+  /**
+   * The generic TESLA connector. This is NACS in the North America but can be
+   * non-NACS in other parts of the world (e.g. CCS Combo 2 (CCS2) or GB/T).
+   * This value is less representative of an actual connector type, and more
+   * represents the ability to charge a Tesla brand vehicle at a Tesla owned
+   * charging station.
+   */
+  TESLA: 'TESLA',
+  /**
+   * IEC 62196 type 2 connector. Often referred to as MENNEKES.
+   */
+  TYPE_2: 'TYPE_2',
+  /**
+   * GB/T type corresponds to the GB/T standard in China. This type covers all
+   * GB_T types.
+   */
+  UNSPECIFIED_GB_T: 'UNSPECIFIED_GB_T',
+  /**
+   * Unspecified wall outlet.
+   */
+  UNSPECIFIED_WALL_OUTLET: 'UNSPECIFIED_WALL_OUTLET',
+};
+
+/**
+ * EV-related options that can be specified for a place search request.
+ * @record
+ */
+google.maps.places.EVSearchOptions = function() {};
+
+/**
+ * The list of preferred EV connector types. A place that does not support any
+ * of the listed connector types is filtered out.
+ * @type {!Array<!google.maps.places.EVConnectorType>|undefined}
+ */
+google.maps.places.EVSearchOptions.prototype.connectorTypes;
+
+/**
+ * Minimum required charging rate in kilowatts. A place with a charging rate
+ * less than the specified rate is filtered out.
+ * @type {number|undefined}
+ */
+google.maps.places.EVSearchOptions.prototype.minimumChargingRateKw;
+
+/**
  * Options for fetching Place fields.
  * @record
  */
@@ -16592,6 +17253,166 @@ google.maps.places.FindPlaceFromQueryRequest.prototype.locationBias;
 google.maps.places.FindPlaceFromQueryRequest.prototype.query;
 
 /**
+ * Text representing a Place prediction. The text may be used as is or
+ * formatted.
+ *
+ * Access by calling `const {FormattableText} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.FormattableText = function() {};
+
+/**
+ * A list of string ranges identifying where the input request matched in {@link
+ * google.maps.places.FormattableText.text}. The ranges can be used to format
+ * specific parts of <code>text</code>. The substrings may not be exact matches
+ * of {@link google.maps.places.AutocompleteRequest.input} if the matching was
+ * determined by criteria other than string matching (for example, spell
+ * corrections or transliterations). These values are Unicode character offsets
+ * of {@link google.maps.places.FormattableText.text}. The ranges are guaranteed
+ * to be ordered in increasing offset values.
+ * @type {!Array<!google.maps.places.StringRange>}
+ */
+google.maps.places.FormattableText.prototype.matches;
+
+/**
+ * Text that may be used as is or formatted with {@link
+ * google.maps.places.FormattableText.matches}.
+ * @type {string}
+ */
+google.maps.places.FormattableText.prototype.text;
+
+/**
+ * The most recent information about fuel options in a gas station. This
+ * information is updated regularly.
+ *
+ * Access by calling `const {FuelOptions} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.FuelOptions = function() {};
+
+/**
+ * A list of fuel prices for each type of fuel this station has, one entry per
+ * fuel type.
+ * @type {!Array<!google.maps.places.FuelPrice>}
+ */
+google.maps.places.FuelOptions.prototype.fuelPrices;
+
+/**
+ * Fuel price information for a given type of fuel.
+ *
+ * Access by calling `const {FuelPrice} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.FuelPrice = function() {};
+
+/**
+ * The price of the fuel.
+ * @type {!google.maps.places.Money|null}
+ */
+google.maps.places.FuelPrice.prototype.price;
+
+/**
+ * The type of fuel.
+ * @type {!google.maps.places.FuelType|null}
+ */
+google.maps.places.FuelPrice.prototype.type;
+
+/**
+ * The time the fuel price was last updated.
+ * @type {!Date|null}
+ */
+google.maps.places.FuelPrice.prototype.updateTime;
+
+/**
+ * Types of fuel.
+ *
+ * Access by calling `const {FuelType} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.FuelType = {
+  /**
+   * Bio-diesel.
+   */
+  BIO_DIESEL: 'BIO_DIESEL',
+  /**
+   * Diesel fuel.
+   */
+  DIESEL: 'DIESEL',
+  /**
+   * E 80.
+   */
+  E80: 'E80',
+  /**
+   * E 85.
+   */
+  E85: 'E85',
+  /**
+   * LPG.
+   */
+  LPG: 'LPG',
+  /**
+   * Methane.
+   */
+  METHANE: 'METHANE',
+  /**
+   * Midgrade.
+   */
+  MIDGRADE: 'MIDGRADE',
+  /**
+   * Premium.
+   */
+  PREMIUM: 'PREMIUM',
+  /**
+   * Regular unleaded.
+   */
+  REGULAR_UNLEADED: 'REGULAR_UNLEADED',
+  /**
+   * SP 100.
+   */
+  SP100: 'SP100',
+  /**
+   * SP 91.
+   */
+  SP91: 'SP91',
+  /**
+   * SP 91 E10.
+   */
+  SP91_E10: 'SP91_E10',
+  /**
+   * SP 92.
+   */
+  SP92: 'SP92',
+  /**
+   * SP 95.
+   */
+  SP95: 'SP95',
+  /**
+   * SP95 E10.
+   */
+  SP95_E10: 'SP95_E10',
+  /**
+   * SP 98.
+   */
+  SP98: 'SP98',
+  /**
+   * SP 99.
+   */
+  SP99: 'SP99',
+  /**
+   * Truck diesel.
+   */
+  TRUCK_DIESEL: 'TRUCK_DIESEL',
+};
+
+/**
  * @typedef {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|!google.maps.Circle|!google.maps.CircleLiteral|string}
  */
 google.maps.places.LocationBias;
@@ -16600,6 +17421,43 @@ google.maps.places.LocationBias;
  * @typedef {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  */
 google.maps.places.LocationRestriction;
+
+/**
+ * A representation of an amount of money with its currency type.
+ *
+ * Access by calling `const {Money} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.Money = function() {};
+
+/**
+ * The three-letter currency code, defined in ISO 4217.
+ * @type {string}
+ */
+google.maps.places.Money.prototype.currencyCode;
+
+/**
+ * Number of nano (10^-9) units of the amount.
+ * @type {number}
+ */
+google.maps.places.Money.prototype.nanos;
+
+/**
+ * The whole units of the amount. For example, if {@link
+ * google.maps.places.Money.currencyCode} is &quot;USD&quot;, then 1 unit is 1
+ * US dollar.
+ * @type {number}
+ */
+google.maps.places.Money.prototype.units;
+
+/**
+ * Returns a human-readable representation of the amount of money with its
+ * currency symbol.
+ * @return {string}
+ */
+google.maps.places.Money.prototype.toString = function() {};
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -16903,6 +17761,14 @@ google.maps.places.Place.prototype.businessStatus;
 google.maps.places.Place.prototype.displayName;
 
 /**
+ * The language of the location&#39;s display name. <code>null</code> if there
+ * is no name. <code>undefined</code> if the name data has not been loaded from
+ * the server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.displayNameLanguageCode;
+
+/**
  * The editorial summary for this place. <code>null</code> if there is no
  * editorial summary. <code>undefined</code> if this field has not yet been
  * requested.
@@ -16919,10 +17785,24 @@ google.maps.places.Place.prototype.editorialSummary;
 google.maps.places.Place.prototype.editorialSummaryLanguageCode;
 
 /**
+ * EV Charge options provided by the place. <code>undefined</code> if the EV
+ * charge options have not been called for from the server.
+ * @type {google.maps.places.EVChargeOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.evChargeOptions;
+
+/**
  * The locations’s full address.
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.formattedAddress;
+
+/**
+ * Fuel options provided by the place. <code>undefined</code> if the fuel
+ * options have not been called for from the server.
+ * @type {google.maps.places.FuelOptions|null|undefined}
+ */
+google.maps.places.Place.prototype.fuelOptions;
 
 /**
  * URL of the official Google page for this place. This is the Google-owned page
@@ -17079,6 +17959,29 @@ google.maps.places.Place.prototype.plusCode;
  * @type {google.maps.places.PriceLevel|null|undefined}
  */
 google.maps.places.Place.prototype.priceLevel;
+
+/**
+ * The location&#39;s primary type. <code>null</code> if there is no type.
+ * <code>undefined</code> if the type data has not been loaded from the server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.primaryType;
+
+/**
+ * The location&#39;s primary type display name. <code>null</code> if there is
+ * no type. <code>undefined</code> if the type data has not been loaded from the
+ * server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.primaryTypeDisplayName;
+
+/**
+ * The language of the location&#39;s primary type display name.
+ * <code>null</code> if there is no type. <code>undefined</code> if the type
+ * data has not been loaded from the server.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.primaryTypeDisplayNameLanguageCode;
 
 /**
  * A rating, between 1.0 to 5.0, based on user reviews of this Place.
@@ -17750,6 +18653,69 @@ google.maps.places.PlacePlusCode.prototype.compound_code;
  * @type {string}
  */
 google.maps.places.PlacePlusCode.prototype.global_code;
+
+/**
+ * Prediction results for a Place Autocomplete prediction.
+ *
+ * Access by calling `const {PlacePrediction} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.PlacePrediction = function() {};
+
+/**
+ * The length of the geodesic in meters from <code>origin</code> if
+ * <code>origin</code> is specified.
+ * @type {number|null}
+ */
+google.maps.places.PlacePrediction.prototype.distanceMeters;
+
+/**
+ * Represents the name of the Place.
+ * @type {!google.maps.places.FormattableText|null}
+ */
+google.maps.places.PlacePrediction.prototype.mainText;
+
+/**
+ * The unique identifier of the suggested Place. This identifier can be used in
+ * other APIs that accept Place IDs.
+ * @type {string}
+ */
+google.maps.places.PlacePrediction.prototype.placeId;
+
+/**
+ * Represents additional disambiguating features (such as a city or region) to
+ * further identify the Place.
+ * @type {!google.maps.places.FormattableText|null}
+ */
+google.maps.places.PlacePrediction.prototype.secondaryText;
+
+/**
+ * Contains the human-readable name for the returned result. For establishment
+ * results, this is usually the business name and address. <br/><br/>
+ * <code>text</code> is recommended for developers who wish to show a single UI
+ * element. Developers who wish to show two separate, but related, UI elements
+ * may want to use {@link google.maps.places.PlacePrediction.mainText}
+ * and {@link google.maps.places.PlacePrediction.secondaryText} instead.
+ * @type {!google.maps.places.FormattableText}
+ */
+google.maps.places.PlacePrediction.prototype.text;
+
+/**
+ * List of types that apply to this Place from Table A or Table B in <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">https://developers.google.com/maps/documentation/places/web-service/place-types</a>.
+ * @type {!Array<string>}
+ */
+google.maps.places.PlacePrediction.prototype.types;
+
+/**
+ * Returns a Place representation of this PlacePrediction. A subsequent call
+ * to {@link google.maps.places.Place.fetchFields} is required to get full Place
+ * details.
+ * @return {!google.maps.places.Place}
+ */
+google.maps.places.PlacePrediction.prototype.toPlace = function() {};
 
 /**
  * Defines information about a Place.
@@ -18622,13 +19588,18 @@ google.maps.places.SearchByTextRankPreference = {
 google.maps.places.SearchByTextRequest = function() {};
 
 /**
+ * EV-related options that can be specified for a place search request.
+ * @type {!google.maps.places.EVSearchOptions|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.evSearchOptions;
+
+/**
  * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
- * production deployments). For a list of fields see {@link
- * google.maps.places.PlaceResult}. Nested fields can be specified with
- * dot-paths (for example, <code>"geometry.location"</code>).
+ * production deployments). You can request any property in the {@link
+ * google.maps.places.Place} class as a field.
  * @type {!Array<string>}
  */
 google.maps.places.SearchByTextRequest.prototype.fields;
@@ -18701,7 +19672,7 @@ google.maps.places.SearchByTextRequest.prototype.priceLevels;
 
 /**
  * How results will be ranked in the response.
- * @default <code>SearchByTextRankPreference.DISTANCE</code>
+ * @default <code>SearchByTextRankPreference.RELEVANCE</code>
  * @type {!google.maps.places.SearchByTextRankPreference|undefined}
  */
 google.maps.places.SearchByTextRequest.prototype.rankPreference;
@@ -18785,13 +19756,23 @@ google.maps.places.SearchNearbyRequest = function() {};
 google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
 
 /**
+ * Excluded place type. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
+ * list of types supported</a>. A place can have many different place types. Up
+ * to 50 types may be specified. If you specify the same type in both
+ * <code>included</code> and <code>excluded</code> lists, an INVALID_ARGUMENT
+ * error is returned.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.excludedTypes;
+
+/**
  * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
- * production deployments). For a list of fields see {@link
- * google.maps.places.PlaceResult}. Nested fields can be specified with
- * dot-paths (for example, <code>"geometry.location"</code>).
+ * production deployments). You can request any property in the {@link
+ * google.maps.places.Place} class as a field.
  * @type {!Array<string>}
  */
 google.maps.places.SearchNearbyRequest.prototype.fields;
@@ -18858,6 +19839,29 @@ google.maps.places.SearchNearbyRequest.prototype.rankPreference;
  * @type {string|undefined}
  */
 google.maps.places.SearchNearbyRequest.prototype.region;
+
+/**
+ * Identifies a substring within a given text.
+ *
+ * Access by calling `const {StringRange} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.StringRange = function() {};
+
+/**
+ * Zero-based offset of the last Unicode character of the substring (exclusive).
+ * @type {number}
+ */
+google.maps.places.StringRange.prototype.endOffset;
+
+/**
+ * Zero-based offset of the first Unicode character of the substring
+ * (inclusive).
+ * @type {number}
+ */
+google.maps.places.StringRange.prototype.startOffset;
 
 /**
  * Contains structured information about the place&#39;s description, divided
