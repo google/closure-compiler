@@ -604,7 +604,9 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
      */
     private boolean isRhsSafeToInline(final Scope usageScope) {
       // Don't inline definitions with an R-Value that has:
-      // 1) GETPROP, GETELEM,
+      // 1) GETELEM, OPTCHAIN_GETELEM (e.g: foo?.['bar']), GETPROP, OPTCHAIN_GETPROP (e.g:
+      // foo?.bar), CLASS, ARRAYLIT,
+      // OBJECTLIT, REGEXP
       // 2) anything that creates a new object.
       // Example:
       // var x = a.b.c; j.c = 1; print(x);
@@ -615,6 +617,9 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
             switch (input.getToken()) {
               case GETELEM:
               case GETPROP:
+              case OPTCHAIN_GETPROP:
+              case OPTCHAIN_GETELEM:
+              case CLASS:
               case ARRAYLIT:
               case OBJECTLIT:
               case REGEXP:

@@ -1151,6 +1151,72 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoInlineOnOptionalGetProp() {
+    // b/360959953 - github issue 4187
+    // `const t2 = y?.left` should not get inlined into `node.right = t2` (to be
+    // `node.right = y?.left`), because the `y?.left` value needs to be stored here
+    // in t2, before it is rewritten by `y.left = node`.
+    testSame(
+        "function swap(node) {"
+            + "const y = node.right;"
+            + "const t2 = y?.left;"
+            + "y.left = node;"
+            + "node.right = t2;"
+            + "return node;"
+            + "}");
+  }
+
+  @Test
+  public void testNoInlineOnOptionalGetElem() {
+    // b/360959953 - github issue 4187
+    testSame(
+        "function swap(node) {"
+            + "const y = node.right;"
+            + "const t2 = y?.['foo'];"
+            + "y['foo'] = node;"
+            + "node.right = t2;"
+            + "return node;"
+            + "}");
+  }
+
+  @Test
+  public void testNoInlineOnAwait() {
+    test("async function f() {var x = 1; print(x) }", "async function f() { var x; print(1) }");
+    testSame("async function f() {var x = await 1; print(x) }");
+  }
+
+  @Test
+  public void testNoInlineOnYeild() {
+    test("function *f() {var x = 1; print(x) }", "function *f() { var x; print(1) }");
+    testSame("function *f() {var x = yield 1; print(x) }");
+  }
+
+  @Test
+  public void testNoInlineOnClass() {
+    testSame(
+        "function f() {" //
+            + "const x = class {};"
+            + "const y = x;"
+            + "}");
+  }
+
+  @Test
+  public void testNoInlineOnTaggedTemplate() {
+    testSame(
+        "function f() {" //
+            + "var f = (a)=>{};"
+            + "const x = f`tagged`;"
+            + "const y = x;"
+            + "}");
+  }
+
+  @Test
+  public void testInlineOnOptionalCall() {
+    inline("let x = 1; const y = print(x)", "let x; const y = print(1)");
+    inline("let x = 1; const y = print?.(x)", "let x; const y = print?.(1)");
+  }
+
+  @Test
   public void testOkayToInlineWithSideEffects() {
     inline(
         "var x = 1; var y = x; var z = 1; print(z++, y);",
