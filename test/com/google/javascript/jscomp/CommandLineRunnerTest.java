@@ -2958,31 +2958,55 @@ public final class CommandLineRunnerTest {
         "let Foo; const x = `${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var Foo,x=\"\"+Foo"));
 
     test(
         "const x = `\\${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var x=\"${Foo}\""));
 
     test(
         "let Foo; const x = `${Foo}\\${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var Foo,x=Foo+\"${Foo}\""));
     test(
         "let Foo; const x = `\\${Foo}${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var Foo,x=\"${Foo}\"+Foo"));
   }
 

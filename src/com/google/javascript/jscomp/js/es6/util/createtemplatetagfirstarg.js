@@ -26,10 +26,10 @@
  * @param {!ITemplateArray} arrayStrings
  * @return {!ITemplateArray}
  * @noinline
+ * @nosideeffects
  */
 $jscomp.createTemplateTagFirstArg = function(arrayStrings) {
-  arrayStrings.raw = arrayStrings;
-  return /** @type {!ITemplateArray} */ (arrayStrings);
+  return $jscomp.createTemplateTagFirstArgWithRaw(arrayStrings, arrayStrings);
 };
 
 /**
@@ -39,9 +39,19 @@ $jscomp.createTemplateTagFirstArg = function(arrayStrings) {
  * @param {!ITemplateArray} rawArrayStrings raw string values of arrayString
  * @return {!ITemplateArray}
  * @noinline
+ * @nosideeffects
  */
 $jscomp.createTemplateTagFirstArgWithRaw = function(
     arrayStrings, rawArrayStrings) {
+  // According to the spec the arrays should be frozen.
+  // Additionally:
+  //  - `raw` should be non-enumerable and non-writable
+  //  - the template and raw arrays should be different
+  //  - there should be a global interning registry of all template strings
+  // For now we don't bother with those, but getting mutability correct is more
+  // important.
+  // See https://262.ecma-international.org/6.0/#sec-gettemplateobject
   arrayStrings.raw = rawArrayStrings;
+  Object.freeze && (Object.freeze(arrayStrings), Object.freeze(rawArrayStrings));
   return /** @type {!ITemplateArray} */ (arrayStrings);
 };
