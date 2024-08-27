@@ -86,8 +86,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryOptimizeNameDeclaration(subtree);
       case DEFAULT_VALUE:
         return tryRemoveDefaultValue(subtree);
+      case OPTCHAIN_GETPROP:
       case OPTCHAIN_CALL:
-        return tryRemoveOptionalCall(subtree);
+      case OPTCHAIN_GETELEM:
+        return tryRemoveOptionalChaining(subtree);
       default:
         return subtree;
     }
@@ -1460,23 +1462,23 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
   }
 
-  private Node tryRemoveOptionalCall(Node optionalCall) {
-    Node callee = optionalCall.getFirstChild();
+  private Node tryRemoveOptionalChaining(Node optionalChain) {
+    Node callee = optionalChain.getFirstChild();
     if (!NodeUtil.isNullOrUndefined(callee)) {
-      return optionalCall;
+      return optionalChain;
     }
     final Node result;
     if (this.mayHaveSideEffects(callee)) {
       // Simplify `(void sideEffectFunction())?.()` to `(void sideEffectFunction())`
       // The optional chain call won't execute but sideEffectFunction() is still evaluated.
-      optionalCall.replaceWith(callee.detach());
+      optionalChain.replaceWith(callee.detach());
       result = callee;
     } else {
-      // Remove `(void 0)?.()` and (null)?.()
+      // Remove `(void 0)?.()` and (null)?.() and simplify `(void 0)?.x and null?.x` to void 0
       result = NodeUtil.newUndefinedNode(callee);
-      optionalCall.replaceWith(result);
+      optionalChain.replaceWith(result);
     }
-    this.markFunctionsDeleted(optionalCall);
+    this.markFunctionsDeleted(optionalChain);
     this.reportChangeToEnclosingScope(result);
     return result;
   }

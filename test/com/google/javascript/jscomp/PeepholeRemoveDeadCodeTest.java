@@ -1838,6 +1838,12 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("(undefined)?.();", "");
     fold("(void 0)?.(0)", "");
     fold("(void 0)?.(function f() {})", "");
+    fold("(null)?.x;", "");
+    fold("(void 0)?.x;", "");
+    fold("(null)?.['x'];", "");
+    fold("(void 0)?.['x'];", "");
+    fold("(null)?.[x];", "");
+    fold("(void 0)?.[x];", "");
     // arguments with unknown side effects are also removed
     fold("(void 0)?.(f(), g())", "");
 
@@ -1847,6 +1853,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     foldSame("(f(), null)?.()");
     foldSame("f?.()");
+    fold("a?.x;", "");
+    fold("a?.['x'];", "");
   }
 
   @Test
