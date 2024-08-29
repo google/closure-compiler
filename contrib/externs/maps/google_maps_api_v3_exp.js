@@ -9040,14 +9040,14 @@ google.maps.StreetViewCoverageLayer = function() {};
 
 /**
  * Returns the map on which this layer is displayed.
- * @return {?google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.StreetViewCoverageLayer.prototype.getMap = function() {};
 
 /**
  * Renders the layer on the specified map. If the map is set to null, the layer
  * will be removed.
- * @param {?google.maps.Map} map
+ * @param {!google.maps.Map|null} map
  * @return {undefined}
  */
 google.maps.StreetViewCoverageLayer.prototype.setMap = function(map) {};
