@@ -581,12 +581,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     if (info != null && info.hasType()) {
       boolean valid = false;
       switch (n.getToken()) {
-          // Function declarations are valid
+        // Function declarations are valid
         case FUNCTION:
           valid = NodeUtil.isFunctionDeclaration(n);
           break;
-          // Object literal properties, catch declarations and variable
-          // initializers are valid.
+        // Object literal properties, catch declarations and variable
+        // initializers are valid.
         case NAME:
           valid = isTypeAnnotationAllowedForName(n);
           break;
@@ -597,7 +597,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           //   function f(/** !Array */ [x]) {}
           valid = n.getParent().isParamList();
           break;
-          // Casts, exports, and Object literal properties are valid.
+        // Casts, exports, and Object literal properties are valid.
         case CAST:
         case EXPORT:
         case STRING_KEY:
@@ -607,15 +607,15 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         case COMPUTED_FIELD_DEF:
           valid = true;
           break;
-          // Declarations are valid iff they only contain simple names
-          //   /** @type {number} */ var x = 3; // ok
-          //   /** @type {number} */ var {x} = obj; // forbidden
+        // Declarations are valid iff they only contain simple names
+        //   /** @type {number} */ var x = 3; // ok
+        //   /** @type {number} */ var {x} = obj; // forbidden
         case VAR:
         case LET:
         case CONST:
           valid = !NodeUtil.isDestructuringDeclaration(n);
           break;
-          // Property assignments are valid, if at the root of an expression.
+        // Property assignments are valid, if at the root of an expression.
         case ASSIGN:
           {
             Node lvalue = n.getFirstChild();
