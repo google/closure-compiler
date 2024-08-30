@@ -2851,7 +2851,10 @@ public final class NodeUtil {
    * present.
    */
   public static Node getCallTargetResolvingIndirectCalls(Node call) {
-    checkArgument(call.isCall() || call.isNew(), "must be call or new expression, got %s", call);
+    checkArgument(
+        call.isCall() || call.isNew() || call.isTaggedTemplateLit(),
+        "must be call, new or tagged-template-literal expression, got %s",
+        call);
     Node target = call.getFirstChild();
     if (target.isComma() && target.getSecondChild().isQualifiedName()) {
       return target.getSecondChild();

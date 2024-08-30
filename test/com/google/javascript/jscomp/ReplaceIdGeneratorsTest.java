@@ -18,8 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
+import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_TEMPLATE_LITERAL_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +54,9 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     lastPass =
         new ReplaceIdGenerators(
             compiler,
+            /* templateLiteralsAreTranspiled= */ compiler
+                .getOptions()
+                .needsTranspilationOf(Feature.TEMPLATE_LITERALS),
             new ImmutableMap.Builder<String, RenamingMap>()
                 .put("goog.events.getUniqueId", RenamingToken.INCONSISTENT)
                 .put("goog.place.getUniqueId", RenamingToken.INCONSISTENT)
@@ -643,6 +648,83 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "/** @idGenerator {consistent} */ id = function() {};"
             + "foo.bar = id(`hello${ ' '}world`)",
         INVALID_GENERATOR_PARAMETER);
+  }
+
+  @Test
+  public void testTTLCall() {
+    testMap(
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
+            "function Foo() { tagId`foo`; }"),
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
+            "function Foo() { 'AAGMxg'; }"),
+        lines("[tagId]", "", "AAGMxg:foo", "", ""));
+    testMap(
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
+            "function Foo() { tagId`foo${1}bar${2}`; }"),
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
+            "function Foo() { tagId`AAGMxg${1}AAF8Ew${2}AAAAAA`; }"),
+        lines("[tagId]", "", "AAGMxg:foo", "AAF8Ew:bar", "AAAAAA:", "", ""));
+  }
+
+  // The application may or may not be transpiling, ensure we support transpiled mode
+  @Test
+  public void testTTLCall_transpiled() {
+    enableTranspile();
+    testMap(
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
+            "function Foo() { tagId`foo`; }"),
+        lines(
+            "/** @const */",
+            "var $jscomp = $jscomp || {};",
+            "/** @const */",
+            "$jscomp.scope = {};",
+            "/**",
+            " * @nosideeffects",
+            " * @noinline",
+            " * @param {!ITemplateArray} arrayStrings",
+            " * @return {!ITemplateArray}",
+            " */",
+            "$jscomp.createTemplateTagFirstArg = function(arrayStrings) {",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(arrayStrings, arrayStrings)",
+            "};",
+            "/**",
+            " * @nosideeffects",
+            " * @noinline",
+            " * @param {!ITemplateArray} arrayStrings",
+            " * @param {!ITemplateArray} rawArrayStrings",
+            " * @return {!ITemplateArray}",
+            " */",
+            "$jscomp.createTemplateTagFirstArgWithRaw = function(arrayStrings, rawArrayStrings) {",
+            "  arrayStrings.raw = rawArrayStrings;",
+            "  Object.freeze && (Object.freeze(arrayStrings), Object.freeze(rawArrayStrings));",
+            "  return (/** @type {!ITemplateArray} */ (arrayStrings));",
+            "};",
+            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
+            "function Foo() { 'AAGMxg'; }"),
+        lines("[tagId]", "", "AAGMxg:foo", "", ""));
+    enableTranspile();
+    testMap(
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
+            "function Foo() { tagId`foo${1}bar${2}`; }"),
+        lines(
+            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
+            "function Foo() { tagId`AAGMxg${1}AAF8Ew${2}AAAAAA`; }"),
+        lines("[tagId]", "", "AAGMxg:foo", "AAF8Ew:bar", "AAAAAA:", "", ""));
+  }
+
+  @Test
+  public void testTTLCall_invalid() {
+    testSame(
+        "/** @idGenerator {stable} */ function tagId(strings) {};\n"
+            // invalid escape sequence.  We don't support this though we could.
+            + "function Foo() { tagId`$\\underline{u}$`;}\n",
+        INVALID_TEMPLATE_LITERAL_PARAMETER);
   }
 
   private void testMap(String code, String expected, String expectedMap) {

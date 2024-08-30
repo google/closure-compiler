@@ -529,7 +529,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(removeWeakSources);
 
       // it would be safe to always recompute side effects even if not using precompiled libraries
-      // (the else case) but it's unecessary so skip it to improve build times.
+      // (the else case) but it's unnecessary so skip it to improve build times.
       passes.maybeAdd(checkRegExpForOptimizations);
 
       // This runs during getChecks(), so only needs to be run here if using precompiled .typedasts
@@ -629,6 +629,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(stripCode);
     }
 
+    // Ideally this pass would run before transpilation which would allow it to be simplified.
+    // It needs to run after `inlineAndCollapseProperties` in order to identify idGenerator calls.
     if (options.replaceIdGenerators) {
       passes.maybeAdd(replaceIdGenerators);
     }
@@ -1007,7 +1009,7 @@ public final class DefaultPassConfig extends PassConfig {
     // For example, `flowSensitiveInlineVariables` will change this
     // ```
     // var x = 'localized version of message';
-    // x = x + '&nbsp';
+    // x = x + '&nbsp;';
     // ```
     // to this
     // ```
@@ -2074,6 +2076,7 @@ public final class DefaultPassConfig extends PassConfig {
                       ReplaceIdGenerators pass =
                           new ReplaceIdGenerators(
                               compiler,
+                              options.needsTranspilationOf(Feature.TEMPLATE_LITERALS),
                               options.idGenerators,
                               options.generatePseudoNames,
                               options.idGeneratorsMapSerialized,

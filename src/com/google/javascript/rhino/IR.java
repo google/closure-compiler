@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An AST construction helper class
@@ -112,14 +113,12 @@ public class IR {
   }
 
   public static Node block() {
-    Node block = new Node(Token.BLOCK);
-    return block;
+    return new Node(Token.BLOCK);
   }
 
   public static Node block(Node stmt) {
     checkState(mayBeStatement(stmt), "Block node cannot contain %s", stmt.getToken());
-    Node block = new Node(Token.BLOCK, stmt);
-    return block;
+    return new Node(Token.BLOCK, stmt);
   }
 
   public static Node block(Node... stmts) {
@@ -146,8 +145,7 @@ public class IR {
 
   public static Node script() {
     // TODO(johnlenz): finish setting up the SCRIPT node
-    Node block = new Node(Token.SCRIPT);
-    return block;
+    return new Node(Token.SCRIPT);
   }
 
   public static Node script(Node... stmts) {
@@ -307,8 +305,7 @@ public class IR {
     // TODO(johnlenz): additional validation here.
     checkState(name.isLabelName());
     checkState(mayBeStatement(stmt));
-    Node block = new Node(Token.LABEL, name, stmt);
-    return block;
+    return new Node(Token.LABEL, name, stmt);
   }
 
   public static Node labelName(String name) {
@@ -697,6 +694,20 @@ public class IR {
     return k;
   }
 
+  public static Node templateLiteral() {
+    return new Node(Token.TEMPLATELIT);
+  }
+
+  public static Node templateLiteralString(@Nullable String cooked, String raw) {
+    return Node.newTemplateLitString(cooked, raw);
+  }
+
+  public static Node templateLiteralSubstitution(Node child) {
+    var sub = new Node(Token.TEMPLATELIT_SUB);
+    sub.addChildToBack(child);
+    return sub;
+  }
+
   public static Node iterRest(Node target) {
     checkState(target.isValidAssignmentTarget(), target);
     return new Node(Token.ITER_REST, target);
@@ -784,7 +795,7 @@ public class IR {
   public static Node importMeta() {
     return new Node(Token.IMPORT_META);
   }
-
+  
   // helper methods
 
   private static Node binaryOp(Token token, Node expr1, Node expr2) {
