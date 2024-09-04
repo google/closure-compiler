@@ -500,8 +500,7 @@ class ReplaceIdGenerators implements CompilerPass {
       }
     }
 
-    @Nullable
-    private Node findTtlVar(NodeTraversal t, Node arg) {
+    private @Nullable Node findTtlVar(NodeTraversal t, Node arg) {
       var name = arg.getString();
       var ttlVarName = t.getScope().getVar(name).getNode();
       var parent = ttlVarName.getParent();
