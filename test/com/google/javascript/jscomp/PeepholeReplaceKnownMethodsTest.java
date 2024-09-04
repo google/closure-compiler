@@ -616,6 +616,47 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldMathFunctions_pow() {
+    fold("Math.pow(1, 2)", "1");
+    fold("Math.pow(2, 0)", "1");
+    fold("Math.pow(2, 2)", "4");
+    fold("Math.pow(2, 32)", "4294967296");
+    fold("Math.pow(Infinity, 0)", "1");
+    fold("Math.pow(Infinity, 1)", "Infinity");
+    fold("Math.pow('a', 33)", "NaN");
+  }
+
+  @Test
+  public void testFoldNumberFunctions_isSafeInteger() {
+    fold("Number.isSafeInteger(1)", "true");
+    fold("Number.isSafeInteger(1.5)", "false");
+    fold("Number.isSafeInteger(9007199254740991)", "true");
+    fold("Number.isSafeInteger(9007199254740992)", "false");
+    fold("Number.isSafeInteger(-9007199254740991)", "true");
+    fold("Number.isSafeInteger(-9007199254740992)", "false");
+  }
+
+  @Test
+  public void testFoldNumberFunctions_isFinite() {
+    fold("Number.isFinite(1)", "true");
+    fold("Number.isFinite(1.5)", "true");
+    fold("Number.isFinite(NaN)", "false");
+    fold("Number.isFinite(Infinity)", "false");
+    fold("Number.isFinite(-Infinity)", "false");
+    foldSame("Number.isFinite('a')");
+  }
+
+  @Test
+  public void testFoldNumberFunctions_isNaN() {
+    fold("Number.isNaN(1)", "false");
+    fold("Number.isNaN(1.5)", "false");
+    fold("Number.isNaN(NaN)", "true");
+    foldSame("Number.isNaN('a')");
+    // unknown function may have side effects
+    foldSame("Number.isNaN(+(void unknown()))");
+  }
+
+  @Test
   public void testFoldParseNumbers() {
     // Template Strings
     foldSame("x = parseInt(`123`)");
@@ -633,6 +674,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('07', 8)", "x = 7");
     fold("x = parseInt('08')", "x = 8");
     fold("x = parseInt('0')", "x = 0");
+    fold("x = parseInt('-0')", "x = -0");
     fold("x = parseFloat('0')", "x = 0");
     fold("x = parseFloat('1.23')", "x = 1.23");
     fold("x = parseFloat('-1.23')", "x = -1.23");
@@ -656,6 +698,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseFloat(3.14)", "x = 3.14");
     fold("x = parseFloat(-3.14)", "x = -3.14");
     fold("x = parseFloat('-3.14')", "x = -3.14");
+    fold("x = parseFloat('-0')", "x = -0");
 
     // Valid calls - unable to fold
     foldSame("x = parseInt('FXX123', 16)");

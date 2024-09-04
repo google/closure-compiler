@@ -113,6 +113,14 @@ abstract class AbstractPeepholeOptimization {
     return value;
   }
 
+  protected Double getSideEffectFreeNumberValueNoConversion(Node n) {
+    Double value = NodeUtil.getNumberValueNoConversions(n);
+    if (value != null && astAnalyzer.mayHaveSideEffects(n)) {
+      value = null;
+    }
+    return value;
+  }
+
   /**
    * Returns the bigint value of the node if it has one and it cannot have side effects.
    *

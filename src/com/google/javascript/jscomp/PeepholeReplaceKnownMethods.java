@@ -87,6 +87,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
               return tryFoldKnownArrayMethods(subtree, callTarget);
             case "Math":
               return tryFoldKnownMathMethods(subtree, callTarget);
+            case "Number":
+              return tryFoldKnownNumberMethods(subtree, callTarget);
             default: // fall out
           }
         }
@@ -116,6 +118,56 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     subtree.replaceWith(arraylit);
     reportChangeToEnclosingScope(arraylit);
     return arraylit;
+  }
+
+  private strictfp Node tryFoldKnownNumberMethods(Node subtree, Node callTarget) {
+    checkArgument(subtree.isCall() && callTarget.isGetProp());
+    String methodName = callTarget.getString();
+    switch (methodName) {
+      case "parseInt":
+      case "parseFloat":
+        Node firstArg = callTarget.getNext();
+        if ((firstArg != null && firstArg.isStringLit()) || isNumericLiteral(firstArg)) {
+          return tryFoldParseNumber(subtree, methodName, firstArg);
+        }
+        return subtree;
+      default:
+        break;
+    }
+
+    // If the value is a constant but known not to be a number we could still constant fold many of
+    // the methods below but it doesn't seem worth it.
+    // Get the only number arg as a double as long as it is the only argument
+    Double onlyArg = null;
+    Node valueNode = callTarget.getNext();
+    if (valueNode == null
+        || valueNode.getNext() != null
+        || (onlyArg = getSideEffectFreeNumberValueNoConversion(valueNode)) == null) {
+      return subtree;
+    }
+    Node replacement = null;
+    switch (methodName) {
+      case "isFinite":
+        replacement = NodeUtil.booleanNode(Double.isFinite(onlyArg));
+        break;
+      case "isNaN":
+        replacement = NodeUtil.booleanNode(Double.isNaN(onlyArg));
+        break;
+      case "isSafeInteger":
+        replacement =
+            NodeUtil.booleanNode(
+                onlyArg < Math.pow(2, 53)
+                    && onlyArg >= (-1 * (Math.pow(2, 53) - 1))
+                    && onlyArg.longValue() == onlyArg.doubleValue());
+        break;
+      default: // fall out
+    }
+    if (replacement != null) {
+      subtree.replaceWith(replacement);
+      reportChangeToEnclosingScope(replacement);
+      return replacement;
+    }
+    return subtree;
   }
 
   /** Tries to evaluate a method on the Math object */
@@ -170,7 +222,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           if (Double.isNaN(arg) || Double.isInfinite(arg)) {
             replacement = arg;
           } else {
-            replacement = Double.valueOf(Math.round(arg));
+            replacement = (double) Math.round(arg);
           }
           break;
         case "sign":
@@ -223,6 +275,13 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             }
             break;
           }
+        case "pow":
+          {
+            if (args.size() == 2) {
+              replacement = Math.pow(args.get(0), args.get(1));
+            }
+            break;
+          }
         default: // fall out
       }
     }
@@ -235,6 +294,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
     return subtree;
   }
+
 
   /** Try to evaluate known String methods .indexOf(), .substr(), .substring() */
   private Node tryFoldKnownStringMethods(Node subtree, Node callTarget) {
@@ -533,8 +593,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       } catch (NumberFormatException e) {
         return n;
       }
-
-      newNode = NodeUtil.numberNode(newVal, n);
+      if (newVal == 0 && stringVal.startsWith("-")) {
+        newNode = NodeUtil.numberNode(-0D, n);
+      } else {
+        newNode = NodeUtil.numberNode(newVal, n);
+      }
     } else {
       String normalizedNewVal = "0";
       try {

@@ -35,7 +35,6 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
 import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -351,6 +350,23 @@ public final class NodeUtil {
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
   static @Nullable Double getNumberValue(Node n) {
+    return doGetNumberValue(n, /* numberConversions= */ true);
+  }
+
+  /**
+   * Gets the value of a node as a Number, or null if it isn't a number. This method is similar to
+   * `typeof v == "number" ? v : null` as it does not perform any automatic conversions.
+   *
+   * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
+   *
+   * @param n The node.
+   * @return The value of a node as a Number, or null if it cannot be converted.
+   */
+  static @Nullable Double getNumberValueNoConversions(Node n) {
+    return doGetNumberValue(n, /* numberConversions= */ false);
+  }
+
+  private static @Nullable Double doGetNumberValue(Node n, boolean numberConversions) {
     switch (n.getToken()) {
       case NUMBER:
         return n.getDouble();
@@ -377,17 +393,18 @@ public final class NodeUtil {
         }
 
       case POS:
-        return getNumberValue(n.getOnlyChild());
+        // unary plus triggers numeric conversions
+        return doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
 
       case NEG:
         {
-          Double val = getNumberValue(n.getOnlyChild());
+          Double val = doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
           return (val == null) ? null : -val;
         }
 
       case BITNOT:
         {
-          Double val = getNumberValue(n.getOnlyChild());
+          Double val = doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
           return (val == null) ? null : (double) ~ecmascriptToInt32(val);
         }
 
@@ -395,6 +412,9 @@ public final class NodeUtil {
       case NOT:
       case NULL:
       case TRUE:
+        if (!numberConversions) {
+          return null;
+        }
         switch (getBooleanValue(n)) {
           case TRUE:
             return 1.0;
@@ -406,6 +426,9 @@ public final class NodeUtil {
         throw new AssertionError();
 
       case TEMPLATELIT:
+        if (!numberConversions) {
+          return null;
+        }
         String string = getStringValue(n);
         if (string == null) {
           return null;
@@ -413,10 +436,16 @@ public final class NodeUtil {
         return getStringNumberValue(string);
 
       case STRINGLIT:
+        if (!numberConversions) {
+          return null;
+        }
         return getStringNumberValue(n.getString());
 
       case ARRAYLIT:
       case OBJECTLIT:
+        if (!numberConversions) {
+          return null;
+        }
         String value = getStringValue(n);
         return value != null ? getStringNumberValue(value) : null;
       default:

@@ -1822,6 +1822,41 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("x.y"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1/2"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1-2"))).isNull();
+
+      assertThat(NodeUtil.getNumberValue(parseExpr("[1]"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("{}"))).isNaN();
+    }
+
+    @Test
+    public void testGetNumberValueNoConversions() {
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("''"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("``"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("true"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("false"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("null"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("[1]"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("{}"))).isNull();
+
+      // Literals
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1n"))).isEqualTo(null);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("22"))).isEqualTo(22.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("022"))).isEqualTo(18.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("0x22"))).isEqualTo(34.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-0.1"))).isEqualTo(-0.1);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-0.0"))).isEqualTo(-0.0);
+
+      // BITNOT
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~1"))).isEqualTo(-2.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~-1"))).isEqualTo(0.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~22"))).isEqualTo(-23.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~022"))).isEqualTo(-19.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~0.0"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~0.1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~NaN"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~Infinity"))).isEqualTo(-1.0);
     }
 
     @Test
