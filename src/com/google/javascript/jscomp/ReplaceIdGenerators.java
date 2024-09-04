@@ -504,7 +504,12 @@ class ReplaceIdGenerators implements CompilerPass {
     private Node findTtlVar(NodeTraversal t, Node arg) {
       var name = arg.getString();
       var ttlVarName = t.getScope().getVar(name).getNode();
-
+      var parent = ttlVarName.getParent();
+      // We are only interested in top level var definitions since that is what the transpiler
+      // creates
+      if (!parent.isVar() || !parent.getParent().isScript()) {
+        return null;
+      }
       // Because the AST is normalized there is only one child
       checkState(
           ttlVarName.getParent().hasOneChild(),
