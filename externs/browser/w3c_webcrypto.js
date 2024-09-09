@@ -312,7 +312,7 @@ webCrypto.RsaKeyGenParams.prototype.publicExponent;
  * @extends webCrypto.RsaKeyGenParams
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedKeyGenParams
  */
-webCrypto.RsaHashedKeyGenParamsi = function() {};
+webCrypto.RsaHashedKeyGenParams = function() {};
 /**
  * @type {webCrypto.HashAlgorithmIdentifier}
  */
@@ -340,7 +340,7 @@ webCrypto.RsaKeyAlgorithm.prototype.publicExponent;
  * @extends webCrypto.RsaKeyAlgorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedKeyAlgorithm
  */
-webCrypto.RsaHashedKeyAlgorithmi = function() {};
+webCrypto.RsaHashedKeyAlgorithm = function() {};
 /**
  * @type {webCrypto.KeyAlgorithm}
  */
