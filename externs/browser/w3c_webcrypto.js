@@ -296,7 +296,7 @@ webCrypto.RsaOtherPrimesInfo.prototype.t;
  * @extends webCrypto.Algorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaKeyGenParams
  */
-webCrypto.RsaKeyGenParams = function() {};
+webCrypto.RsaKeyGenParams;
 /**
  * @type {number}
  */
@@ -312,7 +312,7 @@ webCrypto.RsaKeyGenParams.prototype.publicExponent;
  * @extends webCrypto.RsaKeyGenParams
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedKeyGenParams
  */
-webCrypto.RsaHashedKeyGenParams = function() {};
+webCrypto.RsaHashedKeyGenParams;
 /**
  * @type {webCrypto.HashAlgorithmIdentifier}
  */
@@ -324,7 +324,7 @@ webCrypto.RsaHashedKeyGenParams.prototype.hash;
  * @extends webCrypto.KeyAlgorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaKeyAlgorithm
  */
-webCrypto.RsaKeyAlgorithm = function() {};
+webCrypto.RsaKeyAlgorithm;
 /**
  * @type {number}
  */
@@ -340,7 +340,7 @@ webCrypto.RsaKeyAlgorithm.prototype.publicExponent;
  * @extends webCrypto.RsaKeyAlgorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedKeyAlgorithm
  */
-webCrypto.RsaHashedKeyAlgorithm = function() {};
+webCrypto.RsaHashedKeyAlgorithm;
 /**
  * @type {webCrypto.KeyAlgorithm}
  */
@@ -352,7 +352,7 @@ webCrypto.RsaHashedKeyAlgorithm.prototype.hash;
  * @extends webCrypto.Algorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedImportParams
  */
-webCrypto.RsaHashedImportParams = function() {};
+webCrypto.RsaHashedImportParams;
 /**
  * @type {webCrypto.HashAlgorithmIdentifier}
  */
@@ -364,7 +364,7 @@ webCrypto.RsaHashedImportParams.prototype.hash;
  * @extends webCrypto.Algorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaPssParams
  */
-webCrypto.RsaPssParams = function() {};
+webCrypto.RsaPssParams;
 /**
  * @type {number}
  */
@@ -376,7 +376,7 @@ webCrypto.RsaPssParams.prototype.saltLength;
  * @extends webCrypto.Algorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaOaepParams
  */
-webCrypto.RsaOaepParams = function() {};
+webCrypto.RsaOaepParams;
 /**
  * @type {undefined|!BufferSource}
  */
@@ -388,7 +388,7 @@ webCrypto.RsaOaepParams.prototype.label;
  * @extends webCrypto.Algorithm
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-EcdsaParams
  */
-webCrypto.EcdsaParams = function() {};
+webCrypto.EcdsaParams;
 /**
  * @type {!webCrypto.HashAlgorithmIdentifier}
  */
