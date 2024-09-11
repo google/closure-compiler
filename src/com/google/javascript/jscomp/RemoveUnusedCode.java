@@ -2583,7 +2583,10 @@ class RemoveUnusedCode implements CompilerPass {
   private static Node maybeUnwrapQnameOrDefaultValueNode(Node targetNode, Node valueNode) {
     if (valueNode.isOr() && targetNode.isQualifiedName()) {
       final Node lhsOfOr = checkNotNull(valueNode.getFirstChild());
-      if (lhsOfOr.isEquivalentTo(targetNode)) {
+      if (lhsOfOr.matchesQualifiedName(targetNode)) {
+        // We use `matchesQualifiedName` rather than `isEquivalentTo` to properly handle the
+        // variable declaration case where the assigned value is a child of the name we want to
+        // match.
         return valueNode.getLastChild();
       }
     }

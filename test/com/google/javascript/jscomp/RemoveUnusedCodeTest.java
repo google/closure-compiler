@@ -3446,6 +3446,19 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testVariableAssignedToItselfInORNode() {
+    // Fix for b/359932022, where variable is assigned to itself in an OR node.
+    // 1) the node to which a value is being assigned
+    // 2) the value being assigned and the
+    // Handle the case in an OR node,where both (1) and (2) are the same variable.
+    test("var a = a || {}; a[\"hi\"] = true;", "");
+    test("var a = {}; a[\"hi\"] = true;", ""); // without the OR node
+
+    // test RHS of OR is not removable
+    testSame("var not_removable = 5; var a = a || not_removable ; a[\"hi\"] = true;");
+  }
+
+  @Test
   public void testRemovalFromExpression() {
     test(
         lines(
