@@ -6382,3 +6382,29 @@ ValidityStateFlags.prototype.badInput;
 
 /** @type {boolean|undefined} */
 ValidityStateFlags.prototype.customError;
+
+/**
+ * @see https://drafts.csswg.org/css-view-transitions/#dom-document-startviewtransition
+ * @param {function(): (undefined|!Promise<undefined>)} updateCallback
+ * @return {!ViewTransition}
+ */
+Document.prototype.startViewTransition = function(updateCallback) {};
+
+/**
+ * @see https://drafts.csswg.org/css-view-transitions/#viewtransition
+ * @record
+ * @struct
+ */
+function ViewTransition() {}
+
+/** @const {!Promise<undefined>} */
+ViewTransition.prototype.finished;
+
+/** @const {!Promise<undefined>} */
+ViewTransition.prototype.ready;
+
+/** @const {!Promise<undefined>} */
+ViewTransition.prototype.updateCallbackDone;
+
+/** @return {undefined} */
+ViewTransition.prototype.skipTransition = function() {};

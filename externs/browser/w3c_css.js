@@ -517,6 +517,12 @@ CSSStyleDeclaration.prototype.removeProperty = function(propertyName) {};
 CSSStyleDeclaration.prototype.setProperty = function(
     propertyName, value, opt_priority) {};
 
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-view-transitions/#propdef-view-transition-name
+ */
+CSSStyleDeclaration.prototype.viewTransitionName;
+
 // IE-specific
 
 /**
