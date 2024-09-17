@@ -468,11 +468,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.maybeAdd(mergeSyntheticScript);
 
-    // At this point all checks have been done.
-    if (!options.checksOnly && options.exportTestFunctions) {
-      checks.maybeAdd(exportTestFunctions);
-    }
-
     // Create extern exports after the normalize because externExports depends on unique names.
     if (options.getExternExportsPath() != null) {
       checks.maybeAdd(externExports);
@@ -502,6 +497,10 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
+    // At this point all checks have been done.
+    if (options.exportTestFunctions) {
+      passes.maybeAdd(exportTestFunctions);
+    }
     if (options.isPropertyRenamingOnlyCompilationMode()) {
       passes.maybeAdd(removeUnnecessarySyntheticExterns);
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
