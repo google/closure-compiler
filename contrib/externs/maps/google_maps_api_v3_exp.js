@@ -1033,7 +1033,7 @@ google.maps.Data.DataOptions.prototype.controlPosition;
  * controls are disabled and not displayed. Possible drawing modes are
  * <code>"Point"</code>, <code>"LineString"</code> or <code>"Polygon"</code>.
  * @default <code>null</code>
- * @type {Array<string>|null|undefined}
+ * @type {!Array<string>|null|undefined}
  */
 google.maps.Data.DataOptions.prototype.controls;
 
@@ -6617,10 +6617,9 @@ google.maps.MapTypeRegistry = function() {};
  * Sets the registry to associate the passed string identifier with the passed
  * MapType.
  * @param {string} id Identifier of the MapType to add to the registry.
- * @param {!google.maps.MapType|*} mapType MapType object to add to the
+ * @param {!google.maps.MapType|?} mapType MapType object to add to the
  *     registry.
  * @return {undefined}
- * @override
  */
 google.maps.MapTypeRegistry.prototype.set = function(id, mapType) {};
 
@@ -6685,14 +6684,14 @@ google.maps.Maps3DLibrary.prototype.AltitudeMode;
 google.maps.Maps3DLibrary.prototype.CenterChangeEvent;
 
 /**
- * @type {typeof google.maps.maps3d.ClickEvent}
- */
-google.maps.Maps3DLibrary.prototype.ClickEvent;
-
-/**
  * @type {typeof google.maps.maps3d.HeadingChangeEvent}
  */
 google.maps.Maps3DLibrary.prototype.HeadingChangeEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.LocationClickEvent}
+ */
+google.maps.Maps3DLibrary.prototype.LocationClickEvent;
 
 /**
  * @type {typeof google.maps.maps3d.Map3DElement}
@@ -7525,7 +7524,7 @@ google.maps.MarkerShape = function() {};
  * <code>rect</code>: coords is <code>[x1,y1,x2,y2]</code> where x1,y1 are the
  * coordinates of the upper-left corner of the rectangle and x2,y2 are the
  * coordinates of the lower-right coordinates of the rectangle.
- * @type {Array<number>}
+ * @type {!Array<number>|null}
  */
 google.maps.MarkerShape.prototype.coords;
 
@@ -8785,7 +8784,7 @@ google.maps.RotateControlOptions = function() {};
 /**
  * Position id. Used to specify the position of the control on the map.
  * @default {@link google.maps.ControlPosition.INLINE_END_BLOCK_END}
- * @type {google.maps.ControlPosition|null|undefined}
+ * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.RotateControlOptions.prototype.position;
 
@@ -8857,7 +8856,7 @@ google.maps.ScaleControlOptions = function() {};
 
 /**
  * Style id. Used to select what style of scale control to display.
- * @type {google.maps.ScaleControlStyle|null|undefined}
+ * @type {!google.maps.ScaleControlStyle|null|undefined}
  */
 google.maps.ScaleControlOptions.prototype.style;
 
@@ -9012,7 +9011,7 @@ google.maps.StreetViewControlOptions = function() {};
  * <code>zoomControlOptions</code> or <code>panControlOptions</code>, the Street
  * View control will be displayed as part of the navigation controls. Otherwise,
  * it will be displayed separately.
- * @type {google.maps.ControlPosition|null|undefined}
+ * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.StreetViewControlOptions.prototype.position;
 
@@ -9023,7 +9022,7 @@ google.maps.StreetViewControlOptions.prototype.position;
  * the {@link google.maps.StreetViewSource.OUTDOOR} source is not supported at
  * this time.
  * @default [{@link google.maps.StreetViewSource.DEFAULT}]
- * @type {Iterable<!google.maps.StreetViewSource>|null|undefined}
+ * @type {!Iterable<!google.maps.StreetViewSource>|null|undefined}
  */
 google.maps.StreetViewControlOptions.prototype.sources;
 
@@ -10830,7 +10829,7 @@ google.maps.ZoomControlOptions = function() {};
 /**
  * Position id. Used to specify the position of the control on the map.
  * @default {@link google.maps.ControlPosition.INLINE_END_BLOCK_END}
- * @type {google.maps.ControlPosition|null|undefined}
+ * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.ZoomControlOptions.prototype.position;
 
@@ -10961,14 +10960,14 @@ google.maps.drawing.DrawingControlOptions = function() {};
  * google.maps.drawing.OverlayType.RECTANGLE}, {@link
  * google.maps.drawing.OverlayType.CIRCLE}, {@link
  * google.maps.drawing.OverlayType.POLYGON}]</code>
- * @type {Array<!google.maps.drawing.OverlayType>|null|undefined}
+ * @type {!Array<!google.maps.drawing.OverlayType>|null|undefined}
  */
 google.maps.drawing.DrawingControlOptions.prototype.drawingModes;
 
 /**
  * Position id. Used to specify the position of the control on the map.
  * @default {@link google.maps.ControlPosition.TOP_LEFT}
- * @type {google.maps.ControlPosition|null|undefined}
+ * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.drawing.DrawingControlOptions.prototype.position;
 
@@ -15342,29 +15341,6 @@ google.maps.maps3d.CenterChangeEvent = function() {};
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
- * This event is created from clicking a Map3DElement.
- *
- * Access by calling `const {ClickEvent} = await
- * google.maps.importLibrary("maps3d")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- */
-google.maps.maps3d.ClickEvent = function() {};
-
-/**
- * The latitude/longitude/altitude that was below the cursor when the event
- * occurred. Please note, that at coarser levels, less accurate data will be
- * returned. Also, sea floor elevation may be returned for the altitude value
- * when clicking at the water surface from higher camera positions. This event
- * bubbles up through the DOM tree.
- * @type {!google.maps.LatLngAltitude|null}
- */
-google.maps.maps3d.ClickEvent.prototype.position;
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
  * This event is created from monitoring heading change on
  * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
@@ -15375,6 +15351,29 @@ google.maps.maps3d.ClickEvent.prototype.position;
  * @constructor
  */
 google.maps.maps3d.HeadingChangeEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from clicking a Map3DElement.
+ *
+ * Access by calling `const {LocationClickEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.LocationClickEvent = function() {};
+
+/**
+ * The latitude/longitude/altitude that was below the cursor when the event
+ * occurred. Please note, that at coarser levels, less accurate data will be
+ * returned. Also, sea floor elevation may be returned for the altitude value
+ * when clicking at the water surface from higher camera positions. This event
+ * bubbles up through the DOM tree.
+ * @type {!google.maps.LatLngAltitude|null}
+ */
+google.maps.maps3d.LocationClickEvent.prototype.position;
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -16454,13 +16453,13 @@ google.maps.places.AuthorAttribution.prototype.displayName;
 
 /**
  * Author&#39;s photo URI for this result. This may not always be available.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.AuthorAttribution.prototype.photoURI;
 
 /**
  * Author&#39;s profile URI for this result.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.AuthorAttribution.prototype.uri;
 
@@ -19313,14 +19312,14 @@ google.maps.places.PlusCode = function() {};
  * A plus code with a 1/8000th of a degree by 1/8000th of a degree area where
  * the first four characters (the area code) are dropped and replaced with a
  * locality description. For example, &quot;9G8F+5W Zurich, Switzerland&quot;.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.PlusCode.prototype.compoundCode;
 
 /**
  * A plus code with a 1/8000th of a degree by 1/8000th of a degree area. For
  * example, &quot;8FVC9G8F+5W&quot;.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.PlusCode.prototype.globalCode;
 
