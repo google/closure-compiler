@@ -2292,6 +2292,12 @@ CSSProperties.prototype.objectPosition;
  */
 CSSProperties.prototype.clipPath;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-masking-1/
+ */
+CSSProperties.prototype.maskImage;
+
 // CSS Containment
 
 /**
