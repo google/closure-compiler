@@ -11118,13 +11118,13 @@ google.maps.drawing.OverlayCompleteEvent = function() {};
 
 /**
  * The completed overlay.
- * @type {google.maps.Marker|google.maps.Polygon|google.maps.Polyline|google.maps.Rectangle|google.maps.Circle}
+ * @type {!google.maps.Marker|!google.maps.Polygon|!google.maps.Polyline|!google.maps.Rectangle|!google.maps.Circle}
  */
 google.maps.drawing.OverlayCompleteEvent.prototype.overlay;
 
 /**
  * The completed overlay&#39;s type.
- * @type {google.maps.drawing.OverlayType}
+ * @type {!google.maps.drawing.OverlayType}
  */
 google.maps.drawing.OverlayCompleteEvent.prototype.type;
 
@@ -16394,13 +16394,13 @@ google.maps.places.AddressComponent = function() {};
 
 /**
  * The full text of the address component.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.AddressComponent.prototype.longText;
 
 /**
  * The abbreviated, short text of the given address component.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.AddressComponent.prototype.shortText;
 
@@ -19493,18 +19493,18 @@ google.maps.places.Review = function() {};
 
 /**
  * The reviewer.
- * @type {?google.maps.places.AuthorAttribution}
+ * @type {!google.maps.places.AuthorAttribution|null}
  */
 google.maps.places.Review.prototype.authorAttribution;
 
 /**
- * @type {?Date}
+ * @type {!Date|null}
  */
 google.maps.places.Review.prototype.publishTime;
 
 /**
  * The rating of this review, a number between 1.0 and 5.0 (inclusive).
- * @type {?number}
+ * @type {number|null}
  */
 google.maps.places.Review.prototype.rating;
 
@@ -19512,13 +19512,13 @@ google.maps.places.Review.prototype.rating;
  * A string of formatted recent time, expressing the review time relative to the
  * current time in a form appropriate for the language and country. For example
  * `&quot;a month ago&quot;&#39;.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.Review.prototype.relativePublishTimeDescription;
 
 /**
  * The text of a review.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.Review.prototype.text;
 
@@ -19528,7 +19528,7 @@ google.maps.places.Review.prototype.text;
  * secondary tag indicating country or region. For example, all the English
  * reviews are tagged as <code>'en'</code> rather than &#39;en-AU&#39; or
  * &#39;en-UK&#39;.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.Review.prototype.textLanguageCode;
 
