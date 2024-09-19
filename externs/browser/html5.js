@@ -3276,6 +3276,28 @@ BroadcastChannel.prototype.onmessage;
 BroadcastChannel.prototype.name;
 
 /**
+ * StaticRange class.
+ * @constructor
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/StaticRange
+ */
+function StaticRange() {}
+
+/** @type {boolean} */
+StaticRange.prototype.collapsed;
+
+/** @type {Node} */
+StaticRange.prototype.endContainer;
+
+/** @type {number} */
+StaticRange.prototype.endOffset;
+
+/** @type {Node} */
+StaticRange.prototype.startContainer;
+
+/** @type {number} */
+StaticRange.prototype.startOffset;
+
+/**
  * HTML5 DataTransfer class.
  *
  * @see http://www.w3.org/TR/2011/WD-html5-20110113/dnd.html

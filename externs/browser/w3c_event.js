@@ -549,10 +549,9 @@ InputEventInit.prototype.inputType;
 /** @type {undefined|?DataTransfer} */
 InputEventInit.prototype.dataTransfer;
 
+/** @type {undefined|function():!Array<!StaticRange>} */
+InputEventInit.prototype.getTargetRanges;
 
-// TODO(charleyroy): Add getTargetRanges() once a consensus has been made
-// regarding how to structure these values. See
-// https://github.com/w3c/input-events/issues/38.
 /**
  * @constructor
  * @extends {UIEvent}
@@ -575,6 +574,8 @@ InputEvent.prototype.inputType;
 /** @type {?DataTransfer} */
 InputEvent.prototype.dataTransfer;
 
+/** @type {function():!Array<!StaticRange>} */
+InputEvent.prototype.getTargetRanges;
 
 /**
  * @record
