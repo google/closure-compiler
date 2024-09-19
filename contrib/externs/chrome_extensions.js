@@ -7134,6 +7134,8 @@ chrome.storage.local;
 /** @type {!StorageArea} */
 chrome.storage.managed;
 
+/** @type {!StorageArea} */
+chrome.storage.session;
 
 /** @type {!StorageChangeEvent} */
 chrome.storage.onChanged;
