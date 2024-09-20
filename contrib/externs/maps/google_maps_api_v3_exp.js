@@ -778,6 +778,11 @@ google.maps.CoreLibrary.prototype.MVCArray;
 google.maps.CoreLibrary.prototype.MVCObject;
 
 /**
+ * @type {typeof google.maps.Orientation3D}
+ */
+google.maps.CoreLibrary.prototype.Orientation3D;
+
+/**
  * @type {typeof google.maps.Point}
  */
 google.maps.CoreLibrary.prototype.Point;
@@ -801,6 +806,11 @@ google.maps.CoreLibrary.prototype.SymbolPath;
  * @type {typeof google.maps.UnitSystem}
  */
 google.maps.CoreLibrary.prototype.UnitSystem;
+
+/**
+ * @type {typeof google.maps.Vector3D}
+ */
+google.maps.CoreLibrary.prototype.Vector3D;
 
 /**
  * A layer for displaying geospatial data. Points, line-strings and polygons can
@@ -3059,7 +3069,7 @@ google.maps.ElevationService = function() {};
  * Makes an elevation request along a path, where the elevation data are
  * returned as distance-based samples along that path.
  * @param {!google.maps.PathElevationRequest} request
- * @param {(function(?Array<!google.maps.ElevationResult>,
+ * @param {(function((!Array<!google.maps.ElevationResult>|null),
  *     !google.maps.ElevationStatus): void)=} callback
  * @return {!Promise<!google.maps.PathElevationResponse>}
  */
@@ -3069,7 +3079,7 @@ google.maps.ElevationService.prototype.getElevationAlongPath = function(
 /**
  * Makes an elevation request for a list of discrete locations.
  * @param {!google.maps.LocationElevationRequest} request
- * @param {(function(?Array<!google.maps.ElevationResult>,
+ * @param {(function((!Array<!google.maps.ElevationResult>|null),
  *     !google.maps.ElevationStatus): void)=} callback
  * @return {!Promise<!google.maps.LocationElevationResponse>}
  */
@@ -6679,16 +6689,6 @@ google.maps.Maps3DLibrary = function() {};
 google.maps.Maps3DLibrary.prototype.AltitudeMode;
 
 /**
- * @type {typeof google.maps.maps3d.CenterChangeEvent}
- */
-google.maps.Maps3DLibrary.prototype.CenterChangeEvent;
-
-/**
- * @type {typeof google.maps.maps3d.HeadingChangeEvent}
- */
-google.maps.Maps3DLibrary.prototype.HeadingChangeEvent;
-
-/**
  * @type {typeof google.maps.maps3d.LocationClickEvent}
  */
 google.maps.Maps3DLibrary.prototype.LocationClickEvent;
@@ -6697,6 +6697,26 @@ google.maps.Maps3DLibrary.prototype.LocationClickEvent;
  * @type {typeof google.maps.maps3d.Map3DElement}
  */
 google.maps.Maps3DLibrary.prototype.Map3DElement;
+
+/**
+ * @type {typeof google.maps.maps3d.Marker3DElement}
+ */
+google.maps.Maps3DLibrary.prototype.Marker3DElement;
+
+/**
+ * @type {typeof google.maps.maps3d.Marker3DInteractiveElement}
+ */
+google.maps.Maps3DLibrary.prototype.Marker3DInteractiveElement;
+
+/**
+ * @type {typeof google.maps.maps3d.Model3DElement}
+ */
+google.maps.Maps3DLibrary.prototype.Model3DElement;
+
+/**
+ * @type {typeof google.maps.maps3d.PlaceClickEvent}
+ */
+google.maps.Maps3DLibrary.prototype.PlaceClickEvent;
 
 /**
  * @type {typeof google.maps.maps3d.Polygon3DElement}
@@ -6709,24 +6729,9 @@ google.maps.Maps3DLibrary.prototype.Polygon3DElement;
 google.maps.Maps3DLibrary.prototype.Polyline3DElement;
 
 /**
- * @type {typeof google.maps.maps3d.RangeChangeEvent}
- */
-google.maps.Maps3DLibrary.prototype.RangeChangeEvent;
-
-/**
- * @type {typeof google.maps.maps3d.RollChangeEvent}
- */
-google.maps.Maps3DLibrary.prototype.RollChangeEvent;
-
-/**
  * @type {typeof google.maps.maps3d.SteadyChangeEvent}
  */
 google.maps.Maps3DLibrary.prototype.SteadyChangeEvent;
-
-/**
- * @type {typeof google.maps.maps3d.TiltChangeEvent}
- */
-google.maps.Maps3DLibrary.prototype.TiltChangeEvent;
 
 /**
  * An event listener, created by <code><a
@@ -7614,6 +7619,104 @@ google.maps.MotionTrackingControlOptions = function() {};
  * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.MotionTrackingControlOptions.prototype.position;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A <code>Orientation3D</code> is a three-dimensional vector used for standard
+ * mathematical rotation transformations along heading, tilt, and roll.<br> <ul>
+ * <li>heading is an angle in the range [0, 360) degrees.</li> <li>tilt is an
+ * angle in the range [0, 360) degrees.</li> <li>roll is an angle in the range
+ * [0, 360) degrees.</li> </ul>
+ *
+ * Access by calling `const {Orientation3D} = await
+ * google.maps.importLibrary("core")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.Orientation3D|!google.maps.Orientation3DLiteral} value
+ *     The initializing value.
+ * @implements {google.maps.Orientation3DLiteral}
+ * @constructor
+ */
+google.maps.Orientation3D = function(value) {};
+
+/**
+ * Rotation about the z-axis (normal to the Earth&#39;s surface). A value of 0
+ * (the default) equals North. A positive rotation is clockwise around the
+ * z-axis and specified in degrees from 0 to 360. Values above or below this
+ * range will be wrapped so that they fall within the range. For example, a
+ * value of -190 will be converted to 170. A value of 530 will be converted to
+ * 170 as well.
+ * @default <code>0</code>
+ * @type {number}
+ */
+google.maps.Orientation3D.prototype.heading;
+
+/**
+ * Rotation about the y-axis. A positive rotation is clockwise around the y-axis
+ * and specified in degrees from 0 to 360. Values above or below this range will
+ * be wrapped so that they fall within the range. For example, a value of -190
+ * will be converted to 170. A value of 530 will be converted to 170 as well.
+ * @default <code>0</code>
+ * @type {number}
+ */
+google.maps.Orientation3D.prototype.roll;
+
+/**
+ * Rotation about the x-axis. A positive rotation is clockwise around the x-axis
+ * and specified in degrees from 0 to 360. Values above or below this range will
+ * be wrapped so that they fall within the range. For example, a value of -190
+ * will be converted to 170. A value of 530 will be converted to 170 as well.
+ * @default <code>0</code>
+ * @type {number}
+ */
+google.maps.Orientation3D.prototype.tilt;
+
+/**
+ * Comparison function.
+ * @param {!google.maps.Orientation3D|!google.maps.Orientation3DLiteral|null}
+ *     other Another Orientation3D object.
+ * @return {boolean} Whether the two objects are equal.
+ */
+google.maps.Orientation3D.prototype.equals = function(other) {};
+
+/**
+ * Converts to JSON representation. This function is intended to be used via
+ * JSON.stringify.
+ * @return {!google.maps.Orientation3DLiteral}
+ */
+google.maps.Orientation3D.prototype.toJSON = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Object literals are accepted in place of <code>Orientation3D</code> objects,
+ * as a convenience, in many places. These are converted to
+ * <code>Orientation3D</code> objects when the Maps API encounters them.
+ * @record
+ */
+google.maps.Orientation3DLiteral = function() {};
+
+/**
+ * Rotation about the z-axis (normal to the Earth&#39;s surface). A value of 0
+ * (the default) equals North. A positive rotation is clockwise around the
+ * z-axis and specified in degrees from 0 to 360.
+ * @type {number|null|undefined}
+ */
+google.maps.Orientation3DLiteral.prototype.heading;
+
+/**
+ * Rotation about the y-axis. A positive rotation is clockwise around the y-axis
+ * and specified in degrees from 0 to 360.
+ * @type {number|null|undefined}
+ */
+google.maps.Orientation3DLiteral.prototype.roll;
+
+/**
+ * Rotation about the x-axis. A positive rotation is clockwise around the x-axis
+ * and specified in degrees from 0 to 360.
+ * @type {number|null|undefined}
+ */
+google.maps.Orientation3DLiteral.prototype.tilt;
 
 /**
  * You can implement this class if you want to display custom types of overlay
@@ -10537,6 +10640,85 @@ google.maps.UnitSystem = {
    */
   METRIC: 1,
 };
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A <code>Vector3D</code> is a three-dimensional vector used for standard
+ * mathematical operations such as scaling the bounds of three-dimensional
+ * object along local x-, y-, and z-axes.<br> <ul> <li>x is a real number.</li>
+ * <li>y is a real number.</li> <li>z is a real number.</li> </ul>
+ *
+ * Access by calling `const {Vector3D} = await
+ * google.maps.importLibrary("core")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.Vector3D|!google.maps.Vector3DLiteral} value The
+ *     initializing value.
+ * @implements {google.maps.Vector3DLiteral}
+ * @constructor
+ */
+google.maps.Vector3D = function(value) {};
+
+/**
+ * X-component of the three-dimensional vector.
+ * @type {number}
+ */
+google.maps.Vector3D.prototype.x;
+
+/**
+ * Y-component of the three-dimensional vector.
+ * @type {number}
+ */
+google.maps.Vector3D.prototype.y;
+
+/**
+ * Z-component of the three-dimensional vector.
+ * @type {number}
+ */
+google.maps.Vector3D.prototype.z;
+
+/**
+ * Comparison function.
+ * @param {!google.maps.Vector3D|!google.maps.Vector3DLiteral|null} other
+ *     Another Vector3D or Vector3DLiteral object.
+ * @return {boolean}
+ */
+google.maps.Vector3D.prototype.equals = function(other) {};
+
+/**
+ * Converts to JSON representation. This function is intended to be used via
+ * JSON.stringify.
+ * @return {!google.maps.Vector3DLiteral}
+ */
+google.maps.Vector3D.prototype.toJSON = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Object literals are accepted in place of <code>Vector3D</code> objects, as a
+ * convenience, in many places. These are converted to <code>Vector3D</code>
+ * objects when the Maps API encounters them.
+ * @record
+ */
+google.maps.Vector3DLiteral = function() {};
+
+/**
+ * X-component of the three-dimensional vector.
+ * @type {number}
+ */
+google.maps.Vector3DLiteral.prototype.x;
+
+/**
+ * Y-component of the three-dimensional vector.
+ * @type {number}
+ */
+google.maps.Vector3DLiteral.prototype.y;
+
+/**
+ * Z-component of the three-dimensional vector.
+ * @type {number}
+ */
+google.maps.Vector3DLiteral.prototype.z;
 
 /**
  * Possible values for vehicle types.
@@ -15327,30 +15509,89 @@ google.maps.maps3d.AltitudeMode = {
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
- * This event is created from monitoring center change on
- * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
- *
- * Access by calling `const {CenterChangeEvent} = await
- * google.maps.importLibrary("maps3d")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
+ * CameraOptions object used to define the properties that can be set on a
+ * camera object. The camera object can be anything that has a camera position,
+ * e.g. a current map state, or a future requested animation state.
+ * @record
  */
-google.maps.maps3d.CenterChangeEvent = function() {};
+google.maps.maps3d.CameraOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.heading}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.heading;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.range}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.range;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.roll}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.roll;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.tilt}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.tilt;
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
- * This event is created from monitoring heading change on
- * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
- *
- * Access by calling `const {HeadingChangeEvent} = await
- * google.maps.importLibrary("maps3d")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
+ * Customization options for the FlyCameraAround Animation.
+ * @record
  */
-google.maps.maps3d.HeadingChangeEvent = function() {};
+google.maps.maps3d.FlyAroundAnimationOptions = function() {};
+
+/**
+ * The central point at which the camera should look at during the orbit
+ * animation. Note that the map heading will change as the camera orbits around
+ * this center point.
+ * @type {!google.maps.maps3d.CameraOptions}
+ */
+google.maps.maps3d.FlyAroundAnimationOptions.prototype.camera;
+
+/**
+ * The duration of the animation in milliseconds. This is the total duration of
+ * the animation, not the duration of a single rotation.
+ * @type {number|undefined}
+ */
+google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
+
+/**
+ * The number of rounds to rotate around the center in the given duration. This
+ * controls the overall speed of rotation. Passing a negative number to rounds
+ * will cause the camera to rotate in a counter-clockwise direction instead of
+ * the default clockwise direction.
+ * @type {number|undefined}
+ */
+google.maps.maps3d.FlyAroundAnimationOptions.prototype.rounds;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Customization options for the FlyCameraTo Animation.
+ * @record
+ */
+google.maps.maps3d.FlyToAnimationOptions = function() {};
+
+/**
+ * The duration of the animation in milliseconds. A duration of 0 will teleport
+ * the camera straight to the end position.
+ * @type {number|undefined}
+ */
+google.maps.maps3d.FlyToAnimationOptions.prototype.durationMillis;
+
+/**
+ * The location at which the camera should point at the end of the animation.
+ * @type {!google.maps.maps3d.CameraOptions}
+ */
+google.maps.maps3d.FlyToAnimationOptions.prototype.endCamera;
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -15507,6 +15748,43 @@ google.maps.maps3d.Map3DElement.prototype.tilt;
 
 
 /**
+ * This method orbits the camera around a given location for a given duration,
+ * making the given number of rounds in that time. <br /><br /> By default, the
+ * camera orbits clockwise. If given a negative number for rounds, the camera
+ * will orbit in a counter-clockwise direction instead. <br /><br /> The method
+ * is asynchronous because animations can only start after the map has loaded a
+ * minimum amount. The method returns once the animation has been started. <br
+ * /><br /> If the number of rounds is zero, no spin will occur, and the
+ * animation will complete immediately after it starts.
+ * @param {!google.maps.maps3d.FlyAroundAnimationOptions} options
+ * @return {undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.flyCameraAround = function(
+    options) {};
+
+/**
+ * This method moves the camera parabolically from the current location to a
+ * given end location over a given duration. <br /><br /> The method is
+ * asynchronous because animations can only start after the map has loaded a
+ * minimum amount. The method returns once the animation has been started.
+ * @param {!google.maps.maps3d.FlyToAnimationOptions} options
+ * @return {undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.flyCameraTo = function(options) {};
+
+
+
+/**
+ * This method stops any fly animation that might happen to be running. The
+ * camera stays wherever it is mid-animation; it does not teleport to the end
+ * point. <br /><br /> The method is asynchronous because animations can only
+ * start or stop after the map has loaded a minimum amount. The method returns
+ * once the animation has stopped.
+ * @return {undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.stopCameraAnimation = function() {};
+
+/**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * Map3DElementOptions object used to define the properties that can be set on a
@@ -15596,6 +15874,302 @@ google.maps.maps3d.Map3DElementOptions.prototype.tilt;
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
+ * Shows a position on a 3D map. Note that the <code>position</code> must be set
+ * for the <code>Marker3DElement</code> to display.
+ *
+ * Access by calling `const {Marker3DElement} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Marker3DElementOptions=} options
+ * @implements {google.maps.maps3d.Marker3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.Marker3DElement = function(options) {};
+
+/**
+ * Specifies how the altitude component of the position is interpreted.
+ * @default {@link google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.altitudeMode;
+
+/**
+ * An enumeration specifying how a Marker3DElement should behave when it
+ * collides with another Marker3DElement or with the basemap labels.
+ * @default {@link google.maps.CollisionBehavior.REQUIRED}
+ * @type {!google.maps.CollisionBehavior|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.collisionBehavior;
+
+/**
+ * Specifies whether this marker should be drawn or not when it&#39;s occluded.
+ * The marker can be occluded by map geometry (e.g. buildings).
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.drawsWhenOccluded;
+
+/**
+ * Specifies whether to connect the marker to the ground. To extrude a marker,
+ * the <code>altitudeMode</code> must be either <code>RELATIVE_TO_GROUND</code>
+ * or <code>ABSOLUTE</code>.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.extruded;
+
+/**
+ * Text to be displayed by this marker.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.label;
+
+/**
+ * The location of the tip of the marker. Altitude is ignored in certain modes
+ * and thus optional.
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.position;
+
+/**
+ * Specifies whether this marker should preserve its size or not regardless of
+ * distance from camera. By default, the marker is scaled based on distance from
+ * camera/tilt.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.sizePreserved;
+
+/**
+ * The zIndex compared to other markers.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.zIndex;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Marker3DElementOptions object used to define the properties that can be set
+ * on a Marker3DElement.
+ * @record
+ */
+google.maps.maps3d.Marker3DElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.altitudeMode}.
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.collisionBehavior}.
+ * @type {!google.maps.CollisionBehavior|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.collisionBehavior;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.drawsWhenOccluded}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.drawsWhenOccluded;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.extruded}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.extruded;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.label}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.label;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.position}.
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.position;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.sizePreserved}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.sizePreserved;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.zIndex}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.zIndex;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Shows a position on a 3D map. Note that the <code>position</code> must be set
+ * for the <code>Marker3DInteractiveElement</code> to display. Unlike
+ * <code>Marker3DElement</code>, <code>Marker3DInteractiveElement</code>
+ * receives a <code>gmp-click</code> event.
+ *
+ * Access by calling `const {Marker3DInteractiveElement} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Marker3DElementOptions=} options
+ * @implements {google.maps.maps3d.Marker3DInteractiveElementOptions}
+ * @extends {google.maps.maps3d.Marker3DElement}
+ * @constructor
+ */
+google.maps.maps3d.Marker3DInteractiveElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Marker3DInteractiveElementOptions object used to define the properties that
+ * can be set on a Marker3DInteractiveElement.
+ * @extends {google.maps.maps3d.Marker3DElementOptions}
+ * @record
+ */
+google.maps.maps3d.Marker3DInteractiveElementOptions = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A 3D model which allows the rendering of gLTF models. Note that the
+ * <code>position</code> and the <code>src</code> must be set for the
+ * <code>Model3DElement</code> to display. <br /><br /> Core properties of the
+ * <a href="https://www.khronos.org/gltf/pbr">gLTF PBR</a> should be supported.
+ * No extensions or extension properties are currently supported.
+ *
+ * Access by calling `const {Model3DElement} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Model3DElementOptions=} options
+ * @implements {google.maps.maps3d.Model3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.Model3DElement = function(options) {};
+
+/**
+ * Specifies how altitude in the position is interpreted.
+ * @default {@link google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Model3DElement.prototype.altitudeMode;
+
+/**
+ * Describes rotation of a 3D model&#39;s coordinate system to position the
+ * model on the 3D Map. <br /><br /> Rotations are applied to the model in the
+ * following order: roll, tilt and then heading.
+ * @type {!google.maps.Orientation3D|!google.maps.Orientation3DLiteral|null|undefined}
+ */
+google.maps.maps3d.Model3DElement.prototype.orientation;
+
+/**
+ * Sets the <code>Model3DElement</code>&#39;s position. Altitude is ignored in
+ * certain modes and thus optional.
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Model3DElement.prototype.position;
+
+/**
+ * Scales the model along the x, y, and z axes in the model&#39;s coordinate
+ * space.
+ * @default <code>1</code>
+ * @type {number|!google.maps.Vector3D|!google.maps.Vector3DLiteral|null|undefined}
+ */
+google.maps.maps3d.Model3DElement.prototype.scale;
+
+/**
+ * Specifies the url of the 3D model. At this time, only models in the
+ * <code>.glb</code> format are supported. <br /><br /> Any relative HTTP urls
+ * will be resolved to their corresponding absolute ones. <br /><br /> Please
+ * note that If you&#39;re hosting your <code>.glb</code> model files on a
+ * different website or server than your main application, make sure to set up
+ * the correct CORS HTTP headers. This allows your application to securely
+ * access the model files from the other domain.
+ * @type {string|!URL|null|undefined}
+ */
+google.maps.maps3d.Model3DElement.prototype.src;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Model3DElementOptions object used to define the properties that can be set on
+ * a Model3DElement.
+ * @record
+ */
+google.maps.maps3d.Model3DElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Model3DElement.altitudeMode}.
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.Model3DElementOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.Model3DElement.orientation}.
+ * @type {!google.maps.Orientation3D|!google.maps.Orientation3DLiteral|null|undefined}
+ */
+google.maps.maps3d.Model3DElementOptions.prototype.orientation;
+
+/**
+ * See {@link google.maps.maps3d.Model3DElement.position}.
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Model3DElementOptions.prototype.position;
+
+/**
+ * See {@link google.maps.maps3d.Model3DElement.scale}.
+ * @type {number|!google.maps.Vector3D|!google.maps.Vector3DLiteral|null|undefined}
+ */
+google.maps.maps3d.Model3DElementOptions.prototype.scale;
+
+/**
+ * See {@link google.maps.maps3d.Model3DElement.src}.
+ * @type {string|!URL|null|undefined}
+ */
+google.maps.maps3d.Model3DElementOptions.prototype.src;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created from clicking a Map3DElement.
+ *
+ * Access by calling `const {PlaceClickEvent} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {google.maps.maps3d.LocationClickEvent}
+ * @constructor
+ */
+google.maps.maps3d.PlaceClickEvent = function() {};
+
+/**
+ * The place id of the map feature.
+ * @type {string}
+ */
+google.maps.maps3d.PlaceClickEvent.prototype.placeId;
+
+/**
+ * Fetches a <code>Place</code> for this place id. In the resulting
+ * <code>Place</code> object, the id property will be populated. Additional
+ * fields can be subsequently requested via <code>Place.fetchFields()</code>
+ * subject to normal Places API enablement and billing. The promise is rejected
+ * if there was an error fetching the <code>Place</code>.
+ * @return {!Promise<!google.maps.places.Place>}
+ */
+google.maps.maps3d.PlaceClickEvent.prototype.fetchPlace = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
  * A 3D polygon (like a 3D polyline) defines a series of connected coordinates
  * in an ordered sequence. Additionally, polygons form a closed loop and define
  * a filled region.
@@ -15641,12 +16215,6 @@ google.maps.maps3d.Polygon3DElement.prototype.extruded;
 google.maps.maps3d.Polygon3DElement.prototype.fillColor;
 
 /**
- * The fill opacity between 0.0 and 1.0.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polygon3DElement.prototype.fillOpacity;
-
-/**
  * When <code>true</code>, edges of the polygon are interpreted as geodesic and
  * will follow the curvature of the Earth. When <code>false</code>, edges of the
  * polygon are rendered as straight lines in screen space.
@@ -15677,12 +16245,6 @@ google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
 google.maps.maps3d.Polygon3DElement.prototype.strokeColor;
 
 /**
- * The stroke opacity between <code>0.0</code> and <code>1.0</code>.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polygon3DElement.prototype.strokeOpacity;
-
-/**
  * The stroke width in pixels.
  * @type {number|null|undefined}
  */
@@ -15707,21 +16269,18 @@ google.maps.maps3d.Polygon3DElementOptions = function() {};
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.altitudeMode}.
- * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.altitudeMode;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.drawsOccludedSegments}.
- * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.drawsOccludedSegments;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.extruded}.
- * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.extruded;
@@ -15733,14 +16292,7 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.extruded;
 google.maps.maps3d.Polygon3DElementOptions.prototype.fillColor;
 
 /**
- * See {@link google.maps.maps3d.Polygon3DElement.fillOpacity}.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polygon3DElementOptions.prototype.fillOpacity;
-
-/**
  * See {@link google.maps.maps3d.Polygon3DElement.geodesic}.
- * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.geodesic;
@@ -15762,12 +16314,6 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.outerCoordinates;
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.strokeColor;
-
-/**
- * See {@link google.maps.maps3d.Polygon3DElement.strokeOpacity}.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polygon3DElementOptions.prototype.strokeOpacity;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.strokeWidth}.
@@ -15843,12 +16389,6 @@ google.maps.maps3d.Polyline3DElement.prototype.geodesic;
 google.maps.maps3d.Polyline3DElement.prototype.outerColor;
 
 /**
- * The outer opacity between <code>0.0</code> and <code>1.0</code>.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polyline3DElement.prototype.outerOpacity;
-
-/**
  * The outer width is between <code>0.0</code> and <code>1.0</code>. This is a
  * percentage of the <code>strokeWidth</code>.
  * @type {number|null|undefined}
@@ -15860,12 +16400,6 @@ google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.strokeColor;
-
-/**
- * The stroke opacity between <code>0.0</code> and <code>1.0</code>.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polyline3DElement.prototype.strokeOpacity;
 
 /**
  * The stroke width in pixels.
@@ -15892,7 +16426,6 @@ google.maps.maps3d.Polyline3DElementOptions = function() {};
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.altitudeMode}.
- * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.altitudeMode;
@@ -15905,21 +16438,18 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.coordinates;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.drawsOccludedSegments}.
- * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.drawsOccludedSegments;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.extruded}.
- * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.extruded;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.geodesic}.
- * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.geodesic;
@@ -15929,12 +16459,6 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.geodesic;
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.outerColor;
-
-/**
- * See {@link google.maps.maps3d.Polyline3DElement.outerOpacity}.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polyline3DElementOptions.prototype.outerOpacity;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.outerWidth}.
@@ -15949,12 +16473,6 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.outerWidth;
 google.maps.maps3d.Polyline3DElementOptions.prototype.strokeColor;
 
 /**
- * See {@link google.maps.maps3d.Polyline3DElement.strokeOpacity}.
- * @type {number|null|undefined}
- */
-google.maps.maps3d.Polyline3DElementOptions.prototype.strokeOpacity;
-
-/**
  * See {@link google.maps.maps3d.Polyline3DElement.strokeWidth}.
  * @type {number|null|undefined}
  */
@@ -15965,34 +16483,6 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.strokeWidth;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * This event is created from monitoring range change on
- * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
- *
- * Access by calling `const {RangeChangeEvent} = await
- * google.maps.importLibrary("maps3d")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- */
-google.maps.maps3d.RangeChangeEvent = function() {};
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * This event is created from monitoring roll change on
- * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
- *
- * Access by calling `const {RollChangeEvent} = await
- * google.maps.importLibrary("maps3d")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- */
-google.maps.maps3d.RollChangeEvent = function() {};
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -16014,20 +16504,6 @@ google.maps.maps3d.SteadyChangeEvent = function() {};
  * @type {boolean}
  */
 google.maps.maps3d.SteadyChangeEvent.prototype.isSteady;
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * This event is created from monitoring tilt change on
- * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
- *
- * Access by calling `const {TiltChangeEvent} = await
- * google.maps.importLibrary("maps3d")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- */
-google.maps.maps3d.TiltChangeEvent = function() {};
 
 /**
  * @const
@@ -16425,12 +16901,12 @@ google.maps.places.Attribution = function() {};
 
 /**
  * Attribution text to be displayed for this Place result.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.Attribution.prototype.provider;
 
 /**
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.places.Attribution.prototype.providerURI;
 
@@ -17520,7 +17996,7 @@ google.maps.places.OpeningHoursPeriod = function() {};
 
 /**
  * The closing time for the Place.
- * @type {?google.maps.places.OpeningHoursPoint}
+ * @type {!google.maps.places.OpeningHoursPoint|null}
  */
 google.maps.places.OpeningHoursPeriod.prototype.close;
 
