@@ -15662,6 +15662,14 @@ google.maps.maps3d.Map3DElement.prototype.center;
 google.maps.maps3d.Map3DElement.prototype.defaultLabelsDisabled;
 
 /**
+ * When <code>true</code>, all default UI buttons are disabled. Does not disable
+ * the keyboard and gesture controls.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
+
+/**
  * The compass heading of the map, in degrees, where due north is zero. When
  * there is no tilt, any roll will be interpreted as heading.
  * @type {number|null|undefined}
