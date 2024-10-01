@@ -2134,7 +2134,7 @@ String.prototype.localeCompare = function(compareString, locales, options) {};
  *
  * @this {String|string}
  * @param {*} regexp
- * @return {Array<string>} This should really return an Array with a few
+ * @return {RegExpResult} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see Regexp.prototype.exec.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
