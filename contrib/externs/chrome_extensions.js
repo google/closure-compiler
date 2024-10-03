@@ -2711,6 +2711,48 @@ chrome.enterprise.reportingPrivate.Certificate;
 chrome.enterprise.reportingPrivate.getCertificate = function(url, callback) {};
 
 /**
+ * Reports a data masking event.
+ * Since Chrome 130.
+ * @param {!chrome.enterprise.reportingPrivate.DataMaskingEvent} event The
+ *     event to report.
+ * @param {(function(): void)=} callback Called back when this operation is
+ *     finished.
+ */
+chrome.enterprise.reportingPrivate.reportDataMaskingEvent = function(
+    event, callback) {};
+
+/**
+ * Data masking event.
+ * @typedef {?{
+ *   url: string,
+ *   eventResult: string,
+ *   triggeredRuleInfo:
+ * Array<chrome.enterprise.reportingPrivate.TriggeredRuleInfo>,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.DataMaskingEvent;
+
+/**
+ * Triggered rule info.
+ * @typedef {?{
+ *   ruleId: string,
+ *   ruleName: string,
+ *   matchedDetectors: Array<chrome.enterprise.reportingPrivate.DetectorInfo>,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.TriggeredRuleInfo;
+
+/**
+ * Detector info.
+ * @typedef {?{
+ *   detectorId: string,
+ *   displayName: string,
+ *   detectorType: string,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.DetectorInfo;
+
+/**
  * @see https://developer.chrome.com/extensions/extension.html
  * @const
  */
