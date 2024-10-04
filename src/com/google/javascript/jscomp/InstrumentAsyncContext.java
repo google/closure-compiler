@@ -33,10 +33,8 @@ import org.jspecify.annotations.Nullable;
 /** Instruments {@code await} and {@code yield} for the {@code AsyncContext} polyfill. */
 public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callback {
 
-  private static final String CONTEXT_VAR_NAME = "$jscomp$context";
+  private static final String SWAP = "$jscomp$swapContext";
   private static final String JSCOMP = "$jscomp";
-  private static final String EXIT = "asyncContextExit";
-  private static final String REENTER = "asyncContextReenter";
   private static final String ENTER = "asyncContextEnter";
 
   private final AbstractCompiler compiler;
@@ -107,7 +105,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
           instrumentGeneratorFunction(t, n);
         } else {
           checkState(n.isAsyncFunction());
-          instrumentFunction(n);
+          instrumentAsyncFunction(n);
         }
       }
     }
@@ -115,9 +113,9 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   // When we see a reentrance node, we need to do several things:
   //  1. replace `await EXPR` with
-  //     `$jscomp$context.$jscomp$reenter(await $jscomp$context.$jscomp$exit(EXPR))`
-  //  2. ensure the enclosing function has been instrumented with `$jscomp$context`
-  //  3. look for an immediately-enclosing `try` block and instrument it with a `reenter`
+  //     `$jscomp$SwapContext(await $jscomp$swapContext(EXPR), 1)`
+  //  2. ensure the enclosing function has been instrumented with `$jscomp$swapContext`
+  //  3. look for an immediately-enclosing `try` block and instrument it with a reentry
   private void instrumentReentrance(NodeTraversal t, Node n, Node parent) {
     Node enclosingTry = tryFunctionStack.peek();
     if (enclosingTry != null && !enclosingTry.isTry()) {
@@ -149,16 +147,17 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       return;
     }
 
-    // Wrap yielded/awaited expression with a call to $jscomp$context.$jscomp$exit
+    // Wrap yielded/awaited expression with an exit call: $jscomp$swapContext(...)
     Node placeholder = IR.empty();
     Node arg = n.getFirstChild();
     if (arg == null) {
-      n.addChildToBack(arg = astFactory.createUndefinedValue());
+      n.addChildToBack(createExit().srcrefTreeIfMissing(n));
+    } else {
+      arg.replaceWith(placeholder);
+      placeholder.replaceWith(createExit(arg).srcrefTreeIfMissing(arg));
     }
-    arg.replaceWith(placeholder);
-    placeholder.replaceWith(createExit(arg).srcrefTreeIfMissing(arg));
 
-    // Wrap the entire yield/await with a call to $jscomp$context.$jscomp$reenter
+    // Wrap the entire yield/await with a reenter call: $jscomp$swapContext(..., 1)
     n.replaceWith(placeholder);
     placeholder.replaceWith(createReenter(n).srcrefTreeIfMissing(n));
   }
@@ -168,12 +167,12 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     //   use(x);
     // }
     //     becomes
-    // for await (const x of exit(expr())) {
-    //   reenter();
+    // for await (const x of swap(expr())) { // exit
+    //   swap(0, 1); // reenter
     //   use(x);
-    //   exit();
+    //   swap(); // exit
     // }
-    // reenter();
+    // swap(0, 1); // reenter
 
     // First wrap the iterator argument
     Node placeholder = IR.empty();
@@ -185,10 +184,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     checkState(body.isBlock()); // NOTE: IRFactory normalizes non-block `for` bodies
 
     // Add reenter/exit calls to start/end of block
-    body.addChildToFront(
-        IR.exprResult(createReenter(astFactory.createUndefinedValue()).srcrefTreeIfMissing(arg)));
-    body.addChildToBack(
-        IR.exprResult(createExit(astFactory.createUndefinedValue()).srcrefTreeIfMissing(arg)));
+    body.addChildToFront(IR.exprResult(createReenter().srcrefTreeIfMissing(arg)));
+    body.addChildToBack(IR.exprResult(createExit().srcrefTreeIfMissing(arg)));
 
     // Add reenter call after for-await-of
     if (!parent.isBlock()) {
@@ -198,8 +195,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       block.addChildToFront(n);
       n = block;
     }
-    IR.exprResult(createReenter(astFactory.createUndefinedValue()).srcrefTreeIfMissing(arg))
-        .insertAfter(n);
+    IR.exprResult(createReenter().srcrefTreeIfMissing(arg)).insertAfter(n);
   }
 
   void instrumentTry(Node n) {
@@ -213,9 +209,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       block = block.getNext();
     }
     checkState(block.isBlock());
-    // Prepend a call to $jscomp$context.$jscomp$reenter()
-    block.addChildToFront(
-        IR.exprResult(createReenter(astFactory.createUndefinedValue()).srcrefTreeIfMissing(block)));
+    // Prepend an empty reenter call: $jscomp$swapContext(0, 1)
+    block.addChildToFront(IR.exprResult(createReenter().srcrefTreeIfMissing(block)));
   }
 
   void instrumentGeneratorFunction(NodeTraversal t, Node f) {
@@ -253,7 +248,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     inner.getLastChild().replaceWith(generatorBody);
 
     generatorBody = addFinallyExit(generatorBody);
-    generatorBody.addChildToFront(IR.exprResult(createReenter(astFactory.createUndefinedValue())));
+    generatorBody.addChildToFront(IR.exprResult(createReenter()));
     Node newOuterBody =
         IR.block(createEnter(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
     f.addChildToBack(newOuterBody.srcrefTreeIfMissing(generatorBody));
@@ -282,12 +277,12 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     // Specifically:
     //     *m(a, {b: c=1}, d=2, ...e) { ... }
     // would become
-    //     *m$jscomp$123($jscomp$context, a, {b: c=1}, d=2, ...e) {
-    //       try { ... } finally { $jscomp$asyncContextExit($jscomp$context); }
+    //     *m$jscomp$123($jscomp$swapContext, a, {b: c=1}, d=2, ...e) {
+    //       try { ... } finally { $jscomp$swapContext(); }
     //     }
     //     m(a, $jscomp$0, d, ...e) {
-    //       const $jscomp$context = $jscomp$asyncContextEnter();
-    //       return this.m$jscomp$123($jscomp$context, a, $jscomp$0, d, ...e);
+    //       const $jscomp$swapContext = $jscomp$asyncContextEnter();
+    //       return this.m$jscomp$123($jscomp$swapContext, a, $jscomp$0, d, ...e);
     //     }
     // If the function refers to `arguments`, then an additional
     // `$jscomp$arguments` parameter is added to the synthesized method after
@@ -300,15 +295,15 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     Node outerParams = f.getSecondChild();
     Node innerParams = outerParams.cloneTree();
 
-    // Add the $jscomp$context parameter to the front of the inner parameter list
-    Node contextParam = astFactory.createNameWithUnknownType(CONTEXT_VAR_NAME);
+    // Add the $jscomp$swapContext parameter to the front of the inner parameter list
+    Node contextParam = astFactory.createNameWithUnknownType(SWAP);
     innerParams.addChildToFront(contextParam);
     AstFactory.Type unknownType = AstFactory.type(contextParam);
 
     // Add a finally-exit wrapper and an initial reenter call around the original generator body
     // (which has already had its yields/awaits instrumented).
     Node generatorBody = addFinallyExit(f.getLastChild());
-    generatorBody.addChildToFront(IR.exprResult(createReenter(astFactory.createUndefinedValue())));
+    generatorBody.addChildToFront(IR.exprResult(createReenter()));
 
     // Look for references to `arguments`.  If found, add an extra parameter to the inner method.
     // We need to save a reference to the parameter in order to replace it in the function call
@@ -456,7 +451,11 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     }
   }
 
-  void instrumentFunction(Node f) {
+  /**
+   * Given an async function node, instrument it by wrapping the body in a try-finally and adding an
+   * "enter" call to the front.
+   */
+  void instrumentAsyncFunction(Node f) {
     // Add a variable to the front of the body
     Node block = f.getLastChild();
     Node newBlock = addFinallyExit(block);
@@ -478,42 +477,47 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       block = IR.block(IR.returnNode(block)).srcrefTreeIfMissing(block);
     }
     Node newBlock =
-        IR.block(
-                IR.tryFinally(
-                    block, IR.block(IR.exprResult(createExit(astFactory.createUndefinedValue())))))
+        IR.block(IR.tryFinally(block, IR.block(IR.exprResult(createExit()))))
             .srcrefTreeIfMissing(block);
     placeholder.replaceWith(newBlock);
     return newBlock;
   }
 
+  /** Creates a {@code $jscomp$swapContext} identifier node. */
+  private Node createSwap() {
+    return astFactory.createQNameWithUnknownType(SWAP);
+  }
+
+  /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter();}. */
   private Node createEnter() {
     Node call =
         astFactory.createCallWithUnknownType(
             astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(ENTER)));
-    return IR.var(astFactory.createConstantName(CONTEXT_VAR_NAME, AstFactory.type(call)), call);
+    return IR.var(astFactory.createConstantName(SWAP, AstFactory.type(call)), call);
   }
 
+  /** Wraps the giuven node in an exit call: {@code $jscomp$swapContext(NODE)}. */
   private Node createExit(Node inner) {
-    Node call =
-        astFactory.createCall(
-            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(EXIT)),
-            AstFactory.type(inner),
-            inner,
-            astFactory.createQNameWithUnknownType(CONTEXT_VAR_NAME));
-    // NOTE: This call _must_ be decomposable since it's quite likely to have an `await` in an arg.
-    call.putBooleanProp(Node.FREE_CALL, true);
-    return call;
+    return astFactory.createCall(createSwap(), AstFactory.type(inner), inner);
   }
 
+  /** Creates an empty exit call: {@code $jscomp$swapContext()}. */
+  private Node createExit() {
+    Node swap = createSwap();
+    return astFactory.createCall(swap, AstFactory.type(swap));
+  }
+
+  /** Wraps the given node in a reenter call: {@code $jscomp$swapContext(NODE, 1)}. */
   private Node createReenter(Node inner) {
-    Node call =
-        astFactory.createCall(
-            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(REENTER)),
-            AstFactory.type(inner),
-            inner,
-            astFactory.createQNameWithUnknownType(CONTEXT_VAR_NAME));
-    // NOTE: This call _must_ be decomposable since the arg is _always_ a reentrance node.
-    call.putBooleanProp(Node.FREE_CALL, true);
-    return call;
+    return astFactory.createCall(
+        createSwap(), AstFactory.type(inner), inner, astFactory.createNumber(1));
+  }
+
+  /**
+   * Creates an empty reenter call. The re-returned furst argument is irrelevant, so we just pass a
+   * literal zero node, since it should compress well.
+   */
+  private Node createReenter() {
+    return createReenter(astFactory.createNumber(0));
   }
 }
