@@ -7157,6 +7157,136 @@ chrome.sockets.udp.ReceiveErrorEvent = function() {};
  */
 chrome.sockets.udp.onReceiveError;
 
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/scripting.html
+ */
+chrome.scripting = {};
+
+/**
+ * @param {!chrome.scripting.ScriptInjection} injection
+ * @param {function(Array<!chrome.scripting.InjectionResult>): void=} callback
+ * @return {Promise<Array<!chrome.scripting.InjectionResult>>}
+ * @see https://developer.chrome.com/extensions/scripting#method-executeScript
+ */
+chrome.scripting.executeScript = function(injection, callback) {};
+
+/**
+ * @typedef {{
+ *   args: (!Array|undefined),
+ *   files: (!Array<string>|undefined),
+ *   injectImmediately: (boolean|undefined),
+ *   target: (!chrome.scripting.ScriptInjection),
+ *   world: (string|undefined),
+ *   func: (function()),
+ * }}
+ */
+chrome.scripting.ScriptInjection;
+
+
+/**
+ * @typedef {{
+ *   allFrames: (boolean|undefined),
+ *   documentIds: (!Array<string>|undefined),
+ *   frameIds: (!Array<number>|undefined),
+ *   tabId: (number|undefined),
+ * }}
+ */
+chrome.scripting.InjectionTarget;
+
+/**
+ * @typedef {{
+ *   result: (Object|undefined),
+ *   frameId: (number|undefined),
+ *   documentId: (string|undefined),
+ * }}
+ */
+chrome.scripting.InjectionResult;
+
+
+/**
+ * @param {function(!Array<!chrome.scripting.RegisteredContentScript>): void=}
+ *     callback
+ * @return {Promise<!Array<!chrome.scripting.RegisteredContentScript>>}
+ * @see https://developer.chrome.com/extensions/scripting#method-getRegisteredContentScripts
+ */
+chrome.scripting.getRegisteredContentScripts = function(callback) {};
+
+/**
+ * @param {!Array<!chrome.scripting.RegisteredContentScript>} scripts
+ * @param {function(): void=} callback
+ * @return {Promise<void>}
+ * @see https://developer.chrome.com/extensions/scripting#method-registerContentScripts
+ */
+chrome.scripting.registerContentScripts = function(scripts, callback) {};
+
+/**
+ * @param {!Array<!chrome.scripting.RegisteredContentScript>} scripts
+ * @param {function(): void=} callback
+ * @return {Promise<void>}
+ * @see https://developer.chrome.com/extensions/scripting#method-unregisterContentScripts
+ */
+chrome.scripting.updateContentScripts = function(scripts, callback) {};
+
+/**
+ * @param {!chrome.scripting.ContentScriptFilter} filter
+ * @param {function(): void=} callback
+ * @return {Promise<void>}
+ * @see https://developer.chrome.com/extensions/scripting#method-unregisterContentScripts
+ */
+chrome.scripting.unregisterContentScripts = function(filter, callback) {};
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   js: (!Array<string>|undefined),
+ *   css: (!Array<string>|undefined),
+ *   matches: (!Array<string>|undefined),
+ *   excludeMatches: (!Array<string>|undefined),
+ *   runAt: (string|undefined),
+ *   world: (string|undefined),
+ *   allFrames: (boolean|undefined),
+ *   matchOriginAsFallback: (boolean|undefined),
+ *   persistAcrossSessions: (boolean|undefined),
+ * }}
+ * @see https://developer.chrome.com/extensions/scripting#type-RegisteredContentScript
+ */
+chrome.scripting.RegisteredContentScript;
+
+/**
+ * @typedef {{
+ *   ids: !Array<string>,
+ * }}
+ * @see https://developer.chrome.com/extensions/scripting#type-ContentScriptFilter
+ */
+chrome.scripting.ContentScriptFilter = function() {};
+
+/**
+ * @param {!chrome.scripting.CSSInjection} injection
+ * @param {function(): void=} callback
+ * @return {Promise<void>}
+ * @see https://developer.chrome.com/extensions/scripting#method-insertCSS
+ */
+chrome.scripting.insertCSS = function(injection, callback) {};
+
+/**
+ * @param {!chrome.scripting.CSSInjection} injection
+ * @param {function(): void=} callback
+ * @return {Promise<void>}
+ * @see https://developer.chrome.com/extensions/scripting#method-removeCSS
+ */
+chrome.scripting.removeCSS = function(injection, callback) {};
+
+/**
+ * @typedef {{
+ *   css: (string|undefined),
+ *   files: (!Array<string>|undefined),
+ *   origin: (string|undefined),
+ *   target: (!chrome.scripting.InjectionTarget|undefined),
+ * }}
+ * @see https://developer.chrome.com/extensions/scripting#type-CSSInjection
+ */
+chrome.scripting.CSSInjection;
 
 /**
  * @const
