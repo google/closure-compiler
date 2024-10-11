@@ -74,4 +74,4 @@ $jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION = false;
  * propagate AsyncContext.
  * @define {boolean}
  */
-$jscomp.INSTRUMENT_ASYNC_CONTEXT = false;
+$jscomp.INSTRUMENT_ASYNC_CONTEXT = true;
