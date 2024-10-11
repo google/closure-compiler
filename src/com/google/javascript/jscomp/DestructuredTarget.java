@@ -323,7 +323,9 @@ public final class DestructuredTarget {
 
     // e.g. get `number` from `!Iterable<number>`
     JSType templateTypeOfIterable =
-        patternType.getTemplateTypeMap().getResolvedTemplateType(registry.getIterableTemplate());
+        patternType
+            .getTemplateTypeMap()
+            .getResolvedTemplateType(registry.getIterableValueTemplate());
 
     if (isRest) {
       // return `!Array<number>`

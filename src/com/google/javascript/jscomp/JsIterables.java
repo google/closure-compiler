@@ -48,15 +48,15 @@ final class JsIterables {
             .autobox()
             .getTemplateTypeMap();
 
-    if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableTemplate())) {
+    if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableValueTemplate())) {
       // `Iterable<SomeElementType>` or `Generator<SomeElementType>`
-      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableTemplate());
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableValueTemplate());
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorValueTemplate())) {
       // `Iterator<SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorValueTemplate());
-    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIterableTemplate())) {
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIterableValueTemplate())) {
       // `AsyncIterable<SomeElementType>` or `AsyncGenerator<SomeElementType>`
-      return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIterableTemplate());
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIterableValueTemplate());
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIteratorValueTemplate())) {
       // `AsyncIterator<SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIteratorValueTemplate());
@@ -172,8 +172,8 @@ final class JsIterables {
         }
         TemplateType valueTemplate =
             isAsyncIterable
-                ? typeRegistry.getAsyncIterableTemplate()
-                : typeRegistry.getIterableTemplate();
+                ? typeRegistry.getAsyncIterableValueTemplate()
+                : typeRegistry.getIterableValueTemplate();
         templatedTypes.add(alt.getTemplateTypeMap().getResolvedTemplateType(valueTemplate));
       }
     } else {
@@ -187,8 +187,8 @@ final class JsIterables {
       }
       TemplateType templateType =
           isAsyncIterable
-              ? typeRegistry.getAsyncIterableTemplate()
-              : typeRegistry.getIterableTemplate();
+              ? typeRegistry.getAsyncIterableValueTemplate()
+              : typeRegistry.getIterableValueTemplate();
       templatedTypes.add(autoboxedType.getTemplateTypeMap().getResolvedTemplateType(templateType));
     }
     return new MaybeBoxedType(typeRegistry.createUnionType(templatedTypes), null);

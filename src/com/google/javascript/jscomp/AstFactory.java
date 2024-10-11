@@ -1338,7 +1338,7 @@ final class AstFactory {
             iterable
                 .getJSType()
                 .getTemplateTypeMap()
-                .getResolvedTemplateType(registry.getIterableTemplate());
+                .getResolvedTemplateType(registry.getIterableValueTemplate());
         JSType makeIteratorType = makeIteratorName.getJSType();
         // e.g. replace
         //   function(Iterable<T>): Iterator<T>
@@ -1413,7 +1413,7 @@ final class AstFactory {
             iterable
                 .getJSType()
                 .getTemplateTypeMap()
-                .getResolvedTemplateType(registry.getIterableTemplate());
+                .getResolvedTemplateType(registry.getIterableValueTemplate());
         JSType makeIterableType = makeIterableName.getJSType();
         // e.g. replace
         //   function(Iterable<T>): Array<T>

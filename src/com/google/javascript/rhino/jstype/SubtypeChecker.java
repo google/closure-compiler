@@ -664,16 +664,16 @@ final class SubtypeChecker {
         return unwrapped.registry.getAsyncIteratorValueTemplate();
 
       case "Iterable":
-        return unwrapped.registry.getIterableTemplate();
+        return unwrapped.registry.getIterableValueTemplate();
 
       case "IteratorIterable":
-        return unwrapped.registry.getIteratorIterableTemplateKey();
+        return unwrapped.registry.getIteratorIterableValueTemplate();
 
       case "IIterableResult":
-        return unwrapped.registry.getIIterableResultTemplateKey();
+        return unwrapped.registry.getIIterableResultValueTemplate();
 
       case "AsyncIterable":
-        return unwrapped.registry.getAsyncIterableTemplate();
+        return unwrapped.registry.getAsyncIterableValueTemplate();
 
       default:
         // All other types are either invariant or bivariant

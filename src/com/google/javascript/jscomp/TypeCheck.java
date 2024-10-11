@@ -2017,7 +2017,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           iterableType
               .autobox()
               .getTemplateTypeMap()
-              .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+              .getResolvedTemplateType(typeRegistry.getIterableValueTemplate());
     }
 
     if (NodeUtil.isNameDeclaration(lhs)) {
@@ -2991,7 +2991,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           // don't do any further typechecking of the yield* type.
           return;
         }
-        TemplateType templateType = typeRegistry.getIterableTemplate();
+        TemplateType templateType = typeRegistry.getIterableValueTemplate();
         actualYieldType =
             actualYieldType.autobox().getTemplateTypeMap().getResolvedTemplateType(templateType);
       }
