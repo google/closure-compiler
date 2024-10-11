@@ -147,15 +147,15 @@ google.maps.BicyclingLayer = function() {};
 
 /**
  * Returns the map on which this layer is displayed.
- * @return {google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.BicyclingLayer.prototype.getMap = function() {};
 
 /**
  * Renders the layer on the specified map. If map is set to <code>null</code>,
  * the layer will be removed.
- * @param {google.maps.Map} map
- * @return {undefined}
+ * @param {!google.maps.Map|null} map
+ * @return {void}
  */
 google.maps.BicyclingLayer.prototype.setMap = function(map) {};
 
@@ -234,7 +234,7 @@ google.maps.CameraParams.prototype.zoom;
  *
  * Access by calling `const {Circle} = await google.maps.importLibrary("maps")`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(google.maps.Circle|google.maps.CircleLiteral|google.maps.CircleOptions|null)=}
+ * @param {(!google.maps.Circle|!google.maps.CircleLiteral|!google.maps.CircleOptions|null)=}
  *     circleOrCircleOptions
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -243,13 +243,13 @@ google.maps.Circle = function(circleOrCircleOptions) {};
 
 /**
  * Gets the <code>LatLngBounds</code> of this Circle.
- * @return {?google.maps.LatLngBounds}
+ * @return {!google.maps.LatLngBounds|null}
  */
 google.maps.Circle.prototype.getBounds = function() {};
 
 /**
  * Returns the center of this circle.
- * @return {?google.maps.LatLng}
+ * @return {!google.maps.LatLng|null}
  */
 google.maps.Circle.prototype.getCenter = function() {};
 
@@ -267,7 +267,7 @@ google.maps.Circle.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this circle is displayed.
- * @return {?google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.Circle.prototype.getMap = function() {};
 
@@ -285,7 +285,7 @@ google.maps.Circle.prototype.getVisible = function() {};
 
 /**
  * Sets the center of this circle.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral|null} center
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral|null} center
  * @return {undefined}
  */
 google.maps.Circle.prototype.setCenter = function(center) {};
@@ -309,13 +309,13 @@ google.maps.Circle.prototype.setEditable = function(editable) {};
 /**
  * Renders the circle on the specified map. If map is set to <code>null</code>,
  * the circle will be removed.
- * @param {?google.maps.Map} map
+ * @param {!google.maps.Map|null} map
  * @return {undefined}
  */
 google.maps.Circle.prototype.setMap = function(map) {};
 
 /**
- * @param {?google.maps.CircleOptions} options
+ * @param {!google.maps.CircleOptions|null} options
  * @return {undefined}
  */
 google.maps.Circle.prototype.setOptions = function(options) {};
@@ -3862,7 +3862,7 @@ google.maps.GroundOverlayOptions.prototype.clickable;
 
 /**
  * The map on which to display the overlay.
- * @type {google.maps.Map|null|undefined}
+ * @type {!google.maps.Map|null|undefined}
  */
 google.maps.GroundOverlayOptions.prototype.map;
 
@@ -4084,7 +4084,7 @@ google.maps.ImageMapTypeOptions.prototype.alt;
 
 /**
  * Returns a string (URL) for given tile coordinate (x, y) and zoom level.
- * @type {(function(!google.maps.Point, number): ?string)|null|undefined}
+ * @type {(function(!google.maps.Point, number): (string|null))|null|undefined}
  */
 google.maps.ImageMapTypeOptions.prototype.getTileUrl;
 
@@ -4115,7 +4115,7 @@ google.maps.ImageMapTypeOptions.prototype.opacity;
 
 /**
  * The tile size.
- * @type {google.maps.Size|null|undefined}
+ * @type {!google.maps.Size|null|undefined}
  */
 google.maps.ImageMapTypeOptions.prototype.tileSize;
 
@@ -4499,7 +4499,7 @@ google.maps.KmlFeatureData = function() {};
 /**
  * The feature&#39;s <code>&lt;atom:author&gt;</code>, extracted from the layer
  * markup (if specified).
- * @type {google.maps.KmlAuthor}
+ * @type {!google.maps.KmlAuthor}
  */
 google.maps.KmlFeatureData.prototype.author;
 
@@ -4625,7 +4625,7 @@ google.maps.KmlLayerMetadata = function() {};
 /**
  * The layer&#39;s <code>&lt;atom:author&gt;</code>, extracted from the layer
  * markup.
- * @type {google.maps.KmlAuthor}
+ * @type {!google.maps.KmlAuthor|null}
  */
 google.maps.KmlLayerMetadata.prototype.author;
 
@@ -4670,7 +4670,7 @@ google.maps.KmlLayerOptions.prototype.clickable;
 
 /**
  * The map on which to display the layer.
- * @type {google.maps.Map|null|undefined}
+ * @type {!google.maps.Map|null|undefined}
  */
 google.maps.KmlLayerOptions.prototype.map;
 
@@ -7368,14 +7368,14 @@ google.maps.MarkerOptions = function() {};
 /**
  * The offset from the marker&#39;s position to the tip of an InfoWindow that
  * has been opened with the marker as anchor.
- * @type {google.maps.Point|null|undefined}
+ * @type {!google.maps.Point|null|undefined}
  */
 google.maps.MarkerOptions.prototype.anchorPoint;
 
 /**
  * Which animation to play when marker is added to a map.
  * @default <code>null</code>
- * @type {google.maps.Animation|null|undefined}
+ * @type {!google.maps.Animation|null|undefined}
  */
 google.maps.MarkerOptions.prototype.animation;
 
@@ -7411,7 +7411,7 @@ google.maps.MarkerOptions.prototype.draggable;
 /**
  * Icon for the foreground. If a string is provided, it is treated as though it
  * were an <code>Icon</code> with the string as <code>url</code>.
- * @type {string|google.maps.Icon|google.maps.Symbol|null|undefined}
+ * @type {string|!google.maps.Icon|!google.maps.Symbol|null|undefined}
  */
 google.maps.MarkerOptions.prototype.icon;
 
@@ -7424,7 +7424,7 @@ google.maps.MarkerOptions.prototype.icon;
  * label&#39;s text. Please note that the <code>label</code> is currently only
  * used for accessibility text for non-optimized markers.
  * @default <code>null</code>
- * @type {string|google.maps.MarkerLabel|null|undefined}
+ * @type {string|!google.maps.MarkerLabel|null|undefined}
  */
 google.maps.MarkerOptions.prototype.label;
 
@@ -7432,7 +7432,7 @@ google.maps.MarkerOptions.prototype.label;
  * Map on which to display Marker. The map is required to display the marker and
  * can be provided with {@link google.maps.Marker.setMap} if not provided at
  * marker construction.
- * @type {google.maps.Map|google.maps.StreetViewPanorama|null|undefined}
+ * @type {!google.maps.Map|!google.maps.StreetViewPanorama|null|undefined}
  */
 google.maps.MarkerOptions.prototype.map;
 
@@ -7458,13 +7458,13 @@ google.maps.MarkerOptions.prototype.optimized;
  * its position is provided - for example, by a user&#39;s actions or choices. A
  * marker position can be provided with {@link google.maps.Marker.setPosition}
  * if not provided at marker construction.
- * @type {google.maps.LatLng|google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.MarkerOptions.prototype.position;
 
 /**
  * Image map region definition used for drag/click.
- * @type {google.maps.MarkerShape|null|undefined}
+ * @type {!google.maps.MarkerShape|null|undefined}
  */
 google.maps.MarkerOptions.prototype.shape;
 
@@ -7498,7 +7498,7 @@ google.maps.MarkerOptions.prototype.zIndex;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Set a collision behavior for markers on vector maps.
  * @default <code>null</code>
- * @type {string|google.maps.CollisionBehavior|null|undefined}
+ * @type {string|!google.maps.CollisionBehavior|null|undefined}
  * @deprecated <code>collisionBehavior</code> is deprecated as of July 2023.
  *     Use {@link google.maps.marker.AdvancedMarkerElement.collisionBehavior}
  *     instead.
@@ -8467,7 +8467,7 @@ google.maps.PolygonOptions.prototype.zIndex;
  * Access by calling `const {Polyline} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?google.maps.PolylineOptions=} opts
+ * @param {(!google.maps.PolylineOptions|null)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -8528,7 +8528,7 @@ google.maps.Polyline.prototype.setEditable = function(editable) {};
 google.maps.Polyline.prototype.setMap = function(map) {};
 
 /**
- * @param {?google.maps.PolylineOptions} options
+ * @param {!google.maps.PolylineOptions|null} options
  * @return {undefined}
  */
 google.maps.Polyline.prototype.setOptions = function(options) {};
@@ -8683,7 +8683,7 @@ google.maps.Projection.prototype.fromPointToLatLng = function(
  * Access by calling `const {Rectangle} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?google.maps.RectangleOptions=} opts
+ * @param {(!google.maps.RectangleOptions|null)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -8691,7 +8691,7 @@ google.maps.Rectangle = function(opts) {};
 
 /**
  * Returns the bounds of this rectangle.
- * @return {?google.maps.LatLngBounds}
+ * @return {!google.maps.LatLngBounds|null}
  */
 google.maps.Rectangle.prototype.getBounds = function() {};
 
@@ -8709,7 +8709,7 @@ google.maps.Rectangle.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this rectangle is displayed.
- * @return {?google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.Rectangle.prototype.getMap = function() {};
 
@@ -8721,7 +8721,8 @@ google.maps.Rectangle.prototype.getVisible = function() {};
 
 /**
  * Sets the bounds of this rectangle.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null} bounds
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null}
+ *     bounds
  * @return {undefined}
  */
 google.maps.Rectangle.prototype.setBounds = function(bounds) {};
@@ -8744,13 +8745,13 @@ google.maps.Rectangle.prototype.setEditable = function(editable) {};
 /**
  * Renders the rectangle on the specified map. If map is set to
  * <code>null</code>, the rectangle will be removed.
- * @param {?google.maps.Map} map
+ * @param {!google.maps.Map|null} map
  * @return {undefined}
  */
 google.maps.Rectangle.prototype.setMap = function(map) {};
 
 /**
- * @param {?google.maps.RectangleOptions} options
+ * @param {!google.maps.RectangleOptions|null} options
  * @return {undefined}
  */
 google.maps.Rectangle.prototype.setOptions = function(options) {};
@@ -10176,7 +10177,7 @@ google.maps.Time.prototype.value;
  * Access by calling `const {TrafficLayer} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.TrafficLayerOptions=} opts
+ * @param {!google.maps.TrafficLayerOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -10184,20 +10185,20 @@ google.maps.TrafficLayer = function(opts) {};
 
 /**
  * Returns the map on which this layer is displayed.
- * @return {google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.TrafficLayer.prototype.getMap = function() {};
 
 /**
  * Renders the layer on the specified map. If map is set to <code>null</code>,
  * the layer will be removed.
- * @param {google.maps.Map} map
+ * @param {!google.maps.Map|null} map
  * @return {undefined}
  */
 google.maps.TrafficLayer.prototype.setMap = function(map) {};
 
 /**
- * @param {google.maps.TrafficLayerOptions} options
+ * @param {!google.maps.TrafficLayerOptions|null} options
  * @return {undefined}
  */
 google.maps.TrafficLayer.prototype.setOptions = function(options) {};
@@ -10393,7 +10394,7 @@ google.maps.TransitLine = function() {};
 
 /**
  * The transit agency that operates this transit line.
- * @type {Array<google.maps.TransitAgency>}
+ * @type {!Array<!google.maps.TransitAgency>}
  */
 google.maps.TransitLine.prototype.agencies;
 
@@ -12268,8 +12269,6 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderUpdateEvent
     .prototype.tasks;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Fleet Location Provider.
  *
  * Access by calling `const {FleetEngineFleetLocationProvider} = await
@@ -12309,8 +12308,6 @@ google.maps.journeySharing.FleetEngineFleetLocationProvider.prototype
     .vehicleFilter;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for fleet location provider.
  * @record
  */
@@ -12388,8 +12385,6 @@ google.maps.journeySharing.FleetEngineFleetLocationProviderOptions.prototype
     .vehicleMarkerCustomization;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.FleetEngineFleetLocationProvider.update} event is
  * triggered.
@@ -12920,8 +12915,6 @@ google.maps.journeySharing.FleetEngineTripLocationProviderUpdateEvent.prototype
     .trip;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Vehicle Location Provider.
  *
  * Access by calling `const {FleetEngineVehicleLocationProvider} = await
@@ -12978,8 +12971,6 @@ google.maps.journeySharing.FleetEngineVehicleLocationProvider
     params) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for vehicle location provider.
  * @record
  */
@@ -13184,8 +13175,6 @@ google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.prototype
     .vehicleMarkerCustomization;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event object passed to the event handler when the {@link
  * google.maps.journeySharing.FleetEngineVehicleLocationProvider.update} event
  * is triggered.
@@ -14528,8 +14517,6 @@ google.maps.journeySharing.TripPolylineCustomizationFunctionParams.prototype
     .trip;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Trip types supported by a {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {TripType} = await
@@ -14553,8 +14540,6 @@ google.maps.journeySharing.TripType = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * TripWaypoint type.
  * @record
  */
@@ -14632,8 +14617,6 @@ google.maps.journeySharing.TripWaypointMarkerCustomizationFunctionParams
     .prototype.waypointIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The details for a vehicle returned by Fleet Engine.
  * @record
  */
@@ -14796,8 +14779,6 @@ google.maps.journeySharing.VehicleLocationUpdate.prototype
 google.maps.journeySharing.VehicleLocationUpdate.prototype.time;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * vehicle markers. Used by {@link
  * google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.vehicleMarkerCustomization}
@@ -14817,8 +14798,6 @@ google.maps.journeySharing.VehicleMarkerCustomizationFunctionParams.prototype
     .vehicle;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The current navigation status of a {@link
  * google.maps.journeySharing.Vehicle}.
  *
@@ -14868,8 +14847,6 @@ google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams.prototype
     .vehicle;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The current state of a {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {VehicleState} = await
@@ -14893,8 +14870,6 @@ google.maps.journeySharing.VehicleState = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The type of {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {VehicleType} = await
@@ -14972,8 +14947,6 @@ google.maps.journeySharing.VehicleWaypoint.prototype.path;
 google.maps.journeySharing.VehicleWaypoint.prototype.speedReadingIntervals;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Parameters specific to marker customization functions that apply options to
  * vehicle waypoint markers. Used by {@link
  * google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions.originMarkerCustomization}, {@link
@@ -14996,8 +14969,6 @@ google.maps.journeySharing.VehicleWaypointMarkerCustomizationFunctionParams
     .prototype.waypointIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Waypoint types supported by {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {WaypointType} = await
@@ -15818,6 +15789,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.center;
  * @type {boolean|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.defaultLabelsDisabled;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.defaultUIDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.heading}.
@@ -19661,7 +19638,7 @@ google.maps.places.PlacesService = function(attrContainer) {};
  * calling {@link google.maps.places.PlacesService.getDetails} and passing
  * the {@link google.maps.places.PlaceResult.place_id} for the desired place.
  * @param {!google.maps.places.FindPlaceFromPhoneNumberRequest} request
- * @param {function(?Array<!google.maps.places.PlaceResult>,
+ * @param {function((!Array<!google.maps.places.PlaceResult>|null),
  *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
@@ -19678,7 +19655,7 @@ google.maps.places.PlacesService.prototype.findPlaceFromPhoneNumber = function(
  * calling {@link google.maps.places.PlacesService.getDetails} and passing
  * the {@link google.maps.places.PlaceResult.place_id} for the desired place.
  * @param {!google.maps.places.FindPlaceFromQueryRequest} request
- * @param {function(?Array<!google.maps.places.PlaceResult>,
+ * @param {function((!Array<!google.maps.places.PlaceResult>|null),
  *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
@@ -19689,7 +19666,7 @@ google.maps.places.PlacesService.prototype.findPlaceFromQuery = function(
  * Retrieves details about the place identified by the given
  * <code>placeId</code>.
  * @param {!google.maps.places.PlaceDetailsRequest} request
- * @param {function(?google.maps.places.PlaceResult,
+ * @param {function((!google.maps.places.PlaceResult|null),
  *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
@@ -19711,9 +19688,9 @@ google.maps.places.PlacesService.prototype.getDetails = function(
  * additional pages of results (null if this is the last page of results or if
  * there is only one page of results).
  * @param {!google.maps.places.PlaceSearchRequest} request
- * @param {function(?Array<!google.maps.places.PlaceResult>,
+ * @param {function((!Array<!google.maps.places.PlaceResult>|null),
  *     !google.maps.places.PlacesServiceStatus,
- *     ?google.maps.places.PlaceSearchPagination): void} callback
+ *     (!google.maps.places.PlaceSearchPagination|null)): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.nearbySearch = function(
@@ -19730,9 +19707,9 @@ google.maps.places.PlacesService.prototype.nearbySearch = function(
  * object can be used to fetch additional pages of results (null if this is the
  * last page of results or if there is only one page of results).
  * @param {!google.maps.places.TextSearchRequest} request
- * @param {function(?Array<!google.maps.places.PlaceResult>,
+ * @param {function((!Array<!google.maps.places.PlaceResult>|null),
  *     !google.maps.places.PlacesServiceStatus,
- *     ?google.maps.places.PlaceSearchPagination): void} callback
+ *     (!google.maps.places.PlaceSearchPagination|null)): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.textSearch = function(
@@ -20062,7 +20039,7 @@ google.maps.places.SearchBoxOptions = function() {};
 /**
  * The area towards which to bias query predictions. Predictions are biased
  * towards, but not restricted to, queries targeting these bounds.
- * @type {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null|undefined}
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
  */
 google.maps.places.SearchBoxOptions.prototype.bounds;
 
@@ -20529,7 +20506,7 @@ google.maps.visualization.HeatmapLayerOptions = function() {};
 
 /**
  * The data points to display. Required.
- * @type {google.maps.MVCArray<!google.maps.LatLng|!google.maps.visualization.WeightedLocation>|Array<!google.maps.LatLng|!google.maps.visualization.WeightedLocation>|null|undefined}
+ * @type {!google.maps.MVCArray<!google.maps.LatLng|!google.maps.visualization.WeightedLocation>|!Array<!google.maps.LatLng|!google.maps.visualization.WeightedLocation>|null|undefined}
  */
 google.maps.visualization.HeatmapLayerOptions.prototype.data;
 
@@ -20545,13 +20522,13 @@ google.maps.visualization.HeatmapLayerOptions.prototype.dissipating;
 /**
  * The color gradient of the heatmap, specified as an array of CSS color
  * strings. All CSS3 colors are supported except for extended named colors.
- * @type {Array<string>|null|undefined}
+ * @type {!Array<string>|null|undefined}
  */
 google.maps.visualization.HeatmapLayerOptions.prototype.gradient;
 
 /**
  * The map on which to display the layer.
- * @type {google.maps.Map|null|undefined}
+ * @type {!google.maps.Map|null|undefined}
  */
 google.maps.visualization.HeatmapLayerOptions.prototype.map;
 
