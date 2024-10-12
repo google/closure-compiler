@@ -3855,6 +3855,8 @@ chrome.windows.onCreated;
 /** @type {!ChromeEvent} */
 chrome.windows.onFocusChanged;
 
+/** @type {!ChromeEvent} */
+chrome.windows.onBoundsChanged;
 
 /** @type {!ChromeEvent} */
 chrome.windows.onRemoved;
