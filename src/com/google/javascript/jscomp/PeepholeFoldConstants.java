@@ -167,10 +167,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case SUB:
       case DIV:
       case MOD:
+      case MUL:
       case EXPONENT:
         return tryFoldArithmeticOp(subtree, left, right);
 
-      case MUL:
       case BITAND:
       case BITOR:
       case BITXOR:
@@ -1022,8 +1022,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Expressions such as [foo() * 10 * 20] generate parse trees where no node has two const children
-   * ((foo() * 10) * 20), so performArithmeticOp() won't fold it: tryFoldLeftChildOp() will.
+   * Expressions such as [foo() && 10 && 20] generate parse trees where no node has two const
+   * children ((foo() && 10) && 20), so performArithmeticOp() won't fold it: tryFoldLeftChildOp()
+   * will.
    *
    * <p>Specifically, this folds associative expressions where:
    *
@@ -1034,9 +1035,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     Token opType = n.getToken();
-    checkState((NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType)) || n.isAdd());
-
-    checkState(!n.isAdd() || !NodeUtil.mayBeString(n, shouldUseTypes));
+    checkState((NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType)));
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
@@ -1092,7 +1091,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (result != node) {
         return result;
       }
-      return tryFoldLeftChildOp(node, left, right);
+      return node;
     }
   }
 

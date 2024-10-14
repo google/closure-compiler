@@ -1840,11 +1840,12 @@ public final class NodeUtil {
   /**
    * Returns true if the operator is associative. e.g. (a * b) * c = a * (b * c) Note: "+" is not
    * associative because it is also the concatenation for strings. e.g. "a" + (1 + 2) is not "a" + 1
-   * + 2
+   * + 2. Multilication is not associative because it can include floating point numbers. </pre>
+   *
+   * e.g. 1e-300 * 1e300 * 1e9 does not equal 1e-300 * (1e300 * 1e9). </pre>
    */
   static boolean isAssociative(Token type) {
     switch (type) {
-      case MUL:
       case AND:
       case OR:
       case COALESCE:

@@ -1037,9 +1037,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void testFoldArithmetic() {
     test("x = 10 + 20", "x = 30");
     test("x = 2 / 4", "x = 0.5");
-    test("x = 2.25 * 3", "x = 6.75");
-    testSame("z = x * y");
-    testSame("x = y * 5");
+    test("x = 2.25 & 3", "x = 2");
+    testSame("z = x & y");
+    testSame("x = y & 5");
     testSame("x = 1 / 0");
     test("x = 3 % 2", "x = 1");
     test("x = 3 % -2", "x = 1");
@@ -1055,19 +1055,19 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void testFoldArithmetic2() {
     testSame("x = y + 10 + 20");
     testSame("x = y / 2 / 4");
-    test("x = y * 2.25 * 3", "x = y * 6.75");
-    testSame("x = y * 2.25 * z * 3");
-    testSame("z = x * y");
-    testSame("x = y * 5");
-    test("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
+    test("x = y & 2.25 & 3", "x = y & 2");
+    testSame("x = y & 2.25 & z & 3");
+    testSame("z = x &y");
+    testSame("x = y & 5");
+    test("x = y + (z & 24 & 60 & 60 & 1000)", "x = y + (z & 8)");
   }
 
   @Test
   public void testFoldArithmetic3() {
-    test("x = null * undefined", "x = NaN");
-    test("x = null * 1", "x = 0");
-    test("x = (null - 1) * 2", "x = -2");
-    test("x = (null + 1) * 2", "x = 2");
+    test("x = null | undefined", "x = 0");
+    test("x = null | 1", "x = 1");
+    test("x = (null - 1)| 2", "x = -1");
+    test("x = (null + 1) | 2", "x = 3");
     test("x = null ** 0", "x = 1");
     test("x = (-0) ** 3", "x = -0");
   }
@@ -1088,8 +1088,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testNoFoldArithmeticWithSideEffects() {
-    // can't fold this to "x = y * 6.75" because you can't remove the "sideEffects()" call
-    testSame("x = y * 2.25 * (sideEffects(), 3)");
+    // can't fold this to "x = y & 6.75" because you can't remove the "sideEffects()" call
+    testSame("x = y & 2.25 & (sideEffects(), 3)");
   }
 
   @Test
@@ -1105,8 +1105,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 1n ** 2147483647n", "x = 1n");
     testSame("x = 1n ** 2147483648n");
 
-    test("x = y * 2n * 3n", "x = y * 6n");
+    test("x = y & 2n & 3n", "x = y & 2n");
+
+    // TODO b/361826515: Optimize associative bigint operations
     testSame("x = y * 2n * z * 3n");
+    testSame("x = y + 2n + z + 3n");
   }
 
   @Test
@@ -1473,7 +1476,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testFoldLeft() {
     testSame("(+x - 1) + 2"); // not yet
-    test("(+x + 1) + 2", "+x + 3");
+    test("(+x & 1) & 2", "+x & 0");
   }
 
   @Test
@@ -1696,7 +1699,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testFoldLeftChildOp() {
-    test("x * Infinity * 2", "x * Infinity");
+    test("x & Infinity & 2", "x & 0");
     testSame("x - Infinity - 2"); // want "x-Infinity"
     testSame("x - 1 + Infinity");
     testSame("x - 2 + 1");
@@ -1725,17 +1728,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testFoldSimpleArithmeticOp() {
-    testSame("x*NaN");
+    testSame("x|NaN");
     testSame("NaN/y");
     testSame("f(x)-0");
-    testSame("f(x)*1");
-    testSame("1*f(x)");
+    testSame("f(x)|1");
+    testSame("1|f(x)");
     testSame("0+a+b");
     testSame("0-a-b");
     testSame("a+b-0");
-    testSame("(1+x)*NaN");
+    testSame("(1+x)|NaN");
 
-    testSame("(1+f(x))*NaN"); // don't fold side-effects
+    testSame("(1+f(x))|NaN"); // don't fold side-effects
   }
 
   @Test
@@ -1967,13 +1970,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testTypeBasedFoldConstant() {
     enableTypeCheck();
-    test(
-        "function f(/** number */ x) { x + 1 + 1 + x; }",
-        "function f(/** number */ x) { x + 2 + x; }");
+    testSame("function f(/** number */ x) { x + 1 + 1 + x; }");
 
-    test(
-        "function f(/** boolean */ x) { x + 1 + 1 + x; }",
-        "function f(/** boolean */ x) { x + 2 + x; }");
+    testSame("function f(/** boolean */ x) { x + 1 + 1 + x; }");
 
     testSame("function f(/** null */ x) { var y = true > x; }");
 
@@ -1990,13 +1989,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     disableCompareJsDoc();
-    test(
-        "function f(/** number */ x) { x + 1 + 1 + x; }",
-        "function f(/** number */ x) { x + 2 + x; }");
+    testSame("function f(/** number */ x) { x + 1 + 1 + x; }");
 
-    test(
-        "function f(/** boolean */ x) { x + 1 + 1 + x; }",
-        "function f(/** boolean */ x) { x + 2 + x; }");
+    testSame("function f(/** boolean */ x) { x + 1 + 1 + x; }");
 
     testSame("function f(/** null */ x) { var y = true > x; }");
 
@@ -2135,7 +2130,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testConvertToNumberNegativeInf() {
-    testSame("var x = 3 * (r ? Infinity : -Infinity);");
+    testSame("var x = 3 & (r ? Infinity : -Infinity);");
   }
 
   @Test
@@ -2196,6 +2191,18 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     testSame("(0n,doSomething())*1n");
     testSame("1n*(0n,doSomething())");
+  }
+
+  @Test
+  public void testAssociativeFoldConstantsWithVariables() {
+    // MUL and ADD should not fold
+    testSame("alert(x * 12 * 20);");
+    testSame("alert(12 * x * 20);");
+    testSame("alert(x + 12 + 20);");
+    testSame("alert(12 + x +  20);");
+
+    test("alert(x & 12 & 20);", "alert(x & 4);");
+    test("alert(12 & x & 20);", "alert(x & 4);");
   }
 
   private void foldBigIntTypes(String js, String expected) {

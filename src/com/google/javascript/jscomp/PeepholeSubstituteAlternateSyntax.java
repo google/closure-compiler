@@ -100,8 +100,7 @@ class PeepholeSubstituteAlternateSyntax
 
       case TEMPLATELIT:
         return tryTurnTemplateStringsToStrings(node);
-
-      case MUL:
+        
       case AND:
       case OR:
       case BITOR:
@@ -109,6 +108,11 @@ class PeepholeSubstituteAlternateSyntax
       case BITAND:
       case COALESCE:
         return tryRotateAssociativeOperator(node);
+
+      case MUL:
+        if (!mayHaveSideEffects(node)) {
+          return tryRotateCommutativeOperator(node);
+        }
 
       default:
         return node; //Nothing changed
@@ -154,6 +158,28 @@ class PeepholeSubstituteAlternateSyntax
     return node;
   }
 
+  private Node tryRotateCommutativeOperator(Node n) {
+    if (!late) {
+      return n;
+    }
+    // Transform a * (b / c) to b / c * a
+    Node rhs = n.getLastChild();
+    Node lhs = n.getFirstChild();
+    while (lhs.getToken() == n.getToken() && NodeUtil.isAssociative(n.getToken())) {
+      lhs = lhs.getFirstChild();
+    }
+    int precedence = NodeUtil.precedence(n.getToken());
+    int lhsPrecedence = NodeUtil.precedence(lhs.getToken());
+    int rhsPrecedence = NodeUtil.precedence(rhs.getToken());
+    if (rhsPrecedence == precedence && lhsPrecedence != precedence) {
+      rhs.detach();
+      lhs.replaceWith(rhs);
+      n.addChildToBack(lhs);
+      reportChangeToEnclosingScope(n);
+    }
+    return n;
+  }
+
   private Node tryRotateAssociativeOperator(Node n) {
     if (!late) {
       return n;
@@ -173,20 +199,7 @@ class PeepholeSubstituteAlternateSyntax
       return newRoot;
     } else if (NodeUtil.isCommutative(n.getToken()) && !mayHaveSideEffects(n)) {
       // Transform a * (b / c) to b / c * a
-      Node lhs = n.getFirstChild();
-      while (lhs.getToken() == n.getToken()) {
-        lhs = lhs.getFirstChild();
-      }
-      int precedence = NodeUtil.precedence(n.getToken());
-      int lhsPrecedence = NodeUtil.precedence(lhs.getToken());
-      int rhsPrecedence = NodeUtil.precedence(rhs.getToken());
-      if (rhsPrecedence == precedence && lhsPrecedence != precedence) {
-        rhs.detach();
-        lhs.replaceWith(rhs);
-        n.addChildToBack(lhs);
-        reportChangeToEnclosingScope(n);
-        return n;
-      }
+      return tryRotateCommutativeOperator(n);
     }
     return n;
   }

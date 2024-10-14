@@ -570,15 +570,21 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   @Test
   public void testRotateAssociativeOperators() {
-    test("a || (b || c); a * (b * c); a | (b | c)", "(a || b) || c; (a * b) * c; (a | b) | c");
+    // Multiplication is not associative because it can include floating point numbers e.g.
+    // 1e-300 * 1e300 * 1e9 does not equal 1e-300 * (1e300 * 1e9).
+    test("a || (b || c); a * (b * c); a | (b | c)", "a || b || c; b * c * a; a | b | c");
     testSame("a % (b % c); a / (b / c); a - (b - c);");
-    test("a * (b % c);", "b % c * a");
-    test("a * b * (c / d)", "c / d * b * a");
+    testSame("(a / b) & (c % d)");
+    testSame("(c = 5) & (c % d)");
+    testSame("(a + b) * c * (d % e)");
     test("(a + b) * (c % d)", "c % d * (a + b)");
-    testSame("(a / b) * (c % d)");
-    testSame("(c = 5) * (c % d)");
-    test("(a + b) * c * (d % e)", "d % e * c * (a + b)");
-    test("!a * c * (d % e)", "d % e * c * !a");
+  }
+
+  @Test
+  public void testRotateCommutativeeOperators() {
+    test("a * (b % c);", "b % c * a");
+    testSame("a * b * (c / d)");
+    testSame("!a * c * (d % e)");
   }
 
   @Test
@@ -588,7 +594,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   @Test
   public void testNoRotateInfiniteLoop() {
-    test("1/x * (y/1 * (1/z))", "1/x * (y/1) * (1/z)");
-    testSame("1/x * (y/1) * (1/z)");
+    test("1/x || (y/1 ||(1/z))", "1/x || (y/1) || (1/z)");
+    testSame("1/x || (y/1) || (1/z)");
   }
 }
