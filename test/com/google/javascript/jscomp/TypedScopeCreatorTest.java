@@ -859,7 +859,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "function f(x, [y]) {}"));
 
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
-    assertType(fVar.getType()).toStringIsEqualTo("function(string, Iterable<number>): undefined");
+    assertType(fVar.getType())
+        .toStringIsEqualTo("function(string, Iterable<number,?,?>): undefined");
     assertThat(fVar.isTypeInferred()).isFalse();
 
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
@@ -876,7 +877,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("/** @param {!Iterable<number>} arr */ function f([x, ...y]) {}");
 
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
-    assertType(fVar.getType()).toStringIsEqualTo("function(Iterable<number>): undefined");
+    assertType(fVar.getType()).toStringIsEqualTo("function(Iterable<number,?,?>): undefined");
     assertThat(fVar.isTypeInferred()).isFalse();
 
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
@@ -909,7 +910,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     // JSType on the array pattern
     JSType arrayPatternType = findTokenType(Token.ARRAY_PATTERN, globalScope);
-    assertType(arrayPatternType).toStringIsEqualTo("Iterable<number>");
+    assertType(arrayPatternType).toStringIsEqualTo("Iterable<number,?,?>");
   }
 
   @Test
@@ -1129,7 +1130,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType())
         .toStringIsEqualTo(
-            "function(string, {a: Iterable<number>}, Iterable<{z: null}>): undefined");
+            "function(string, {a: Iterable<number,?,?>}, Iterable<{z: null},?,?>): undefined");
     assertThat(fVar.isTypeInferred()).isFalse();
 
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));

@@ -1669,7 +1669,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "function f([a, b]) {}"),
         lines(
             "/**",
-            " * @param {!Iterable<number>} p0", // old JSDoc name is ignored
+            " * @param {!Iterable<number,?,?>} p0", // old JSDoc name is ignored
             " * @return {undefined}",
             " */",
             "function f([a, b]) {", // whitespace in output must match
@@ -1685,7 +1685,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "function f([a, b] = [1, 2]) {}"),
         lines(
             "/**",
-            " * @param {!Iterable<number>=} p0", // old JSDoc name is ignored
+            " * @param {!Iterable<number,?,?>=} p0", // old JSDoc name is ignored
             " * @return {undefined}",
             " */",
             "function f([a, b] = [1, 2]) {", // whitespace in output must match

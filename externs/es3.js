@@ -148,28 +148,28 @@ Symbol.unscopables;
 
 /**
  * @record
- * @template VALUE
+ * @template TYield
  */
 function IIterableResult() {};
 
 /** @type {boolean} */
 IIterableResult.prototype.done;
 
-/** @type {VALUE} */
+/** @type {TYield} */
 IIterableResult.prototype.value;
 
 
 
 /**
  * @interface
- * @template VALUE
+ * @template T, TReturn, TNext
  */
 function Iterable() {}
 
 // TODO(johnlenz): remove the suppression when the compiler understands
 // "symbol" natively
 /**
- * @return {!Iterator<VALUE, ?, *>}
+ * @return {!Iterator<T, ?, *>}
  * @suppress {externsValidation}
  */
 Iterable.prototype[Symbol.iterator] = function() {};
@@ -177,17 +177,17 @@ Iterable.prototype[Symbol.iterator] = function() {};
 
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything. https://github.com/google/closure-compiler/issues/3489
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @template T, TReturn, TNext
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
  */
 function Iterator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!IIterableResult<VALUE>}
+ * @return {!IIterableResult<T>}
  */
 Iterator.prototype.next = function(opt_value) {};
 
@@ -197,8 +197,8 @@ Iterator.prototype.next = function(opt_value) {};
  *
  * @interface
  * @extends {Iterator<T, ?, *>}
- * @extends {Iterable<T>}
- * @template T
+ * @extends {Iterable<T, ?, *>}
+ * @template T, TReturn, TNext
  */
 function IteratorIterable() {}
 

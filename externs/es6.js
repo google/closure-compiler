@@ -30,31 +30,31 @@
  */
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything. https://github.com/google/closure-compiler/issues/3489
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
- * @extends {IteratorIterable<VALUE>}
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @extends {IteratorIterable<T, ?, *>}
+ * @template T, TReturn, TNext
  */
 function Generator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!IIterableResult<VALUE>}
+ * @return {!IIterableResult<T>}
  * @override
  */
 Generator.prototype.next = function(opt_value) {};
 
 /**
- * @param {VALUE} value
- * @return {!IIterableResult<VALUE>}
+ * @param {T} value
+ * @return {!IIterableResult<T>}
  */
 Generator.prototype.return = function(value) {};
 
 /**
  * @param {?} exception
- * @return {!IIterableResult<VALUE>}
+ * @return {!IIterableResult<T>}
  */
 Generator.prototype.throw = function(exception) {};
 
@@ -2278,70 +2278,69 @@ Atomics.xor = function(typedArray, index, value) {};
 
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything.
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
  * https://github.com/google/closure-compiler/issues/3489
  * @interface
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @template T, TReturn, TNext
  * @see https://tc39.github.io/proposal-async-iteration/
  */
 function AsyncIterator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @return {!Promise<!IIterableResult<T>>}
  */
 AsyncIterator.prototype.next;
 
 
 /**
  * @interface
- * @template VALUE
+ * @template T, TReturn, TNext
  */
 function AsyncIterable() {}
 
 
 /**
- * @return {!AsyncIterator<VALUE, ?, *>}
+ * @return {!AsyncIterator<T, ?, *>}
  */
 AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
 
 
 /**
  * @interface
- * @extends {AsyncIterator<VALUE, ?, *>}
- * @extends {AsyncIterable<VALUE>}
- * @template VALUE
+ * @extends {AsyncIterator<T, ?, *>}
+ * @extends {AsyncIterable<T>}
+ * @template T
  * @see https://tc39.github.io/proposal-async-iteration/
  */
 function AsyncIteratorIterable() {}
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything. https://github.com/google/closure-compiler/issues/3489
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @see https://tc39.github.io/proposal-async-iteration/
- * @extends {AsyncIteratorIterable<VALUE>}
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @extends {AsyncIteratorIterable<T, TReturn, TNext>}
+ * @template T, TReturn, TNext
  */
 function AsyncGenerator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @return {!Promise<!IIterableResult<T>>}
  * @override
  */
 AsyncGenerator.prototype.next = function(opt_value) {};
 
 /**
- * @param {VALUE} value
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @param {T} value
+ * @return {!Promise<!IIterableResult<T>>}
  */
 AsyncGenerator.prototype.return = function(value) {};
 
 /**
  * @param {?} exception
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @return {!Promise<!IIterableResult<T>>}
  */
 AsyncGenerator.prototype.throw = function(exception) {};
 

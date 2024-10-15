@@ -3902,7 +3902,7 @@ public final class TypeInferenceTest {
             "Y: y"));
 
     assertTypeOfExpression("X").toStringIsEqualTo("number");
-    assertTypeOfExpression("Y").toStringIsEqualTo("Iterable<number>");
+    assertTypeOfExpression("Y").toStringIsEqualTo("Iterable<number,?,?>");
   }
 
   @Test

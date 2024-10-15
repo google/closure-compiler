@@ -4262,7 +4262,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             lines(
                 "Can only iterate over a (non-null) Iterable type",
-                "found   : (Iterable<number>|null)",
+                "found   : (Iterable<number,?,?>|null)",
                 "required: Iterable"))
         .includeDefaultExterns()
         .run();

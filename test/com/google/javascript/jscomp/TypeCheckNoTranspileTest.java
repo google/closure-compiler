@@ -1616,7 +1616,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         .addDiagnostic(
             lines(
                 "Can only iterate over a (non-null) Iterable type",
-                "found   : AsyncIterable<string>",
+                "found   : AsyncIterable<string,?,?>",
                 "required: Iterable"))
         .run();
   }
@@ -8051,7 +8051,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         .addDiagnostic(
             lines(
                 "Can only async iterate over a (non-null) Iterable or AsyncIterable type",
-                "found   : (AsyncIterable<number>|null)",
+                "found   : (AsyncIterable<number,?,?>|null)",
                 "required: (AsyncIterator|Iterator)"))
         .run();
   }

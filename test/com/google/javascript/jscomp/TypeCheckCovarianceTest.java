@@ -69,8 +69,8 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
-                "found   : Iterable<(number|string)>",
-                "required: Iterable<number>"))
+                "found   : Iterable<(number|string),?,?>",
+                "required: Iterable<number,?,?>"))
         .includeDefaultExterns()
         .run();
   }
