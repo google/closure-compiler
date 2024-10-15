@@ -397,10 +397,10 @@ public final class JSTypeRegistry {
     readonlyArrayElementTemplateKey = new TemplateType(this, "T");
 
     // Map-related template types.
-    readonlyMapKeyTemplateKey = new TemplateType(this, "KEY");
-    readonlyMapValueTemplateKey = new TemplateType(this, "VALUE");
-    mapKeyTemplateKey = new TemplateType(this, "KEY");
-    mapValueTemplateKey = new TemplateType(this, "VALUE");
+    readonlyMapKeyTemplateKey = new TemplateType(this, "K");
+    readonlyMapValueTemplateKey = new TemplateType(this, "V");
+    mapKeyTemplateKey = new TemplateType(this, "K");
+    mapValueTemplateKey = new TemplateType(this, "V");
 
     // Promise-related template types.
     iThenableTemplateKey = new TemplateType(this, "TYPE");

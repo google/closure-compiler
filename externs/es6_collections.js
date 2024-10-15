@@ -23,19 +23,19 @@
 // TODO(johnlenz): Use Tuples for the Map and Set iterators where appropriate.
 /**
  * @interface
- * @extends {Iterable<!Array<KEY|VALUE>>}
- * @template KEY, VALUE
+ * @extends {Iterable<!Array<K|V>>}
+ * @template K, V
  */
 function ReadonlyMap() {}
 
 /**
- * @return {!IteratorIterable<!Array<KEY|VALUE>>}
+ * @return {!IteratorIterable<!Array<K|V>>}
  * @nosideeffects
  */
 ReadonlyMap.prototype.entries = function() {};
 
 /**
- * @param {function(this:THIS, VALUE, KEY, MAP): ?} callback
+ * @param {function(this:THIS, V, K, MAP): ?} callback
  * @param {THIS=} opt_thisArg
  * @this {MAP}
  * @template MAP, THIS
@@ -44,21 +44,21 @@ ReadonlyMap.prototype.entries = function() {};
 ReadonlyMap.prototype.forEach = function(callback, opt_thisArg) {};
 
 /**
- * @param {KEY} key
- * @return {VALUE|undefined}
+ * @param {K} key
+ * @return {V|undefined}
  * @nosideeffects
  */
 ReadonlyMap.prototype.get = function(key) {};
 
 /**
- * @param {KEY} key
+ * @param {K} key
  * @return {boolean}
  * @nosideeffects
  */
 ReadonlyMap.prototype.has = function(key) {};
 
 /**
- * @return {!IteratorIterable<KEY>}
+ * @return {!IteratorIterable<K>}
  * @nosideeffects
  */
 ReadonlyMap.prototype.keys = function() {};
@@ -70,22 +70,22 @@ ReadonlyMap.prototype.keys = function() {};
 ReadonlyMap.prototype.size;
 
 /**
- * @return {!IteratorIterable<VALUE>}
+ * @return {!IteratorIterable<V>}
  * @nosideeffects
  */
 ReadonlyMap.prototype.values = function() {};
 
 /**
- * @return {!Iterator<!Array<KEY|VALUE>>}
+ * @return {!Iterator<!Array<K|V>>}
  * @nosideeffects
  */
 ReadonlyMap.prototype[Symbol.iterator] = function() {};
 
 /**
  * @constructor @struct
- * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
- * @implements {ReadonlyMap<KEY, VALUE>}
- * @template KEY, VALUE
+ * @param {Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
+ * @implements {ReadonlyMap<K, V>}
+ * @template K, V
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
  */
@@ -95,21 +95,21 @@ function Map(opt_iterable) {}
 Map.prototype.clear = function() {};
 
 /**
- * @param {KEY} key
+ * @param {K} key
  * @return {boolean}
  */
 Map.prototype.delete = function(key) {};
 
 /**
  * @override
- * @return {!IteratorIterable<!Array<KEY|VALUE>>}
+ * @return {!IteratorIterable<!Array<K|V>>}
  * @nosideeffects
  */
 Map.prototype.entries = function() {};
 
 /**
  * @override
- * @param {function(this:THIS, VALUE, KEY, MAP): ?} callback
+ * @param {function(this:THIS, V, K, MAP): ?} callback
  * @param {THIS=} opt_thisArg
  * @this {MAP}
  * @template MAP,THIS
@@ -119,15 +119,15 @@ Map.prototype.forEach = function(callback, opt_thisArg) {};
 
 /**
  * @override
- * @param {KEY} key
- * @return {VALUE}
+ * @param {K} key
+ * @return {V}
  * @nosideeffects
  */
 Map.prototype.get = function(key) {};
 
 /**
  * @override
- * @param {KEY} key
+ * @param {K} key
  * @return {boolean}
  * @nosideeffects
  */
@@ -135,14 +135,14 @@ Map.prototype.has = function(key) {};
 
 /**
  * @override
- * @return {!IteratorIterable<KEY>}
+ * @return {!IteratorIterable<K>}
  * @nosideeffects
  */
 Map.prototype.keys = function() {};
 
 /**
- * @param {KEY} key
- * @param {VALUE} value
+ * @param {K} key
+ * @param {V} value
  * @return {THIS}
  * @this {THIS}
  * @template THIS
@@ -158,14 +158,14 @@ Map.prototype.size;
 
 /**
  * @override
- * @return {!IteratorIterable<VALUE>}
+ * @return {!IteratorIterable<V>}
  * @nosideeffects
  */
 Map.prototype.values = function() {};
 
 /**
  * @override
- * @return {!Iterator<!Array<KEY|VALUE>>}
+ * @return {!Iterator<!Array<K|V>>}
  * @nosideeffects
  */
 Map.prototype[Symbol.iterator] = function() {};
@@ -173,8 +173,8 @@ Map.prototype[Symbol.iterator] = function() {};
 
 /**
  * @constructor @struct
- * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
- * @template KEY, VALUE
+ * @param {Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
+ * @template K, V
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
  */
@@ -184,28 +184,28 @@ function WeakMap(opt_iterable) {}
 WeakMap.prototype.clear = function() {};
 
 /**
- * @param {KEY} key
+ * @param {K} key
  * @return {boolean}
  */
 WeakMap.prototype.delete = function(key) {};
 
 /**
- * @param {KEY} key
- * @return {VALUE}
+ * @param {K} key
+ * @return {V}
  * @nosideeffects
  */
 WeakMap.prototype.get = function(key) {};
 
 /**
- * @param {KEY} key
+ * @param {K} key
  * @return {boolean}
  * @nosideeffects
  */
 WeakMap.prototype.has = function(key) {};
 
 /**
- * @param {KEY} key
- * @param {VALUE} value
+ * @param {K} key
+ * @param {V} value
  * @return {THIS}
  * @this {THIS}
  * @template THIS
