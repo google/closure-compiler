@@ -1163,7 +1163,7 @@ google.maps.Data.FeatureOptions = function() {};
  * feature&#39;s geometry will be <code>null</code>. If a <code>LatLng</code>
  * object or <code>LatLngLiteral</code> is given, this will be converted to a
  * <code>Data.Point</code> geometry.
- * @type {google.maps.Data.Geometry|google.maps.LatLng|google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.Data.Geometry|!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.Data.FeatureOptions.prototype.geometry;
 
@@ -1178,7 +1178,7 @@ google.maps.Data.FeatureOptions.prototype.id;
 /**
  * The feature properties. This is an arbitrary mapping of property names to
  * values.
- * @type {Object|null|undefined}
+ * @type {!Object|null|undefined}
  */
 google.maps.Data.FeatureOptions.prototype.properties;
 
@@ -4126,7 +4126,7 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
  * google.maps.importLibrary("maps")` or `const {InfoWindow} = await
  * google.maps.importLibrary("streetView")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?google.maps.InfoWindowOptions=} opts
+ * @param {(!google.maps.InfoWindowOptions|null)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -4154,13 +4154,13 @@ google.maps.InfoWindow.prototype.close = function() {};
 google.maps.InfoWindow.prototype.focus = function() {};
 
 /**
- * @return {string|Element|Text|null|undefined} The content of this InfoWindow.
- *     The same as what was previously set as the content.
+ * @return {string|!Element|!Text|null|undefined} The content of this
+ *     InfoWindow. The same as what was previously set as the content.
  */
 google.maps.InfoWindow.prototype.getContent = function() {};
 
 /**
- * @return {string|Element|Text|null|undefined} The header content of this
+ * @return {string|!Element|!Text|null|undefined} The header content of this
  *     InfoWindow. See {@link google.maps.InfoWindowOptions.headerContent}.
  */
 google.maps.InfoWindow.prototype.getHeaderContent = function() {};
@@ -4172,7 +4172,7 @@ google.maps.InfoWindow.prototype.getHeaderContent = function() {};
 google.maps.InfoWindow.prototype.getHeaderDisabled = function() {};
 
 /**
- * @return {google.maps.LatLng|null|undefined} The LatLng position of this
+ * @return {!google.maps.LatLng|null|undefined} The LatLng position of this
  *     InfoWindow.
  */
 google.maps.InfoWindow.prototype.getPosition = function() {};
@@ -4194,10 +4194,10 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
  * google.maps.InfoWindowOpenOptions} interface as the single argument for this
  * method. To prevent changing browser focus on open, set {@link
  * google.maps.InfoWindowOpenOptions.shouldFocus} to <code>false</code>.
- * @param {(google.maps.InfoWindowOpenOptions|google.maps.Map|google.maps.StreetViewPanorama|null)=}
+ * @param {(!google.maps.InfoWindowOpenOptions|!google.maps.Map|!google.maps.StreetViewPanorama|null)=}
  *     options Either an InfoWindowOpenOptions object (recommended) or the
  *     map|panorama on which to render this InfoWindow.
- * @param {(google.maps.MVCObject|google.maps.marker.AdvancedMarkerElement|null)=}
+ * @param {(!google.maps.MVCObject|!google.maps.marker.AdvancedMarkerElement|null)=}
  *     anchor The anchor to which this InfoWindow will be positioned. If the
  *     anchor is non-null, the InfoWindow will be positioned at the top-center
  *     of the anchor. The InfoWindow will be rendered on the same map or
@@ -4207,14 +4207,14 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
 google.maps.InfoWindow.prototype.open = function(options, anchor) {};
 
 /**
- * @param {(string|Element|Text|null)=} content The content to be displayed by
+ * @param {(string|!Element|!Text|null)=} content The content to be displayed by
  *     this InfoWindow.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
 
 /**
- * @param {(string|Element|Text|null)=} headerContent The header content to be
+ * @param {(string|!Element|!Text|null)=} headerContent The header content to be
  *     displayed by this InfoWindow. See {@link
  *     google.maps.InfoWindowOptions.headerContent}.
  * @return {undefined}
@@ -4222,21 +4222,22 @@ google.maps.InfoWindow.prototype.setContent = function(content) {};
 google.maps.InfoWindow.prototype.setHeaderContent = function(headerContent) {};
 
 /**
- * @param {?boolean=} headerDisabled Specifies whether to disable the whole
- *     header row. See {@link google.maps.InfoWindowOptions.headerDisabled}.
+ * @param {(boolean|null)=} headerDisabled Specifies whether to disable the
+ *     whole header row. See {@link
+ *     google.maps.InfoWindowOptions.headerDisabled}.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setHeaderDisabled = function(
     headerDisabled) {};
 
 /**
- * @param {?google.maps.InfoWindowOptions=} options
+ * @param {(!google.maps.InfoWindowOptions|null)=} options
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setOptions = function(options) {};
 
 /**
- * @param {(google.maps.LatLng|google.maps.LatLngLiteral|null)=} position The
+ * @param {(!google.maps.LatLng|!google.maps.LatLngLiteral|null)=} position The
  *     LatLng position at which to display this InfoWindow.
  * @return {undefined}
  */
@@ -4261,13 +4262,13 @@ google.maps.InfoWindowOpenOptions = function() {};
  * non-null, the InfoWindow will be positioned at the top-center of the anchor.
  * The InfoWindow will be rendered on the same map or panorama as the anchor
  * <strong>(when available)</strong>.
- * @type {google.maps.MVCObject|google.maps.marker.AdvancedMarkerElement|null|undefined}
+ * @type {!google.maps.MVCObject|!google.maps.marker.AdvancedMarkerElement|null|undefined}
  */
 google.maps.InfoWindowOpenOptions.prototype.anchor;
 
 /**
  * The map or panorama on which to render this InfoWindow.
- * @type {google.maps.Map|google.maps.StreetViewPanorama|null|undefined}
+ * @type {!google.maps.Map|!google.maps.StreetViewPanorama|null|undefined}
  */
 google.maps.InfoWindowOpenOptions.prototype.map;
 
@@ -6040,13 +6041,13 @@ google.maps.MapOptions.prototype.cameraControl;
 
 /**
  * The display options for the Camera control.
- * @type {google.maps.CameraControlOptions|null|undefined}
+ * @type {!google.maps.CameraControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.cameraControlOptions;
 
 /**
  * The initial Map center.
- * @type {google.maps.LatLng|google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.MapOptions.prototype.center;
 
@@ -6062,7 +6063,7 @@ google.maps.MapOptions.prototype.clickableIcons;
  * The initial Map color scheme. This option can only be set when the map is
  * initialized.
  * @default {@link google.maps.ColorScheme.LIGHT}
- * @type {google.maps.ColorScheme|string|null|undefined}
+ * @type {!google.maps.ColorScheme|string|null|undefined}
  */
 google.maps.MapOptions.prototype.colorScheme;
 
@@ -6125,7 +6126,7 @@ google.maps.MapOptions.prototype.fullscreenControl;
 
 /**
  * The display options for the Fullscreen control.
- * @type {google.maps.FullscreenControlOptions|null|undefined}
+ * @type {!google.maps.FullscreenControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.fullscreenControlOptions;
 
@@ -6196,13 +6197,13 @@ google.maps.MapOptions.prototype.mapTypeControl;
 
 /**
  * The initial display options for the Map type control.
- * @type {google.maps.MapTypeControlOptions|null|undefined}
+ * @type {!google.maps.MapTypeControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.mapTypeControlOptions;
 
 /**
  * The initial Map mapTypeId. Defaults to <code>ROADMAP</code>.
- * @type {google.maps.MapTypeId|string|null|undefined}
+ * @type {!google.maps.MapTypeId|string|null|undefined}
  */
 google.maps.MapOptions.prototype.mapTypeId;
 
@@ -6239,7 +6240,7 @@ google.maps.MapOptions.prototype.noClear;
  * available). Please note that vector maps may not be available for all devices
  * and browsers and the map will fall back to a raster map as needed.
  * @default {@link google.maps.RenderingType.RASTER}
- * @type {google.maps.RenderingType|null|undefined}
+ * @type {!google.maps.RenderingType|null|undefined}
  */
 google.maps.MapOptions.prototype.renderingType;
 
@@ -6247,7 +6248,7 @@ google.maps.MapOptions.prototype.renderingType;
  * Defines a boundary that restricts the area of the map accessible to users.
  * When set, a user can only pan and zoom while the camera view stays inside the
  * limits of the boundary.
- * @type {google.maps.MapRestriction|null|undefined}
+ * @type {!google.maps.MapRestriction|null|undefined}
  */
 google.maps.MapOptions.prototype.restriction;
 
@@ -6259,7 +6260,7 @@ google.maps.MapOptions.prototype.rotateControl;
 
 /**
  * The display options for the Rotate control.
- * @type {google.maps.RotateControlOptions|null|undefined}
+ * @type {!google.maps.RotateControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.rotateControlOptions;
 
@@ -6271,7 +6272,7 @@ google.maps.MapOptions.prototype.scaleControl;
 
 /**
  * The initial display options for the Scale control.
- * @type {google.maps.ScaleControlOptions|null|undefined}
+ * @type {!google.maps.ScaleControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.scaleControlOptions;
 
@@ -6290,7 +6291,7 @@ google.maps.MapOptions.prototype.scrollwheel;
  * dropped on the map. If no panorama is specified, a default
  * <code>StreetViewPanorama</code> will be displayed in the map&#39;s
  * <code>div</code> when the pegman is dropped.
- * @type {google.maps.StreetViewPanorama|null|undefined}
+ * @type {!google.maps.StreetViewPanorama|null|undefined}
  */
 google.maps.MapOptions.prototype.streetView;
 
@@ -6305,7 +6306,7 @@ google.maps.MapOptions.prototype.streetViewControl;
 
 /**
  * The initial display options for the Street View Pegman control.
- * @type {google.maps.StreetViewControlOptions|null|undefined}
+ * @type {!google.maps.StreetViewControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.streetViewControlOptions;
 
@@ -6316,7 +6317,7 @@ google.maps.MapOptions.prototype.streetViewControlOptions;
  * available when using a map ID, or when using vector maps (use <a
  * href="https://developers.google.com/maps/documentation/cloud-customization">cloud-based
  * maps styling</a> instead).
- * @type {Array<!google.maps.MapTypeStyle>|null|undefined}
+ * @type {!Array<!google.maps.MapTypeStyle>|null|undefined}
  */
 google.maps.MapOptions.prototype.styles;
 
@@ -6366,7 +6367,7 @@ google.maps.MapOptions.prototype.zoomControl;
 
 /**
  * The display options for the Zoom control.
- * @type {google.maps.ZoomControlOptions|null|undefined}
+ * @type {!google.maps.ZoomControlOptions|null|undefined}
  */
 google.maps.MapOptions.prototype.zoomControlOptions;
 
@@ -6389,7 +6390,7 @@ google.maps.MapOptions.prototype.panControl;
 
 /**
  * The display options for the Pan control. <p>
- * @type {google.maps.PanControlOptions|null|undefined}
+ * @type {!google.maps.PanControlOptions|null|undefined}
  * @deprecated The Pan control is deprecated as of September 2015.
  */
 google.maps.MapOptions.prototype.panControlOptions;
@@ -11356,6 +11357,38 @@ google.maps.drawing.OverlayType = {
 google.maps.geometry = {};
 
 /**
+ * Utility functions for computations involving polygons and polylines.
+ *
+ * Access by calling `const {poly} = await
+ * google.maps.importLibrary("geometry")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.geometry.poly = function() {};
+
+/**
+ * Computes whether the given point lies inside the specified polygon.
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
+ * @param {!google.maps.Polygon} polygon
+ * @return {boolean}
+ */
+google.maps.geometry.poly.containsLocation = function(point, polygon) {};
+
+/**
+ * Computes whether the given point lies on or near to a polyline, or the edge
+ * of a polygon, within a specified tolerance. Returns <code>true</code> when
+ * the difference between the latitude and longitude of the supplied point, and
+ * the closest point on the edge, is less than the tolerance. The tolerance
+ * defaults to 10<sup>-9</sup> degrees.
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
+ * @param {!google.maps.Polygon|!google.maps.Polyline} poly
+ * @param {number=} tolerance
+ * @return {boolean}
+ */
+google.maps.geometry.poly.isLocationOnEdge = function(
+    point, poly, tolerance) {};
+
+/**
  * Utilities for polyline encoding and decoding.
  *
  * Access by calling `const {encoding} = await
@@ -11379,38 +11412,6 @@ google.maps.geometry.encoding.decodePath = function(encodedPath) {};
  * @return {string}
  */
 google.maps.geometry.encoding.encodePath = function(path) {};
-
-/**
- * Utility functions for computations involving polygons and polylines.
- *
- * Access by calling `const {poly} = await
- * google.maps.importLibrary("geometry")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @const
- */
-google.maps.geometry.poly = {};
-
-/**
- * Computes whether the given point lies inside the specified polygon.
- * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
- * @param {!google.maps.Polygon} polygon
- * @return {boolean}
- */
-google.maps.geometry.poly.containsLocation = function(point, polygon) {};
-
-/**
- * Computes whether the given point lies on or near to a polyline, or the edge
- * of a polygon, within a specified tolerance. Returns <code>true</code> when
- * the difference between the latitude and longitude of the supplied point, and
- * the closest point on the edge, is less than the tolerance. The tolerance
- * defaults to 10<sup>-9</sup> degrees.
- * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
- * @param {!google.maps.Polygon|!google.maps.Polyline} poly
- * @param {number=} tolerance
- * @return {boolean}
- */
-google.maps.geometry.poly.isLocationOnEdge = function(
-    point, poly, tolerance) {};
 
 /**
  * Utility functions for computing geodesic angles, distances and areas. The
@@ -15486,6 +15487,12 @@ google.maps.maps3d.AltitudeMode = {
  * @record
  */
 google.maps.maps3d.CameraOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.center}.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.center;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.heading}.
