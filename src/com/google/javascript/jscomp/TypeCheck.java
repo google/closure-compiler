@@ -2219,7 +2219,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccessHelper(
       JSType objectType, Node propNode, @Nullable Node objNode, boolean strictCheck) {
     final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
-    final String propName = isGetprop ? propNode.getString() : propNode.getString();
+    final String propName = propNode.getString();
 
     if (!reportMissingProperties
         || objectType.isEmptyType()
@@ -2260,8 +2260,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       Node propNode,
       PropDefinitionKind kind,
       boolean strictReport) {
-    final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
-    final String propName = isGetprop ? propNode.getString() : propNode.getString();
+    final String propName = propNode.getString();
 
     boolean isObjectType = objectType.equals(getNativeType(OBJECT_TYPE));
     boolean lowConfidence = objectType.isUnknownType() || objectType.isAllType() || isObjectType;
