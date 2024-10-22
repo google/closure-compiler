@@ -6369,6 +6369,9 @@ ElementInternals.prototype.checkValidity =
         /** @type {!NodeList<!HTMLLabelElement>} */
         ElementInternals.prototype.labels;
 
+/** @type {!CustomStateSet} */
+ElementInternals.prototype.states;
+
 /**
  * @see https://html.spec.whatwg.org/multipage/custom-elements.html#the-elementinternals-interface
  * @record
@@ -6404,6 +6407,73 @@ ValidityStateFlags.prototype.badInput;
 
 /** @type {boolean|undefined} */
 ValidityStateFlags.prototype.customError;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#the-elementinternals-interface
+ * @constructor
+ */
+function CustomStateSet() {}
+
+/**
+ * @param {string} value
+ * @return {void}
+ */
+CustomStateSet.prototype.add = function(value) {};
+
+/**
+ * @return {void}
+ */
+CustomStateSet.prototype.clear = function() {};
+
+/**
+ * @param {string} value
+ * @return {boolean}
+ */
+CustomStateSet.prototype.delete = function(value) {};
+
+/**
+ * @return {!IteratorIterable<!Array<string>>} Where each array has two entries:
+ *     [value, value]
+ * @nosideeffects
+ */
+CustomStateSet.prototype.entries = function() {};
+
+/**
+ * @param {function(this: THIS, string, string, CustomStateSet)} callback
+ * @param {THIS=} opt_thisArg
+ * @this {THIS}
+ * @template THIS
+ */
+CustomStateSet.prototype.forEach = function(callback, opt_thisArg) {};
+
+/**
+ * @param {string} value
+ * @return {boolean}
+ * @nosideeffects
+ */
+CustomStateSet.prototype.has = function(value) {};
+
+/**
+ * @type {number} (readonly)
+ */
+CustomStateSet.prototype.size;
+
+/**
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+CustomStateSet.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+CustomStateSet.prototype.values = function() {};
+
+/**
+ * @return {!Iterator<string>}
+ */
+CustomStateSet.prototype[Symbol.iterator] = function() {};
 
 /**
  * @see https://drafts.csswg.org/css-view-transitions/#dom-document-startviewtransition
