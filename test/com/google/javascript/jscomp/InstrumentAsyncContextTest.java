@@ -1448,4 +1448,60 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }();",
             "}"));
   }
+
+  // Test that if the input is already instrumented, we don't double-instrument.
+  @Test
+  public void testAlreadyInstrumented() {
+    testSame(
+        lines(
+            "const v = new AsyncContext.Variable();",
+            "v.run(100, () => {});",
+            "async function f() {",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  $jscomp$swapContext(await $jscomp$swapContext(42), 1);",
+            "}"));
+  }
+
+  // Already-instrumented check applies on the function level: `f` is skipped, but
+  // `g` and `h` get instrumentation.
+  @Test
+  public void testAlreadyInstrumented_partial() {
+    test(
+        lines(
+            "const v = new AsyncContext.Variable();",
+            "v.run(100, () => {});",
+            "async function f() {",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  $jscomp$swapContext(await $jscomp$swapContext(2), 1);",
+            "  async function g() {",
+            "    await 3;",
+            "  }",
+            "}",
+            "async function h() {",
+            "  await 4;",
+            "}"),
+        lines(
+            "const v = new AsyncContext.Variable();",
+            "v.run(100, () => {});",
+            "async function f() {",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  $jscomp$swapContext(await $jscomp$swapContext(2), 1);",
+            "  async function g() {",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    try {",
+            "      $jscomp$swapContext(await $jscomp$swapContext(3), 1);",
+            "    } finally {",
+            "      $jscomp$swapContext();",
+            "    }",
+            "  }",
+            "}",
+            "async function h() {",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  try {",
+            "    $jscomp$swapContext(await $jscomp$swapContext(4), 1);",
+            "  } finally {",
+            "    $jscomp$swapContext();",
+            "  }",
+            "}"));
+  }
 }

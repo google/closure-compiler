@@ -53,6 +53,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   private final Deque<Node> tryFunctionStack = new ArrayDeque<>();
   private final Set<Node> needsInstrumentation = new LinkedHashSet<>();
+  private final Set<Node> alreadyInstrumented = new LinkedHashSet<>();
   private final Set<Node> hasSuper = new LinkedHashSet<>();
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
@@ -92,12 +93,17 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   @Override
   public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-    if (n.isSuper()) {
+    if (n.isName() && n.getString().equals(SWAP)) {
+      alreadyInstrumented.add(t.getEnclosingFunction());
+    } else if (n.isSuper()) {
       hasSuper.add(t.getEnclosingFunction());
     } else if (isReentrance(n)) {
       instrumentReentrance(t, n, parent);
     } else if (n.equals(tryFunctionStack.peek())) {
       tryFunctionStack.pop();
+      if (alreadyInstrumented.contains(n)) {
+        return;
+      }
       if (needsInstrumentation.contains(n) || n.isGeneratorFunction()) {
         if (n.isTry()) {
           instrumentTry(n);
@@ -126,6 +132,9 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       // NOTE: This is a top-level await, which is currently not supported.  If it becomes supported
       // then we should consider instrumenting the module body as if it were a function.
       // See https://github.com/google/closure-compiler/issues/3835.
+      return;
+    } else if (alreadyInstrumented.contains(enclosingFunction)) {
+      // This function is already instrumented, so don't do any further instrumentation.
       return;
     } else if (parent.isFunction()) {
       // `async (...) => await ...` - no reentrance, so no instrumentation needed.
