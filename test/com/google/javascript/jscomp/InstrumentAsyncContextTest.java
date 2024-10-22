@@ -521,7 +521,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
 
   // BEFORE: function* f() { BODY }
   //  AFTER: function f() {
-  //           var swap = enter();
+  //           var swap = enter(1);
   //           return function*() { swap(0, 1); try { BODY } finally { swap() } }()
   //         }
   //
@@ -529,13 +529,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   //  AFTER: swap(yield swap(EXPR), 1)
   //
   // Explanation:
-  //   * a generator's "function context" is snapshotted when the generator is first called, but no
-  //     ECMAScript code runs at that time - the generator body doesn't begin until the first call
-  //     to iter.next().
   //   * in order to snapshot the context from the initial call, we need to wrap the generator into
   //     an ordinary function to call enter() outside the generator, and then we use an immediately
   //     invoked generator to run the body, which now needs an explit swap(0, 1) to reenter at the
   //     front, since it may happen at some later time in a different context.
+  //   * a generator's "function context" is snapshotted when the generator is first called, but no
+  //     ECMAScript code runs at that time - the generator body doesn't begin until the first call
+  //     to iter.next(): enter(1) indicates that the context should start as "exited".
   @Test
   public void testGenerator() {
     test(
@@ -549,7 +549,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -581,7 +581,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -618,7 +618,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -658,7 +658,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -695,7 +695,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -722,7 +722,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -739,9 +739,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithEmptyBody() {
     testSame(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
-            "v.run(100, () => {});",
-            "function* f() {}"));
+            "const v = new AsyncContext.Variable();", "v.run(100, () => {});", "function* f() {}"));
   }
 
   // Because of the nested generator (which cannot be an arrow because generator arrow don't exist),
@@ -760,7 +758,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "function f(a) {",
             "  const $jscomp$arguments$m1146332801$0 = arguments;",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -791,7 +789,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return (function*() {",
             "      $jscomp$swapContext(0, 1);",
             "      try {",
@@ -822,7 +820,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return (function*() {",
             "      $jscomp$swapContext(0, 1);",
             "      try {",
@@ -858,7 +856,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "class Foo {",
             "  g() {",
             "    const $jscomp$this$m1146332801$0 = this;",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return (function*() {",
             "      $jscomp$swapContext(0, 1);",
             "      try {",
@@ -891,7 +889,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "class Foo {",
             "  g() {",
             "    const $jscomp$arguments$m1146332801$0 = arguments;",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return (function*() {",
             "      $jscomp$swapContext(0, 1);",
             "      try {",
@@ -927,7 +925,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "class Foo {",
             "  /** @nocollapse */",
             "  static f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
             "  }",
             "  /** @nocollapse */",
@@ -962,7 +960,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
             "  }",
             "  *f$jscomp$m1146332801$0($jscomp$swapContext) {",
@@ -993,7 +991,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
             "  }",
             "  *f$jscomp$m1146332801$0($jscomp$swapContext) {",
@@ -1024,7 +1022,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a, b, c) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c);",
             "  }",
             "  *f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c) {",
@@ -1057,7 +1055,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, arguments, a);",
             "  }",
             "  *f$jscomp$m1146332801$0($jscomp$swapContext, $jscomp$arguments$m1146332801$1, a) {",
@@ -1094,7 +1092,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, a);",
             "  }",
             "  *f$jscomp$m1146332801$0($jscomp$swapContext, a = 1) {",
@@ -1125,7 +1123,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f($jscomp$m1146332801$1, $jscomp$m1146332801$2) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0(",
             "        $jscomp$swapContext, ",
             "        $jscomp$m1146332801$1, ",
@@ -1160,7 +1158,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f(...a) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, ...a);",
             "  }",
             "  *f$jscomp$m1146332801$0($jscomp$swapContext, ...a) {",
@@ -1191,7 +1189,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0(",
             "        $jscomp$swapContext, a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2);",
             "  }",
@@ -1224,7 +1222,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  [Symbol.iterator]() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.$jscomp$m1146332801$0($jscomp$swapContext);",
             "  }",
             "  *$jscomp$m1146332801$0($jscomp$swapContext) {",
@@ -1252,7 +1250,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return async function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -1281,7 +1279,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return async function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -1310,7 +1308,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return (async function*() {",
             "      $jscomp$swapContext(0, 1);",
             "      try {",
@@ -1343,7 +1341,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
             "  }",
             "  async *f$jscomp$m1146332801$0($jscomp$swapContext) {",
@@ -1410,7 +1408,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",
@@ -1437,7 +1435,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "const v = new AsyncContext.Variable('name', 42);",
             "v.run(100, () => {});",
             "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
+            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
             "  return async function*() {",
             "    $jscomp$swapContext(0, 1);",
             "    try {",

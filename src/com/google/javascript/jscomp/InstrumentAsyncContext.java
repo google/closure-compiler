@@ -259,7 +259,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     generatorBody = addFinallyExit(generatorBody);
     generatorBody.addChildToFront(IR.exprResult(createReenter()));
     Node newOuterBody =
-        IR.block(createEnter(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
+        IR.block(createEnterExit(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
     f.addChildToBack(newOuterBody.srcrefTreeIfMissing(generatorBody));
 
     // NOTE: if the IIFE generator refers to `this` or `arguments` then we need to extract these
@@ -386,7 +386,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     }
 
     // Populate the outer (non-generator) method body with an enter() and call to the inner method.
-    outerBody.addChildToBack(createEnter());
+    outerBody.addChildToBack(createEnterExit());
     outerBody.addChildToBack(IR.returnNode(innerCall));
 
     // Various cleanups
@@ -498,11 +498,16 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter();}. */
-  private Node createEnter() {
+  private Node createEnter(Node... arg) {
     Node call =
         astFactory.createCallWithUnknownType(
-            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(ENTER)));
+            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(ENTER)), arg);
     return IR.var(astFactory.createConstantName(SWAP, AstFactory.type(call)), call);
+  }
+
+  /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter(1);}. */
+  private Node createEnterExit() {
+    return createEnter(astFactory.createNumber(1));
   }
 
   /** Wraps the giuven node in an exit call: {@code $jscomp$swapContext(NODE)}. */
