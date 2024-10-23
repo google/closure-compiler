@@ -45,12 +45,12 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   @After
   public void tearDown() throws Exception {
     super.tearDown();
-    runWrapPass = false;
-    runUnwrapPass = false;
+    runWrapPass = true;
+    runUnwrapPass = true;
   }
 
-  public boolean runWrapPass = false;
-  public boolean runUnwrapPass = false;
+  public boolean runWrapPass = true;
+  public boolean runUnwrapPass = true;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -83,10 +83,11 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
 
   private void doTest(String js, String expectedWrapped) {
     runWrapPass = true;
+    runUnwrapPass = false; // Validate that only wrapping results in the expected wrapped contents.
     test(js, expectedWrapped);
 
     // now test with unwrapping enabled so it is a no-op
-    // wrapping is still enabled from above
+    runWrapPass = true;
     runUnwrapPass = true;
     testSame(js);
   }
@@ -245,7 +246,7 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
 
   @Test
   public void testErrorsOnUnwrapping_nonCallRef() {
-    runUnwrapPass = true; // This error only occurs when unwrapping
+    runWrapPass = false; // This error only occurs when unwrapping
     testError(
         lines(
             "/** @closureUnaware */",
@@ -257,7 +258,7 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
 
   @Test
   public void testErrorsOnUnwrapping_invalidCallRef_tooManyArgs() {
-    runUnwrapPass = true; // This error only occurs when unwrapping
+    runWrapPass = false; // This error only occurs when unwrapping
     testError(
         lines(
             "/** @closureUnaware */",
@@ -268,7 +269,7 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
 
   @Test
   public void testErrorsOnUnwrapping_invalidCallRef_ignoresOtherCalls() {
-    runUnwrapPass = true; // This error only occurs when unwrapping
+    runWrapPass = false; // This error only occurs when unwrapping
     testNoWarning(
         lines(
             "/** @closureUnaware */",
@@ -278,7 +279,7 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
 
   @Test
   public void testErrorsOnUnwrapping_invalidCallRef_wrongArgType() {
-    runUnwrapPass = true; // This error only occurs when unwrapping
+    runWrapPass = false; // This error only occurs when unwrapping
     testError(
         lines(
             "/** @closureUnaware */",
