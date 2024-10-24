@@ -105,13 +105,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAwait() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  await 1;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -138,7 +138,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testForAwait() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  for await (const x of gen()) {",
@@ -146,7 +146,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -170,7 +170,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testForAwaitNotInBlock() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  if (1)",
@@ -179,7 +179,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -203,7 +203,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testForAwaitMixedWithAwait() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  for await (const x of await gen()) {",
@@ -211,7 +211,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -240,12 +240,12 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
     }
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "await 1;",
             "await 2;"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "var $jscomp$swapContext = $jscomp.asyncContextEnter();",
             "$jscomp$swapContext(await $jscomp$swapContext(1), 1);",
@@ -258,14 +258,14 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testMultipleAwaits() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  await 1;",
             "  await 2;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -290,7 +290,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAwaitInsideTryCatch() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  try {",
@@ -300,7 +300,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -328,7 +328,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAwaitInsideTryCatchFinally() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  try {",
@@ -340,7 +340,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -365,7 +365,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAwaitInsideTryFinally() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  try {",
@@ -375,7 +375,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -397,7 +397,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testReturnAwait() {
     testSame(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  return await 1;",
@@ -411,7 +411,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testReturnAwaitInsideTryCatch() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  try {",
@@ -421,7 +421,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -444,7 +444,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testReturnAwaitInsideTryFinally() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  try {",
@@ -454,7 +454,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -478,7 +478,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAwaitImmediatelyReturnedFromBodylessArrow() {
     testSame(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "(async () => await 1)();"));
   }
@@ -490,11 +490,11 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAwaitInsideBodylessArrow() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "(async () => use(await 1))();"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "(async () => {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
@@ -512,7 +512,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAsyncFunctionWithNoAwait() {
     testSame(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  return 1;",
@@ -540,13 +540,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGenerator() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  yield 1;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -566,7 +566,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithTryCatchFinally() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  try {",
@@ -578,7 +578,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -605,7 +605,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithTryFinally() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  try {",
@@ -615,7 +615,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -641,7 +641,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithNestedTry() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  try {",
@@ -655,7 +655,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -686,13 +686,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithEmptyYield() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  yield;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -713,13 +713,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithNoYield() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  console.log(1);",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -748,13 +748,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorWithArguments() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f(a) {",
             "  yield a + arguments[1];",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f(a) {",
             "  const $jscomp$arguments$m1146332801$0 = arguments;",
@@ -777,7 +777,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethod() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f() {",
@@ -785,7 +785,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
@@ -808,7 +808,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodWithNoYield() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f() {",
@@ -816,7 +816,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
@@ -843,7 +843,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodWithThis() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *g() {",
@@ -851,7 +851,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  g() {",
@@ -876,7 +876,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodWithArguments() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *g() {",
@@ -884,7 +884,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  g() {",
@@ -911,7 +911,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperStatic() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  /** @nocollapse */",
@@ -920,7 +920,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  /** @nocollapse */",
@@ -948,7 +948,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuper() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f() {",
@@ -956,7 +956,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
@@ -979,7 +979,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithNoYield() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f() {",
@@ -987,7 +987,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
@@ -1010,7 +1010,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithParameters() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f(a, b, c) {",
@@ -1018,7 +1018,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a, b, c) {",
@@ -1043,7 +1043,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperReadsArgumentsArray() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f(a) {",
@@ -1051,7 +1051,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a) {",
@@ -1080,7 +1080,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithDefaultParameter() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f(a = 1) {",
@@ -1088,7 +1088,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a) {",
@@ -1111,7 +1111,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithDestructuredParameters() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f({a}, [b = 1]) {",
@@ -1119,7 +1119,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f($jscomp$m1146332801$1, $jscomp$m1146332801$2) {",
@@ -1146,7 +1146,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithRestParameter() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f(...a) {",
@@ -1154,7 +1154,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f(...a) {",
@@ -1177,7 +1177,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithComplicatedParameters() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *f(a, {b}, c = 1, ...[d]) {",
@@ -1185,7 +1185,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f(a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2) {",
@@ -1210,7 +1210,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testGeneratorMethodSuperWithComputedKey() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  *[Symbol.iterator]() {",
@@ -1218,7 +1218,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  [Symbol.iterator]() {",
@@ -1241,13 +1241,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAsyncGenerator() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function* f() {",
             "  yield await 1;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -1270,13 +1270,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAsyncGeneratorWithNoYieldNorAwait() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function* f() {",
             "  return 1;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -1296,7 +1296,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAsyncGeneratorMethod() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  async *f() {",
@@ -1304,7 +1304,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
@@ -1329,7 +1329,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testAsyncGeneratorMethodSuper() {
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  async *f() {",
@@ -1337,7 +1337,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "class Foo {",
             "  f() {",
@@ -1369,7 +1369,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
     instrumentAwait = false;
     testSame(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  await 1;",
@@ -1382,7 +1382,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
     instrumentAwait = false;
     testSame(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function f() {",
             "  for await (const x of gen()) {",
@@ -1399,13 +1399,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
     instrumentAwait = false;
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function* f() {",
             "  yield 1;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
@@ -1426,13 +1426,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
     instrumentAwait = false;
     test(
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "async function* f() {",
             "  yield await 1;",
             "}"),
         lines(
-            "const v = new AsyncContext.Variable('name', 42);",
+            "const v = new AsyncContext.Variable();",
             "v.run(100, () => {});",
             "function f() {",
             "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
