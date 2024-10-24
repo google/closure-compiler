@@ -11223,7 +11223,7 @@ google.maps.drawing.DrawingManagerOptions = function() {};
  * <code>DrawingManager</code>. The <code>center</code> and <code>radius</code>
  * properties are ignored, and the <code>map</code> property of a new circle is
  * always set to the <code>DrawingManager</code>&#39;s map.
- * @type {google.maps.CircleOptions|null|undefined}
+ * @type {!google.maps.CircleOptions|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.circleOptions;
 
@@ -11236,7 +11236,7 @@ google.maps.drawing.DrawingManagerOptions.prototype.drawingControl;
 
 /**
  * The display options for the drawing control.
- * @type {google.maps.drawing.DrawingControlOptions|null|undefined}
+ * @type {!google.maps.drawing.DrawingControlOptions|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.drawingControlOptions;
 
@@ -11247,14 +11247,14 @@ google.maps.drawing.DrawingManagerOptions.prototype.drawingControlOptions;
  * <code>'circle'</code>, or <code>null</code>. A drawing mode of
  * <code>null</code> means that the user can interact with the map as normal,
  * and clicks do not draw anything.
- * @type {google.maps.drawing.OverlayType|null|undefined}
+ * @type {!google.maps.drawing.OverlayType|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.drawingMode;
 
 /**
  * The <code>Map</code> to which the <code>DrawingManager</code> is attached,
  * which is the <code>Map</code> on which the overlays created will be placed.
- * @type {google.maps.Map|null|undefined}
+ * @type {!google.maps.Map|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.map;
 
@@ -11263,7 +11263,7 @@ google.maps.drawing.DrawingManagerOptions.prototype.map;
  * <code>DrawingManager</code>. The <code>position</code> property is ignored,
  * and the <code>map</code> property of a new marker is always set to the
  * <code>DrawingManager</code>&#39;s map.
- * @type {google.maps.MarkerOptions|null|undefined}
+ * @type {!google.maps.MarkerOptions|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.markerOptions;
 
@@ -11272,7 +11272,7 @@ google.maps.drawing.DrawingManagerOptions.prototype.markerOptions;
  * <code>DrawingManager</code>. The <code>paths</code> property is ignored, and
  * the <code>map</code> property of a new polygon is always set to the
  * <code>DrawingManager</code>&#39;s map.
- * @type {google.maps.PolygonOptions|null|undefined}
+ * @type {!google.maps.PolygonOptions|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.polygonOptions;
 
@@ -11281,7 +11281,7 @@ google.maps.drawing.DrawingManagerOptions.prototype.polygonOptions;
  * <code>DrawingManager</code>. The <code>path</code> property is ignored, and
  * the <code>map</code> property of a new polyline is always set to the
  * <code>DrawingManager</code>&#39;s map.
- * @type {google.maps.PolylineOptions|null|undefined}
+ * @type {!google.maps.PolylineOptions|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.polylineOptions;
 
@@ -11290,7 +11290,7 @@ google.maps.drawing.DrawingManagerOptions.prototype.polylineOptions;
  * <code>DrawingManager</code>. The <code>bounds</code> property is ignored, and
  * the <code>map</code> property of a new rectangle is always set to the
  * <code>DrawingManager</code>&#39;s map.
- * @type {google.maps.RectangleOptions|null|undefined}
+ * @type {!google.maps.RectangleOptions|null|undefined}
  */
 google.maps.drawing.DrawingManagerOptions.prototype.rectangleOptions;
 
