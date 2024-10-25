@@ -1241,7 +1241,7 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.SASS_GENERATED_CSS_TS);
   }
 
-  /** Returns whether JSDoc is annotated with the {@code @thirdPartyCode} annotation. */
+  /** Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. */
   public boolean isClosureUnawareCode() {
     return checkBit(Bit.CLOSURE_UNAWARE_CODE);
   }
