@@ -71,8 +71,12 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     test(
         options,
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('a.b');",
+            "/** @closureUnaware */",
             "(function() {",
             "  class ClazzWithStatic {",
             "    constructor() {}",
@@ -91,7 +95,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             "}).call(globalThis);",
             "exports = globalThis['a_b'];"),
         lines(
-            "/** @closureUnaware */",
             "(function() {",
             "  class ClazzWithStatic {",
             "    constructor() {}",
@@ -137,8 +140,12 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             options,
             new String[] {
               lines(
-                  "/** @closureUnaware */",
+                  "/**",
+                  " * @fileoverview",
+                  " * @closureUnaware",
+                  " */",
                   "goog.module('a.b');",
+                  "/** @closureUnaware */",
                   "(function() {",
                   "  class ClazzWithStatic {",
                   "    constructor() {}",
@@ -215,8 +222,12 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     test(
         options,
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('a.b');",
+            "/** @closureUnaware */",
             "(function() {",
             "  const x = 5;",
             "}).call(globalThis);"),
@@ -244,8 +255,12 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     // validation we do a byte-for-byte comparison of the source output.
     String original =
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('a.b');",
+            "/** @closureUnaware */",
             "(function() {",
             "  // This is a comment that should be removed",
             "  \n\n\t\n       ",
@@ -290,15 +305,18 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         options,
         lines(
             "/**",
+            " * @fileoverview",
             " * @closureUnaware",
             " * @suppress {uselessCode}",
             " */",
             "goog.module('a.b');",
             "if (false) {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    const x = 5;",
             "  }).call(globalThis);",
             "} else {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    const x = 10;",
             "  }).call(globalThis);",
@@ -326,15 +344,18 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         options,
         lines(
             "/**",
+            " * @fileoverview",
             " * @closureUnaware",
             " * @suppress {uselessCode}",
             " */",
             "goog.module('a.b');",
             "if (true) {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    const x = 5;",
             "  }).call(globalThis);",
             "} else {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    const x = 10;",
             "  }).call(globalThis);",
@@ -385,7 +406,10 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     test(
         options,
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('a.b');",
             "$jscomp_wrap_closure_unaware_code('{ const x = 5 }');"),
         // This error is currently reported as "invalid structure for @closureUnaware annotated
@@ -459,8 +483,12 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     test(
         options,
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('a.b');",
+            "/** @closureUnaware */",
             "(function() {",
             "  /**",
             "   * @prop {number} a - scale x",

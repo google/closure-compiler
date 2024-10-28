@@ -96,13 +96,17 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testDirectLoad() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
+            "/** @closureUnaware */",
             "(function() {",
             "  window['foo'] = 5;",
             "}).call(globalThis);"),
         lines(
-            "/** @closureUnaware */",
+            "/** @fileoverview @closureUnaware */",
             "goog.module('foo.bar.baz_raw');",
             "$jscomp_wrap_closure_unaware_code('{window[\"foo\"]=5}')"));
   }
@@ -111,16 +115,23 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testDirectLoadWithRequireAndExports() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "goog.require('foo.bar');",
             "const {a} = goog.require('foo.baz');",
+            "/** @closureUnaware */",
             "(function() {",
             "  window['foo'] = 5;",
             "}).call(globalThis);",
             "exports = globalThis['foo'];"),
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "goog.require('foo.bar');",
             "const {a} = goog.require('foo.baz');",
@@ -132,15 +143,22 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testConditionalLoad() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (!window['foo']) {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    window['foo'] = 5;",
             "  }).call(globalThis);",
             "}"),
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (!window['foo']) {",
             "  $jscomp_wrap_closure_unaware_code('{window[\"foo\"]=5}');",
@@ -151,19 +169,27 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testDebugSrcLoad() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (goog.DEBUG) {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    window['foo'] = 5;",
             "  }).call(globalThis);",
             "} else {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "     window['foo'] = 10;",
             "  }).call(globalThis);",
             "}"),
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (goog.DEBUG) {",
             "  $jscomp_wrap_closure_unaware_code('{window[\"foo\"]=5}');",
@@ -176,21 +202,29 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testConditionalAndDebugSrcLoad() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (!window['foo']) {",
             "  if (goog.DEBUG) {",
+            "    /** @closureUnaware */",
             "    (function() {",
             "      window['foo'] = 5;",
             "    }).call(globalThis);",
             "  } else {",
+            "    /** @closureUnaware */",
             "    (function() {",
             "       window['foo'] = 10;",
             "    }).call(globalThis);",
             "  }",
             "}"),
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (!window['foo']) {",
             "  if (goog.DEBUG) {",
@@ -205,9 +239,13 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testDirectLoad_nestedChangeScopes() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (goog.DEBUG) {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    function bar() {",
             "      window['foo'] = 5;",
@@ -216,7 +254,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
             "  }).call(globalThis);",
             "}"),
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (goog.DEBUG) {",
             "  $jscomp_wrap_closure_unaware_code('{function" + " bar(){window[\"foo\"]=5}bar()}');",
@@ -227,9 +268,13 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void testDirectLoad_nestedGlobalThisIIFEIsNotRewritten() {
     doTest(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (goog.DEBUG) {",
+            "  /** @closureUnaware */",
             "  (function() {",
             "    (function() {",
             "      window['foo'] = 10;",
@@ -237,7 +282,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
             "  }).call(globalThis);",
             "}"),
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "if (goog.DEBUG) {",
             "  $jscomp_wrap_closure_unaware_code('{(function(){window[\"foo\"]=10}).call(globalThis)}');",
@@ -249,7 +297,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     runWrapPass = false; // This error only occurs when unwrapping
     testError(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "var x = $jscomp_wrap_closure_unaware_code;",
             "x('window[\"foo\"]=5')"),
@@ -261,7 +312,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     runWrapPass = false; // This error only occurs when unwrapping
     testError(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "$jscomp_wrap_closure_unaware_code(this, 'window[\"foo\"]=5')"),
         ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE);
@@ -272,7 +326,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     runWrapPass = false; // This error only occurs when unwrapping
     testNoWarning(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "eval(this, 'window[\"foo\"]=5')"));
   }
@@ -282,9 +339,34 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     runWrapPass = false; // This error only occurs when unwrapping
     testError(
         lines(
-            "/** @closureUnaware */",
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
             "goog.module('foo.bar.baz_raw');",
             "$jscomp_wrap_closure_unaware_code(5)"),
         ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE);
+  }
+
+  @Test
+  public void testAllowsSpecifyingAnnotationOnIIFE() {
+    doTest(
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('foo.bar.baz_raw');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  window['foo'] = 5;",
+            "}).call(globalThis);"),
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('foo.bar.baz_raw');",
+            "$jscomp_wrap_closure_unaware_code('{window[\"foo\"]=5}')"));
   }
 }
