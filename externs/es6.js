@@ -1980,6 +1980,7 @@ Number.isSafeInteger = function(value) {};
  * @param {!Object} target
  * @param {...(Object|null|undefined)} var_args
  * @return {!Object}
+ * @modifies {arguments}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
  */
 Object.assign = function(target, var_args) {};
