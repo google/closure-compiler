@@ -101,6 +101,19 @@ final class ModuleImportResolver {
       return null;
     }
     String moduleId = googRequire.getSecondChild().getString();
+    return getScopedNameForClosureNamespace(moduleId);
+  }
+
+  /**
+   * Attempts to look up the type of a Closure namespace from a require call
+   *
+   * <p>This returns null if the given {@link ModuleMap} is null, if the required module does not
+   * exist, or if support is missing for the type of required {@link Module}. Currently only
+   * requires of goog.modules, goog.provides, and ES module with goog.declareModuleId are supported.
+   *
+   * @param moduleId a Closure namespace, such as "foo.bar"
+   */
+  private @Nullable ScopedName getScopedNameForClosureNamespace(String moduleId) {
     Module module = moduleMap.getClosureModule(moduleId);
     if (module == null) {
       return null;
@@ -284,7 +297,7 @@ final class ModuleImportResolver {
   }
 
   /** Given a Binding from an ES module, return the name and scope of the bound name. */
-  private static ScopedName getScopedNameFromEsBinding(Binding binding) {
+  private ScopedName getScopedNameFromEsBinding(Binding binding) {
     // NB: If the original export was an `export default` then the local name is *default*.
     // We've already declared a dummy variable named `*default*` in the scope.
     String name = binding.isModuleNamespace() ? Export.NAMESPACE : binding.boundName();
@@ -292,15 +305,37 @@ final class ModuleImportResolver {
         binding.isModuleNamespace()
             ? binding.metadata()
             : binding.originatingExport().moduleMetadata();
-    if (!originalMetadata.isEs6Module()) {
-      // Importing SCRIPTs should not allow you to look up names in scope.
-      return ScopedName.of(name, null);
+    switch (originalMetadata.moduleType()) {
+      case ES6_MODULE:
+        Node scriptNode = originalMetadata.rootNode();
+        // Imports of nonexistent modules have a null 'root node'. Imports of names from scripts are
+        // meaningless.
+        checkState(scriptNode == null || scriptNode.isScript(), scriptNode);
+        return ScopedName.of(name, scriptNode != null ? scriptNode.getOnlyChild() : null);
+      case GOOG_MODULE:
+      case GOOG_PROVIDE:
+      case LEGACY_GOOG_MODULE:
+        ScopedName closureModuleObject =
+            getScopedNameForClosureNamespace(binding.closureNamespace());
+        if (closureModuleObject == null) {
+          // This is an error, but one that should be reported elsewhere. assume the module is
+          // a goog.provide for legacy compatibility.
+          return ScopedName.of(binding.closureNamespace(), null);
+        }
+        if (binding.isModuleNamespace()) {
+          return closureModuleObject;
+        }
+        return ScopedName.of(
+            closureModuleObject.getName() + "." + binding.originatingExport().exportName(),
+            closureModuleObject.getScopeRoot());
+      case SCRIPT:
+        // Importing SCRIPTs should not allow you to look up names in scope.
+        // we also don't really support CommonJs.
+        return ScopedName.of(name, null);
+      case COMMON_JS:
+        throw new IllegalStateException("Typechecking CommonJS modules is not supported");
     }
-    Node scriptNode = originalMetadata.rootNode();
-    // Imports of nonexistent modules have a null 'root node'. Imports of names from scripts are
-    // meaningless.
-    checkState(scriptNode == null || scriptNode.isScript(), scriptNode);
-    return ScopedName.of(name, scriptNode != null ? scriptNode.getOnlyChild() : null);
+    throw new AssertionError();
   }
 
   /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */

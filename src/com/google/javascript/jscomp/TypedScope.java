@@ -121,10 +121,11 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   void validateCompletelyBuilt() {
     checkState(
         reservedNames.isEmpty(),
-        "Expected %s to have no reserved names, found: %s",
+        "Expected %s to have no reserved names, found: %s. This probably indicates a bug in"
+            + " TypedScopeCreator where it is failing to declare a variable.",
         this,
         reservedNames);
-    // let a (16-bit) VM garabage collect 64 bytes per TypedScope. (ImmutableSet.of() returns a
+    // let a (16-bit) VM garbage collect 64 bytes per TypedScope. (ImmutableSet.of() returns a
     // singleton)
     reservedNames = ImmutableSet.of();
   }

@@ -7046,6 +7046,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModule_importSpecs_fromGoogColonProvide() {
+    testSame(
+        srcs(
+            lines("goog.provide('foo.bar');", "/** @type {number} */", "foo.bar.x = 0;"),
+            lines(
+                "import {x as xImported} from 'goog:foo.bar';", //
+                "X: xImported;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testEsModule_importSpecs_fromGoogColonModule() {
+    testSame(
+        srcs(
+            lines("goog.module('foo.bar');", "/** @type {number} */", "exports.x = 0;"),
+            lines(
+                "import {x as xImported} from 'goog:foo.bar';", //
+                "X: xImported;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
+  }
+
+  @Test
   public void testEsModule_moduleObjectTypeMatchesImportExportAndModuleBody() {
     testSame(
         srcs(
@@ -7120,6 +7144,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertNode(getLabeledStatement("B2").statementNode.getOnlyChild())
         .hasJSTypeThat()
         .toStringIsEqualTo("Button");
+  }
+
+  @Test
+  public void testEsModule_importDefault_fromGoogColonModule() {
+    testSame(
+        srcs(
+            lines("goog.module('foo.bar');", "/** @type {number} */", "exports.x = 0;"),
+            lines(
+                "import bar from 'goog:foo.bar';", //
+                "X: bar.x;")));
+
+    assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
 
   @Test
