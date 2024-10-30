@@ -1667,7 +1667,8 @@ public class JSDocInfo implements Serializable {
                           | Bit.NOCOMPILE.mask
                           | Bit.NOCOVERAGE.mask
                           | Bit.TYPE_SUMMARY.mask
-                          | Bit.ENHANCED_NAMESPACE.mask))
+                          | Bit.ENHANCED_NAMESPACE.mask
+                          | Bit.CLOSURE_UNAWARE_CODE.mask))
                   != 0
               || isModsRecorded());
     }
