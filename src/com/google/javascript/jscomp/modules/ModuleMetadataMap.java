@@ -112,10 +112,6 @@ public final class ModuleMetadataMap {
       return moduleType() == ModuleType.GOOG_PROVIDE;
     }
 
-    public boolean hasLegacyGoogNamespaces() {
-      return isGoogProvide() || isLegacyGoogModule();
-    }
-
     public boolean isCommonJs() {
       return moduleType() == ModuleType.COMMON_JS;
     }
