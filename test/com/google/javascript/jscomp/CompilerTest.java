@@ -153,7 +153,8 @@ public final class CompilerTest {
     ImmutableList<SourceFile> thirdPartyCode =
         ImmutableList.of(
             SourceFile.fromCode(
-                "closure_unaware_code.js", "/** @closureUnaware */ function alert(x) {}"));
+                "closure_unaware_code.js",
+                "/** @fileoverview @closureUnaware */ function alert(x) {}"));
     CompilerOptions options = new CompilerOptions();
     options.setPreserveTypeAnnotations(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
