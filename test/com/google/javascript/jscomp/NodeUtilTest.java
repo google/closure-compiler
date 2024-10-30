@@ -3948,7 +3948,7 @@ public final class NodeUtilTest {
       Scope blockScope = scopeCreator.createScope(block, moduleScope);
 
       assertThat(NodeUtil.getGoogRequireInfo("Foo", moduleScope))
-          .isEqualTo(GoogRequire.fromNamespace("d.Foo"));
+          .isEqualTo(GoogRequire.fromNamespace("d.Foo", true));
       assertThat(NodeUtil.getGoogRequireInfo("Foo", blockScope)).isNull();
     }
 
@@ -4721,13 +4721,13 @@ public final class NodeUtilTest {
             {
               "goog.module('a.b.c'); const {Bar} = goog.require('d.Foo');",
               "Bar",
-              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", true)
             },
             {"goog.module('a.b.c'); const {Bar} = goog.require('d.Foo');", "Foo", null},
             {
               "goog.module('a.b.c'); const {Bar: BarLocal} = goog.require('d.Foo');",
               "BarLocal",
-              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", true)
             },
             {
               "goog.module('a.b.c'); const {Bar: BarLocal} =" + " goog.require('d.Foo');",
@@ -4737,22 +4737,22 @@ public final class NodeUtilTest {
             {
               "goog.module('a.b.c'); const Foo = goog.require('d.Foo');",
               "Foo",
-              GoogRequire.fromNamespace("d.Foo")
+              GoogRequire.fromNamespace("d.Foo", true)
             },
             {
               "goog.module('a.b.c'); const dFoo = goog.require('d.Foo');",
               "dFoo",
-              GoogRequire.fromNamespace("d.Foo")
+              GoogRequire.fromNamespace("d.Foo", true)
             },
             {
               "goog.module('a.b.c'); const Foo = goog.requireType('d.Foo');",
               "Foo",
-              GoogRequire.fromNamespace("d.Foo")
+              GoogRequire.fromNamespace("d.Foo", false)
             },
             {
               "goog.module('a.b.c'); const {Bar} = goog.requireType('d.Foo');",
               "Bar",
-              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", false)
             },
             // Test that non-requires just return null.
             {"goog.module('a.b.c'); let Foo;", "Foo", null},

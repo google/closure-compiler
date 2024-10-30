@@ -6279,39 +6279,61 @@ public final class NodeUtil {
 
     public abstract @Nullable String property(); // Non-null for destructuring requires.
 
-    static GoogRequire fromNamespace(String namespace) {
-      return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null);
+    public abstract boolean isStrongRequire(); // True for goog.require, false for goog.requireType
+
+    static GoogRequire fromNamespace(String namespace, boolean isStrongRequire) {
+      return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null, isStrongRequire);
     }
 
-    static GoogRequire fromNamespaceAndProperty(String namespace, String property) {
-      return new AutoValue_NodeUtil_GoogRequire(namespace, property);
+    static GoogRequire fromNamespaceAndProperty(
+        String namespace, String property, boolean isStrongRequire) {
+      return new AutoValue_NodeUtil_GoogRequire(namespace, property, isStrongRequire);
     }
   }
 
   public static @Nullable GoogRequire getGoogRequireInfo(String name, Scope scope) {
     Var var = scope.getVar(name);
-    if (var == null || !var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
+    if (var == null) {
       return null;
     }
-    Node nameNode = var.getNameNode();
+    return getGoogRequireInfo(var);
+  }
+
+  public static @Nullable GoogRequire getGoogRequireInfo(Var var) {
+    checkNotNull(var);
+    if (!var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
+      return null;
+    }
+
+    return getGoogRequireInfo(var.getNameNode());
+  }
+
+  public static @Nullable GoogRequire getGoogRequireInfo(Node nameNode) {
+    checkState(nameNode.isName());
 
     if (NodeUtil.isNameDeclaration(nameNode.getParent())) {
       Node requireCall = nameNode.getFirstChild();
-      if (requireCall == null
-          || !(isGoogRequireCall(requireCall) || isGoogRequireTypeCall(requireCall))) {
+      if (requireCall == null) {
+        return null;
+      }
+      boolean isStrongRequire = isGoogRequireCall(requireCall);
+      if (!(isStrongRequire || isGoogRequireTypeCall(requireCall))) {
         return null;
       }
       String namespace = requireCall.getSecondChild().getString();
-      return GoogRequire.fromNamespace(namespace);
+      return GoogRequire.fromNamespace(namespace, isStrongRequire);
     } else if (nameNode.getParent().isStringKey() && nameNode.getGrandparent().isObjectPattern()) {
       Node requireCall = nameNode.getGrandparent().getNext();
-      if (requireCall == null
-          || !(isGoogRequireCall(requireCall) || isGoogRequireTypeCall(requireCall))) {
+      if (requireCall == null) {
+        return null;
+      }
+      boolean isStrongRequire = isGoogRequireCall(requireCall);
+      if (!(isStrongRequire || isGoogRequireTypeCall(requireCall))) {
         return null;
       }
       String property = nameNode.getParent().getString();
       String namespace = requireCall.getSecondChild().getString();
-      return GoogRequire.fromNamespaceAndProperty(namespace, property);
+      return GoogRequire.fromNamespaceAndProperty(namespace, property, isStrongRequire);
     }
     return null;
   }
