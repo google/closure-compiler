@@ -403,7 +403,13 @@ final class ManageClosureUnawareCode implements CompilerPass {
       // This annotation is not attached to the CALL node which we will attach to the AST later, and
       // that is intentional.
       String unwrappedCode =
-          "/** @closureUnaware */ (function() " + wrappedSrc + ").call(globalThis);";
+          "/**\n"
+              + " * @fileoverview\n"
+              + " * @closureUnaware\n"
+              + " */\n"
+              + "(/** @closureUnaware */ function() "
+              + wrappedSrc
+              + ").call(globalThis);";
 
       try {
         Node parsedCodeRoot =
