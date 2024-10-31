@@ -42,6 +42,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     return options;
   }
 
@@ -660,6 +661,196 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testWarning_missingRequire_nestedProvide() throws Exception {
+    checkIncorrectNamespaceAliasRequireWarning(
+        "foo.bar.Baz",
+        "goog.provide('foo.bar');",
+        "goog.provide('foo.bar.Baz');",
+        lines(
+            "goog.module('another');",
+            "const {Baz} = goog.require('foo.bar');",
+            "function ref(a) {};",
+            "ref(Baz);"));
+  }
+
+  @Test
+  public void testWarning_missingRequireType_nestedProvide() throws Exception {
+    checkIncorrectNamespaceAliasRequireTypeWarning(
+        "foo.bar.Baz",
+        "goog.provide('foo.bar');",
+        "goog.provide('foo.bar.Baz');foo.bar.Baz = class {};",
+        lines(
+            "goog.module('another');",
+            "const {Baz} = goog.requireType('foo.bar');",
+            "let /** !Baz */ x;"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequireType_nestedProvide() throws Exception {
+    checkNoWarning(
+        "goog.provide('foo.bar');",
+        "goog.provide('foo.bar.Baz');foo.bar.Baz = class {};",
+        lines(
+            "goog.module('another');",
+            "const {Baz} = goog.requireType('foo.bar.Baz');",
+            "let /** !Baz */ x;"));
+  }
+
+  @Test
+  public void testWarning_missingRequire_nestedModule() throws Exception {
+    checkIncorrectNamespaceAliasRequireWarning(
+        "foo.bar.Baz",
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();",
+        lines(
+            "goog.module('another');",
+            "const {Baz} = goog.require('foo.bar');",
+            "function ref(a) {};",
+            "ref(Baz);"));
+  }
+
+  @Test
+  public void testWarning_missingRequireType_nestedModule() throws Exception {
+    checkIncorrectNamespaceAliasRequireTypeWarning(
+        "foo.bar.Baz",
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace(); exports = class {};",
+        lines(
+            "goog.module('another');",
+            "const {Baz} = goog.requireType('foo.bar');",
+            "let /** Baz */ x;"));
+  }
+
+  @Test
+  public void testWarning_missingRequire_nestedProvideIndirectRef() throws Exception {
+    checkIndirectNamespaceRefRequireWarning(
+        "foo.bar.Baz",
+        "goog.provide('foo.bar');",
+        "goog.provide('foo.bar.Baz');",
+        lines(
+            "goog.module('another');",
+            "const bar = goog.require('foo.bar');",
+            "function ref(a) {};",
+            "ref(bar.Baz);"));
+  }
+
+  @Test
+  public void testWarning_missingRequireType_nestedProvideIndirectRef() throws Exception {
+    checkIndirectNamespaceRefRequireTypeWarning(
+        "foo.bar.Baz",
+        "goog.provide('foo.bar');",
+        "goog.provide('foo.bar.Baz');foo.bar.Baz = class {};",
+        lines(
+            "goog.module('another');",
+            "const bar = goog.requireType('foo.bar');",
+            "let /** bar.Baz */ x;"));
+  }
+
+  @Test
+  public void testWarning_missingRequire_nestedModuleIndirectRef() throws Exception {
+    checkIndirectNamespaceRefRequireWarning(
+        "foo.bar.Baz",
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();",
+        lines(
+            "goog.module('another');",
+            "const bar = goog.require('foo.bar');",
+            "function ref(a) {};",
+            "ref(bar.Baz);"));
+  }
+
+  @Test
+  public void testWarning_missingRequireType_nestedModuleIndirectRef() throws Exception {
+    checkIndirectNamespaceRefRequireTypeWarning(
+        "foo.bar.Baz",
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
+        lines(
+            "goog.module('another');",
+            "const bar = goog.requireType('foo.bar');",
+            "let /** bar.Baz */ x;"));
+  }
+
+  @Test
+  public void testWarning_wrongAlias_nestedModuleIndirectRef() throws Exception {
+    checkIndirectNamespaceRefRequireTypeWarning(
+        "foo.bar.Baz",
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
+        lines(
+            "goog.module('another');",
+            "const bar = goog.requireType('foo.bar');",
+            "const Baz = goog.requireType('foo.bar.Baz');",
+            "let /** bar.Baz */ x;")); // error should be "Baz"
+  }
+
+  @Test
+  public void testWarning_wrongAlias_nestedModuleIndirectRef2() throws Exception {
+    checkIndirectNamespaceRefRequireWarning(
+        "foo.bar.Baz",
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
+        lines(
+            "goog.module('another');",
+            "const bar = goog.require('foo.bar');",
+            "const Baz = goog.requireType('foo.bar.Baz');",
+            "let x = bar.Baz;")); // error should be "Baz"
+  }
+
+  @Test
+  public void testNoWarning_missingRequire_nestedDirectRef() throws Exception {
+    checkNoWarning(
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
+        lines(
+            "goog.module('another');",
+            "const Baz = goog.require('foo.bar.Baz');",
+            "let x = new Baz.C();"));
+  }
+
+  @Test
+  public void testNoWarningForRequireType_nestedDirectRef() throws Exception {
+    checkNoWarning(
+        "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
+        "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
+        lines(
+            "goog.module('another');",
+            "const Baz = goog.requireType('foo.bar.Baz');",
+            "let /** !Baz.C */ x = null;"));
+  }
+
+  @Test
+  public void testNoWarning_overlapping_module_id_and_legacy_namespace() throws Exception {
+    checkNoWarning(
+        "goog.module('jspb'); exports = {Message: class {}};",
+        lines(
+            "goog.module('jspb.Message');",
+            "goog.module.declareLegacyNamespace();",
+            "const {Message} = goog.require('jspb');",
+            "exports = Message;"),
+        lines(
+            "goog.module('another');",
+            "const {Message} = goog.requireType('jspb');",
+            "let /** !Message */ x = null;"));
+  }
+
+  @Test
+  public void testNoWarning_overlapping_legacy_namespaces() throws Exception {
+    checkNoWarning(
+        "goog.provide('wiz');",
+        "goog.provide('wiz.controller');",
+        lines(
+            "goog.module('wiz.controller.idomcompatiblecontroller');",
+            "goog.module.declareLegacyNamespace();",
+            "class IdomCompatibleController {}",
+            "exports = {IdomCompatibleController};"),
+        lines(
+            "goog.module('another');",
+            "const SomeRandomThing = goog.require('wiz.controller.idomcompatiblecontroller');",
+            "let /** !SomeRandomThing.IdomCompatibleController */ x = null;"));
+  }
+
+  @Test
   public void testNoWarning_missingRequireType_sameModuleWithLegacyNamespace_nestedProvide()
       throws Exception {
     checkNoWarning(
@@ -1092,6 +1283,34 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     testSame(
         srcs(js),
         warning(CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkIndirectNamespaceRefRequireWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkIndirectNamespaceRefRequireTypeWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkIncorrectNamespaceAliasRequireWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkIncorrectNamespaceAliasRequireTypeWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE)
             .withMessageContaining("'" + namespace + "'"));
   }
 }

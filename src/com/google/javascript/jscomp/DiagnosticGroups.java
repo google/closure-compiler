@@ -426,6 +426,14 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE_TYPE,
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
+  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup(
+          "strictMissingRequire",
+          CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE,
+          CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE,
+          CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE,
+          CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE);
+
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
    * (tool that extracts TypeScript definitions from JS code).
