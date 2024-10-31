@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclar
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.LocaleDataPasses.ProtectGoogLocale;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
@@ -441,6 +442,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.maybeAdd(checkConsts);
+
+    // TODO(user): Enable this pass when it is ready.
+    // checks.maybeAdd(rewriteCallerCodeLocation);
 
     if (!options.getConformanceConfigs().isEmpty()) {
       checks.maybeAdd(checkConformance);
@@ -1219,6 +1223,23 @@ public final class DefaultPassConfig extends PassConfig {
         closureRewriteModule,
         removeSyntheticScript,
         "Synthetic script node should be removed only after module rewriting.");
+    checks.assertPassOrder(
+        closureRewriteModule,
+        rewriteCallerCodeLocation,
+        "ClosureRewriteModule must happen before RewriteCallerCodeLocation, so that exported"
+            + " functions and call sites are rewritten correctly.");
+    checks.assertPassOrder(
+        closureRewriteModule,
+        TranspilationPasses.getEs6RewriteDestructuring(
+            ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS),
+        "RewriteCallerCodeLocation must happen before Es6RewriteDestructuring, because we need"
+            + " ReWriteCallerCodeLocation to run before default parameters get rewritten.");
+    checks.assertPassOrder(
+        closureRewriteModule,
+        TranspilationPasses.getEs6RewriteDestructuring(
+            ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST),
+        "RewriteCallerCodeLocation must happen before Es6RewriteDestructuring, because we need"
+            + " ReWriteCallerCodeLocation to run before default parameters get rewritten.");
 
     if (checks.contains(closureGoogScopeAliases)) {
       checkState(
@@ -2055,6 +2076,12 @@ public final class DefaultPassConfig extends PassConfig {
   /** Checks that all constants are not modified */
   private final PassFactory checkConsts =
       PassFactory.builder().setName("checkConsts").setInternalFactory(ConstCheck::new).build();
+
+  private final PassFactory rewriteCallerCodeLocation =
+      PassFactory.builder()
+          .setName("rewriteCallerCodeLocation")
+          .setInternalFactory(RewriteCallerCodeLocation::new)
+          .build();
 
   /** Replaces goog.toggle calls with toggle lookups. */
   private final PassFactory replaceToggles =
