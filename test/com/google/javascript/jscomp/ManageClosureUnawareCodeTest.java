@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,10 +48,21 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     super.tearDown();
     runWrapPass = true;
     runUnwrapPass = true;
+    languageInOverride = Optional.empty();
   }
 
   public boolean runWrapPass = true;
   public boolean runUnwrapPass = true;
+  public Optional<CompilerOptions.LanguageMode> languageInOverride = Optional.empty();
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    if (languageInOverride.isPresent()) {
+      options.setLanguageIn(languageInOverride.get());
+    }
+    return options;
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -290,6 +302,19 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
             "if (goog.DEBUG) {",
             "  $jscomp_wrap_closure_unaware_code('{(function(){window[\"foo\"]=10}).call(globalThis)}');",
             "}"));
+  }
+
+  @Test
+  public void testUnwrap_doesNotEmitParseErrorsThatShouldBeSuppressed() {
+    runWrapPass = false;
+    runUnwrapPass = true;
+    languageInOverride = Optional.of(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+
+    testNoWarning(
+        lines(
+            "/** @fileoverview @closureUnaware */",
+            "goog.module('foo.bar.baz_raw');",
+            "$jscomp_wrap_closure_unaware_code('{class C { foo = \"bar\"; } }');"));
   }
 
   @Test
