@@ -19521,7 +19521,7 @@ google.maps.places.PlaceSearchPagination.prototype.hasNextPage;
 /**
  * Fetches the next page of results. Uses the same callback function that was
  * provided to the first search request.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.places.PlaceSearchPagination.prototype.nextPage = function() {};
 
