@@ -374,4 +374,45 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "module$exports$main.signal = module$contents$main_signal;",
             "(0,module$exports$main.signal)(0, goog.xid('testcode:5:0'));"));
   }
+
+  @Test
+  public void testScopeRewriting() {
+    test(
+        lines(
+            "function signal(here = goog.callerLocation()) {}",
+            "class Button {",
+            "  method(signal) {",
+            "    signal();", // this signal() call shouldn't be rewritten
+            "  }",
+            "}",
+            "signal();" // this signal() call should be rewritten
+            ),
+        lines(
+            "function signal(here = goog.callerLocation()) {}",
+            "class Button {",
+            "  method(signal) {",
+            "    signal();", // not rewritten
+            "  }",
+            "}",
+            "signal(goog.xid('testcode:7:0'));" // rewritten
+            ));
+
+    test(
+        lines(
+            "function signal() {}",
+            "function outter() {",
+            "  function signal(here = goog.callerLocation()) {}",
+            "  signal();", // this signal() call should be rewritten
+            "}",
+            "signal();" // this signal() call shouldn't be rewritten
+            ),
+        lines(
+            "function signal() {}",
+            "function outter() {",
+            "  function signal(here = goog.callerLocation()) {}",
+            "  signal(goog.xid('testcode:4:2'));", // rewritten
+            "}",
+            "signal();" // not rewritten
+            ));
+  }
 }

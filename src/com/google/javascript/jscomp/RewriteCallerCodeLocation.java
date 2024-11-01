@@ -23,6 +23,7 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Rewrites call-sites of functions that have goog.callerLocation as a default parameter.
@@ -64,11 +65,14 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
-  // Map of function name to the position of the param which has goog.callerLocation as default
-  // value. E.g:
+  // Map of function name to a FunctionVarAndParamPosition object which contains:
+  // 1. the function variable
+  // 2. the position of the param which has goog.callerLocation as default value
+  // E.g:
   // `function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}`
-  // callerLocationFunctionNames.put("signal", 2); // 2 because "here" is the second param
-  private final Map<String, Integer> callerLocationFunctionNames;
+  // callerLocationFunctionNames.put("signal", {functionVar: `Var signal @ NAME signal 1:9 ...`,
+  // paramPosition: 2}); // 2 because "here" is the second param
+  private final Map<String, FunctionVarAndParamPosition> callerLocationFunctionNames;
 
   /** Creates an instance. */
   public RewriteCallerCodeLocation(AbstractCompiler compiler) {
@@ -89,10 +93,10 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
     // 2nd pass: visitCallNodeAndRewrite
     switch (n.getToken()) {
       case PARAM_LIST:
-        visitParamListAndAddCallerLocationFunctionNames(n);
+        visitParamListAndAddCallerLocationFunctionNames(n, t);
         break;
       case CALL:
-        visitCallNodeAndRewrite(n);
+        visitCallNodeAndRewrite(n, t);
         break;
       default:
         break;
@@ -111,7 +115,7 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
    *
    * @param n param list node
    */
-  private void visitParamListAndAddCallerLocationFunctionNames(Node n) {
+  private void visitParamListAndAddCallerLocationFunctionNames(Node n, NodeTraversal t) {
     // function foo(<params>) ...
     // Each item in <params> is scanned for having a default value.
     // If there exists a default value, check if it is `goog.callerLocation`.
@@ -141,8 +145,12 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
           this.compiler.report(
               JSError.make(
                   n.getParent().getFirstChild(), JSC_ANONYMOUS_FUNCTION_CODE_LOCATION_ERROR));
+          return;
         }
-        callerLocationFunctionNames.put(functionName, paramPosition);
+
+        FunctionVarAndParamPosition functionVarAndPosition =
+            new FunctionVarAndParamPosition(t.getScope().getVar(functionName), paramPosition);
+        callerLocationFunctionNames.put(functionName, functionVarAndPosition);
       }
     }
   }
@@ -155,8 +163,7 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
    *
    * @param n call node
    */
-  private void visitCallNodeAndRewrite(Node n) {
-
+  private void visitCallNodeAndRewrite(Node n, NodeTraversal t) {
     Node firstChild = n.getFirstChild();
     if (firstChild == null
         || (!firstChild.isName() && !firstChild.isGetProp())
@@ -169,8 +176,6 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
       this.compiler.report(JSError.make(firstChild, JSC_CALLER_LOCATION_ERROR));
     }
 
-    // TODO(user): It's not guaranteed that names are unique at this point in compilation, so
-    // we should check the scope of `name` here.
     // Check if the call-site is calling a callerLocation function.
     // E.g: signal(0); name = "signal"
     String name = firstChild.getQualifiedName();
@@ -187,11 +192,20 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
       return;
     }
 
+    FunctionVarAndParamPosition functionVarAndPosition =
+        callerLocationFunctionNames.get(moduleContentsName);
+
+    Var callerLocationFunction = functionVarAndPosition.getFunctionVar();
+    Var calleeFunction = t.getScope().getVar(moduleContentsName);
+    if (!Objects.equals(calleeFunction, callerLocationFunction)) {
+      return;
+    }
+
     // Check if the argument is provided.
     // E.g:
     // function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
     // signal(0, xid('path/to/file.ts:25')); // goog.CodeLocation is provided
-    int positionOfCallerLocationArg = callerLocationFunctionNames.get(moduleContentsName);
+    int positionOfCallerLocationArg = functionVarAndPosition.getParamPosition();
     int numberOfArgs = n.getChildCount() - 1; // -1 for the firstChild which is the function name.
     if (numberOfArgs >= positionOfCallerLocationArg) {
       // goog.CodeLocation is provided as an argument, we will not rewrite this call-site.
@@ -240,5 +254,45 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
     callNode.addChildToBack(stringNode);
 
     return callNode;
+  }
+
+  /**
+   * Class to store the function variable and the position of the param which has
+   * goog.callerLocation as default value.
+   *
+   * <p>Since it is not guaranteed that names are unique at this point in compilation, we could have
+   * something like (1) a function using goog.callerLocation that's actually nested within another
+   * function, and not available globally or (2) a function using goog.callerLocation that's then
+   * shadowed by another function locally. We do not want to rewrite the call-site in these cases,
+   * so we'll check the scope of the call-site against the function with the `goog.callerLocation`
+   * default parameter.
+   *
+   * <p>E.g: `function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}`
+   *
+   * <p>This class will have:
+   *
+   * <p>1. functionVar: `Var signal @ NAME signal 1:9 ...`
+   *
+   * <p>2. paramPosition: 2 (because "here" is the second param)
+   *
+   * <p>Storing the functionVar is useful for checking if the call-site is calling the same function
+   * as the one with the `goog.callerLocation` default parameter.
+   */
+  private static final class FunctionVarAndParamPosition {
+    final Var functionVar;
+    final int paramPosition;
+
+    FunctionVarAndParamPosition(Var functionVar, int paramPosition) {
+      this.functionVar = functionVar;
+      this.paramPosition = paramPosition;
+    }
+
+    Var getFunctionVar() {
+      return functionVar;
+    }
+
+    int getParamPosition() {
+      return paramPosition;
+    }
   }
 }
