@@ -65,6 +65,17 @@ public final class CompilerOptionsTest {
   }
 
   @Test
+  public void testBrowserFeaturesetYearOptionSetsAssumeES5() {
+    CompilerOptions options = new CompilerOptions();
+    options.setBrowserFeaturesetYear(2012);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES5").getToken())
+        .isEqualTo(Token.FALSE);
+    options.setBrowserFeaturesetYear(2019);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES5").getToken())
+        .isEqualTo(Token.TRUE);
+  }
+
+  @Test
   public void testMinimumBrowserFeatureSetYearRequiredFor() {
     assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.GETTER))
         .isEqualTo(BrowserFeaturesetYear.YEAR_2012);

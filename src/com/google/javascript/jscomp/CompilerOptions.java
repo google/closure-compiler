@@ -183,6 +183,7 @@ public class CompilerOptions implements Serializable {
       // All values targeted by browser featureset year are default strict.
       options.languageOutIsDefaultStrict = Optional.of(true);
       options.setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
+      options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES5", year > 2012);
     }
 
     FeatureSet getFeatureSet() {

@@ -58,6 +58,7 @@ class ProcessDefines implements CompilerPass {
       ImmutableSet.of(
           "COMPILED",
           "goog.DEBUG",
+          "$jscomp.ASSUME_ES5",
           "$jscomp.ISOLATE_POLYFILLS",
           "$jscomp.INSTRUMENT_ASYNC_CONTEXT");
 
