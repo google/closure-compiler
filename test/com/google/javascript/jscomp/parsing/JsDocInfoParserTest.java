@@ -66,6 +66,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
   private Set<String> extraPrimitives;
+  private boolean allowClosureUnawareCode = false;
   private String prevLicense;
   private JsDocInfoParser.JsDocSourceKind jsDocSourceKind;
 
@@ -2276,7 +2277,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseClosureUnawareCode1() {
     assertThat(
             parseFileOverview(
-                    "@closureUnaware*/",
+                    "@fileoverview\n@closureUnaware*/",
                     "@closureUnaware annotation is not allowed in this compilation")
                 .isClosureUnawareCode())
         .isTrue();
@@ -2293,6 +2294,35 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseNoClosureUnawareCode() {
     assertThat(parseFileOverview("@fileoverview*/").isClosureUnawareCode()).isFalse();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode() {
+    assertThat(
+            parse(
+                    "@closureUnaware*/",
+                    "@closureUnaware annotation is not allowed in this compilation")
+                .isClosureUnawareCode())
+        .isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode_allowed() {
+    allowClosureUnawareCode = true;
+    assertThat(parse("@closureUnaware*/").isClosureUnawareCode()).isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode_fileoverview_allowed() {
+    allowClosureUnawareCode = true;
+    assertThat(parseFileOverview("@fileoverview\n@closureUnaware*/").isClosureUnawareCode())
+        .isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode_doesNotCreateFileoverviewCommentStandalone() {
+    allowClosureUnawareCode = true;
+    assertThat(parseFileOverview("@closureUnaware*/")).isNull();
   }
 
   @Test
@@ -6003,6 +6033,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       boolean parseFileOverview,
       String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter().expectAllWarnings(warnings);
+    if (allowClosureUnawareCode) {
+      var unused =
+          errorReporter.expectAllWarnings(
+              "@closureUnaware annotation is not allowed in this compilation");
+    }
 
     Config config =
         Config.builder()
