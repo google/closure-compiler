@@ -35,7 +35,7 @@ import java.util.Objects;
  *
  * <p>i.e. `signal(0,goog.xid(path/to/file.ts:lineno:charno))`
  */
-class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements CompilerPass {
+class RewriteCallerCodeLocation implements CompilerPass {
 
   static final DiagnosticType JSC_CALLER_LOCATION_POSITION_ERROR =
       DiagnosticType.error(
@@ -83,177 +83,188 @@ class RewriteCallerCodeLocation extends AbstractPostOrderCallback implements Com
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverse(compiler, root, new FindCallerLocationFunctions());
+    if (!callerLocationFunctionNames.isEmpty()) {
+      NodeTraversal.traverse(compiler, root, new RewriteCallerLocationFunctionCalls());
+    }
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    // TODO(user): Run 2 passes over the AST.
-    // 1st pass: visitParamListAndAddCallerLocationFunctionNames
-    // 2nd pass: visitCallNodeAndRewrite
-    switch (n.getToken()) {
-      case PARAM_LIST:
+  private class FindCallerLocationFunctions extends AbstractPostOrderCallback {
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isParamList()) {
         visitParamListAndAddCallerLocationFunctionNames(n, t);
-        break;
-      case CALL:
+      }
+      if (n.isCall()) {
+        // Throw an error when goog.callerLocation() is NOT used as a default value in a
+        // function's parameter.
+        Node firstChild = n.getFirstChild();
+        if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(firstChild)
+            && !n.getParent().isDefaultValue()) {
+          compiler.report(JSError.make(firstChild, JSC_CALLER_LOCATION_ERROR));
+        }
+      }
+    }
+
+    /**
+     * Visits the param list of a function and checks if it contains a default value of
+     * goog.callerLocation. If it does, `visitParamList` stores the function name and the index of
+     * the param in `callerLocationFunctionNames` map.
+     *
+     * <p>Example: function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
+     *
+     * <p>`callerLocationFunctionNames` will have an entry for "signal" -> 2 (because "here" is the
+     * second param)
+     *
+     * @param n param list node
+     */
+    private void visitParamListAndAddCallerLocationFunctionNames(Node n, NodeTraversal t) {
+      // function foo(<params>) ...
+      // Each item in <params> is scanned for having a default value.
+      // If there exists a default value, check if it is `goog.callerLocation`.
+      // Check if there is another optional argument that comes before the goog.callerLocation arg.
+      int defaultValuesCount = 0;
+      int paramPosition = 0; // keep track of the position of the param in the param list.
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        paramPosition++;
+        if (!c.isDefaultValue()) {
+          continue;
+        }
+        defaultValuesCount++;
+        Node call = c.getSecondChild(); // CALL node (E.g: goog.callerLocation())
+        if (!call.isCall()) {
+          continue;
+        }
+        Node getProp = call.getFirstChild();
+        if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(getProp)) {
+          if (defaultValuesCount > 1) {
+            compiler.report(JSError.make(c, JSC_CALLER_LOCATION_POSITION_ERROR));
+          }
+          // E.g: function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
+          // Add ("signal" -> 2) to `callerLocationFunctionNames`
+          String functionName = n.getParent().getFirstChild().getQualifiedName();
+          if (functionName == null) {
+            // Anonymous functions are not allowed to use goog.callerLocation.
+            compiler.report(
+                JSError.make(
+                    n.getParent().getFirstChild(), JSC_ANONYMOUS_FUNCTION_CODE_LOCATION_ERROR));
+            return;
+          }
+
+          FunctionVarAndParamPosition functionVarAndPosition =
+              new FunctionVarAndParamPosition(t.getScope().getVar(functionName), paramPosition);
+          callerLocationFunctionNames.put(functionName, functionVarAndPosition);
+        }
+      }
+    }
+  }
+
+  private class RewriteCallerLocationFunctionCalls extends AbstractPostOrderCallback {
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isCall()) {
         visitCallNodeAndRewrite(n, t);
-        break;
-      default:
-        break;
+      }
     }
-  }
 
-  /**
-   * Visits the param list of a function and checks if it contains a default value of
-   * goog.callerLocation. If it does, `visitParamList` stores the function name and the index of the
-   * param in `callerLocationFunctionNames` map.
-   *
-   * <p>Example: function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
-   *
-   * <p>`callerLocationFunctionNames` will have an entry for "signal" -> 2 (because "here" is the
-   * second param)
-   *
-   * @param n param list node
-   */
-  private void visitParamListAndAddCallerLocationFunctionNames(Node n, NodeTraversal t) {
-    // function foo(<params>) ...
-    // Each item in <params> is scanned for having a default value.
-    // If there exists a default value, check if it is `goog.callerLocation`.
-    // Check if there is another optional argument that comes before the goog.callerLocation arg.
-    int defaultValuesCount = 0;
-    int paramPosition = 0; // keep track of the position of the param in the param list.
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      paramPosition++;
-      if (!c.isDefaultValue()) {
-        continue;
+    /**
+     * Visits call expression nodes and checks if they require transformations. If they do, it
+     * rewrites the call expression node to include the code location.
+     *
+     * <p>E.g: `signal(0)` will be rewritten to `signal(0, goog.xid(path/to/file.ts:lineno:charno))`
+     *
+     * @param n call node
+     */
+    private void visitCallNodeAndRewrite(Node n, NodeTraversal t) {
+      Node firstChild = n.getFirstChild();
+      if (firstChild == null
+          || (!firstChild.isName() && !firstChild.isGetProp())
+          || firstChild.getQualifiedName() == null) {
+        return;
       }
-      defaultValuesCount++;
-      Node call = c.getSecondChild(); // CALL node (E.g: goog.callerLocation())
-      if (!call.isCall()) {
-        continue;
+
+      // Check if the call-site is calling a callerLocation function.
+      // E.g: signal(0); name = "signal"
+      String name = firstChild.getQualifiedName();
+
+      // ClosureRewriteModule pass will run before this pass and will rename exported function names
+      // and aliases in goog.modules.
+      // E.g:
+      // function name = module$contents$google3$javascript$apps$wiz$signals$signal_signal
+      // call node name = module$exports$google3$javascript$apps$wiz$signals$signal.signal
+      String moduleContentsName =
+          name.replace('.', '_').replace("module$exports$", "module$contents$");
+
+      if (!callerLocationFunctionNames.containsKey(moduleContentsName)) {
+        return;
       }
-      Node getProp = call.getFirstChild();
-      if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(getProp)) {
-        if (defaultValuesCount > 1) {
-          this.compiler.report(JSError.make(c, JSC_CALLER_LOCATION_POSITION_ERROR));
+
+      FunctionVarAndParamPosition functionVarAndPosition =
+          callerLocationFunctionNames.get(moduleContentsName);
+
+      Var callerLocationFunction = functionVarAndPosition.getFunctionVar();
+      Var calleeFunction = t.getScope().getVar(moduleContentsName);
+      if (!Objects.equals(calleeFunction, callerLocationFunction)) {
+        return;
+      }
+
+      // Check if the argument is provided.
+      // E.g:
+      // function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
+      // signal(0, xid('path/to/file.ts:25')); // goog.CodeLocation is provided
+      int positionOfCallerLocationArg = functionVarAndPosition.getParamPosition();
+      int numberOfArgs = n.getChildCount() - 1; // -1 for the firstChild which is the function name.
+      if (numberOfArgs >= positionOfCallerLocationArg) {
+        // goog.CodeLocation is provided as an argument, we will not rewrite this call-site.
+        // If `undefined` is passed in as an argument to goog.CodeLocation, we will throw an error.
+        // Otherwise continue without rewriting.
+        JSType jsType = n.getChildAtIndex(positionOfCallerLocationArg).getJSType();
+        if (jsType != null && jsType.isExplicitlyVoidable()) {
+          // user is passing in undefined as an argument to goog.CodeLocation
+          compiler.report(JSError.make(firstChild, JSC_UNDEFINED_CODE_LOCATION_ERROR));
         }
-        // E.g: function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
-        // Add ("signal" -> 2) to `callerLocationFunctionNames`
-        String functionName = n.getParent().getFirstChild().getQualifiedName();
-        if (functionName == null) {
-          // Anonymous functions are not allowed to use goog.callerLocation.
-          this.compiler.report(
-              JSError.make(
-                  n.getParent().getFirstChild(), JSC_ANONYMOUS_FUNCTION_CODE_LOCATION_ERROR));
-          return;
-        }
 
-        FunctionVarAndParamPosition functionVarAndPosition =
-            new FunctionVarAndParamPosition(t.getScope().getVar(functionName), paramPosition);
-        callerLocationFunctionNames.put(functionName, functionVarAndPosition);
-      }
-    }
-  }
-
-  /**
-   * Visits call expression nodes and checks if they require transformations. If they do, it
-   * rewrites the call expression node to include the code location.
-   *
-   * <p>E.g: `signal(0)` will be rewritten to `signal(0, goog.xid(path/to/file.ts:lineno:charno))`
-   *
-   * @param n call node
-   */
-  private void visitCallNodeAndRewrite(Node n, NodeTraversal t) {
-    Node firstChild = n.getFirstChild();
-    if (firstChild == null
-        || (!firstChild.isName() && !firstChild.isGetProp())
-        || firstChild.getQualifiedName() == null) {
-      return;
-    }
-
-    if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(firstChild)
-        && !n.getParent().isDefaultValue()) {
-      this.compiler.report(JSError.make(firstChild, JSC_CALLER_LOCATION_ERROR));
-    }
-
-    // Check if the call-site is calling a callerLocation function.
-    // E.g: signal(0); name = "signal"
-    String name = firstChild.getQualifiedName();
-
-    // ClosureRewriteModule pass will run before this pass and will rename exported function names
-    // and aliases in goog.modules.
-    // E.g:
-    // function name = module$contents$google3$javascript$apps$wiz$signals$signal_signal
-    // call node name = module$exports$google3$javascript$apps$wiz$signals$signal.signal
-    String moduleContentsName =
-        name.replace('.', '_').replace("module$exports$", "module$contents$");
-
-    if (!callerLocationFunctionNames.containsKey(moduleContentsName)) {
-      return;
-    }
-
-    FunctionVarAndParamPosition functionVarAndPosition =
-        callerLocationFunctionNames.get(moduleContentsName);
-
-    Var callerLocationFunction = functionVarAndPosition.getFunctionVar();
-    Var calleeFunction = t.getScope().getVar(moduleContentsName);
-    if (!Objects.equals(calleeFunction, callerLocationFunction)) {
-      return;
-    }
-
-    // Check if the argument is provided.
-    // E.g:
-    // function signal(val, here: goog.CodeLocation = goog.callerLocation()) {}
-    // signal(0, xid('path/to/file.ts:25')); // goog.CodeLocation is provided
-    int positionOfCallerLocationArg = functionVarAndPosition.getParamPosition();
-    int numberOfArgs = n.getChildCount() - 1; // -1 for the firstChild which is the function name.
-    if (numberOfArgs >= positionOfCallerLocationArg) {
-      // goog.CodeLocation is provided as an argument, we will not rewrite this call-site.
-      // If `undefined` is passed in as an argument to goog.CodeLocation, we will throw an error.
-      // Otherwise continue without rewriting.
-      JSType jsType = n.getChildAtIndex(positionOfCallerLocationArg).getJSType();
-      if (jsType != null && jsType.isExplicitlyVoidable()) {
-        // user is passing in undefined as an argument to goog.CodeLocation
-        this.compiler.report(JSError.make(firstChild, JSC_UNDEFINED_CODE_LOCATION_ERROR));
+        return;
       }
 
-      return;
+      // create the goog.xid(path/to/file.ts:lineno:charno) and add it as the last parameter.
+      Node xidCall = createGoogXidFilePathNode(n);
+      compiler.reportChangeToEnclosingScope(n);
+      n.addChildToBack(xidCall);
     }
 
-    // create the goog.xid(path/to/file.ts:lineno:charno) and add it as the last parameter.
-    Node xidCall = createGoogXidFilePathNode(n);
-    compiler.reportChangeToEnclosingScope(n);
-    n.addChildToBack(xidCall);
-  }
+    /**
+     * Creates a call node for "goog.xid(path/to/file.ts:lineno:charno)"
+     *
+     * @param n call node of a function that needs to be rewritten to include the code location
+     * @return call node including code location i.e. "goog.xid(path/to/file.ts:lineno:charno)"
+     */
+    private Node createGoogXidFilePathNode(Node n) {
+      // googNode is "goog"
+      Node googNode = IR.name("goog");
+      googNode.srcrefIfMissing(n);
 
-  /**
-   * Creates a call node for "goog.xid(path/to/file.ts:lineno:charno)"
-   *
-   * @param n call node of a function that needs to be rewritten to include the code location
-   * @return call node including code location i.e. "goog.xid(path/to/file.ts:lineno:charno)"
-   */
-  private Node createGoogXidFilePathNode(Node n) {
-    // googNode is "goog"
-    Node googNode = IR.name("goog");
-    googNode.srcrefIfMissing(n);
+      // googXid is "goog.xid" node
+      Node googXid = astFactory.createGetPropWithUnknownType(googNode, "xid");
+      googXid.srcrefIfMissing(n);
 
-    // googXid is "goog.xid" node
-    Node googXid = astFactory.createGetPropWithUnknownType(googNode, "xid");
-    googXid.srcrefIfMissing(n);
+      // callNode is "goog.xid()" node
+      Node callNode = astFactory.createCallWithUnknownType(googXid);
+      callNode.srcrefIfMissing(n);
 
-    // callNode is "goog.xid()" node
-    Node callNode = astFactory.createCallWithUnknownType(googXid);
-    callNode.srcrefIfMissing(n);
+      // stringNode is "path/to/file.ts:lineno:charno" node
+      Node stringNode =
+          astFactory.createString(
+              n.getSourceFileName() + ":" + n.getLineno() + ":" + n.getCharno());
+      stringNode.srcrefIfMissing(n);
 
-    // stringNode is "path/to/file.ts:lineno:charno" node
-    Node stringNode =
-        astFactory.createString(n.getSourceFileName() + ":" + n.getLineno() + ":" + n.getCharno());
-    stringNode.srcrefIfMissing(n);
+      // turns callNode from "goog.xid()" to "goog.xid(path/to/file.ts:lineno:charno)"
+      callNode.addChildToBack(stringNode);
 
-    // turns callNode from "goog.xid()" to "goog.xid(path/to/file.ts:lineno:charno)"
-    callNode.addChildToBack(stringNode);
-
-    return callNode;
+      return callNode;
+    }
   }
 
   /**
