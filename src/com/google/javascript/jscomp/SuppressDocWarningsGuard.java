@@ -52,15 +52,23 @@ class SuppressDocWarningsGuard extends WarningsGuard {
     LinkedHashMap<String, DiagnosticGroup> builder = new LinkedHashMap<>(suppressors);
 
     // Hack: Allow "@suppress {missingProperties}" to mean
-    // "@suppress {strictmissingProperties}".
+    // "@suppress {strictMissingProperties}".
     // TODO(johnlenz): Delete this when it is enabled with missingProperties
     builder.put(
         "missingProperties",
         new DiagnosticGroup(
             DiagnosticGroups.MISSING_PROPERTIES, DiagnosticGroups.STRICT_MISSING_PROPERTIES));
 
+    // Hack: Allow "@suppress {missingRequire}" to mean
+    // "@suppress {strictMissingRequire}".
+    // TODO(johnlenz): Delete this when it is enabled with missingRequire
+    builder.put(
+        "missingRequire",
+        new DiagnosticGroup(
+            DiagnosticGroups.MISSING_REQUIRE, DiagnosticGroups.STRICT_MISSING_REQUIRE));
+
     // Hack: Allow "@suppress {checkTypes}" to include
-    // "strictmissingProperties".
+    // "strictMissingProperties".
     // TODO(johnlenz): Delete this when it is enabled with missingProperties
     builder.put(
         "checkTypes",
