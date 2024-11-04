@@ -43,11 +43,10 @@ class RewriteCallerCodeLocation implements CompilerPass {
           "Please make sure there is only one goog.callerLocation argument in your function's"
               + " parameter list, and it is the first optional argument in the list");
 
-  static final DiagnosticType JSC_CALLER_LOCATION_ERROR =
+  static final DiagnosticType JSC_CALLER_LOCATION_MISUSE_ERROR =
       DiagnosticType.error(
-          "JSC_CALLER_LOCATION_ERROR",
-          "goog.callerLocation should only be used as a default value in a function's parameter"
-              + " list");
+          "JSC_CALLER_LOCATION_MISUSE_ERROR",
+          "goog.callerLocation should only be used as a default parameter initializer");
 
   static final DiagnosticType JSC_UNDEFINED_CODE_LOCATION_ERROR =
       DiagnosticType.error(
@@ -97,12 +96,27 @@ class RewriteCallerCodeLocation implements CompilerPass {
         visitParamListAndAddCallerLocationFunctionNames(n, t);
       }
       if (n.isCall()) {
-        // Throw an error when goog.callerLocation() is NOT used as a default value in a
-        // function's parameter.
+        // Check for misuse of goog.callerLocation.
         Node firstChild = n.getFirstChild();
-        if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(firstChild)
-            && !n.getParent().isDefaultValue()) {
-          compiler.report(JSError.make(firstChild, JSC_CALLER_LOCATION_ERROR));
+        if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(firstChild)) {
+          if (!parent.isDefaultValue()) {
+            // Throw an error when goog.callerLocation() is NOT used as a default value in a
+            // function's parameter.
+            compiler.report(JSError.make(firstChild, JSC_CALLER_LOCATION_MISUSE_ERROR));
+          }
+          if (parent.getParent().isStringKey()) {
+            // Throw an error when goog.callerLocation() is used in an object literal.
+            // E.g:
+            // function foo({val1, val2, here = goog.callerLocation()}) {}
+            // The AST for `here = goog.callerLocation()`looks like:
+            // STRING_KEY here (This node tells us we are in an object literal)
+            //   DEFAULT_VALUE
+            //     NAME here 1:26
+            //     CALL 1:33
+            //       GETPROP callerLocation
+            //         NAME goog 1:33
+            compiler.report(JSError.make(parent.getParent(), JSC_CALLER_LOCATION_MISUSE_ERROR));
+          }
         }
       }
     }

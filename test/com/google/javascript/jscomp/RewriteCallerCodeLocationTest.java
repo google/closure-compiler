@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.RewriteCallerCodeLocation.JSC_ANONYMOUS_FUNCTION_CODE_LOCATION_ERROR;
-import static com.google.javascript.jscomp.RewriteCallerCodeLocation.JSC_CALLER_LOCATION_ERROR;
+import static com.google.javascript.jscomp.RewriteCallerCodeLocation.JSC_CALLER_LOCATION_MISUSE_ERROR;
 import static com.google.javascript.jscomp.RewriteCallerCodeLocation.JSC_CALLER_LOCATION_POSITION_ERROR;
 import static com.google.javascript.jscomp.RewriteCallerCodeLocation.JSC_UNDEFINED_CODE_LOCATION_ERROR;
 
@@ -296,19 +296,17 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "function foo() {", //
             "  const x = goog.callerLocation();", //
             "}"),
-        JSC_CALLER_LOCATION_ERROR);
+        JSC_CALLER_LOCATION_MISUSE_ERROR);
   }
 
   @Test
   public void testDestructuringOptionsBag() {
-    // TODO(user): this should error
-    test(
+    // Error if `goog.callerLocation()` is used in an object literal
+    testError(
         lines(
             "function foo({val1, val2, here = goog.callerLocation()}) {}", //
             "foo({val1:0, val2:0})"),
-        lines(
-            "function foo({val1, val2, here = goog.callerLocation()}) {}",
-            "foo({val1:0, val2:0})"));
+        JSC_CALLER_LOCATION_MISUSE_ERROR);
   }
 
   @Test
