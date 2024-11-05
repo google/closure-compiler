@@ -196,45 +196,59 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCallerLocationIsSpecified() {
+  public void testGoogCallerLocationDefinitionInBaseJsDoesNotError() {
+    String baseJsSource =
+        lines(
+            "var goog = goog || {};", //
+            "goog.callerLocation = function() {};");
+    SourceFile baseJs = SourceFile.fromCode("javascript/closure/base.js", baseJsSource);
+    // this code is only allowed in base.js
+    test(srcs(baseJs), expected(baseJs));
+  }
+
+  @Test
+  public void testNoRewritingIfCallerLocationIsSpecified() {
     enableTypeCheck();
     enableParseTypeInfo();
+
+    String baseJsSource =
+        lines(
+            "var goog = goog || {};", //
+            "goog.callerLocation = function() {};");
+    SourceFile baseJs = SourceFile.fromCode("javascript/closure/base.js", baseJsSource);
+
     // no rewriting if CodeLocation is provided as an argument
-    testSame(
+    String codeLocationProvided =
         lines(
-            "var goog = goog || {};",
-            "goog.callerLocation = function() {};",
             "function signal(here = goog.callerLocation()) {}",
-            "const mySignal = signal('path/to/file.ts:25');"));
+            "const mySignal = signal('path/to/file.ts:25');");
+    SourceFile testJs = SourceFile.fromCode("codeLocationProvided.js", codeLocationProvided);
+    testSame(srcs(baseJs, testJs));
 
-    testSame(
+    String codeLocationProvided2 =
         lines(
-            "var goog = goog || {};",
-            "goog.callerLocation = function() {};",
             "function signal(val, here = goog.callerLocation()) {}",
-            "const mySignal = signal(0, xid('path/to/file.ts:25'));"));
+            "const mySignal = signal(0, xid('path/to/file.ts:25'));");
+    SourceFile testJs2 = SourceFile.fromCode("codeLocationProvided2.js", codeLocationProvided2);
+    testSame(srcs(baseJs, testJs2));
 
-    testSame(
+    String codeLocationProvided3 =
         lines(
-            "var goog = goog || {};",
-            "goog.callerLocation = function() {};",
             "function signal(val, here = goog.callerLocation()) {}",
             "const mySignal = signal(",
             "  () => foo() % 2 === 0,",
             "  xid('path/to/file.ts:25'),",
-            ");"));
-  }
+            ");");
+    SourceFile testJs3 = SourceFile.fromCode("codeLocationProvided3.js", codeLocationProvided3);
+    testSame(srcs(baseJs, testJs3));
 
-  @Test
-  public void testCallerLocationIsSpecified_withNonStringArgument() {
-    enableTypeCheck();
     // no rewriting if CodeLocation is provided as an argument, regardless of the type of the arg
-    testSame(
+    String codeLocationProvided4 =
         lines(
-            "var goog = goog || {};",
-            "goog.callerLocation = function() {};",
             "function signal(here = goog.callerLocation()) {}", //
-            "const mySignal = signal(foo());"));
+            "const mySignal = signal(foo());");
+    SourceFile testJs4 = SourceFile.fromCode("codeLocationProvided4.js", codeLocationProvided4);
+    testSame(srcs(baseJs, testJs4));
   }
 
   @Test

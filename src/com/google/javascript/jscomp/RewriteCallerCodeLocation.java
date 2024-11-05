@@ -92,33 +92,56 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (isGoogCallerLocationMisused(n, parent)) {
+        compiler.report(JSError.make(parent.getParent(), JSC_CALLER_LOCATION_MISUSE_ERROR));
+      }
+
       if (n.isParamList()) {
         visitParamListAndAddCallerLocationFunctionNames(n, t);
       }
-      if (n.isCall()) {
-        // Check for misuse of goog.callerLocation.
-        Node firstChild = n.getFirstChild();
-        if (GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(firstChild)) {
-          if (!parent.isDefaultValue()) {
-            // Throw an error when goog.callerLocation() is NOT used as a default value in a
-            // function's parameter.
-            compiler.report(JSError.make(firstChild, JSC_CALLER_LOCATION_MISUSE_ERROR));
-          }
-          if (parent.getParent().isStringKey()) {
-            // Throw an error when goog.callerLocation() is used in an object literal.
-            // E.g:
-            // function foo({val1, val2, here = goog.callerLocation()}) {}
-            // The AST for `here = goog.callerLocation()`looks like:
-            // STRING_KEY here (This node tells us we are in an object literal)
-            //   DEFAULT_VALUE
-            //     NAME here 1:26
-            //     CALL 1:33
-            //       GETPROP callerLocation
-            //         NAME goog 1:33
-            compiler.report(JSError.make(parent.getParent(), JSC_CALLER_LOCATION_MISUSE_ERROR));
-          }
-        }
+    }
+
+    /**
+     * Checks if `goog.callerLocation` is misused. `goog.callerLocation` should only be used as a
+     * default parameter initializer.
+     *
+     * @param n node to check
+     * @param parent parent node
+     * @return true if goog.callerLocation is misused, false otherwise
+     */
+    private boolean isGoogCallerLocationMisused(Node n, Node parent) {
+      if (!GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(n)) {
+        // not a `goog.callerLocation` node
+        return false;
       }
+
+      // Check for misuse of goog.callerLocation.
+      if (parent.isCall() && parent.getParent().isDefaultValue()) {
+        if (parent.getParent().getParent().isStringKey()) {
+          // Throw an error when `goog.callerLocation` is used in an object literal.
+          // E.g:
+          // function foo({val1, val2, here = goog.callerLocation()}) {}
+          // The AST for `here = goog.callerLocation()`looks like:
+          // STRING_KEY here (This node tells us we are in an object literal)
+          //   DEFAULT_VALUE
+          //     NAME here 1:26
+          //     CALL 1:33
+          //       GETPROP callerLocation (This is the node `n` we are currently at)
+          //         NAME goog 1:33
+          return true;
+        }
+
+        // `goog.callerLocation` is used correctly as a default value in a function's parameter
+        // list.
+        return false;
+      }
+
+      if (n.getSourceFileName().contains("javascript/closure/base.js")) {
+        return false;
+      }
+
+      // `goog.callerLocation` is NOT used as a default value in a function's parameter list.
+      return true;
     }
 
     /**
