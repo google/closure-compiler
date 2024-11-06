@@ -373,7 +373,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                   .getOutputFeatureSet()
                   .without(
                       Feature.CLASSES,
-                      Feature.CLASS_EXTENDS,
                       Feature.CLASS_GETTER_SETTER,
                       Feature.PUBLIC_CLASS_FIELDS,
                       Feature.CLASS_STATIC_BLOCK,

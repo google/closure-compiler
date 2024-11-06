@@ -40,11 +40,13 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean getterSetterSupported;
+  private boolean injectedClassExtendsLibraries;
 
   public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.getterSetterSupported =
         !FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet());
+    this.injectedClassExtendsLibraries = false;
   }
 
   @Override
@@ -56,7 +58,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
 
     FeatureSet outputFeatures = compiler.getOptions().getOutputFeatureSet();
 
-    // Check for references to global `Symbol` and getters/setters
+    // Check for references to global `Symbol`, getters/setters, and class `extends` clauses
     if (!outputFeatures.contains(used)) {
       NodeTraversal.traverse(compiler, root, this);
     }
@@ -83,8 +85,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterator");
     }
 
-    if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)
-        || mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
+    if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)) {
       // We must automatically generate the default constructor for descendent classes,
       // and those must call super(...arguments), so we end up injecting our own spread
       // expressions for such cases.
@@ -98,11 +99,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       // but the output language level doesn't indicate that it is guaranteed to be present, so
       // we'll include our polyfill.
       compiler.ensureLibraryInjected("es6/object/assign", /* force= */ false);
-    }
-
-    if (mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
-      TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "construct");
-      TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "inherits");
     }
 
     if (mustBeCompiledAway.contains(Feature.CLASS_GETTER_SETTER)) {
@@ -160,6 +156,22 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
         if (!getterSetterSupported) {
           TranspilationUtil.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
+        }
+        break;
+
+      case CLASS:
+        // This is technically an optimization - we could just always inject these when we see
+        // Feature.CLASSES. That's fine for real code, but just makes some unit testing
+        // harder because more runtime libraries are injected.
+        Node superclass = n.getSecondChild();
+        if (!injectedClassExtendsLibraries && !superclass.isEmpty()) {
+          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "construct");
+          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "inherits");
+          // We must automatically generate the default constructor for descendent classes,
+          // and those must call super(...arguments), so we end up injecting our own spread
+          // expressions for such cases.
+          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterable");
+          injectedClassExtendsLibraries = true;
         }
         break;
       default:

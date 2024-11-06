@@ -183,7 +183,6 @@ public final class FeatureSet implements Serializable {
     BINARY_LITERALS("binary literal", LangVersion.ES2015),
     BLOCK_SCOPED_FUNCTION_DECLARATION("block-scoped function declaration", LangVersion.ES2015),
     CLASSES("class", LangVersion.ES2015),
-    CLASS_EXTENDS("class extends", LangVersion.ES2015),
     CLASS_GETTER_SETTER("class getters/setters", LangVersion.ES2015),
     COMPUTED_PROPERTIES("computed property", LangVersion.ES2015),
     CONST_DECLARATIONS("const declaration", LangVersion.ES2015),

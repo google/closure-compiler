@@ -131,10 +131,6 @@ final class ScriptNodeDeserializer {
     }
 
     private void recordScriptFeatures(Node grandparent, Node parent, Node node) {
-      if (parent.isClass() && !node.isEmpty() && node.isSecondChildOf(parent)) {
-        this.addScriptFeature(Feature.CLASS_EXTENDS);
-      }
-
       switch (node.getToken()) {
         case FUNCTION:
           if (node.isAsyncGeneratorFunction()) {

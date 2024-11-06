@@ -41,7 +41,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
   private static final FeatureSet features =
       FeatureSet.BARE_MINIMUM.with(
           Feature.CLASSES,
-          Feature.CLASS_EXTENDS,
           Feature.CLASS_GETTER_SETTER,
           Feature.NEW_TARGET,
           Feature.SUPER);

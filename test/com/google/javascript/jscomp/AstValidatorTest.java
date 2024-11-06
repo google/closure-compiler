@@ -1301,11 +1301,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFeatureValidation_classExtends() {
-    testFeatureValidation("class B {} class C extends B {}", Feature.CLASS_EXTENDS);
-  }
-
-  @Test
   public void testFeatureValidation_arrowFunctions() {
     testFeatureValidation("var arrow = () => 3", Feature.ARROW_FUNCTIONS);
     testFeatureValidation("var asyncArrow = async () => 3", Feature.ARROW_FUNCTIONS);

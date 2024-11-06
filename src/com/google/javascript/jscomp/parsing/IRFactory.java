@@ -2748,11 +2748,7 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.CLASSES);
 
       Node name = transformOrEmpty(tree.name, tree);
-
       Node superClass = transformOrEmpty(tree.superClass, tree);
-      if (!superClass.isEmpty()) {
-        features = features.with(Feature.CLASS_EXTENDS);
-      }
 
       Node body = newNode(Token.CLASS_MEMBERS);
       setSourceInfo(body, tree);

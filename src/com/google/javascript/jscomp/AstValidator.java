@@ -953,7 +953,6 @@ public final class AstValidator implements CompilerPass {
       validateProperties(superClass);
       validateChildless(superClass);
     } else {
-      validateFeature(Feature.CLASS_EXTENDS, n);
       validateExpression(superClass);
     }
 
