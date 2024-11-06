@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -94,6 +96,7 @@ class RewriteCallerCodeLocation implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (isGoogCallerLocationMisused(n, parent)) {
         compiler.report(JSError.make(parent.getParent(), JSC_CALLER_LOCATION_MISUSE_ERROR));
+        return;
       }
 
       if (n.isParamList()) {
@@ -137,6 +140,8 @@ class RewriteCallerCodeLocation implements CompilerPass {
       }
 
       if (n.getSourceFileName().contains("javascript/closure/base.js")) {
+        // This is the definition of the debug build runtime implementation of goog.callerLocation.
+        // This is not a misuse.
         return false;
       }
 
@@ -157,6 +162,7 @@ class RewriteCallerCodeLocation implements CompilerPass {
      * @param n param list node
      */
     private void visitParamListAndAddCallerLocationFunctionNames(Node n, NodeTraversal t) {
+      checkState(n.isParamList(), n);
       // function foo(<params>) ...
       // Each item in <params> is scanned for having a default value.
       // If there exists a default value, check if it is `goog.callerLocation`.
