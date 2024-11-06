@@ -1031,7 +1031,11 @@ public class Node {
         case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
           // note: we could relax this restriction if VarCheck needed to generate other forms of
           // synthetic externs
-          if (!isVar() || !hasOneChild() || !getFirstChild().isName()) {
+          if (!isVar()) {
+            // TODO: this check used to also try and validate that the synthetic externs VAR's had
+            // names, but this doesn't work during deserialization because the name is a child node
+            // that we haven't even seen yet when we are validating properties.
+            // || !hasOneChild() || !getFirstChild().isName()) {
             violationMessageConsumer.accept(
                 "Expected all synthetic unfulfilled declarations to be `var <name>`");
           }
@@ -1243,7 +1247,7 @@ public class Node {
         // NOTE: errorMessage will never be null, but just passing `false` to `checkState()`
         // triggers warning messages from some code analysis tools.
         errorMessage ->
-            checkState(errorMessage != null, "deserialize error: %s: %s", errorMessage, this));
+            checkState(errorMessage == null, "deserialize error: %s: %s", errorMessage, this));
   }
 
   /** Sets the syntactical type specified on this node. */
