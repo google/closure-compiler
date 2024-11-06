@@ -78,7 +78,7 @@ final class ScriptNodeDeserializer {
         Node scriptNode =
             this.visit(
                 AstNode.parseFrom(astStream, ExtensionRegistry.getEmptyRegistry()),
-                null,
+                FeatureContext.NONE,
                 this.owner().createSourceInfoTemplate(this.owner().sourceFile));
         scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
         return scriptNode;
@@ -91,7 +91,7 @@ final class ScriptNodeDeserializer {
       return ScriptNodeDeserializer.this;
     }
 
-    private Node visit(AstNode astNode, @Nullable Node parent, @Nullable Node sourceFileTemplate) {
+    private Node visit(AstNode astNode, FeatureContext context, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
         sourceFileTemplate =
@@ -115,22 +115,21 @@ final class ScriptNodeDeserializer {
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
+      this.recordScriptFeatures(context, n);
 
+      FeatureContext newContext = contextFor(context, n);
       int children = astNode.getChildCount();
       for (int i = 0; i < children; i++) {
         AstNode child = astNode.getChild(i);
-        Node deserializedChild = this.visit(child, n, sourceFileTemplate);
+        Node deserializedChild = this.visit(child, newContext, sourceFileTemplate);
         n.addChildToBack(deserializedChild);
-        // record script features here instead of while visiting child because some features are
-        // context-dependent, and we need to know the parent and/or grandparent.
-        this.recordScriptFeatures(parent, n, deserializedChild);
         this.owner().setOriginalNameIfPresent(child, deserializedChild);
       }
 
       return n;
     }
 
-    private void recordScriptFeatures(Node grandparent, Node parent, Node node) {
+    private void recordScriptFeatures(FeatureContext context, Node node) {
       switch (node.getToken()) {
         case FUNCTION:
           if (node.isAsyncGeneratorFunction()) {
@@ -146,7 +145,7 @@ final class ScriptNodeDeserializer {
             this.addScriptFeature(Feature.GENERATORS);
           }
 
-          if (parent.isBlock() && !grandparent.isFunction()) {
+          if (context.equals(FeatureContext.BLOCK_SCOPE)) {
             this.scriptFeatures =
                 this.scriptFeatures.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
           }
@@ -164,39 +163,39 @@ final class ScriptNodeDeserializer {
           return;
 
         case DEFAULT_VALUE:
-          if (parent.isParamList()) {
+          if (context.equals(FeatureContext.PARAM_LIST)) {
             this.addScriptFeature(Feature.DEFAULT_PARAMETERS);
           }
           return;
 
         case GETTER_DEF:
           this.addScriptFeature(Feature.GETTER);
-          if (parent.isClassMembers()) {
+          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
             this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
           }
           return;
 
         case SETTER_DEF:
           this.addScriptFeature(Feature.SETTER);
-          if (parent.isClassMembers()) {
+          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
             this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
           }
           return;
 
         case BLOCK:
-          if (parent.isClassMembers()) {
+          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
             this.addScriptFeature(Feature.CLASS_STATIC_BLOCK);
           }
           return;
 
         case EMPTY:
-          if (parent.isCatch()) {
+          if (context.equals(FeatureContext.CATCH)) {
             this.addScriptFeature(Feature.OPTIONAL_CATCH_BINDING);
           }
           return;
         case ITER_REST:
           this.addScriptFeature(Feature.ARRAY_PATTERN_REST);
-          if (parent.isParamList()) {
+          if (context.equals(FeatureContext.PARAM_LIST)) {
             this.addScriptFeature(Feature.REST_PARAMETERS);
           }
           return;
@@ -655,5 +654,49 @@ final class ScriptNodeDeserializer {
       return nodeProperties; // we are deserializing colors, so this is fine.
     }
     return nodeProperties & ~(1L << NodeProperty.COLOR_FROM_CAST.getNumber());
+  }
+
+  /**
+   * Parent context of a node while deserializing, specifically for the purpose of tracking {@link
+   * com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature}
+   *
+   * <p>This models only the direct parent of a node. e.g. nested nodes within a function body
+   * should not have the FUNCTION context. Only direct children of the function would. The intent is
+   * to have a way to model the parent Node of a node being visited before the AST is fully built,
+   * as the parent pointer may not have been instantiated yet.
+   */
+  private enum FeatureContext {
+    PARAM_LIST,
+    CLASS_MEMBERS,
+    CLASS,
+    CATCH,
+    // the top of a block scope, e.g. within an if/while/for loop block, or a plain `{ }` block
+    BLOCK_SCOPE,
+    FUNCTION,
+    NONE;
+  }
+
+  private static FeatureContext contextFor(FeatureContext parentContext, Node node) {
+    switch (node.getToken()) {
+      case PARAM_LIST:
+        return FeatureContext.PARAM_LIST;
+      case CLASS_MEMBERS:
+        return FeatureContext.CLASS_MEMBERS;
+      case CLASS:
+        return FeatureContext.CLASS;
+      case CATCH:
+        return FeatureContext.CATCH;
+      case BLOCK:
+        // a function body is not a block scope - BLOCK is just overloaded. all other references to
+        // BLOCK are block scopes.
+        if (parentContext.equals(FeatureContext.FUNCTION)) {
+          return FeatureContext.NONE;
+        }
+        return FeatureContext.BLOCK_SCOPE;
+      case FUNCTION:
+        return FeatureContext.FUNCTION;
+      default:
+        return FeatureContext.NONE;
+    }
   }
 }
