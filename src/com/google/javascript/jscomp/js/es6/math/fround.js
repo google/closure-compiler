@@ -20,7 +20,7 @@
 $jscomp.polyfill('Math.fround', function(orig) {
   if (orig) return orig;
 
-  if ($jscomp.SIMPLE_FROUND_POLYFILL || typeof Float32Array !== 'function') {
+  if (!$jscomp.ASSUME_ES5 && typeof Float32Array !== 'function') {
     // Explicitly requested a no-op polyfill, or Float32Array not available.
     return /** @return {number} */ function(/** number */ arg) {
       return arg;

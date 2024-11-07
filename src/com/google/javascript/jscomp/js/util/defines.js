@@ -37,16 +37,6 @@ $jscomp.ASSUME_NO_NATIVE_MAP = false;
 $jscomp.ASSUME_NO_NATIVE_SET = false;
 
 /**
- * Whether to provide an incorrect but tiny Math.fround polyfill that just
- * returns the number given.  This is usually okay to do, particularly if
- * `Math.fround` is only used to allow the JavaScript engine to use faster
- * 32-bit float operations, but could cause problems if program logic is
- * dependent on floats being truncated consistently.
- * @define {boolean}
- */
-$jscomp.SIMPLE_FROUND_POLYFILL = false;
-
-/**
  * Whether to isolate all injected polyfills from global state. This is not
  * on by default, as it bloats code size, but is useful when code needs to
  * operate on untrusted third_party sites. It relies on a compiler pass to
