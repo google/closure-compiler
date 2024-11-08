@@ -203,7 +203,9 @@ public class Node {
     // Only present in the "synthetic externs file". Builds initialized using a
     // "TypedAST filesystem" will delete any such declarations present in a different compilation
     // shard
-    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION
+    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
+    // This prop holds a reference to a closure-unaware sub-AST.
+    CLOSURE_UNAWARE_SHADOW,
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -604,6 +606,22 @@ public class Node {
 
   public final @Nullable Node getPrevious() {
     return this == parent.first ? null : previous;
+  }
+
+  public final void setClosureUnawareShadow(@Nullable Node shadowRoot) {
+    checkState(this.first == null, "Cannot set shadow root on a node with children");
+    checkState(this.token == Token.NAME, "Only NAME nodes can be used as shadows");
+    this.putProp(Prop.CLOSURE_UNAWARE_SHADOW, shadowRoot);
+  }
+
+  public final @Nullable Node getClosureUnawareShadow() {
+    if (this.token != Token.NAME) {
+      // As checked in setClosureUnawareShadow, only NAME nodes can have shadow content.
+      // We short-circuit the getProp call here because that can be very expensive for nodes that
+      // have long proplists (and we know it wouldn't find this prop anyways).
+      return null;
+    }
+    return (Node) this.getProp(Prop.CLOSURE_UNAWARE_SHADOW);
   }
 
   /**
@@ -1040,6 +1058,13 @@ public class Node {
                 "Expected all synthetic unfulfilled declarations to be `var <name>`");
           }
           break;
+        case CLOSURE_UNAWARE_SHADOW:
+          PropListItem shadowProp = lookupProperty(Prop.CLOSURE_UNAWARE_SHADOW);
+          if (!(shadowProp instanceof Node.ObjectPropListItem)
+              || !(shadowProp.getObjectValue() instanceof Node)) {
+            violationMessageConsumer.accept("CLOSURE_UNAWARE_SHADOW property must point to a Node");
+          }
+          break;
         default:
           // No validation is currently done for other properties
           break;
@@ -1119,7 +1144,7 @@ public class Node {
     return (bitset & nodePropertyToBit(prop)) != 0;
   }
 
-  static boolean hasBitSet(long bitset, int bit) {
+  public static final boolean hasBitSet(long bitset, int bit) {
     return (bitset & 1L << bit) != 0;
   }
 
@@ -1145,6 +1170,14 @@ public class Node {
           break;
         case SIDE_EFFECT_FLAGS:
           propSet = setNodePropertySideEffectFlags(propSet, propListItem.getIntValue());
+          break;
+        case CLOSURE_UNAWARE_SHADOW:
+          // This is a bit of an unusual case, because the CLOSURE_UNAWARE_SHADOW Prop is a Node
+          // pointer, not a boolean.
+          // However, it is treated as a boolean property in the TypedAST representation as a signal
+          // that the child ASTNode is shadowed code and not a normal child node.
+          // We check for this bit when building in ScriptNodeDeserializer.
+          propSet = setNodePropertyBit(propSet, NodeProperty.CLOSURE_UNAWARE_SHADOW);
           break;
         default:
           if (propListItem instanceof Node.IntPropListItem) {
@@ -1217,6 +1250,13 @@ public class Node {
           break;
         case THROWS:
           sideEffectFlags |= SideEffectFlags.THROWS;
+          break;
+        case CLOSURE_UNAWARE_SHADOW:
+          // Ignore this - we need the deserialized child to actually set the shadow.
+          // We'll check for this higher up in the call stack.
+          // If we don't ignore this, then a boolean prop is created (and then later clobbered)
+          // representing this property, which seems silly at best and potentially dangerous at
+          // worst.
           break;
         default:
           // All other properties are booleans that are 1-to-1 equivalent with Node properties.
@@ -1396,6 +1436,10 @@ public class Node {
       byte[] keys = getSortedPropTypes();
       for (int i = 0; i < keys.length; i++) {
         Prop type = PROP_VALUES[keys[i]];
+        if (type == Prop.CLOSURE_UNAWARE_SHADOW) {
+          sb.append(" [is_shadow_host]");
+          continue;
+        }
         PropListItem x = lookupProperty(type);
         sb.append(" [");
         sb.append(Ascii.toLowerCase(String.valueOf(type)));
@@ -1533,6 +1577,10 @@ public class Node {
     sb.append('\n');
     for (Node cursor = n.first; cursor != null; cursor = cursor.next) {
       toStringTreeHelper(cursor, level + 1, sb);
+    }
+    Node shadow = n.getClosureUnawareShadow();
+    if (shadow != null) {
+      toStringTreeHelper(shadow, level + 1, sb);
     }
   }
 
@@ -2460,6 +2508,12 @@ public class Node {
       lastChild.next = null;
       result.first = firstChild;
     }
+
+    Node shadow = this.getClosureUnawareShadow();
+    if (shadow != null) {
+      result.setClosureUnawareShadow(shadow.cloneTree(cloneTypeExprs));
+    }
+
     return result;
   }
 

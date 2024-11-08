@@ -162,6 +162,13 @@ final class SerializeTypesToPointers {
       if (type != null) {
         typePointersByJstype.computeIfAbsent(type, jstypeReconserializer::serializeType);
       }
+      Node shadow = n.getClosureUnawareShadow();
+      if (shadow != null) {
+        // Shadow roots are structured as
+        // ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
+        NodeTraversal.traverse(
+            compiler, shadow.getFirstFirstChild().getFirstChild(), new TypeSearchCallback());
+      }
     }
   }
 

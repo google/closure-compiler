@@ -407,4 +407,9 @@ enum NodeProperty {
   MUTATES_THIS = 47;
   MUTATES_ARGUMENTS = 48;
   THROWS = 49;
+
+  // Indicates whether this node is shadowing closure-unware code. In the
+  // TypedAST, the singular child AstNode is the shadowed code, not a normal
+  // child node.
+  CLOSURE_UNAWARE_SHADOW = 50;
 }

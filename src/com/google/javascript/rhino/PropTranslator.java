@@ -153,6 +153,7 @@ final class PropTranslator {
         return NodeProperty.CONSTANT_VAR_FLAGS;
       case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
         return NodeProperty.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION;
+      case CLOSURE_UNAWARE_SHADOW:
       case SIDE_EFFECT_FLAGS:
       case DECLARED_TYPE_EXPR:
       case FEATURE_SET:
@@ -199,6 +200,9 @@ final class PropTranslator {
         case MUTATES_ARGUMENTS:
         case THROWS:
           // these are used for the SIDE_EFFECT_FLAGS bit field property
+          break;
+        case CLOSURE_UNAWARE_SHADOW:
+          // this is a special case where the property is a Node pointer, not a boolean
           break;
         default:
           // everything else should be a 1-to-1 match with a boolean property

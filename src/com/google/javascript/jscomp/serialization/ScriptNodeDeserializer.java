@@ -118,6 +118,21 @@ final class ScriptNodeDeserializer {
       this.recordScriptFeatures(context, n);
 
       FeatureContext newContext = contextFor(context, n);
+      if (Node.hasBitSet(properties, NodeProperty.CLOSURE_UNAWARE_SHADOW.getNumber())) {
+        AstNode serializedShadowChild = astNode.getChild(0);
+        Node shadowedCode = this.visit(serializedShadowChild, newContext, sourceFileTemplate);
+        this.owner().setOriginalNameIfPresent(serializedShadowChild, shadowedCode);
+        // The shadowed code is only the "source" parts of the shadow structure, and does not
+        // include the synthetic code that is needed for the compiler to consider it a valid
+        // standalone AST. We recreate that here.
+        // This must be kept in sync with the shadow structure created by TypedAstSerializer.
+        Node shadowRoot = IR.root(IR.script(IR.exprResult(shadowedCode)));
+        shadowRoot.getFirstChild().setStaticSourceFileFrom(sourceFileTemplate);
+        shadowRoot.getFirstFirstChild().setStaticSourceFileFrom(sourceFileTemplate);
+        n.setClosureUnawareShadow(shadowRoot);
+        return n;
+      }
+
       int children = astNode.getChildCount();
       for (int i = 0; i < children; i++) {
         AstNode child = astNode.getChild(i);

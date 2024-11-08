@@ -5913,6 +5913,11 @@ public final class NodeUtil {
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       markFunctionsDeleted(child, compiler);
     }
+
+    Node shadowed = node.getClosureUnawareShadow();
+    if (shadowed != null) {
+      markFunctionsDeleted(shadowed, compiler);
+    }
   }
 
   /** Returns the list of scope nodes which are parents of the provided list of scope nodes. */

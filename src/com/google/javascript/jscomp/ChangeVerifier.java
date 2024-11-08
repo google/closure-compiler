@@ -74,6 +74,14 @@ public class ChangeVerifier {
       child = child.getNext();
       snapshotChild = snapshotChild.getNext();
     }
+
+    Node shadowChild = n.getClosureUnawareShadow();
+    Node snapshotShadowChild = snapshot.getClosureUnawareShadow();
+    if (shadowChild != null && snapshotShadowChild != null) {
+      associateClones(shadowChild, snapshotShadowChild);
+    } else if (shadowChild != null || snapshotShadowChild != null) {
+      throw new IllegalStateException("invalid Shadow node state");
+    }
   }
 
   /** Checks that the scope roots marked as changed have indeed changed */
@@ -89,6 +97,10 @@ public class ChangeVerifier {
           public void visit(Node oldNode) {
             if (NodeUtil.isChangeScopeRoot(oldNode)) {
               snapshotScopeNodes.add(oldNode);
+            }
+            Node shadow = oldNode.getClosureUnawareShadow();
+            if (shadow != null) {
+              NodeUtil.visitPreOrder(shadow.getFirstFirstChild(), this);
             }
           }
         });
@@ -110,6 +122,15 @@ public class ChangeVerifier {
               } else {
                 verifyNodeChange(passNameMsg, n, clone);
               }
+            }
+            Node shadow = n.getClosureUnawareShadow();
+            if (shadow != null) {
+              checkState(shadow.isRoot(), shadow);
+              checkState(shadow.getChildCount() == 1, shadow);
+              Node script = shadow.getFirstChild();
+              checkState(script.isScript(), script);
+              checkState(script.getChildCount() == 1, script);
+              NodeUtil.visitPreOrder(script.getFirstChild(), this);
             }
           }
         });

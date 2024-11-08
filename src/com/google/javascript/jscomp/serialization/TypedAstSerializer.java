@@ -165,6 +165,19 @@ final class TypedAstSerializer {
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       builder.addChild(visit(child));
     }
+    Node shadowedCode = n.getClosureUnawareShadow();
+    if (shadowedCode != null) {
+      // For Closure shadow hosts, the ASTNode will get a boolean property bit set
+      // (CLOSURE_UNAWARE_SHADOW) that indicates this child ASTNode is not a normal child, but is
+      // the contents of the shadow.
+      // Shadow roots are structured as
+      // ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
+      // We avoid including the ROOT -> SCRIPT -> EXPR_RESULT structure in the serialization as it
+      // is all synthetic code that would unnecessarily bloat the TypedAST and is instead recreated
+      // upon deserialization.
+      // The child ASTNode is just the FUNCTION.
+      builder.addChild(visit(shadowedCode.getFirstFirstChild().getFirstChild()));
+    }
 
     if (sourceFile != 0) {
       subtreeSourceFiles.removeLast();

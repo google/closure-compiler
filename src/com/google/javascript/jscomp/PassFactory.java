@@ -86,7 +86,7 @@ public abstract class PassFactory {
   }
 
   /** Creates a new compiler pass to be run. */
-  final CompilerPass create(AbstractCompiler compiler) {
+  public final CompilerPass create(AbstractCompiler compiler) {
     return getInternalFactory().apply(compiler);
   }
 }

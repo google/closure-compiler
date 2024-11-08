@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -24,10 +25,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.PassFactory;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -45,6 +48,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -71,16 +75,28 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean resolveSourceMapAnnotations;
   private boolean parseInlineSourceMaps;
   private ImmutableList<String> runtimeLibraries = null;
+  private Optional<PassFactory> preSerializePassFactory = Optional.empty();
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(
-        compiler,
-        consumer,
-        SerializationOptions.builder()
-            .setIncludeDebugInfo(false)
-            .setRuntimeLibraries(this.runtimeLibraries)
-            .build());
+    CompilerPass serializationPass =
+        new SerializeTypedAstPass(
+            compiler,
+            consumer,
+            SerializationOptions.builder()
+                .setIncludeDebugInfo(false)
+                .setRuntimeLibraries(this.runtimeLibraries)
+                .build());
+    if (preSerializePassFactory.isEmpty()) {
+      return serializationPass;
+    }
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        preSerializePassFactory.get().create(compiler).process(externs, root);
+        serializationPass.process(externs, root);
+      }
+    };
   }
 
   @Override
@@ -712,6 +728,47 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             expected(""));
 
     assertThat(result.ast.getExternProperties()).containsAtLeast("method", "arg");
+  }
+
+  @Test
+  public void includesShadowedCode() throws IOException {
+    preSerializePassFactory =
+        Optional.of(
+            PassFactory.builder()
+                .setName("createShadow")
+                .setInternalFactory(
+                    (AbstractCompiler c) ->
+                        new CompilerPass() {
+                          @Override
+                          public void process(Node externs, Node root) {
+                            Node functionToBeShadowed =
+                                root.getFirstFirstChild().getFirstFirstChild();
+                            checkState(functionToBeShadowed.isFunction());
+
+                            Node name = IR.name("SHADOW");
+                            functionToBeShadowed.replaceWith(name);
+
+                            Node shadowRoot =
+                                IR.root(IR.script(IR.exprResult(functionToBeShadowed)));
+                            name.setClosureUnawareShadow(shadowRoot);
+
+                            c.reportChangeToEnclosingScope(name);
+                          }
+                        })
+                .build());
+    Result result =
+        testAndReturnResult(
+            srcs(lines("(function() {", "  window['foo'] = 5;", "})();")),
+            expected(lines("SHADOW();")));
+    assertThat(result.compiler.getErrors()).isEmpty();
+
+    // Also validate that the content of the shadow is actually correct
+    Node shadowHost = result.sourceRoot.getFirstFirstChild().getFirstFirstChild();
+
+    Node shadowedContent = shadowHost.getClosureUnawareShadow();
+    Node expectedShadowContent =
+        this.parseExpectedJs(lines("(function() {", "  window['foo'] = 5;", "})"));
+    assertNode(shadowedContent).isEqualIncludingJsDocTo(expectedShadowContent);
   }
 
   @Test

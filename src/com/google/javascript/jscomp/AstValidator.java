@@ -1111,6 +1111,7 @@ public final class AstValidator implements CompilerPass {
     validateProperties(n);
     validateChildCount(n);
     validateTypeInformation(n);
+    validateShadowContentIfPresent(n);
   }
 
   private void validateOptionalName(Node n) {
@@ -1122,6 +1123,41 @@ public final class AstValidator implements CompilerPass {
     if (!isEmpty) {
       validateTypeInformation(n);
     }
+  }
+
+  private void validateShadowContentIfPresent(Node n) {
+    Node shadow = n.getClosureUnawareShadow();
+    if (shadow == null) {
+      return;
+    }
+    if (!shadow.isRoot()) {
+      violation("Shadow reference node is not a ROOT node", shadow);
+      return;
+    }
+    Node shadowScript = shadow.getFirstChild();
+    if (shadowScript == null || !shadowScript.isScript()) {
+      violation("Shadow root node's child is not a script node", shadowScript);
+      return;
+    }
+    if (shadowScript.getChildCount() != 1) {
+      violation("Shadow SCRIPT node child has more than one child", shadowScript);
+      return;
+    }
+    Node exprResult = shadowScript.getFirstChild();
+    if (exprResult == null || !exprResult.isExprResult()) {
+      violation("Shadow SCRIPT node child is not an expr result node", exprResult);
+      return;
+    }
+    if (exprResult.getChildCount() != 1) {
+      violation("Shadow EXPR_RESULT node should have exactly one child", exprResult);
+      return;
+    }
+    Node shadowJsFunction = exprResult.getFirstChild();
+    if (!shadowJsFunction.isFunction()) {
+      violation("Shadow node EXPR_RESULT child is not a function", shadowJsFunction);
+      return;
+    }
+    validateFunctionExpression(shadowJsFunction);
   }
 
   private void validateEmptyName(Node n) {
