@@ -1419,7 +1419,7 @@ final class ClosureRewriteModule implements CompilerPass {
       compiler.reportChangeToEnclosingScope(call);
       Node exportedNamespaceName =
           this.astFactory
-              .createQNameFromTypedScope(this.globalTypedScope, exportedNamespace)
+              .createQNameUsingJSTypeInfo(this.globalTypedScope, exportedNamespace)
               .srcrefTree(call);
       exportedNamespaceName.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
       exportedNamespaceName.setOriginalName(namespaceId);
@@ -1892,7 +1892,7 @@ final class ClosureRewriteModule implements CompilerPass {
     Node nameParent = nameNode.getParent();
     Node newQualifiedName =
         this.astFactory
-            .createQNameFromTypedScope(this.globalTypedScope, newString)
+            .createQNameUsingJSTypeInfo(this.globalTypedScope, newString)
             .srcrefTree(nameNode);
     // Sometimes the typechecker gave `nameNode` the correct type, but we can't infer the right type
     // for `newQualifiedName`. If so, giving `newQualifiedName` the same type typechecking used for

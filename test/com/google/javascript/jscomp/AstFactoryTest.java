@@ -1437,7 +1437,7 @@ public class AstFactoryTest {
     TypedScope scope = TypedScope.createGlobalScope(IR.root());
     scope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
 
-    Node name = astFactory.createQNameFromTypedScope(scope, "x");
+    Node name = astFactory.createQNameUsingJSTypeInfo(scope, "x");
 
     assertNode(name).hasStringThat().isEqualTo("x");
     assertNode(name).hasJSTypeThat().isNumber();
@@ -1453,7 +1453,7 @@ public class AstFactoryTest {
     objectWithYProp.defineDeclaredProperty("y", getNativeType(JSTypeNative.NUMBER_TYPE), null);
     scope.declare("x", IR.name("x"), objectWithYProp, null, true);
 
-    Node name = astFactory.createQNameFromTypedScope(scope, "x.y");
+    Node name = astFactory.createQNameUsingJSTypeInfo(scope, "x.y");
 
     assertNode(name).matchesQualifiedName("x.y");
     assertNode(name).hasJSTypeThat().isNumber();
@@ -1466,7 +1466,7 @@ public class AstFactoryTest {
 
     TypedScope scope = TypedScope.createGlobalScope(IR.root());
 
-    assertThrows(Exception.class, () -> astFactory.createQNameFromTypedScope(scope, "x"));
+    assertThrows(Exception.class, () -> astFactory.createQNameUsingJSTypeInfo(scope, "x"));
   }
 
   @Test
@@ -1481,10 +1481,10 @@ public class AstFactoryTest {
     globalScope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
     TypedScope localScope = new TypedScope(globalScope, block);
 
-    astFactory.createQNameFromTypedScope(globalScope, "x");
+    var unused = astFactory.createQNameUsingJSTypeInfo(globalScope, "x");
     assertThrows(
         IllegalArgumentException.class,
-        () -> astFactory.createQNameFromTypedScope(localScope, "x"));
+        () -> astFactory.createQNameUsingJSTypeInfo(localScope, "x"));
   }
 
   @Test

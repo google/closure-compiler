@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import org.jspecify.annotations.Nullable;
@@ -76,6 +77,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     enableCreateModuleMap();
+    enableTypeCheck();
     enableTypeInfoValidation();
   }
 
@@ -449,6 +451,10 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         lines(
             "export var ARRAY, OBJ, UNCHANGED;",
             "function f() {",
+            // TODO(lharker): this typechecking suppression seems like it shouldn't be necessary,
+            // but mutable exports are not really well-supported in the compiler so not a high
+            // priority to fix.
+            "  /** @suppress {checkTypes} */",
             "  ({OBJ} = {OBJ: {}});",
             "  [ARRAY] = [];",
             "  var x = {UNCHANGED: 0};",
@@ -456,6 +462,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         lines(
             "var ARRAY$$module$testcode, OBJ$$module$testcode, UNCHANGED$$module$testcode;",
             "function f$$module$testcode() {",
+            "  /** @suppress {checkTypes} */",
             "  ({OBJ:OBJ$$module$testcode} = {OBJ: {}});",
             "  [ARRAY$$module$testcode] = [];",
             "  var x = {UNCHANGED: 0};",
@@ -995,8 +1002,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};"));
 
     testModules(
-        "import * as f from './other.js';\nvar bar = {a: 1, f};",
         lines(
+            "import * as f from './other.js';",
+            // TODO(lharker): this typechecking suppression seems like it shouldn't be necessary
+            "/** @suppress {checkTypes} */",
+            "var bar = {a: 1, f};"),
+        lines(
+            "/** @suppress {checkTypes} */",
             "var bar$$module$testcode={a: 1, f: module$other};",
             "/** @const */ var module$testcode = {};"));
   }
@@ -1279,5 +1291,30 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};",
             "/** @const */ module$testcode.url = url$$module$testcode;",
             "export {};"));
+  }
+
+  @Test
+  public void testGoogColonImport_fromLegacyNamespace() {
+    String closureBase = TestExternsBuilder.getClosureExternsAsSource();
+    String googAsserts =
+        lines(
+            "goog.module('goog.asserts');",
+            "goog.module.declareLegacyNamespace();",
+            "function assert(condition) { if (!condition) { throw new Error('Assertion failed')}}",
+            "exports = {assert};");
+    test(
+        srcs(
+            closureBase,
+            googAsserts,
+            lines(
+                "import {assert} from 'goog:goog.asserts';", //
+                "assert(1 < 2);")),
+        expected(
+            closureBase,
+            googAsserts,
+            lines(
+                "(0, goog.asserts.assert)(1 < 2);", //
+                "/** @const */",
+                "var module$testcode2 = {};")));
   }
 }

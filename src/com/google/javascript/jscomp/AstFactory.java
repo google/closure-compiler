@@ -675,13 +675,16 @@ final class AstFactory {
   }
 
   /**
-   * Looks up the type of a name from a {@link TypedScope} created from typechecking
+   * Looks up the type of a name from a {@link TypedScope} created from typechecking, using the
+   * {@link JSType} API. Will crash if is called on an AstFactory that is created after JSType ->
+   * color conversion.
+   *
+   * <p>Prefer {@link #createQName(StaticScope, String)} if running after JSType -> color
+   * conversion.
    *
    * @param globalTypedScope Must be the top, global scope.
-   * @deprecated Prefer {@link #createQName(StaticScope, String)}
    */
-  @Deprecated
-  Node createQNameFromTypedScope(TypedScope globalTypedScope, String qname) {
+  Node createQNameUsingJSTypeInfo(TypedScope globalTypedScope, String qname) {
     checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
     assertNotAddingColors();
     List<String> nameParts = DOT_SPLITTER.splitToList(qname);

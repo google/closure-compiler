@@ -1011,7 +1011,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         newNode =
             // we might encounter a name not in the global scope when requiring a missing symbol.
             globalTypedScope != null && globalTypedScope.hasSlot(root)
-                ? astFactory.createQName(globalTypedScope, globalName.join())
+                ? astFactory.createQNameUsingJSTypeInfo(globalTypedScope, globalName.join())
                 : astFactory.createQNameWithUnknownType(globalName.join());
       } else {
         // Because this pass does not update the global scope with injected names, t.getScope()
