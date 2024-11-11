@@ -195,7 +195,7 @@ final class ClosureRewriteModule implements CompilerPass {
     final Node requireNode;
     final String namespaceId;
 
-    UnrecognizedRequire(Node requireNode, String namespaceId, boolean mustBeOrdered) {
+    UnrecognizedRequire(Node requireNode, String namespaceId) {
       this.requireNode = requireNode;
       this.namespaceId = namespaceId;
     }
@@ -376,7 +376,7 @@ final class ClosureRewriteModule implements CompilerPass {
           } else if (method.matchesQualifiedName(GOOG_PROVIDE)) {
             recordGoogProvide(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
-            recordGoogRequire(t, n, /* mustBeOrdered= */ true);
+            recordGoogRequire(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIRETYPE)) {
             recordGoogRequireType(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIREDYNAMIC)) {
@@ -904,7 +904,7 @@ final class ClosureRewriteModule implements CompilerPass {
     updateLegacyScriptNamespacesAndPrefixes(namespaceId);
   }
 
-  private void recordGoogRequire(NodeTraversal t, Node call, boolean mustBeOrdered) {
+  private void recordGoogRequire(NodeTraversal t, Node call) {
     maybeSplitMultiVar(call);
 
     Node namespaceIdNode = call.getLastChild();
@@ -919,7 +919,7 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean targetIsAModule = rewriteState.containsModule(namespaceId);
     boolean targetIsALegacyScript = rewriteState.providedNamespaces.contains(namespaceId);
     if (currentScript.isModule && !targetIsAModule && !targetIsALegacyScript) {
-      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId, mustBeOrdered));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId));
     }
   }
 
@@ -933,7 +933,7 @@ final class ClosureRewriteModule implements CompilerPass {
     // For purposes of import collection, goog.requireType is the same as goog.require but
     // a goog.requireType call is not required to appear after the corresponding namespace
     // definition.
-    recordGoogRequire(t, call, /* mustBeOrdered= */ false);
+    recordGoogRequire(t, call);
   }
 
   private void recordGoogForwardDeclare(NodeTraversal t, Node call) {
@@ -943,13 +943,8 @@ final class ClosureRewriteModule implements CompilerPass {
       return;
     }
 
-    // modules already require that goog.forwardDeclare() and goog.module.get() occur in matched
-    // pairs. If a "missing module" error were to occur here it would also occur in the matching
-    // goog.module.get(). To avoid reporting the error twice suppress it here.
-    boolean mustBeOrdered = false;
-
     // For purposes of import collection, goog.forwardDeclare is the same as goog.require.
-    recordGoogRequire(t, call, mustBeOrdered);
+    recordGoogRequire(t, call);
   }
 
   private void recordGoogRequireDynamic(NodeTraversal t, Node call) {
@@ -962,8 +957,7 @@ final class ClosureRewriteModule implements CompilerPass {
     String namespaceId = namespaceIdNode.getString();
 
     if (!rewriteState.containsModule(namespaceId)) {
-      unrecognizedRequires.add(
-          new UnrecognizedRequire(call, namespaceId, /* mustBeOrdered= */ false));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId));
     }
     this.googRequireDynamicCalls.add(call);
   }
@@ -977,8 +971,7 @@ final class ClosureRewriteModule implements CompilerPass {
     String namespaceId = namespaceIdNode.getString();
 
     if (!rewriteState.containsModule(namespaceId)) {
-      unrecognizedRequires.add(
-          new UnrecognizedRequire(call, namespaceId, /* mustBeOrdered= */ false));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId));
     }
     this.googModuleGetCalls.add(call);
 
