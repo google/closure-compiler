@@ -2659,14 +2659,24 @@ public class CompilerOptions implements Serializable {
     return conformanceConfigs;
   }
 
-  /** Both enable and configure conformance checks, if non-null. */
+  /**
+   * Both enable and configure conformance checks, if non-null.
+   *
+   * @deprecated See go/binary-level-conformance-deprecated.
+   */
   @GwtIncompatible("Conformance")
+  @Deprecated // See go/binary-level-conformance-deprecated.
   public void setConformanceConfig(ConformanceConfig conformanceConfig) {
     setConformanceConfigs(ImmutableList.of(conformanceConfig));
   }
 
-  /** Both enable and configure conformance checks, if non-null. */
+  /**
+   * Both enable and configure conformance checks, if non-null.
+   *
+   * @deprecated See go/binary-level-conformance-deprecated.
+   */
   @GwtIncompatible("Conformance")
+  @Deprecated // See go/binary-level-conformance-deprecated.
   public void setConformanceConfigs(List<ConformanceConfig> configs) {
     this.conformanceConfigs = ImmutableList.copyOf(configs);
   }
