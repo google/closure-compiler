@@ -19,16 +19,12 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
@@ -93,74 +89,21 @@ public class JsAst implements SourceAst {
     return features;
   }
 
-  /** Representation of Rhino parser error. */
-  public static class RhinoError implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    public final String message;
-    public final String sourceName;
-    public final int line;
-    public final int lineOffset;
-
-    public RhinoError(String message, String sourceName, int line, int lineOffset) {
-      this.message = message;
-      this.sourceName = sourceName;
-      this.line = line;
-      this.lineOffset = lineOffset;
-    }
-  }
-
-  /** Simple class to share parse results between compilation jobs */
-  public static class ParseResult implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    public final ImmutableList<RhinoError> errors;
-    public final ImmutableList<RhinoError> warnings;
-
-    ParseResult(ImmutableList<RhinoError> errors, ImmutableList<RhinoError> warnings) {
-      this.errors = errors;
-      this.warnings = warnings;
-    }
-  }
-
-  private static class RecordingReporterProxy implements ErrorReporter {
-    final ArrayList<RhinoError> errors = new ArrayList<>();
-    final ArrayList<RhinoError> warnings = new ArrayList<>();
-    private final ErrorReporter delegateReporter;
-
-    RecordingReporterProxy(ErrorReporter delegateReporter) {
-      this.delegateReporter = delegateReporter;
-    }
-
-    @Override
-    public void warning(String message, String sourceName, int line, int lineOffset) {
-      warnings.add(new RhinoError(message, sourceName, line, lineOffset));
-      delegateReporter.warning(message, sourceName, line, lineOffset);
-    }
-
-    @Override
-    public void error(String message, String sourceName, int line, int lineOffset) {
-      errors.add(new RhinoError(message, sourceName, line, lineOffset));
-      delegateReporter.error(message, sourceName, line, lineOffset);
-    }
-  }
-
   boolean isParsed() {
     return root != null;
   }
 
   private void parse(AbstractCompiler compiler) {
-    RecordingReporterProxy reporter = new RecordingReporterProxy(
-        compiler.getDefaultErrorReporter());
-
     try {
-      ParserRunner.ParseResult result = ParserRunner.parse(
-          sourceFile,
-          sourceFile.getCode(),
-          compiler.getParserConfig(sourceFile.isExtern()
-              ? AbstractCompiler.ConfigContext.EXTERNS
-              : AbstractCompiler.ConfigContext.DEFAULT),
-          reporter);
+      ParserRunner.ParseResult result =
+          ParserRunner.parse(
+              sourceFile,
+              sourceFile.getCode(),
+              compiler.getParserConfig(
+                  sourceFile.isExtern()
+                      ? AbstractCompiler.ConfigContext.EXTERNS
+                      : AbstractCompiler.ConfigContext.DEFAULT),
+              compiler.getDefaultErrorReporter());
       root = result.ast;
       features = result.features;
 
@@ -182,13 +125,6 @@ public class JsAst implements SourceAst {
 
     if (root == null) {
       root = IR.script();
-    }
-
-    if (!reporter.errors.isEmpty() || !reporter.warnings.isEmpty()) {
-      ParseResult result = new ParseResult(
-          ImmutableList.copyOf(reporter.errors),
-          ImmutableList.copyOf(reporter.warnings));
-      root.putProp(Node.PARSE_RESULTS, result);
     }
 
     // Set the source name so that the compiler passes can track

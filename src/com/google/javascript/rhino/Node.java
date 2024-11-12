@@ -163,9 +163,6 @@ public class Node {
     ACCESS_MODIFIER,
     // Indicates the node should not be indexed by analysis tools.
     NON_INDEXABLE,
-    // Parse results stored on SCRIPT nodes to allow replaying parse warnings/errors when cloning
-    // cached ASTs.
-    PARSE_RESULTS,
     // Indicates that a SCRIPT node is a goog.module. Remains set after the goog.module is
     // desugared.
     GOOG_MODULE,
@@ -284,7 +281,6 @@ public class Node {
   public static final Prop IMPLEMENTS = Prop.IMPLEMENTS;
   public static final Prop CONSTRUCT_SIGNATURE = Prop.CONSTRUCT_SIGNATURE;
   public static final Prop ACCESS_MODIFIER = Prop.ACCESS_MODIFIER;
-  public static final Prop PARSE_RESULTS = Prop.PARSE_RESULTS;
   public static final Prop GOOG_MODULE = Prop.GOOG_MODULE;
   public static final Prop FEATURE_SET = Prop.FEATURE_SET;
   public static final Prop IS_TYPESCRIPT_ABSTRACT = Prop.IS_TYPESCRIPT_ABSTRACT;

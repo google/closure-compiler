@@ -172,7 +172,6 @@ final class PropTranslator {
       case IMPLEMENTS:
       case CONSTRUCT_SIGNATURE:
       case ACCESS_MODIFIER:
-      case PARSE_RESULTS:
       case IS_TYPESCRIPT_ABSTRACT:
       case TYPEDEF_TYPE:
         // These cases cannot be translated to a NodeProperty
