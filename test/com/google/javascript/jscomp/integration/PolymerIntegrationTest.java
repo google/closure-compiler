@@ -307,8 +307,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setClosurePass(true);
-    // TODO(b/144593112): remove this option
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     addPolymerExterns();
     test(
         options,
@@ -327,10 +325,10 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "var $jscomp = $jscomp || {};",
             "$jscomp.scope = {};",
             "$jscomp.reflectObject = function(type, object) { return object; };",
-            "var module$exports$a={};",
-            "var module$contents$a_MyTypedef;",
             "var XFooElement=function(){};",
+            "var module$exports$a={};",
             "XFooElement.prototype.value;",
+            "var module$contents$a_MyTypedef;",
             "Polymer({",
             "is:\"x-foo\",",
             "properties: $jscomp.reflectObject(XFooElement, {value:number})",
