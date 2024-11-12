@@ -72,7 +72,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     compile(
         options,
         new String[] {
@@ -122,7 +121,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     compile(
         options,
@@ -144,7 +142,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             lines(
                 "actual parameter 1 of $jscomp$scope$98477071$0$f does not match formal parameter",
                 "found   : null",
-                "required: module$exports$foo$bar$Types.Klazz"));
+                "required: foo.bar.Types.Klazz"));
     assertThat(lastCompiler.getErrors()).isEmpty();
   }
 
@@ -153,7 +151,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     compile(
         options,
@@ -171,9 +168,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
         .containsExactly(
             lines(
-                "actual parameter 1 of f$$module$i1 does not match formal parameter",
+                "actual parameter 1 of f does not match formal parameter",
                 "found   : null",
-                "required: module$exports$foo$bar$Types.Klazz"));
+                "required: foo.bar.Types.Klazz"));
     assertThat(lastCompiler.getErrors()).isEmpty();
   }
 
@@ -1608,7 +1605,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setClosurePass(true);
     options.setChecksOnly(true);
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     compile(
         options,
