@@ -23,23 +23,23 @@
 
 /**
  * @constructor
- * @param {undefined|VideoColorSpaceInit} init
+ * @param {!VideoColorSpaceInit|undefined} init
  * @see https://www.w3.org/TR/webcodecs/#videocolorspace
  */
 function VideoColorSpace(init) {}
 
 /**
- * @const {string|null}
+ * @const {!VideoColorPrimaries|null}
  */
 VideoColorSpace.prototype.primaries;
 
 /**
- * @const {string|null}
+ * @const {!VideoTransferCharacteristics|null}
  */
 VideoColorSpace.prototype.transfer;
 
 /**
- * @const {string|null}
+ * @const {!VideoMatrixCoefficients|null}
  */
 VideoColorSpace.prototype.matrix;
 
@@ -48,6 +48,11 @@ VideoColorSpace.prototype.matrix;
  */
 VideoColorSpace.prototype.fullRange;
 
+/**
+ * @override
+ * @return {!VideoColorSpaceInit}
+ */
+VideoColorSpace.prototype.toJSON = function() {};
 
 /**
  * @interface
@@ -56,22 +61,22 @@ VideoColorSpace.prototype.fullRange;
 function VideoColorSpaceInit() {}
 
 /**
- * @type {undefined|string}
+ * @type {!VideoColorPrimaries|undefined}
  */
 VideoColorSpaceInit.prototype.primaries;
 
 /**
- * @type {undefined|string}
+ * @type {!VideoTransferCharacteristics|undefined}
  */
 VideoColorSpaceInit.prototype.transfer;
 
 /**
- * @type {undefined|string}
+ * @type {!VideoMatrixCoefficients|undefined}
  */
 VideoColorSpaceInit.prototype.matrix;
 
 /**
- * @type {undefined|boolean}
+ * @type {boolean|undefined}
  */
 VideoColorSpaceInit.prototype.fullRange;
 
@@ -93,27 +98,45 @@ var AlphaOption;
 var WebCodecsVideoFrameMetadata;
 
 /**
- * @typedef {{
- *   duration: (number|undefined),
- *   timestamp: (number|undefined),
- *   alpha: (!AlphaOption|undefined),
- *   visibleRect: (!DOMRectInit|undefined),
- *   displayWidth: (number|undefined),
- *   displayHeight: (number|undefined),
- *   metadata: (!WebCodecsVideoFrameMetadata|undefined)
- * }}
+ * @record
+ * @struct
  * @see https://www.w3.org/TR/webcodecs/#dictdef-videoframeinit
  */
 var VideoFrameInit;
 
+/** @type {!AlphaOption|undefined} */
+VideoFrameInit.prototype.alpha;
+
+/** @type {number|undefined} */
+VideoFrameInit.prototype.displayHeight;
+
+/** @type {number|undefined} */
+VideoFrameInit.prototype.displayWidth;
+
+/** @type {number|undefined} */
+VideoFrameInit.prototype.duration;
+
+/** @type {number|undefined} */
+VideoFrameInit.prototype.timestamp;
+
+/** @type {!DOMRectInit|undefined} */
+VideoFrameInit.prototype.visibleRect;
+
+/** @type {!WebCodecsVideoFrameMetadata|undefined} */
+VideoFrameInit.prototype.metadata;
+
 /**
- * @typedef {{
- *   offset: number,
- *   stride: number
- * }}
+ * @record
+ * @struct
  * @see https://www.w3.org/TR/webcodecs/#dictdef-planelayout
  */
 var PlaneLayout;
+
+/** @type {number} */
+PlaneLayout.prototype.offset;
+
+/** @type {number} */
+PlaneLayout.prototype.stride;
 
 /**
  * @typedef {string}
@@ -122,91 +145,120 @@ var PlaneLayout;
 var VideoPixelFormat;
 
 /**
- * @typedef {{
- *   format: !VideoPixelFormat,
- *   codedWidth: number,
- *   codedHeight: number,
- *   timestamp: number,
- *   duration: (number|undefined),
- *   layout: (!Array<!PlaneLayout>|undefined),
- *   visibleRect: (!DOMRectInit|undefined),
- *   displayWidth: (number|undefined),
- *   displayHeight: (number|undefined),
- *   colorSpace: (!VideoColorSpaceInit|undefined)
- * }}
+ * @record
+ * @struct
  * @see https://www.w3.org/TR/webcodecs/#dictdef-videoframeinit
  */
 var VideoFrameBufferInit;
 
+/** @type {number} */
+VideoFrameBufferInit.prototype.codedHeight;
+
+/** @type {number} */
+VideoFrameBufferInit.prototype.codedWidth;
+
+/** @type {!VideoColorSpaceInit|undefined} */
+VideoFrameBufferInit.prototype.colorSpace;
+
+/** @type {number|undefined} */
+VideoFrameBufferInit.prototype.displayHeight;
+
+/** @type {number|undefined} */
+VideoFrameBufferInit.prototype.displayWidth;
+
+/** @type {number|undefined} */
+VideoFrameBufferInit.prototype.duration;
+
+/** @type {string} */
+VideoFrameBufferInit.prototype.format;
+
+/** @type {!Array<!PlaneLayout>|undefined} */
+VideoFrameBufferInit.prototype.layout;
+
+/** @type {number} */
+VideoFrameBufferInit.prototype.timestamp;
+
+/** @type {!DOMRectInit|undefined} */
+VideoFrameBufferInit.prototype.visibleRect;
+
 /**
- * @param {!CanvasImageSource|!BufferSource} imageOrData
+ * @param {!CanvasImageSource|!AllowSharedBufferSource} imageOrData
  * @param {!VideoFrameInit|!VideoFrameBufferInit} init
  * @constructor
  * @see https://www.w3.org/TR/webcodecs/#videoframe-constructors
  */
 function VideoFrame(imageOrData, init) {}
 
-/**
- * @type {?VideoPixelFormat}
- */
+/** @const {?VideoPixelFormat} */
 VideoFrame.prototype.format;
 
-/**
- * @type {number}
- */
+/** @const {number} */
 VideoFrame.prototype.codedWidth;
 
-/**
- * @type {number}
- */
+/** @const {number} */
 VideoFrame.prototype.codedHeight;
 
-/**
- * @type {?DOMRectReadOnly}
- */
+/** @const {?DOMRectReadOnly} */
 VideoFrame.prototype.codedRect;
 
-/**
- * @type {?DOMRectReadOnly}
- */
+/** @const {?DOMRectReadOnly} */
 VideoFrame.prototype.visibleRect;
 
-/**
- * @type {number}
- */
+/** @const {number} */
 VideoFrame.prototype.displayWidth;
 
-/**
- * @type {number}
- */
+/** @const {number} */
 VideoFrame.prototype.displayHeight;
 
-/**
- * @type {number|null}
- */
+/** @const {?number} */
 VideoFrame.prototype.duration;
 
-/**
- * @type {number|null}
- */
+/** @const {number} */
 VideoFrame.prototype.timestamp;
 
-/**
- * @type {!VideoColorSpace}
- */
+/** @const {!VideoColorSpace} */
 VideoFrame.prototype.colorSpace;
+
+/**
+ * @param {!VideoFrameCopyToOptions=} options
+ * @return {number}
+ */
+VideoFrame.prototype.allocationSize = function(options) {};
+
+/** @return {!VideoFrame} */
+VideoFrame.prototype.clone = function() {};
+
+/** */
+VideoFrame.prototype.close = function() {};
+
+/**
+ * @param {!AllowSharedBufferSource} destination
+ * @param {!VideoFrameCopyToOptions=} options
+ * @return {!Promise<!Array<!PlaneLayout>>}
+ */
+VideoFrame.prototype.copyTo = function(destination, options) {};
 
 /** @return {!WebCodecsVideoFrameMetadata} */
 VideoFrame.prototype.metadata = function() {};
 
 /**
- * @typedef {{
- *   rect: (!DOMRectInit|undefined),
- *   layout: (!Array<!PlaneLayout>|undefined)
- * }}
+ * @record
+ * @struct
  * @see https://www.w3.org/TR/webcodecs/#dictdef-videoframecopytooptions
  */
 var VideoFrameCopyToOptions;
+
+/** @type {!PredefinedColorSpace|undefined} */
+VideoFrameCopyToOptions.prototype.colorSpace;
+
+/** @type {!VideoPixelFormat|undefined} */
+VideoFrameCopyToOptions.prototype.format;
+
+/** @type {!Array<!PlaneLayout>|undefined} */
+VideoFrameCopyToOptions.prototype.layout;
+
+/** @type {!DOMRectInit|undefined} */
+VideoFrameCopyToOptions.prototype.rect;
 
 /**
  * @param {!VideoFrameCopyToOptions=} options
@@ -236,7 +288,7 @@ VideoFrame.prototype.close = function() {};
  */
 function AvcEncoderConfig() {}
 
-/** @type {(undefined|string)} */
+/** @type {!AvcBitstreamFormat|undefined} */
 AvcEncoderConfig.prototype.format;
 
 /**
@@ -246,10 +298,10 @@ AvcEncoderConfig.prototype.format;
  */
 function EncodedVideoChunkInit() {}
 
-/** @type {(!ArrayBuffer|!ArrayBufferView)} */
+/** @type {!AllowSharedBufferSource} */
 EncodedVideoChunkInit.prototype.data;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 EncodedVideoChunkInit.prototype.duration;
 
 /** @type {number} */
@@ -274,10 +326,10 @@ function EncodedVideoChunkOutputCallback() {}
  */
 function EncodedVideoChunkMetadata() {}
 
-/** @type {(undefined|!VideoDecoderConfig)} */
+/** @type {!VideoDecoderConfig|undefined} */
 EncodedVideoChunkMetadata.prototype.decoderConfig;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 EncodedVideoChunkMetadata.prototype.temporalLayerId;
 
 
@@ -287,31 +339,32 @@ EncodedVideoChunkMetadata.prototype.temporalLayerId;
  * @see https://www.w3.org/TR/webcodecs/#dictdef-videodecoderconfig
  */
 function VideoDecoderConfig() {}
+
 /** @type {string} */
 VideoDecoderConfig.prototype.codec;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoDecoderConfig.prototype.codedHeight;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoDecoderConfig.prototype.codedWidth;
 
-/** @type {(undefined|!VideoColorSpaceInit)} */
+/** @type {!VideoColorSpaceInit|undefined} */
 VideoDecoderConfig.prototype.colorSpace;
 
-/** @type {(undefined|!ArrayBuffer|!ArrayBufferView)} */
+/** @type {!AllowSharedBufferSource|undefined} */
 VideoDecoderConfig.prototype.description;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoDecoderConfig.prototype.displayAspectHeight;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoDecoderConfig.prototype.displayAspectWidth;
 
-/** @type {(undefined|string)} */
+/** @type {!HardwareAcceleration|undefined} */
 VideoDecoderConfig.prototype.hardwareAcceleration;
 
-/** @type {(undefined|boolean)} */
+/** @type {boolean|undefined} */
 VideoDecoderConfig.prototype.optimizeForLatency;
 
 
@@ -336,12 +389,50 @@ VideoDecoderInit.prototype.output;
  */
 function VideoDecoderSupport() {}
 
-/** @type {!VideoDecoderConfig} */
+/** @type {!VideoDecoderConfig|undefined} */
 VideoDecoderSupport.prototype.config;
 
-/** @type {boolean} */
+/** @type {boolean|undefined} */
 VideoDecoderSupport.prototype.supported;
 
+/**
+ * Available only in secure contexts.
+ * @param {!VideoDecoderInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#videodecoder-constructors
+ */
+function VideoDecoder(init) {}
+
+/**
+ * @param {!VideoDecoderConfig} config
+ * @return {!Promise<!VideoDecoderSupport>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-videodecoder-isconfigsupported
+ */
+VideoDecoder.isConfigSupported = function(config) {};
+
+/** @const {number} */
+VideoDecoder.prototype.decodeQueueSize;
+
+/** @type {function(!Event)|undefined} */
+VideoDecoder.prototype.ondequeue;
+
+/** @const {!CodecState} */
+VideoDecoder.prototype.state;
+
+/** */
+VideoDecoder.prototype.close = function() {};
+
+/** @param {!VideoDecoderConfig} config */
+VideoDecoder.prototype.configure = function(config) {};
+
+/** @param {!EncodedVideoChunk} chunk */
+VideoDecoder.prototype.decode = function(chunk) {};
+
+/** @return {!Promise<undefined>} */
+VideoDecoder.prototype.flush = function() {};
+
+/** */
+VideoDecoder.prototype.reset = function() {};
 
 /**
  * @record
@@ -350,40 +441,40 @@ VideoDecoderSupport.prototype.supported;
  */
 function VideoEncoderConfig() {}
 
-/** @type {(undefined|string)} */
+/** @type {!AlphaOption|undefined} */
 VideoEncoderConfig.prototype.alpha;
 
-/** @type {(undefined|!AvcEncoderConfig)} */
+/** @type {!AvcEncoderConfig|undefined} */
 VideoEncoderConfig.prototype.avc;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoEncoderConfig.prototype.bitrate;
 
-/** @type {(undefined|string)} */
+/** @type {!VideoEncoderBitrateMode|undefined} */
 VideoEncoderConfig.prototype.bitrateMode;
 
 /** @type {string} */
 VideoEncoderConfig.prototype.codec;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoEncoderConfig.prototype.displayHeight;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoEncoderConfig.prototype.displayWidth;
 
-/** @type {(undefined|number)} */
+/** @type {number|undefined} */
 VideoEncoderConfig.prototype.framerate;
 
-/** @type {(undefined|string)} */
+/** @type {!HardwareAcceleration|undefined} */
 VideoEncoderConfig.prototype.hardwareAcceleration;
 
 /** @type {number} */
 VideoEncoderConfig.prototype.height;
 
-/** @type {(undefined|string)} */
+/** @type {!LatencyMode|undefined} */
 VideoEncoderConfig.prototype.latencyMode;
 
-/** @type {(undefined|string)} */
+/** @type {string|undefined} */
 VideoEncoderConfig.prototype.scalabilityMode;
 
 /** @type {number} */
@@ -397,9 +488,20 @@ VideoEncoderConfig.prototype.width;
  */
 function VideoEncoderEncodeOptions() {}
 
-/** @type {(undefined|null|boolean)} */
+/** @type {!VideoEncoderEncodeOptionsForAvc|undefined} */
+VideoEncoderEncodeOptions.prototype.avc;
+
+/** @type {boolean|null|undefined} */
 VideoEncoderEncodeOptions.prototype.keyFrame;
 
+/**
+ * @record
+ * @struct
+ */
+function VideoEncoderEncodeOptionsForAvc() {}
+
+/** @type {number|null|undefined} */
+VideoEncoderEncodeOptionsForAvc.prototype.quantizer;
 
 /**
  * @record
@@ -422,10 +524,10 @@ VideoEncoderInit.prototype.output;
  */
 function VideoEncoderSupport() {}
 
-/** @type {!VideoEncoderConfig} */
+/** @type {!VideoEncoderConfig|undefined} */
 VideoEncoderSupport.prototype.config;
 
-/** @type {boolean} */
+/** @type {boolean|undefined} */
 VideoEncoderSupport.prototype.supported;
 
 /**
@@ -444,6 +546,7 @@ function WebCodecsErrorCallback() {}
 
 
 /**
+ * Available only in secure contexts.
  * @param {!AudioEncoderInit} init
  * @constructor
  * @see https://www.w3.org/TR/webcodecs/#audioencoder-constructors
@@ -451,19 +554,19 @@ function WebCodecsErrorCallback() {}
 function AudioEncoder(init) {}
 
 /**
- * @type {!CodecState}
+ * @const {!CodecState}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-state
  */
 AudioEncoder.prototype.state;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-encodequeuesize
  */
 AudioEncoder.prototype.encodeQueueSize;
 
 /**
- * @type {(function(!Event)|undefined)}
+ * @type {function(!Event)|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoder-ondequeue
  */
 AudioEncoder.prototype.ondequeue;
@@ -512,31 +615,31 @@ AudioEncoder.prototype.close = function() {};
 function EncodedAudioChunk(init) {}
 
 /**
- * @type {!EncodedAudioChunkType}
+ * @const {!EncodedAudioChunkType}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-type
  */
 EncodedAudioChunk.prototype.type;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-timestamp
  */
 EncodedAudioChunk.prototype.timestamp;
 
 /**
- * @type {number|null}
+ * @const {number|null}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-duration
  */
 EncodedAudioChunk.prototype.duration;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunk-bytelength
  */
 EncodedAudioChunk.prototype.byteLength;
 
 /**
- * @param {!BufferSource} destination
+ * @param {!AllowSharedBufferSource} destination
  */
 EncodedAudioChunk.prototype.copyTo = function(destination) {};
 
@@ -561,17 +664,22 @@ EncodedAudioChunkInit.prototype.type;
 EncodedAudioChunkInit.prototype.timestamp;
 
 /**
- * @type {undefined|number}
+ * @type {number|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-duration
  */
 EncodedAudioChunkInit.prototype.duration;
 
 /**
- * @type {!BufferSource}
+ * @type {!AllowSharedBufferSource}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-data
  */
 EncodedAudioChunkInit.prototype.data;
 
+/**
+ * @type {!Array<!ArrayBuffer>|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkinit-transfer
+ */
+EncodedAudioChunkInit.prototype.transfer;
 
 /**
  * @record
@@ -581,7 +689,7 @@ EncodedAudioChunkInit.prototype.data;
 function EncodedAudioChunkMetadata() {}
 
 /**
- * @type {AudioDecoderConfig}
+ * @type {!AudioDecoderConfig|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedaudiochunkmetadata-decoderconfig
  */
 EncodedAudioChunkMetadata.prototype.decoderConfig;
@@ -601,29 +709,55 @@ function AudioEncoderConfig() {}
 AudioEncoderConfig.prototype.codec;
 
 /**
- * @type {(undefined|number)}
+ * @type {number|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-samplerate
  */
 AudioEncoderConfig.prototype.sampleRate;
 
 /**
- * @type {(undefined|number)}
+ * @type {number|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-numberofchannels
  */
 AudioEncoderConfig.prototype.numberOfChannels;
 
 /**
- * @type {(undefined|number)}
+ * @type {number|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-bitrate
  */
 AudioEncoderConfig.prototype.bitrate;
 
 /**
- * @type {(undefined|!BitrateMode)}
+ * @type {!BitrateMode|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-bitratemode
  */
 AudioEncoderConfig.prototype.bitrateMode;
 
+/** @type {!OpusEncoderConfig|undefined} */
+AudioEncoderConfig.prototype.opus;
+
+/**
+ * @record
+ * @struct
+ */
+function OpusEncoderConfig() {}
+
+/** @type {number|undefined} */
+OpusEncoderConfig.prototype.complexity;
+
+/** @type {!OpusBitstreamFormat|undefined} */
+OpusEncoderConfig.prototype.format;
+
+/** @type {number|undefined} */
+OpusEncoderConfig.prototype.frameDuration;
+
+/** @type {number|undefined} */
+OpusEncoderConfig.prototype.packetlossperc;
+
+/** @type {boolean|undefined} */
+OpusEncoderConfig.prototype.usedtx;
+
+/** @type {boolean|undefined} */
+OpusEncoderConfig.prototype.useinbandfec;
 
 /**
  * @record
@@ -651,11 +785,55 @@ AudioDecoderConfig.prototype.sampleRate;
 AudioDecoderConfig.prototype.numberOfChannels;
 
 /**
- * @type {BufferSource}
+ * @type {!BufferSource|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderconfig-description
  */
 AudioDecoderConfig.prototype.description;
 
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audiodecoderinit
+ */
+function AudioDecoderInit() {}
+
+/**
+ * @type {!WebCodecsErrorCallback}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderinit-error
+ */
+AudioDecoderInit.prototype.error;
+
+/**
+ * @type {!AudioDataOutputCallback}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoderinit-output
+ */
+AudioDecoderInit.prototype.output;
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#callbackdef-audiodataoutputcallback
+ */
+function AudioDataOutputCallback() {}
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-audiodecodersupport
+ */
+function AudioDecoderSupport() {}
+
+/**
+ * @type {!AudioDecoderConfig|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecodersupport-config
+ */
+AudioDecoderSupport.prototype.config;
+
+/**
+ * @type {boolean|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecodersupport-supported
+ */
+AudioDecoderSupport.prototype.supported;
 
 /**
  * @record
@@ -665,13 +843,13 @@ AudioDecoderConfig.prototype.description;
 function AudioEncoderSupport() {}
 
 /**
- * @type {boolean}
+ * @type {boolean|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencodersupport-supported
  */
 AudioEncoderSupport.prototype.supported;
 
 /**
- * @type {!AudioEncoderConfig}
+ * @type {!AudioEncoderConfig|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencodersupport-config
  */
 AudioEncoderSupport.prototype.config;
@@ -712,37 +890,37 @@ function EncodedAudioChunkOutputCallback() {}
 function AudioData(init) {}
 
 /**
- * @type {?AudioSampleFormat}
+ * @const {?AudioSampleFormat}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-format
  */
 AudioData.prototype.format;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-samplerate
  */
 AudioData.prototype.sampleRate;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-numberofframes
  */
 AudioData.prototype.numberOfFrames;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-numberofchannels
  */
 AudioData.prototype.numberOfChannels;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-duration
  */
 AudioData.prototype.duration;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-timestamp
  */
 AudioData.prototype.timestamp;
@@ -755,7 +933,7 @@ AudioData.prototype.timestamp;
 AudioData.prototype.allocationSize = function(options) {};
 
 /**
- * @param {!BufferSource} destination
+ * @param {!AllowSharedBufferSource} destination
  * @param {!AudioDataCopyToOptions} options
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodata-copyto
  */
@@ -816,6 +994,11 @@ AudioDataInit.prototype.timestamp;
  */
 AudioDataInit.prototype.data;
 
+/**
+ * @type {!Array<!ArrayBuffer>|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodatainit-transfer
+ */
+AudioDataInit.prototype.transfer;
 
 /**
  * @record
@@ -831,23 +1014,78 @@ function AudioDataCopyToOptions() {}
 AudioDataCopyToOptions.prototype.planeIndex;
 
 /**
- * @type {undefined|number}
+ * @type {number|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-frameoffset
  */
 AudioDataCopyToOptions.prototype.frameOffset;
 
 /**
- * @type {undefined|number}
+ * @type {number|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-framecount
  */
 AudioDataCopyToOptions.prototype.frameCount;
 
 /**
- * @type {undefined|!AudioSampleFormat}
+ * @type {!AudioSampleFormat|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-audiodatacopytooptions-format
  */
 AudioDataCopyToOptions.prototype.format;
 
+/**
+ * Available only in secure contexts.
+ * @param {!AudioDecoderInit} init
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#audiodecoder-interface
+ */
+function AudioDecoder(init) {}
+
+/** @const {number} */
+AudioDecoder.prototype.decodeQueueSize;
+
+/** @type {function(!Event)|undefined} */
+AudioDecoder.prototype.ondequeue;
+
+/** @const {!CodecState} */
+AudioDecoder.prototype.state;
+
+/** */
+AudioDecoder.prototype.close = function() {};
+
+/**
+ * @param {!AudioDecoderConfig} config
+ */
+AudioDecoder.prototype.configure = function(config) {};
+
+/**
+ * @param {!EncodedAudioChunk} chunk
+ */
+AudioDecoder.prototype.decode = function(chunk) {};
+
+/**
+ * @return {!Promise<undefined>}
+ */
+AudioDecoder.prototype.flush = function() {};
+
+/** */
+AudioDecoder.prototype.reset = function() {};
+
+/**
+ * @param {!AudioDecoderConfig} config
+ * @return {!Promise<!AudioDecoderSupport>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-audiodecoder-isconfigsupported
+ */
+AudioDecoder.isConfigSupported = function(config) {};
+
+/**
+ * @typedef {string}
+ */
+var AvcBitstreamFormat;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-videoencoderbitratemode
+ */
+var VideoEncoderBitrateMode;
 
 /**
  * @typedef {string}
@@ -880,6 +1118,48 @@ var EncodedAudioChunkType;
 var EncodedVideoChunkType;
 
 /**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-hardwareacceleration
+ */
+var HardwareAcceleration;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-latencymode
+ */
+var LatencyMode;
+
+/**
+ * @typedef {string}
+ * @see https://html.spec.whatwg.org/multipage/canvas.html#predefinedcolorspace
+ */
+var PredefinedColorSpace;
+
+/**
+ * @typedef {string}
+ */
+var OpusBitstreamFormat;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-videomatrixcoefficients
+ */
+var VideoMatrixCoefficients;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-videocolorprimaries
+ */
+var VideoColorPrimaries;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webcodecs/#enumdef-videotransfercharacteristics
+ */
+var VideoTransferCharacteristics;
+
+/**
+ * Available only in secure contexts.
  * @param {!VideoEncoderInit} init
  * @constructor
  * @see https://www.w3.org/TR/webcodecs/#videoencoder-constructors
@@ -887,19 +1167,19 @@ var EncodedVideoChunkType;
 function VideoEncoder(init) {}
 
 /**
- * @type {!CodecState}
+ * @const {!CodecState}
  * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-state
  */
 VideoEncoder.prototype.state;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-encodequeuesize
  */
 VideoEncoder.prototype.encodeQueueSize;
 
 /**
- * @type {(function(!Event)|undefined)}
+ * @type {function(!Event)|undefined}
  * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-ondequeue
  */
 VideoEncoder.prototype.ondequeue;
@@ -919,7 +1199,7 @@ VideoEncoder.prototype.configure = function(config) {};
 
 /**
  * @param {!VideoFrame} frame
- * @param {undefined|!VideoEncoderEncodeOptions} options
+ * @param {!VideoEncoderEncodeOptions|undefined} options
  * @see https://www.w3.org/TR/webcodecs/#dom-videoencoder-encode
  */
 VideoEncoder.prototype.encode = function(frame, options) {};
@@ -949,31 +1229,31 @@ VideoEncoder.prototype.close = function() {};
 function EncodedVideoChunk(init) {}
 
 /**
- * @type {!EncodedVideoChunkType}
+ * @const {!EncodedVideoChunkType}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-type
  */
 EncodedVideoChunk.prototype.type;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-timestamp
  */
 EncodedVideoChunk.prototype.timestamp;
 
 /**
- * @type {number|null}
+ * @const {number|null}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-duration
  */
 EncodedVideoChunk.prototype.duration;
 
 /**
- * @type {number}
+ * @const {number}
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-bytelength
  */
 EncodedVideoChunk.prototype.byteLength;
 
 /**
- * @param {!BufferSource} destination
+ * @param {!AllowSharedBufferSource} destination
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-copyto
  */
 EncodedVideoChunk.prototype.copyTo = function(destination) {};

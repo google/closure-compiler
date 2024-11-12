@@ -445,6 +445,11 @@ SharedArrayBuffer.prototype.slice = function(begin, end) {};
  */
 var BufferSource;
 
+/**
+ * @typedef {!ArrayBuffer|!ArrayBufferView}
+ */
+var AllowSharedBufferSource;
+
 
 /**
  * @constructor
