@@ -78,6 +78,8 @@ public final class SourceFile implements StaticSourceFile {
 
   private final CodeLoader loader;
 
+  private boolean isStubSourceFileForAlreadyProvidedInput = false;
+
   // Source Line Information
   private int @Nullable [] lineOffsets = null;
 
@@ -100,6 +102,15 @@ public final class SourceFile implements StaticSourceFile {
     this.loader = loader;
     this.fileName = fileName;
     this.kind = kind;
+  }
+
+  public boolean isStubSourceFileForAlreadyProvidedInput() {
+    return isStubSourceFileForAlreadyProvidedInput;
+  }
+
+  private void setIsStubSourceFileForAlreadyProvidedInput(
+      boolean isStubSourceFileForAlreadyProvidedInput) {
+    this.isStubSourceFileForAlreadyProvidedInput = isStubSourceFileForAlreadyProvidedInput;
   }
 
   @Override
@@ -522,6 +533,18 @@ public final class SourceFile implements StaticSourceFile {
   }
 
   /**
+   * Returns a stub SourceFile with the given name and kind. It is used when the actual sources are
+   * provided via TypedASTs to stage2 and stage3.
+   */
+  public static SourceFile stubSourceFile(String fileName, SourceKind kind) {
+    return builder()
+        .withPath(fileName)
+        .withKind(kind)
+        .setIsStubSourceFileForAlreadyProvidedInput()
+        .build();
+  }
+
+  /**
    * Reconciles serialized state in a {@link SourceFileProto} with the existing state in this file.
    *
    * <p>This should be called whenever initializing a compilation based on TypedAST protos. For
@@ -603,6 +626,12 @@ public final class SourceFile implements StaticSourceFile {
               .withZipEntryPath(zipEntry.getZipPath(), zipEntry.getEntryName())
               .build();
         }
+      case STUB_FILE:
+        return SourceFile.builder()
+            .withKind(sourceKind)
+            .withOriginalPath(protoSourceFile.getFilename())
+            .setIsStubSourceFileForAlreadyProvidedInput()
+            .build();
       case LOADER_NOT_SET:
         break;
     }
@@ -644,6 +673,7 @@ public final class SourceFile implements StaticSourceFile {
     private SourceKind kind = SourceKind.STRONG;
     private Charset charset = UTF_8;
     private @Nullable String originalPath = null;
+    private boolean isStubSourceFileForAlreadyProvidedInput = false;
 
     private @Nullable String path = null;
     private @Nullable Path pathWithFilesystem = null;
@@ -718,6 +748,16 @@ public final class SourceFile implements StaticSourceFile {
       return this;
     }
 
+    /**
+     * Sets that this SourceFile is a stub file for an input that was already provided to the
+     * compiler in the form of TypedAST.
+     */
+    @CanIgnoreReturnValue
+    public Builder setIsStubSourceFileForAlreadyProvidedInput() {
+      this.isStubSourceFileForAlreadyProvidedInput = true;
+      return this;
+    }
+
     public SourceFile build() {
       String displayPath =
           (this.originalPath != null)
@@ -725,6 +765,13 @@ public final class SourceFile implements StaticSourceFile {
               : ((this.zipEntryPath == null)
                   ? this.path
                   : this.path + BANG_SLASH + this.zipEntryPath);
+
+      if (this.isStubSourceFileForAlreadyProvidedInput) {
+        SourceFile file =
+            new SourceFile(new CodeLoader.StubSourceFileCodeLoader(), displayPath, this.kind);
+        file.setIsStubSourceFileForAlreadyProvidedInput(true);
+        return file;
+      }
 
       if (this.lazyContent != null) {
         return new SourceFile(
@@ -814,6 +861,25 @@ public final class SourceFile implements StaticSourceFile {
       @Override
       SourceFileProto.Builder toProtoLocationBuilder(String fileName) {
         return SourceFileProto.newBuilder().setPreloadedContents(this.preloadedCode);
+      }
+    }
+
+    /* A code loader which throws an error when loading code for a stub SourceFile. */
+    static final class StubSourceFileCodeLoader extends CodeLoader {
+      private static final long serialVersionUID = 2L;
+
+      StubSourceFileCodeLoader() {
+        super();
+      }
+
+      @Override
+      String loadUncachedCode() {
+        throw new UnsupportedOperationException("Attempting to load code from a stub SourceFile.");
+      }
+
+      @Override
+      SourceFileProto.Builder toProtoLocationBuilder(String fileName) {
+        return SourceFileProto.newBuilder().setFilename(fileName).setStubFile(true);
       }
     }
 

@@ -21,6 +21,9 @@ message SourceFileProto {
     string preloaded_contents = 2;
     FileOnDisk file_on_disk = 3;
     ZipEntryOnDisk zip_entry = 4;
+    // If true, this SourceFile is an empty stub file that does not have any
+    // JS content
+    bool stub_file = 9;
   }
 
   // required

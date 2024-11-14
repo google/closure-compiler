@@ -4412,6 +4412,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         List<SourceFile> sourceFiles = new ArrayList<>();
         for (JSChunk chunk : allModules) {
           for (CompilerInput input : chunk.getInputs()) {
+            SourceFile sourceFile = input.getSourceFile();
+            if (sourceFile.isStubSourceFileForAlreadyProvidedInput()) {
+              // do not add stub source files to the source map
+              continue;
+            }
             sourceFiles.add(input.getSourceFile());
           }
         }

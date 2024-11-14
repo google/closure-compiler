@@ -555,6 +555,10 @@ public final class CodePrinter {
 
       String srcCode;
       try {
+        if (src.isStubSourceFileForAlreadyProvidedInput()) {
+          // source file is a stub file, so we can not get number from source.
+          return null;
+        }
         srcCode = src.getCode();
       } catch (IOException e) {
         return null;

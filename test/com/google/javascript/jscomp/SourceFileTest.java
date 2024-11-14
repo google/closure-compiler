@@ -244,6 +244,15 @@ public final class SourceFileTest {
     assertThat(sourceFile.getCode()).isEqualTo(expectedContent);
   }
 
+  @Test
+  public void testStubSourceFile_created_crashesOnGetCode() {
+    String fileName = "file.js";
+    SourceFile stubSourceFile = SourceFile.stubSourceFile(fileName, SourceKind.WEAK);
+    assertThat(stubSourceFile.getName()).isEqualTo(fileName);
+    assertThat(stubSourceFile.getKind()).isEqualTo(SourceKind.WEAK);
+    assertThrows(UnsupportedOperationException.class, stubSourceFile::getCode);
+  }
+
   private static void createZipWithContent(Path zipFile, String content) throws IOException {
     Instant lastModified = Instant.now();
     if (zipFile.toFile().exists()) {
