@@ -1243,7 +1243,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Node parse(SourceFile file) {
     initCompilerOptionsIfTesting();
     logger.finest("Parsing: " + file.getName());
-    return new JsAst(file).getAstRoot(this);
+    return new CompilerInput(file).getAstRoot(this);
   }
 
   PassConfig getPassConfig() {
@@ -3818,19 +3818,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(
         !this.inputsById.containsKey(SYNTHETIC_CODE_INPUT_ID),
         "Already initialized synthetic input");
-    JsAst ast = new JsAst(SourceFile.fromCode(SYNTHETIC_CODE_INPUT_ID.getIdName(), ""));
+    CompilerInput ast =
+        new CompilerInput(SourceFile.fromCode(SYNTHETIC_CODE_INPUT_ID.getIdName(), ""));
     if (inputsById.containsKey(ast.getInputId())) {
       throw new IllegalStateException("Conflicting synthetic id name");
     }
-    CompilerInput input = new CompilerInput(ast, false);
     jsRoot.addChildToFront(checkNotNull(ast.getAstRoot(this)));
 
     JSChunk firstChunk = Iterables.getFirst(getChunks(), null);
     if (firstChunk.getName().equals(JSChunk.STRONG_CHUNK_NAME)) {
-      firstChunk.add(input);
+      firstChunk.add(ast);
     }
-    input.setChunk(firstChunk);
-    putCompilerInput(input);
+    ast.setChunk(firstChunk);
+    putCompilerInput(ast);
 
     commentsPerFile.put(SYNTHETIC_CODE_INPUT_ID.getIdName(), ImmutableList.of());
     reportChangeToChangeScope(ast.getAstRoot(this));

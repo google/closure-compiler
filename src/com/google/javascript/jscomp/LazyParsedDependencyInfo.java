@@ -32,12 +32,13 @@ import org.jspecify.annotations.Nullable;
 public class LazyParsedDependencyInfo implements DependencyInfo {
 
   private final DependencyInfo delegate;
-  private @Nullable JsAst ast;
+  private @Nullable CompilerInput ast;
   private final transient AbstractCompiler compiler;
 
   private ImmutableMap<String, String> loadFlags;
 
-  public LazyParsedDependencyInfo(DependencyInfo delegate, JsAst ast, AbstractCompiler compiler) {
+  public LazyParsedDependencyInfo(
+      DependencyInfo delegate, CompilerInput ast, AbstractCompiler compiler) {
     this.delegate = checkNotNull(delegate);
     this.ast = checkNotNull(ast);
     this.compiler = checkNotNull(compiler);

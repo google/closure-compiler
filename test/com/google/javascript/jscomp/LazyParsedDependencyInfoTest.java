@@ -36,7 +36,7 @@ public final class LazyParsedDependencyInfoTest {
     Require baz = Require.googRequireSymbol("baz");
     Require qux = Require.googRequireSymbol("qux");
     Compiler compiler = new Compiler();
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "// nothing here"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "// nothing here"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("path/to/1.js", "path/2.js")
             .setProvides("foo", "bar")
@@ -54,7 +54,7 @@ public final class LazyParsedDependencyInfoTest {
   public void testLoadFlagsParsesEs3() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "// nothing here"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "// nothing here"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("", "").setLoadFlags(ImmutableMap.of("foo", "bar")).build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
@@ -72,7 +72,7 @@ public final class LazyParsedDependencyInfoTest {
   public void testLoadFlagsParsesEs5() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "var x = [1, 2,];"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "var x = [1, 2,];"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("", "")
             .setLoadFlags(ImmutableMap.of("module", "goog"))
@@ -87,7 +87,7 @@ public final class LazyParsedDependencyInfoTest {
   public void testLoadFlagsParsesEs6Impl() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "class X {}"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "class X {}"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("", "").setLoadFlags(ImmutableMap.of("foo", "bar")).build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
@@ -100,7 +100,7 @@ public final class LazyParsedDependencyInfoTest {
   public void testLoadFlagsParsesEs6() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "let [a, b] = [1, 2];"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "let [a, b] = [1, 2];"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("", "").setLoadFlags(ImmutableMap.of("foo", "bar")).build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
@@ -113,7 +113,7 @@ public final class LazyParsedDependencyInfoTest {
   public void testParseIsLazy() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "parse error"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "parse error"));
     SimpleDependencyInfo delegate = SimpleDependencyInfo.builder("", "").build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
@@ -132,7 +132,7 @@ public final class LazyParsedDependencyInfoTest {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     compiler.initOptions(options);
-    JsAst ast = new JsAst(SourceFile.fromCode("file.js", "export let foo = 42;"));
+    CompilerInput ast = new CompilerInput(SourceFile.fromCode("file.js", "export let foo = 42;"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("", "my/js.js")
             .setLoadFlags(ImmutableMap.of("module", "goog"))

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -30,7 +31,9 @@ import com.google.javascript.jscomp.deps.JsFileRegexParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
+import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -40,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -54,9 +58,10 @@ public class CompilerInput implements DependencyInfo {
   // Info about where the file lives.
   private JSChunk chunk;
   private final InputId id;
+  private final SourceFile sourceFile;
 
-  // The AST.
-  private final SourceAst ast;
+  // The lazily constructed AST.
+  private final JsAst ast = new JsAst();
 
   // DependencyInfo to delegate to.
   private DependencyInfo dependencyInfo;
@@ -98,38 +103,28 @@ public class CompilerInput implements DependencyInfo {
   // with the AST node. Once (when?) we enforce that extern files always contain an @externs
   // annotation, we can store the extern bit in the AST node, and make SourceFile immutable.
 
-  public CompilerInput(SourceAst ast) {
-    this(ast, ast.getSourceFile().getName(), false);
+  public CompilerInput(SourceFile file, InputId inputId) {
+    this(file, inputId, false);
   }
 
-  public CompilerInput(SourceAst ast, boolean isExtern) {
-    this.ast = ast;
-    this.id = ast.getInputId();
+  /**
+   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
+   */
+  @Deprecated
+  public CompilerInput(SourceFile sourceFile, String inputId, boolean isExtern) {
+    this(sourceFile, new InputId(inputId), isExtern);
+  }
 
+  /**
+   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
+   */
+  @Deprecated
+  public CompilerInput(SourceFile sourceFile, InputId inputId, boolean isExtern) {
+    this.sourceFile = sourceFile;
+    this.id = inputId;
     if (isExtern) {
       setIsExtern();
     }
-  }
-
-  /**
-   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
-   */
-  @Deprecated
-  public CompilerInput(SourceAst ast, String inputId, boolean isExtern) {
-    this(ast, new InputId(inputId), isExtern);
-  }
-
-  /**
-   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
-   */
-  @Deprecated
-  public CompilerInput(SourceAst ast, InputId inputId, boolean isExtern) {
-    this(ast, isExtern);
-    checkArgument(
-        inputId.equals(ast.getInputId()),
-        "mismatched input ids\nctor param: %s\nast.getInputId(): %s",
-        inputId,
-        ast.getInputId());
   }
 
   public CompilerInput(SourceFile file) {
@@ -137,7 +132,7 @@ public class CompilerInput implements DependencyInfo {
   }
 
   public CompilerInput(SourceFile file, boolean isExtern) {
-    this(new JsAst(file), isExtern);
+    this(file, new InputId(file.getName()), isExtern);
   }
 
   /** Returns a name for this input. Must be unique across all inputs. */
@@ -170,7 +165,7 @@ public class CompilerInput implements DependencyInfo {
   }
 
   public SourceFile getSourceFile() {
-    return ast.getSourceFile();
+    return sourceFile;
   }
 
   /** Sets an abstract compiler for doing parsing. */
@@ -341,7 +336,7 @@ public class CompilerInput implements DependencyInfo {
 
     // If the code is a JsAst, then it was originally JS code, and is compatible with the
     // regex-based parsing of JsFileRegexParser.
-    if (ast instanceof JsAst && JsFileRegexParser.isSupported() && compiler.preferRegexParser()) {
+    if (JsFileRegexParser.isSupported() && compiler.preferRegexParser()) {
       // Look at the source code.
       // Note: it's OK to use getName() instead of
       // getPathRelativeToClosureBase() here because we're not using
@@ -353,7 +348,7 @@ public class CompilerInput implements DependencyInfo {
                 .setModuleLoader(compiler.getModuleLoader())
                 .setIncludeGoogBase(true)
                 .parseFile(getName(), getName(), getCode());
-        return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
+        return new LazyParsedDependencyInfo(info, this, compiler);
       } catch (IOException e) {
         compiler
             .getErrorManager()
@@ -573,22 +568,22 @@ public class CompilerInput implements DependencyInfo {
   }
 
   public boolean isExtern() {
-    if (ast == null || ast.getSourceFile() == null) {
+    if (sourceFile == null) {
       return false;
     }
-    return ast.getSourceFile().isExtern();
+    return sourceFile.isExtern();
   }
 
   void setIsExtern() {
     // TODO(tjgq): Add a precondition check here. People are passing in null, but they shouldn't be.
-    if (ast == null || ast.getSourceFile() == null) {
+    if (sourceFile == null) {
       return;
     }
-    ast.getSourceFile().setKind(SourceKind.EXTERN);
+    sourceFile.setKind(SourceKind.EXTERN);
   }
 
   public int getLineOffset(int lineno) {
-    return ast.getSourceFile().getLineOffset(lineno);
+    return sourceFile.getLineOffset(lineno);
   }
 
   @Override
@@ -635,5 +630,97 @@ public class CompilerInput implements DependencyInfo {
     COMMONJS,
     JSON,
     IMPORTED_SCRIPT
+  }
+
+  public FeatureSet getFeatures(AbstractCompiler compiler) {
+    var unused = this.ast.getAstRoot(compiler); // parse if required
+    return this.ast.features;
+  }
+
+  /**
+   * Wraps the Rhino AST for this CompilerInput.
+   *
+   * <p>Use this wrapper class instead of directly storing a Node because the AST is lazily
+   * constructed. CompilerInputs are created before the parsing step, and in some cases the AST for
+   * a given CompilerInput may never be parsed if dependency pruning is enabled.
+   *
+   * <p>Additionally if using precompiled libraries, this class handles deserializing the AST from
+   * the TypedAST format, instead of parsing it from the source.
+   */
+  private final class JsAst {
+    private @Nullable Node root;
+    private FeatureSet features;
+
+    public Node getAstRoot(AbstractCompiler compiler) {
+      if (this.isParsed()) {
+        return this.root;
+      }
+
+      Supplier<Node> astRootSource = compiler.getTypedAstDeserializer(sourceFile);
+      if (astRootSource != null) {
+        this.root = astRootSource.get();
+        this.features = (FeatureSet) this.root.getProp(Node.FEATURE_SET);
+      } else {
+        this.parse(compiler);
+      }
+      checkState(identical(this.root.getStaticSourceFile(), sourceFile));
+      this.root.setInputId(id);
+      // Clear the cached source after parsing.  It will be re-read for snippet generation if
+      // needed.
+      sourceFile.clearCachedSource();
+      return this.root;
+    }
+
+    public void clearAst() {
+      root = null;
+      // While we're at it, clear out any saved text in the source file on
+      // the assumption that if we're dumping the parse tree, then we probably
+      // assume regenerating everything else is a smart idea also.
+      sourceFile.clearCachedSource();
+    }
+
+    private boolean isParsed() {
+      return root != null;
+    }
+
+    private void parse(AbstractCompiler compiler) {
+      try {
+        ParserRunner.ParseResult result =
+            ParserRunner.parse(
+                sourceFile,
+                sourceFile.getCode(),
+                compiler.getParserConfig(
+                    sourceFile.isExtern()
+                        ? AbstractCompiler.ConfigContext.EXTERNS
+                        : AbstractCompiler.ConfigContext.DEFAULT),
+                compiler.getDefaultErrorReporter());
+        root = result.ast;
+        features = result.features;
+
+        if (compiler.getOptions().preservesDetailedSourceInfo()) {
+          compiler.addComments(sourceFile.getName(), result.comments);
+        }
+        if (result.sourceMapURL != null && compiler.getOptions().resolveSourceMapAnnotations) {
+          boolean parseInline = compiler.getOptions().parseInlineSourceMaps;
+          SourceFile sourceMapSourceFile =
+              SourceMapResolver.extractSourceMap(sourceFile, result.sourceMapURL, parseInline);
+          if (sourceMapSourceFile != null) {
+            compiler.addInputSourceMap(
+                sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
+          }
+        }
+      } catch (IOException e) {
+        compiler.report(
+            JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName(), e.getMessage()));
+      }
+
+      if (root == null) {
+        root = IR.script();
+      }
+
+      // Set the source name so that the compiler passes can track
+      // the source file and module.
+      root.setStaticSourceFile(sourceFile);
+    }
   }
 }
