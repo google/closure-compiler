@@ -47,9 +47,9 @@ import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A class for the internal representation of an input to the compiler. Wraps a {@link SourceAst}
- * and maintain state such as module for the input and whether the input is an extern. Also
- * calculates provided and required types.
+ * A class for the internal representation of an input to the compiler. Wraps a {@link JsAst} and
+ * maintain state such as module for the input and whether the input is an extern. Also calculates
+ * provided and required types.
  */
 public class CompilerInput implements DependencyInfo {
 
@@ -108,7 +108,7 @@ public class CompilerInput implements DependencyInfo {
   }
 
   /**
-   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
+   * @deprecated the inputId is read from the SourceFile. Use CompilerInput(file, isExtern)
    */
   @Deprecated
   public CompilerInput(SourceFile sourceFile, String inputId, boolean isExtern) {
@@ -116,12 +116,12 @@ public class CompilerInput implements DependencyInfo {
   }
 
   /**
-   * @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern)
+   * @deprecated the inputId is read from the SourceFile. Use CompilerInput(file, isExtern)
    */
   @Deprecated
   public CompilerInput(SourceFile sourceFile, InputId inputId, boolean isExtern) {
-    this.sourceFile = sourceFile;
-    this.id = inputId;
+    this.sourceFile = checkNotNull(sourceFile);
+    this.id = checkNotNull(inputId);
     if (isExtern) {
       setIsExtern();
     }
@@ -568,17 +568,10 @@ public class CompilerInput implements DependencyInfo {
   }
 
   public boolean isExtern() {
-    if (sourceFile == null) {
-      return false;
-    }
     return sourceFile.isExtern();
   }
 
   void setIsExtern() {
-    // TODO(tjgq): Add a precondition check here. People are passing in null, but they shouldn't be.
-    if (sourceFile == null) {
-      return;
-    }
     sourceFile.setKind(SourceKind.EXTERN);
   }
 
