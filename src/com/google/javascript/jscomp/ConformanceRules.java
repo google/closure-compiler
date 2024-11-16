@@ -569,6 +569,7 @@ public final class ConformanceRules {
 
   /** Banned name rule */
   static final class BannedName extends AbstractRule {
+    // LINT.ThenChange(//depot/google3/javascript/typescript/compiler/conformance/rules/ban_third_party_script.ts)
     private final Requirement.Type requirementType;
     private final ImmutableList<Node> qualifiedNames;
     private final ImmutableSet<String> shortNames;
