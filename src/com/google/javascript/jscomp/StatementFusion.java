@@ -101,7 +101,6 @@ final class StatementFusion extends AbstractPeepholeOptimization {
   /**
    * Given a block, fuse a list of statements with comma's.
    *
-   * @param parent The parent that contains the statements.
    * @param first The first statement to fuse (inclusive)
    * @param last The last statement to fuse (exclusive)
    * @return A single statement that contains all the fused statement as one.
