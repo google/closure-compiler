@@ -831,10 +831,6 @@ final class PolymerClassRewriter {
 
         JSDocInfo.Builder info = getJSDocInfoBuilderForBehavior(behavior, behaviorFunction);
 
-        // Uses of private members that come from behaviors are not recognized correctly,
-        // so just suppress that warning.
-        info.recordSuppression("unusedPrivateMembers");
-
         // If the function in the behavior is @protected, switch it to @public so that
         // we don't get a visibility warning. This is a bit of a hack but easier than
         // making the type system understand that methods are "inherited" from behaviors.

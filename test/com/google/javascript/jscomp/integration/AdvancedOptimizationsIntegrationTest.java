@@ -245,7 +245,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             " * @suppress {missingRequire} added by tsickle",
             " * @suppress {uselessCode} added by tsickle",
             " * @suppress {missingReturn} added by tsickle",
-            " * @suppress {unusedPrivateMembers} added by tsickle",
             " * @suppress {missingOverride} added by tsickle",
             " * @suppress {const} added by tsickle",
             " */",
