@@ -305,7 +305,9 @@ final class SubtypeChecker {
        */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
-    } else if (!subAndSuperAreSameBaseType && supertype.isRecordType()) {
+    } else if (!subAndSuperAreSameBaseType
+        && supertype.isRecordType()
+        && this.isUsingStructuralTyping) {
       /*
        * Anonymous record types are always considered structurally when supertypes.
        *

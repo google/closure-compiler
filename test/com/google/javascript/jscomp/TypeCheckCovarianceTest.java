@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
+import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -792,7 +793,7 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  var y;",
             "  y.abort();",
             "}")
-        .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
+        .addDiagnostic(STRICT_INEXISTENT_UNION_PROPERTY)
         .run();
   }
 

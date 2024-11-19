@@ -1000,6 +1000,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String dDecl =
         lines("/** @constructor */ function D() {}", "/** @type {string} */", "D.prototype.p;");
 
+    testConformance(cDecl, dDecl);
     String typedefDecl =
         lines(
             "/** @typedef {{p: string}} */ let E;",

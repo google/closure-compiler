@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.TypeCheck.ILLEGAL_PROPERTY_CREATION_O
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
+import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -2578,7 +2579,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {",
             "  var /** null */ n = x.b;",
             "}")
-        .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
+        .addDiagnostic(STRICT_INEXISTENT_UNION_PROPERTY)
+        .addDiagnostic(TypeValidator.TYPE_MISMATCH_WARNING)
         .run();
   }
 
@@ -2590,7 +2592,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {",
             "  var /** null */ n = x.b;",
             "}")
-        .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
+        .addDiagnostic(STRICT_INEXISTENT_UNION_PROPERTY)
+        .addDiagnostic(TypeValidator.TYPE_MISMATCH_WARNING)
         .run();
   }
 
@@ -2602,7 +2605,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {}",
             "/** @param {{a: number}} x */",
             "function g(x) { return x.b; }")
-        .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
+        .addDiagnostic(TypeCheck.INEXISTENT_PROPERTY)
         .run();
   }
 
@@ -2639,21 +2642,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             lines(
                 "initializing variable", //
-                "found   : {a: number}",
+                "found   : ({",
+                "  a: number,",
+                "  b: string",
+                "}|{a: number})",
                 "required: null"))
         .run();
   }
 
   @Test
   public void testDontDropPropertiesInUnion7() {
-    // Only a strict warning because in the registry we map {a, c} to {b, d}
     newTest()
         .addSource(
             "/** @param {{a: number}|{a:number, b:string}} x */",
             "function f(x) {}",
             "/** @param {{c: number}|{c:number, d:string}} x */",
             "function g(x) { return x.b; }")
-        .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
+        .addDiagnostic(TypeCheck.INEXISTENT_PROPERTY)
         .run();
   }
 
