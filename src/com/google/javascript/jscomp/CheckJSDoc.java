@@ -533,8 +533,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
 
-    boolean hasNonDescMsgTag =
-        info.isHidden() || info.getMeaning() != null || info.getAlternateMessageId() != null;
+    boolean hasNonDescMsgTag = info.getMeaning() != null || info.getAlternateMessageId() != null;
 
     if (hasNonDescMsgTag
         // Don't error on TS gencode using @desc on a non-message. There's a lot of code that

@@ -674,12 +674,6 @@ public final class JsDocInfoParser {
           token = eatUntilEOLIfNotAnnotation(token);
           return token;
 
-        case HIDDEN:
-          if (!jsdocBuilder.recordHiddenness()) {
-            addParserWarning(Msg.JSDOC_HIDDEN);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case LENDS:
           skipEOLs();
 

@@ -309,7 +309,6 @@ public class JSDocInfo implements Serializable {
     CONST,
     CONSTRUCTOR,
     DEFINE,
-    HIDDEN,
     TYPE_SUMMARY,
     FINAL,
     OVERRIDE,
@@ -791,11 +790,6 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isDefine() {
     return checkBit(Bit.DEFINE);
-  }
-
-  /** Returns whether the {@code @hidden} annotation is present on this {@link JSDocInfo}. */
-  public boolean isHidden() {
-    return checkBit(Bit.HIDDEN);
   }
 
   /** Returns whether the {@code @override} annotation is present on this {@link JSDocInfo}. */
@@ -2294,17 +2288,6 @@ public class JSDocInfo implements Serializable {
 
       String txt = getProp(LICENSE);
       return recordLicense(RhinoStringPool.addOrGet(nullToEmpty(txt) + license));
-    }
-
-    /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isHidden()}
-     * flag set to {@code true}.
-     *
-     * @return {@code true} if the hiddenness was recorded and {@code false} if it was already
-     *     defined
-     */
-    public boolean recordHiddenness() {
-      return populateBit(Bit.HIDDEN, true);
     }
 
     /**

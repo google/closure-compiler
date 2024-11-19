@@ -2421,13 +2421,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression4() {
-    String comment = " * @const\n" + " * @hidden\n" + " * @constructor\n" + " */";
+    String comment = " * @const\n" + " * @private\n" + " * @constructor\n" + " */";
 
     JSDocInfo info = parse(comment);
     assertThat(info.isConstant()).isTrue();
     assertThat(info.isDefine()).isFalse();
     assertThat(info.isConstructor()).isTrue();
-    assertThat(info.isHidden()).isTrue();
+    assertThat(info.getVisibility()).isEqualTo(Visibility.PRIVATE);
   }
 
   @Test
@@ -2438,16 +2438,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isConstant()).isTrue();
     assertThat(info.isDefine()).isFalse();
     assertTypeEquals(STRING_TYPE, info.getEnumParameterType());
-    assertThat(info.getVisibility()).isEqualTo(Visibility.PUBLIC);
-  }
-
-  @Test
-  public void testRegression6() {
-    String comment = "@hidden\n@enum\n@public*/";
-
-    JSDocInfo info = parse(comment);
-    assertThat(info.isHidden()).isTrue();
-    assertTypeEquals(NUMBER_TYPE, info.getEnumParameterType());
     assertThat(info.getVisibility()).isEqualTo(Visibility.PUBLIC);
   }
 
@@ -2490,7 +2480,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isFalse();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(1);
     assertTypeEquals(STRING_TYPE, jsdoc.getParameterType("p0"));
     assertThat(jsdoc.getReturnType()).isNull();
@@ -2511,7 +2500,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isFalse();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(2);
     assertTypeEquals(STRING_OBJECT_TYPE, jsdoc.getParameterType("p0"));
     assertTypeEquals(BOOLEAN_TYPE, jsdoc.getParameterType("p1"));
@@ -2528,7 +2516,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isFalse();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(0);
     assertThat(jsdoc.getReturnType()).isNull();
     assertThat(jsdoc.getType()).isNull();
@@ -2543,7 +2530,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isFalse();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(0);
     assertThat(jsdoc.getReturnType()).isNull();
     assertThat(jsdoc.getType()).isNull();
@@ -2558,7 +2544,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isFalse();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(0);
     assertThat(jsdoc.getReturnType()).isNull();
     assertTypeEquals(REGEXP_TYPE, jsdoc.getType());
@@ -2573,7 +2558,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isTrue();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(0);
     assertThat(jsdoc.getReturnType()).isNull();
     assertThat(jsdoc.getType()).isNull();
@@ -2588,7 +2572,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstant()).isTrue();
     assertThat(jsdoc.getDescription()).isEqualTo("Hello, World!");
     assertThat(jsdoc.getEnumParameterType()).isNull();
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(0);
     assertThat(jsdoc.getReturnType()).isNull();
     assertThat(jsdoc.getType()).isNull();
@@ -2603,7 +2586,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isFalse();
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
-    assertThat(jsdoc.isHidden()).isFalse();
     assertThat(jsdoc.getParameterCount()).isEqualTo(0);
     assertThat(jsdoc.getReturnType()).isNull();
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.INHERITED);

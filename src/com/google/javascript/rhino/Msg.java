@@ -72,7 +72,6 @@ public enum Msg {
   JSDOC_FINAL("extra @final tag."),
   JSDOC_FUNCTION_NEWNOTOBJECT("constructed type must be an object type"),
   JSDOC_FUNCTION_VARARGS("variable length argument must be last."),
-  JSDOC_HIDDEN("extra @hidden tag"),
   JSDOC_IDGEN_BAD("malformed @idGenerator tag"),
   JSDOC_IDGEN_DUPLICATE("extra @idGenerator tag"),
   JSDOC_IDGEN_UNKNOWN("unknown @idGenerator parameter: {0}"),

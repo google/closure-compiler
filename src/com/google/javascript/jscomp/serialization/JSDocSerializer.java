@@ -155,9 +155,6 @@ public final class JSDocSerializer {
     }
 
     // Used by ReplaceMessages
-    if (jsdoc.isHidden()) {
-      builder.addKind(JsdocTag.JSDOC_HIDDEN);
-    }
     if (jsdoc.getDescription() != null) {
       builder.setDescriptionPointer(stringPool.put(jsdoc.getDescription()));
     }
@@ -323,10 +320,6 @@ public final class JSDocSerializer {
 
         case JSDOC_ABSTRACT:
           builder.recordAbstract();
-          continue;
-
-        case JSDOC_HIDDEN:
-          builder.recordHiddenness();
           continue;
 
           // TODO(lharker): stage 2 passes ideally shouldn't report diagnostics, so this could be

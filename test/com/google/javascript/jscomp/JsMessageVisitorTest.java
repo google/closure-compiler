@@ -903,7 +903,6 @@ public final class JsMessageVisitorTest {
             + "function f() {\n"
             + "  /**\n"
             + "   * @desc A message that demonstrates placeholders\n"
-            + "   * @hidden\n"
             + "   */\n"
             + "  a.b.MSG_SILLY = goog.getMsg(\n"
             + "      '{$adjective} ' + '{$someNoun}',\n"

@@ -48,7 +48,6 @@ enum JsdocTag {
   JSDOC_ABSTRACT = 19;
 
   // Used by ReplaceMessage i18n
-  JSDOC_HIDDEN = 21;
   JSDOC_SUPPRESS_MESSAGE_CONVENTION = 22;
 
   // Used by CollapseProperties

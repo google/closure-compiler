@@ -127,15 +127,15 @@ public final class JsDocTokenStreamTest {
   public void testJsDocTokenization6() {
     ImmutableList<JsDocToken> tokens =
         ImmutableList.of(ANNOTATION, EOL, ANNOTATION, EOL, ANNOTATION, EOC);
-    ImmutableList<String> strings = ImmutableList.of("hidden", "static", "desc");
-    testJSDocTokenStream("@hidden\n@static\n@desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n @static\n@desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static\n @desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static\n@desc */", tokens, strings);
-    testJSDocTokenStream(" @hidden \n@static\n @desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static    \n @desc  */", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static\n@desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden   \n@static   \n @desc*/", tokens, strings);
+    ImmutableList<String> strings = ImmutableList.of("private", "static", "desc");
+    testJSDocTokenStream("@private\n@static\n@desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n @static\n@desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n@static\n @desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n@static\n@desc */", tokens, strings);
+    testJSDocTokenStream(" @private \n@static\n @desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n@static    \n @desc  */", tokens, strings);
+    testJSDocTokenStream("@private\n@static\n@desc*/", tokens, strings);
+    testJSDocTokenStream("@private   \n@static   \n @desc*/", tokens, strings);
   }
 
   @Test

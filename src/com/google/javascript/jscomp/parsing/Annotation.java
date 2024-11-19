@@ -41,7 +41,6 @@ enum Annotation {
   EXPORT,
   FILE_OVERVIEW,
   FINAL,
-  HIDDEN,
   IDGENERATOR,
   IMPLEMENTS,
   IMPLICIT_CAST,
@@ -133,7 +132,6 @@ enum Annotation {
           .put("externs", Annotation.EXTERNS)
           .put("fileoverview", Annotation.FILE_OVERVIEW)
           .put("final", Annotation.FINAL)
-          .put("hidden", Annotation.HIDDEN)
           .put("idGenerator", Annotation.IDGENERATOR)
           .put("implements", Annotation.IMPLEMENTS)
           .put("implicitCast", Annotation.IMPLICIT_CAST)

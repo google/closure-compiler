@@ -101,12 +101,6 @@ public abstract class JsMessage {
   /** Gets the meaning annotated to the message, intended to force different translations. */
   public abstract @Nullable String getMeaning();
 
-  /**
-   * Gets whether this message should be hidden from volunteer translators (to reduce the chances of
-   * a new feature leak).
-   */
-  public abstract boolean isHidden();
-
   public abstract ImmutableMap<String, String> getPlaceholderNameToExampleMap();
 
   public abstract ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap();
@@ -371,7 +365,6 @@ public abstract class JsMessage {
     private String meaning;
 
     private String desc;
-    private boolean hidden;
     private boolean isAnonymous = false;
     private boolean isExternal = false;
 
@@ -499,13 +492,6 @@ public abstract class JsMessage {
       return this;
     }
 
-    /** Sets whether the message should be hidden from volunteer translators. */
-    @CanIgnoreReturnValue
-    public Builder setIsHidden(boolean hidden) {
-      this.hidden = hidden;
-      return this;
-    }
-
     @CanIgnoreReturnValue
     public Builder setIsAnonymous(boolean isAnonymous) {
       this.isAnonymous = isAnonymous;
@@ -554,7 +540,6 @@ public abstract class JsMessage {
           alternateId,
           desc,
           meaning,
-          hidden,
           placeholderNameToExampleMap,
           placeholderNameToOriginalCodeMap,
           ImmutableSet.copyOf(jsPlaceholderNames));
