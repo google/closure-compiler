@@ -820,9 +820,7 @@ public final class ConformanceRules {
         }
       } else if (foundType.isSubtypeOf(checkType)) {
         return ConformanceResult.VIOLATION;
-      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)
-          // TODO(b/350086590): remove this exclusion once the subtyping relation above is fixed.
-          && !isObjectTypedef(foundType)) {
+      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)) {
         if (matchesPrototype(checkType, foundType)) {
           return ConformanceResult.VIOLATION;
         } else if (reportLooseTypeViolations) {
@@ -2875,19 +2873,5 @@ public final class ConformanceRules {
 
   private static boolean isLooseObject(JSType type, JSTypeRegistry registry) {
     return type.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
-  }
-
-  /**
-   * Returns true if the given type is a typedef of a record.
-   *
-   * <p>Example: @typedef {{foo: string}}
-   *
-   * <p>This can behave differently from ordinary records as the resulting type will not have a
-   * constructor.
-   */
-  private static boolean isObjectTypedef(JSType type) {
-    // The JSCompiler models object literals as 'anonymous records'.
-    ObjectType objType = type.toMaybeObjectType();
-    return objType != null && objType.getConstructor() == null && type.isRecordType();
   }
 }
