@@ -769,6 +769,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node expectedShadowContent =
         this.parseExpectedJs(lines("(function() {", "  window['foo'] = 5;", "})"));
     assertNode(shadowedContent).isEqualIncludingJsDocTo(expectedShadowContent);
+
+    assertThat(result.compiler.toSource(result.sourceRoot))
+        .isEqualTo("(function(){window[\"foo\"]=5})()");
   }
 
   @Test

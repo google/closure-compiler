@@ -201,6 +201,12 @@ public class CodeGenerator {
     if (!cc.continueProcessing()) {
       return;
     }
+    // If this node is actually a shadow host node, then print the shadow content instead.
+    Node shadow = node.getClosureUnawareShadow();
+    if (shadow != null) {
+      add(shadow.getFirstFirstChild().getFirstChild(), context, printComments);
+      return;
+    }
     if (printComments) {
       printLeadingCommentsInOrder(node);
     }
