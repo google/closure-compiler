@@ -388,6 +388,14 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
               if (!parent.isGetProp()) {
                 compiler.report(
                     JSError.make(parent, TranspilationUtil.CANNOT_CONVERT_YET, "super expression"));
+              } else if (NodeUtil.isLValue(parent)) {
+                // NOTE: `super.prop = x` is valid, and can be useful in overridden setters, but
+                // these cannot be async. For now, we don't support this construct in async methods.
+                compiler.report(
+                    JSError.make(
+                        parent.getParent(),
+                        TranspilationUtil.CANNOT_CONVERT_YET,
+                        "assignment to super property"));
               }
               // different name for parent for better readability
               Node superDotProperty = parent;

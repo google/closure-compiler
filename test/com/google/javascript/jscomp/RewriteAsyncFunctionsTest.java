@@ -727,6 +727,20 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             ""));
   }
 
+  @Test
+  public void testSuperPropAssignment() {
+    testError(
+        lines(
+            "class A {}", //
+            "class B extends A {",
+            "  async f() {",
+            "    super.x = 5;",
+            "  }",
+            "}"),
+        TranspilationUtil.CANNOT_CONVERT_YET,
+        "Transpilation of 'assignment to super property' is not yet implemented.");
+  }
+
   private void testAsyncRewriting(Externs externs, Sources sources, Expected expected) {
     Expected updatedExpected =
         expected(
