@@ -51,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,16 +63,70 @@ import org.junit.runners.JUnit4;
 public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
   private ArrayList<Path> shards;
-  private ArrayList<SourceFile> externFiles;
-  private ArrayList<SourceFile> sourceFiles;
+  private ArrayList<SourceFile> stubExternFiles;
+  private ArrayList<SourceFile> stubSourceFiles;
 
   @Override
   @Before
   public void setUp() {
     super.setUp();
     this.shards = new ArrayList<>();
-    this.externFiles = new ArrayList<>();
-    this.sourceFiles = new ArrayList<>();
+    this.stubExternFiles = new ArrayList<>();
+    this.stubSourceFiles = new ArrayList<>();
+  }
+
+  @Test
+  public void compilerGeneratesErrorReportWithoutCrashing() throws IOException {
+    SourceFile lib1 =
+        code("\n\n class Lib1 { m() { return 'lib1'; } n() { return 'delete me'; } }");
+    SourceFile lib2 =
+        code("\n\n class Lib2 { m() { return 'delete me'; } n() { return 'lib2'; } }");
+    precompileLibrary(lib1);
+    precompileLibrary(lib2);
+    precompileLibrary(
+        extern(new TestExternsBuilder().addAlert().build()),
+        typeSummary(lib1),
+        typeSummary(lib2),
+        code("\n\n alert(new Lib1().m()); \n\n alert(new Lib2().n());"));
+    // assigning an instance of Lib1 to a variable of type 'string' causes the disambiguator to
+    // 'invalidate' the type of Lib1 and any associated properties.
+    SourceFile invalidating =
+        code("/** @suppress {checkTypes} @type {string} */ \n\n\n const str = new Lib1();");
+    precompileLibrary(typeSummary(lib1), invalidating);
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
+    options.setDisambiguateProperties(true);
+    options.setPropertiesThatMustDisambiguate(ImmutableSet.of("m"));
+
+    Compiler compiler = compileTypedAstShardsWithoutErrorChecks(options);
+
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "Property 'm' was required to be disambiguated but was invalidated."
+            );
+
+    // This code path pipes through the {@link ErrorManager} which extends the
+    // {@link BasicErrorManager}. The {@link BasicErrorManager} uses a {@link
+    // LightweightMessageFormatter} to format the error messages seen by the compiler. When doing
+    // so, it tries to format the error message using the compiler which extends the {@link
+    // SourceExceptProvider} to attach the relevant snippet of the source files. It invokes
+    // {@link SourceExceptProvider}'s methods such as {@link getSourceLine()}, etc to get the source
+    // code. For stage 2 and stage 3 passes, the compiler (and these tests) does not receive the
+    // source files. So, the {@link SourceExceptProvider} backs off from reading the source files.
+    // TODO(b/379868495): The `JSC_DISAMBIGUATE2_PROPERTY_INVALIDATION` error in this test is not a
+    // good example to test the crashing behavior when it is reported by the compiler. It is not a
+    // good example because it is a `JSError` that is created in the disambiguator pass without
+    // source details (line number, column number, etc) -
+    // https://source.corp.google.com/piper///depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/disambiguate/DisambiguateProperties.java;rcl=665086807;l=235. When such an error is formatted, the {@link
+    // LightweightMessageFormatter}
+    // anyway backs off from extracting the source snippet and formatting it -
+    // https://source.corp.google.com/piper///depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/LightweightMessageFormatter.java;rcl=645071015;l=175.
+    // A better example would be an error that is reported in the stage 2 or stage 3 pass and
+    // includes the relevant source code details.
+    compiler.generateReport();
   }
 
   @Test
@@ -230,8 +285,10 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     // However, leave in the associated TypedAST in this.shards.
     // We want to verify that JSCompiler is able to disambiguate properties on Lib1 despite the
     // invalidation in the unused TypedAST shard.
-    Preconditions.checkState(this.sourceFiles.get(3) == invalidating, this.sourceFiles);
-    this.sourceFiles.remove(3);
+    Preconditions.checkState(
+        Objects.equals(this.stubSourceFiles.get(3).getName(), invalidating.getName()),
+        this.stubSourceFiles);
+    this.stubSourceFiles.remove(3);
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -298,9 +355,9 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     // However, leave in the associated TypedAST in this.shards.
     // We want to verify that JSCompiler does /not/ pay attention to the @export in
     // the unusedLib file, as it's not part of the compilation.
-    Preconditions.checkState(this.sourceFiles.size() == 2, this.sourceFiles);
+    Preconditions.checkState(this.stubSourceFiles.size() == 2, this.stubSourceFiles);
     Preconditions.checkState(this.shards.size() == 2, this.shards);
-    this.sourceFiles.remove(1);
+    this.stubSourceFiles.remove(1);
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -512,7 +569,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
                 "  InternalWidget.$clinit();",
                 "};",
                 "InternalWidget.$clinit();"));
-    sourceFiles.add(f);
+    stubSourceFiles.add(f);
     precompileLibrary(f);
 
     CompilerOptions options = new CompilerOptions();
@@ -576,7 +633,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     // run compilation
     try (InputStream inputStream = toInputStream(this.shards)) {
       compiler.initChunksWithTypedAstFilesystem(
-          ImmutableList.copyOf(this.externFiles),
+          ImmutableList.copyOf(this.stubExternFiles),
           ImmutableList.of(chunk1, chunk2),
           options,
           inputStream);
@@ -842,8 +899,8 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     compiler.initOptions(options);
     try (InputStream inputStream = toInputStream(this.shards)) {
       compiler.initWithTypedAstFilesystem(
-          ImmutableList.copyOf(this.externFiles),
-          ImmutableList.copyOf(this.sourceFiles),
+          ImmutableList.copyOf(this.stubExternFiles),
+          ImmutableList.copyOf(this.stubSourceFiles),
           options,
           inputStream);
     }
@@ -851,6 +908,8 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     if (!compiler.hasErrors()) {
       compiler.stage3Passes();
     }
+
+    compiler.generateReport();
 
     return compiler;
   }
@@ -864,15 +923,19 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
   private SourceFile code(String... code) {
     SourceFile sourceFile =
-        SourceFile.fromCode("input_" + (sourceFiles.size() + 1), lines(code), SourceKind.STRONG);
-    this.sourceFiles.add(sourceFile);
+        SourceFile.fromCode(
+            "input_" + (stubSourceFiles.size() + 1), lines(code), SourceKind.STRONG);
+    SourceFile stubFile = SourceFile.stubSourceFile(sourceFile.getName(), SourceKind.STRONG);
+    this.stubSourceFiles.add(stubFile);
     return sourceFile;
   }
 
   private SourceFile extern(String... code) {
     SourceFile sourceFile =
-        SourceFile.fromCode("extern_" + (externFiles.size() + 1), lines(code), SourceKind.EXTERN);
-    this.externFiles.add(sourceFile);
+        SourceFile.fromCode(
+            "extern_" + (stubExternFiles.size() + 1), lines(code), SourceKind.EXTERN);
+    SourceFile stubFile = SourceFile.stubSourceFile(sourceFile.getName(), SourceKind.STRONG);
+    this.stubExternFiles.add(stubFile);
     return sourceFile;
   }
 

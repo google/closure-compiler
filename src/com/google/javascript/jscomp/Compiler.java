@@ -3394,6 +3394,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public @Nullable CharSequence getSourceFileContentByName(String sourceName) {
     SourceFile file = getSourceFileByName(sourceName);
+    if (file.isStubSourceFileForAlreadyProvidedInput()) {
+      return null;
+    }
     checkNotNull(file);
     try {
       return file.getCode();
@@ -3521,7 +3524,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
     SourceFile input = getSourceFileByName(sourceName);
-    if (input != null) {
+    if (input != null && !input.isStubSourceFileForAlreadyProvidedInput()) {
       return input.getLine(lineNumber);
     }
     return null;
@@ -3533,7 +3536,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
     SourceFile input = getSourceFileByName(sourceName);
-    if (input != null) {
+    if (input != null && !input.isStubSourceFileForAlreadyProvidedInput()) {
       return input.getLines(lineNumber, length);
     }
     return null;
@@ -3545,7 +3548,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
     SourceFile input = getSourceFileByName(sourceName);
-    if (input != null) {
+    if (input != null && !input.isStubSourceFileForAlreadyProvidedInput()) {
       return input.getRegion(lineNumber);
     }
     return null;
