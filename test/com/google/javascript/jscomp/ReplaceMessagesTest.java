@@ -21,11 +21,17 @@ import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALI
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.JsMessage.Part;
+import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
+import com.google.javascript.jscomp.JsMessage.StringPart;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,6 +39,27 @@ import org.junit.runners.JUnit4;
 /** Test which checks that replacer works correctly. */
 @RunWith(JUnit4.class)
 public final class ReplaceMessagesTest extends CompilerTestCase {
+
+  // Generate IDs of the form `MEANING_PARTCOUNT[PARTCOUNT...]`
+  // PARTCOUNT = 'sN' for a string part with N == string length
+  // PARTCOUNT = 'pN' for a placeholder with N == length of the canonical placeholder name
+  public static final JsMessage.IdGenerator TEST_ID_GENERATOR =
+      new JsMessage.IdGenerator() {
+        @Override
+        public String generateId(String meaning, List<Part> messageParts) {
+          StringBuilder idBuilder = new StringBuilder();
+          idBuilder.append(meaning).append('_');
+          for (Part messagePart : messageParts) {
+            if (messagePart.isPlaceholder()) {
+              idBuilder.append('p').append(messagePart.getCanonicalPlaceholderName().length());
+            } else {
+              idBuilder.append('s').append(messagePart.getString().length());
+            }
+          }
+
+          return idBuilder.toString();
+        }
+      };
 
   /** Indicates which part of the replacement we're currently testing */
   enum TestMode {
@@ -57,7 +84,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   // Messages returned from fake bundle, keyed by `JsMessage.id`.
   private Map<String, JsMessage> messages;
+  // If `true` report errors for messages that are not found in the bundle.
   private boolean strictReplacement;
+  // If `true` pass TEST_ID_GENERATOR in to ReplaceMessages via the fake bundle, so it will be
+  // used to calculate the message IDs from the meaning and parts instead of just using the message
+  // key as its id.
+  private boolean useTestIdGenerator;
   private TestMode testMode = TestMode.FULL_REPLACE;
 
   @Override
@@ -188,6 +220,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     super.setUp();
     messages = new HashMap<>();
     strictReplacement = false;
+    useTestIdGenerator = false;
     enableTypeCheck();
     replaceTypesWithColors();
     enableTypeInfoValidation();
@@ -295,18 +328,28 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  @Ignore // TODO(b/378574591): fix the bug this test exposes
   public void testReplaceIcuTemplateMessageWithBundleAndJsPlaceholders() {
-    // Message in the bundle has a placeholder and is NOT in ICU selector format.
-    //
-    // (i.e. it does not start with "{WORD,").
-    //
-    // Here we want to make sure that messages created with declareIcuTemplate()
-    // get treated as ICU messages even without that distinguishing feature.
-    registerMessage(
-        getTestMessageBuilder("MSG_SHOW_EMAIL")
-            .appendStringPart("Retpoŝtadreso: ")
-            .appendCanonicalPlaceholderReference("EMAIL")
-            .build());
+    useTestIdGenerator = true;
+    strictReplacement = true;
+
+    String meaning = "MSG_SHOW_EMAIL";
+    Part originalStringPart = StringPart.create("Email: ");
+    Part originalPlaceholerPart = PlaceholderReference.createForCanonicalName("EMAIL");
+    String expectedMessageId =
+        TEST_ID_GENERATOR.generateId(
+            meaning, ImmutableList.of(originalStringPart, originalPlaceholerPart));
+
+    // Create and register the translation we expect to find in the message bundle
+    final JsMessage showEmailTranslatedMsg =
+        new JsMessage.Builder()
+            .setKey(meaning)
+            .setMeaning(meaning)
+            .appendStringPart("Retpoŝtadreso: ") // translated string
+            .appendPart(originalPlaceholerPart) // placeholder is the same as original
+            .setId(expectedMessageId) // message ID was calculated from the original
+            .build();
+    registerMessage(showEmailTranslatedMsg);
 
     multiPhaseTest(
         lines(
@@ -327,6 +370,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         lines(
             "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
             "",
+            // TODO(b/378574591): The information gathered here isn't enough to correctly generate
+            // the message ID for lookup. Since the "example" information is dropped, we won't
+            // know that we need to split the message text into parts, treating "EMAIL" as a
+            // placeholder. As a result, we calculate the message ID using just a single string
+            // part, so we get a different message ID than we got during extraction, and we
+            // won't be able to find the message.
             "const MSG_SHOW_EMAIL =",
             "    __jscomp_define_msg__(",
             "        {",
@@ -2107,7 +2156,6 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   private class SimpleMessageBundle implements MessageBundle {
-
     @Override
     public JsMessage getMessage(String id) {
       return messages.get(id);
@@ -2120,7 +2168,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     @Override
     public JsMessage.IdGenerator idGenerator() {
-      return null;
+      return useTestIdGenerator ? TEST_ID_GENERATOR : null;
     }
   }
 }

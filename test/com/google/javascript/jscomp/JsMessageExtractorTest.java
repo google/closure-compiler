@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.JsMessage.Part;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -33,14 +34,44 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class JsMessageExtractorTest {
 
+  // Generate IDs of the form `MEANING_PARTCOUNT[PARTCOUNT...]`
+  // PARTCOUNT = 'sN' for a string part with N == string length
+  // PARTCOUNT = 'pN' for a placeholder with N == length of the canonical placeholder name
+  public static final JsMessage.IdGenerator TEST_ID_GENERATOR =
+      new JsMessage.IdGenerator() {
+        @Override
+        public String generateId(String meaning, List<Part> messageParts) {
+          StringBuilder idBuilder = new StringBuilder();
+          idBuilder.append(meaning).append('_');
+          for (Part messagePart : messageParts) {
+            if (messagePart.isPlaceholder()) {
+              idBuilder.append('p').append(messagePart.getCanonicalPlaceholderName().length());
+            } else {
+              idBuilder.append('s').append(messagePart.getString().length());
+            }
+          }
+
+          return idBuilder.toString();
+        }
+      };
+
   private Collection<JsMessage> extractMessages(String... js) {
+    return extractMessages(/* idGenerator= */ null, js);
+  }
+
+  private static Collection<JsMessage> extractMessages(
+      JsMessage.IdGenerator idGenerator, String[] js) {
     String sourceCode = Joiner.on("\n").join(js);
-    return new JsMessageExtractor(null)
+    return new JsMessageExtractor(idGenerator)
         .extractMessages(SourceFile.fromCode("testcode", sourceCode));
   }
 
   private JsMessage extractMessage(String... js) {
-    Collection<JsMessage> messages = extractMessages(js);
+    return extractMessage(/* idGenerator= */ null, js);
+  }
+
+  private JsMessage extractMessage(JsMessage.IdGenerator idGenerator, String... js) {
+    Collection<JsMessage> messages = extractMessages(/* idGenerator= */ idGenerator, js);
     assertThat(messages).hasSize(1);
     return messages.iterator().next();
   }
@@ -115,6 +146,42 @@ public final class JsMessageExtractorTest {
             "        example: {",
             "            'interpolation_0': 'Ginny Weasley',",
             "            'interpolation_1': 'Google Muggle Finder',",
+            "        },",
+            "    },",
+            ");"));
+  }
+
+  @Test
+  public void testOriginalCodeAndExampleMapsForDeclareIcuTemplate() {
+    // A message with placeholders and original code annotations.
+    assertEquals(
+        new JsMessage.Builder()
+            .setKey("MSG_WELCOME")
+            .appendStringPart("Hi ") // "s3" in the ID
+            .appendCanonicalPlaceholderReference("INTERPOLATION_0") // "p15" in the ID
+            .appendStringPart("! Welcome to ") // "s13" in the ID
+            .appendCanonicalPlaceholderReference("INTERPOLATION_1") // "p15" in the ID
+            .appendStringPart(".") // "s1" in the ID
+            .setPlaceholderNameToOriginalCodeMap(
+                ImmutableMap.of(
+                    "INTERPOLATION_0", "foo.getUserName()",
+                    "INTERPOLATION_1", "bar.getProductName()"))
+            .setPlaceholderNameToExampleMap(
+                ImmutableMap.of(
+                    "INTERPOLATION_0", "Ginny Weasley",
+                    "INTERPOLATION_1", "Google Muggle Finder"))
+            .setDesc("The welcome message.")
+            .setId("MSG_WELCOME_s3p15s13p15s1")
+            .build(),
+        extractMessage(
+            TEST_ID_GENERATOR,
+            "var MSG_WELCOME = declareIcuTemplate(",
+            "    'Hi {INTERPOLATION_0}! Welcome to {INTERPOLATION_1}.',",
+            "    {",
+            "        description: 'The welcome message.',",
+            "        example: {",
+            "            'INTERPOLATION_0': 'Ginny Weasley',",
+            "            'INTERPOLATION_1': 'Google Muggle Finder',",
             "        },",
             "    },",
             ");"));
