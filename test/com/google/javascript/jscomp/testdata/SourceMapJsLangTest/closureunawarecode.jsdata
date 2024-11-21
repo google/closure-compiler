@@ -1,7 +1,10 @@
-/** @closureUnaware */
+/**
+ * @fileoverview
+ * @closureUnaware
+ */
 goog.module('a.b.c');
 
-(function() {
+(/** @closureUnaware */ function() {
    class ClazzWithStatic {
      constructor() {}
 

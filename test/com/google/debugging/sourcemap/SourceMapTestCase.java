@@ -26,12 +26,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.gson.Gson;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.DetailLevel;
+import com.google.javascript.jscomp.WarningsGuard;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -299,7 +303,14 @@ public abstract class SourceMapTestCase {
 
     Result result = compiler.compile(EXTERNS, inputs, options);
 
-    assertWithMessage("compilation failed").that(result.success).isTrue();
+    assertWithMessage("compilation failed with errors")
+        .that(result.errors)
+        .isEqualTo(ImmutableList.of());
+    assertWithMessage("compilation failed with warnings")
+        .that(result.warnings)
+        .isEqualTo(ImmutableList.of());
+
+    assertWithMessage("compilation failed (other reason)").that(result.success).isTrue();
     String source = compiler.toSource();
 
     StringBuilder sb = new StringBuilder();
@@ -323,6 +334,17 @@ public abstract class SourceMapTestCase {
     options.setSourceMapFormat(getSourceMapFormat());
     options.setSourceMapDetailLevel(detailLevel);
     options.setSourceMapIncludeSourcesContent(sourceMapIncludeSourcesContent);
+    options.addWarningsGuard(
+        new WarningsGuard() {
+
+          @Override
+          public CheckLevel level(JSError error) {
+            if (DiagnosticGroups.CHECK_USELESS_CODE.matches(error)) {
+              return CheckLevel.OFF;
+            }
+            return null;
+          }
+        });
     return options;
   }
 }
