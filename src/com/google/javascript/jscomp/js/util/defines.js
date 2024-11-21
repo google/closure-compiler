@@ -25,6 +25,13 @@
 $jscomp.ASSUME_ES5 = false;
 
 /**
+ * Whether to assume ES6 is available.  This enables removing several
+ * internal polyfills, which must otherwise be detected at runtime.
+ * @define {boolean}
+ */
+$jscomp.ASSUME_ES6 = false;
+
+/**
  * Whether to skip the conformance check and simply use the polyfill always.
  * @define {boolean}
  */

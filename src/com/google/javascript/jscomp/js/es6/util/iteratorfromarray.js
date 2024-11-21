@@ -29,6 +29,9 @@
  * @suppress {checkTypes|reportUnknownTypes}
  */
 $jscomp.iteratorFromArray = function(array, transform) {
+  if ($jscomp.ASSUME_ES6){
+    return array[Symbol.iterator]();
+  }
   // NOTE: IE8 doesn't support indexing from boxed Strings.
   if (array instanceof String) array = array + '';
   var i = 0;
