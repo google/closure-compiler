@@ -322,11 +322,6 @@ public final class JSDocSerializer {
           builder.recordAbstract();
           continue;
 
-        case JSDOC_HIDDEN:
-          // TODO(b/238215455): delete this case once the change to stop
-          // serializing hidden JSDoc tags lands in a release.
-          continue;
-
           // TODO(lharker): stage 2 passes ideally shouldn't report diagnostics, so this could be
           // moved to stage 1.
         case JSDOC_SUPPRESS_MESSAGE_CONVENTION:
