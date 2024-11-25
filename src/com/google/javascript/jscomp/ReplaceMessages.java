@@ -29,6 +29,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessage.StringPart;
+import com.google.javascript.jscomp.JsMessageVisitor.ExtractedIcuTemplateParts;
+import com.google.javascript.jscomp.JsMessageVisitor.IcuMessageTemplateString;
 import com.google.javascript.jscomp.JsMessageVisitor.MalformedException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -276,6 +278,20 @@ public final class ReplaceMessages {
   private Node createMsgPropertiesNode(JsMessage message, MsgOptions msgOptions) {
     QuotedKeyObjectLitBuilder msgPropsBuilder = new QuotedKeyObjectLitBuilder();
     msgPropsBuilder.addString("key", message.getKey());
+    if (msgOptions.isIcuTemplate() && !message.canonicalPlaceholderNames().isEmpty()) {
+      // ICU messages created using `declareIcuTemplate` can get stored into the XMB file as
+      // multiple parts if necessary to record example or original code text.
+      // `icu_placeholder_names` stores these parts of the ICU message, which allows us to
+      // correctly calculate the message ID in the protected message.
+      final Node namesArrayLit = astFactory.createArraylit();
+      for (String name : message.canonicalPlaceholderNames()) {
+        namesArrayLit.addChildToBack(astFactory.createString(name));
+      }
+      // Example:
+      // declareIcuTemplate('blah blah {PH1} blah {PH2}', ... );
+      // icu_placeholder_names: ['PH1', 'PH2']
+      msgPropsBuilder.addNode("icu_placeholder_names", namesArrayLit);
+    }
     String altId = message.getAlternateId();
     if (altId != null) {
       msgPropsBuilder.addString("alt_id", altId);
@@ -882,12 +898,41 @@ public final class ReplaceMessages {
       checkState(propertiesNode.isObjectLit(), propertiesNode);
       String msgKey = null;
       String meaning = null;
+      Set<String> icuPlaceholderNames = new LinkedHashSet<>();
+      String messageText = null;
+      Node messageTextNode = null;
       for (Node strKey = propertiesNode.getFirstChild();
           strKey != null;
           strKey = strKey.getNext()) {
         checkState(strKey.isStringKey(), strKey);
         String key = strKey.getString();
         Node valueNode = strKey.getOnlyChild();
+        if (key.equals("icu_placeholder_names")) {
+          checkState(valueNode.isArrayLit(), "icu_placeholder_names must be an array");
+          // If the message is an ICU template and `icu_placeholder_names` is present, then there
+          // are placeholders in the message. These placeholders will be replaced at runtime, but
+          // it is important that we keep track of these placeholders because it means that the
+          // ICU template CANNOT be treated as a single string part, because having placeholders
+          // means that the message has multiple parts.
+          // When a message is a `declareIcuTemplate` with multiple parts, we generate a `msg id`
+          // in the XMB, which is sent to the Translation Console so that the translators can
+          // translate this. We generate the deterministic `msg id` using an algorithm that takes
+          // into account how many parts the message has.
+          // Now during JSCompiler compilation process, we protect the message by wrapping it in a
+          // `__jscomp_define_msg__` (for safety because we don't want any of our optimization
+          // passes to change the message).
+          // Later in this method, we generate an ID (using `idGenerator.generateId()`) and use
+          // this to lookup a message in the translated XTB file. As I mentioned earlier, the
+          // algorithm for generating an ID needs to know the correct parts of the message, so we
+          // fail to generate the same ID we did when we added the message to the XMB.
+          // This `icu_placeholder_names` field is necessary to help us figure out the correct
+          // parts of the message, in order to generate the correct message ID that matches the ID
+          // we generated when we added the message to the XMB (which is the same ID in the XTB).
+          for (Node valueNodeChild : valueNode.children()) {
+            icuPlaceholderNames.add(valueNodeChild.getString());
+          }
+          continue;
+        }
         checkState(valueNode.isStringLit(), valueNode);
         String value = valueNode.getString();
         switch (key) {
@@ -903,17 +948,13 @@ public final class ReplaceMessages {
             jsMessageBuilder.setAlternateId(value);
             break;
           case "msg_text":
-            try {
-              // NOTE: If the text is for an ICU template, then it will not contain any
-              // placeholders ("{$placeholderName}"), so it will be treated as a single string
-              // part.
-              jsMessageBuilder.appendParts(JsMessageVisitor.parseJsMessageTextIntoParts(value));
-            } catch (PlaceholderFormatException unused) {
-              // Somehow we stored the protected message text incorrectly, which should never
-              // happen.
-              throw new IllegalStateException(
-                  valueNode.getLocation() + ": Placeholder incorrectly formatted: >" + value + "<");
-            }
+            // This may be an ICU template that also has the `icu_placeholder_names` property, which
+            // means we need to append multiple parts of the message to `jsMessageBuilder`. For now,
+            // we will save the message text and current node, and we'll parse it once we know if
+            // this is an ICU template with multiple parts (after this loop to run through all the
+            // properties is finished).
+            messageText = value;
+            messageTextNode = valueNode;
             break;
           case "isIcuTemplate":
             isIcuTemplate = true;
@@ -930,6 +971,39 @@ public final class ReplaceMessages {
             throw new IllegalStateException("unknown protected message key: " + strKey);
         }
       }
+
+      try {
+        if (!icuPlaceholderNames.isEmpty()) {
+          checkState(
+              isIcuTemplate,
+              "Found icu_placeholder_names for a message that is not an ICU template.");
+          // This is an ICU template with placeholders ("{$placeholderName}"). We cannot treat this
+          // as a single string part, because it has multiple parts. Otherwise, we will generate the
+          // wrong message id and we will not be able to find the correct translated message in the
+          // XTB file (because when the XMB message was created during message extraction, we
+          // treated this ICU template as having multiple parts).
+          final IcuMessageTemplateString icuMessageTemplateString =
+              new IcuMessageTemplateString(messageText);
+          final ExtractedIcuTemplateParts extractedIcuTemplateParts =
+              icuMessageTemplateString.extractParts(icuPlaceholderNames);
+
+          // Append the parts of the ICU template to the jsMessageBuilder.
+          jsMessageBuilder.appendParts(extractedIcuTemplateParts.extractedParts);
+        } else {
+          // This message is a single string part. It may be an ICU template without placeholders,
+          // or it may be a normal `goog.getMsg()` message.
+          jsMessageBuilder.appendParts(JsMessageVisitor.parseJsMessageTextIntoParts(messageText));
+        }
+      } catch (PlaceholderFormatException unused) {
+        // Somehow we stored the protected message text incorrectly, which should never
+        // happen 🙏
+        throw new IllegalStateException(
+            messageTextNode.getLocation()
+                + ": Placeholder incorrectly formatted: >"
+                + messageText
+                + "<");
+      }
+
       final String externalMessageId = JsMessageVisitor.getExternalMessageId(msgKey);
       if (externalMessageId != null) {
         // MSG_EXTERNAL_12345 = ...

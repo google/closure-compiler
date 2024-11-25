@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -328,8 +327,10 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
-  @Ignore // TODO(b/378574591): fix the bug this test exposes
   public void testReplaceIcuTemplateMessageWithBundleAndJsPlaceholders() {
+    // This unit test contains an ICU template with placeholders ("{EMAIL}"). We cannot treat this
+    // message as a single string part, because it has multiple parts. Otherwise, we will generate
+    // the wrong message id and this unit test will fail.
     useTestIdGenerator = true;
     strictReplacement = true;
 
@@ -370,16 +371,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         lines(
             "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
             "",
-            // TODO(b/378574591): The information gathered here isn't enough to correctly generate
-            // the message ID for lookup. Since the "example" information is dropped, we won't
-            // know that we need to split the message text into parts, treating "EMAIL" as a
-            // placeholder. As a result, we calculate the message ID using just a single string
-            // part, so we get a different message ID than we got during extraction, and we
-            // won't be able to find the message.
             "const MSG_SHOW_EMAIL =",
             "    __jscomp_define_msg__(",
             "        {",
             "          \"key\":    \"MSG_SHOW_EMAIL\",",
+            "          \"icu_placeholder_names\": [\"EMAIL\"],",
             "          \"msg_text\": \"Email: {EMAIL}\",",
             "          \"isIcuTemplate\": \"\"",
             "        });"),
@@ -431,6 +427,50 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceIcuTemplateMessageWithJsPlaceholders() {
+    // Make sure ICU messages with multiple parts are handled correctly.
+    // We cannot treat this ICU message as a single string part, because it has two placeholders
+    // (EMAIL1 and EMAIL2) that cause the message to be split into multiple parts.
+    registerMessage(
+        getTestMessageBuilder("MSG_SHOW_EMAIL")
+            .appendStringPart("Retpoŝtadreso: ")
+            .appendCanonicalPlaceholderReference("EMAIL_1")
+            .appendStringPart(" aŭ ")
+            .appendCanonicalPlaceholderReference("EMAIL_2")
+            .build());
+
+    multiPhaseTest(
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    declareIcuTemplate(",
+            "        'Email Options: {EMAIL_1} or {EMAIL_2}',",
+            "        {",
+            "          description: 'Labeled email address',",
+            "          example: {",
+            "            'EMAIL_1': 'me1@foo.com',",
+            "            'EMAIL_2': 'me2@foo.com'",
+            "           }",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_SHOW_EMAIL\",",
+            "          \"icu_placeholder_names\": [\"EMAIL_1\", \"EMAIL_2\"],",
+            "          \"msg_text\": \"Email Options: {EMAIL_1} or {EMAIL_2}\",",
+            "          \"isIcuTemplate\": \"\"",
+            "        });"),
+        lines(
+            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
+            "",
+            "const MSG_SHOW_EMAIL = 'Retpoŝtadreso: {EMAIL_1} aŭ {EMAIL_2}';"));
+  }
+
+  @Test
   public void testMissingIcuTemplateMessage() {
     // We don't registerMessage() here, so there are no messages in the bundle used by this test.
 
@@ -446,8 +486,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             // The example text is dropped, since it is only used for XMB extraction.
             // However, it does cause the JsMessage read from the JS code to have a placeholder
             // in it.
-            // One purpose of this test is to make sure the message template is properly put back
-            // together.
+            // We add this placeholder in the "icu_placeholder_names" field to keep track of how the
+            // message has multiple parts, which is necessary for the message ID to be generated
+            // correctly.
+            // The purpose of this test is to:
+            // 1. make sure the message template is properly put back together.
+            // 2. make sure the "icu_placeholder_names" field is populated with `EMAIL`
             "          example: {",
             "            'EMAIL': 'me@foo.com'",
             "           }",
@@ -459,6 +503,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "    __jscomp_define_msg__(",
             "        {",
             "          \"key\":    \"MSG_SHOW_EMAIL\",",
+            "          \"icu_placeholder_names\": [\"EMAIL\"],",
             "          \"msg_text\": \"Email: {EMAIL}\",",
             "          \"isIcuTemplate\": \"\"",
             "        });"),
