@@ -116,6 +116,8 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     switch (n.getToken()) {
+      case REGEXP: // string nodes that are children of REGEXP literals can not be aliased
+      case GETPROP: // string nodes that are children of GETPROP nodes can not be aliased
       case TEMPLATELIT:
       case TAGGED_TEMPLATELIT:
       case TEMPLATELIT_SUB: // technically redundant, since it must be a child of the others
@@ -131,7 +133,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isStringLit() && !parent.isRegExp()) {
+    if (n.isStringLit()) {
       String str = n.getString();
 
       // "undefined" is special-cased, since it needs to be used when JS code
