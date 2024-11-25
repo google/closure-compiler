@@ -105,8 +105,20 @@ public abstract class JsMessage {
 
   public abstract ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap();
 
-  /** Gets a set of the registered placeholders in this message. */
+  /**
+   * Gets a set of the registered placeholders in this message in lowerCamelCase format.
+   *
+   * <p>This is the format used in `goog.getMsg()` declarations.
+   */
   public abstract ImmutableSet<String> jsPlaceholderNames();
+
+  /**
+   * Gets a set of the registered placeholders in this message in UPPER_SNAKE_CASE format.
+   *
+   * <p>This is the format stored into XMB / XTB files and used in `declareIcuTemplate()
+   * declarations.
+   */
+  public abstract ImmutableSet<String> canonicalPlaceholderNames();
 
   public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToOriginalCodeMap()
@@ -372,8 +384,12 @@ public abstract class JsMessage {
     private @Nullable String alternateId;
 
     private final List<Part> parts = new ArrayList<>();
-    // Placeholder names in JS code format
+    // Placeholder names in JS code format (lowerCamelCase),
+    // which is used for `goog.getMsg()` messages
     private final Set<String> jsPlaceholderNames = new LinkedHashSet<>();
+    // Placeholder names in canonical format (UPPER_SNAKE_CASE)
+    // which is used in XMB / XTB files and `declareIcuTemplate()` messages.
+    private final Set<String> canonicalPlaceholderNames = new LinkedHashSet<>();
     private ImmutableMap<String, String> placeholderNameToExampleMap = ImmutableMap.of();
     private ImmutableMap<String, String> placeholderNameToOriginalCodeMap = ImmutableMap.of();
 
@@ -409,6 +425,7 @@ public abstract class JsMessage {
       parts.add(part);
       if (part.isPlaceholder()) {
         jsPlaceholderNames.add(part.getJsPlaceholderName());
+        canonicalPlaceholderNames.add(part.getCanonicalPlaceholderName());
       }
       return this;
     }
@@ -542,7 +559,8 @@ public abstract class JsMessage {
           meaning,
           placeholderNameToExampleMap,
           placeholderNameToOriginalCodeMap,
-          ImmutableSet.copyOf(jsPlaceholderNames));
+          ImmutableSet.copyOf(jsPlaceholderNames),
+          ImmutableSet.copyOf(canonicalPlaceholderNames));
     }
   }
 

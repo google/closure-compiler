@@ -213,6 +213,65 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testIcuTemplatePlaceholderUpperSnakeCase() {
+    // For ICU templates you must always use UPPER_SNAKE_CASE for your placeholder names.
+    // This matches the way the placeholder names are formatted in the XMB/XTB files.
+    // Note that `goog.getMsg()` requires lowerCamelCase for placeholder names, but
+    // actually converts them to UPPER_SNAKE_CASE when storing them in XMB and must convert
+    // the UPPER_SNAKE_CASE to lowerCamelCase when reading from XTB files. We want to avoid
+    // this needless complication for `declareIcuTemplate()` message declarations.
+    extractMessages(
+        lines(
+            "const MSG_ICU_EXAMPLE = declareIcuTemplate(",
+            "    'Email: {USER_EMAIL}',",
+            "    {",
+            "      description: 'Labeled email address',",
+            "      example: {",
+            "        'USER_EMAIL': 'jane@doe.com',",
+            "      }",
+            "    });",
+            ""));
+    final ImmutableList<JSError> actualErrors = compiler.getErrors();
+    assertThat(actualErrors).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+    JsMessage jsMessage = messages.get(0);
+    assertThat(jsMessage.canonicalPlaceholderNames()).containsExactly("USER_EMAIL");
+  }
+
+  @Test
+  public void testIcuTemplatePlaceholderLowerCamelCase() {
+    // For ICU templates you must always use UPPER_SNAKE_CASE for your placeholder names.
+    // This matches the way the placeholder names are formatted in the XMB/XTB files.
+    // Note that `goog.getMsg()` requires lowerCamelCase for placeholder names, but
+    // actually converts them to UPPER_SNAKE_CASE when storing them in XMB and must convert
+    // the UPPER_SNAKE_CASE to lowerCamelCase when reading from XTB files. We want to avoid
+    // this needless complication for `declareIcuTemplate()` message declarations.
+    extractMessages(
+        lines(
+            "const MSG_ICU_EXAMPLE = declareIcuTemplate(",
+            "    'Email: {userEmail}',", // should be USER_EMAIL
+            "    {",
+            "      description: 'Labeled email address',",
+            "      example: {",
+            "        'userEmail': 'jane@doe.com',", // should be USER_EMAIL
+            "      }",
+            "    });",
+            ""));
+    final ImmutableList<JSError> actualErrors = compiler.getErrors();
+    assertThat(actualErrors)
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(MESSAGE_TREE_MALFORMED);
+    assertThat(actualErrors)
+        .comparingElementsUsing(DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "Message parse tree malformed. Placeholder not in UPPER_SNAKE_CASE: userEmail");
+    assertThat(compiler.getWarnings()).isEmpty();
+    // The malformed message is skipped.
+    assertThat(messages).isEmpty();
+  }
+
+  @Test
   public void testJsMessageOnVar() {
     extractMessagesSafely("/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();

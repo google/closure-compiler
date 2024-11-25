@@ -1051,6 +1051,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private interface JsMessageOptions {
     // Replace `'<'` with `'&lt;'` in the message.
     boolean isEscapeLessThan();
+
     // Replace these escaped entities with their literal characters in the message
     // (Overrides escapeLessThan)
     // '&lt;' -> '<'
@@ -1215,6 +1216,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
             .addAll(placeholderExamplesMap.keySet())
             .addAll(placeholderOriginalCodeMap.keySet())
             .build();
+
+    for (String placeholderName : placeholderNames) {
+      if (!JsMessage.isCanonicalPlaceholderNameFormat(placeholderName)) {
+        throw new MalformedException(
+            SimpleFormat.format("Placeholder not in UPPER_SNAKE_CASE: %s", placeholderName),
+            optionsBag);
+      }
+    }
 
     // NOTE: The getX() methods below should all do little to no computation.
     // In particular, all checking for MalformedExceptions must be done before creating this object.
