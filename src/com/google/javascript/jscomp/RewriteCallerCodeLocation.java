@@ -35,7 +35,7 @@ import java.util.Objects;
  * <p>When a function is called without providing the optional `here` argument, we will rewrite the
  * function call to include the code location.
  *
- * <p>i.e. `signal(0,goog.xid(path/to/file.ts:lineno:charno))`
+ * <p>i.e. `signal(0, goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno))`
  */
 class RewriteCallerCodeLocation implements CompilerPass {
 
@@ -216,7 +216,8 @@ class RewriteCallerCodeLocation implements CompilerPass {
      * Visits call expression nodes and checks if they require transformations. If they do, it
      * rewrites the call expression node to include the code location.
      *
-     * <p>E.g: `signal(0)` will be rewritten to `signal(0, goog.xid(path/to/file.ts:lineno:charno))`
+     * <p>E.g: `signal(0)` will be rewritten to `signal(0,
+     * goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno))`
      *
      * @param n call node
      */
@@ -272,28 +273,33 @@ class RewriteCallerCodeLocation implements CompilerPass {
         return;
       }
 
-      // create the goog.xid(path/to/file.ts:lineno:charno) and add it as the last parameter.
+      // create the goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno) and
+      // add it as the last parameter.
       Node xidCall = createGoogXidFilePathNode(n);
       compiler.reportChangeToEnclosingScope(n);
       n.addChildToBack(xidCall);
     }
 
     /**
-     * Creates a call node for "goog.xid(path/to/file.ts:lineno:charno)"
+     * Creates a call node for
+     * "goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno)"
      *
      * @param n call node of a function that needs to be rewritten to include the code location
-     * @return call node including code location i.e. "goog.xid(path/to/file.ts:lineno:charno)"
+     * @return call node including code location i.e.
+     *     "goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno)"
      */
     private Node createGoogXidFilePathNode(Node n) {
       // googNode is "goog"
       Node googNode = IR.name("goog");
       googNode.srcrefIfMissing(n);
 
-      // googXid is "goog.xid" node
-      Node googXid = astFactory.createGetPropWithUnknownType(googNode, "xid");
+      // googXid is "goog.callerLocationIdInternalDoNotCallOrElse" node
+      Node googXid =
+          astFactory.createGetPropWithUnknownType(
+              googNode, "callerLocationIdInternalDoNotCallOrElse");
       googXid.srcrefIfMissing(n);
 
-      // callNode is "goog.xid()" node
+      // callNode is "goog.callerLocationIdInternalDoNotCallOrElse()" node
       Node callNode = astFactory.createCallWithUnknownType(googXid);
       callNode.srcrefIfMissing(n);
 
@@ -303,7 +309,8 @@ class RewriteCallerCodeLocation implements CompilerPass {
               n.getSourceFileName() + ":" + n.getLineno() + ":" + n.getCharno());
       stringNode.srcrefIfMissing(n);
 
-      // turns callNode from "goog.xid()" to "goog.xid(path/to/file.ts:lineno:charno)"
+      // turns callNode from "goog.callerLocationIdInternalDoNotCallOrElse()" to
+      // "goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno)"
       callNode.addChildToBack(stringNode);
 
       return callNode;

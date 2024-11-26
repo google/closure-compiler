@@ -44,7 +44,7 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "signal();"),
         lines(
             "function signal(here = goog.callerLocation()) {}",
-            "signal(goog.xid('testcode:2:0'))"));
+            "signal(goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:0'))"));
   }
 
   @Test
@@ -55,7 +55,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const mySignal = (0, signal)(0);"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const mySignal = signal(0, goog.xid('testcode:2:17'));"));
+            "const mySignal = signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:17'));"));
   }
 
   @Test
@@ -101,7 +102,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const mySignal = signal(0);"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const mySignal = signal(0, goog.xid('testcode:2:17'));"));
+            "const mySignal = signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:17'));"));
   }
 
   @Test
@@ -115,7 +117,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const myComputed = computed(() => mySignal[0]() % 2 === 0);"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const mySignal = signal(0, goog.xid('testcode:2:17'));",
+            "const mySignal = signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:17'));",
             "const myComputed = computed(() => mySignal[0]() % 2 === 0);"));
   }
 
@@ -127,7 +130,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const [foo, setFoo] = signal(0);"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const [foo, setFoo] = signal(0, goog.xid('testcode:2:22'));"));
+            "const [foo, setFoo] = signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:22'));"));
   }
 
   @Test
@@ -138,7 +142,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const {foo, setFoo} = signal(0);"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const {foo, setFoo} = signal(0, goog.xid('testcode:2:22'));"));
+            "const {foo, setFoo} = signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:22'));"));
   }
 
   @Test
@@ -149,7 +154,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const obj = {prop: signal(0)};"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const obj = {prop: signal(0, goog.xid('testcode:2:19'))};"));
+            "const obj = {prop: signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:19'))};"));
   }
 
   @Test
@@ -160,7 +166,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const maybeSignal = Math.random() ? signal(0) : null;"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const maybeSignal = Math.random() ? signal(0, goog.xid('testcode:2:36')) : null;"));
+            "const maybeSignal = Math.random() ? signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:36')) : null;"));
   }
 
   @Test
@@ -171,7 +178,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const intermediateFunction = (() => signal(0))();"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const intermediateFunction = (() => signal(0, goog.xid('testcode:2:36')))();"));
+            "const intermediateFunction = (() => signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:36')))();"));
   }
 
   @Test
@@ -182,8 +190,9 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "const signalArray = [signal(0), signal(1)];"),
         lines(
             "function signal(val, here = goog.callerLocation()) {}",
-            "const signalArray = [signal(0, goog.xid('testcode:2:21')), signal(1,"
-                + " goog.xid('testcode:2:32'))];"));
+            "const signalArray = [signal(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:21')), signal(1,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:32'))];"));
   }
 
   @Test
@@ -281,7 +290,7 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
         lines(
             "function foo(val, here = goog.callerLocation()) {}",
             "function bar(val) {",
-            "  foo(val, goog.xid('testcode:3:2'));",
+            "  foo(val, goog.callerLocationIdInternalDoNotCallOrElse('testcode:3:2'));",
             "}",
             "bar(0)"));
 
@@ -297,9 +306,9 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
         lines(
             "function foo(val, here = goog.callerLocation()) {}",
             "function bar(val, here = goog.callerLocation()) {",
-            "  foo(val, goog.xid('testcode:3:2'));",
+            "  foo(val, goog.callerLocationIdInternalDoNotCallOrElse('testcode:3:2'));",
             "}",
-            "bar(0, goog.xid('testcode:5:0'));"));
+            "bar(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:5:0'));"));
   }
 
   @Test
@@ -340,9 +349,9 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "foo()",
             "foo(1)",
             "foo(1, 2)",
-            "foo(1, 2, goog.xid('customString'))",
-            "foo(1, 2, goog.xid('customString'), 3)",
-            "foo(1, 2, goog.xid('customString'), 3, 4)"),
+            "foo(1, 2, goog.callerLocationIdInternalDoNotCallOrElse('customString'))",
+            "foo(1, 2, goog.callerLocationIdInternalDoNotCallOrElse('customString'), 3)",
+            "foo(1, 2, goog.callerLocationIdInternalDoNotCallOrElse('customString'), 3, 4)"),
         JSC_CALLER_LOCATION_POSITION_ERROR);
   }
 
@@ -384,7 +393,8 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "  return val;",
             "}",
             "module$exports$main.signal = module$contents$main_signal;",
-            "(0,module$exports$main.signal)(0, goog.xid('testcode:5:0'));"));
+            "(0,module$exports$main.signal)(0,"
+                + " goog.callerLocationIdInternalDoNotCallOrElse('testcode:5:0'));"));
   }
 
   @Test
@@ -406,7 +416,7 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "    signal();", // not rewritten
             "  }",
             "}",
-            "signal(goog.xid('testcode:7:0'));" // rewritten
+            "signal(goog.callerLocationIdInternalDoNotCallOrElse('testcode:7:0'));" // rewritten
             ));
 
     test(
@@ -422,7 +432,7 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
             "function signal() {}",
             "function outter() {",
             "  function signal(here = goog.callerLocation()) {}",
-            "  signal(goog.xid('testcode:4:2'));", // rewritten
+            "  signal(goog.callerLocationIdInternalDoNotCallOrElse('testcode:4:2'));", // rewritten
             "}",
             "signal();" // not rewritten
             ));
