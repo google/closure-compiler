@@ -25,6 +25,116 @@
 var Intl = {};
 
 /**
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/Segmenter#parameters
+ */
+Intl.SegmenterOptions = function() {};
+
+/**
+ * @type {string|undefined}
+ */
+Intl.SegmenterOptions.prototype.localeMatcher;
+
+/**
+ * @type {string|undefined}
+ */
+Intl.SegmenterOptions.prototype.granularity;
+
+/**
+ * @record
+ */
+Intl.ResolvedSegmenterOptions = function() {};
+
+/**
+ * @type {string}
+ */
+Intl.ResolvedSegmenterOptions.prototype.locale;
+
+/**
+ * @type {string}
+ */
+Intl.ResolvedSegmenterOptions.prototype.granularity;
+
+/**
+ * @record
+ * @template T
+ */
+Intl.SegmentIterator = function() {};
+
+/**
+ * @return {!Intl.SegmentIterator<T>}
+ */
+Intl.SegmentIterator.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @record
+ */
+Intl.Segments = function() {};
+
+/**
+ * @param {number=} codeUnitIndex
+ * @return {!Intl.SegmentData}
+ */
+Intl.Segments.prototype.containing = function(codeUnitIndex) {};
+
+/**
+ * @return {!Intl.SegmentIterator<!Intl.SegmentData>}
+ */
+Intl.Segments.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @record
+ */
+Intl.SegmentData = function() {};
+
+/**
+ * @type {string}
+ */
+Intl.SegmentData.prototype.segment;
+
+/**
+ * @type {number}
+ */
+Intl.SegmentData.prototype.index;
+
+/**
+ * @type {string}
+ */
+Intl.SegmentData.prototype.input;
+
+/**
+ * @type {boolean|undefined}
+ */
+Intl.SegmentData.prototype.isWordLike;
+
+/**
+ * @constructor
+ * @param {string|!Array<string>=} locales
+ * @param {!Intl.SegmenterOptions=} options
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter.
+ */
+Intl.Segmenter = function(locales, options) {};
+
+/**
+ * @param {string} input
+ * @return {!Intl.Segments}
+ */
+Intl.Segmenter.prototype.segment = function(input) {};
+
+/**
+ * @return {!Intl.ResolvedSegmenterOptions}
+ */
+Intl.Segmenter.prototype.resolvedOptions = function() {};
+
+/**
+ * @param {string|!Array<string>} locales
+ * @param {!Intl.SegmenterOptions=} options
+ * @return {Array<string>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/supportedLocalesOf
+ */
+Intl.Segmenter.supportedLocalesOf = function(locales, options) {};
+
+/**
  * @param {string} key
  * @return {Array<string>}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf
