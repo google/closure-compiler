@@ -2179,6 +2179,26 @@ CSSProperties.prototype.transitionTimingFunction;
  */
 CSSProperties.prototype.pointerEvents;
 
+// CSS Compositing 1
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/compositing-1/#mix-blend-mode
+ */
+CSSProperties.prototype.mixBlendMode;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/compositing-1/#isolation
+ */
+CSSProperties.prototype.isolation;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/compositing-1/#background-blend-mode
+ */
+CSSProperties.prototype.backgroundBlendMode;
+
 
 // CSS Flexbox 1
 
