@@ -3610,6 +3610,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Names exported by goog.exportSymbol. */
   private final LinkedHashSet<String> exportedNames = new LinkedHashSet<>();
 
+  /** Names defined by goog.define. */
+  private ImmutableSet<String> defineNames = ImmutableSet.of();
+
   @Override
   public void setVariableMap(VariableMap variableMap) {
     this.variableMap = variableMap;
@@ -3683,6 +3686,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public Set<String> getExportedNames() {
     return exportedNames;
+  }
+
+  @Override
+  public void setDefineNames(Collection<String> defineNames) {
+    this.defineNames = ImmutableSet.copyOf(defineNames);
+  }
+
+  @Override
+  public ImmutableSet<String> getDefineNames() {
+    return defineNames;
   }
 
   @Override

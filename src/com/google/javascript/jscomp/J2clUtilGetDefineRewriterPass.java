@@ -35,11 +35,7 @@ public class J2clUtilGetDefineRewriterPass extends AbstractPostOrderCallback
     if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
       return;
     }
-    defines =
-        new ProcessDefines.Builder(compiler)
-            .setMode(ProcessDefines.Mode.OPTIMIZE)
-            .build()
-            .collectDefineNames(externs, root);
+    defines = compiler.getDefineNames();
     NodeTraversal.traverse(compiler, root, this);
   }
 

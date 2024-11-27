@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.ProcessDefines.Mode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -25,7 +26,12 @@ public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new J2clUtilGetDefineRewriterPass(compiler);
+    return (externs, root) -> {
+      // We require the ProcessDefines pass to run first, so run it in optimize mode so that we
+      // replicate the state we expect the code to be in when it reaches this pass.
+      new ProcessDefines.Builder(compiler).setMode(Mode.OPTIMIZE).build().process(externs, root);
+      new J2clUtilGetDefineRewriterPass(compiler).process(externs, root);
+    };
   }
 
   @Override
@@ -37,13 +43,28 @@ public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
 
   @Test
   public void testUtilGetDefine() {
-    String defineAbc = "var a={}; a.b={}; /** @define {boolean} */ a.b.c = true;\n";
     test(
-        defineAbc + "nativebootstrap.Util.$getDefine('a.b.c', 'def');",
-        defineAbc + "('def', String(a.b.c));");
+        lines(
+            "var a = {};",
+            "a.b = {}",
+            "/** @define {boolean} */ a.b.c = goog.define('a.b.c', true);",
+            "nativebootstrap.Util.$getDefine('a.b.c', 'def');"),
+        lines(
+            "var a = {};",
+            "a.b = {}",
+            "/** @define {boolean} */ a.b.c = true;",
+            "('def', String(a.b.c));"));
     test(
-        defineAbc + "nativebootstrap.Util.$getDefine('a.b.c');",
-        defineAbc + "(null, String(a.b.c));");
+        lines(
+            "var a = {};",
+            "a.b = {}",
+            "/** @define {boolean} */ a.b.c = goog.define('a.b.c', true);",
+            "nativebootstrap.Util.$getDefine('a.b.c');"),
+        lines(
+            "var a = {};",
+            "a.b = {}",
+            "/** @define {boolean} */ a.b.c = true;",
+            "(null, String(a.b.c));"));
   }
 
   @Test

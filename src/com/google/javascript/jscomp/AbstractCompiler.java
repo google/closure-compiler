@@ -46,6 +46,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -115,6 +116,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /** Gets the names that have been exported. */
   public abstract Set<String> getExportedNames();
+
+  /** Adds @define names to keep track. */
+  public abstract void setDefineNames(Collection<String> defineNames);
+
+  public abstract ImmutableSet<String> getDefineNames();
 
   /** Sets the variable renaming map */
   public abstract void setVariableMap(VariableMap variableMap);

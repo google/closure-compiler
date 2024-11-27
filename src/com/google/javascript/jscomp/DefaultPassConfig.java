@@ -1306,7 +1306,7 @@ public final class DefaultPassConfig extends PassConfig {
         processDefinesOptimize,
         j2clUtilGetDefineRewriterPass,
         "J2CL define re-writing should be done after processDefines since it relies on "
-            + "collectDefines which has side effects.");
+            + "Compiler#getDefineNames to have been populated by it.");
 
     optimizations.assertPassOrder(
         removeUnusedCode,

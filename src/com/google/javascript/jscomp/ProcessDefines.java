@@ -208,13 +208,6 @@ class ProcessDefines implements CompilerPass {
     this.overrideDefines();
   }
 
-  final ImmutableSet<String> collectDefineNames(Node externs, Node root) {
-    this.initNamespace(externs, root);
-    this.collectDefines(root);
-
-    return ImmutableSet.copyOf(this.defineByDefineName.keySet());
-  }
-
   private void initNamespace(Node externs, Node root) {
     if (namespaceSupplier != null) {
       this.namespace = namespaceSupplier.get();
@@ -352,6 +345,7 @@ class ProcessDefines implements CompilerPass {
         }
       }
     }
+    compiler.setDefineNames(defineByDefineName.keySet());
   }
 
   private @Nullable Ref selectDefineDeclaration(Name name) {
