@@ -13,7 +13,7 @@ MAVEN_ARTIFACTS = [
     "com.google.guava:guava:33.0.0-jre",
     "com.google.guava:guava-testlib:33.0.0-jre",
     "com.google.jimfs:jimfs:1.2",
-    "com.google.protobuf:protobuf-java:3.25.2",
+    "com.google.protobuf:protobuf-java:3.25.5",
     "com.google.re2j:re2j:1.3",
     "com.google.truth.extensions:truth-liteproto-extension:1.4.0",
     "com.google.truth.extensions:truth-proto-extension:1.4.0",
