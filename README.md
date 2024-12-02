@@ -144,6 +144,9 @@ To achieve these goals closure compiler places many restrictions on its input:
 
 ## Getting Started
 
+NOTE: NPM releases were put on hold in early 2024 and are not likely to resume
+until early 2025.
+
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
 [Yarn](https://yarnpkg.com):
 
@@ -175,6 +178,9 @@ var x=42;
 ```
 
 #### Downloading from Maven Repository
+
+NOTE: Maven releases were put on hold in early 2024 and are not likely to resume
+until early 2025.
 
 A pre-compiled release of the compiler is also available via
 [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
