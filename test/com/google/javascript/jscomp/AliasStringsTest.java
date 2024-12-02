@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -46,6 +47,13 @@ public final class AliasStringsTest extends CompilerTestCase {
     return pass;
   }
 
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    aliasStringsMode = AliasStringsMode.ALL;
+  }
+
   @Test
   public void testTemplateLiteral() {
     // TODO(bradfordcsmith): Maybe implement using aliases in template literals?
@@ -59,6 +67,18 @@ public final class AliasStringsTest extends CompilerTestCase {
             "const A = $$S_aliasable$20string;",
             "const B = $$S_aliasable$20string;",
             "const AB = `${A}aliasable string${B}`"));
+  }
+
+  @Test
+  public void testAliasAggressively() {
+    testSame(lines("function f() { return 'aliasable string'; }"));
+
+    aliasStringsMode = AliasStringsMode.ALL_AGGRESSIVE;
+    test(
+        lines("function f() { return 'aliasable string'; }"),
+        lines(
+            "var $$S_aliasable$20string = 'aliasable string';",
+            "function f() { return $$S_aliasable$20string; }"));
   }
 
   @Test

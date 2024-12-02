@@ -3183,7 +3183,8 @@ public class CompilerOptions implements Serializable {
   public static enum AliasStringsMode {
     NONE, // Do not alias string literals.
     LARGE, // Alias all string literals with a length greater than 100 characters.
-    ALL // Alias all string literals.
+    ALL, // Alias all string literals where it may improve code size
+    ALL_AGGRESSIVE // Alias all string regardless of code size
   }
 
   /**
