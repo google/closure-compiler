@@ -335,7 +335,7 @@ class IRFactory {
       ErrorReporter errorReporter,
       SourceFile file) {
     JsDocInfoParser.JsDocSourceKind jsDocSourceKind =
-        (sourceFile.isTypeScriptSource())
+        sourceFile.isTypeScriptSource()
             ? JsDocInfoParser.JsDocSourceKind.TSICKLE
             : JsDocInfoParser.JsDocSourceKind.NORMAL;
     IRFactory irFactory =
@@ -1404,7 +1404,8 @@ class IRFactory {
       }
 
       NonJSDocComment lastComment = parseNonJSDocCommentAt(blockNode.getEnd(), false);
-      return addExtraTrailingComment(node, lastComment);
+      addExtraTrailingComment(node, lastComment);
+      return node;
     }
 
     Node processBreakStatement(BreakStatementTree statementNode) {
@@ -1460,10 +1461,8 @@ class IRFactory {
       return getElem;
     }
 
-    /**
-     * @param exprNode unused
-     */
-    Node processEmptyStatement(EmptyStatementTree exprNode) {
+    @SuppressWarnings("unused") // for symmetry all the process* methods take a ParseTree
+    Node processEmptyStatement(EmptyStatementTree unused) {
       return newNode(Token.EMPTY);
     }
 
@@ -1571,7 +1570,7 @@ class IRFactory {
         // `(0, real.callee)(args)` when necessary to avoid changing the calling behavior.
         n.putBooleanProp(Node.FREE_CALL, true);
 
-        if (callee.isName() && "eval".equals(callee.getString())) {
+        if (callee.isName() && callee.getString().equals("eval")) {
           // Keep track of the context in which eval is called. It is important
           // to distinguish between "(0, eval)()" and "eval()".
           callee.putBooleanProp(Node.DIRECT_EVAL, true);
@@ -1668,13 +1667,13 @@ class IRFactory {
       node.setTrailingNonJSDocComment(trailingComment);
     }
 
-    Node addExtraTrailingComment(Node node, NonJSDocComment lastComment) {
+    void addExtraTrailingComment(Node node, NonJSDocComment lastComment) {
       if (lastComment == null) {
-        return node;
+        return;
       }
       if (!node.hasChildren()) {
         node.setTrailingNonJSDocComment(lastComment);
-        return node;
+        return;
       }
 
       Node lastChild = node.getLastChild();
@@ -1696,7 +1695,7 @@ class IRFactory {
             new NonJSDocComment(
                 newStart, lastComment.getEndPosition(), "\n" + lastComment.getCommentString());
         node.getLastChild().setTrailingNonJSDocComment(newlineComment);
-        return node;
+        return;
       }
 
       int blankLines = lastComment.getStartPosition().line - currentComment.getEndPosition().line;
@@ -1721,7 +1720,6 @@ class IRFactory {
       allComments.setEndsAsLineComment(lastComment.isEndingAsLineComment());
       allComments.setIsInline(true);
       node.getLastChild().setTrailingNonJSDocComment(allComments);
-      return node;
     }
 
     Node processOptChainFunctionCall(OptChainCallExpressionTree callNode) {
@@ -2031,17 +2029,13 @@ class IRFactory {
       return root;
     }
 
-    /**
-     * @param node unused.
-     */
-    Node processDebuggerStatement(DebuggerStatementTree node) {
+    @SuppressWarnings("unused") // for symmetry all the process* methods take a ParseTree
+    Node processDebuggerStatement(DebuggerStatementTree unused) {
       return newNode(Token.DEBUGGER);
     }
 
-    /**
-     * @param node unused.
-     */
-    Node processThisExpression(ThisExpressionTree node) {
+    @SuppressWarnings("unused") // for symmetry all the process* methods take a ParseTree
+    Node processThisExpression(ThisExpressionTree unused) {
       return newNode(Token.THIS);
     }
 
@@ -2663,10 +2657,8 @@ class IRFactory {
       return newNode(Token.WITH, transform(stmt.expression), transformBlock(stmt.body));
     }
 
-    /**
-     * @param tree unused
-     */
-    Node processMissingExpression(MissingPrimaryExpressionTree tree) {
+    @SuppressWarnings("unused") // for symmetry all the process* methods take a ParseTree
+    Node processMissingExpression(MissingPrimaryExpressionTree unused) {
       // This will already have been reported as an error by the parser.
       // Try to create something valid that ide mode might be able to
       // continue with.
@@ -2710,17 +2702,13 @@ class IRFactory {
       return newNode(transformBooleanTokenType(literal.literalToken.type));
     }
 
-    /**
-     * @param literal unused
-     */
-    Node processNullLiteral(LiteralExpressionTree literal) {
+    @SuppressWarnings("unused") // for symmetry all the process* methods take a ParseTree
+    Node processNullLiteral(LiteralExpressionTree unused) {
       return newNode(Token.NULL);
     }
 
-    /**
-     * @param literal unused
-     */
-    Node processNull(NullTree literal) {
+    @SuppressWarnings("unused") // for symmetry all the process* methods take a ParseTree
+    Node processNull(NullTree unused) {
       // NOTE: This is not a NULL literal but a placeholder node such as in
       // an array with "holes".
       return newNode(Token.EMPTY);
