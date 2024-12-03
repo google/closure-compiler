@@ -741,12 +741,6 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup(
         "invalidProvide", ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
 
-    DiagnosticGroups.registerDeprecatedGroup("es6Typed");
-
-    DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
-
-    DiagnosticGroups.registerDeprecatedGroup("unnecessaryEscape");
-
     DiagnosticGroups.registerGroup("conflictingIjsFile", IjsErrors.CONFLICTING_IJS_FILE);
 
     DiagnosticGroups.registerGroup(
