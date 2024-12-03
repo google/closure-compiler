@@ -421,15 +421,14 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE,
           CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
           CheckMissingRequires.MISSING_REQUIRE_TYPE,
-          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
-
-  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "strictMissingRequire",
+          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE,
           CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE,
           CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE,
           CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE,
           CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE);
+
+  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
+      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
