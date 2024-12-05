@@ -670,7 +670,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             return !NodeUtil.doesFunctionReferenceOwnArgumentsObject(functionNode)
                 // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is
                 // movable.
-                && !mayReferenceParamBeforeBody(functionNode);
+                && !mayReferenceParamBeforeBody(functionNode)
+                // `function f(/** @noinline */ a) {...}` means back off.
+                && !mayHaveNoInlineParameters(functionNode);
           }
         }
       case FUNCTION:
@@ -679,7 +681,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             // "arguments" can refer to all parameters or their count.
             && !NodeUtil.doesFunctionReferenceOwnArgumentsObject(n)
             // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is movable.
-            && !mayReferenceParamBeforeBody(n);
+            && !mayReferenceParamBeforeBody(n)
+            // `function f(/** @noinline */ a) {...}` means back off.
+            && !mayHaveNoInlineParameters(n);
       case CAST:
       case COMMA:
         return allDefinitionsAreCandidateFunctions(n.getLastChild());
@@ -694,6 +698,26 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       default:
         return false;
     }
+  }
+
+  /**
+   * Returns true if the function has any parameters tagged with @noinline.
+   *
+   * <p>In this case we just back off on all parameter optimizations. We could be more clever and
+   * only back off on the ones tagged @noinline, but it's not worth the complexity.
+   */
+  private static boolean mayHaveNoInlineParameters(Node function) {
+    Node paramList = function.getSecondChild();
+    if (!paramList.hasChildren()) {
+      return false; // Fast path; there can't possibly be @noinline params.
+    }
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+      var jsDocInfo = param.getJSDocInfo();
+      if (jsDocInfo != null && jsDocInfo.isNoInline()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
