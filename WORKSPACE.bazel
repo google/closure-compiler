@@ -2,29 +2,26 @@ workspace(name = "com_google_javascript_jscomp")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# From https://github.com/bazelbuild/rules_java/releases/
 http_archive(
     name = "rules_java",
-    url = "https://github.com/bazelbuild/rules_java/releases/download/5.4.1/rules_java-5.4.1.tar.gz",
-    sha256 = "a1f82b730b9c6395d3653032bd7e3a660f9d5ddb1099f427c1e1fe768f92e395",
+    sha256 = "29ba147c583aaf5d211686029842c5278e12aaea86f66bd4a9eb5e525b7f2701",
+    url = "https://github.com/bazelbuild/rules_java/releases/download/6.3.0/rules_java-6.3.0.tar.gz",
 )
-load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
-rules_java_dependencies()
-rules_java_toolchains()
 
 http_archive(
     name = "rules_jvm_external",
+    sha256 = "12695154251711a275f0e637731d87dcaf8d9c5a6bb200735325ebebc2feba02",
     strip_prefix = "rules_jvm_external-77c3538b33cf195879b337fd48c480b77815b9a0",
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/77c3538b33cf195879b337fd48c480b77815b9a0.zip",
-    sha256 = "12695154251711a275f0e637731d87dcaf8d9c5a6bb200735325ebebc2feba02",
 )
 
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+
 rules_jvm_external_deps()
 
 load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
-rules_jvm_external_setup()
 
+rules_jvm_external_setup()
 
 http_archive(
     name = "protobuf_proto_rules",
@@ -38,7 +35,9 @@ http_archive(
 )
 
 load("@protobuf_proto_rules//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
 rules_proto_dependencies()
+
 rules_proto_toolchains()
 
 #
@@ -54,7 +53,7 @@ http_archive(
     sha256 = "9e966f57182e76ba2f5a692ec410e32e5c77808220fd94f99071caac5310a019",
     strip_prefix = "bazel-common-65f295afec03cce3807df5b06ef42bf8e46df4e4",
     urls = [
-      "https://github.com/google/bazel-common/archive/65f295afec03cce3807df5b06ef42bf8e46df4e4.zip",
+        "https://github.com/google/bazel-common/archive/65f295afec03cce3807df5b06ef42bf8e46df4e4.zip",
     ],
 )
 
@@ -71,7 +70,7 @@ http_archive(
     sha256 = "fdf2c5276e5c6f27efa1e0b64a301f5a122d84a4c1c0dd80006dbbc530a16773",
     strip_prefix = "bazel_jar_jar-171f268569384c57c19474b04aebe574d85fde0d",
     urls = [
-      "https://github.com/johnynek/bazel_jar_jar/archive/171f268569384c57c19474b04aebe574d85fde0d.zip",
+        "https://github.com/johnynek/bazel_jar_jar/archive/171f268569384c57c19474b04aebe574d85fde0d.zip",
     ],
 )
 
