@@ -22,4 +22,5 @@ unset ANDROID_HOME
 
 bazel build :all
 
+bazel test :compiler_unshaded_content_test --test_output=errors
 # TODO: Run other tests needed for open source verification

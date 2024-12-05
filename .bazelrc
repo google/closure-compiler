@@ -13,3 +13,5 @@ build --define=COMPILER_VERSION=1.0-SNAPSHOT
 
 # Setting for running in remote CI
 build --color=yes
+
+test --test_output=errors

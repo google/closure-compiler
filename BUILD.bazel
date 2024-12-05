@@ -106,11 +106,46 @@ genrule(
 
 java_export(
     name = "compiler_unshaded",
+    # Compile time dependencies that are not added as @maven//: need to be excluded.
+    excluded_workspaces = {
+        "javax_annotation_jsr250_api": None,
+        "com_google_auto_value_auto_value_annotations": None,
+    },
     maven_coordinates = "com.google.javascript:closure-compiler-unshaded:{0}".format(version),
     pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl",
+    tags = [
+        "no-javadocs",  # Generated from the compiler_lib_no_runtime_libs.javadoc target.
+    ],
     runtime_deps = [
         "//:compiler_unshaded_lib",
     ],
+)
+
+# Owned packages. Everything else should be a maven dependency.
+ALLOWED_PACKAGES = [
+    "com.google.javascript",  # Compiler code
+    "com.google.debugging",  # Compiler code
+    "com.google.protobuf.Descriptors",  # Generated proto
+    "com.google.protobuf.MapField",  # Generated proto
+]
+
+sh_test(
+    name = "compiler_unshaded_content_test",
+    srcs = ["check_jar_content.sh"],
+    args = [
+        "$(location compiler_unshaded)",
+        "\\\\|".join(ALLOWED_PACKAGES).replace(".", "/"),
+    ],
+    data = [":compiler_unshaded"],
+)
+
+genrule(
+    name = "check_jar_content",
+    outs = ["check_jar_content.sh"],
+    cmd = """echo '
+        OUT=$$(jar -tf $$1|grep \\.class|grep -v "$$2");
+        if [[ -n $$OUT ]]; then echo Unexpected: $$OUT && exit 1; fi
+        ' > $@""",
 )
 
 java_library(
@@ -147,9 +182,9 @@ java_library(
 java_library(
     name = "compiler_lib",
     resources = [
-        ":src/java/com/google/javascript/jscomp/js/polyfills.txt",
         ":runtime_libs_srcs",
         ":runtime_libs_typedast",
+        ":src/java/com/google/javascript/jscomp/js/polyfills.txt",
     ],
     exports = [":compiler_lib_no_runtime_libs"],
 )
