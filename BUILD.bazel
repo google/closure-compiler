@@ -26,6 +26,8 @@ package(licenses = ["notice"])
 
 exports_files([
     "LICENSE",
+    "THIRD_PARTY_NOTICES",
+    "maven_artifacts.bzl",
 ])
 
 filegroup(
@@ -92,17 +94,6 @@ java_binary(
 )
 
 version = "$(COMPILER_VERSION)" or "1.0-SNAPSHOT"
-
-genrule(
-    name = "third_party_licenses_genrule",
-    srcs = [
-        "//license_check:THIRD_PARTY_NOTICES",
-    ],
-    outs = [
-        "THIRD_PARTY_NOTICES",
-    ],
-    cmd = "cp $(location //license_check:THIRD_PARTY_NOTICES) $(location THIRD_PARTY_NOTICES)",
-)
 
 java_export(
     name = "compiler_unshaded",

@@ -79,7 +79,7 @@ load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
 jar_jar_repositories()
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
-load("//license_check:maven_artifacts.bzl", "MAVEN_ARTIFACTS")
+load("//:maven_artifacts.bzl", "MAVEN_ARTIFACTS")
 
 maven_install(
     artifacts = MAVEN_ARTIFACTS,

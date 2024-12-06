@@ -14,17 +14,12 @@
 
 package(licenses = ["notice"])
 
-exports_files([
-    "maven_artifacts.bzl",
-    "THIRD_PARTY_NOTICES",
-])
-
 sh_test(
     name = "third_party_license_test",
     srcs = ["third_party_license_test.sh"],
     data = [
-        ":THIRD_PARTY_NOTICES",
-        ":maven_artifacts.bzl",
         ":third_party_license_test.py",
+        "//:THIRD_PARTY_NOTICES",
+        "//:maven_artifacts.bzl",
     ],
 )
