@@ -163,7 +163,6 @@ public class DiagnosticGroups {
           + "underscore, "
           + "unknownDefines, "
           + "unusedLocalVariables, "
-          + "unusedPrivateMembers, "
           + "uselessCode, "
           + "untranspilableFeatures,"
           + "visibility";
@@ -518,23 +517,9 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
       DiagnosticGroups.registerGroup("deprecatedAnnotations", CheckJSDoc.ANNOTATION_DEPRECATED);
 
-  /**
-   * @deprecated this check has been moved into the "lintChecks" group
-   */
-  @Deprecated
-  public static final DiagnosticGroup UNUSED_PRIVATE_PROPERTY =
-      DiagnosticGroups.registerDeprecatedGroup("unusedPrivateMembers");
-
   public static final DiagnosticGroup UNUSED_LOCAL_VARIABLE =
       DiagnosticGroups.registerGroup(
           "unusedLocalVariables", VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
-
-  /**
-   * @deprecated this check has been moved into the "lintChecks" group
-   */
-  @Deprecated
-  public static final DiagnosticGroup MISSING_CONST_PROPERTY =
-      DiagnosticGroups.registerDeprecatedGroup("jsdocMissingConst");
 
   public static final DiagnosticGroup JSDOC_MISSING_TYPE =
       DiagnosticGroups.registerGroup(
