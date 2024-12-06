@@ -6773,6 +6773,12 @@ google.maps.Maps3DLibrary.prototype.Polyline3DElement;
 google.maps.Maps3DLibrary.prototype.SteadyChangeEvent;
 
 /**
+ * Describes a Firebase App Check token result.
+ * @record
+ */
+google.maps.MapsAppCheckTokenResult = function() {};
+
+/**
  * An event listener, created by <code><a
  * href="#event">google.maps.event.addListener</a>()</code> and friends.
  * @record
@@ -9018,8 +9024,6 @@ google.maps.ScaleControlStyle = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Settings which control the behavior of the Maps JavaScript API as a whole.
  *
  * Access by calling `const {Settings} = await
@@ -9044,7 +9048,14 @@ google.maps.Settings = function() {};
 google.maps.Settings.prototype.experienceIds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Returns a promise that resolves to a Firebase App Check token result. The
+ * token is attached to gRPC requests as a &quot;X-Firebase-AppCheck&quot; HTTP
+ * header. If the token is empty, the header is not attached.
+ * @type {function(): !Promise<!google.maps.MapsAppCheckTokenResult>}
+ */
+google.maps.Settings.prototype.fetchAppCheckToken;
+
+/**
  * Returns the singleton instance of <code>google.maps.Settings</code>.
  * @return {!google.maps.Settings}
  */
