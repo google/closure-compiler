@@ -3342,7 +3342,7 @@ google.maps.FullscreenControlOptions = function() {};
 /**
  * Position id. Used to specify the position of the control on the map.
  * @default {@link google.maps.ControlPosition.INLINE_END_BLOCK_START}
- * @type {google.maps.ControlPosition|null|undefined}
+ * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.FullscreenControlOptions.prototype.position;
 
@@ -5543,6 +5543,14 @@ google.maps.Map.prototype.getHeading = function() {};
 google.maps.Map.prototype.getHeadingInteractionEnabled = function() {};
 
 /**
+ * Returns the list of usage attribution IDs, which help Google understand which
+ * libraries and samples are helpful to developers, such as usage of a marker
+ * clustering library.
+ * @return {!Iterable<string>|null}
+ */
+google.maps.Map.prototype.getInternalUsageAttributionIds = function() {};
+
+/**
  * Informs the caller of the current capabilities available to the map based on
  * the Map ID that was provided.
  * @return {!google.maps.MapCapabilities}
@@ -5903,6 +5911,18 @@ google.maps.MapElement.prototype.headingInteractionDisabled;
 google.maps.MapElement.prototype.innerMap;
 
 /**
+ * Adds a usage attribution ID to the initializer, which helps Google understand
+ * which libraries and samples are helpful to developers, such as usage of a
+ * marker clustering library. To opt out of sending the usage attribution ID, it
+ * is safe to delete this property or replace the value with an empty string.
+ * Only unique values will be sent. Changes to this value after instantiation
+ * may be ignored.
+ * @default <code>null</code>
+ * @type {!Iterable<string>|null}
+ */
+google.maps.MapElement.prototype.internalUsageAttributionIds;
+
+/**
  * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
  * ID</a> of the map. This parameter cannot be set or changed after a map is
  * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
@@ -5962,6 +5982,12 @@ google.maps.MapElementOptions.prototype.center;
  * @type {boolean|null|undefined}
  */
 google.maps.MapElementOptions.prototype.headingInteractionDisabled;
+
+/**
+ * See {@link google.maps.MapElement.internalUsageAttributionIds}.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.MapElementOptions.prototype.internalUsageAttributionIds;
 
 /**
  * See {@link google.maps.MapElement.mapId}.
@@ -6162,6 +6188,18 @@ google.maps.MapOptions.prototype.heading;
  * @type {boolean|null|undefined}
  */
 google.maps.MapOptions.prototype.headingInteractionEnabled;
+
+/**
+ * Adds a usage attribution ID to the initializer, which helps Google understand
+ * which libraries and samples are helpful to developers, such as usage of a
+ * marker clustering library. To opt out of sending the usage attribution ID, it
+ * is safe to delete this property or replace the value with an empty string.
+ * Only unique values will be sent. Changes to this value after instantiation
+ * may be ignored.
+ * @default <code>null</code>
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.MapOptions.prototype.internalUsageAttributionIds;
 
 /**
  * Whether the map should allow fractional zoom levels. Listen to
@@ -9547,7 +9585,7 @@ google.maps.StreetViewPanoramaOptions.prototype.addressControl;
 
 /**
  * The display options for the address control.
- * @type {google.maps.StreetViewAddressControlOptions|null|undefined}
+ * @type {!google.maps.StreetViewAddressControlOptions|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.addressControlOptions;
 
@@ -9596,7 +9634,7 @@ google.maps.StreetViewPanoramaOptions.prototype.fullscreenControl;
 
 /**
  * The display options for the fullscreen control.
- * @type {google.maps.FullscreenControlOptions|null|undefined}
+ * @type {!google.maps.FullscreenControlOptions|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.fullscreenControlOptions;
 
@@ -9641,7 +9679,7 @@ google.maps.StreetViewPanoramaOptions.prototype.motionTrackingControl;
 
 /**
  * The display options for the motion tracking control.
- * @type {google.maps.MotionTrackingControlOptions|null|undefined}
+ * @type {!google.maps.MotionTrackingControlOptions|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.motionTrackingControlOptions;
 
@@ -9653,7 +9691,7 @@ google.maps.StreetViewPanoramaOptions.prototype.panControl;
 
 /**
  * The display options for the pan control.
- * @type {google.maps.PanControlOptions|null|undefined}
+ * @type {!google.maps.PanControlOptions|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.panControlOptions;
 
@@ -9665,13 +9703,13 @@ google.maps.StreetViewPanoramaOptions.prototype.pano;
 
 /**
  * The <code>LatLng</code> position of the Street View panorama.
- * @type {google.maps.LatLng|google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.position;
 
 /**
  * The camera orientation, specified as heading and pitch, for the panorama.
- * @type {google.maps.StreetViewPov|null|undefined}
+ * @type {!google.maps.StreetViewPov|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.pov;
 
@@ -9712,7 +9750,7 @@ google.maps.StreetViewPanoramaOptions.prototype.zoomControl;
 
 /**
  * The display options for the zoom control.
- * @type {google.maps.ZoomControlOptions|null|undefined}
+ * @type {!google.maps.ZoomControlOptions|null|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.zoomControlOptions;
 
@@ -10378,15 +10416,15 @@ google.maps.TransitLayer = function() {};
 
 /**
  * Returns the map on which this layer is displayed.
- * @return {google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.TransitLayer.prototype.getMap = function() {};
 
 /**
  * Renders the layer on the specified map. If map is set to <code>null</code>,
  * the layer will be removed.
- * @param {google.maps.Map} map
- * @return {undefined}
+ * @param {!google.maps.Map|null} map
+ * @return {void}
  */
 google.maps.TransitLayer.prototype.setMap = function(map) {};
 
@@ -11363,7 +11401,10 @@ google.maps.elevation = {};
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * An HTML element that visually displays elevation data. Set the element&#39;s
- * <code>path</code> property to show a graph of elevation along the path.
+ * <code>path</code> property to show a graph of elevation along the path. To
+ * use the Elevation Element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {ElevationElement} = await
  * google.maps.importLibrary("elevation")`. See
@@ -18924,7 +18965,10 @@ google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
  *
  * An HTML element that displays details for a place. Use the
  * <code>configureFromPlace()</code> or <code>configureFromLocation()</code>
- * methods to specify the content to be rendered.
+ * methods to specify the content to be rendered. To use the Place Details
+ * Element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {PlaceDetailsElement} = await
  * google.maps.importLibrary("places")`. See
@@ -19099,7 +19143,9 @@ google.maps.places.PlaceGeometry.prototype.viewport;
  * An HTML element that displays the results of a place search in a list. Use
  * the <code>configureFromSearchByTextRequest()</code> or
  * <code>configureFromSearchNearbyRequest()</code> methods to specify the
- * request to render results for.
+ * request to render results for. To use the Place List Element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {PlaceListElement} = await
  * google.maps.importLibrary("places")`. See
