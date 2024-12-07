@@ -14,6 +14,7 @@ import requests
 # Constants
 GITHUB_PREFIX = 'https://github.com/'
 RAW_FILE_PREFIX = 'https://raw.githubusercontent.com/'
+VERSION_TAG_SEPARATOR = '@/'
 
 POM_FILE_SUFFIX = '.xml'
 GRADLE_FILE_SUFFIX = '.gradle'
@@ -28,20 +29,14 @@ SPACER = """
 
 
 def get_file_from_github(github_url):
-  raw_file_url_with_blob = github_url.replace(GITHUB_PREFIX, RAW_FILE_PREFIX)
+  raw_file_url = (
+      github_url
+      .replace(GITHUB_PREFIX, RAW_FILE_PREFIX)
+      .replace(VERSION_TAG_SEPARATOR, '/')
+      .replace('/blob/', '/refs/tags/')
+  )
 
-  raw_file_url = ''
-  branch_roots = ['master/', 'main/']
-
-  for br in branch_roots:
-    if br in raw_file_url_with_blob:
-      split_url = raw_file_url_with_blob.split(br)
-      raw_file_url = split_url[0][:-5] + br + split_url[1]
-      break
-
-  if not raw_file_url:
-    return None
-
+  print('Requesting: ', raw_file_url)
   response = requests.get(raw_file_url)
 
   if response.status_code != 200:
@@ -85,29 +80,9 @@ def get_gradle_artifact_name(url):
   return '%s:%s' % (group_id, artifact_id)
 
 
-def get_github_root_url(url):
-  branch_roots = ['master/', 'main/']
-  github_root = ''
-
-  for br in branch_roots:
-    if br in url:
-      split_url = url.split(br)
-      github_root = split_url[0] + br
-
-  if not github_root:
-    print(
-        'Cannot find the main branch root directory for the pom/gradle ',
-        'file: ',
-        url,
-    )
-    sys.exit(1)
-
-  return github_root
-
-
 def get_license_from_pom(url):
-  github_branch_root = get_github_root_url(url)
-  license_filenames = ['LICENSE', 'COPYING']
+  github_branch_root = url.split(VERSION_TAG_SEPARATOR)[0]
+  license_filenames = ['/LICENSE', '/COPYING']
 
   license_content = None
   license_url = ''
@@ -223,10 +198,11 @@ def main():
   else:
     old_third_party_notices_content = open(third_party_notices_file).read()
     if old_third_party_notices_content == third_party_notices_content:
+      print('Success: THIRD_PARTY_NOTICES file is up-to-date.')
       sys.exit()
     else:
       print('Changes detected in THIRD_PARTY_NOTICES file!')
-      print('Please run with --update flagto update the license file.')
+      print('Please run with --update flag to update the license file.')
       sys.exit(1)
 
 
