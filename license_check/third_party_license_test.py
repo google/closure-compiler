@@ -131,14 +131,6 @@ def main():
       description='Checks if the third party licenses are up to date',
       epilog='',
   )
-
-  parser.add_argument(
-      'maven_artifacts_file',
-      help='path to the bzl file with the list of maven artifacts.',
-  )
-  parser.add_argument(
-      'third_party_notices_file', help='path to the THIRD_PARTY_NOTICES file.'
-  )
   parser.add_argument(
       '-u',
       '--update',
@@ -147,8 +139,11 @@ def main():
   )
   args = parser.parse_args()
 
+  maven_artifacts_file = 'maven_artifacts.bzl'
+  third_party_notices_file = 'THIRD_PARTY_NOTICES'
+
   # Read maven_artifacts.bzl
-  bzl_file_contents = open(args.maven_artifacts_file).read()
+  bzl_file_contents = open(maven_artifacts_file).read()
 
   # Work around a python3 bug with exec and local variables
   ldict = {}
@@ -161,7 +156,7 @@ def main():
     print(
         'artifact list length and pom/gradle file list length is not equal. ',
         'Please check the file :',
-        args.maven_artifacts_file,
+        maven_artifacts_file,
     )
     sys.exit(1)
 
@@ -220,22 +215,18 @@ def main():
 
   # Compare or Write out THIRD_PARTY_NOTICES file
   if args.update:
-    fh = open(args.third_party_notices_file, 'w')
+    fh = open(third_party_notices_file, 'w')
     fh.write(third_party_notices_content)
     fh.close()
     sys.exit()
 
   else:
-    old_third_party_notices_content = open(args.third_party_notices_file).read()
+    old_third_party_notices_content = open(third_party_notices_file).read()
     if old_third_party_notices_content == third_party_notices_content:
       sys.exit()
     else:
       print('Changes detected in THIRD_PARTY_NOTICES file!')
-      print('Please run the following command to update the license file: \n')
-      print(' python3 \\')
-      print('     third_party/third_party_license_test.py \\')
-      print('     third_party/maven_artifacts.bzl \\')
-      print('     third_party/THIRD_PARTY_NOTICES --update')
+      print('Please run with --update flagto update the license file.')
       sys.exit(1)
 
 
