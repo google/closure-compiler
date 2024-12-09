@@ -17,6 +17,9 @@ MAVEN_ARTIFACTS = [
     "org.jspecify:jspecify:0.3.0",
 ]
 
+# After updating dependencies, please run the license check script from this directory:
+#   ./license_check/third_party_license_test.sh --update
+#
 # Note the added "@" after version tag to make easier to extract the root url
 ORDERED_POM_OR_GRADLE_FILE_LIST = [
     "https://github.com/kohsuke/args4j/blob/args4j-site-2.33@/args4j/pom.xml",
