@@ -160,6 +160,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateReturnJsDoc(n, info);
     validateTsType(n, info);
     validateJsDocTypeNames(info);
+    validateIsUsedViaDotConstructor(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -835,6 +836,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           || ClosureRewriteModule.isModuleContent(rootOfType)) {
         typeRefNode.setString("UnrecognizedType_" + typeName);
       }
+    }
+  }
+
+  /** Checks that @usedViaDotConstructor is only used on constructors. */
+  private void validateIsUsedViaDotConstructor(Node n, JSDocInfo info) {
+    if (info == null || !info.isUsedViaDotConstructor()) {
+      return;
+    }
+    if (!(n.isFunction() && info.isConstructor())
+        && !NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
+      report(n, MISPLACED_ANNOTATION, "usedViaDotConstructor", "must be on a constructor");
     }
   }
 }

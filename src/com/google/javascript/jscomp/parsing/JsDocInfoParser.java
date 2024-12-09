@@ -773,9 +773,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case NOT_IMPLEMENTED:
-          return eatUntilEOLIfNotAnnotation();
-
         case INHERIT_DOC:
         case OVERRIDE:
           if (!jsdocBuilder.recordOverride()) {
@@ -1082,11 +1079,17 @@ public final class JsDocInfoParser {
         case LOG_TYPE_IN_COMPILER:
           var unused = jsdocBuilder.recordLogTypeInCompiler();
           return eatUntilEOLIfNotAnnotation();
+        case NOT_IMPLEMENTED:
         case JSX:
         case JSX_FRAGMENT:
         case SOY_MODULE:
         case SOY_TEMPLATE:
         case WIZ_ANALYZER:
+          return eatUntilEOLIfNotAnnotation();
+        case USED_VIA_DOT_CONSTRUCTOR:
+          if (!jsdocBuilder.recordUsedViaDotConstructor()) {
+            addParserWarning(Msg.JSDOC_USEDVIADOTCONSTRUCTOR);
+          }
           return eatUntilEOLIfNotAnnotation();
         case WIZACTION:
           if (!jsdocBuilder.recordWizaction()) {

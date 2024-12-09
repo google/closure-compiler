@@ -170,6 +170,9 @@ public final class JSDocSerializer {
     if (jsdoc.getSuppressions().contains("untranspilableFeatures")) {
       builder.addKind(JsdocTag.JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES);
     }
+    if (jsdoc.isUsedViaDotConstructor()) {
+      builder.addKind(JsdocTag.JSDOC_USED_VIA_DOT_CONSTRUCTOR);
+    }
 
     OptimizationJsdoc result = builder.build();
     if (OptimizationJsdoc.getDefaultInstance().equals(result)) {
@@ -349,7 +352,11 @@ public final class JSDocSerializer {
         case JSDOC_SASS_GENERATED_CSS_TS:
           builder.recordSassGeneratedCssTs();
           continue;
-
+        case JSDOC_USED_VIA_DOT_CONSTRUCTOR:
+          {
+            var unused = builder.recordUsedViaDotConstructor();
+            continue;
+          }
         case JSDOC_UNSPECIFIED:
         case UNRECOGNIZED:
           throw new MalformedTypedAstException(

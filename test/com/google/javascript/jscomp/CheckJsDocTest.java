@@ -1304,4 +1304,11 @@ public final class CheckJsDocTest extends CompilerTestCase {
   public void testNameDeclarationAndAssignForTemplatedClass() {
     testSame(lines("/** @template T */", "let A = A_1 = class A {}"));
   }
+
+  @Test
+  public void testIsUsedViaDotConstrucctor() {
+    testSame("/** @constructor @usedViaDotConstructor */ function A() {}");
+    testSame("class Foo {/** @usedViaDotConstructor */ constructor() {} }");
+    testWarning("/** @usedViaDotConstructor */ function A() {}", MISPLACED_ANNOTATION);
+  }
 }

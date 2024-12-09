@@ -671,8 +671,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
                 // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is
                 // movable.
                 && !mayReferenceParamBeforeBody(functionNode)
-                // `function f(/** @noinline */ a) {...}` means back off.
-                && !mayHaveNoInlineParameters(functionNode);
+                // `/** @usedViaDotConstructor */ function f(a) {...}` means back off.
+                && !isUsedViaDotConstructor(functionNode);
           }
         }
       case FUNCTION:
@@ -682,8 +682,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             && !NodeUtil.doesFunctionReferenceOwnArgumentsObject(n)
             // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is movable.
             && !mayReferenceParamBeforeBody(n)
-            // `function f(/** @noinline */ a) {...}` means back off.
-            && !mayHaveNoInlineParameters(n);
+            // `/** @usedViaDotConstructor */ function f(a) {...}` means back off.
+            && !isUsedViaDotConstructor(n);
       case CAST:
       case COMMA:
         return allDefinitionsAreCandidateFunctions(n.getLastChild());
@@ -701,23 +701,14 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   }
 
   /**
-   * Returns true if the function has any parameters tagged with @noinline.
+   * Returns true if the function is annotated with @usedViaDotConstructor
    *
-   * <p>In this case we just back off on all parameter optimizations. We could be more clever and
-   * only back off on the ones tagged @noinline, but it's not worth the complexity.
+   * <p>In this case we just back off on all parameter optimizations since we cannot detect which
+   * parameters are used via calls through {@code .constructor}.
    */
-  private static boolean mayHaveNoInlineParameters(Node function) {
-    Node paramList = function.getSecondChild();
-    if (!paramList.hasChildren()) {
-      return false; // Fast path; there can't possibly be @noinline params.
-    }
-    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
-      var jsDocInfo = param.getJSDocInfo();
-      if (jsDocInfo != null && jsDocInfo.isNoInline()) {
-        return true;
-      }
-    }
-    return false;
+  private static boolean isUsedViaDotConstructor(Node function) {
+    var docInfo = NodeUtil.getBestJSDocInfo(function);
+    return docInfo != null && docInfo.isUsedViaDotConstructor();
   }
 
   /**

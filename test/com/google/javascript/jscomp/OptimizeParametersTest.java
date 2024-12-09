@@ -409,7 +409,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(
         "const foo = (p1)=>{       }; foo(); foo()", //
         "const foo = (  )=>{var p1;}; foo(); foo()");
-    testSame("const foo = (/** @noinline */ p1)=>{}; foo(); foo()");
+    testSame("class foo { /** @usedViaDotConstructor */ constructor(p1) {}} new foo(); new foo()");
 
     // constant parameter
     test(
@@ -421,7 +421,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(
         "const foo = (p1)=>{           }; foo(1); foo(1)",
         "const foo = (  )=>{var p1 = 1;}; foo( ); foo( )");
-    testSame("const foo = (/** @noinline */ p1)=>{}; foo(1); foo(1)");
+    testSame(
+        "class foo { /** @usedViaDotConstructor */ constructor(p1) {}} new foo(1); new foo(1)");
   }
 
   @Test
@@ -441,7 +442,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(
         "function f(p1) {           } new f(1,x()); new f(1,y())",
         "function f(  ) {var p1 = 1;} new f(  x()); new f(  y())");
-    testSame("function f(/** @noinline */ p1) {} new f(); new f()");
+    testSame("/** @usedViaDotConstructor */ function f(p1) {} new f(); new f()");
   }
 
   @Test
@@ -469,22 +470,22 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(
         "function f(p1) {       } f.prop = 1; new f(); new f()",
         "function f(  ) {var p1;} f.prop = 1; new f(); new f()");
-    testSame("function f(/** @noinline */ p1) {} f.prop = 1; new f(); new f()");
+    testSame("/** @usedViaDotConstructor */ function f(p1) {} f.prop = 1; new f(); new f()");
 
     test(
         "function f(p1) {           } f.prop = 1; new f(1); new f(1)",
         "function f(  ) {var p1 = 1;} f.prop = 1; new f( ); new f( )");
-    testSame("function f(/** @noinline */ p1) {} f.prop = 1; new f(1); new f(1)");
+    testSame("/** @usedViaDotConstructor */ function f(p1) {} f.prop = 1; new f(1); new f(1)");
 
     test(
         "function f(p1) {       } f['prop'] = 1; new f(); new f()",
         "function f(  ) {var p1;} f['prop'] = 1; new f(); new f()");
-    testSame("function f(/** @noinline */ p1) {} f['prop'] = 1; new f(); new f()");
+    testSame("/** @usedViaDotConstructor */ function f(p1) {} f['prop'] = 1; new f(); new f()");
 
     test(
         "function f(p1) {           } f['prop'] = 1; new f(1); new f(1)",
         "function f(  ) {var p1 = 1;} f['prop'] = 1; new f( ); new f( )");
-    testSame("function f(/** @noinline */ p1) {} f['prop'] = 1; new f(1); new f(1)");
+    testSame("/** @usedViaDotConstructor */ function f(p1) {} f['prop'] = 1; new f(1); new f(1)");
   }
 
   @Test

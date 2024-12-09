@@ -144,6 +144,7 @@ public enum Msg {
   JSDOC_TYPETRANSFORMATION_MISSING_PARAM("Missing parameter in {0}"),
   JSDOC_TYPE_RECORD_DUPLICATE("Duplicate record field {0}."),
   JSDOC_TYPE_SYNTAX("type not recognized due to syntax error."),
+  JSDOC_USEDVIADOTCONSTRUCTOR("extra @usedViaDotConstructor tag"),
   JSDOC_UNNECESSARY_BRACES("braces are not required here"),
   JSDOC_VERSIONMISSING("@version tag missing version information"),
   JSDOC_WIZACTION("extra @wizaction tag"),

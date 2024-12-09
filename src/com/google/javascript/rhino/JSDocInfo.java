@@ -325,6 +325,7 @@ public class JSDocInfo implements Serializable {
     NOCOMPILE,
     NODTS,
     UNRESTRICTED,
+    USED_VIA_DOT_CONSTRUCTOR,
     STRUCT,
     DICT,
     NOCOLLAPSE,
@@ -1238,6 +1239,11 @@ public class JSDocInfo implements Serializable {
   /** Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. */
   public boolean isClosureUnawareCode() {
     return checkBit(Bit.CLOSURE_UNAWARE_CODE);
+  }
+
+  /** Returns whether JSDoc is annotated with the {@code @usedViaDotConstructor} annotation. */
+  public boolean isUsedViaDotConstructor() {
+    return checkBit(Bit.USED_VIA_DOT_CONSTRUCTOR);
   }
 
   /** Gets the description specified by the {@code @license} annotation. */
@@ -2710,6 +2716,11 @@ public class JSDocInfo implements Serializable {
     /** Records that this JSDoc was annotated with the {@code @closureUnaware} annotation. */
     public boolean recordClosureUnawareCode() {
       return populateBit(Bit.CLOSURE_UNAWARE_CODE, true);
+    }
+
+    /** Records that this JSDoc was annotated with the {@code @usedViaDotConstructor} annotation. */
+    public boolean recordUsedViaDotConstructor() {
+      return populateBit(Bit.USED_VIA_DOT_CONSTRUCTOR, true);
     }
 
     // TODO(sdh): this is a new method - consider removing it in favor of recordType?

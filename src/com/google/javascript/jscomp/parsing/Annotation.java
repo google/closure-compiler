@@ -100,6 +100,7 @@ enum Annotation {
   TYPEDEF,
   TYPE_SUMMARY,
   UNRESTRICTED,
+  USED_VIA_DOT_CONSTRUCTOR,
   WIZACTION,
   TS_TYPE,
   WIZ_ANALYZER,
@@ -180,6 +181,7 @@ enum Annotation {
           .put("typedef", Annotation.TYPEDEF)
           .put("typeSummary", Annotation.TYPE_SUMMARY)
           .put("unrestricted", Annotation.UNRESTRICTED)
+          .put("usedViaDotConstructor", Annotation.USED_VIA_DOT_CONSTRUCTOR)
           .put("wizaction", Annotation.WIZACTION)
           .put("tsType", Annotation.TS_TYPE)
           .put("wizAnalyzer", Annotation.WIZ_ANALYZER)
