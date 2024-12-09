@@ -745,17 +745,26 @@ class StripCode implements CompilerPass {
         String nameString = n.getString();
         // CollapseProperties may have turned "a.b.c" into "a$b$c",
         // so split that up and match its parts.
-        if (nameString.indexOf('$') != -1) {
-          for (String part : nameString.split("\\$")) {
-            if (isStripName(part)) {
-              return true;
-            }
-          }
+        int end = nameString.indexOf('$');
+        if (end == -1) {
+          return false;
         }
-        return false;
-      } else {
-        return false;
+        // iterate over all the $-deliminated parts of the name, where each part is from [start,end)
+        int start = 0;
+        while (true) {
+          if (isStripName(nameString.substring(start, end))) {
+            return true;
+          }
+          if (end == nameString.length()) {
+            break;
+          }
+          int newStart = end + 1;
+          int newEnd = nameString.indexOf('$', newStart);
+          start = newStart;
+          end = newEnd == -1 ? nameString.length() : newEnd;
+        }
       }
+      return false;
     }
 
     /**
