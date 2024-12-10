@@ -332,12 +332,19 @@ final class ScriptNodeDeserializer {
 
   private void setOriginalNameIfPresent(AstNode astNode, Node n) {
     if (astNode.getOriginalNamePointer() != 0) {
-      n.setOriginalName(this.stringPool.get(astNode.getOriginalNamePointer()));
+      n.setOriginalNameFromStringPool(
+          this.stringPool.getInternedStrings(), astNode.getOriginalNamePointer());
     }
   }
 
-  private String getString(AstNode n) {
-    return this.stringPool.get(n.getStringValuePointer());
+  /**
+   * Creates a new string node with the given token & string value of the AstNode
+   *
+   * <p>Prefer calling this method over calling a regular Node.* or IR.* method when possible. This
+   * method integrates with {@link RhinoStringPool} to cache String interning results.
+   */
+  private Node stringNode(Token token, AstNode n) {
+    return Node.newString(token, this.stringPool.getInternedStrings(), n.getStringValuePointer());
   }
 
   private Node deserializeSingleNode(AstNode n) {
@@ -348,9 +355,9 @@ final class ScriptNodeDeserializer {
       case NUMBER_LITERAL:
         return IR.number(n.getDoubleValue());
       case STRING_LITERAL:
-        return IR.string(getString(n));
+        return stringNode(Token.STRINGLIT, n);
       case IDENTIFIER:
-        return IR.name(getString(n));
+        return stringNode(Token.NAME, n);
       case FALSE:
         return new Node(Token.FALSE);
       case TRUE:
@@ -362,7 +369,8 @@ final class ScriptNodeDeserializer {
       case VOID:
         return new Node(Token.VOID);
       case BIGINT_LITERAL:
-        return IR.bigint(new BigInteger(getString(n)));
+        String bigintString = this.stringPool.get(n.getStringValuePointer());
+        return IR.bigint(new BigInteger(bigintString));
       case REGEX_LITERAL:
         return new Node(Token.REGEXP);
       case ARRAY_LITERAL:
@@ -377,7 +385,7 @@ final class ScriptNodeDeserializer {
       case NEW:
         return new Node(Token.NEW);
       case PROPERTY_ACCESS:
-        return Node.newString(Token.GETPROP, getString(n));
+        return stringNode(Token.GETPROP, n);
       case ELEMENT_ACCESS:
         return new Node(Token.GETELEM);
 
@@ -497,10 +505,10 @@ final class ScriptNodeDeserializer {
       case TEMPLATELIT_STRING:
         {
           TemplateStringValue templateStringValue = n.getTemplateStringValue();
-          int cookedPointer = templateStringValue.getCookedStringPointer();
-          String cookedString = cookedPointer == -1 ? null : this.stringPool.get(cookedPointer);
-          String rawString = this.stringPool.get(templateStringValue.getRawStringPointer());
-          return Node.newTemplateLitString(cookedString, rawString);
+          return Node.newTemplateLitString(
+              this.stringPool.getInternedStrings(),
+              templateStringValue.getCookedStringPointer(),
+              templateStringValue.getRawStringPointer());
         }
       case NEW_TARGET:
         return new Node(Token.NEW_TARGET);
@@ -509,7 +517,7 @@ final class ScriptNodeDeserializer {
       case IMPORT_META:
         return new Node(Token.IMPORT_META);
       case OPTCHAIN_PROPERTY_ACCESS:
-        return Node.newString(Token.OPTCHAIN_GETPROP, getString(n));
+        return stringNode(Token.OPTCHAIN_GETPROP, n);
       case OPTCHAIN_CALL:
         return new Node(Token.OPTCHAIN_CALL);
       case OPTCHAIN_ELEMENT_ACCESS:
@@ -581,21 +589,21 @@ final class ScriptNodeDeserializer {
       case LABELED_STATEMENT:
         return new Node(Token.LABEL);
       case LABELED_NAME:
-        return IR.labelName(getString(n));
+        return stringNode(Token.LABEL_NAME, n);
       case CLASS_MEMBERS:
         return new Node(Token.CLASS_MEMBERS);
       case METHOD_DECLARATION:
-        return Node.newString(Token.MEMBER_FUNCTION_DEF, getString(n));
+        return stringNode(Token.MEMBER_FUNCTION_DEF, n);
       case FIELD_DECLARATION:
-        return Node.newString(Token.MEMBER_FIELD_DEF, getString(n));
+        return stringNode(Token.MEMBER_FIELD_DEF, n);
       case COMPUTED_PROP_FIELD:
         return new Node(Token.COMPUTED_FIELD_DEF);
       case PARAMETER_LIST:
         return new Node(Token.PARAM_LIST);
       case RENAMABLE_STRING_KEY:
-        return IR.stringKey(getString(n));
+        return stringNode(Token.STRING_KEY, n);
       case QUOTED_STRING_KEY:
-        Node quotedStringKey = IR.stringKey(getString(n));
+        Node quotedStringKey = stringNode(Token.STRING_KEY, n);
         quotedStringKey.setQuotedStringKey();
         return quotedStringKey;
       case CASE:
@@ -617,14 +625,14 @@ final class ScriptNodeDeserializer {
 
       case RENAMABLE_GETTER_DEF:
       case QUOTED_GETTER_DEF:
-        Node getterDef = Node.newString(Token.GETTER_DEF, getString(n));
+        Node getterDef = stringNode(Token.GETTER_DEF, n);
         if (n.getKind().equals(NodeKind.QUOTED_GETTER_DEF)) {
           getterDef.setQuotedStringKey();
         }
         return getterDef;
       case RENAMABLE_SETTER_DEF:
       case QUOTED_SETTER_DEF:
-        Node setterDef = Node.newString(Token.SETTER_DEF, getString(n));
+        Node setterDef = stringNode(Token.SETTER_DEF, n);
         if (n.getKind().equals(NodeKind.QUOTED_SETTER_DEF)) {
           setterDef.setQuotedStringKey();
         }
@@ -635,7 +643,7 @@ final class ScriptNodeDeserializer {
       case IMPORT_SPEC:
         return new Node(Token.IMPORT_SPEC);
       case IMPORT_STAR:
-        return Node.newString(Token.IMPORT_STAR, getString(n));
+        return stringNode(Token.IMPORT_STAR, n);
       case EXPORT_SPECS:
         return new Node(Token.EXPORT_SPECS);
       case EXPORT_SPEC:

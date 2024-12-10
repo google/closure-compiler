@@ -19,10 +19,10 @@ package com.google.javascript.jscomp.serialization;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.errorprone.annotations.Immutable;
+import com.google.javascript.rhino.RhinoStringPool;
 import com.google.protobuf.ByteString;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
@@ -34,37 +34,40 @@ import java.util.LinkedHashMap;
  * <p>This implies default/unset/0-valued uuint32 StringPool pointers in protos are equivalent to
  * the empty string.
  */
-@Immutable
 public final class StringPool {
 
-  private final int maxLength;
-  private final ImmutableList<String> pool;
+  private final int maxLength; // max length of any individual string in the pool
+  private final RhinoStringPool.LazyInternedStringList pool;
 
   public static StringPool fromProto(StringPoolProto proto) {
     Wtf8.Decoder decoder = Wtf8.decoder(proto.getMaxLength());
 
-    ImmutableList.Builder<String> pool = ImmutableList.builder();
+    ArrayList<String> pool = new ArrayList<>();
     pool.add("");
     for (ByteString s : proto.getStringsList()) {
       pool.add(decoder.decode(s));
     }
 
-    return new StringPool(proto.getMaxLength(), pool.build());
+    return new StringPool(proto.getMaxLength(), pool);
   }
 
   public static StringPool empty() {
     return EMPTY;
   }
 
-  private StringPool(int maxLength, ImmutableList<String> pool) {
+  private StringPool(int maxLength, ArrayList<String> pool) {
     this.maxLength = maxLength;
-    this.pool = pool;
+    this.pool = new RhinoStringPool.LazyInternedStringList(pool);
 
     checkState(pool.get(0).isEmpty());
   }
 
   public String get(int offset) {
     return this.pool.get(offset);
+  }
+
+  public RhinoStringPool.LazyInternedStringList getInternedStrings() {
+    return this.pool;
   }
 
   public StringPoolProto toProto() {
@@ -104,7 +107,7 @@ public final class StringPool {
     }
 
     public StringPool build() {
-      return new StringPool(this.maxLength, ImmutableList.copyOf(this.pool.keySet()));
+      return new StringPool(this.maxLength, new ArrayList<>(this.pool.keySet()));
     }
   }
 

@@ -16,6 +16,9 @@
 
 package com.google.javascript.rhino;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 /**
  * A JS compatible implementation of the string pool.
  *
@@ -33,4 +36,21 @@ public final class RhinoStringPool {
   }
 
   private RhinoStringPool() {}
+
+  /**
+   * Stub implementation
+   *
+   * <p>Ok because it's only used for serialization/deserialization
+   */
+  public static final class LazyInternedStringList {
+    public LazyInternedStringList(List<String> strings) {}
+
+    public String get(int offset) {
+      return null;
+    }
+
+    public Stream<String> stream() {
+      return Stream.empty();
+    }
+  }
 }

@@ -359,6 +359,11 @@ public class Node {
       setString(str);
     }
 
+    StringNode(Token token, RhinoStringPool.LazyInternedStringList stringPool, int offset) {
+      super(token);
+      setStringFromStringPool(stringPool, offset);
+    }
+
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
@@ -393,6 +398,16 @@ public class Node {
       // RhinoStringPool is null-hostile.
       this.cooked = (cooked == null) ? null : RhinoStringPool.addOrGet(cooked);
       this.raw = RhinoStringPool.addOrGet(raw);
+    }
+
+    private TemplateLiteralSubstringNode(
+        RhinoStringPool.LazyInternedStringList stringPool,
+        int cookedOffsetOrNegativeOne,
+        int rawOffset) {
+      super(Token.TEMPLATELIT_STRING);
+      this.cooked =
+          (cookedOffsetOrNegativeOne == -1) ? null : stringPool.get(cookedOffsetOrNegativeOne);
+      this.raw = stringPool.get(rawOffset);
     }
 
     @Override
@@ -557,8 +572,20 @@ public class Node {
     return new StringNode(token, str);
   }
 
+  public static Node newString(
+      Token token, RhinoStringPool.LazyInternedStringList stringPool, int offset) {
+    return new StringNode(token, stringPool, offset);
+  }
+
   public static Node newTemplateLitString(String cooked, String raw) {
     return new TemplateLiteralSubstringNode(cooked, raw);
+  }
+
+  public static Node newTemplateLitString(
+      RhinoStringPool.LazyInternedStringList stringPool,
+      int cookedOffsetOrNegativeOne,
+      int rawOffset) {
+    return new TemplateLiteralSubstringNode(stringPool, cookedOffsetOrNegativeOne, rawOffset);
   }
 
   public final Token getToken() {
@@ -1384,6 +1411,14 @@ public class Node {
     ((StringNode) this).str = RhinoStringPool.addOrGet(str); // RhinoStringPool is null-hostile.
   }
 
+  final void setStringFromStringPool(
+      RhinoStringPool.LazyInternedStringList stringPool, int offset) {
+    // RhinoStringPool.LazyInternedStringList guarantees that the result of calling get(offset) is
+    // interned. In some cases this is more performance than RhinoStringPool.addOrGet because the
+    // LazyInternedStringList caches interning results.
+    ((StringNode) this).str = stringPool.get(offset);
+  }
+
   public final String getRawString() {
     return ((TemplateLiteralSubstringNode) this).raw;
   }
@@ -1701,6 +1736,13 @@ public class Node {
 
   public final void setOriginalName(String s) {
     this.originalName = (s == null) ? null : RhinoStringPool.addOrGet(s);
+  }
+
+  public final void setOriginalNameFromStringPool(
+      RhinoStringPool.LazyInternedStringList stringPool, int offset) {
+    // RhinoStringPool.LazyInternedStringList guarantees that the result of calling get(offset) is
+    // interned, and sometimes caches results.
+    this.originalName = stringPool.get(offset);
   }
 
   // Copy the original
