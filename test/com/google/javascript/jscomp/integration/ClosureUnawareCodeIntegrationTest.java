@@ -470,7 +470,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     externs =
         ImmutableList.<SourceFile>builder()
@@ -492,12 +491,180 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             "(function() {",
             "  /**",
             "   * @prop {number} a - scale x",
+            // @defaults isn't a valid jsdoc tag, but within  the closure-unaware portions of the
+            // AST we should not raise a warning.
+            "   * @defaults",
             "   */",
             "  const x = 5;",
             "}).call(globalThis);"),
         lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
   }
 
+  @Test
+  public void
+      testNoOptimizeClosureUnawareCode_parsesCodeWithNonClosureJsDoc_whenNotAttachedToNode() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // this test-case is trying to ensure that even when there are jsdoc comments in the
+    // closure-unaware portions of the AST that aren't attached to specific nodes / expressions
+    // that we can still ignore invalid jsdoc contents.
+    // @defaults isn't a valid jsdoc tag, and outside of the closure-unaware portions of the AST we
+    // should raise a warning.
+
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  /** @defaults */", // JSDoc comment not attached to any node
+            "  /**",
+            "   * @prop {number} a - scale x",
+            "   * @defaults",
+            "   */",
+            "  const x = 5;",
+            "}).call(globalThis);"),
+        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+  }
+
+  @Test
+  public void
+      testNoOptimizeClosureUnawareCode_parsesCodeWithNonClosureJsDoc_whenNotAttachedToNode_typedJsDoc() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // this test-case is trying to ensure that even when there are jsdoc comments in the
+    // closure-unaware portions of the AST that aren't attached to specific nodes / expressions
+    // that we can still ignore invalid jsdoc contents.
+    // @type [string] does not parse as a valid "typed jsdoc" tag, and this follows a different
+    // parsing codepath than non-type jsdoc tags and raises a different error
+    // than an entirely unknown jsdoc tag.
+
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  /** @type [string] */",
+            "",
+            "  /**",
+            "   * @prop {number} a - scale x",
+            "   * @defaults",
+            "   */",
+            "  const x = 5;",
+            "}).call(globalThis);"),
+        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+  }
+
+  @Test
+  public void
+      testNoOptimizeClosureUnawareCode_doesntSuppressParseErrorsOutsideClosureUnawareBlocks() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // this test-case is trying to ensure that even when the special handling for JSDoc comments in
+    // closureUnaware code we can still report jsdoc errors for code that is not within the
+    // closure-unaware subsection of the AST.
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            // This is invalid JSDoc, but it isn't within the subtree of a node annotated as
+            // `@closureUnaware`.
+            // NOTE: The `@closureUnaware` in the `@fileoverview` comment does not apply this
+            // subtree suppression
+            // mechanism to the whole script - it is only to indicate that the file contains some
+            // closure-unaware code
+            // (e.g. a performance optimization).
+            "/**",
+            " * @prop {number} a - scale x",
+            " */",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  const x = 5;",
+            "}).call(globalThis);"),
+        DiagnosticGroups.NON_STANDARD_JSDOC);
+  }
+
+  @Test
+  public void
+      testNoOptimizeClosureUnawareCode_doesntSuppressParseErrorsOutsideClosureUnawareBlocks_afterRange() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // this test-case is trying to ensure that even when the special handling for JSDoc comments in
+    // closureUnaware code we can still report jsdoc errors for code that is not within the
+    // closure-unaware subsection of the AST.
+    // Specifically this test validates that any comments that come after a closure-unaware
+    // subsection of the AST don't have their jsdoc parse errors suppressed.
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  const x = 5;",
+            "}).call(globalThis);",
+            "/**",
+            " * @prop {number} a - scale x",
+            " */",
+            ""),
+        DiagnosticGroups.NON_STANDARD_JSDOC);
+  }
   // TODO how can I test whether source info is being properly retained?
   // TODO if there is a sourcemap comment in the IIFE, can we use that info somehow?
 }

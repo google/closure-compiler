@@ -33,6 +33,19 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>ManageClosureUnawareCode.unwrap() should be run after all other passes have run, to unwrap the
  * code and re-expose it to the code-printing stage of the compiler.
+ *
+ * <p>Valid "closure-unaware" scripts should:
+ * <li>be explicitly annotated with a @fileoverview JSDoc comment that also has the @closureUnaware
+ *     JSDoc tag. This is done so that checking whether an arbitrary node is closure-unaware is a
+ *     very quick operation (as the JSDoc from the SCRIPT node determines whether a bit is set on
+ *     the relevant SourceFile object for those AST nodes), and this higher-level check is used in
+ *     several places in the compiler to avoid reporting various errors.
+ * <li>annotate each expression within the script that is really "closure-unaware" with a JSDoc
+ *     comment with the @closureUnaware JSDoc tag. Currently, these comments must be attached to
+ *     FUNCTION nodes, and the AST inside the BLOCK child node is considered the closure-unaware
+ *     code. This allows the compiler to differentiate between the parts of the AST containing code
+ *     that has to be "closure-aware" (such as closure module system constructs, assertions that
+ *     should optimize away, etc) from the code that is actually closure-unaware.
  */
 final class ManageClosureUnawareCode implements CompilerPass {
 

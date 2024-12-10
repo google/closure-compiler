@@ -394,4 +394,29 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
             "goog.module('foo.bar.baz_raw');",
             "$jscomp_wrap_closure_unaware_code('{window[\"foo\"]=5}')"));
   }
+
+  @Test
+  public void testReparseWithInvalidJSDocTags() {
+    // @dependency is not a valid JSDoc tag, and for normal code we would issue a parser error.
+    // However, for closure-unaware code we don't care at all what is in jsdoc comments.
+    doTest(
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('foo.bar.baz_raw');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  /** @dependency */",
+            "  window['foo'] = 5;",
+            "}).call(globalThis);"),
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('foo.bar.baz_raw');",
+            "$jscomp_wrap_closure_unaware_code('{window[\"foo\"]=5}')"));
+  }
 }

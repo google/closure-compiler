@@ -135,6 +135,7 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -244,7 +245,7 @@ class IRFactory {
 
   private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private Node resultNode;
-  private boolean isClosureUnawareCode = false;
+  private final ArrayList<SourceRange> closureUnawareCodeRanges = new ArrayList<>();
 
   private IRFactory(
       StaticSourceFile sourceFile,
@@ -647,9 +648,6 @@ class IRFactory {
     }
 
     JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
-    if (newFileoverview != null && newFileoverview.isClosureUnawareCode()) {
-      this.isClosureUnawareCode = true;
-    }
     if (identical(newFileoverview, this.firstFileoverview)) {
       return false;
     }
@@ -868,6 +866,10 @@ class IRFactory {
     JSDocInfo info = parseJSDocInfoOnTree(tree);
     NonJSDocComment comment = parseNonJSDocCommentAt(tree.getStart(), false);
 
+    if (info != null && info.isClosureUnawareCode()) {
+      this.closureUnawareCodeRanges.add(tree.location);
+    }
+
     Node node = transformDispatcher.process(tree);
 
     if (info != null) {
@@ -879,6 +881,49 @@ class IRFactory {
     }
     setSourceInfo(node, tree);
     return node;
+  }
+
+  private boolean withinClosureUnawareCodeRange(int line, int lineColumnNo) {
+    // TODO: b/331840742: Improve the performance of this check, as naive O(n) is not ideal when
+    // there are a small number of ranges but many checks against those ranges.
+    for (SourceRange range : this.closureUnawareCodeRanges) {
+      if (withinRange(range, line, lineColumnNo)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private final boolean withinRange(SourceRange range, int line, int lineColumnNo) {
+    int startLine = range.start.line;
+    int startColumnNo = range.start.column;
+    int endLine = range.end.line;
+    int endColumnNo = range.end.column;
+    // range starts after line
+    if (afterPosition(startLine, startColumnNo, line, lineColumnNo, true)) {
+      return false;
+    }
+
+    // range ends before line
+    if (afterPosition(line, lineColumnNo, endLine, endColumnNo, false)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean afterPosition(
+      int aLine, int aLineColumnNo, int bLine, int bColumnNo, boolean inclusive) {
+    if (aLine > bLine) {
+      return true;
+    }
+    if (aLine < bLine) {
+      return false;
+    }
+    if (inclusive && aLineColumnNo == bColumnNo) {
+      return true;
+    }
+    return aLineColumnNo > bColumnNo;
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
@@ -1084,7 +1129,8 @@ class IRFactory {
 
     @Override
     public void error(String message, String sourceName, int line, int lineOffset) {
-      if (host.isClosureUnawareCode) {
+      // Line numbers are 1-indexed, but the SourcePosition uses 0-indexed.
+      if (host.withinClosureUnawareCodeRange(line - 1, lineOffset)) {
         return;
       }
       delegate.error(message, sourceName, line, lineOffset);
@@ -1092,7 +1138,8 @@ class IRFactory {
 
     @Override
     public void warning(String message, String sourceName, int line, int lineOffset) {
-      if (host.isClosureUnawareCode) {
+      // Line numbers are 1-indexed, but the SourcePosition uses 0-indexed.
+      if (host.withinClosureUnawareCodeRange(line - 1, lineOffset)) {
         return;
       }
       delegate.warning(message, sourceName, line, lineOffset);
