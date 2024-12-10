@@ -368,14 +368,15 @@ class InlineAndCollapseProperties implements CompilerPass {
     private void inlineAliasesForName(Name name, GlobalNamespace namespace) {
       List<Ref> refs = new ArrayList<>(name.getRefs());
       for (Ref ref : refs) {
-        Scope hoistScope = ref.scope.getClosestHoistScope();
         if (ref.isAliasingGet() && !mayBeGlobalAlias(ref) && !ref.isTwin()) {
           // {@code name} meets condition (c). Try to inline it.
           // TODO(johnlenz): consider picking up new aliases at the end
           // of the pass instead of immediately like we do for global
           // inlines.
           inlineAliasIfPossible(name, ref, namespace);
-        } else if (ref.isAliasingGet() && hoistScope.isGlobal() && !ref.isTwin()) {
+        } else if (ref.isAliasingGet()
+            && ref.scope.getClosestHoistScope().isGlobal()
+            && !ref.isTwin()) {
           inlineGlobalAliasIfPossible(name, ref, namespace);
         } else if (name.isClass() && ref.isSubclassingGet() && name.props != null) {
           for (Name prop : name.props) {
