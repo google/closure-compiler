@@ -426,9 +426,6 @@ public class DiagnosticGroups {
           CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE,
           CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE);
 
-  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
-
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
    * (tool that extracts TypeScript definitions from JS code).

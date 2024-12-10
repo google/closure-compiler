@@ -45,7 +45,6 @@ public final class J2clSuppressWarningsGuard extends WarningsGuard {
           DiagnosticGroups.LATE_PROVIDE,
           DiagnosticGroups.MISSING_OVERRIDE,
           DiagnosticGroups.MISSING_REQUIRE,
-          DiagnosticGroups.STRICT_MISSING_REQUIRE,
           DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
           DiagnosticGroups.SUSPICIOUS_CODE,
           DiagnosticGroups.UNUSED_LOCAL_VARIABLE,
