@@ -226,6 +226,7 @@ oss_java_library(
             ":THIRD_PARTY_NOTICES",
             ":externs_zip",
         ] + glob([
+            "lib/*.js",
             "src/**/*.properties",
         ]),
     ),
