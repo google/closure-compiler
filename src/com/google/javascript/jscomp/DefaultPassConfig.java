@@ -443,8 +443,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.maybeAdd(checkConsts);
 
-    // TODO(user): Enable this pass when it is ready.
-    // checks.maybeAdd(rewriteCallerCodeLocation);
+    checks.maybeAdd(rewriteCallerCodeLocation);
 
     if (!options.getConformanceConfigs().isEmpty()) {
       checks.maybeAdd(checkConformance);

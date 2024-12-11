@@ -139,9 +139,9 @@ class RewriteCallerCodeLocation implements CompilerPass {
         return false;
       }
 
-      if (n.getSourceFileName().contains("javascript/closure/base.js")) {
-        // This is the definition of the debug build runtime implementation of goog.callerLocation.
-        // This is not a misuse.
+      if (parent.isAssign() && n.getNext() != null && n.getNext().isFunction()) {
+        // This is the definition of goog.callerLocation, so this is not a misuse.
+        // i.e: `goog.callerLocation = function(...) { ... }`
         return false;
       }
 
