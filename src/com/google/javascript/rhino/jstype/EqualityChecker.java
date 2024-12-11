@@ -235,7 +235,10 @@ final class EqualityChecker {
         // TODO(b/140763807): this is not valid across scopes pre-resolution.
         String nameOfleft = checkNotNull(leftUnwrapped.getReferenceName());
         String nameOfright = checkNotNull(rightUnwrapped.getReferenceName());
-        return Objects.equals(nameOfleft, nameOfright);
+        String googModuleIdOfLeft = getGoogModuleId(leftUnwrapped);
+        String googModuleIdOfRight = getGoogModuleId(rightUnwrapped);
+        return Objects.equals(nameOfleft, nameOfright)
+            && Objects.equals(googModuleIdOfLeft, googModuleIdOfRight);
       }
     }
 
@@ -284,6 +287,16 @@ final class EqualityChecker {
     }
 
     return true;
+  }
+
+  private static @Nullable String getGoogModuleId(ObjectType type) {
+    if (type instanceof FunctionType) {
+      return ((FunctionType) type).getGoogModuleId();
+    }
+    if (type.getConstructor() != null) {
+      return type.getConstructor().getGoogModuleId();
+    }
+    return null;
   }
 
   /**

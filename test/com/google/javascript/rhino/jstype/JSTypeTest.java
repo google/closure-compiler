@@ -6438,6 +6438,47 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEqualityOfClassTypes_withSameReferenceName_differentGoogModuleId_preResolution() {
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      FunctionType classACtor =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Foo")
+              .setGoogModuleId("module1")
+              .build();
+
+      FunctionType classBCtor =
+          FunctionType.builder(registry).forConstructor().withName("Foo").build();
+
+      // the different goog module id indicate the types are not equal.
+      assertType(classACtor.getInstanceType()).isNotEqualTo(classBCtor.getInstanceType());
+    }
+  }
+
+  @Test
+  public void testEqualityOfClassTypes_withSameReferenceName_sameGoogModuleId_preResolution() {
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      FunctionType classACtor =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Foo")
+              .setGoogModuleId("module1")
+              .build();
+
+      FunctionType classBCtor =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Foo")
+              .setGoogModuleId("module1")
+              .build();
+
+      // Currently, to handle NamedTypes, we treat unresolved type equality as purely based on
+      // reference name & goog module id.
+      assertType(classACtor.getInstanceType()).isEqualTo(classBCtor.getInstanceType());
+    }
+  }
+
+  @Test
   public void testEqualityOfClassTypes_withSameReferenceName_postResolution() {
     FunctionType classACtor =
         withOpenRegistry(
