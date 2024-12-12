@@ -1623,7 +1623,7 @@ final class ClosureRewriteModule implements CompilerPass {
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
           this.astFactory
-              .createQName(this.globalTypedScope, currentScript.namespaceId)
+              .createQNameUsingJSTypeInfo(this.globalTypedScope, currentScript.namespaceId)
               .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       n.replaceWith(legacyQname);
