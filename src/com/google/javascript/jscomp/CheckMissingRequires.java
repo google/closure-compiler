@@ -292,11 +292,6 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         // file).
         return;
       }
-      if (rootName.equals("xid")) {
-        // TODO(b/160167649): Decide if we should report `xid` which initially was too common to
-        // fix.
-        return;
-      }
     }
 
     if (NodeUtil.isDeclarationLValue(n)) {
