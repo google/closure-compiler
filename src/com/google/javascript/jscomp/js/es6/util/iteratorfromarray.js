@@ -16,8 +16,10 @@
 
 /**
  * @fileoverview Utilities for iterator-returning methods.
+ * @suppress {uselessCode} for the require lines below.
  */
 'require es6/symbol';
+'require util/defines';
 
 
 /**
