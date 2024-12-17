@@ -53,7 +53,7 @@ public final class DefaultNameGenerator implements NameGenerator {
       this.occurrence = 0;
     }
 
-    // @Override removed for GWT compatibility
+    @Override
     public CharPriority clone() {
       CharPriority result = new CharPriority(name, order);
       result.occurrence = occurrence;

@@ -651,7 +651,7 @@ public class JSDocInfo implements Serializable {
     return builder;
   }
 
-  @SuppressWarnings("MissingOverride") // Adding @Override breaks the GWT compilation.
+  @Override
   public JSDocInfo clone() {
     return clone(false);
   }

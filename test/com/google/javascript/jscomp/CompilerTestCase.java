@@ -664,7 +664,6 @@ public abstract class CompilerTestCase {
     this("");
   }
 
-  @SuppressWarnings("MissingOverride")
   public String getName() {
     return this.getClass().getSimpleName();
   }
