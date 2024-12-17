@@ -30,8 +30,6 @@ import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.io.FilterOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -458,16 +456,9 @@ public final class PerformanceTracker {
     }
 
     output.println();
-
     // this.output can be System.out, so don't close it to not lose subsequent
     // error messages. Flush to ensure that you will see the tracer report.
-    try {
-      // TODO(johnlenz): Remove this cast and try/catch.
-      // This is here to workaround GWT http://b/30943295
-      ((FilterOutputStream) output).flush();
-    } catch (IOException e) {
-      throw new RuntimeException("Unreachable.", e);
-    }
+    output.flush();
   }
 
   /**
