@@ -241,9 +241,6 @@ oss_java_library(
             ],
             exclude = [
                 "**/debugger/**/*.java",
-                "**/j2clbuild/**/*.java",
-                "**/j2cl/**/*.java",
-                "**/super*/**/*.java",
                 "**/testing/**/*.java",
                 "**/webservice/**/*.java",
             ],
@@ -300,12 +297,6 @@ gen_java_tests(
         [
             "test/**/*.java",
             "src/**/testing/**/*.java",
-        ],
-        exclude = [
-            # These files are only needed by the J2CL build of the compiler.
-            "**/super*/**/*.java",
-            "**/j2cl/**/*.java",
-            "**/j2clbuild/**/*.java",
         ],
     ),
     javacopts = [
