@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
 import static java.util.Comparator.naturalOrder;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -29,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 /** Used to print a map from diagnostic id to suppression. */
-@GwtIncompatible
 public final class DiagnosticToSuppressionMapper {
 
   enum OutputFormat {

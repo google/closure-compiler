@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -322,7 +321,6 @@ public final class JSChunkGraph implements Serializable {
    *
    * @return List of chunk JSONObjects.
    */
-  @GwtIncompatible("com.google.gson")
   JsonArray toJson() {
     JsonArray chunks = new JsonArray();
     for (JSChunk chunk : getAllChunks()) {

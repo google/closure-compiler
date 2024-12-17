@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -37,7 +36,6 @@ import java.util.concurrent.ThreadPoolExecutor;
  * input. Get them all now using multiple threads, so they'll be parsed in parallel and already
  * available during the rest of the compilation.
  */
-@GwtIncompatible("com.google.common.util.concurrent")
 class PrebuildDependencyInfo {
   private final int numParallelThreads;
 

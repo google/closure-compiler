@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.throwIfUnchecked;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.common.annotations.GwtIncompatible;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -46,14 +45,13 @@ class CompilerExecutor {
   private int timeout = 0;
 
   /**
-   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
-   * large or complex JS code. When threads are available, we run all compile
-   * jobs on a separate thread with a larger stack.
+   * Under JRE 1.6, the JS Compiler overflows the stack when running on some large or complex JS
+   * code. When threads are available, we run all compile jobs on a separate thread with a larger
+   * stack.
    *
-   * That way, we don't have to increase the stack size for *every* thread
-   * (which is what -Xss does).
+   * <p>That way, we don't have to increase the stack size for *every* thread (which is what -Xss
+   * does).
    */
-  @GwtIncompatible("java.util.concurrent.ExecutorService")
   ExecutorService getExecutorService() {
     return getDefaultExecutorService();
   }

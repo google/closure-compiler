@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -168,14 +167,12 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   /**
    * {@inheritDoc}
    *
-   * <p>In Google code, the package name of a source file is its file path.
-   * Exceptions: if a source file's parent directory is "test", "tests", or
-   * "testing", that directory is stripped from the package name.
-   * If a file is generated, strip the "genfiles" prefix to try
-   * to match the package of the generating file.
+   * <p>In Google code, the package name of a source file is its file path. Exceptions: if a source
+   * file's parent directory is "test", "tests", or "testing", that directory is stripped from the
+   * package name. If a file is generated, strip the "genfiles" prefix to try to match the package
+   * of the generating file.
    */
   @Override
-  @GwtIncompatible // TODO(tdeegan): Remove use of Matcher#group to make this fully GWT compatible.
   public String getPackageName(StaticSourceFile source) {
     String name = source.getName();
     Matcher genfilesMatcher = GENFILES_DIR.matcher(name);

@@ -18,17 +18,13 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
-import com.google.common.annotations.GwtIncompatible;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Output charset encoder for {@code CodeGenerator} that delegates to a CharsetEncoder.
- *
- * TODO(moz): Add GWT compatible super-source replacement
  */
-@GwtIncompatible("java.nio.charset")
 final class OutputCharsetEncoder {
 
   private final @Nullable CharsetEncoder encoder;

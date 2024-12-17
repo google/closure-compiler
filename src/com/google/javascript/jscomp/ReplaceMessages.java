@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -49,7 +48,6 @@ import org.jspecify.annotations.Nullable;
  * ReplaceMessages replaces user-visible messages with alternatives. It uses Google specific
  * JsMessageVisitor implementation.
  */
-@GwtIncompatible("JsMessage")
 public final class ReplaceMessages {
   public static final DiagnosticType BUNDLE_DOES_NOT_HAVE_THE_MESSAGE =
       DiagnosticType.error(

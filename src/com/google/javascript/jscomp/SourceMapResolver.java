@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -27,7 +26,6 @@ import java.nio.file.FileSystems;
 import org.jspecify.annotations.Nullable;
 
 /** Utility class for resolving source maps and files referenced in source maps. */
-@GwtIncompatible("Accesses the file system")
 public final class SourceMapResolver {
   private static final String BASE64_URL_PREFIX = "data:";
   private static final String BASE64_START = "base64,";

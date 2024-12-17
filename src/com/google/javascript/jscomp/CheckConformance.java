@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -40,7 +39,6 @@ import org.jspecify.annotations.Nullable;
  * <p>Conformance violations are both reported as compiler errors, and are also reported separately
  * to the {cI gue@link ErrorManager}
  */
-@GwtIncompatible("com.google.protobuf")
 public final class CheckConformance implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType CONFORMANCE_ERROR =
       DiagnosticType.error("JSC_CONFORMANCE_ERROR", "Violation: {0}{1}{2}");

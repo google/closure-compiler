@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +37,6 @@ import java.util.List;
  *
  * <p>This class enforces the policy that message variable names must be unique across all JS files.
  */
-@GwtIncompatible("JsMessage.Builder")
 public final class JsMessageExtractor {
 
   private final JsMessage.IdGenerator idGenerator;

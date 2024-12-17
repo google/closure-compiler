@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.AstFactory.type;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -33,7 +32,6 @@ import java.util.List;
  * placeholders, the second argument is an array of the values being used for the placeholders,
  * sorted by placeholder name.
  */
-@GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {
 
   static final DiagnosticType DECLARE_ICU_TEMPLATE_NOT_SUPPORTED =

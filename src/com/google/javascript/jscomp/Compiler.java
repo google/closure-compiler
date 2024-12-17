@@ -22,7 +22,6 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -596,7 +595,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    *
    * @param typedAstListStream a gzipped, binary-serialized TypedAst.List proto
    */
-  @GwtIncompatible
   public final void initWithTypedAstFilesystem(
       List<SourceFile> externs,
       List<SourceFile> sources,
@@ -621,7 +619,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    *
    * @param typedAstListStream a gzipped, binary-serialized TypedAst.List proto
    */
-  @GwtIncompatible
   public void initChunksWithTypedAstFilesystem(
       List<SourceFile> externs,
       List<JSChunk> chunks,
@@ -644,7 +641,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.mergeAndDeserializeTypedAsts(files, typedAstListStream, options);
   }
 
-  @GwtIncompatible
   private void mergeAndDeserializeTypedAsts(
       ImmutableSet<SourceFile> requiredInputFiles,
       InputStream typedAstListStream,
@@ -695,7 +691,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  @GwtIncompatible
   public void initRuntimeLibraryTypedAsts(Optional<ColorPool.Builder> colorPoolBuilder) {
     checkState(this.runtimeLibraryTypedAsts == null);
 
@@ -4179,7 +4174,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return jsmoduleToInputId.build();
   }
 
-  @GwtIncompatible("ObjectOutputStream")
   public void saveState(OutputStream outputStream) throws IOException {
     // Do not close the outputstream, caller is responsible for closing it.
     runInCompilerThread(
@@ -4209,7 +4203,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return new CompilerState(this);
   }
 
-  @GwtIncompatible("ClassNotFoundException")
   public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
@@ -4232,7 +4225,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  @GwtIncompatible("ObjectInputStream")
   // this method must be called from within a "compiler thread" with a larger stack
   private void deserializeCompilerState(InputStream inputStream)
       throws IOException, ClassNotFoundException {

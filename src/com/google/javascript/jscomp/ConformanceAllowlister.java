@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -25,7 +24,6 @@ import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.rhino.Node;
 
 /** Creates or updates conformance allowlist/whitelist entries. */
-@GwtIncompatible("Conformance")
 public class ConformanceAllowlister {
   private ConformanceAllowlister() {}
 

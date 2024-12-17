@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -369,7 +368,6 @@ public abstract class JsMessage {
    * <p>This implementation correctly processes unnamed messages and creates a key for them that
    * looks like {@code MSG_<fingerprint value>};.
    */
-  @GwtIncompatible("java.util.regex")
   public static final class Builder {
 
     private @Nullable String key = null;

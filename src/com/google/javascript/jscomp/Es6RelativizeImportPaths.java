@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
@@ -31,7 +30,6 @@ import java.nio.file.Path;
  * <p>Useful for servers that wish to preserve ES6 modules, meaning their paths need to be valid in
  * the browser.
  */
-@GwtIncompatible("java.net.URI")
 public class Es6RelativizeImportPaths implements CompilerPass {
 
   private final AbstractCompiler compiler;

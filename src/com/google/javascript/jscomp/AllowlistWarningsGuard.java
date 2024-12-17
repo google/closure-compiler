@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -46,7 +45,6 @@ import org.jspecify.annotations.Nullable;
  * implementing the {@code level} function. Warnings are defined by the name of the JS file and the
  * first line of warnings description.
  */
-@GwtIncompatible("java.io, java.util.regex")
 public class AllowlistWarningsGuard extends WarningsGuard {
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 

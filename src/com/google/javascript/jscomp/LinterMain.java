@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import org.kohsuke.args4j.Option;
  * means some checks in the lintChecks DiagnosticGroup are skipped, since they depend on type
  * information.
  */
-@GwtIncompatible("Unnecessary")
 public final class LinterMain {
   @Option(name = "--fix", usage = "Fix lint warnings automatically")
   private boolean fix = false;

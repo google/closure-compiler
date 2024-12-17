@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.AstFactory.type;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -29,7 +28,6 @@ import com.google.javascript.rhino.Node;
  * phase of compilation, then replace it with the specific destination locale near the end of
  * compilation.
  */
-@GwtIncompatible("Unnecessary")
 final class LocaleDataPasses {
 
   private LocaleDataPasses() {}

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -38,7 +37,6 @@ import java.util.zip.ZipFile;
  * a timestamp controlled caching which ensures we always read up-to-date zip while avoiding wasting
  * time by re-reading the zip for each entry.
  */
-@GwtIncompatible("java.util.zip.ZipFile")
 final class JSCompZipFileCache {
 
   /**

@@ -23,7 +23,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.InlineMe;
@@ -218,7 +217,6 @@ public final class SourceFile implements StaticSourceFile {
   }
 
   /** Gets a reader for the code in this source file. */
-  @GwtIncompatible("java.io.Reader")
   public Reader getCodeReader() throws IOException {
     // Only synchronize if we need to
     if (this.code == null) {
@@ -477,7 +475,6 @@ public final class SourceFile implements StaticSourceFile {
     return fileName;
   }
 
-  @GwtIncompatible("fromZipInput")
   public static List<SourceFile> fromZipFile(String zipName, Charset inputCharset)
       throws IOException {
     try (InputStream input = new FileInputStream(zipName)) {
@@ -485,7 +482,6 @@ public final class SourceFile implements StaticSourceFile {
     }
   }
 
-  @GwtIncompatible("java.util.zip.ZipInputStream")
   public static List<SourceFile> fromZipInput(
       String zipName, InputStream input, Charset inputCharset) throws IOException {
     final String absoluteZipPath = new File(zipName).getAbsolutePath();
@@ -509,17 +505,14 @@ public final class SourceFile implements StaticSourceFile {
     return sourceFiles;
   }
 
-  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset charset) {
     return builder().withPath(fileName).withCharset(charset).build();
   }
 
-  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName) {
     return builder().withPath(fileName).build();
   }
 
-  @GwtIncompatible("java.io.File")
   public static SourceFile fromPath(Path path, Charset charset) {
     return builder().withPath(path).withCharset(charset).build();
   }
@@ -587,7 +580,6 @@ public final class SourceFile implements StaticSourceFile {
     this.isClosureUnawareCode = protoSourceFile.getIsClosureUnawareCode();
   }
 
-  @GwtIncompatible("java.io.Reader")
   public static SourceFile fromProto(SourceFileProto protoSourceFile) {
     SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);
     SourceFile sourceFile = fromProto(protoSourceFile, sourceKind);
@@ -712,7 +704,6 @@ public final class SourceFile implements StaticSourceFile {
     }
 
     @CanIgnoreReturnValue
-    @GwtIncompatible
     public Builder withContent(InputStream x) {
       this.lazyContent =
           () -> {
@@ -896,7 +887,6 @@ public final class SourceFile implements StaticSourceFile {
       }
 
       @Override
-      @GwtIncompatible
       String loadUncachedCode() throws IOException {
         try {
           return Files.readString(this.relativePath, this.getCharset());
@@ -907,7 +897,6 @@ public final class SourceFile implements StaticSourceFile {
       }
 
       @Override
-      @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return Files.newBufferedReader(this.relativePath, this.getCharset());
       }
@@ -944,13 +933,11 @@ public final class SourceFile implements StaticSourceFile {
       }
 
       @Override
-      @GwtIncompatible
       String loadUncachedCode() throws IOException {
         return CharStreams.toString(this.openUncachedReader());
       }
 
       @Override
-      @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return new InputStreamReader(
             JSCompZipFileCache.getEntryStream(this.zipName, this.entryName), this.getCharset());

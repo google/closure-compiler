@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.DiagnosticToSuppressionMapper.OutputFormat;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import org.kohsuke.args4j.CmdLineException;
@@ -40,7 +39,6 @@ import org.kohsuke.args4j.Option;
  *       Parser, and are not included in the map.
  * </ul>
  */
-@GwtIncompatible
 public final class MapDiagnosticToSuppression {
 
   @Option(

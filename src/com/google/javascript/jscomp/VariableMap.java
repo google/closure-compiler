@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Map.Entry.comparingByKey;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
@@ -79,18 +78,12 @@ public final class VariableMap implements Serializable {
     return map.inverse();
   }
 
-  /**
-   * Saves the variable map to a file.
-   */
-  @GwtIncompatible("com.google.io.Files")
+  /** Saves the variable map to a file. */
   public void save(String filename) throws IOException {
     Files.write(toBytes(), new File(filename));
   }
 
-  /**
-   * Reads the variable map from a file written via {@link #save(String)}.
-   */
-  @GwtIncompatible("java.io.File")
+  /** Reads the variable map from a file written via {@link #save(String)}. */
   public static VariableMap load(String filename) throws IOException {
     try {
       return fromBytes(Files.toByteArray(new File(filename)));
@@ -100,10 +93,7 @@ public final class VariableMap implements Serializable {
     }
   }
 
-  /**
-   * Serializes the variable map to a byte array.
-   */
-  @GwtIncompatible("java.io.ByteArrayOutputStream")
+  /** Serializes the variable map to a byte array. */
   public byte[] toBytes() {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Writer writer = new OutputStreamWriter(baos, UTF_8);
@@ -125,11 +115,7 @@ public final class VariableMap implements Serializable {
     return baos.toByteArray();
   }
 
-  /**
-   * Deserializes the variable map from a byte array returned by
-   * {@link #toBytes()}.
-   */
-  @GwtIncompatible("com.google.common.base.Splitter.onPattern()")
+  /** Deserializes the variable map from a byte array returned by {@link #toBytes()}. */
   public static VariableMap fromBytes(byte[] bytes) throws ParseException {
     String string = new String(bytes, UTF_8);
     ImmutableMap.Builder<String, String> map = ImmutableMap.builder();

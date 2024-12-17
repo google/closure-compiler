@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -62,10 +61,6 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>This class is not thread safe.
  */
-@GwtIncompatible(
-    "java.util.Collections.shuffle, "
-    + "com.google.common.hash.Hasher, "
-    + "com.google.common.hash.Hashing")
 public final class RandomNameGenerator implements NameGenerator {
 
   /** Generate random names with this first character. */

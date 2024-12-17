@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -449,11 +448,9 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
-  @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage", JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
 
-  @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup MESSAGE_DESCRIPTIONS =
       DiagnosticGroups.registerGroup(
           "msgDescriptions", JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
@@ -462,7 +459,6 @@ public class DiagnosticGroups {
    * Warnings that only apply to people who use MSG_ to denote messages. Note that this doesn't
    * include warnings about proper use of goog.getMsg
    */
-  @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup MSG_CONVENTIONS =
       DiagnosticGroups.registerGroup(
           "messageConventions", // undocumented
@@ -655,7 +651,6 @@ public class DiagnosticGroups {
   // OK to suppress.
   // For now, the only way to suppress a check at a granularity smaller than
   // the file level is by using a allowlist file.
-  @GwtIncompatible("Conformance")
   public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
       DiagnosticGroups.registerGroup(
           "conformanceViolations",

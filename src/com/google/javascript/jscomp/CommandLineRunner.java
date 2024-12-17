@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -130,7 +129,6 @@ import org.kohsuke.args4j.spi.StringOptionHandler;
  *
  * This class is totally not thread-safe.
  */
-@GwtIncompatible("Unnecessary")
 public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, CompilerOptions> {
 
   public static final String OUTPUT_MARKER = AbstractCommandLineRunner.OUTPUT_MARKER;

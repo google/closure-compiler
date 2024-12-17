@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
@@ -70,7 +69,6 @@ import org.jspecify.annotations.Nullable;
  * Standard conformance rules. See
  * third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto
  */
-@GwtIncompatible("java.lang.reflect, java.util.regex")
 public final class ConformanceRules {
 
   private static final AllowList ALL_TS_ALLOWLIST = createTsAllowlist();
