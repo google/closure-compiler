@@ -45,7 +45,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableMap;
@@ -2498,7 +2497,6 @@ public class Node {
   }
 
   @DoNotCall
-  @GwtIncompatible
   @Override
   public final Object clone() {
     throw new UnsupportedOperationException("Did you mean cloneNode?");

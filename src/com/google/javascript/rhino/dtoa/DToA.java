@@ -58,10 +58,8 @@
  ***************************************************************/
 package com.google.javascript.rhino.dtoa;
 
-import com.google.common.annotations.GwtIncompatible;
 import java.math.BigInteger;
 
-@GwtIncompatible("unnecessarily complex")
 public final class DToA {
 
   private static final int

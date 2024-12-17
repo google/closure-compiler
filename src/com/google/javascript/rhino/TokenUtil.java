@@ -45,17 +45,12 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.base.Tri;
 
 /**
- * Helper methods for parsing JavaScript. These methods use unsupported features in GWT's emulation
- * of java.lang.Character.
- *
- * <p>TODO(moz): Add a GWT-compatible version in the super-source directory.
+ * Helper methods for parsing JavaScript.
  *
  */
-@GwtIncompatible("Unsupported java.lang.Character fields")
 public final class TokenUtil {
   /* As defined in ECMA.  jsscan.c uses C isspace() (which allows
    * \v, I think.)  note that code in getChar() implicitly accepts

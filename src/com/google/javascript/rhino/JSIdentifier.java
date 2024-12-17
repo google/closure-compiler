@@ -45,7 +45,6 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.annotations.GwtIncompatible;
 
 /**
  * Utility class to hold isJSIdentifier.
@@ -55,7 +54,6 @@ import com.google.common.annotations.GwtIncompatible;
  * <p>IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file due
  * to limitations on some internal Google projects that depend on it.
  */
-@GwtIncompatible
 public final class JSIdentifier {
   static boolean isJSIdentifier(String s) {
     int length = s.length();
