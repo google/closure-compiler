@@ -1435,6 +1435,12 @@ CSSProperties.prototype.fontWeight;
 
 /**
  * @type {string}
+ * @see https://www.w3.org/TR/css-align-3/#propdef-gap
+ */
+CSSProperties.prototype.gap;
+
+/**
+ * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid
  */
 CSSProperties.prototype.grid;
