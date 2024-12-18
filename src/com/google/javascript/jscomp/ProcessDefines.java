@@ -59,6 +59,7 @@ class ProcessDefines implements CompilerPass {
           "COMPILED",
           "goog.DEBUG",
           "$jscomp.ASSUME_ES5",
+          "$jscomp.ASSUME_ES6",
           "$jscomp.ISOLATE_POLYFILLS",
           "$jscomp.INSTRUMENT_ASYNC_CONTEXT");
 
