@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
@@ -27,7 +26,6 @@ import com.google.javascript.rhino.Node;
 import java.util.Map;
 
 /** This class implements a traversal to instrument an AST for code coverage. */
-@GwtIncompatible("FileInstrumentationData")
 class CoverageInstrumentationCallback implements NodeTraversal.Callback {
 
   private final Map<String, FileInstrumentationData> instrumentationData;

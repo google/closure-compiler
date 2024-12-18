@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.bundle;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -27,7 +26,6 @@ import java.util.Optional;
 /**
  * A source transformer for instrmenting code for coverage data collection.
  */
-@GwtIncompatible
 @Immutable
 public class CoverageInstrumenter extends CompilerBasedTransformer {
 

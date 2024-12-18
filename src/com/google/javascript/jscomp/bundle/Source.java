@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.bundle;
 
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -33,7 +32,6 @@ import org.jspecify.annotations.Nullable;
 
 /** An abstract representation of a source file. */
 @AutoValue
-@GwtIncompatible
 @Immutable
 public abstract class Source {
 
@@ -94,7 +92,6 @@ public abstract class Source {
 
   /** Builder for Source instances. */
   @AutoValue.Builder
-  @GwtIncompatible
   public abstract static class Builder {
     public abstract Builder setPath(Path path);
     public abstract Builder setSourceMap(String sourceMap);
@@ -179,7 +176,6 @@ public abstract class Source {
   }
 
   /** Essentially the same as Supplier, but wraps equals and hashCode. */
-  @GwtIncompatible
   @Immutable
   abstract static class Lazy<T> implements Supplier<T> {
 

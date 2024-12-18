@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.cache.CacheBuilder;
 import java.util.function.Function;
 import org.junit.Before;
@@ -31,7 +30,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link Source} and its nested classes. */
-@GwtIncompatible
 @RunWith(JUnit4.class)
 public final class CachedTransformerTest {
 

@@ -16,13 +16,11 @@
 
 package com.google.javascript.jscomp.bundle;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 /** A Transformer that caches output from a delegate transformer. */
-@GwtIncompatible
 public class CachedTransformer implements Source.Transformer {
 
   private static final String DEFAULT_CACHE_SPEC = "maximumSize=10000";

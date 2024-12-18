@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.bundle;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,7 +28,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link Source} and its nested classes. */
-@GwtIncompatible
 @RunWith(JUnit4.class)
 public final class SourceTest {
 

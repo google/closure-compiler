@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.bundle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.Immutable;
 import java.util.Optional;
 
@@ -26,7 +25,6 @@ import java.util.Optional;
  * A source transformer for lowering JS language versions. May also include a runtime that needs to
  * be shipped with the final bundle.
  */
-@GwtIncompatible
 @Immutable
 public class Transpiler extends CompilerBasedTransformer {
 

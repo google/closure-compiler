@@ -17,7 +17,6 @@ package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.ControlFlowGraph;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Instrument branch coverage for javascript. */
-@GwtIncompatible("FileInstrumentationData")
 public class BranchCoverageInstrumentationCallback extends NodeTraversal.AbstractCfgCallback {
   private final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;

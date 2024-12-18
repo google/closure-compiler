@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1535,7 +1534,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(options, "/** @suppress{es5Strict} */ function f() { var arguments; }", "");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testBrokenNameSpace() {
     CompilerOptions options = createCompilerOptions();
@@ -1727,7 +1725,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   // DefaultCodingConvention due to it throwing on methods such as extractIsModuleFile which is
   // needed in {@link CompilerInput$DepsFinder#visitSubtree}. Disable this test in the JsVersion.
   // TODO(tdeegan): DepsFinder should error out early if run with DefaultCodingConvention.
-  @GwtIncompatible
   @Test
   public void testES6UnusedClassesAreRemovedDefaultCodingConvention() {
     testES6UnusedClassesAreRemoved(CodingConventions.getDefault());

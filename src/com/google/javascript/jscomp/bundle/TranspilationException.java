@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.bundle;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ErrorFormat;
 import com.google.javascript.jscomp.JSError;
@@ -28,7 +27,6 @@ import org.jspecify.annotations.Nullable;
  * An unchecked exception thrown when transpilation fails due to one or
  * more errors in the input script.
  */
-@GwtIncompatible
 public class TranspilationException extends RuntimeException {
 
   private final ImmutableList<JSError> errors;

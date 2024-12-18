@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -32,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** This code implements the instrumentation pass over the AST (returned by JSCompiler). */
-@GwtIncompatible("FileInstrumentationData")
 public class CoverageInstrumentationPass implements CompilerPass {
 
   final AbstractCompiler compiler;

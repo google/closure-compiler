@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.bundle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.CheckLevel;
@@ -42,7 +41,6 @@ import java.util.Optional;
  * A source transformer base class. May also include a runtime that needs to
  * be shipped with the final bundle.
  */
-@GwtIncompatible
 @Immutable
 public abstract class CompilerBasedTransformer implements Source.Transformer {
 

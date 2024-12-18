@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.Base64VLQ;
 import com.google.gson.Gson;
@@ -45,7 +44,6 @@ import java.util.Objects;
  * it can be run on client browsers with the goal of better detecting dead code. The callback will
  * instrument by pushing a string onto an array which identifies what piece of code was executed.
  */
-@GwtIncompatible
 final class ProductionCoverageInstrumentationCallback implements NodeTraversal.Callback {
 
   /**

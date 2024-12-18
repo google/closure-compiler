@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -4294,7 +4293,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
   public void testEs6ModuleEntryPoint() throws Exception {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
@@ -4320,7 +4318,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
   public void testEs6ModuleEntryPointWithSquareBracketsInFilename() throws Exception {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(

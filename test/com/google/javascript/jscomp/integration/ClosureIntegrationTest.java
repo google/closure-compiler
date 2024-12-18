@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.DiagnosticGroups.CHECK_TYPES;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ClosureCodingConvention;
@@ -542,7 +541,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         "var x;var y");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testClosurePassOff() {
     CompilerOptions options = createCompilerOptions();
@@ -551,7 +549,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     testSame(options, "goog.getCssName = function(x) {};" + "goog.getCssName('foo');");
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testClosurePassOn() {
     CompilerOptions options = createCompilerOptions();
@@ -993,7 +990,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         DiagnosticGroups.CLOSURE_DEP_METHOD_USAGE_CHECKS);
   }
 
-  @GwtIncompatible // b/63595345
   @Test
   public void testProvideRequireSameFile() {
     CompilerOptions options = createCompilerOptions();
