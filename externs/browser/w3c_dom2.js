@@ -445,6 +445,31 @@ HTMLElement.prototype.className;
 HTMLElement.prototype.click = function() {};
 
 /**
+ * @type {string|null}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/popover
+ */
+HTMLElement.prototype.popover;
+
+/**
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/hidePopover
+ */
+HTMLElement.prototype.hidePopover = function() {};
+
+/**
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/showPopover
+ */
+HTMLElement.prototype.showPopover = function() {};
+
+/**
+ * @param {boolean=} force
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/togglePopover
+ */
+HTMLElement.prototype.togglePopover = function(force) {};
+
+/**
  * @type {number}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40676705
  */
