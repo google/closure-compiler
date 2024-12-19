@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.LocaleDataPasses.ProtectGoogLocale;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -25,7 +24,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Test which checks that replacer works correctly. */
-@GwtIncompatible("Unnecessary")
 @RunWith(JUnit4.class)
 public final class LocaleDataPassesTest extends CompilerTestCase {
 

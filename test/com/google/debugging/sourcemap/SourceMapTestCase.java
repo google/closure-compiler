@@ -19,7 +19,6 @@ package com.google.debugging.sourcemap;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +47,6 @@ public abstract class SourceMapTestCase {
 
   private static final Gson GSON = new Gson();
 
-  @GwtIncompatible
   private static final Type JSON_MAP_TYPE = (new TypeToken<Map<String, ?>>() {}).getType();
 
   private boolean validateColumns = true;
@@ -94,12 +92,10 @@ public abstract class SourceMapTestCase {
   /**
    * Creates a source map for the given JS code and asserts it is equal to the expected golden map.
    */
-  @GwtIncompatible
   protected void checkSourceMap(String js, ImmutableMap<String, ?> expectedMap) throws IOException {
     checkSourceMap("testcode", js, expectedMap);
   }
 
-  @GwtIncompatible
   protected void checkSourceMap(String fileName, String js, ImmutableMap<String, ?> expectedMap)
       throws IOException {
     RunResult result = compile(js, fileName);

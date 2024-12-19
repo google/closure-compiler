@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.instrumentation.reporter;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.gson.Gson;
@@ -41,7 +40,6 @@ import org.kohsuke.args4j.Option;
  * instrumented production code. It will then take these inputs and generate a single JSON which
  * provides a detailed breakdown of each instrumentation point.
  */
-@GwtIncompatible
 final class ProductionInstrumentationReporter {
 
   @Option(

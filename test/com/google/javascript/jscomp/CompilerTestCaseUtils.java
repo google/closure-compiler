@@ -15,14 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 /** CompilerTestCase utilities that can be super sourced out for GWT/J2CL implementation. */
 public final class CompilerTestCaseUtils {
-  @GwtIncompatible
   public static Compiler multistageSerializeAndDeserialize(
       CompilerTestCase testCase,
       Compiler compiler,
@@ -50,7 +48,6 @@ public final class CompilerTestCaseUtils {
     return compiler;
   }
 
-  @GwtIncompatible
   public static void setDebugLogDirectoryOn(CompilerOptions options) {
   }
 

@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomati
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static java.util.Comparator.naturalOrder;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -52,7 +51,6 @@ import org.jspecify.annotations.Nullable;
  * Grab an integer TypePool pointer for each JSType on the AST and log information about the
  * pointers.
  */
-@GwtIncompatible
 final class SerializeTypesToPointers {
 
   private final AbstractCompiler compiler;

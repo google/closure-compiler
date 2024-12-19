@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp.testing;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.ErrorManager;
@@ -48,7 +47,6 @@ public class NoninjectingCompiler extends Compiler {
   }
 
   @Override
-  @GwtIncompatible
   public final void saveState(OutputStream outputStream) throws IOException {
     ObjectOutputStream out = new ObjectOutputStream(outputStream);
     out.writeObject(injected);
@@ -59,7 +57,6 @@ public class NoninjectingCompiler extends Compiler {
 
   @SuppressWarnings("unchecked")
   @Override
-  @GwtIncompatible
   public final void restoreState(InputStream inputStream)
       throws IOException, ClassNotFoundException {
     ObjectInputStream in = new ObjectInputStream(inputStream);

@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -39,7 +38,6 @@ import java.util.LinkedHashMap;
 import org.jspecify.annotations.Nullable;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
-@GwtIncompatible("protobuf.lite")
 final class TypedAstSerializer {
 
   private final AbstractCompiler compiler;

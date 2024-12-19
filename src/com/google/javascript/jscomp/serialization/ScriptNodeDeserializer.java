@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SourceFile;
@@ -38,7 +37,6 @@ import org.jspecify.annotations.Nullable;
  * <p>This process depends on other information from the TypedAST format, but the output it limited
  * to only a single SCRIPT. The other deserialized content must be provided beforehand.
  */
-@GwtIncompatible("protobuf.lite")
 final class ScriptNodeDeserializer {
 
   private final SourceFile sourceFile;

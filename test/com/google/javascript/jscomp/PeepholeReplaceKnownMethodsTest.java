@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -543,7 +542,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  @GwtIncompatible // TODO(b/155511629): Enable this test for J2CL
   public void testFoldMathFunctions_fround_j2cl() {
     foldSame("Math.fround(1.2)");
   }

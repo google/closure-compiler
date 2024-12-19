@@ -21,7 +21,6 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +50,6 @@ import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 /** Deserializes a list of TypedAst protos into the JSCompiler AST structure. */
-@GwtIncompatible("protobuf.lite")
 public final class TypedAstDeserializer {
 
   private final Mode mode;
@@ -384,7 +382,6 @@ public final class TypedAstDeserializer {
     };
   }
 
-  @GwtIncompatible("ObjectInputStream")
   private static void deserializeTypedAsts(
       InputStream typedAstsStream,
       TypedAstDeserializer deserializer,

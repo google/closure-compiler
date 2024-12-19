@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp.graph;
 
-import com.google.common.annotations.GwtCompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -31,7 +30,6 @@ import java.util.Set;
  *
  * @param <E> element type
  */
-@GwtCompatible
 public interface UnionFind<E> {
 
   /**

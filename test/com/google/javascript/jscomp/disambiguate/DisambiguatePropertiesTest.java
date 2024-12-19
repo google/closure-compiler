@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.joining;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
@@ -1280,7 +1279,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "}")));
   }
 
-  @GwtIncompatible
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));
@@ -1289,7 +1287,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     }
   }
 
-  @GwtIncompatible
   private ImmutableList<Path> debugLogFiles() {
     try {
       Path dir =

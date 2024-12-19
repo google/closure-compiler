@@ -23,7 +23,6 @@ import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
 import static com.google.common.collect.Streams.stream;
 import static java.util.Comparator.naturalOrder;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -379,7 +378,6 @@ public final class ModuleLoader {
       }
     },
 
-    @GwtIncompatible("Paths.get, Path.toAbsolutePath")
     ABSOLUTE {
       @Override
       public String apply(String path) {

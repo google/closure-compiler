@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -36,7 +35,6 @@ import java.util.regex.Pattern;
  * Base class for classes that parse JavaScript sources on a line-by-line basis. Strips comments
  * from files and records all parsing errors.
  */
-@GwtIncompatible("java.io")
 public abstract class JsFileLineParser {
 
   static final DiagnosticType PARSE_WARNING = DiagnosticType.warning(

@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static java.util.stream.Collectors.joining;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
@@ -556,7 +555,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             "const /** !Foo1 */ typeMismatch = new Foo0();"));
   }
 
-  @GwtIncompatible
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));
@@ -565,7 +563,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     }
   }
 
-  @GwtIncompatible
   private ImmutableList<Path> debugLogFiles() {
     try {
       Path dir =

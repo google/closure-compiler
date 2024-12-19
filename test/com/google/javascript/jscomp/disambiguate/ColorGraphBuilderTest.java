@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.ALGEBRAIC;
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.CAN_HOLD;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +59,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ColorGraphBuilderTest extends CompilerTestCase {
 
-  @Rule @GwtIncompatible public final TestName testName = new TestName();
+  @Rule public final TestName testName = new TestName();
 
   private final Compiler compiler = new Compiler();
 
@@ -550,7 +549,6 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   }
 
   @After
-  @GwtIncompatible
   public void renderResultGraph() {
   }
 

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -44,7 +43,6 @@ import java.util.regex.Pattern;
  *
  * <p>See //javascript/closure/deps.js for an example file.
  */
-@GwtIncompatible("java.util.regex")
 public final class DepsFileRegexParser extends JsFileLineParser {
   private static final Logger logger = Logger.getLogger(DepsFileRegexParser.class.getName());
 
