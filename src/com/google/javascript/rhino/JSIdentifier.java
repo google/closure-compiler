@@ -49,8 +49,6 @@ package com.google.javascript.rhino;
 /**
  * Utility class to hold isJSIdentifier.
  *
- * <p>Separated into its own class because it is not GWT compatible.
- *
  * <p>IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file due
  * to limitations on some internal Google projects that depend on it.
  */

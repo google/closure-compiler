@@ -26,13 +26,13 @@ import java.util.Date;
 import org.jspecify.annotations.Nullable;
 
 /**
- * This is a hacked apart version of the Apache Harmony String.format class
- * with all parts outside of the GWT subset removed.  It will work for
- * simple format commands but does not handle I18N and doesn't handle complex
- * formatting options such as calendar entries and hashcodes.
+ * This is a hacked apart version of the Apache Harmony String.format class with all parts outside
+ * of the GWT subset removed. It will work for simple format commands but does not handle I18N and
+ * doesn't handle complex formatting options such as calendar entries and hashcodes.
  *
- * Formats arguments according to a format string (like {@code printf} in C).
- * <p>
+ * <p>Formats arguments according to a format string (like {@code printf} in C).
+ *
+ * <p>TODO: b/384760309 - replace with standard String.format
  */
 public final class SimpleFormat {
   final StringBuilder out;

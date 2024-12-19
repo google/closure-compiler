@@ -19,7 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
-/** CompilerTestCase utilities that can be super sourced out for GWT/J2CL implementation. */
+/** CompilerTestCase utilities */
 public final class CompilerTestCaseUtils {
   public static Compiler multistageSerializeAndDeserialize(
       CompilerTestCase testCase,
