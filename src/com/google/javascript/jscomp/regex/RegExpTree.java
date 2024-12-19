@@ -748,12 +748,7 @@ public abstract class RegExpTree {
       return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch == '_' || ch == '$'));
     }
 
-    // Workaround b/36459436
-    // When running under GWT, Character.isLetter only handles ASCII
-    // Angular relies heavily on U+0275 (Latin Barred O)
-    return ch == 0x0275
-        // TODO: UnicodeLetter also includes Letter Number (NI)
-        || Character.isLetter(ch);
+    return Character.isLetter(ch);
   }
 
   /**

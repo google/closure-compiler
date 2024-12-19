@@ -30,25 +30,7 @@ public final class Identifiers {
 
     // Handle non-ASCII characters.
     // TODO(tjgq): This should include all characters with the ID_Start property.
-    if (Character.isLetter(ch)) {
-      return true;
-    }
-
-    // Workaround for b/36459436.
-    // When running under GWT/J2CL, Character.isLetter only handles ASCII.
-    // Angular relies heavily on Latin Small Letter Barred O and Greek Capital Letter Delta.
-    // Greek letters are occasionally found in math code.
-    // Latin letters are found in our own tests.
-    return (ch >= 0x00C0 & ch <= 0x00D6) // Latin letters
-        // 0x00D7 = multiplication sign, not a letter
-        | (ch >= 0x00D8 & ch <= 0x00F6) // Latin letters
-        // 0x00F7 = division sign, not a letter
-        | (ch >= 0x00F8 & ch <= 0x00FF) // Latin letters
-        | ch == 0x0275 // Latin Barred O
-        | (ch >= 0x0391 & ch <= 0x03A1) // Greek uppercase letters
-        // 0x03A2 = unassigned
-        | (ch >= 0x03A3 & ch <= 0x03A9) // Remaining Greek uppercase letters
-        | (ch >= 0x03B1 & ch <= 0x03C9); // Greek lowercase letters
+    return Character.isLetter(ch);
   }
 
   @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
