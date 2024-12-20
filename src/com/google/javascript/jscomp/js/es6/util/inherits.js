@@ -19,6 +19,7 @@
  * @suppress {uselessCode}
  */
 'require base';
+'require util/defines';
 'require util/objectcreate';
 'require es6/util/setprototypeof';
 
@@ -57,10 +58,11 @@
 $jscomp.inherits = function(childCtor, parentCtor) {
   childCtor.prototype = $jscomp.objectCreate(parentCtor.prototype);
   /** @override */ childCtor.prototype.constructor = childCtor;
-  if ($jscomp.setPrototypeOf) {
+  if ($jscomp.ASSUME_ES6 || $jscomp.setPrototypeOf) {
     // avoid null dereference warning
-    /** @const {!Function} */
-    var setPrototypeOf = $jscomp.setPrototypeOf;
+    // NOTE: `$jscomp.setPrototypeOf` will be set to `Object.setPrototypeOf`
+    // when `$jscomp.ASSUME_ES6` is `true`.
+    var setPrototypeOf = /** @type {!Function} */ ($jscomp.setPrototypeOf);
     setPrototypeOf(childCtor, parentCtor);
   } else {
     // setPrototypeOf is not available so we need to copy the static
