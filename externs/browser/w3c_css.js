@@ -1295,6 +1295,12 @@ CSSProperties.prototype.color;
 
 /**
  * @type {string}
+ * @see https://drafts.csswg.org/css-color-adjust/#color-scheme-prop
+ */
+CSSProperties.prototype.colorScheme;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/css-contain-2/#contain-property
  */
 CSSProperties.prototype.contain;
