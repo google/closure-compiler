@@ -48,8 +48,8 @@ $jscomp.underscoreProtoCanBeSet = function() {
  *
  * @type {null|function(!Object, ?Object): !Object}
  */
-$jscomp.setPrototypeOf = ($jscomp.TRUST_ES6_POLYFILLS &&
-                          typeof Object.setPrototypeOf == 'function') ?
+$jscomp.setPrototypeOf = ($jscomp.ASSUME_ES6 || ($jscomp.TRUST_ES6_POLYFILLS &&
+                          typeof Object.setPrototypeOf == 'function')) ?
     Object.setPrototypeOf :
     $jscomp.underscoreProtoCanBeSet() ? function(target, proto) {
       target.__proto__ = proto;
