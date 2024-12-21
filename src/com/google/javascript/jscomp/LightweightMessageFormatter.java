@@ -339,7 +339,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
         // nice spaces for the line number
         int spaces = numberLength - Integer.toString(lineNumber).length();
-        builder.repeat(" ", spaces);
+        builder.append(" ".repeat(spaces));
         builder.append(lineNumber);
         builder.append("| ");
 
