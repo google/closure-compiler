@@ -57,7 +57,7 @@ jobs:
       - uses: bazelbuild/setup-bazelisk@v2
 
       - name: Build and Test
-        run: bazelisk test //:all
+        run: unset ANDROID_HOME && bazelisk test //:all
 
       - name: Unsymlink Bazel Artifacts
         # upload-artifact doesn't support paths with symlinks
