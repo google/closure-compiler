@@ -32,10 +32,10 @@ var LockManager = function() {};
 
 
 /**
- * @param  {string}                           name
+ * @param  {string}                            name
  * @param  {!LockOptions|!LockGrantedCallback} options
- * @param  {!LockGrantedCallback|undefined=}  callback
- * @return {!Promise<void>}
+ * @param  {!LockGrantedCallback|undefined=}   callback
+ * @return {!Promise<*>}
  */
 LockManager.prototype.request = function(name, options, callback) {};
 
@@ -70,7 +70,7 @@ Lock.prototype.mode;
 
 
 /**
- * @typedef {function(!Lock): !Promise<void>}
+ * @typedef {function(!Lock): !Promise<*>}
  * @see https://www.w3.org/TR/web-locks/#callbackdef-lockgrantedcallback
  */
 var LockGrantedCallback;
@@ -106,7 +106,7 @@ var LockOptions;
  * }}
  * @see https://www.w3.org/TR/web-locks/#dictdef-lockinfo
  */
-var LockInfo
+var LockInfo;
 
 
 /**
