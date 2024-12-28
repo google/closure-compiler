@@ -6500,3 +6500,31 @@ ViewTransition.prototype.updateCallbackDone;
 
 /** @return {undefined} */
 ViewTransition.prototype.skipTransition = function() {};
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#toggleeventinit
+ */
+function ToggleEventInit() {}
+
+/** @type {undefined|string} */
+ToggleEventInit.prototype.newState;
+
+/** @type {undefined|string} */
+ToggleEventInit.prototype.oldState;
+
+/**
+ * @param {string} type
+ * @param {ToggleEventInit=} opt_eventInitDict
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#toggleevent
+ * @constructor
+ * @extends {Event}
+ */
+function ToggleEvent(type, opt_eventInitDict) {}
+
+/** @const {string} */
+ToggleEvent.prototype.newState;
+
+/** @const {string} */
+ToggleEvent.prototype.oldState;
