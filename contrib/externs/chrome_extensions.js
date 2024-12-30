@@ -7397,7 +7397,7 @@ chrome.system.display.Bounds;
 
 /**
  * @enum {string}
- * @see TODO(user): link to docs once published
+ * @see https://developer.chrome.com/docs/extensions/reference/api/system/display#type-ActiveState
  */
 chrome.system.display.ActiveState = {
   ACTIVE: '',
