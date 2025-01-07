@@ -20,11 +20,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static java.lang.Integer.parseInt;
+import static java.util.Comparator.comparingInt;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeSet;
+import com.google.common.collect.TreeRangeSet;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -135,7 +140,6 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -245,7 +249,31 @@ class IRFactory {
 
   private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private Node resultNode;
-  private final ArrayList<SourceRange> closureUnawareCodeRanges = new ArrayList<>();
+
+  /** Represents a line and column number in a file. */
+  @AutoValue
+  public abstract static class LineAndColumn implements Comparable<LineAndColumn> {
+    public abstract int lineNo();
+
+    public abstract int column();
+
+    static LineAndColumn of(int lineNo, int column) {
+      return new AutoValue_IRFactory_LineAndColumn(lineNo, column);
+    }
+
+    static LineAndColumn fromSourcePosition(SourcePosition pos) {
+      return new AutoValue_IRFactory_LineAndColumn(pos.line, pos.column);
+    }
+
+    @Override
+    public int compareTo(LineAndColumn o) {
+      return comparingInt(LineAndColumn::lineNo)
+          .thenComparingInt(LineAndColumn::column)
+          .compare(this, o);
+    }
+  }
+
+  private final RangeSet<LineAndColumn> closureUnawareCodeRanges = TreeRangeSet.create();
 
   private IRFactory(
       StaticSourceFile sourceFile,
@@ -867,7 +895,13 @@ class IRFactory {
     NonJSDocComment comment = parseNonJSDocCommentAt(tree.getStart(), false);
 
     if (info != null && info.isClosureUnawareCode()) {
-      this.closureUnawareCodeRanges.add(tree.location);
+      SourceRange nextClosureUnawareRange = tree.location;
+      LineAndColumn nextClosureUnawareRangeStart =
+          LineAndColumn.fromSourcePosition(nextClosureUnawareRange.start);
+      LineAndColumn nextClosureUnawareRangeEnd =
+          LineAndColumn.fromSourcePosition(nextClosureUnawareRange.end);
+      this.closureUnawareCodeRanges.add(
+          Range.closed(nextClosureUnawareRangeStart, nextClosureUnawareRangeEnd));
     }
 
     Node node = transformDispatcher.process(tree);
@@ -884,46 +918,11 @@ class IRFactory {
   }
 
   private boolean withinClosureUnawareCodeRange(int line, int lineColumnNo) {
-    // TODO: b/331840742: Improve the performance of this check, as naive O(n) is not ideal when
-    // there are a small number of ranges but many checks against those ranges.
-    for (SourceRange range : this.closureUnawareCodeRanges) {
-      if (withinRange(range, line, lineColumnNo)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private final boolean withinRange(SourceRange range, int line, int lineColumnNo) {
-    int startLine = range.start.line;
-    int startColumnNo = range.start.column;
-    int endLine = range.end.line;
-    int endColumnNo = range.end.column;
-    // range starts after line
-    if (afterPosition(startLine, startColumnNo, line, lineColumnNo, true)) {
+    if (this.closureUnawareCodeRanges.isEmpty()) {
       return false;
     }
 
-    // range ends before line
-    if (afterPosition(line, lineColumnNo, endLine, endColumnNo, false)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private boolean afterPosition(
-      int aLine, int aLineColumnNo, int bLine, int bColumnNo, boolean inclusive) {
-    if (aLine > bLine) {
-      return true;
-    }
-    if (aLine < bLine) {
-      return false;
-    }
-    if (inclusive && aLineColumnNo == bColumnNo) {
-      return true;
-    }
-    return aLineColumnNo > bColumnNo;
+    return this.closureUnawareCodeRanges.contains(LineAndColumn.of(line, lineColumnNo));
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
@@ -2010,7 +2009,7 @@ class IRFactory {
           break;
         case QUESTION_QUESTION_EQUAL:
           maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
-          // fall through
+        // fall through
         case OR_EQUAL:
         case AND_EQUAL:
           maybeWarnForFeature(exprNode, Feature.LOGICAL_ASSIGNMENT);
@@ -3229,13 +3228,13 @@ class IRFactory {
         case ITER_SPREAD:
           return processIterSpread(node.asIterSpread());
 
-          // ES2019
+        // ES2019
         case OBJECT_REST:
           return processObjectPatternElement(node.asObjectRest());
         case OBJECT_SPREAD:
           return processObjectSpread(node.asObjectSpread());
 
-          // ES2022
+        // ES2022
         case FIELD_DECLARATION:
           return processField(node.asFieldDeclaration());
         case COMPUTED_PROPERTY_FIELD:
@@ -3308,7 +3307,7 @@ class IRFactory {
       cur++; // skip the escape char.
       char c = value.charAt(cur);
       switch (c) {
-          // Characters for which the backslash is semantically important.
+        // Characters for which the backslash is semantically important.
         case '^':
         case '$':
         case '\\':
@@ -3354,7 +3353,7 @@ class IRFactory {
         case '8':
         case '9':
           result.append('\\');
-          // fallthrough
+        // fallthrough
         default:
           // For all other characters, the backslash has no effect, so just append the next char.
           result.append(c);
