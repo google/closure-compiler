@@ -1,12 +1,13 @@
 """Check and generate the licenses for third party dependencies.
 
 This script generates the THIRD_PARTY_NOTICES file, which is the licenses
-for all our external dependencies. It reads the maven_artifacts.bzl
-file, compares the pom.xml and gradle files with the jar file list,
+for all our external dependencies. It reads the MODULE.bazel file,
+compares the pom.xml and gradle files with the jar file list,
 and then generates the license file.
 """
 
 import argparse
+import re
 import sys
 import xml.etree.ElementTree as ET
 import requests
@@ -114,11 +115,13 @@ def main():
   )
   args = parser.parse_args()
 
-  maven_artifacts_file = 'maven_artifacts.bzl'
+  maven_artifacts_file = 'MODULE.bazel'
   third_party_notices_file = 'THIRD_PARTY_NOTICES'
 
-  # Read maven_artifacts.bzl
-  bzl_file_contents = open(maven_artifacts_file).read()
+  # Read artifacts from MODULE.bazel
+  contents = open(maven_artifacts_file).read()
+  pattern = r'START_MAVEN_ARTIFACTS_LIST\s*(.*?)\s*END_MAVEN_ARTIFACTS_LIST'
+  bzl_file_contents = re.search(pattern, contents, re.DOTALL).group(1)
 
   # Work around a python3 bug with exec and local variables
   ldict = {}

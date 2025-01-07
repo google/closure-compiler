@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
+load("@bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
 # Produce an unshaded export jar based on :compiler_lib
@@ -96,10 +96,10 @@ version = "$(COMPILER_VERSION)" or "1.0-SNAPSHOT"
 java_export(
     name = "compiler_unshaded",
     # Compile time dependencies that are not added as @maven//: need to be excluded.
-    excluded_workspaces = {
-        "javax_annotation_jsr250_api": None,
-        "com_google_auto_value_auto_value_annotations": None,
-    },
+    # https://github.com/bazel-contrib/rules_jvm_external/issues/1300
+    deploy_env = [
+        "@google_bazel_common//third_party/java/auto:value",
+    ],
     maven_coordinates = "com.google.javascript:closure-compiler-unshaded:{0}".format(version),
     pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl",
     tags = [
@@ -265,7 +265,7 @@ genrule(
     srcs = glob(["externs/**/*.js"]),
     outs = ["externs.zip"],
     # Trim the "externs/" prefix from the names of the ziped files.
-    cmd = "cd externs && find . -name '*.js' | zip ../$(OUTS) -@ &> /dev/null",
+    cmd = "OUT=$$(pwd)/$(OUTS) && cd externs && find . -name '*.js' | zip $$OUT -@ &> /dev/null",
 )
 
 # It's easier to make a copy of this Java file because the Java compiler can

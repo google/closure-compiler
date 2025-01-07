@@ -1,5 +1,17 @@
-"""List of external dependencies from Maven."""
+bazel_dep(name = "rules_java", version = "8.6.1")
+bazel_dep(name = "protobuf", version = "29.1")
+bazel_dep(name = "bazel_jar_jar", version = "0.1.5")
+bazel_dep(name = "google_bazel_common")
+git_override(
+    module_name = "google_bazel_common",
+    commit = "0aa5acbefe37b58cc8f0fbdb510606bbeb19ef8a",
+    remote = "https://github.com/google/bazel-common",
+)
 
+bazel_dep(name = "rules_jvm_external", version = "6.6")
+
+## START_MAVEN_ARTIFACTS_LIST
+# List of external dependencies from Maven. Also update corresponding POM file below.
 MAVEN_ARTIFACTS = [
     "args4j:args4j:2.33",
     "com.google.code.gson:gson:2.9.1",
@@ -37,3 +49,24 @@ ORDERED_POM_OR_GRADLE_FILE_LIST = [
     "https://github.com/apache/ant/blob/rel/1.10.11@/src/etc/poms/ant/pom.xml",
     "https://github.com/jspecify/jspecify/blob/v0.3.0@/gradle/publish.gradle",
 ]
+
+## END_MAVEN_ARTIFACTS_LIST
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    artifacts = MAVEN_ARTIFACTS,
+    repositories = [
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
+)
+use_repo(maven, "maven")
+
+# Works around https://github.com/bazelbuild/rules_python/issues/1169
+bazel_dep(name = "rules_python", version = "0.28.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = "3.11",
+)

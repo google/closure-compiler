@@ -16,10 +16,6 @@
 # Script that can be used by CI server for testing JsCompiler builds.
 set -e
 
-# Avoid a "Android SDK api level 30 was requested but it is not installed" error
-# that happens when pulling in https://github.com/google/bazel-common
-unset ANDROID_HOME
-
 bazel build :all
 
 bazel test :compiler_unshaded_content_test --test_output=errors
