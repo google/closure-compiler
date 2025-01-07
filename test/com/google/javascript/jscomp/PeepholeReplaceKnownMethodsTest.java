@@ -67,7 +67,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     useTypes = true;
     disableTypeCheck();
     enableNormalize();
-    disableMultistageCompilation(); // this test runs under J2CL
   }
 
   @Override

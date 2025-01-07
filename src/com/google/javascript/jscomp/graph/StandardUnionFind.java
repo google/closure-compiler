@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Iterators.filter;
 import static com.google.common.collect.Multimaps.asMap;
 
-import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +45,6 @@ import org.jspecify.annotations.Nullable;
  *
  * @param <E> element type
  */
-@GwtCompatible
 public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   /** All values with the same root node are in the same equivalence set. */

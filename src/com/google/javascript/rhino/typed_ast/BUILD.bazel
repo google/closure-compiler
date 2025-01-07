@@ -31,9 +31,3 @@ java_proto_library(
     name = "typed_ast_java_proto",
     deps = [":typed_ast_proto"],
 )
-
-# TODO: Reenable once j2cl_proto_library is working again.
-# j2cl_proto_library(
-#     name = "typed_ast_j2cl_proto",
-#     deps = [":typed_ast_proto"],
-# )
