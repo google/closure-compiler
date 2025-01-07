@@ -217,10 +217,6 @@ java_binary(
 oss_java_library(
     name = "compiler_lib_no_runtime_libs",
     java_attrs = dict(
-        javacopts = [
-            "-source 11",
-            "-target 11",
-        ],
         resources = [
             ":LICENSE",
             ":THIRD_PARTY_NOTICES",
@@ -299,10 +295,6 @@ gen_java_tests(
             "src/**/testing/**/*.java",
         ],
     ),
-    javacopts = [
-        "-source 11",
-        "-target 11",
-    ],
     prefix_path = "test/",
     deps = [
         ":compiler_lib",
