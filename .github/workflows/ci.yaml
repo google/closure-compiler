@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: zulu
-          java-version: '11'
+          java-version: '21'
           java-package: jdk
           architecture: x64
 
@@ -146,7 +146,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: zulu
-          java-version: '11'
+          java-version: '21'
           java-package: jdk
           architecture: x64
 
