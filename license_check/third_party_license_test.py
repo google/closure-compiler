@@ -86,7 +86,6 @@ def get_license_from_pom(url):
   license_filenames = ['/LICENSE', '/COPYING']
 
   license_content = None
-  license_url = ''
 
   for filename in license_filenames:
     license_url = github_branch_root + filename
@@ -98,7 +97,7 @@ def get_license_from_pom(url):
     print('Cannot get license information for pom/gradle file: ', url)
     sys.exit(1)
 
-  return (license_url, license_content)
+  return license_content
 
 
 def main():
@@ -168,27 +167,23 @@ def main():
     print('Maven artifact list: ', artifact_list_from_maven)
     sys.exit(1)
 
-  license_url_to_package = {}
-  license_url_to_content = {}
+  license_content_to_package = {}
   # Create a dictionary of license names to maven jar files
   for package in artifact_list_from_github:
-    (license_url, license_content) = get_license_from_pom(
-        package_name_to_pom[package]
-    )
-    if license_url in license_url_to_package:
-      license_url_to_package[license_url].append(package)
+    license_content = get_license_from_pom(package_name_to_pom[package])
+    if license_content in license_content_to_package:
+      license_content_to_package[license_content].append(package)
     else:
-      license_url_to_package[license_url] = [package]
-      license_url_to_content[license_url] = license_content
+      license_content_to_package[license_content] = [package]
 
   # Create THIRD_PARTY_NOTICES
   third_party_notices_content = ''
-  for license_url in license_url_to_package:
+  for license_content in license_content_to_package:
     third_party_notices_content += 'License for package(s): ' + str(
-        license_url_to_package[license_url]
+        license_content_to_package[license_content]
     )
     third_party_notices_content += '\n\n'
-    third_party_notices_content += license_url_to_content[license_url]
+    third_party_notices_content += license_content
     third_party_notices_content += SPACER
 
   # Compare or Write out THIRD_PARTY_NOTICES file
