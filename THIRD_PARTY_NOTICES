@@ -1154,7 +1154,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ===============================================================================
 ===============================================================================
 
-License for package(s): ['com.google.truth.extensions:truth-liteproto-extension', 'com.google.truth.extensions:truth-proto-extension']
+License for package(s): ['com.google.truth.extensions:truth-proto-extension']
 
 
                                  Apache License

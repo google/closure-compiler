@@ -316,7 +316,6 @@ gen_java_tests(
         "@maven//:com_google_jimfs_jimfs",
         "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:com_google_re2j_re2j",
-        "@maven//:com_google_truth_extensions_truth_liteproto_extension",
         "@maven//:com_google_truth_extensions_truth_proto_extension",
         "@maven//:io_github_java_diff_utils_java_diff_utils",
         "@maven//:org_jspecify_jspecify",
