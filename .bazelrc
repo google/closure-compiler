@@ -14,10 +14,10 @@ build --define=COMPILER_VERSION=1.0-SNAPSHOT
 # Setting for running in remote CI
 build --color=yes
 
-# Enable Java 11
-build --java_runtime_version=11
-build --java_language_version=11
-build --tool_java_language_version=11
-build --tool_java_runtime_version=11
+# Enable Java 21
+build --java_runtime_version=21
+build --java_language_version=21
+build --tool_java_language_version=21
+build --tool_java_runtime_version=21
 
 test --test_output=errors
