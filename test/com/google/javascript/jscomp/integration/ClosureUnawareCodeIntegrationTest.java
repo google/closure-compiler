@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ConformanceConfig;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
@@ -665,6 +666,65 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             ""),
         DiagnosticGroups.NON_STANDARD_JSDOC);
   }
+
+  @Test
+  public void testNoOptimizeClosureUnawareCode_doesntCreateCastNodesInClosureUnawareBlocks() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
+    // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
+    // so instead this test validates that during parsing we never create CAST nodes to begin with.
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  const x = /** @type {string | number} */ (5);",
+            "}).call(globalThis);"),
+        lines("(function() {", "  const x = /** string */ (5);", "}).call(globalThis);"));
+
+    Node fn =
+        lastCompiler
+            .getRoot()
+            .getSecondChild()
+            .getFirstFirstChild()
+            .getFirstFirstChild()
+            .getFirstChild();
+    assertThat(fn.isFunction()).isTrue();
+    assertThat(fn.getJSDocInfo()).isNotNull();
+    assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
+    NodeTraversal.traverse(
+        lastCompiler,
+        fn,
+        new NodeTraversal.Callback() {
+
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            return true;
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            assertThat(n.isCast()).isFalse();
+          }
+        });
+  }
+
   // TODO how can I test whether source info is being properly retained?
   // TODO if there is a sourcemap comment in the IIFE, can we use that info somehow?
 }

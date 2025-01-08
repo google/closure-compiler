@@ -926,6 +926,10 @@ class IRFactory {
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
+    if (withinClosureUnawareCodeRange(node.location.start.line, node.location.start.column)) {
+      // closure-unaware code should never have CAST nodes in the AST.
+      return irNode;
+    }
     if (node.type == ParseTreeType.PAREN_EXPRESSION && info.hasType()) {
       irNode = newNode(Token.CAST, irNode);
     }
