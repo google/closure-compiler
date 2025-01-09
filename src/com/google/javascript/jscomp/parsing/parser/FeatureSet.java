@@ -132,8 +132,14 @@ public final class FeatureSet implements Serializable {
           Feature.REGEXP_LOOKBEHIND);
 
   // According to https://compat-table.github.io/compat-table/es2016plus/ this should include all
-  // features through ES2023.
+  // features through ES2023. So once LangVersion.ES2023 is added, this should be updated to
+  // include it.
   public static final FeatureSet BROWSER_2024 = ES2021_MODULES;
+
+  // According to https://compat-table.github.io/compat-table/es2016plus/ this should include all
+  // features through ES2024, except for the latest unicode versions for the /v regexp flag, which
+  // isn't disqualifying. So once LangVersion.ES2024 is added, this should be updated to include it.
+  public static final FeatureSet BROWSER_2025 = ES2021_MODULES;
 
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
