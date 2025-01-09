@@ -95,6 +95,15 @@ jobs:
     needs:
       - build-and-test
     steps:
+      - name: Setup Java
+        # https://github.com/marketplace/actions/setup-java-jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+          java-package: jdk
+          architecture: x64
+
       - name: Setup Node.js
         # https://github.com/marketplace/actions/setup-node-js-environment
         uses: actions/setup-node@v4
