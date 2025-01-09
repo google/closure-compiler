@@ -2089,7 +2089,7 @@ google.maps.DirectionsRendererOptions = function() {};
  * The directions to display on the map and/or in a <code>&lt;div&gt;</code>
  * panel, retrieved as a <code>DirectionsResult</code> object from
  * <code>DirectionsService</code>.
- * @type {google.maps.DirectionsResult|null|undefined}
+ * @type {!google.maps.DirectionsResult|null|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.directions;
 
@@ -2114,33 +2114,33 @@ google.maps.DirectionsRendererOptions.prototype.hideRouteList;
  * moved. If no info window is specified, the <code>DirectionsRenderer</code>
  * will create and use its own info window. This property will be ignored if
  * <code>suppressInfoWindows</code> is set to <code>true</code>.
- * @type {google.maps.InfoWindow|null|undefined}
+ * @type {!google.maps.InfoWindow|null|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.infoWindow;
 
 /**
  * Map on which to display the directions.
- * @type {google.maps.Map|null|undefined}
+ * @type {!google.maps.Map|null|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.map;
 
 /**
  * Options for the markers. All markers rendered by the
  * <code>DirectionsRenderer</code> will use these options.
- * @type {google.maps.MarkerOptions|null|undefined}
+ * @type {!google.maps.MarkerOptions|null|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.markerOptions;
 
 /**
  * The <code>&lt;div&gt;</code> in which to display the directions steps.
- * @type {HTMLElement|null|undefined}
+ * @type {!HTMLElement|null|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.panel;
 
 /**
  * Options for the polylines. All polylines rendered by the
  * <code>DirectionsRenderer</code> will use these options.
- * @type {google.maps.PolylineOptions|null|undefined}
+ * @type {!google.maps.PolylineOptions|null|undefined}
  */
 google.maps.DirectionsRendererOptions.prototype.polylineOptions;
 
@@ -5552,7 +5552,7 @@ google.maps.Map.prototype.getInternalUsageAttributionIds = function() {};
 
 /**
  * Informs the caller of the current capabilities available to the map based on
- * the Map ID that was provided.
+ * the map ID that was provided.
  * @return {!google.maps.MapCapabilities}
  */
 google.maps.Map.prototype.getMapCapabilities = function() {};
@@ -5758,7 +5758,7 @@ google.maps.Map.prototype.setTiltInteractionEnabled = function(
 google.maps.Map.prototype.setZoom = function(zoom) {};
 
 /**
- * Map ID which can be used for code samples which require a Map ID. This Map ID
+ * Map ID which can be used for code samples which require a map ID. This map ID
  * is not intended for use in production applications and cannot be used for
  * features which require cloud configuration (such as Cloud Styling).
  * @const
@@ -5923,7 +5923,7 @@ google.maps.MapElement.prototype.innerMap;
 google.maps.MapElement.prototype.internalUsageAttributionIds;
 
 /**
- * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
+ * The <a href="https://developers.google.com/maps/documentation/get-map-id">map
  * ID</a> of the map. This parameter cannot be set or changed after a map is
  * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
  * features that require a map ID but which do not require cloud enablement.
@@ -6219,7 +6219,7 @@ google.maps.MapOptions.prototype.isFractionalZoomEnabled;
 google.maps.MapOptions.prototype.keyboardShortcuts;
 
 /**
- * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
+ * The <a href="https://developers.google.com/maps/documentation/get-map-id">map
  * ID</a> of the map. This parameter cannot be set or changed after a map is
  * instantiated. {@link google.maps.Map.DEMO_MAP_ID} can be used to try out
  * features that require a map ID but which do not require cloud enablement.
@@ -6578,20 +6578,20 @@ google.maps.MapTypeControlOptions = function() {};
 
 /**
  * IDs of map types to show in the control.
- * @type {Array<!google.maps.MapTypeId|string>|null|undefined}
+ * @type {!Array<!google.maps.MapTypeId|string>|null|undefined}
  */
 google.maps.MapTypeControlOptions.prototype.mapTypeIds;
 
 /**
  * Position id. Used to specify the position of the control on the map.
  * @default {@link google.maps.ControlPosition.BLOCK_START_INLINE_START}
- * @type {google.maps.ControlPosition|null|undefined}
+ * @type {!google.maps.ControlPosition|null|undefined}
  */
 google.maps.MapTypeControlOptions.prototype.position;
 
 /**
  * Style id. Used to select what style of map type control to display.
- * @type {google.maps.MapTypeControlStyle|null|undefined}
+ * @type {!google.maps.MapTypeControlStyle|null|undefined}
  */
 google.maps.MapTypeControlOptions.prototype.style;
 
@@ -11472,6 +11472,31 @@ google.maps.elevation.ElevationElementOptions.prototype.unitSystem;
 google.maps.geometry = {};
 
 /**
+ * Utilities for polyline encoding and decoding.
+ *
+ * Access by calling `const {encoding} = await
+ * google.maps.importLibrary("geometry")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.geometry.encoding = function() {};
+
+/**
+ * Decodes an encoded path string into a sequence of LatLngs.
+ * @param {string} encodedPath
+ * @return {!Array<!google.maps.LatLng>}
+ */
+google.maps.geometry.encoding.decodePath = function(encodedPath) {};
+
+/**
+ * Encodes a sequence of LatLngs into an encoded path string.
+ * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|!google.maps.MVCArray<!google.maps.LatLng|!google.maps.LatLngLiteral>}
+ *     path
+ * @return {string}
+ */
+google.maps.geometry.encoding.encodePath = function(path) {};
+
+/**
  * Utility functions for computations involving polygons and polylines.
  *
  * Access by calling `const {poly} = await
@@ -11613,31 +11638,6 @@ google.maps.geometry.spherical.computeSignedArea = function(loop, radius) {};
  * @return {!google.maps.LatLng}
  */
 google.maps.geometry.spherical.interpolate = function(from, to, fraction) {};
-
-/**
- * Utilities for polyline encoding and decoding.
- *
- * Access by calling `const {encoding} = await
- * google.maps.importLibrary("geometry")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @const
- */
-google.maps.geometry.encoding = {};
-
-/**
- * Decodes an encoded path string into a sequence of LatLngs.
- * @param {string} encodedPath
- * @return {!Array<!google.maps.LatLng>}
- */
-google.maps.geometry.encoding.decodePath = function(encodedPath) {};
-
-/**
- * Encodes a sequence of LatLngs into an encoded path string.
- * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|!google.maps.MVCArray<!google.maps.LatLng|!google.maps.LatLngLiteral>}
- *     path
- * @return {string}
- */
-google.maps.geometry.encoding.encodePath = function(path) {};
 
 /**
  * @const
@@ -20334,7 +20334,7 @@ google.maps.places.Review.prototype.textLanguageCode;
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLInputElement} inputField
- * @param {?google.maps.places.SearchBoxOptions=} opts
+ * @param {(!google.maps.places.SearchBoxOptions|null)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -20356,7 +20356,8 @@ google.maps.places.SearchBox.prototype.getPlaces = function() {};
 /**
  * Sets the region to use for biasing query predictions. Results will only be
  * biased towards this area and not be completely restricted to it.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null} bounds
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null}
+ *     bounds
  * @return {undefined}
  */
 google.maps.places.SearchBox.prototype.setBounds = function(bounds) {};
