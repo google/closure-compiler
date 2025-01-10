@@ -188,10 +188,13 @@ IDBRequest.prototype.source; // readonly
 /** @type {?IDBTransaction} */
 IDBRequest.prototype.transaction; // readonly
 
-
+// Note: ?IDBDatabase is used as the type argument here in order to honor the
+// fact that IDBFactory#deleteDatabase will always return with a null result.
+// As of TS 5.7 the corresponding .d.ts declaration is incorrect as it does not
+// allow for null.
 /**
  * @constructor
- * @extends {IDBRequest}
+ * @extends {IDBRequest<?IDBDatabase>}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBOpenDBRequest
  */
 function IDBOpenDBRequest() {}
