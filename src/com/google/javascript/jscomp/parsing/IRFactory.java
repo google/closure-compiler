@@ -718,14 +718,17 @@ class IRFactory {
   }
 
   private @Nullable JSDocInfo parseJSDocInfoFrom(Comment comment) {
-    if (comment != null) {
-      JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
-      parsedComments.add(comment);
-      if (!handlePossibleFileOverviewJsDoc(jsDocParser)) {
-        return jsDocParser.retrieveAndResetParsedJSDocInfo();
-      }
+    if (comment == null) {
+      return null;
     }
-    return null;
+    JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
+    parsedComments.add(comment);
+    if (handlePossibleFileOverviewJsDoc(jsDocParser)) {
+      // Returning null here means that the comment was treated as a fileoverview comment, and
+      // JSDocInfo should not then be attached to a specific node, so we return null;
+      return null;
+    }
+    return jsDocParser.retrieveAndResetParsedJSDocInfo();
   }
 
   private @Nullable JSDocInfo parseJSDocInfoOnTree(ParseTree tree) {
