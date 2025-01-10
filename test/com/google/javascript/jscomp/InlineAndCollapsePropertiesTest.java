@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
@@ -3297,5 +3298,40 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             // The indirect call below does not prevent this property collapse
             "var xid$internal_ = function() {};",
             "var xx = ((x ? xid : abc) - def).toExponential(5);"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk() {
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                lines(
+                    "const registry = {};",
+                    "const factories = {};",
+                    "factories.one = function() {};",
+                    "",
+                    "function build() {",
+                    "  const mod = registry.mod;",
+                    "  if (mod) mod();",
+                    "}"))
+            // m2, conditionally loaded after m1
+            .addChunk("registry.mod = factories.one;")
+            .build();
+
+    // TODO - b/385132629: don't inline the definition of registry.mod into build(). If the mod
+    // chunk is not loaded, then registry.mod will be undefined when build() is called, so it's
+    // wrong to always call `factories$one` in build().
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            lines(
+                "var factories$one = function() {};",
+                "",
+                "function build() {",
+                "  const mod = null;",
+                "  if (factories$one) factories$one();",
+                "}"),
+            "var registry$mod = null;"));
   }
 }
