@@ -625,7 +625,7 @@ class InlineVariables implements CompilerPass {
     }
 
     /** Indicates that the analyzed variable may be inlined. */
-    private class PositiveInlineVarAnalysis extends InlineVarAnalysis {
+    private static class PositiveInlineVarAnalysis extends InlineVarAnalysis {
       private final Runnable inliner;
 
       private PositiveInlineVarAnalysis(Runnable inliner) {
@@ -657,7 +657,7 @@ class InlineVariables implements CompilerPass {
      * Indicates that the analyzed variable is an alias and the decision about whether to inline it
      * must wait until inlining has been done (or not) for the original value it aliases.
      */
-    private class VarIsAliasAnalysis extends InlineVarAnalysis {
+    private static class VarIsAliasAnalysis extends InlineVarAnalysis {
       private final Var aliasedVar;
 
       private VarIsAliasAnalysis(Var aliasedVar) {
@@ -723,7 +723,7 @@ class InlineVariables implements CompilerPass {
     }
 
     /** Used to initialize fields in a `StandardVarExpert` object. */
-    private class VarExpertInitData {
+    private static class VarExpertInitData {
 
       Var v;
       ReferenceCollection referenceInfo;

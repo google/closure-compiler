@@ -783,7 +783,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       return astFactory.createName(loopObject.name, type(StandardColors.TOP_OBJECT));
     }
 
-    private class LoopObject {
+    private static class LoopObject {
 
       /**
        * The name of the variable having the loop's internal variables as properties, and the label

@@ -942,7 +942,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return directAssignments < 2 && (exports.isEmpty() || moduleExports.isEmpty());
     }
 
-    private class UmdTestInfo {
+    private static class UmdTestInfo {
       public final Node enclosingIf;
       public final Node activeBranch;
 

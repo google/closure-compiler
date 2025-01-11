@@ -630,7 +630,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private final ArrayDeque<FunctionStackEntry> functionScopeStack =
         new ArrayDeque<>(ImmutableList.of(new FunctionStackEntry(null)));
 
-    final class FunctionStackEntry {
+    static final class FunctionStackEntry {
       final Node root;
       final LinkedHashSet<Var> skiplistedVars = new LinkedHashSet<>();
       final LinkedHashSet<Var> taintedVars = new LinkedHashSet<>();

@@ -1069,7 +1069,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     /** Finds the only YIELD node in a tree. */
-    private class YieldFinder extends NodeTraversal.AbstractPreOrderCallback {
+    private static class YieldFinder extends NodeTraversal.AbstractPreOrderCallback {
 
       private Node yieldNode;
 
@@ -2205,7 +2205,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Reprasents a catch case that is used by try/catch transpilation */
-      class CatchCase {
+      static class CatchCase {
         final Case catchCase;
 
         /**
@@ -2220,7 +2220,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Stores "break" and "continue" case sections assosiated with a label. */
-      class LabelCases {
+      static class LabelCases {
 
         final Case breakCase;
 

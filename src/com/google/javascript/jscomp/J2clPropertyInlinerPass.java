@@ -77,7 +77,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       new InlinePropertiesPass(result).run();
     }
 
-    private abstract class J2clProperty {
+    private abstract static class J2clProperty {
       final Node getKey;
       final Node setKey;
       boolean isSafeToInline;
@@ -382,7 +382,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       }
     }
 
-    private class DetermineInlinableProperties extends AbstractPostOrderCallback {
+    private static class DetermineInlinableProperties extends AbstractPostOrderCallback {
       private final Map<String, J2clProperty> propertiesByName;
 
       DetermineInlinableProperties(Map<String, J2clProperty> allGetterSetters) {

@@ -489,7 +489,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
 
     /** Variable that doesn't cross chunk boundaries. */
-    private class ChunkGlobal {
+    private static class ChunkGlobal {
       final Node root;
       final Node name;
 

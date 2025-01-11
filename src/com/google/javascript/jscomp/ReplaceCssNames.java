@@ -292,7 +292,7 @@ class ReplaceCssNames implements CompilerPass {
           cssClosureClassesQualifiedName);
     }
 
-    private class SassGeneratedCssTsExpert {
+    private static class SassGeneratedCssTsExpert {
       public final boolean hasSassGeneratedCssTsJsDoc;
       public final JSError sassGeneratedCssTsValidationError;
       public final boolean isCssClosureClassesAssignment;
@@ -310,7 +310,7 @@ class ReplaceCssNames implements CompilerPass {
       }
     }
 
-    private class TraversalState {
+    private static class TraversalState {
       public boolean inSassGeneratedCssTsScript;
       public String cssClosureClassesQualifiedName;
     }
