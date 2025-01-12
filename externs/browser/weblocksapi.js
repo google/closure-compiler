@@ -16,7 +16,7 @@
 /**
  * @fileoverview Definitions for objects in the Web Locks API. Details of the
  * API are at:
- * https://wicg.github.io/web-locks/
+ * @see https://w3c.github.io/web-locks/
  *
  * @externs
  * @author ohsnapitscolin@google.com (Colin Dunn)
@@ -25,21 +25,27 @@
 /**
  * Possible values are "shared" and "exclusive".
  * @typedef {string}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#enumdef-lockmode
  */
 var LockMode;
 
 
 /**
  * @interface
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#lock
  */
 function Lock() {}
 
-/** @const {string} */
+/**
+ * @const {string}
+ * @see https://w3c.github.io/web-locks/#lock-concept-name
+ */
 Lock.prototype.name;
 
-/** @const {!LockMode} */
+/**
+ * @const {!LockMode}
+ * @see https://w3c.github.io/web-locks/#lock-concept-mode
+ */
 Lock.prototype.mode;
 
 
@@ -49,7 +55,7 @@ Lock.prototype.mode;
  *   mode: !LockMode,
  *   clientId: string
  * }}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#dictdef-lockinfo
  */
 var LockInfo;
 
@@ -61,7 +67,7 @@ var LockInfo;
  *   steal: (boolean|undefined),
  *   signal: (!AbortSignal|undefined)
  * }}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#dictdef-lockoptions
  */
 var LockOptions;
 
@@ -71,24 +77,26 @@ var LockOptions;
  *   held: !Array<!LockInfo>,
  *   pending: !Array<!LockInfo>
  * }}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#dictdef-lockmanagersnapshot
  */
 var LockManagerSnapshot;
 
 
 /**
  * @typedef {(function(?Lock) : !Promise<*>)}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#callbackdef-lockgrantedcallback
  */
 var LockGrantedCallback;
 
 
 /**
  * @interface
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#lockmanager
  */
 function LockManager() {}
+
 /**
+ * @see https://w3c.github.io/web-locks/#dom-lockmanager-request
  * @param {string} name
  * @param {(!LockOptions|!LockGrantedCallback)} optionsOrCallback
  * @param {!LockGrantedCallback=} callback
@@ -97,6 +105,7 @@ function LockManager() {}
 LockManager.prototype.request = function(name, optionsOrCallback, callback) {};
 
 /**
+ * @see https://w3c.github.io/web-locks/#dom-lockmanager-query
  * @return {!Promise<!LockManagerSnapshot>}
  */
 LockManager.prototype.query = function() {};
@@ -104,13 +113,13 @@ LockManager.prototype.query = function() {};
 
 /**
  * @type {!LockManager}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#lockmanager
  */
 Navigator.prototype.locks;
 
 
 /**
  * @type {!LockManager}
- * [Web Locks API Spec](https://wicg.github.io/web-locks/#idl-index)
+ * @see https://w3c.github.io/web-locks/#lockmanager
  */
 WorkerNavigator.prototype.locks;
