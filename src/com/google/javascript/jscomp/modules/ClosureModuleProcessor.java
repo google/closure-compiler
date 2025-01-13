@@ -189,9 +189,9 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     private void reportInvalidDestructuringRequire(
         UnresolvedModule requested, Import importRecord) {
       String additionalInfo = "";
-      if (requested instanceof UnresolvedGoogModule) {
+      if (requested instanceof UnresolvedGoogModule unresolvedGoogModule) {
         // Detect some edge cases and given more helpful error messages.
-        ImmutableMap<String, Binding> exports = ((UnresolvedGoogModule) requested).namespace;
+        ImmutableMap<String, Binding> exports = unresolvedGoogModule.namespace;
         if (exports.containsKey(Export.NAMESPACE)) {
           // Can't use destructuring imports on a goog.module with a default export like
           //   exports = class {

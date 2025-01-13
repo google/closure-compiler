@@ -566,7 +566,7 @@ public final class CompileTask
       String key, Object value) {
     boolean success = false;
 
-    if (value instanceof String) {
+    if (value instanceof String string) {
       final boolean isTrue = "true".equals(value);
       final boolean isFalse = "false".equals(value);
 
@@ -574,23 +574,23 @@ public final class CompileTask
         options.setDefineToBooleanLiteral(key, isTrue);
       } else {
         try {
-          double dblTemp = Double.parseDouble((String) value);
+          double dblTemp = Double.parseDouble(string);
           options.setDefineToDoubleLiteral(key, dblTemp);
         } catch (NumberFormatException nfe) {
           // Not a number, assume string
-          options.setDefineToStringLiteral(key, (String) value);
+          options.setDefineToStringLiteral(key, string);
         }
       }
 
       success = true;
-    } else if (value instanceof Boolean) {
-      options.setDefineToBooleanLiteral(key, (Boolean) value);
+    } else if (value instanceof Boolean b) {
+      options.setDefineToBooleanLiteral(key, b);
       success = true;
-    } else if (value instanceof Integer) {
-      options.setDefineToNumberLiteral(key, (Integer) value);
+    } else if (value instanceof Integer i) {
+      options.setDefineToNumberLiteral(key, i);
       success = true;
-    } else if (value instanceof Double) {
-      options.setDefineToDoubleLiteral(key, (Double) value);
+    } else if (value instanceof Double d) {
+      options.setDefineToDoubleLiteral(key, d);
       success = true;
     }
 
@@ -706,16 +706,14 @@ public final class CompileTask
     long lastModified = 0;
 
     for (Object entry : fileLists) {
-      if (entry instanceof FileList) {
-        FileList list = (FileList) entry;
+      if (entry instanceof FileList list) {
 
         for (String fileName : list.getFiles(this.getProject())) {
           File path = list.getDir(this.getProject());
           File file = new File(path, fileName);
           lastModified = max(getLastModifiedTime(file), lastModified);
         }
-      } else if (entry instanceof Path) {
-        Path path = (Path) entry;
+      } else if (entry instanceof Path path) {
         for (String src : path.list()) {
           File file = new File(src);
           lastModified = max(getLastModifiedTime(file), lastModified);

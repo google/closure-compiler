@@ -84,8 +84,8 @@ public class TranspilationException extends RuntimeException {
   }
 
   private static @Nullable TranspilationException tryCastToTranspilationException(Throwable t) {
-    if (t instanceof TranspilationException) {
-      return (TranspilationException) t;
+    if (t instanceof TranspilationException transpilationException) {
+      return transpilationException;
     }
     return null;
   }

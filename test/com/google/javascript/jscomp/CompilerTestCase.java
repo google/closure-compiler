@@ -1347,11 +1347,11 @@ public abstract class CompilerTestCase {
 
     CompilerOptions options = getOptions();
 
-    if (inputs instanceof FlatSources) {
+    if (inputs instanceof FlatSources flatSources) {
       // TODO(bradfordcsmith): Why do we set this only for the non-module case?
       //     I extracted this method from testInternal().
       options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
-      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+      compiler.init(externs.externs, flatSources.sources, options);
     } else {
       compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
@@ -2002,8 +2002,8 @@ public abstract class CompilerTestCase {
       Externs externs, Sources inputs, Expected expectedExtern, Diagnostic... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
-    if (inputs instanceof FlatSources) {
-      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+    if (inputs instanceof FlatSources flatSources) {
+      compiler.init(externs.externs, flatSources.sources, options);
     } else {
       compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
@@ -2290,10 +2290,10 @@ public abstract class CompilerTestCase {
   }
 
   private static Expected fromSources(Sources srcs) {
-    if (srcs instanceof FlatSources) {
-      return expected(((FlatSources) srcs).sources);
-    } else if (srcs instanceof ChunkSources) {
-      ChunkSources modules = ((ChunkSources) srcs);
+    if (srcs instanceof FlatSources flatSources) {
+      return expected(flatSources.sources);
+    } else if (srcs instanceof ChunkSources chunkSources) {
+      ChunkSources modules = chunkSources;
       return expected(modules.chunks.toArray(new JSChunk[0]));
     } else {
       throw new IllegalStateException("unexpected");

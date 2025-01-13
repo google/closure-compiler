@@ -2350,11 +2350,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     ctorType = ctorType.restrictByNotNullOrUndefined();
 
     FunctionType ctorFnType = ctorType.toMaybeFunctionType();
-    if (ctorFnType == null && ctorType instanceof FunctionType) {
+    if (ctorFnType == null && ctorType instanceof FunctionType functionType) {
       // If ctorType is a NoObjectType, then toMaybeFunctionType will
       // return null. But NoObjectType implements the FunctionType
       // interface, precisely because it can validly construct objects.
-      ctorFnType = (FunctionType) ctorType;
+      ctorFnType = functionType;
     }
 
     if (ctorFnType == null || !ctorFnType.isConstructor()) {

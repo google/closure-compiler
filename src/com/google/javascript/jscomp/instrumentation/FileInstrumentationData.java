@@ -62,8 +62,7 @@ class FileInstrumentationData {
 
     @Override
     public boolean equals(Object object) {
-      if (object instanceof BranchIndexPair) {
-        BranchIndexPair that = (BranchIndexPair) object;
+      if (object instanceof BranchIndexPair that) {
         return this.getLine() == that.getLine() && this.getBranch() == that.getBranch();
       }
       return false;

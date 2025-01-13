@@ -40,8 +40,8 @@ public class TimelineTest {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof Event) {
-        return ((Event) obj).hashcode == hashcode;
+      if (obj instanceof Event event) {
+        return event.hashcode == hashcode;
       }
       return false;
     }

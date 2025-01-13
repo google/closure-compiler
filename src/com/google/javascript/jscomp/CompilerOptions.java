@@ -1437,12 +1437,12 @@ public class CompilerOptions implements Serializable {
     for (Map.Entry<String, Object> entry : this.defineReplacements.entrySet()) {
       String name = entry.getKey();
       Object value = entry.getValue();
-      if (value instanceof Boolean) {
-        map.put(name, NodeUtil.booleanNode(((Boolean) value).booleanValue()));
-      } else if (value instanceof Number) {
-        map.put(name, NodeUtil.numberNode(((Number) value).doubleValue(), null));
-      } else if (value instanceof String) {
-        map.put(name, IR.string((String) value));
+      if (value instanceof Boolean b) {
+        map.put(name, NodeUtil.booleanNode(b.booleanValue()));
+      } else if (value instanceof Number number) {
+        map.put(name, NodeUtil.numberNode(number.doubleValue(), null));
+      } else if (value instanceof String string) {
+        map.put(name, IR.string(string));
       } else {
         throw new IllegalStateException(String.valueOf(value));
       }

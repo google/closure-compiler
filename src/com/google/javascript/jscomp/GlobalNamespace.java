@@ -283,8 +283,7 @@ class GlobalNamespace
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof AstChange) {
-        AstChange other = (AstChange) obj;
+      if (obj instanceof AstChange other) {
         return Objects.equals(this.scope, other.scope) && Objects.equals(this.node, other.node);
       }
       return false;
@@ -1392,9 +1391,8 @@ class GlobalNamespace
       if (this.refsForNode == null) {
         return;
       }
-      if (this.refsForNode instanceof Ref) {
-        checkState(
-            ((Ref) this.refsForNode).node != node, "Ref already exists for node: %s", refsForNode);
+      if (this.refsForNode instanceof Ref ref) {
+        checkState(ref.node != node, "Ref already exists for node: %s", refsForNode);
         return;
       }
       Ref refForNode = castRefsForNodeMap().get(node);
@@ -1658,8 +1656,8 @@ class GlobalNamespace
       if (refsForNode == null) {
         return ImmutableSet.of();
       }
-      if (refsForNode instanceof Ref) {
-        return ImmutableSet.of((Ref) refsForNode);
+      if (refsForNode instanceof Ref ref) {
+        return ImmutableSet.of(ref);
       }
       return castRefsForNodeMap().values();
     }
@@ -1675,8 +1673,7 @@ class GlobalNamespace
       if (refsForNode == null) {
         return null;
       }
-      if (refsForNode instanceof Ref) {
-        Ref ref = (Ref) refsForNode;
+      if (refsForNode instanceof Ref ref) {
         return ref.getNode() == node ? ref : null;
       }
       return castRefsForNodeMap().get(node);
@@ -1684,8 +1681,8 @@ class GlobalNamespace
 
     Ref getFirstRef() {
       checkNotNull(refsForNode, "no first Ref to get");
-      if (refsForNode instanceof Ref) {
-        return (Ref) refsForNode;
+      if (refsForNode instanceof Ref ref) {
+        return ref;
       }
       return castRefsForNodeMap().values().iterator().next();
     }

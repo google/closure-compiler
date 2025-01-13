@@ -2063,9 +2063,9 @@ class IRFactory {
           previous.addChildToFront(current);
         }
 
-        if (exprTree.left instanceof BinaryOperatorTree) {
+        if (exprTree.left instanceof BinaryOperatorTree binaryOperatorTree) {
           // continue with the left hand child
-          exprTree = (BinaryOperatorTree) exprTree.left;
+          exprTree = binaryOperatorTree;
         } else {
           // Finish things off, add the left operand to the current node.
           Node leftNode = transform(exprTree.left);

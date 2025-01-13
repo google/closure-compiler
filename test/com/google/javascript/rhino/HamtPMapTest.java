@@ -457,8 +457,7 @@ public class HamtPMapTest {
 
     @Override
     public boolean equals(Object o) {
-      if (o instanceof IntegerWithCustomHashCode) {
-        IntegerWithCustomHashCode that = (IntegerWithCustomHashCode) o;
+      if (o instanceof IntegerWithCustomHashCode that) {
         return i.equals(that.i);
       }
       return false;

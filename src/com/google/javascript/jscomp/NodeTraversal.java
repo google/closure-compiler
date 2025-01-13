@@ -200,8 +200,7 @@ public class NodeTraversal {
       ControlFlowGraph<Node> result;
       Object o = cfgs.peek();
       checkState(o != null);
-      if (o instanceof Node) {
-        Node cfgRoot = (Node) o;
+      if (o instanceof Node cfgRoot) {
         result =
             ControlFlowAnalysis.builder()
                 .setCompiler(compiler)
@@ -755,15 +754,15 @@ public class NodeTraversal {
 
       @Override
       public void enterScope(NodeTraversal t) {
-        if (insideScopeNode && cb instanceof ScopedCallback) {
-          ((ScopedCallback) cb).enterScope(t);
+        if (insideScopeNode && cb instanceof ScopedCallback scopedCallback) {
+          scopedCallback.enterScope(t);
         }
       }
 
       @Override
       public void exitScope(NodeTraversal t) {
-        if (insideScopeNode && cb instanceof ScopedCallback) {
-          ((ScopedCallback) cb).exitScope(t);
+        if (insideScopeNode && cb instanceof ScopedCallback scopedCallback) {
+          scopedCallback.exitScope(t);
         }
       }
     }
@@ -1234,10 +1233,10 @@ public class NodeTraversal {
   private AbstractScope<?, ?> getAbstractScope(int rootDepth) {
 
     Object o = scopes.get(rootDepth);
-    if (o instanceof Node) {
+    if (o instanceof Node node) {
       // The root scope has a null parent.
       AbstractScope<?, ?> parentScope = (rootDepth > 0) ? getAbstractScope(rootDepth - 1) : null;
-      AbstractScope<?, ?> scope = scopeCreator.createScope((Node) o, parentScope);
+      AbstractScope<?, ?> scope = scopeCreator.createScope(node, parentScope);
       scopes.set(rootDepth, scope);
       return scope;
     } else {

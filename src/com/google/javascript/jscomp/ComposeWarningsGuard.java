@@ -84,8 +84,7 @@ public final class ComposeWarningsGuard extends WarningsGuard {
   }
 
   void addGuard(WarningsGuard guard) {
-    if (guard instanceof ComposeWarningsGuard) {
-      ComposeWarningsGuard composeGuard = (ComposeWarningsGuard) guard;
+    if (guard instanceof ComposeWarningsGuard composeGuard) {
       if (composeGuard.demoteErrors) {
         this.demoteErrors = composeGuard.demoteErrors;
       }

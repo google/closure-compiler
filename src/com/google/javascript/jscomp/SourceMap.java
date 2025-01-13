@@ -123,9 +123,9 @@ public final class SourceMap {
 
     @Override
     public boolean equals(Object other) {
-      if (other instanceof PrefixLocationMapping) {
-        return ((PrefixLocationMapping) other).prefix.equals(prefix)
-            && ((PrefixLocationMapping) other).replacement.equals(replacement);
+      if (other instanceof PrefixLocationMapping prefixLocationMapping) {
+        return prefixLocationMapping.prefix.equals(prefix)
+            && prefixLocationMapping.replacement.equals(replacement);
       } else {
         return false;
       }

@@ -1469,8 +1469,8 @@ public final class ConformanceRules {
           rule = (Rule) (ctor.newInstance(compiler, requirement));
         } catch (InvocationTargetException e) {
           Throwable cause = e.getCause();
-          if (cause instanceof InvalidRequirementSpec) {
-            throw (InvalidRequirementSpec) cause;
+          if (cause instanceof InvalidRequirementSpec invalidRequirementSpec) {
+            throw invalidRequirementSpec;
           }
           throw new RuntimeException(cause);
         }

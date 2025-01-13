@@ -387,8 +387,7 @@ public final class DataFlowAnalysisTest {
 
     @Override
     public boolean equals(Object other) {
-      if (other instanceof ConstPropLatticeElement) {
-        ConstPropLatticeElement otherLattice = (ConstPropLatticeElement) other;
+      if (other instanceof ConstPropLatticeElement otherLattice) {
         return (this.isTop == otherLattice.isTop) && this.constMap.equals(otherLattice.constMap);
       }
       return false;

@@ -69,8 +69,7 @@ public final class CheckMissingSemicolon extends AbstractPostOrderCallback imple
 
   private void checkSemicolon(NodeTraversal t, Node n) {
     StaticSourceFile staticSourceFile = n.getStaticSourceFile();
-    if (staticSourceFile instanceof SourceFile) {
-      SourceFile sourceFile = (SourceFile) staticSourceFile;
+    if (staticSourceFile instanceof SourceFile sourceFile) {
 
       String code;
       try {

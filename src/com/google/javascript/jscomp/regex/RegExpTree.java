@@ -1108,8 +1108,7 @@ public abstract class RegExpTree {
       }
       int min = this.min;
       int max = this.max;
-      if (body instanceof Repetition) {
-        Repetition rbody = (Repetition) body;
+      if (body instanceof Repetition rbody) {
         if (rbody.greedy == greedy) {
           long lmin = ((long) min) * rbody.min;
           long lmax = ((long) max) * rbody.max;
@@ -1298,8 +1297,8 @@ public abstract class RegExpTree {
       List<RegExpTree> alternatives = new ArrayList<>();
       for (RegExpTree alternative : this.alternatives) {
         alternative = alternative.simplify(flags);
-        if (alternative instanceof Alternation) {
-          alternatives.addAll(((Alternation) alternative).alternatives);
+        if (alternative instanceof Alternation alternation) {
+          alternatives.addAll(alternation.alternatives);
         } else {
           alternatives.add(alternative);
         }
@@ -1340,14 +1339,13 @@ public abstract class RegExpTree {
             CharRanges ieExplicits = CharRanges.EMPTY;
             List<RegExpTree> charAlternatives = alternatives.subList(i, end);
             for (RegExpTree charAlternative : charAlternatives) {
-              if (charAlternative instanceof Text) {
-                char ch = ((Text) charAlternative).text.charAt(0);
+              if (charAlternative instanceof Text text) {
+                char ch = text.text.charAt(0);
                 members[memberIdx++] = ch;
                 if (IE_SPEC_ERRORS.contains(ch)) {
                   ieExplicits = ieExplicits.union(CharRanges.inclusive(ch, ch));
                 }
-              } else if (charAlternative instanceof Charset) {
-                Charset cs = (Charset) charAlternative;
+              } else if (charAlternative instanceof Charset cs) {
                 chars = chars.union(cs.ranges);
                 ieExplicits = ieExplicits.union(cs.ieExplicits);
               }
@@ -2126,8 +2124,8 @@ public abstract class RegExpTree {
         final List<RegExpTree> simplified = new ArrayList<>();
 
         void simplify(RegExpTree t) {
-          if (t instanceof Concatenation) {
-            for (RegExpTree child : ((Concatenation) t).elements) {
+          if (t instanceof Concatenation concatenation) {
+            for (RegExpTree child : concatenation.elements) {
               simplify(child);
             }
           } else if (t instanceof Empty) {

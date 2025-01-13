@@ -52,8 +52,8 @@ final class Timeline<T> {
 
     @Override
     public boolean equals(Object anObject) {
-      if (anObject instanceof Time) {
-        return name.equals(((Time) anObject).name);
+      if (anObject instanceof Time time) {
+        return name.equals(time.name);
       }
       return false;
     }

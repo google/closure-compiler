@@ -121,10 +121,10 @@ public class CrossChunkMethodMotion implements CompilerPass {
       Iterator<Symbol> declarations = nameInfo.getDeclarations().descendingIterator();
       while (declarations.hasNext()) {
         Symbol symbol = declarations.next();
-        if (symbol instanceof PrototypeProperty) {
-          tryToMovePrototypeMethod(nameInfo, deepestCommonModuleRef, (PrototypeProperty) symbol);
-        } else if (symbol instanceof ClassMemberFunction) {
-          tryToMoveMemberFunction(nameInfo, deepestCommonModuleRef, (ClassMemberFunction) symbol);
+        if (symbol instanceof PrototypeProperty prototypeProperty) {
+          tryToMovePrototypeMethod(nameInfo, deepestCommonModuleRef, prototypeProperty);
+        } else if (symbol instanceof ClassMemberFunction classMemberFunction) {
+          tryToMoveMemberFunction(nameInfo, deepestCommonModuleRef, classMemberFunction);
         } // else it's a variable definition, and we don't move those.
       }
     }
@@ -554,8 +554,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
 
   static boolean hasUnmovableRedeclaration(NameInfo nameInfo, Property prop) {
     for (Symbol symbol : nameInfo.getDeclarations()) {
-      if (symbol instanceof Property) {
-        Property otherProp = (Property) symbol;
+      if (symbol instanceof Property otherProp) {
         // It is possible to do better here if the dependencies are well defined
         // but redefinitions are usually in optional chunks so it isn't likely
         // worth the effort to check.

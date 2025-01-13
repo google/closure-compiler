@@ -3375,8 +3375,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // Named types are usually @typedefs. For such types we need to check underlying type specified
     // in @typedef annotation.
-    if (type instanceof NamedType) {
-      return isReasonableObjectPropertyKey(((NamedType) type).getReferencedType());
+    if (type instanceof NamedType namedType) {
+      return isReasonableObjectPropertyKey(namedType.getReferencedType());
     }
 
     // For union type every alternate must be stringifiable.

@@ -1148,10 +1148,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 stringWriter,
                 null,
                 (optionHandler) -> {
-                  if (optionHandler.option instanceof NamedOptionDef) {
+                  if (optionHandler.option instanceof NamedOptionDef namedOptionDef) {
                     return !optionHandler.option.hidden()
-                        && optionName.equals(
-                            ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
+                        && optionName.equals(namedOptionDef.name().replaceFirst("^--", ""));
                   }
                   return false;
                 });
@@ -1179,10 +1178,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
               outputStream,
               null,
               (optionHandler) -> {
-                if (optionHandler.option instanceof NamedOptionDef) {
+                if (optionHandler.option instanceof NamedOptionDef namedOptionDef) {
                   return !optionHandler.option.hidden()
-                      && options.contains(
-                          ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
+                      && options.contains(namedOptionDef.name().replaceFirst("^--", ""));
                 }
                 return false;
               });

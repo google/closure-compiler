@@ -1117,11 +1117,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   private static void closeAppendable(Appendable output) throws IOException {
-    if (output instanceof Flushable) {
-      ((Flushable) output).flush();
+    if (output instanceof Flushable flushable) {
+      flushable.flush();
     }
-    if (output instanceof Closeable) {
-      ((Closeable) output).close();
+    if (output instanceof Closeable closeable) {
+      closeable.close();
     }
   }
 

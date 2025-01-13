@@ -573,8 +573,8 @@ public final class SimpleFormat {
     int length = source.length();
     if (precision >= 0) {
       length = min(length, precision);
-      if (source instanceof StringBuilder) {
-        ((StringBuilder) source).setLength(length);
+      if (source instanceof StringBuilder stringBuilder) {
+        stringBuilder.setLength(length);
       } else {
         source = source.subSequence(0, length);
       }
@@ -633,14 +633,14 @@ public final class SimpleFormat {
     char currentConversionType = formatToken.getConversionType();
 
     long value;
-    if (arg instanceof Long) {
-      value = ((Long) arg).longValue();
-    } else if (arg instanceof Integer) {
-      value = ((Integer) arg).longValue();
-    } else if (arg instanceof Short) {
-      value = ((Short) arg).longValue();
-    } else if (arg instanceof Byte) {
-      value = ((Byte) arg).longValue();
+    if (arg instanceof Long l) {
+      value = l.longValue();
+    } else if (arg instanceof Integer i) {
+      value = i.longValue();
+    } else if (arg instanceof Short s) {
+      value = s.longValue();
+    } else if (arg instanceof Byte b) {
+      value = b.longValue();
     } else {
       throw badArgumentType();
     }
@@ -742,8 +742,8 @@ public final class SimpleFormat {
     // this is a total hack... as we don't care...
     Date date = null;
     {
-      if (arg instanceof Long) {
-        date = new Date(((Long) arg).longValue());
+      if (arg instanceof Long l) {
+        date = new Date(l.longValue());
       } else if (arg instanceof Date) {
         date = (Date) arg;
       } else {

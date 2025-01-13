@@ -2368,22 +2368,22 @@ public final class SymbolTable {
   }
 
   private @Nullable JSType getType(StaticSlot sym) {
-    if (sym instanceof StaticTypedSlot) {
-      return ((StaticTypedSlot) sym).getType();
+    if (sym instanceof StaticTypedSlot staticTypedSlot) {
+      return staticTypedSlot.getType();
     }
     return null;
   }
 
   private @Nullable JSType getTypeOfThis(StaticScope s) {
-    if (s instanceof StaticTypedScope) {
-      return ((StaticTypedScope) s).getTypeOfThis();
+    if (s instanceof StaticTypedScope staticTypedScope) {
+      return staticTypedScope.getTypeOfThis();
     }
     return null;
   }
 
   private boolean isTypeInferred(StaticSlot sym) {
-    if (sym instanceof StaticTypedSlot) {
-      return ((StaticTypedSlot) sym).isTypeInferred();
+    if (sym instanceof StaticTypedSlot staticTypedSlot) {
+      return staticTypedSlot.isTypeInferred();
     }
     return true;
   }
