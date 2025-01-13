@@ -465,7 +465,8 @@ public final class NodeTraversalTest {
         tree // script
             .getFirstChild() // function
             .getLastChild() // function body
-            .getSecondChild(); // switch (first child is var b)
+            .getSecondChild() // switch (first child is var b)
+            .getSecondChild(); // switch block
 
     Scope blockScope = creator.createScope(innerBlock, topScope);
     callback.expect(innerBlock, innerBlock);

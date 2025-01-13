@@ -656,7 +656,7 @@ public class NodeTraversal {
         }
         break;
       case BLOCK:
-      case SWITCH:
+      case SWITCH_BODY:
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 

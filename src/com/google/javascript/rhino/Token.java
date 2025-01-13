@@ -148,6 +148,7 @@ public enum Token {
 
   ROOT, // Used only for the 3 root nodes of the AST: externsRoot, jsRoot, and externsAndJsRoot
   BLOCK, // statement block
+  SWITCH_BODY, // holds case statements within a switch
   LABEL, // label
   EXPR_RESULT, // expression statement in scripts
   SCRIPT, // top-level node for entire script
@@ -293,7 +294,7 @@ public enum Token {
       case SCRIPT:
       case STAR:
       case STRING_KEY:
-      case SWITCH:
+      case SWITCH_BODY:
       case TEMPLATELIT:
       case TRY:
       case VAR:
@@ -392,6 +393,7 @@ public enum Token {
       case NE:
       case OR:
       case RSH:
+      case SWITCH:
       case SHEQ:
       case SHNE:
       case SUB:

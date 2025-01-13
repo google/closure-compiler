@@ -2552,8 +2552,11 @@ class IRFactory {
 
     Node processSwitchStatement(SwitchStatementTree statementNode) {
       Node node = newNode(Token.SWITCH, transform(statementNode.expression));
+      Node switchBody = newNode(Token.SWITCH_BODY);
+      setSourceInfo(switchBody, statementNode);
+      node.addChildToBack(switchBody);
       for (ParseTree child : statementNode.caseClauses) {
-        node.addChildToBack(transform(child));
+        switchBody.addChildToBack(transform(child));
       }
       return node;
     }

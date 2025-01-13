@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -721,34 +722,44 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   public void testOldJsdocSwitch2() {
     Node root = parse("switch (x) { /** don't attach */ case 1: ; }");
     Node sw = root.getFirstChild();
-    assertThat(sw.getSecondChild().getJSDocInfo()).isNull();
+    Node caseNode = sw.getSecondChild().getFirstChild();
+    checkState(caseNode.isCase(), caseNode);
+    assertThat(caseNode.getJSDocInfo()).isNull();
   }
 
   @Test
   public void testOldJsdocSwitch3() {
     Node root = parse("switch (x) { case /** attach */ 1: ; }");
     Node sw = root.getFirstChild();
-    assertThat(sw.getSecondChild().getFirstChild().getJSDocInfo()).isNotNull();
+    Node numberNode = sw.getSecondChild().getFirstFirstChild();
+    checkState(numberNode.isNumber(), numberNode);
+    assertThat(numberNode.getJSDocInfo()).isNotNull();
   }
 
   @Test
   public void testOldJsdocSwitch4() {
     Node root = parse("switch (x) { case 1: /** don't attach */ {}; }");
     Node sw = root.getFirstChild();
-    assertThat(sw.getSecondChild().getLastChild().getJSDocInfo()).isNull();
+    Node caseBlock = sw.getSecondChild().getOnlyChild().getLastChild();
+    checkState(caseBlock.isBlock(), caseBlock);
+    assertThat(caseBlock.getJSDocInfo()).isNull();
   }
 
   @Test
   public void testOldJsdocSwitch5() {
     Node root = parse("switch (x) { default: /** don't attach */ {}; }");
     Node sw = root.getFirstChild();
-    assertThat(sw.getSecondChild().getLastChild().getJSDocInfo()).isNull();
+    Node defaultBlock = sw.getSecondChild().getOnlyChild().getLastChild();
+    checkState(defaultBlock.isBlock(), defaultBlock);
+    assertThat(defaultBlock.getJSDocInfo()).isNull();
   }
 
   @Test
   public void testOldJsdocSwitch6() {
     Node root = parse("switch (x) { case 1: /** don't attach */ }");
     Node sw = root.getFirstChild();
+    Node caseBlock = sw.getSecondChild().getOnlyChild().getLastChild();
+    checkState(caseBlock.isBlock(), caseBlock);
     assertThat(sw.getSecondChild().getLastChild().getJSDocInfo()).isNull();
   }
 
@@ -758,7 +769,8 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
         parse(
             "switch (x) {" + "  case 1: " + "    /** attach */ y;" + "    /** attach */ z;" + "}");
     Node sw = root.getFirstChild();
-    Node caseBody = sw.getSecondChild().getLastChild();
+    Node caseBody = sw.getSecondChild().getLastChild().getLastChild();
+    checkState(caseBody.isBlock(), caseBody);
     assertThat(caseBody.getFirstFirstChild().getJSDocInfo()).isNotNull();
     assertThat(caseBody.getSecondChild().getFirstChild().getJSDocInfo()).isNotNull();
   }

@@ -800,6 +800,48 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInlineSwitchStatementWithReturns() {
+    test(
+        """
+        function foo(x) {
+          switch (x) {
+            case 1: return 2;
+            case 2: return 3;
+            default: return 4;
+          }
+        }
+        function bar() {
+          const f = foo(x);
+          console.log(f);
+        }
+        bar();
+        """,
+        """
+        {
+          var JSCompiler_inline_result$jscomp$0;
+              {
+                JSCompiler_inline_label_foo_2: {
+                  switch(x) {
+                    case 1:
+                      JSCompiler_inline_result$jscomp$0 = 2;
+                      break JSCompiler_inline_label_foo_2;
+                    case 2:
+                      JSCompiler_inline_result$jscomp$0 = 3;
+                      break JSCompiler_inline_label_foo_2;
+                    default:
+                      JSCompiler_inline_result$jscomp$0 = 4;
+                      break JSCompiler_inline_label_foo_2;
+                  }
+                  JSCompiler_inline_result$jscomp$0 = void 0;
+                }
+              }
+          const f$jscomp$inline_0 = JSCompiler_inline_result$jscomp$0;
+          console.log(f$jscomp$inline_0);
+        }
+        """);
+  }
+
+  @Test
   public void testDontInlineFunctionsWithArgumentsReferencesInArrowFunction() {
     testSame("function foo() { return () => arguments[0]; } foo(1);");
   }

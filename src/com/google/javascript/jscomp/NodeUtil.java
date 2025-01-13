@@ -2450,7 +2450,7 @@ public final class NodeUtil {
       case IF:
       case SWITCH:
       case CASE:
-        return parent.getFirstChild() != n;
+        return parent.getFirstChild() != n; // exclude the condition
       case DEFAULT_CASE:
         return true;
       default:
@@ -2515,7 +2515,7 @@ public final class NodeUtil {
       case FOR_IN:
       case FOR_OF:
       case FOR_AWAIT_OF:
-      case SWITCH:
+      case SWITCH_BODY:
       case CLASS:
         return true;
       default:
@@ -4533,7 +4533,10 @@ public final class NodeUtil {
    * traversing into nested functions, so it will return true for e.g. a BLOCK or SWITCH statement.
    */
   public static boolean isShallowStatementTree(Node n) {
-    return n == null || NodeUtil.isControlStructure(n) || NodeUtil.isStatementBlock(n);
+    return n == null
+        || NodeUtil.isControlStructure(n)
+        || NodeUtil.isStatementBlock(n)
+        || n.isSwitchBody();
   }
 
   /** A predicate for matching statements without exiting the current scope. */

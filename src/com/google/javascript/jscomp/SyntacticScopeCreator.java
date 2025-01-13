@@ -151,7 +151,7 @@ public final class SyntacticScopeCreator implements ScopeCreator {
         case FOR_OF:
         case FOR_AWAIT_OF:
         case FOR_IN:
-        case SWITCH:
+        case SWITCH_BODY:
           scanVars(n, null, scope);
           return;
 

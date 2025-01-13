@@ -146,6 +146,7 @@ public class ControlFlowGraph<N> extends
       case ROOT:
       case SCRIPT:
       case TRY:
+      case SWITCH_BODY:
         return true;
       case FUNCTION:
         // A function node represents the start of a function where the name
@@ -176,11 +177,10 @@ public class ControlFlowGraph<N> extends
         // TODO(user): Investigate how we should handle the case where
         // we have a very complex expression inside the FOR-IN header.
         return n != parent.getFirstChild();
-      case SWITCH:
       case CASE:
       case CATCH:
       case WITH:
-        return n != parent.getFirstChild();
+        return n != parent.getFirstChild(); // exclude the condition
       default:
         return false;
     }

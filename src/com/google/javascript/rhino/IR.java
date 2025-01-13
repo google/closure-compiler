@@ -281,9 +281,11 @@ public class IR {
   public static Node switchNode(Node cond, Node... cases) {
     checkState(mayBeExpression(cond));
     Node switchNode = new Node(Token.SWITCH, cond);
+    Node switchBody = new Node(Token.SWITCH_BODY);
+    switchNode.addChildToBack(switchBody);
     for (Node caseNode : cases) {
       checkState(caseNode.isCase() || caseNode.isDefaultCase());
-      switchNode.addChildToBack(caseNode);
+      switchBody.addChildToBack(caseNode);
     }
     return switchNode;
   }

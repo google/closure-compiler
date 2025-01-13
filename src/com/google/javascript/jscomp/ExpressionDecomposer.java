@@ -924,6 +924,7 @@ class ExpressionDecomposer {
         case BLOCK:
         case LABEL:
         case CASE:
+        case SWITCH_BODY:
         case DEFAULT_CASE:
         case DEFAULT_VALUE:
         case PARAM_LIST:

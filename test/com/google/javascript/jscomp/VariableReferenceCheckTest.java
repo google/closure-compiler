@@ -1058,6 +1058,19 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         EARLY_EXPORTS_REFERENCE);
   }
 
+  @Test
+  public void testReferenceInSwitchCondition_shadowedInSwitchBody() {
+    assertNoWarning(
+        lines(
+            "const x = 0;",
+            "switch (x) {",
+            "  case 0:",
+            "  let x;",
+            "  break;",
+            "  default: break;",
+            "}"));
+  }
+
   /** Expects the JS to generate one bad-read error. */
   private void assertRedeclare(String js) {
     testWarning(js, REDECLARED_VARIABLE);

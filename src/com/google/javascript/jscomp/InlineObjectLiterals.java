@@ -411,9 +411,11 @@ class InlineObjectLiterals implements CompilerPass {
         // Assuming scopeRoot is a BLOCK, then we want to insert at the top of the block, before the
         // first statement.
         vnode = scopeRoot.getFirstChild();
-        // Some scope-creating nodes might not be BLOCK nodes (e.g. SWITCH)
+        // Some scope-creating nodes might not be BLOCK nodes
         if (!NodeUtil.isStatement(vnode) && NodeUtil.isStatement(scopeRoot)) {
           vnode = scopeRoot;
+        } else if (scopeRoot.isSwitchBody()) {
+          vnode = scopeRoot.getParent();
         }
       } else {
         // Find the beginning of the function body / script.

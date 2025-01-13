@@ -50,8 +50,9 @@ public final class CheckDuplicateCase extends AbstractPostOrderCallback implemen
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isSwitch()) {
+      Node switchBody = n.getSecondChild();
       Set<String> cases = new LinkedHashSet<>();
-      for (Node curr = n.getSecondChild(); curr != null; curr = curr.getNext()) {
+      for (Node curr = switchBody.getFirstChild(); curr != null; curr = curr.getNext()) {
         String source = compiler.toSource(curr.getFirstChild());
         if (!cases.add(source)) {
           t.report(curr, DUPLICATE_CASE);

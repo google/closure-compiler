@@ -3629,6 +3629,10 @@ public class Node {
     return this.token == Token.SWITCH;
   }
 
+  public final boolean isSwitchBody() {
+    return this.token == Token.SWITCH_BODY;
+  }
+
   public final boolean isTaggedTemplateLit() {
     return this.token == Token.TAGGED_TEMPLATELIT;
   }

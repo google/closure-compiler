@@ -1300,8 +1300,12 @@ public class CodeGenerator {
         add("switch(");
         add(first);
         add(")");
+        add(last, context);
+        break;
+
+      case SWITCH_BODY:
         cc.beginBlock();
-        addAllSiblings(first.getNext());
+        addAllSiblings(first);
         cc.endBlock(context == Context.STATEMENT);
         break;
 

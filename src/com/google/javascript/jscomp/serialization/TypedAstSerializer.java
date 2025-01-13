@@ -542,6 +542,8 @@ final class TypedAstSerializer {
         return NodeKind.OBJECT_REST;
       case OBJECT_SPREAD:
         return NodeKind.OBJECT_SPREAD;
+      case SWITCH_BODY:
+        return NodeKind.SWITCH_BODY;
 
         // Explicitly unsupported token types. Not serialized.
       case ROOT:

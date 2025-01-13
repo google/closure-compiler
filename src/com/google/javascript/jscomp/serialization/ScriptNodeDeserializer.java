@@ -130,8 +130,14 @@ final class ScriptNodeDeserializer {
         n.setClosureUnawareShadow(shadowRoot);
         return n;
       }
-
       int children = astNode.getChildCount();
+      // TODO - b/388559434: remove this special case once SWITCH_BODY serialization is released.
+      if (n.isSwitch()
+          && (children == 1 || astNode.getChild(1).getKind() != NodeKind.SWITCH_BODY)) {
+        deserializeSwitchTemporary(astNode, n, newContext, sourceFileTemplate);
+        return n;
+      }
+
       for (int i = 0; i < children; i++) {
         AstNode child = astNode.getChild(i);
         Node deserializedChild = this.visit(child, newContext, sourceFileTemplate);
@@ -140,6 +146,26 @@ final class ScriptNodeDeserializer {
       }
 
       return n;
+    }
+
+    private void deserializeSwitchTemporary(
+        AstNode astNode, Node switchNode, FeatureContext newContext, Node sourceFileTemplate) {
+      // handle deserialization of switch nodes using an older AST format, where instead of a
+      // SWITCH_BODY node, the cases are directly children of the SWITCH node.
+      AstNode condition = astNode.getChild(0);
+      Node deserializedCondition = this.visit(condition, newContext, sourceFileTemplate);
+      this.owner().setOriginalNameIfPresent(condition, deserializedCondition);
+      Node switchBody = new Node(Token.SWITCH_BODY).srcref(switchNode);
+
+      switchNode.addChildToBack(deserializedCondition);
+      switchNode.addChildToBack(switchBody);
+
+      int children = astNode.getChildCount();
+      for (int i = 1; i < children; i++) {
+        AstNode caseChild = astNode.getChild(i);
+        Node deserializedCaseChild = this.visit(caseChild, newContext, sourceFileTemplate);
+        switchBody.addChildToBack(deserializedCaseChild);
+      }
     }
 
     private void recordScriptFeatures(FeatureContext context, Node node) {
@@ -556,6 +582,8 @@ final class ScriptNodeDeserializer {
         return new Node(Token.RETURN);
       case SWITCH_STATEMENT:
         return new Node(Token.SWITCH);
+      case SWITCH_BODY:
+        return new Node(Token.SWITCH_BODY);
       case THROW_STATEMENT:
         return new Node(Token.THROW);
       case TRY_STATEMENT:

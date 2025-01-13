@@ -297,8 +297,9 @@ enum NodeKind {
   MODULE_BODY = 632;
   FIELD_DECLARATION = 633;
   COMPUTED_PROP_FIELD = 634;
+  SWITCH_BODY = 635;
 
-  // Next other: 635
+  // Next other: 636
 }
 
 // Rename to `BooleanNodeProperty` if/when we also need non-boolean properties

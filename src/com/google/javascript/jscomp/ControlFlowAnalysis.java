@@ -438,6 +438,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
       case WITH:
         handleWith(n);
         return;
+      case SWITCH_BODY:
       case LABEL:
       case CLASS_MEMBERS:
       case MEMBER_FUNCTION_DEF:
@@ -532,38 +533,40 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   private void handleSwitch(Node node) {
     // Transfer to the first non-DEFAULT CASE. if there are none, transfer
     // to the DEFAULT or the EMPTY node.
-    Node next = getNextSiblingOfType(node.getSecondChild(), Token.CASE, Token.EMPTY);
+    Node switchBody = node.getLastChild();
+    createEdge(node, Branch.UNCOND, switchBody);
+    Node next = getNextSiblingOfType(switchBody.getFirstChild(), Token.CASE, Token.EMPTY);
     if (next != null) { // Has at least one CASE or EMPTY
-      createEdge(node, Branch.UNCOND, next);
+      createEdge(switchBody, Branch.UNCOND, next);
     } else { // Has no CASE but possibly a DEFAULT
-      if (node.getSecondChild() != null) {
-        createEdge(node, Branch.UNCOND, node.getSecondChild());
+      if (switchBody.hasChildren()) {
+        createEdge(switchBody, Branch.UNCOND, switchBody.getFirstChild());
       } else { // No CASE, no DEFAULT
-        createEdge(node, Branch.UNCOND, computeFollowNode(node, this));
+        createEdge(switchBody, Branch.UNCOND, computeFollowNode(node, this));
       }
     }
     connectToPossibleExceptionHandler(node, node.getFirstChild());
   }
 
-  private void handleCase(Node node) {
+  private void handleCase(Node caseNode) {
     // Case is a bit tricky....First it goes into the body if condition is true.
-    createEdge(node, Branch.ON_TRUE, node.getSecondChild());
+    createEdge(caseNode, Branch.ON_TRUE, caseNode.getSecondChild());
 
     // Look for the next CASE, skipping over DEFAULT.
-    Node next = getNextSiblingOfType(node.getNext(), Token.CASE);
+    Node next = getNextSiblingOfType(caseNode.getNext(), Token.CASE);
     if (next != null) { // Found a CASE
       checkState(next.isCase());
-      createEdge(node, Branch.ON_FALSE, next);
+      createEdge(caseNode, Branch.ON_FALSE, next);
     } else { // No more CASE found, go back and search for a DEFAULT.
-      Node parent = node.getParent();
-      Node deflt = getNextSiblingOfType(parent.getSecondChild(), Token.DEFAULT_CASE);
+      Node switchBody = caseNode.getParent();
+      Node deflt = getNextSiblingOfType(switchBody.getFirstChild(), Token.DEFAULT_CASE);
       if (deflt != null) { // Has a DEFAULT
-        createEdge(node, Branch.ON_FALSE, deflt);
+        createEdge(caseNode, Branch.ON_FALSE, deflt);
       } else { // No DEFAULT found, go to the follow of the SWITCH.
-        createEdge(node, Branch.ON_FALSE, computeFollowNode(node, this));
+        createEdge(caseNode, Branch.ON_FALSE, computeFollowNode(caseNode, this));
       }
     }
-    connectToPossibleExceptionHandler(node, node.getFirstChild());
+    connectToPossibleExceptionHandler(caseNode, caseNode.getFirstChild());
   }
 
   private void handleDefault(Node node) {

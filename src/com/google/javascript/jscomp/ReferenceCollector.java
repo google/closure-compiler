@@ -293,6 +293,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
         case WHILE:
         case WITH:
         case CLASS:
+        case SWITCH_BODY:
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK
@@ -307,7 +308,6 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
         case HOOK:
         case IF:
         case OR:
-        case SWITCH:
         case COALESCE:
         case OPTCHAIN_GETPROP:
         case OPTCHAIN_GETELEM:

@@ -913,9 +913,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case CASE:
-        JSType switchType = getJSType(parent.getFirstChild());
+        JSType switchConditionType = getJSType(parent.getPrevious());
         JSType caseType = getJSType(n.getFirstChild());
-        validator.expectSwitchMatchesCase(n, switchType, caseType);
+        validator.expectSwitchMatchesCase(n, switchConditionType, caseType);
         typeable = false;
         break;
 
@@ -951,6 +951,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case LABEL:
       case LABEL_NAME:
       case SWITCH:
+      case SWITCH_BODY:
       case BREAK:
       case CATCH:
       case TRY:

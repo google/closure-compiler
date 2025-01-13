@@ -472,8 +472,9 @@ public final class ControlFlowAnalysisTest {
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.VAR, Token.SWITCH, Branch.UNCOND);
     assertNoEdge(cfg, Token.SWITCH, Token.NAME);
+    assertDownEdge(cfg, Token.SWITCH, Token.SWITCH_BODY, Branch.UNCOND);
     // Transfer between cases and default.
-    assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
+    assertDownEdge(cfg, Token.SWITCH_BODY, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.CASE, Branch.ON_FALSE);
     assertCrossEdge(cfg, Token.CASE, Token.DEFAULT_CASE, Branch.ON_FALSE);
     // Within each case.
@@ -495,7 +496,7 @@ public final class ControlFlowAnalysisTest {
     // DEFAULT appears first. But it is should evaluated last.
     String src = "var x; switch(x){ default: break; case 1: break; }";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
+    assertDownEdge(cfg, Token.SWITCH_BODY, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.DEFAULT_CASE, Branch.ON_FALSE);
   }
 
@@ -504,7 +505,7 @@ public final class ControlFlowAnalysisTest {
     // DEFAULT appears in the middle. But it is should evaluated last.
     String src = "var x; switch(x){ case 1: break; default: break; " + "case 2: break; }";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
+    assertDownEdge(cfg, Token.SWITCH_BODY, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.CASE, Branch.ON_FALSE);
     assertCrossEdge(cfg, Token.CASE, Token.DEFAULT_CASE, Branch.ON_FALSE);
   }
@@ -514,7 +515,7 @@ public final class ControlFlowAnalysisTest {
     // DEFAULT appears first. But it is should evaluated last.
     String src = "var x; switch(x){}; x()";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertCrossEdge(cfg, Token.SWITCH, Token.EMPTY, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.SWITCH_BODY, Token.EMPTY, Branch.UNCOND);
     assertCrossEdge(cfg, Token.EMPTY, Token.EXPR_RESULT, Branch.UNCOND);
   }
 

@@ -812,6 +812,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       case ROOT:
       case SCRIPT:
       case MODULE_BODY:
+      case SWITCH_BODY:
       case FUNCTION:
       case PARAM_LIST:
       case BLOCK:

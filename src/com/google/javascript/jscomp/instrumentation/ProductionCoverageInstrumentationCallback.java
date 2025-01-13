@@ -135,7 +135,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
         break;
       case SWITCH:
         boolean hasDefaultCase = false;
-        for (Node c = node.getSecondChild(); c != null; c = c.getNext()) {
+        Node switchBody = node.getSecondChild();
+        for (Node c = switchBody.getFirstChild(); c != null; c = c.getNext()) {
           if (c.isDefaultCase()) {
             instrumentBlockNode(
                 c.getLastChild(), sourceFileName, functionName, Type.BRANCH_DEFAULT);
@@ -148,7 +149,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
           Node defaultBlock = IR.block();
           defaultBlock.srcrefTreeIfMissing(node);
           Node defaultCase = IR.defaultCase(defaultBlock).srcrefTreeIfMissing(node);
-          node.addChildToBack(defaultCase);
+          switchBody.addChildToBack(defaultCase);
           instrumentBlockNode(defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
         break;

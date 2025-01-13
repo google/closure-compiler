@@ -287,7 +287,6 @@ public class ConvertToTypedInterface implements CompilerPass {
         case FOR_OF:
         case FOR_AWAIT_OF:
         case IF:
-        case SWITCH:
           if (n.hasParent()) {
             Node children = n.removeChildren();
             parent.addChildrenAfter(children, n);
@@ -298,6 +297,17 @@ public class ConvertToTypedInterface implements CompilerPass {
             // by moving children to parents where they are not valid temporarily.
             // `NodeUtil.removeChild()` would throw an exception here if it noticed the invalid AST
             // state.
+            n.detach();
+            t.reportCodeChange();
+          }
+          break;
+        case SWITCH:
+          // shouldTraverse() removed the switch condition already, so we just need to handle the
+          // cases.
+          if (n.hasParent()) {
+            checkState(n.hasOneChild(), "malfrmed sWITCH %s", n.toStringTree());
+            Node children = n.getFirstChild().removeChildren();
+            parent.addChildrenAfter(children, n);
             n.detach();
             t.reportCodeChange();
           }

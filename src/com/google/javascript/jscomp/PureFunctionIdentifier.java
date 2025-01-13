@@ -309,7 +309,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       case IF:
       case SWITCH:
       case WHILE:
-        return rvalue.isFirstChildOf(parent);
+        return rvalue.isFirstChildOf(parent); // the condition is always an r-value
 
       case EXPR_RESULT:
         // Extern declarations are sometimes stubs. These must be considered L-values with no

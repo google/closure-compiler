@@ -969,7 +969,8 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // Are all "switch" cases unmarked?
       boolean hasGeneratorMarker = false;
-      for (Node caseSection = n.getSecondChild();
+      Node switchBody = n.getSecondChild();
+      for (Node caseSection = switchBody.getFirstChild();
           caseSection != null;
           caseSection = caseSection.getNext()) {
         if (caseSection.isGeneratorMarker()) {
@@ -1000,7 +1001,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // We don't have to transpile unmarked cases at the beginning of "switch".
       boolean canSkipUnmarkedCases = true;
-      for (Node caseSection = n.getSecondChild();
+      for (Node caseSection = switchBody.getFirstChild();
           caseSection != null;
           caseSection = caseSection.getNext()) {
         if (!caseSection.isDefaultCase() && caseSection.getFirstChild().isGeneratorMarker()) {
@@ -1046,6 +1047,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // Transpile the barebone of original "switch" statement
       n.setGeneratorMarker(false);
+      switchBody.setGeneratorMarker(false);
       transpileUnmarkedNode(n);
       context.writeJumpTo(endCase, n); // TODO(skill): do not always add this.
 
@@ -1359,10 +1361,11 @@ final class Es6RewriteGenerators implements CompilerPass {
         Node switchNode =
             IR.switchNode(getContextField(generatorBody, "nextAddress")).srcref(generatorBody);
         generatorBody.addChildToBack(switchNode);
+        Node switchBody = switchNode.getSecondChild().srcref(generatorBody);
 
         // Populate "switch" statement with "case"s.
         for (Case currentCase : allCases) {
-          switchNode.addChildToBack(currentCase.createCaseNode());
+          switchBody.addChildToBack(currentCase.createCaseNode());
         }
         allCases.clear();
       }

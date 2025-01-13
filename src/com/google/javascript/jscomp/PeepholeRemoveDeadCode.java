@@ -511,31 +511,32 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
   }
 
-  private Node tryRemoveSwitchWithSingleCase(Node n, boolean shouldHoistCondition) {
-    Node caseBlock = n.getLastChild().getLastChild();
+  private Node tryRemoveSwitchWithSingleCase(Node switchNode, boolean shouldHoistCondition) {
+    Node switchBody = switchNode.getSecondChild();
+    Node caseBlock = switchBody.getOnlyChild().getLastChild();
     removeIfUnnamedBreak(caseBlock.getLastChild());
     // Back off if the switch contains statements like "if (a) { break; }"
     if (NodeUtil.has(caseBlock, MATCH_UNNAMED_BREAK, NodeUtil.MATCH_NOT_FUNCTION)) {
-      return n;
+      return switchNode;
     }
     if (shouldHoistCondition) {
-      Node switchBlock = caseBlock.getGrandparent();
-      IR.exprResult(n.removeFirstChild()).srcref(n).insertBefore(switchBlock);
+      IR.exprResult(switchNode.removeFirstChild()).srcref(switchNode).insertBefore(switchNode);
     }
-    n.replaceWith(caseBlock.detach());
+    switchNode.replaceWith(caseBlock.detach());
     reportChangeToEnclosingScope(caseBlock);
     return caseBlock;
   }
 
   private Node tryRemoveSwitch(Node n) {
-    if (n.hasOneChild()) {
+    Node switchBody = n.getSecondChild();
+    if (!switchBody.hasChildren()) {
       // Remove the switch if there are no remaining cases
       Node condition = n.removeFirstChild();
       Node replacement = IR.exprResult(condition).srcref(n);
       n.replaceWith(replacement);
       reportChangeToEnclosingScope(replacement);
       return replacement;
-    } else if (n.hasTwoChildren() && n.getLastChild().isDefaultCase()) {
+    } else if (switchBody.hasOneChild() && switchBody.getOnlyChild().isDefaultCase()) {
       if (n.getFirstChild().isCall() || n.getFirstChild().isOptChainCall()) {
         // Before removing switch, we must preserve the switch condition if it is a call
         return tryRemoveSwitchWithSingleCase(n, true);
@@ -551,16 +552,17 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private Node tryOptimizeSwitch(Node n) {
     checkState(n.isSwitch(), n);
 
+    Node switchBody = n.getSecondChild();
     Node defaultCase = tryOptimizeDefaultCase(n);
 
     // Generally, it is unsafe to remove other cases when the default case is not the last one.
-    if (defaultCase == null || n.getLastChild().isDefaultCase()) {
+    if (defaultCase == null || switchBody.getLastChild().isDefaultCase()) {
       Node cond = n.getFirstChild();
       Node prev = null;
       Node next = null;
       Node cur;
 
-      for (cur = cond.getNext(); cur != null; cur = next) {
+      for (cur = switchBody.getFirstChild(); cur != null; cur = next) {
         next = cur.getNext();
         if (!mayHaveSideEffects(cur.getFirstChild()) && isUselessCase(cur, prev, defaultCase)) {
           removeCase(n, cur);
@@ -574,7 +576,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         Node caseLabel;
         Tri caseMatches = Tri.TRUE;
         // Remove cases until you find one that may match
-        for (cur = cond.getNext(); cur != null; cur = next) {
+        for (cur = switchBody.getFirstChild(); cur != null; cur = next) {
           next = cur.getNext();
           caseLabel = cur.getFirstChild();
           caseMatches = PeepholeFoldConstants.evaluateComparison(this, Token.SHEQ, cond, caseLabel);
@@ -637,23 +639,21 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private @Nullable Node tryOptimizeDefaultCase(Node n) {
     checkState(n.isSwitch(), n);
 
-    Node lastNonRemovable = n.getFirstChild(); // The switch condition
+    Node switchBody = n.getSecondChild();
+    Node lastNonRemovable = null; // the most recently iterated case known to not be removable.
 
-    // The first child is the switch conditions skip it when looking for cases.
-    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+    for (Node c = switchBody.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isDefaultCase()) {
-        // Remove cases that fall-through to the default case
-        Node caseToRemove = lastNonRemovable.getNext();
+        // Remove any cases that fall-through to the default case
+        Node caseToRemove =
+            lastNonRemovable != null ? lastNonRemovable.getNext() : switchBody.getFirstChild();
         for (Node next; caseToRemove != c; caseToRemove = next) {
           next = caseToRemove.getNext();
           removeCase(n, caseToRemove);
         }
 
-        // Don't use the switch condition as the previous case.
-        Node prevCase = (lastNonRemovable == n.getFirstChild()) ? null : lastNonRemovable;
-
         // Remove the default case if we can
-        if (isUselessCase(c, prevCase, c)) {
+        if (isUselessCase(c, lastNonRemovable, c)) {
           removeCase(n, c);
           return null;
         }
@@ -690,8 +690,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     checkState(previousCase == null || previousCase.getNext() == caseNode);
     // A case isn't useless if a previous case falls through to it unless it happens to be the last
     // case in the switch.
-    Node switchNode = caseNode.getParent();
-    if (switchNode.getLastChild() != caseNode && previousCase != null) {
+    Node switchBody = caseNode.getParent();
+    if (switchBody.getLastChild() != caseNode && previousCase != null) {
       Node previousBlock = previousCase.getLastChild();
       if (!previousBlock.hasChildren() || !isExit(previousBlock.getLastChild())) {
         return false;
@@ -818,7 +818,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     boolean hasDefaultCase = false;
 
-    for (Node switchCase = n.getSecondChild();
+    Node switchBody = n.getSecondChild();
+    for (Node switchCase = switchBody.getFirstChild();
         switchCase != null;
         switchCase = switchCase.getNext()) {
       if (switchCase.isDefaultCase()) {

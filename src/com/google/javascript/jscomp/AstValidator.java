@@ -1753,10 +1753,12 @@ public final class AstValidator implements CompilerPass {
   private void validateSwitch(Node n) {
     validateNodeType(Token.SWITCH, n);
     validateProperties(n);
-    validateMinimumChildCount(n, 1);
+    validateChildCount(n, 2);
     validateExpression(n.getFirstChild());
+    validateNodeType(Token.SWITCH_BODY, n.getSecondChild());
+    Node cases = n.getSecondChild();
     int defaults = 0;
-    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+    for (Node c = cases.getFirstChild(); c != null; c = c.getNext()) {
       validateSwitchMember(c);
       if (c.isDefaultCase()) {
         defaults++;

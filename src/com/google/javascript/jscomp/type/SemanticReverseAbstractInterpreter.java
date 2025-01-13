@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.type;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
@@ -107,7 +108,8 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
         Node left;
         Node right;
         if (operatorToken == Token.CASE) {
-          left = condition.getParent().getFirstChild(); // the switch condition
+          left = condition.getParent().getPrevious(); // the switch condition
+          checkState(condition.getParent().isSwitchBody(), condition.getParent());
           right = condition.getFirstChild();
         } else {
           left = condition.getFirstChild();
@@ -226,7 +228,7 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
 
       case CASE:
         {
-          Node left = condition.getParent().getFirstChild(); // the switch condition
+          Node left = condition.getParent().getPrevious(); // the switch condition
           Node right = condition.getFirstChild();
           if (outcome.isTruthy()) {
             return caseEquality(left, right, blindScope, SHEQ);

@@ -1063,7 +1063,7 @@ public final class SyntacticScopeCreatorTest {
     assertScope(globalScope).doesNotDeclare("c");
 
     Node switchNode = root.getFirstChild();
-    Scope switchScope = scopeCreator.createScope(switchNode, globalScope);
+    Scope switchScope = scopeCreator.createScope(switchNode.getLastChild(), globalScope);
     assertScope(switchScope).declares("c").directly();
   }
 
