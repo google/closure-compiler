@@ -601,9 +601,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Check for goog.provide or goog.module statements
-      if (parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent)) {
+      if (NodeUtil.isShallowStatementTree(parent)) {
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null

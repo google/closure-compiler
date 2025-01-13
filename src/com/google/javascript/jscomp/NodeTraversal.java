@@ -264,9 +264,7 @@ public class NodeTraversal {
   public abstract static class AbstractShallowStatementCallback implements Callback {
     @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      return parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent);
+      return NodeUtil.isShallowStatementTree(parent);
     }
   }
 

@@ -4526,15 +4526,22 @@ public final class NodeUtil {
   static final Predicate<Node> MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION =
       n -> !NodeUtil.isNonArrowFunction(n);
 
+  /**
+   * Whether the given node's subtree may contain statements, excepting nested functions
+   *
+   * <p>This is useful for traversing all statements in a given script or function without
+   * traversing into nested functions, so it will return true for e.g. a BLOCK or SWITCH statement.
+   */
+  public static boolean isShallowStatementTree(Node n) {
+    return n == null || NodeUtil.isControlStructure(n) || NodeUtil.isStatementBlock(n);
+  }
+
   /** A predicate for matching statements without exiting the current scope. */
   static class MatchShallowStatement implements Predicate<Node> {
     @Override
     public boolean apply(Node n) {
       Node parent = n.getParent();
-      return n.isRoot()
-          || n.isBlock()
-          || (!n.isFunction()
-              && (parent == null || isControlStructure(parent) || isStatementBlock(parent)));
+      return n.isRoot() || n.isBlock() || (!n.isFunction() && isShallowStatementTree(parent));
     }
   }
 

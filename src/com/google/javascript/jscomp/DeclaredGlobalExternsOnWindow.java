@@ -24,11 +24,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * A compiler pass to normalize externs by declaring global names on
- * the "window" object, if it is declared in externs.
- * The new declarations are added to the window instance, not to Window.prototype.
+ * A compiler pass to normalize externs by declaring global names on the "window" object, if it is
+ * declared in externs. The new declarations are added to the window instance, not to
+ * Window.prototype.
  */
-class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callback {
+class DeclaredGlobalExternsOnWindow extends NodeTraversal.AbstractShallowStatementCallback
+    implements CompilerPass {
 
   private static final String WINDOW_NAME = "window";
 
@@ -109,13 +110,6 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
     newNode.setOriginalName(name);
     newNode.makeNonIndexableRecursive();
     node.getGrandparent().addChildToBack(IR.exprResult(newNode));
-  }
-
-  @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    return parent == null
-        || NodeUtil.isControlStructure(parent)
-        || NodeUtil.isStatementBlock(parent);
   }
 
   @Override

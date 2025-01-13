@@ -438,9 +438,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       }
 
       // Shallow traversal, since we don't need to inspect within functions or expressions.
-      if (parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent)) {
+      if (NodeUtil.isShallowStatementTree(parent)) {
         if (n.isReturn() && n.hasChildren()) {
           found = true;
           return false;

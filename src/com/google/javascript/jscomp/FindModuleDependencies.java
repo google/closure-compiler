@@ -79,9 +79,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
         return false;
       }
       // Shallow traversal, since we don't need to inspect within functions or expressions.
-      if (parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent)) {
+      if (NodeUtil.isShallowStatementTree(parent)) {
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
@@ -144,9 +142,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     ModuleLoader.ResolutionMode resolutionMode = compiler.getOptions().moduleResolutionMode;
-    if (parent == null
-        || NodeUtil.isControlStructure(parent)
-        || NodeUtil.isStatementBlock(parent)) {
+    if (NodeUtil.isShallowStatementTree(parent)) {
       if (n.isExprResult()) {
         Node maybeGetProp = n.getFirstFirstChild();
         if (maybeGetProp != null
