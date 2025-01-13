@@ -407,6 +407,7 @@ ArrayBuffer.isView = function(arg) {};
 
 /**
  * @constructor
+ * @template TArrayBuffer (unused)
  */
 function ArrayBufferView() {}
 
@@ -456,6 +457,7 @@ var AllowSharedBufferSource;
  * @implements {IArrayLike<number>}
  * @implements {Iterable<number>}
  * @extends {ArrayBufferView}
+ * @template TArrayBuffer (unused)
  */
 function TypedArray() {};
 
@@ -734,6 +736,7 @@ TypedArray.prototype[Symbol.iterator] = function() {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -780,6 +783,7 @@ Int8Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -816,6 +820,7 @@ Uint8Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -861,6 +866,7 @@ var CanvasPixelArray;
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -897,6 +903,7 @@ Int16Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -933,6 +940,7 @@ Uint16Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -969,6 +977,7 @@ Int32Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1005,6 +1014,7 @@ Uint32Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1041,6 +1051,7 @@ Float32Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1077,6 +1088,7 @@ Float64Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} byteOffset
  * @param {number=} bufferLength
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1113,6 +1125,7 @@ BigInt64Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} byteOffset
  * @param {number=} bufferLength
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
