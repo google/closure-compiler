@@ -1053,6 +1053,35 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPolymerBehaviorListenersAndHostAttributeKeysQuoted() {
+    // Polymer behaviors with string key property on listeners and hostAttributes need to be marked
+    // as quoted.
+    // This is the bugfix for b/388337323.
+    test(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "exports.CheckedOnTapBehavior = {",
+                "  listeners: {tap: 'onTap'},",
+                "  hostAttributes: {foo: 1},",
+                "  onTap() {",
+                "    this.checked = true;",
+                "  },",
+                "};")),
+        expected(
+            lines(
+                "/** @polymerBehavior @nocollapse */",
+                "exports.CheckedOnTapBehavior = {",
+                "  listeners: {'tap': 'onTap'},",
+                "  hostAttributes: {'foo': 1},",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  onTap() {",
+                "    this.checked = true;",
+                "  },",
+                "};")));
+  }
+
+  @Test
   public void testNativeElementExtension() {
     String js = lines("Polymer({", "  is: 'x-input',", "  extends: 'input',", "});");
 

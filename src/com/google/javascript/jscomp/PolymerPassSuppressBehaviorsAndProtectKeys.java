@@ -25,12 +25,15 @@ import com.google.javascript.rhino.Node;
 /**
  * For every Polymer Behavior, strip property type annotations and add suppress checktypes on
  * functions.
+ *
+ * <p>Also find listener and hostAttribute keys in the behavior, and mark them as quoted. This
+ * protects the keys from being renamed.
  */
-final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
+final class PolymerPassSuppressBehaviorsAndProtectKeys extends ExternsSkippingCallback {
 
   private final AbstractCompiler compiler;
 
-  PolymerPassSuppressBehaviors(AbstractCompiler compiler) {
+  PolymerPassSuppressBehaviorsAndProtectKeys(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -42,6 +45,10 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
         return;
       }
 
+      // Find listener and hostAttribute keys in the behavior, and mark them as quoted.
+      // This ensures that the keys are not renamed.
+      traverseBehaviorandfindListenerAndHostAttributeAndMarkKeysAsQuoted(n);
+
       // Add @nocollapse.
       JSDocInfo.Builder newDocs = JSDocInfo.Builder.maybeCopyFrom(n.getJSDocInfo());
       newDocs.recordNoCollapse();
@@ -52,6 +59,17 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
         behaviorValue = n.getFirstFirstChild();
       }
       suppressBehavior(behaviorValue, n);
+    }
+  }
+
+  /** Traverse the behavior, find listener and hostAttribute keys, and mark them as quoted. */
+  private void traverseBehaviorandfindListenerAndHostAttributeAndMarkKeysAsQuoted(Node n) {
+    if (n.isObjectLit()) {
+      PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(n, compiler);
+    }
+
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      traverseBehaviorandfindListenerAndHostAttributeAndMarkKeysAsQuoted(child);
     }
   }
 
