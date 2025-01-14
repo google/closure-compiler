@@ -2718,6 +2718,15 @@ public class JSDocInfo implements Serializable {
       return populateBit(Bit.CLOSURE_UNAWARE_CODE, true);
     }
 
+    /**
+     * Removes the {@code @closureUnaware} annotation from this JSDoc, returning true the annotation
+     * was present before removal.
+     */
+    @CanIgnoreReturnValue
+    public boolean removeClosureUnawareCode() {
+      return populateBit(Bit.CLOSURE_UNAWARE_CODE, false);
+    }
+
     /** Records that this JSDoc was annotated with the {@code @usedViaDotConstructor} annotation. */
     public boolean recordUsedViaDotConstructor() {
       return populateBit(Bit.USED_VIA_DOT_CONSTRUCTOR, true);

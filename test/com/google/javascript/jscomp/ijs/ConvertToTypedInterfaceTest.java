@@ -2433,4 +2433,15 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "a.b.c.d = goog.module.get('x.y.z').d;",
             ""));
   }
+
+  @Test
+  public void testRemovesClosureUnawareCodeAnnotationIfPresent() {
+    test(
+        lines("/** @fileoverview @closureUnaware */", "goog.module('a.b.c');", "exports.foo = 10;"),
+        lines(
+            "/**@fileoverview */",
+            "goog.module('a.b.c');",
+            "/** @const @type {number} */",
+            "exports.foo;"));
+  }
 }

@@ -133,6 +133,17 @@ public class ConvertToTypedInterface implements CompilerPass {
       scriptNode.detach();
       return;
     }
+
+    JSDocInfo scriptJsDoc = scriptNode.getJSDocInfo();
+    if (scriptJsDoc != null && scriptJsDoc.isClosureUnawareCode()) {
+      // If we are generating type summary files, then those files won't contain the method content
+      // from within the closure-unaware section, and the entire file effectively becomes
+      // closure-aware again (as it is generated code that describes a module shape).
+      JSDocInfo.Builder scriptJsDocBuilder = scriptJsDoc.toBuilder();
+      var unused = scriptJsDocBuilder.removeClosureUnawareCode();
+      scriptNode.setJSDocInfo(scriptJsDocBuilder.build());
+    }
+
     FileInfo currentFile = new FileInfo();
     NodeTraversal.traverse(compiler, scriptNode, new RemoveNonDeclarations());
     NodeTraversal.traverse(compiler, scriptNode, new PropagateConstJsdoc(currentFile));
