@@ -369,6 +369,29 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void exportSymbol_preventsVariableRenamingCollision() throws IOException {
+    SourceFile lib1 =
+        code("/** @fileoverview @suppress {checkTypes} */ var goog, x; goog.exportSymbol('a', x);");
+    precompileLibrary(lib1);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    assertCompiledCodeEquals(
+        // TODO - b/389980981: don't reuse the name 'a' in variable renaming 'a' because it's also
+        // used in the goog.exportSymbol call.
+        compiler,
+        lines(
+            "var a;", //
+            "var b;",
+            "a.exportSymbol('a', b);"));
+  }
+
+  @Test
   public void lateFulfilledGlobalVariableIsRenamed() throws IOException {
     SourceFile lib1 =
         code(
