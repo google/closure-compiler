@@ -124,7 +124,9 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // BEFORE: for await (const x of EXPR) { BODY }
-  //  AFTER: for await (const x of swap(EXPR)) { swap(0, 1); BODY; swap() } swap(0, 1)
+  //  AFTER: for await (const x of swap(EXPR)) {
+  //           swap(0, 1); try { BODY } finally { swap() }
+  //         } swap(0, 1)
   //
   // Explanation:
   //   * each iteration of the for-await loop is effectively an await; the top of the loop body is
@@ -153,8 +155,11 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "  try {",
             "    for await (const x of $jscomp$swapContext(gen())) {",
             "      $jscomp$swapContext(0, 1);",
-            "      use(x);",
-            "      $jscomp$swapContext();",
+            "      try {",
+            "        use(x);",
+            "      } finally {",
+            "        $jscomp$swapContext();",
+            "      }",
             "    }",
             "    $jscomp$swapContext(0, 1);",
             "  } finally {",
@@ -187,8 +192,11 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "    if (1) {",
             "      for await (const x of $jscomp$swapContext(gen())) {",
             "        $jscomp$swapContext(0, 1);",
-            "        use(x);",
-            "        $jscomp$swapContext();",
+            "        try {",
+            "          use(x);",
+            "        } finally {",
+            "          $jscomp$swapContext();",
+            "        }",
             "      }",
             "      $jscomp$swapContext(0, 1);",
             "    }",
@@ -220,9 +228,12 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             "                   $jscomp$swapContext(",
             "                       $jscomp$swapContext(await $jscomp$swapContext(gen()), 1))) {",
             "      $jscomp$swapContext(0, 1);",
-            "      $jscomp$swapContext(",
-            "          await $jscomp$swapContext(use(x)), 1);",
-            "      $jscomp$swapContext();",
+            "      try {",
+            "        $jscomp$swapContext(",
+            "            await $jscomp$swapContext(use(x)), 1);",
+            "      } finally {",
+            "        $jscomp$swapContext();",
+            "      }",
             "    }",
             "    $jscomp$swapContext(0, 1);",
             "  } finally {",

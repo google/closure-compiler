@@ -178,8 +178,11 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     //     becomes
     // for await (const x of swap(expr())) { // exit
     //   swap(0, 1); // reenter
-    //   use(x);
-    //   swap(); // exit
+    //   try {
+    //     use(x);
+    //   } finally {
+    //     swap(); // exit
+    //   }
     // }
     // swap(0, 1); // reenter
 
@@ -191,10 +194,13 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
     Node body = n.getLastChild();
     checkState(body.isBlock()); // NOTE: IRFactory normalizes non-block `for` bodies
-
-    // Add reenter/exit calls to start/end of block
-    body.addChildToFront(IR.exprResult(createReenter().srcrefTreeIfMissing(arg)));
-    body.addChildToBack(IR.exprResult(createExit().srcrefTreeIfMissing(arg)));
+    body.replaceWith(placeholder);
+    placeholder.replaceWith(
+        IR.block(
+            IR.exprResult(createReenter().srcrefTreeIfMissing(arg)),
+            IR.tryFinally(
+                body, //
+                IR.block(IR.exprResult(createExit().srcrefTreeIfMissing(arg))))));
 
     // Add reenter call after for-await-of
     if (!parent.isBlock()) {
