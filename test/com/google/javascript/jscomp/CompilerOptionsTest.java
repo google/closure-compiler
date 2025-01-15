@@ -81,11 +81,17 @@ public final class CompilerOptionsTest {
   @Test
   public void testBrowserFeaturesetYearOptionSetsAssumeES6() {
     CompilerOptions options = new CompilerOptions();
-    options.setBrowserFeaturesetYear(2018);
+    options.setBrowserFeaturesetYear(2012);
     assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES6").getToken())
         .isEqualTo(Token.FALSE);
-    options.setBrowserFeaturesetYear(2019);
+    options.setBrowserFeaturesetYear(2018);
     assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES6").getToken())
+        .isEqualTo(Token.TRUE);
+    options.setBrowserFeaturesetYear(2020);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES2020").getToken())
+        .isEqualTo(Token.FALSE);
+    options.setBrowserFeaturesetYear(2021);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES2020").getToken())
         .isEqualTo(Token.TRUE);
   }
 

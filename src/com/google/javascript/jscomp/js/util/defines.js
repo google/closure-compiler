@@ -32,6 +32,15 @@ $jscomp.ASSUME_ES5 = false;
 $jscomp.ASSUME_ES6 = false;
 
 /**
+ * Whether to assume ES2020 is available.  This enables removing several
+ * internal polyfills, which must otherwise be detected at runtime.
+ * @define {boolean}
+ */
+$jscomp.ASSUME_ES2020 = false;
+
+
+
+/**
  * Whether to skip the conformance check and simply use the polyfill always.
  * @define {boolean}
  */

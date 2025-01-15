@@ -185,7 +185,8 @@ public class CompilerOptions implements Serializable {
       options.languageOutIsDefaultStrict = Optional.of(true);
       options.setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
       options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES5", year > 2012);
-      options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES6", year > 2018);
+      options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES6", year >= 2018);
+      options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES2020", year >= 2021);
     }
 
     FeatureSet getFeatureSet() {

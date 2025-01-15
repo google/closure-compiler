@@ -19,6 +19,7 @@
  * @suppress {uselessCode}
  */
 'require base';
+'require util/defines';
 
 /**
  * Locate and return a reference to the global object.
@@ -85,4 +86,4 @@ $jscomp.getGlobal = function(passedInThis) {
  * The global object.
  * @const {!Global}
  */
-$jscomp.global = $jscomp.getGlobal(this);
+$jscomp.global = $jscomp.ASSUME_ES2020 ? globalThis : $jscomp.getGlobal(this);
