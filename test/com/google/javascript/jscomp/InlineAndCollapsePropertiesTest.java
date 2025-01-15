@@ -1903,6 +1903,27 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCollapseOfGoogModule() {
+    test(
+        lines(
+            "var goog = goog || {};", //
+            "/** @constructor */",
+            "goog.module = function(id) {};",
+            "goog.module.get = function(id) {};",
+            "goog.module.getInternal_ = function(id) {};",
+            "goog.module = goog.module || {};",
+            ""),
+        lines(
+            "var goog = goog || {};", //
+            "var goog$module = function(id) {};",
+            // TODO(b/389129315): This should be goog$module$get.
+            "goog$module.get = function(id) {};",
+            "goog$module.getInternal_ = function(id) {};",
+            "goog$module = goog$module || {};",
+            ""));
+  }
+
+  @Test
   public void testCodeGeneratedByGoogModule() {
     // The static property is added to the exports object
     test(
