@@ -21,9 +21,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Unit tests for {@link PolymerPassSuppressBehaviors} */
+/** Unit tests for {@link PolymerPassSuppressBehaviorsAndProtectKeys} */
 @RunWith(JUnit4.class)
-public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
+public class PolymerPassSuppressBehaviorsAndProtectKeysTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       lines(
@@ -58,7 +58,7 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
           "var Polymer = function(a) {};",
           "var alert = function(msg) {};");
 
-  public PolymerPassSuppressBehaviorsTest() {
+  public PolymerPassSuppressBehaviorsAndProtectKeysTest() {
     super(EXTERNS);
   }
 
@@ -67,8 +67,8 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        PolymerPassSuppressBehaviors suppressBehaviorsCallback =
-            new PolymerPassSuppressBehaviors(compiler);
+        PolymerPassSuppressBehaviorsAndProtectKeys suppressBehaviorsCallback =
+            new PolymerPassSuppressBehaviorsAndProtectKeys(compiler);
         NodeTraversal.traverse(compiler, root, suppressBehaviorsCallback);
       }
     };

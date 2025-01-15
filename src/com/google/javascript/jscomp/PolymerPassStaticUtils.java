@@ -131,7 +131,8 @@ final class PolymerPassStaticUtils {
   static void quoteListenerAndHostAttributeKeys(Node objLit, AbstractCompiler compiler) {
     checkState(objLit.isObjectLit());
     for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
-      if (keyNode.isComputedProp()) {
+      if (!keyNode.isStringKey()) {
+        // We should only quote string keys. If this is not a string key, then we should skip it.
         continue;
       }
       if (!keyNode.getString().equals("listeners")
