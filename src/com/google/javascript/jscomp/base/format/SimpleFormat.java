@@ -588,11 +588,7 @@ public final class SimpleFormat {
 
     char paddingChar = '\u0020'; // space as padding char.
     if (formatToken.flagZero) {
-      if (formatToken.getConversionType() == 'd') {
-        paddingChar = '0';
-      } else {
-        paddingChar = '0'; // No localized digits for bases other than decimal.
-      }
+      paddingChar = '0';
     } else {
       // if padding char is space, always pad from the start.
       start = 0;
