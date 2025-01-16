@@ -60,7 +60,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   }
 
   @Override
-  protected PassListBuilder getOptimizations() {
+  protected PassListBuilder getOptimizations(OptimizationPasses optimizationPasses) {
     return new PassListBuilder(options);
   }
 

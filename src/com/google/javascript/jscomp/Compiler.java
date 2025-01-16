@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
 import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
+import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -3003,7 +3004,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void performTranspilationAndOptimizations() {
     checkState(options.shouldOptimize());
     // getOptimizations() also includes transpilation passes
-    ImmutableList<PassFactory> optimizations = getPassConfig().getOptimizations().build();
+    ImmutableList<PassFactory> optimizations =
+        getPassConfig().getOptimizations(OptimizationPasses.ALL).build();
     if (optimizations.isEmpty()) {
       return;
     }

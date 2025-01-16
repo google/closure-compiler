@@ -498,7 +498,7 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   @Override
-  protected PassListBuilder getOptimizations() {
+  protected PassListBuilder getOptimizations(OptimizationPasses optimizationPasses) {
     PassListBuilder passes = new PassListBuilder(options);
     // At this point all checks have been done.
     if (options.exportTestFunctions) {
