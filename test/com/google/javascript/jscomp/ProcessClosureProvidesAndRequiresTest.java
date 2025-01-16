@@ -39,6 +39,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   private boolean preserveGoogProvidesAndRequires;
+  private ProcessClosureProvidesAndRequires lastProcessor;
 
   private ProcessClosureProvidesAndRequires createClosureProcessor(Compiler compiler) {
     return new ProcessClosureProvidesAndRequires(compiler, preserveGoogProvidesAndRequires);
@@ -53,14 +54,15 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     enableTypeCheck();
     enableCreateModuleMap(); // necessary for the typechecker
     replaceTypesWithColors();
+    lastProcessor = null;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (Node externs, Node root) -> {
       verifyCollectProvidedNamesDoesntChangeAst(externs, root, compiler);
-      ProcessClosureProvidesAndRequires processor = createClosureProcessor(compiler);
-      processor.rewriteProvidesAndRequires(externs, root);
+      lastProcessor = createClosureProcessor(compiler);
+      lastProcessor.rewriteProvidesAndRequires(externs, root);
     };
   }
 
@@ -936,6 +938,20 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         getProvidedNameCollection("goog.declareModuleId('a.b.c'); export const x = 0;");
 
     assertThat(providedNameMap.keySet()).containsExactly("goog");
+  }
+
+  @Test
+  public void testGoogExportSymbolRecording() {
+    testSame(
+        """
+            goog.exportSymbol('a', 0);
+            goog.exportSymbol('foo.bar.baz', 1);
+            goog.exportSymbol(notAStringLiteral, 2);
+            function f() {
+              goog.exportSymbol('b', 3);
+            }
+        """);
+    assertThat(lastProcessor.getExportedVariableNames()).containsExactly("a", "foo", "b");
   }
 
   private Map<String, ProvidedName> getProvidedNameCollection(String js) {

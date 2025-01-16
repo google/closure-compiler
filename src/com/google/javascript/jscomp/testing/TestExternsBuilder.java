@@ -65,7 +65,7 @@ public class TestExternsBuilder {
           " * @template T",
           " */",
           "goog.define = function(name, defaultValue) {};",
-          "goog.exportSymbol = function() {};",
+          "goog.exportSymbol = function(publicName, symbol) {};",
           "goog.inherits = function(childCtor, parentCtor) {",
           "  childCtor.superClass_ = parentCtor.prototype;",
           "};",

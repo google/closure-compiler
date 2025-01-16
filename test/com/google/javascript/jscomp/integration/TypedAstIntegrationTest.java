@@ -382,13 +382,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     Compiler compiler = compileTypedAstShards(options);
 
     assertCompiledCodeEquals(
-        // TODO - b/389980981: don't reuse the name 'a' in variable renaming 'a' because it's also
-        // used in the goog.exportSymbol call.
         compiler,
         lines(
-            "var a;", //
-            "var b;",
-            "a.exportSymbol('a', b);"));
+            "var b;", //
+            "var c;",
+            "b.exportSymbol('a', c);"));
   }
 
   @Test

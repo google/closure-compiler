@@ -62,6 +62,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
+  private final Set<String> exportedVariables = new LinkedHashSet<>();
+
   // If this is true, rewriting will not remove any goog.provide or goog.require calls
   private final boolean preserveGoogProvidesAndRequires;
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
@@ -83,6 +85,10 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     rewriteProvidesAndRequires(externs, root);
+  }
+
+  Set<String> getExportedVariableNames() {
+    return exportedVariables;
   }
 
   /** Collects all `goog.provide`s in the given namespace and warns on invalid code */
@@ -152,6 +158,19 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
               // when we see a provides/requires, and don't worry about
               // reporting the change when we actually do the replacement.
               switch (left.getString()) {
+                case "exportSymbol":
+                  // Note: exportSymbol is allowed in local scope
+                  Node arg = n.getSecondChild();
+                  if (arg.isStringLit()) {
+                    String argString = arg.getString();
+                    int dot = argString.indexOf('.');
+                    if (dot == -1) {
+                      exportedVariables.add(argString);
+                    } else {
+                      exportedVariables.add(argString.substring(0, dot));
+                    }
+                  }
+                  break;
                 case "require":
                 case "requireType":
                   if (isValidPrimitiveCall(t, n)) {

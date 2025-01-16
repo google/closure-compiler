@@ -1186,7 +1186,8 @@ public final class RenameVarsTest extends CompilerTestCase {
       new GatherModuleMetadata(
               compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
           .process(externs, root);
-      ProcessClosurePrimitives closurePass = new ProcessClosurePrimitives(compiler);
+      ProcessClosureProvidesAndRequires closurePass =
+          new ProcessClosureProvidesAndRequires(compiler, true);
       closurePass.process(externs, root);
       renameVars =
           new RenameVars(

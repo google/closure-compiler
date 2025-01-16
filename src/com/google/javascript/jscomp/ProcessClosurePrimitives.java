@@ -129,8 +129,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
 
   private final Set<String> knownClosureSubclasses = new LinkedHashSet<>();
 
-  private final Set<String> exportedVariables = new LinkedHashSet<>();
-
   private final ImmutableMap<String, ModuleMetadata> closureModules;
 
   ProcessClosurePrimitives(AbstractCompiler compiler) {
@@ -138,10 +136,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     this.closureModules =
         checkNotNull(compiler.getModuleMetadataMap(), "Need to run GatherModuleMetadata")
             .getModulesByGoogNamespace();
-  }
-
-  Set<String> getExportedVariableNames() {
-    return exportedVariables;
   }
 
   @Override
@@ -244,23 +238,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     // when we see a provides/requires, and don't worry about
     // reporting the change when we actually do the replacement.
     String methodName = callee.getString();
-    Node arg = callee.getNext();
     switch (methodName) {
       case "inherits":
         // Note: inherits is allowed in local scope
         processInheritsCall(call);
-        break;
-      case "exportSymbol":
-        // Note: exportSymbol is allowed in local scope
-        if (arg.isStringLit()) {
-          String argString = arg.getString();
-          int dot = argString.indexOf('.');
-          if (dot == -1) {
-            exportedVariables.add(argString);
-          } else {
-            exportedVariables.add(argString.substring(0, dot));
-          }
-        }
         break;
       case "addDependency":
         if (validateUnaliasablePrimitiveCall(t, call, methodName)) {

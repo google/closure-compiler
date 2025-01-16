@@ -1445,7 +1445,6 @@ public final class DefaultPassConfig extends PassConfig {
                 final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(compiler);
                 return (Node externs, Node root) -> {
                   pass.process(externs, root);
-                  compiler.addExportedNames(pass.getExportedVariableNames());
                 };
               })
           .build();
@@ -1455,9 +1454,16 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("closureProvidesRequires")
           .setInternalFactory(
-              (compiler) ->
-                  new ProcessClosureProvidesAndRequires(
-                      compiler, options.shouldPreservesGoogProvidesAndRequires()))
+              (compiler) -> {
+                preprocessorSymbolTableFactory.maybeInitialize(compiler);
+                final ProcessClosureProvidesAndRequires pass =
+                    new ProcessClosureProvidesAndRequires(
+                        compiler, options.shouldPreservesGoogProvidesAndRequires());
+                return (Node externs, Node root) -> {
+                  pass.process(externs, root);
+                  compiler.addExportedNames(pass.getExportedVariableNames());
+                };
+              })
           .build();
 
   /** Process AngularJS-specific annotations. */
