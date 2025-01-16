@@ -140,7 +140,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       // from within the closure-unaware section, and the entire file effectively becomes
       // closure-aware again (as it is generated code that describes a module shape).
       JSDocInfo.Builder scriptJsDocBuilder = scriptJsDoc.toBuilder();
-      var unused = scriptJsDocBuilder.removeClosureUnawareCode();
+      scriptJsDocBuilder.removeClosureUnawareCode();
       scriptNode.setJSDocInfo(scriptJsDocBuilder.build());
     }
 
