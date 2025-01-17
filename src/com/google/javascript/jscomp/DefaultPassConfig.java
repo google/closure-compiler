@@ -43,7 +43,6 @@ import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
-import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -1947,7 +1946,6 @@ public final class DefaultPassConfig extends PassConfig {
                     ImmutableList.<NodeTraversal.Callback>builder()
                         .add(new CheckConstPrivateProperties(compiler))
                         .add(new CheckConstantCaseNames(compiler))
-                        .add(new CheckDefaultExportOfGoogModule(compiler))
                         .add(new CheckEmptyStatements(compiler))
                         .add(new CheckEnums(compiler))
                         .add(new CheckEs6ModuleFileStructure(compiler))

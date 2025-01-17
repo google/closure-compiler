@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
-import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -555,8 +554,6 @@ public class DiagnosticGroups {
               CheckConstPrivateProperties.MISSING_CONST_PROPERTY,
               CheckConstantCaseNames.REASSIGNED_CONSTANT_CASE_NAME,
               CheckConstantCaseNames.MISSING_CONST_PROPERTY,
-              CheckDefaultExportOfGoogModule.DEFAULT_EXPORT_IN_GOOG_MODULE,
-              CheckDefaultExportOfGoogModule.MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE,
               CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
               CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
               CheckEnums.DUPLICATE_ENUM_VALUE,
