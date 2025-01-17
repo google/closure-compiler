@@ -48,6 +48,7 @@ import com.google.javascript.jscomp.Compiler.SingleBinaryLicenseTracker;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
+import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
@@ -1386,7 +1387,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     try {
       if (!compiler.hasErrors()) {
         metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes();
+        compiler.stage2Passes(OptimizationPasses.ALL);
         if (!compiler.hasErrors()) {
           try (BufferedOutputStream serializedOutputStream =
               new BufferedOutputStream(new FileOutputStream(outputFilename))) {
@@ -1411,7 +1412,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     try {
       if (!compiler.hasErrors()) {
         metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes();
+        compiler.stage2Passes(OptimizationPasses.ALL);
         if (!compiler.hasErrors()) {
           compiler.stage3Passes();
         }
@@ -1435,7 +1436,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
         metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes();
+        compiler.stage2Passes(OptimizationPasses.ALL);
         if (!compiler.hasErrors()) {
           try (BufferedOutputStream serializedOutputStream =
               new BufferedOutputStream(new FileOutputStream(outputFilename))) {
@@ -1465,7 +1466,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
         metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes();
+        compiler.stage2Passes(OptimizationPasses.ALL);
         if (!compiler.hasErrors()) {
           compiler.stage3Passes();
         }
@@ -1513,7 +1514,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         metricsRecorder.recordStartState(compiler);
         compiler.stage1Passes();
         if (!compiler.hasErrors()) {
-          compiler.stage2Passes();
+          compiler.stage2Passes(OptimizationPasses.ALL);
           if (!compiler.hasErrors()) {
             compiler.stage3Passes();
           }

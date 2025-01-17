@@ -939,7 +939,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         } else {
           stage1Passes();
           if (!hasErrors()) {
-            stage2Passes();
+            stage2Passes(OptimizationPasses.ALL);
             if (!hasErrors()) {
               stage3Passes();
             }
@@ -995,7 +995,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         } else {
           stage1Passes();
           if (!hasErrors()) {
-            stage2Passes();
+            stage2Passes(OptimizationPasses.ALL);
             if (!hasErrors()) {
               stage3Passes();
             }
@@ -1040,7 +1040,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
    * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
    */
-  public void stage2Passes() {
+  public void stage2Passes(OptimizationPasses optimizationPasses) {
     checkState(chunkGraph != null, "No inputs. Did you call init() or initChunks()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
@@ -1056,7 +1056,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           if (options.shouldOptimize()) {
-            performTranspilationAndOptimizations(OptimizationPasses.ALL);
+            performTranspilationAndOptimizations(optimizationPasses);
           }
           return null;
         });
