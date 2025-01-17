@@ -2384,8 +2384,6 @@ public final class ConformanceRules {
             "action",
             "formaction",
             "sandbox",
-            "cite",
-            "poster",
             "icon",
             "codebase",
             "data");
