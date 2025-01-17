@@ -1056,7 +1056,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           if (options.shouldOptimize()) {
-            performTranspilationAndOptimizations();
+            performTranspilationAndOptimizations(OptimizationPasses.ALL);
           }
           return null;
         });
@@ -3001,11 +3001,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Optimizations
   // ------------------------------------------------------------------------
 
-  void performTranspilationAndOptimizations() {
+  void performTranspilationAndOptimizations(OptimizationPasses optimizationPasses) {
     checkState(options.shouldOptimize());
     // getOptimizations() also includes transpilation passes
     ImmutableList<PassFactory> optimizations =
-        getPassConfig().getOptimizations(OptimizationPasses.ALL).build();
+        getPassConfig().getOptimizations(optimizationPasses).build();
     if (optimizations.isEmpty()) {
       return;
     }
