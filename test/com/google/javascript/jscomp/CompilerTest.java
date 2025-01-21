@@ -3453,4 +3453,78 @@ public final class CompilerTest {
     assertThat(compiler.getInputsById().get(syntheticExterns.getInputId()))
         .isSameInstanceAs(syntheticExterns);
   }
+
+  @Test
+  public void testStage2SplittingResultsInSameOutput() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+    CompilerOptions options = new CompilerOptions();
+
+    options.setEmitUseStrict(false);
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    List<SourceFile> externs =
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "externs.js",
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    "")));
+    List<SourceFile> srcs =
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "input.js",
+                lines(
+                    "goog.module('foo');",
+                    "const hello = 'hello';",
+                    "function f() { return hello; }",
+                    "console.log(f());")));
+    compiler.init(externs, srcs, options);
+
+    // This is what the output should look like after all optimizations.
+    String finalOutputAfterOptimizations = "console.log(\"hello\");";
+
+    // Stage 1
+    compiler.parse();
+    compiler.check();
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+    restoreCompilerState(compiler, stateAfterChecks);
+
+    // Stage 2, all passes
+    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    String source = compiler.toSource();
+    assertThat(source).isEqualTo(finalOutputAfterOptimizations); // test output stage 2 code
+
+    // Now reset the compiler and test splitting stage 2 into two halves. We want to test that the
+    // output is the same as when we run all of stage 2 in one go.
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+
+    // Stage 1
+    compiler.parse();
+    compiler.check();
+    final byte[] stateAfterChecks2 = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+    restoreCompilerState(compiler, stateAfterChecks2);
+
+    // Stage 2, first half
+    compiler.performTranspilationAndOptimizations(OptimizationPasses.FIRST_HALF);
+    source = compiler.toSource();
+    assertThat(source).isEqualTo("console.log(function(){return\"hello\"}());");
+
+    final byte[] stateAfterFirstHalfOptimizations = getSavedCompilerState(compiler);
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+    restoreCompilerState(compiler, stateAfterFirstHalfOptimizations);
+
+    // Stage 2, second half
+    compiler.performTranspilationAndOptimizations(OptimizationPasses.SECOND_HALF);
+    source = compiler.toSource();
+    assertThat(source).isEqualTo(finalOutputAfterOptimizations); // output is the same as before
+  }
 }
