@@ -22,13 +22,14 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.truth.extensions.proto.ProtoSubject;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import java.util.ArrayList;
@@ -480,14 +481,23 @@ public class ColorSerializerTest {
   /**
    * Represents a string that is stored in a StringPool, recording both its value and its offset.
    */
-  @AutoValue
-  abstract static class PooledString {
-    public abstract String getValue();
+  record PooledString(String value, int poolOffset) {
+    PooledString {
+      requireNonNull(value, "value");
+    }
 
-    public abstract int getPoolOffset();
+    @InlineMe(replacement = "this.value()")
+    public String getValue() {
+      return value();
+    }
+
+    @InlineMe(replacement = "this.poolOffset()")
+    public int getPoolOffset() {
+      return poolOffset();
+    }
 
     static PooledString create(String value, int poolOffset) {
-      return new AutoValue_ColorSerializerTest_PooledString(value, poolOffset);
+      return new PooledString(value, poolOffset);
     }
   }
 
@@ -624,23 +634,39 @@ public class ColorSerializerTest {
     return TestColor.create(axiomaticColor, null, poolOffset);
   }
 
-  /** Represents a Color that has been or will be added to the ColorSerializer. */
-  @AutoValue
-  abstract static class TestColor {
-    // The Color that will be added to the ColorSerializer.
-    public abstract Color getColor();
+  /**
+   * Represents a Color that has been or will be added to the ColorSerializer.
+   *
+   * @param nullableExpectedTypeProto The TypeProto we expect ColorSerializer to create for this
+   *     Color.
+   *     <p>For an axiomatic color this will return `null`, since those are never stored into a
+   *     `TypeProto`. Generally test code should call `getExpectedTypeProto()` instead in order to
+   *     get an exception if an attempt is made to serialize an axiomatic color.
+   */
+  record TestColor(
+      Color color, @Nullable TypeProto nullableExpectedTypeProto, int expectedTypePointer) {
+    TestColor {
+      requireNonNull(color, "color");
+    }
 
-    /**
-     * The TypeProto we expect ColorSerializer to create for this Color.
-     *
-     * <p>For an axiomatic color this will return `null`, since those are never stored into a
-     * `TypeProto`. Generally test code should call `getExpectedTypeProto()` instead in order to get
-     * an exception if an attempt is made to serialize an axiomatic color.
-     */
-    public abstract @Nullable TypeProto getNullableExpectedTypeProto();
+    @InlineMe(replacement = "this.color()")
+    public Color getColor() {
+      return color();
+    }
+
+    @InlineMe(replacement = "this.nullableExpectedTypeProto()")
+    public @Nullable TypeProto getNullableExpectedTypeProto() {
+      return nullableExpectedTypeProto();
+    }
+
+    @InlineMe(replacement = "this.expectedTypePointer()")
+    public int getExpectedTypePointer() {
+      return expectedTypePointer();
+    }
+
+    // The Color that will be added to the ColorSerializer.
 
     // The Integer we expect ColorSerializer to create for this Color.
-    public abstract int getExpectedTypePointer();
 
     public TypeProto getExpectedTypeProto() {
       return checkNotNull(getNullableExpectedTypeProto());
@@ -648,19 +674,28 @@ public class ColorSerializerTest {
 
     static TestColor create(
         Color color, @Nullable TypeProto expectedTypeProto, int nullableExpectedTypePointer) {
-      return new AutoValue_ColorSerializerTest_TestColor(
-          color, expectedTypeProto, nullableExpectedTypePointer);
+      return new TestColor(color, expectedTypeProto, nullableExpectedTypePointer);
     }
   }
 
   /**
    * Represents a color/type mismatch both as it would appear in a ColorRegistry and in a TypePool.
    */
-  @AutoValue
-  abstract static class TestMismatch {
-    public abstract String getLocationString();
+  record TestMismatch(String locationString, ImmutableList<TestColor> testColors) {
+    TestMismatch {
+      requireNonNull(locationString, "locationString");
+      requireNonNull(testColors, "testColors");
+    }
 
-    public abstract ImmutableList<TestColor> getTestColors();
+    @InlineMe(replacement = "this.locationString()")
+    public String getLocationString() {
+      return locationString();
+    }
+
+    @InlineMe(replacement = "this.testColors()")
+    public ImmutableList<TestColor> getTestColors() {
+      return testColors();
+    }
 
     public List<Color> getColors() {
       return getTestColors().stream().map(TestColor::getColor).collect(Collectors.toList());
@@ -683,8 +718,7 @@ public class ColorSerializerTest {
      *     order
      */
     static TestMismatch create(String locationString, TestColor... testColors) {
-      return new AutoValue_ColorSerializerTest_TestMismatch(
-          locationString, ImmutableList.copyOf(testColors));
+      return new TestMismatch(locationString, ImmutableList.copyOf(testColors));
     }
   }
 
@@ -787,16 +821,22 @@ public class ColorSerializerTest {
   }
 
   /** The result of Tester::generateTypePool() */
-  @AutoValue
-  abstract static class GenerateTypePoolTestResult {
-    public abstract TypePool getTypePool();
+  record GenerateTypePoolTestResult(TypePool typePool) {
+    GenerateTypePoolTestResult {
+      requireNonNull(typePool, "typePool");
+    }
+
+    @InlineMe(replacement = "this.typePool()")
+    public TypePool getTypePool() {
+      return typePool();
+    }
 
     ProtoSubject assertThatTypePool() {
       return assertThat(getTypePool());
     }
 
     static GenerateTypePoolTestResult create(TypePool typePool) {
-      return new AutoValue_ColorSerializerTest_GenerateTypePoolTestResult(typePool);
+      return new GenerateTypePoolTestResult(typePool);
     }
   }
 }
