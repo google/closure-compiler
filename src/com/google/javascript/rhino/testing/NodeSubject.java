@@ -272,6 +272,12 @@ public final class NodeSubject extends Subject {
   }
 
   @CanIgnoreReturnValue
+  public NodeSubject isCast() {
+    hasToken(Token.CAST);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public NodeSubject isArrowFunction() {
     check("isArrowFunction()").that(actual.isArrowFunction()).isTrue();
     return this;

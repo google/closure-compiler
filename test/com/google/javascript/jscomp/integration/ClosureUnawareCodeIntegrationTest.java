@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -31,9 +32,13 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -496,7 +501,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             // AST we should not raise a warning.
             "   * @defaults",
             "   */",
-            "  const x = 5;",
+            "  const x = /** @inline */ (5);",
             "}).call(globalThis);"),
         lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
   }
@@ -705,24 +710,164 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .getFirstFirstChild()
             .getFirstFirstChild()
             .getFirstChild();
-    assertThat(fn.isFunction()).isTrue();
+    assertNode(fn).isFunction();
     assertThat(fn.getJSDocInfo()).isNotNull();
     assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
-    NodeTraversal.traverse(
-        lastCompiler,
-        fn,
-        new NodeTraversal.Callback() {
+    NodeTraversal.builder()
+        .setCompiler(lastCompiler)
+        .setCallback(
+            (NodeTraversal t, Node n, Node parent) -> {
+              assertThat(n.isCast()).isFalse();
+            })
+        .traverse(fn);
+  }
 
-          @Override
-          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-            return true;
-          }
+  @Test
+  public void testNoOptimizeClosureUnawareCode_doesntCreateJSDocInfoWithinClosureUnawareBlocks() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
 
-          @Override
-          public void visit(NodeTraversal t, Node n, Node parent) {
-            assertThat(n.isCast()).isFalse();
-          }
-        });
+    options.setPreserveNonJSDocComments(true);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
+    // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
+    // so instead this test validates that during parsing we never create CAST nodes to begin with.
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  /**",
+            // This @date tag is ignored - it isn't parsed as JSDoc and doesn't end up in the
+            // license text.
+            "   * @date 1900-01-01",
+            "   * @license FOO BAR BAZ!",
+            "   */",
+            "  const z = /** hello world! */ (5);",
+            "  const x = /** @type {string | number} */ (5);",
+            "}).call(globalThis);"),
+        lines("(function() {", "  const z = 5; const x = 5;", "}).call(globalThis);"));
+
+    Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
+    assertNode(script).isScript();
+    assertThat(script.getJSDocInfo()).isNotNull();
+    assertThat(script.getJSDocInfo().getLicense()).isEqualTo(" FOO BAR BAZ!\n");
+
+    Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
+    assertNode(fn).isFunction();
+    assertThat(fn.getJSDocInfo()).isNotNull();
+    assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
+
+    Node fnBlock = fn.getChildAtIndex(2);
+    assertNode(fnBlock).isBlock();
+
+    // From within the expected closure-unaware code block, we want to ensure that no AST node has
+    // any jsdocinfo attached to it.
+    // instead, the relevant nodes should have nonjsdoc comments attached to them.
+    List<Node> nodesWithNonJsdocComments = new ArrayList<>();
+
+    NodeTraversal.builder()
+        .setCompiler(lastCompiler)
+        .setCallback(
+            (NodeTraversal t, Node n, Node parent) -> {
+              if (n.getNonJSDocComment() != null) {
+                nodesWithNonJsdocComments.add(n);
+              }
+
+              JSDocInfo info = n.getJSDocInfo();
+              assertThat(info).isNull();
+            })
+        .traverse(fnBlock);
+
+    assertThat(
+            nodesWithNonJsdocComments.stream().map(n -> n.getNonJSDocComment().getCommentString()))
+        .containsExactly("/** hello world! */", "/** @type {string | number} */");
+  }
+
+  @Test
+  public void testNoOptimizeClosureUnawareCode_collapsesSequentialComments() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    options.setPreserveNonJSDocComments(true);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+            .build();
+
+    // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
+    // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
+    // so instead this test validates that during parsing we never create CAST nodes to begin with.
+    test(
+        options,
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @closureUnaware",
+            " */",
+            "goog.module('a.b');",
+            "/** @closureUnaware */",
+            "(function() {",
+            "  // A B C ",
+            "  /** FOO BAR BAZ! */",
+            "  // D E F",
+            "  const z = 5;",
+            "}).call(globalThis);"),
+        lines("(function() {", "  const z = 5;", "}).call(globalThis);"));
+
+    Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
+    assertNode(script).isScript();
+
+    Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
+    assertNode(fn).isFunction();
+    assertThat(fn.getJSDocInfo()).isNotNull();
+    assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
+
+    Node fnBlock = fn.getChildAtIndex(2);
+    assertNode(fnBlock).isBlock();
+
+    // From within the expected closure-unaware code block, we want to ensure that no AST node has
+    // any jsdocinfo attached to it.
+    // instead, the relevant nodes should have nonjsdoc comments attached to them.
+    List<Node> nodesWithNonJsdocComments = new ArrayList<>();
+
+    NodeTraversal.builder()
+        .setCompiler(lastCompiler)
+        .setCallback(
+            (NodeTraversal t, Node n, Node parent) -> {
+              if (n.getNonJSDocComment() != null) {
+                nodesWithNonJsdocComments.add(n);
+              }
+
+              JSDocInfo info = n.getJSDocInfo();
+              assertThat(info).isNull();
+            })
+        .traverse(fnBlock);
+
+    assertThat(
+            nodesWithNonJsdocComments.stream().map(n -> n.getNonJSDocComment().getCommentString()))
+        .containsExactly("// A B C\n/** FOO BAR BAZ! */\n// D E F");
   }
 
   // TODO how can I test whether source info is being properly retained?

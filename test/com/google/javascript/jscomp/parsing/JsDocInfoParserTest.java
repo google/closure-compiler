@@ -2058,6 +2058,40 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseLicenseOnlyContentParsesLicenseWithInvalidJsDocTag() {
+    String comment = "@date 11/12/2023\n@nosideeffects\n@deprecated\n@license Foo\n*/";
+    JSDocInfo r = parse(comment, Config.JsDocParsing.LICENSE_COMMENTS_ONLY);
+    assertThat(r).isNotNull();
+    assertThat(this.prevLicense).isEqualTo(" Foo\n");
+    assertThat(r.isNoSideEffects()).isFalse();
+    assertThat(r.isDeprecated()).isFalse();
+    assertThat(r.getMarkers().stream().map(m -> m.getAnnotation().getItem()))
+        .containsExactlyElementsIn(ImmutableList.of("license"));
+  }
+
+  @Test
+  public void testParseLicenseOnlyContentParsesPreservedCommentWithInvalidJsDocTag() {
+    String comment = "@date 11/12/2023\n@nosideeffects\n@deprecated\n@preserve Foo\n*/";
+    JSDocInfo r = parse(comment, Config.JsDocParsing.LICENSE_COMMENTS_ONLY);
+    assertThat(r).isNotNull();
+    assertThat(this.prevLicense).isEqualTo(" Foo\n");
+    assertThat(r.isNoSideEffects()).isFalse();
+    assertThat(r.isDeprecated()).isFalse();
+    assertThat(r.getMarkers().stream().map(m -> m.getAnnotation().getItem()))
+        .containsExactlyElementsIn(ImmutableList.of("preserve"));
+  }
+
+  @Test
+  public void testCantParseLicenseWithInvalidJsDocTag() {
+    String comment = "@date 11/12/2023\n@license Foo\n*/";
+    parse(
+        comment,
+        "illegal use of unknown JSDoc tag \"date\"; ignoring it. Place another character before"
+            + " the @ to stop JSCompiler from parsing it as an annotation.");
+    assertThat(this.prevLicense).isEqualTo(" Foo\n");
+  }
+
+  @Test
   public void testParseDefine1() {
     assertTypeEquals(STRING_TYPE, parse("@define {string}*/").getType());
   }

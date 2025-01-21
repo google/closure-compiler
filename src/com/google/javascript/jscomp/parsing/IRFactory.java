@@ -140,6 +140,7 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -293,14 +294,7 @@ class IRFactory {
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
 
     this.config = config;
-    // We can't just use the existing error reporter, because we might be parsing code that is
-    // closure-unaware, and there is a conceptually-circular dependency that makes suppressing
-    // spurious errors difficult: we need to be able to parse a file to determine if the JSDoc was
-    // annotated as closure-unaware, but that parsing hasn't finished when the existing error
-    // reporter is called with the parse errors from that code. Instead, we have to locally track
-    /// whether the parser has seen the relevant closure-unaware annotation, and locally drop the
-    // errors, handing any other errors off to the provided error reporter.
-    this.errorReporter = new ClosureUnawareCodeSkippingJsDocInfoErroReporter(this, errorReporter);
+    this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
 
     if (config.strictMode().isStrict()) {
@@ -317,6 +311,7 @@ class IRFactory {
     private final ImmutableList<Comment> source;
     private final Predicate<Comment> filter;
     private int index = -1;
+    private int previousIndex = -1;
 
     CommentTracker(ImmutableList<Comment> source, Predicate<Comment> filter) {
       this.source = source;
@@ -330,6 +325,7 @@ class IRFactory {
     }
 
     void advance() {
+      this.previousIndex = this.index;
       while (true) {
         this.index++; // Always advance at least one element.
 
@@ -338,6 +334,10 @@ class IRFactory {
           break;
         }
       }
+    }
+
+    void backtrack() {
+      this.index = this.previousIndex;
     }
 
     boolean hasPendingCommentBefore(SourcePosition pos) {
@@ -379,7 +379,10 @@ class IRFactory {
       for (Comment comment : tree.sourceComments) {
         if ((comment.type == Comment.Type.JSDOC || comment.type == Comment.Type.IMPORTANT)
             && !irFactory.parsedComments.contains(comment)) {
-          irFactory.handlePossibleFileOverviewJsDoc(comment);
+          boolean useLicensesOnlyConfig =
+              irFactory.withinClosureUnawareCodeRange(
+                  comment.location.start.line, comment.location.start.column);
+          irFactory.handlePossibleFileOverviewJsDoc(comment, useLicensesOnlyConfig);
         }
       }
 
@@ -701,8 +704,8 @@ class IRFactory {
     return true;
   }
 
-  private void handlePossibleFileOverviewJsDoc(Comment comment) {
-    JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
+  private void handlePossibleFileOverviewJsDoc(Comment comment, boolean useLicensesOnlyConfig) {
+    JsDocInfoParser jsDocParser = createJsDocInfoParser(comment, useLicensesOnlyConfig);
     parsedComments.add(comment);
     handlePossibleFileOverviewJsDoc(jsDocParser);
   }
@@ -721,6 +724,17 @@ class IRFactory {
     if (comment == null) {
       return null;
     }
+
+    if (withinClosureUnawareCodeRange(comment.location.start.line, comment.location.start.column)) {
+      // Within closure-unaware code, we don't parse jsdoc as if it is load-bearing.
+      // This early-return prevents the comments here from being recorded as being parsed,
+      // and this later allows all these jsdoc comments to be treated as "top-level" comments that
+      // might contain license info / "important" comments (the only form of JSDoc that should
+      // happen for closure-unaware code).
+      this.jsdocTracker.backtrack();
+      return null;
+    }
+
     JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
     parsedComments.add(comment);
     if (handlePossibleFileOverviewJsDoc(jsDocParser)) {
@@ -760,15 +774,37 @@ class IRFactory {
     return parseJSDocInfoFrom(getJSDocCommentAt(tree.getStart()));
   }
 
-  JSDocInfo parseJSDocInfoOnToken(com.google.javascript.jscomp.parsing.parser.Token token) {
+  @Nullable JSDocInfo parseJSDocInfoOnToken(
+      com.google.javascript.jscomp.parsing.parser.Token token) {
     return parseJSDocInfoFrom(getJSDocCommentAt(token.getStart()));
   }
 
-  JSDocInfo parseInlineJSDocAt(SourcePosition pos) {
+  @Nullable JSDocInfo parseInlineJSDocAt(SourcePosition pos) {
+    if (withinClosureUnawareCodeRange(pos.line, pos.column)) {
+      // Within closure-unaware code, we don't parse jsdoc as if it is load-bearing.
+      // This early-return prevents the comments here from being recorded as being parsed,
+      // and this later allows all these jsdoc comments to be treated as "top-level" comments that
+      // might contain license info / "important" comments (the only form of JSDoc that should
+      // happen for closure-unaware code).
+      // Unlike other points in IRFactory where we explicitly backtrack the jsdocTracker, we don't
+      // do that here because we've actually never advanced it yet - that happens in
+      // getJSDocCommentAt.
+      return null;
+    }
     Comment comment = getJSDocCommentAt(pos);
     return (comment != null && !comment.value.contains("@"))
         ? parseInlineTypeDoc(comment)
         : parseJSDocInfoFrom(comment);
+  }
+
+  private static final Comparator<Comment> COMMENT_START_POSITION_COMPARATOR =
+      comparingInt((Comment x) -> x.location.start.line)
+          .thenComparingInt(x -> x.location.start.column);
+
+  private boolean hasAnyPendingCommentBefore(
+      SourcePosition pos, boolean withinClosureUnawareCodeRange) {
+    return this.nonJsdocTracker.hasPendingCommentBefore(pos)
+        || (withinClosureUnawareCodeRange && this.jsdocTracker.hasPendingCommentBefore(pos));
   }
 
   /**
@@ -778,20 +814,38 @@ class IRFactory {
    * <p>It would be legal to replace all comments associated with this node with that one string.
    */
   private @Nullable NonJSDocComment parseNonJSDocCommentAt(SourcePosition pos, boolean isInline) {
-    if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      return null;
-    }
-
-    if (!this.nonJsdocTracker.hasPendingCommentBefore(pos)) {
-      return null;
-    }
+    boolean withinClosureUnawareCodeRange = withinClosureUnawareCodeRange(pos.line, pos.column);
 
     StringBuilder result = new StringBuilder();
-    Comment firstComment = this.nonJsdocTracker.current();
+    Comment firstComment = null;
     Comment lastComment = null;
 
-    while (this.nonJsdocTracker.hasPendingCommentBefore(pos)) {
+    while (hasAnyPendingCommentBefore(pos, withinClosureUnawareCodeRange)) {
       Comment currentComment = this.nonJsdocTracker.current();
+      boolean commentFromJsdocTracker = false;
+
+      if (withinClosureUnawareCodeRange) {
+        Comment currentJsDocComment = this.jsdocTracker.current();
+        if (currentComment == null
+            || (currentJsDocComment != null
+                && COMMENT_START_POSITION_COMPARATOR.compare(currentComment, currentJsDocComment)
+                    > 0)) {
+
+          if (currentJsDocComment.value.contains("@license")) {
+            // Skip this so it can be parsed for the license contents (which happens when a comment
+            // isn't inserted into the parsedComments set).
+            this.jsdocTracker.advance();
+            continue;
+          }
+
+          commentFromJsdocTracker = true;
+          currentComment = currentJsDocComment;
+        }
+      }
+
+      if (firstComment == null) {
+        firstComment = currentComment;
+      }
 
       if (lastComment != null) {
         for (int blankCount = currentComment.location.start.line - lastComment.location.end.line;
@@ -802,8 +856,22 @@ class IRFactory {
       }
       result.append(currentComment.value);
 
+
       lastComment = currentComment;
-      this.nonJsdocTracker.advance();
+      if (commentFromJsdocTracker) {
+        this.parsedComments.add(currentComment);
+        this.jsdocTracker.advance();
+      } else {
+        this.nonJsdocTracker.advance();
+      }
+    }
+
+    if (firstComment == null) {
+      return null; // We didn't find any relevant comments.
+    }
+
+    if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      return null;
     }
 
     NonJSDocComment nonJSDocComment =
@@ -929,10 +997,6 @@ class IRFactory {
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
-    if (withinClosureUnawareCodeRange(node.location.start.line, node.location.start.column)) {
-      // closure-unaware code should never have CAST nodes in the AST.
-      return irNode;
-    }
     if (node.type == ParseTreeType.PAREN_EXPRESSION && info.hasType()) {
       irNode = newNode(Token.CAST, irNode);
     }
@@ -1006,6 +1070,9 @@ class IRFactory {
 
   void maybeWarnForFeature(ParseTree node, Feature feature) {
     features = features.with(feature);
+    if (withinClosureUnawareCodeRange(node.location.start.line, node.location.start.column)) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, lineno(node), charno(node));
@@ -1015,6 +1082,9 @@ class IRFactory {
   void maybeWarnForFeature(
       com.google.javascript.jscomp.parsing.parser.Token token, Feature feature) {
     features = features.with(feature);
+    if (withinClosureUnawareCodeRange(token.location.start.line, token.location.start.column)) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, lineno(token), charno(token));
@@ -1023,6 +1093,9 @@ class IRFactory {
 
   void maybeWarnForFeature(Node node, Feature feature) {
     features = features.with(feature);
+    if (withinClosureUnawareCodeRange(node.getLineno(), node.getCharno())) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, node.getLineno(), node.getCharno());
@@ -1054,6 +1127,10 @@ class IRFactory {
     }
   }
 
+  private JsDocInfoParser createJsDocInfoParser(Comment node) {
+    return createJsDocInfoParser(node, false);
+  }
+
   /**
    * Creates a JsDocInfoParser and parses the JsDoc string.
    *
@@ -1064,11 +1141,16 @@ class IRFactory {
    * @return A JsDocInfoParser. Will contain either fileoverview JsDoc, or normal JsDoc, or no JsDoc
    *     (if the method parses to the wrong level).
    */
-  private JsDocInfoParser createJsDocInfoParser(Comment node) {
+  private JsDocInfoParser createJsDocInfoParser(Comment node, boolean useLicensesOnlyConfig) {
     String comment = node.value;
     int lineno = lineno(node.location.start);
     int charno = charno(node.location.start);
     int position = node.location.start.offset;
+
+    Config config = this.config;
+    if (useLicensesOnlyConfig) {
+      config = config.toBuilder().setJsDocParsingMode(JsDocParsing.LICENSE_COMMENTS_ONLY).build();
+    }
 
     // The JsDocInfoParser expects the comment without the initial '/**'.
     int numOpeningChars = 3;
@@ -1120,36 +1202,6 @@ class IRFactory {
 
   void setLengthFrom(Node node, Node ref) {
     node.setLength(ref.getLength());
-  }
-
-  private static final class ClosureUnawareCodeSkippingJsDocInfoErroReporter
-      implements ErrorReporter {
-    private final ErrorReporter delegate;
-    private final IRFactory host;
-
-    private ClosureUnawareCodeSkippingJsDocInfoErroReporter(
-        IRFactory host, ErrorReporter delegate) {
-      this.delegate = delegate;
-      this.host = host;
-    }
-
-    @Override
-    public void error(String message, String sourceName, int line, int lineOffset) {
-      // Line numbers are 1-indexed, but the SourcePosition uses 0-indexed.
-      if (host.withinClosureUnawareCodeRange(line - 1, lineOffset)) {
-        return;
-      }
-      delegate.error(message, sourceName, line, lineOffset);
-    }
-
-    @Override
-    public void warning(String message, String sourceName, int line, int lineOffset) {
-      // Line numbers are 1-indexed, but the SourcePosition uses 0-indexed.
-      if (host.withinClosureUnawareCodeRange(line - 1, lineOffset)) {
-        return;
-      }
-      delegate.warning(message, sourceName, line, lineOffset);
-    }
   }
 
   private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");

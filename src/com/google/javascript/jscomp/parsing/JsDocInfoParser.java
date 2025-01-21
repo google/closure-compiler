@@ -131,6 +131,7 @@ public final class JsDocInfoParser {
       ImmutableSet.of("unique", "consistent", "stable", "mapped", "xid");
   private static final ImmutableSet<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
+  private final boolean onlyParseLicenseJsDoc;
 
   private @Nullable String licenseText;
 
@@ -192,6 +193,8 @@ public final class JsDocInfoParser {
     this.closurePrimitiveNames = config.closurePrimitiveNames();
     this.preserveWhitespace = config.jsDocParsingMode().shouldPreserveWhitespace();
     this.jsDocSourceKind = jsDocSourceKind;
+    this.onlyParseLicenseJsDoc =
+        config.jsDocParsingMode() == Config.JsDocParsing.LICENSE_COMMENTS_ONLY;
 
     this.errorReporter = errorReporter;
     this.templateNode = templateNode == null ? IR.script() : templateNode;
@@ -397,6 +400,12 @@ public final class JsDocInfoParser {
 
     String annotationName = stream.getString();
     Annotation annotation = annotations.get(annotationName);
+
+    if (this.onlyParseLicenseJsDoc
+        && !(annotation == Annotation.LICENSE || annotation == Annotation.PRESERVE)) {
+      return next();
+    }
+
     if (annotation == null || annotationName.isEmpty()) {
       addParserWarning(Msg.BAD_JSDOC_TAG, annotationName);
     } else {

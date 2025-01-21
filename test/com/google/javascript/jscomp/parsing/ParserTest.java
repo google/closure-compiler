@@ -3085,6 +3085,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testAnonymousFunctionExpressionInClosureUnawareCode() {
+    mode = LanguageMode.ECMASCRIPT_2015;
+    parseError(
+        "/** @closureUnaware */ (function() { function () {} }).call(globalThis)",
+        "'identifier' expected");
+  }
+
+  @Test
   public void testArrayDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
@@ -5880,6 +5888,37 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT_2020;
     expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
     parseWarning("class C{['a'] = 2;}", requiresLanguageModeMessage(Feature.PUBLIC_CLASS_FIELDS));
+  }
+
+  @Test
+  public void testClassComputedField_es2020_noWarningOrRecordingOfFeaturesInClosureUnawareCode() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
+    parseWarning(
+        "/** @closureUnaware */ (function() { class C{ a = 2;} }).call(globalThis);",
+        // This warning is expected - it is used to halt compilation during parsing when
+        // closure-unaware code is present when it should not be.
+        "@closureUnaware annotation is not allowed in this compilation");
+
+    // Note that the PUBLIC_CLASS_FIELDS feature is not recorded here. This is OK as we currently do
+    // not support transpiling closure-unaware code.
+    expectFeatures(Feature.CLASSES);
+  }
+
+  @Test
+  public void testClassComputedField_es2020_warnsForCodeOutsideClosureUnawareRange() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
+    parseWarning(
+        "/** @closureUnaware */ (function() { class C{ a = 2;} }).call(globalThis); class C{ a"
+            + " = 2;}",
+        // This warning is expected - it is used to halt compilation during parsing when
+        // closure-unaware code is present when it should not be.
+        "@closureUnaware annotation is not allowed in this compilation",
+        "This language feature is only supported for UNSTABLE mode or better: Public class"
+            + " fields");
+
+    expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS);
   }
 
   @Test
