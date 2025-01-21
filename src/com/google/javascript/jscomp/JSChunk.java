@@ -252,6 +252,10 @@ public final class JSChunk implements Serializable, DependencyInfo {
     return ImmutableList.copyOf(inputs.values());
   }
 
+  public Iterable<CompilerInput> getInputsIterable() {
+    return inputs.values();
+  }
+
   /** Returns the input with the given name or null if none. */
   public CompilerInput getByName(String name) {
     return inputs.get(name);
