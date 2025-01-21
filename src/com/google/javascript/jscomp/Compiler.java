@@ -3561,10 +3561,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return this.inputsById.get(SYNTHETIC_CODE_INPUT_ID).getAstRoot(this);
     }
     if (chunk == null) {
-      if (chunkGraph == null || Iterables.isEmpty(chunkGraph.getAllInputs())) {
+      Iterable<CompilerInput> allInputs = chunkGraph.getAllInputs();
+      if (chunkGraph == null || Iterables.isEmpty(allInputs)) {
         throw new IllegalStateException("No inputs");
       }
-      CompilerInput firstInput = Iterables.getFirst(chunkGraph.getAllInputs(), null);
+      CompilerInput firstInput = Iterables.getFirst(allInputs, null);
       return checkNotModule(firstInput.getAstRoot(this), "Cannot insert code into a module");
     }
 
