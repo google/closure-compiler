@@ -1442,9 +1442,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
                 final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(compiler);
-                return (Node externs, Node root) -> {
-                  pass.process(externs, root);
-                };
+                return pass::process;
               })
           .build();
 
