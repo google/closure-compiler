@@ -1311,4 +1311,11 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("class Foo {/** @usedViaDotConstructor */ constructor() {} }");
     testWarning("/** @usedViaDotConstructor */ function A() {}", MISPLACED_ANNOTATION);
   }
+
+  @Test
+  public void testMisplacedTypeAnnotationCommaExpression() {
+    testSame("var x = obj.method(/** @type {foo} */ (bar), baz);");
+    testSame("var x = (/** @type {foo} */ (obj.method()), bar);");
+    testSame("var x = (/** @type {foo} */ (bar), baz);");
+  }
 }

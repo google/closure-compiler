@@ -755,6 +755,7 @@ class IRFactory {
 
       case CALL_EXPRESSION:
       case CONDITIONAL_EXPRESSION:
+      case COMMA_EXPRESSION:
       case BINARY_OPERATOR:
       case MEMBER_EXPRESSION:
       case MEMBER_LOOKUP_EXPRESSION:
@@ -954,6 +955,9 @@ class IRFactory {
           continue;
         case UPDATE_EXPRESSION:
           tree = tree.asUpdateExpression().operand;
+          continue;
+        case COMMA_EXPRESSION:
+          tree = tree.asCommaExpression().expressions.get(0);
           continue;
         default:
           return tree;
