@@ -69,8 +69,9 @@ public abstract class PassConfig {
    */
   public enum OptimizationPasses {
     ALL,
-    FIRST_HALF, // Passes from beginning of stage 2 until before the early optimization loop.
-    SECOND_HALF, // Passes from the early optimization loop until the end of stage 2.
+    // TODO(user): Enable these in a follow-up CL.
+    // FIRST_HALF, // Passes from beginning of stage 2 until before the early optimization loop.
+    // SECOND_HALF, // Passes from the early optimization loop until the end of stage 2.
   }
 
   /**
