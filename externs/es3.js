@@ -2584,7 +2584,7 @@ Error.captureStackTrace = function(error, opt_constructor){};
 
 /**
  * New in ES 2022, adds a cause to the error which is useful for chaining errors
- * @type {?Error}
+ * @type {*}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause
  */
 Error.prototype.cause;
