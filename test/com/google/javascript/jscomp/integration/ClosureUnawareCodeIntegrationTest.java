@@ -715,10 +715,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
     NodeTraversal.builder()
         .setCompiler(lastCompiler)
-        .setCallback(
-            (NodeTraversal t, Node n, Node parent) -> {
-              assertThat(n.isCast()).isFalse();
-            })
+        .setCallback((NodeTraversal t, Node n, Node parent) -> assertThat(n.isCast()).isFalse())
         .traverse(fn);
   }
 
