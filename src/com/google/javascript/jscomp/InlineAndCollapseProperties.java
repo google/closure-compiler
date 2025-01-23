@@ -32,6 +32,8 @@ import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.GlobalNamespace.RefBasedAstChange;
+import com.google.javascript.jscomp.GlobalNamespace.SimpleAstChange;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
@@ -766,7 +768,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       newNode.srcrefTree(nodeToReplace);
       nodeToReplace.replaceWith(newNode);
       compiler.reportChangeToEnclosingScope(newNode);
-      return new AstChange(aliasRef.getScope(), newNode);
+      return new SimpleAstChange(newNode, alias.getChunk(), alias.scope);
     }
 
     /**
@@ -815,10 +817,10 @@ class InlineAndCollapseProperties implements CompilerPass {
           // nothing to do here
           return;
         }
-        Set<AstChange> newNodes = new LinkedHashSet<>();
 
-        // Rewrite all references to the aliasing name, except for the initialization
-        rewriteAliasReferences(aliasingName, alias, newNodes);
+        // Rewrite all references to the aliasing name, except for the initialization & any cross-
+        // chunk references if they exist.
+        Set<AstChange> newNodes = rewriteAliasReferences(aliasingName, alias, aliasInlinability);
         rewriteAliasProps(aliasingName, alias.getNode(), 0, newNodes);
 
         if (aliasInlinability.shouldRemoveDeclaration()) {
@@ -837,7 +839,7 @@ class InlineAndCollapseProperties implements CompilerPass {
             aliasingName.removeRef(aliasInitialization);
             // Force GlobalNamespace to revisit the new reference to 'aliased.name' and update its
             // internal state.
-            newNodes.add(new AstChange(alias.scope, alias.getNode()));
+            newNodes.add(new RefBasedAstChange(alias, alias.getNode()));
             compiler.reportChangeToEnclosingScope(aliasGrandparent);
           } else {
             // Replace
@@ -858,19 +860,40 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
     }
 
-    /** Replaces all reads of a name with the name it aliases */
-    private void rewriteAliasReferences(
-        Name aliasingName, Ref aliasingRef, Set<AstChange> newNodes) {
+    /**
+     * Replaces reads of a name with the name it aliases
+     *
+     * @param aliasingName the alias - e.g. 'alsoFoo' in 'const alsoFoo = foo;'
+     * @param aliasInlinability indicates whether all references to the alias should be inlined, or
+     *     only those that are in a valid cross-chunk dependency.
+     */
+    private Set<AstChange> rewriteAliasReferences(
+        Name aliasingName, Ref aliasingRef, Inlinability aliasInlinability) {
+      Set<AstChange> newNodes = new LinkedHashSet<>();
       List<Ref> refs = new ArrayList<>(aliasingName.getRefs());
+      JSChunk initializationChunk =
+          aliasingName.getInitialization() != null
+              ? aliasingName.getInitialization().getChunk()
+              : aliasingName.getDeclaration().getChunk();
       for (Ref ref : refs) {
         if (ref.isSetFromGlobal()) {
           // Handled elsewhere
+          // This should either be the initialization or an irrelevant uninitialized declaration.
+          checkState(
+              ref.getChunk().equals(initializationChunk) || ref.isUninitializedDeclaration(), ref);
           continue;
         }
 
         checkState(ref.isGet(), ref); // names with local sets should not be rewritten
         // Twin refs that are both gets and sets are handled later, with the other sets.
         checkState(!ref.isTwin(), ref);
+
+        if (aliasInlinability == Inlinability.INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY
+            && ref.getChunk() != initializationChunk
+            && !compiler.getChunkGraph().dependsOn(ref.getChunk(), initializationChunk)) {
+          continue;
+        }
+
         if (ref.getNode().isStringKey()) {
           // e.g. `y` in `const {y} = x;`
           DestructuringGlobalNameExtractor.reassignDestructringLvalue(
@@ -883,10 +906,11 @@ class InlineAndCollapseProperties implements CompilerPass {
           newNode.srcref(node);
           node.replaceWith(newNode);
           compiler.reportChangeToEnclosingScope(newNode);
-          newNodes.add(new AstChange(ref.scope, newNode));
+          newNodes.add(new RefBasedAstChange(ref, newNode));
         }
         aliasingName.removeRef(ref);
       }
+      return newNodes;
     }
 
     /**
@@ -991,7 +1015,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         compiler.reportChangeToEnclosingScope(newValue);
         prop.removeRef(ref);
         // Rescan the expression root.
-        newNodes.add(new AstChange(ref.scope, ref.getNode()));
+        newNodes.add(new RefBasedAstChange(ref, ref.getNode()));
         codeChanged = true;
       }
     }

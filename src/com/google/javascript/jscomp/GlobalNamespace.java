@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -268,30 +267,30 @@ class GlobalNamespace
     return nameMap;
   }
 
+  static interface AstChange {
+    Node node();
+
+    JSChunk chunk();
+
+    Scope scope();
+  }
+
+  record SimpleAstChange(Node node, JSChunk chunk, Scope scope) implements AstChange {}
+
   /**
    * A simple data class that contains the information necessary to inspect a node for changes to
    * the global namespace.
    */
-  static class AstChange {
-    final Scope scope;
-    final Node node;
+  record RefBasedAstChange(Ref ref, Node node) implements AstChange {
 
-    AstChange(Scope scope, Node node) {
-      this.scope = scope;
-      this.node = node;
+    @Override
+    public JSChunk chunk() {
+      return this.ref.getChunk();
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (obj instanceof AstChange other) {
-        return Objects.equals(this.scope, other.scope) && Objects.equals(this.node, other.node);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(this.scope, this.node);
+    public Scope scope() {
+      return this.ref.scope;
     }
   }
 
@@ -305,32 +304,32 @@ class GlobalNamespace
     BuildGlobalNamespace builder = new BuildGlobalNamespace();
 
     for (AstChange info : newNodes) {
-      if (!info.node.isQualifiedName() && !NodeUtil.mayBeObjectLitKey(info.node)) {
+      if (!info.node().isQualifiedName() && !NodeUtil.mayBeObjectLitKey(info.node())) {
         continue;
       }
-      scanFromNode(builder, info.scope, info.node);
+      scanFromNode(builder, info.scope(), info.node(), info.chunk());
     }
   }
 
-  private void scanFromNode(BuildGlobalNamespace builder, Scope scope, Node n) {
+  private void scanFromNode(BuildGlobalNamespace builder, Scope scope, Node n, JSChunk chunk) {
     // Check affected parent nodes first.
     Node parent = n.getParent();
     if ((n.isName() || n.isGetProp()) && parent.isGetProp()) {
       // e.g. when replacing "my.alias.prop" with "foo.bar.prop"
       // we want also want to visit "foo.bar.prop", since that's a new global qname we are now
       // referencing.
-      scanFromNode(builder, scope, n.getParent());
+      scanFromNode(builder, scope, n.getParent(), chunk);
     } else if (n.getPrevious() != null && n.getPrevious().isObjectPattern()) {
       // e.g. if we change `const {x} = bar` to `const {x} = foo`, add a new reference to `foo.x`
       // attached to the STRING_KEY `x`
       Node pattern = n.getPrevious();
       for (Node key = pattern.getFirstChild(); key != null; key = key.getNext()) {
         if (key.isStringKey()) {
-          scanFromNode(builder, scope, key);
+          scanFromNode(builder, scope, key, chunk);
         }
       }
     }
-    builder.collect(scope, n);
+    builder.collect(scope, chunk, n);
   }
 
   /** Builds the namespace lazily. */
@@ -430,7 +429,7 @@ class GlobalNamespace
         curMetadata = null;
       }
 
-      collect(t.getScope(), n);
+      collect(t.getScope(), t.getChunk(), n);
 
       return true;
     }
@@ -456,7 +455,7 @@ class GlobalNamespace
       }
     }
 
-    private void collect(Scope scope, Node n) {
+    private void collect(Scope scope, JSChunk chunk, Node n) {
       Node parent = n.getParent();
 
       String name;
@@ -604,12 +603,12 @@ class GlobalNamespace
         // name set in a module scope is a 'global' set.
         if (hoistScope.isGlobal()
             || (root != globalRoot && hoistScope.getRootNode() == curModuleRoot)) {
-          handleSetFromGlobal(scope, n, name, type, nameMetadata);
+          handleSetFromGlobal(chunk, scope, n, name, type, nameMetadata);
         } else {
-          handleSetFromLocal(scope, n, name, nameMetadata);
+          handleSetFromLocal(chunk, scope, n, name, nameMetadata);
         }
       } else {
-        handleGet(scope, n, name, nameMetadata);
+        handleGet(chunk, scope, n, name, nameMetadata);
       }
     }
 
@@ -751,8 +750,8 @@ class GlobalNamespace
      * @param type The type of the value that the name is being assigned
      */
     void handleSetFromGlobal(
-        Scope scope, Node n, String name, NameProp type, ModuleMetadata metadata) {
-      if (maybeHandlePrototypePrefix(scope, n, name, metadata)) {
+        JSChunk chunk, Scope scope, Node n, String name, NameProp type, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(chunk, scope, n, name, metadata)) {
         return;
       }
 
@@ -773,9 +772,9 @@ class GlobalNamespace
       if (isNestedAssign(n.getParent())) {
         // This assignment is both a set and a get that creates an alias.
         Ref.Type refType = Ref.Type.GET_AND_SET_FROM_GLOBAL;
-        addOrConfirmRef(nameObj, n, refType, scope);
+        addOrConfirmRef(nameObj, n, refType, scope, chunk);
       } else {
-        addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_GLOBAL, scope);
+        addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_GLOBAL, scope, chunk);
         nameObj.setDeclaredTypeKind(getDeclaredTypeKind(n));
       }
     }
@@ -822,8 +821,9 @@ class GlobalNamespace
      * @param n The node currently being visited
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleSetFromLocal(Scope scope, Node n, String name, ModuleMetadata metadata) {
-      if (maybeHandlePrototypePrefix(scope, n, name, metadata)) {
+    void handleSetFromLocal(
+        JSChunk chunk, Scope scope, Node n, String name, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(chunk, scope, n, name, metadata)) {
         return;
       }
 
@@ -834,9 +834,9 @@ class GlobalNamespace
 
       if (isNestedAssign(n.getParent())) {
         // This assignment is both a set and a get that creates an alias.
-        addOrConfirmRef(nameObj, n, Ref.Type.GET_AND_SET_FROM_LOCAL, scope);
+        addOrConfirmRef(nameObj, n, Ref.Type.GET_AND_SET_FROM_LOCAL, scope, chunk);
       } else {
-        addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_LOCAL, scope);
+        addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_LOCAL, scope, chunk);
       }
     }
 
@@ -847,13 +847,13 @@ class GlobalNamespace
      * @param n The node currently being visited
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleGet(Scope scope, Node n, String name, ModuleMetadata metadata) {
-      if (maybeHandlePrototypePrefix(scope, n, name, metadata)) {
+    void handleGet(JSChunk chunk, Scope scope, Node n, String name, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(chunk, scope, n, name, metadata)) {
         return;
       }
       Ref.Type type = determineRefTypeForGet(n, n, name);
 
-      addOrConfirmRef(getOrCreateName(name, metadata), n, type, scope);
+      addOrConfirmRef(getOrCreateName(name, metadata), n, type, scope, chunk);
     }
 
     /**
@@ -1009,10 +1009,11 @@ class GlobalNamespace
      * If there is already a Ref for the given name & node, confirm it matches what we would create.
      * Otherwise add a new one.
      */
-    private void addOrConfirmRef(Name nameObj, Node node, Ref.Type refType, Scope scope) {
+    private void addOrConfirmRef(
+        Name nameObj, Node node, Ref.Type refType, Scope scope, JSChunk chunk) {
       Ref existingRef = nameObj.getRefForNode(node);
       if (existingRef == null) {
-        nameObj.addRef(scope, node, refType);
+        nameObj.addRef(chunk, scope, node, refType);
       } else {
         // module and scope are dependent on Node, so not much point in checking them
         Ref.Type existingRefType = existingRef.type;
@@ -1061,7 +1062,8 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      * @return Whether the name was handled
      */
-    boolean maybeHandlePrototypePrefix(Scope scope, Node n, String name, ModuleMetadata metadata) {
+    boolean maybeHandlePrototypePrefix(
+        JSChunk chunk, Scope scope, Node n, String name, ModuleMetadata metadata) {
       // We use a string-based approach instead of inspecting the parse tree
       // to avoid complexities with object literals, possibly nested, beneath
       // assignments.
@@ -1095,7 +1097,7 @@ class GlobalNamespace
         n = n.getFirstChild();
       }
 
-      addOrConfirmRef(getOrCreateName(prefix, metadata), n, Ref.Type.PROTOTYPE_GET, scope);
+      addOrConfirmRef(getOrCreateName(prefix, metadata), n, Ref.Type.PROTOTYPE_GET, scope, chunk);
       return true;
     }
 
@@ -1162,15 +1164,11 @@ class GlobalNamespace
         /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ true,
         /* canCollapse= */ true),
-    INLINE_BUT_KEEP_DECLARATION_ENUM(
+    INLINE_BUT_KEEP_DECLARATION(
         /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ false,
         /* canCollapse= */ true),
-    INLINE_BUT_KEEP_DECLARATION_INTERFACE(
-        /* shouldInlineUsages= */ true,
-        /* shouldRemoveDeclaration= */ false,
-        /* canCollapse= */ true),
-    INLINE_BUT_KEEP_DECLARATION_CLASS(
+    INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY(
         /* shouldInlineUsages= */ true,
         /* shouldRemoveDeclaration= */ false,
         /* canCollapse= */ true),
@@ -1380,9 +1378,9 @@ class GlobalNamespace
       return (this.propertyBitSet & property.bit) != 0;
     }
 
-    private void addRef(Scope scope, Node node, Ref.Type type) {
+    private void addRef(JSChunk chunk, Scope scope, Node node, Ref.Type type) {
       checkNoExistingRefsForNode(node);
-      Ref ref = createNewRef(scope, node, type);
+      Ref ref = createNewRef(chunk, scope, node, type);
       putRef(node, ref);
       updateStateForAddedRef(ref);
     }
@@ -1404,8 +1402,9 @@ class GlobalNamespace
       return (Map<Node, Ref>) refsForNode;
     }
 
-    private Ref createNewRef(Scope scope, Node node, Ref.Type type) {
+    private Ref createNewRef(JSChunk chunk, Scope scope, Node node, Ref.Type type) {
       return new Ref(
+          chunk,
           checkNotNull(scope),
           checkNotNull(node), // may be null later, but not on creation
           type);
@@ -1427,7 +1426,7 @@ class GlobalNamespace
     }
 
     Ref addSingleRefForTesting(Node node, Ref.Type type) {
-      Ref ref = new Ref(/* scope= */ null, /* node= */ node, type);
+      Ref ref = new Ref(/* chunk= */ null, /* scope= */ null, /* node= */ node, type);
       putRef(node, ref);
       updateStateForAddedRef(ref);
       return ref;
@@ -1445,7 +1444,7 @@ class GlobalNamespace
     void addAliasingGetClonedFromDeclaration(Node newRefNode) {
       // TODO(bradfordcsmith): It would be good to add checks that the scope is correct.
       Ref declRef = checkNotNull(declaration);
-      addRef(declRef.scope, newRefNode, Ref.Type.ALIASING_GET);
+      addRef(declRef.chunk, declRef.scope, newRefNode, Ref.Type.ALIASING_GET);
     }
 
     /**
@@ -1744,11 +1743,15 @@ class GlobalNamespace
 
       // TODO(lharker): consider separating canCollapseOrInline() into this method, since it
       // duplicates some logic here
-      Inlinability collapsibility = canCollapseOrInline();
-      if (!collapsibility.shouldInlineUsages()) {
+      Inlinability inlinability = canCollapseOrInline();
+      if (!inlinability.shouldInlineUsages()) {
         // if you can't even inline the usages, do nothing.
         return Inlinability.DO_NOT_INLINE;
       }
+      JSChunk initialChunk =
+          getInitialization() != null
+              ? getInitialization().getChunk()
+              : getDeclaration().getChunk();
 
       // Only allow inlining of simple references.
       for (Ref ref : getRefs()) {
@@ -1756,6 +1759,8 @@ class GlobalNamespace
           case SET_FROM_GLOBAL:
           case GET_AND_SET_FROM_GLOBAL:
             // Expect one global set
+            checkState(
+                ref.isUninitializedDeclaration() || ref.getChunk().equals(initialChunk), ref);
             continue;
           case SET_FROM_LOCAL:
           case GET_AND_SET_FROM_LOCAL:
@@ -1765,13 +1770,25 @@ class GlobalNamespace
           case PROTOTYPE_GET:
           case CALL_GET:
           case SUBCLASSING_GET:
+            // This name has a reference in a different chunk that is not guaranteed to be loaded
+            // before the alias is initialized. In an ideal world, we might just back off inlining
+            // this alias entirely. Unfortunately, that causes new runtime errors in practice,
+            // because property collapsing is intentionally unsafe and will collapse properties even
+            // when it will break code, and so it's safer to still inling usages of this alias
+            // except for the specific invalid cross-chunk dependency(s).
+            JSChunk refChunk = ref.getChunk();
+            if (inlinability != Inlinability.INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY
+                && refChunk != initialChunk
+                && !compiler.getChunkGraph().dependsOn(refChunk, initialChunk)) {
+              inlinability = Inlinability.INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY;
+            }
             continue;
           case DELETE_PROP:
             return Inlinability.DO_NOT_INLINE;
         }
         throw new AssertionError();
       }
-      return collapsibility;
+      return inlinability;
     }
 
     private boolean hasOneRealGlobalSet() {
@@ -1887,9 +1904,8 @@ class GlobalNamespace
             return unsafeInlinablility;
           }
 
-        case INLINE_BUT_KEEP_DECLARATION_CLASS:
-        case INLINE_BUT_KEEP_DECLARATION_ENUM:
-        case INLINE_BUT_KEEP_DECLARATION_INTERFACE:
+        case INLINE_BUT_KEEP_DECLARATION:
+        case INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY:
           // this is definitely not safe to completely inline/collapse of its parent
           // if it's a declared type, we should still partially inline it and completely collapse it
           // if not a declared type we should partially inline it iff the other conditions hold
@@ -1931,11 +1947,11 @@ class GlobalNamespace
 
     private Inlinability getUnsafeInlinabilityBasedOnDeclaredType() {
       if (this.getBooleanProperty(NameProp.CONSTRUCTOR_TYPE)) {
-        return Inlinability.INLINE_BUT_KEEP_DECLARATION_CLASS;
+        return Inlinability.INLINE_BUT_KEEP_DECLARATION;
       } else if (this.getBooleanProperty(NameProp.INTERFACE_TYPE)) {
-        return Inlinability.INLINE_BUT_KEEP_DECLARATION_INTERFACE;
+        return Inlinability.INLINE_BUT_KEEP_DECLARATION;
       } else if (this.getBooleanProperty(NameProp.ENUM_TYPE)) {
-        return Inlinability.INLINE_BUT_KEEP_DECLARATION_ENUM;
+        return Inlinability.INLINE_BUT_KEEP_DECLARATION;
       } else if (this.getBooleanProperty(NameProp.NOT_A_TYPE)) {
         return Inlinability.DO_NOT_INLINE;
       }
@@ -2389,6 +2405,7 @@ class GlobalNamespace
     // Not final because CollapseProperties needs to update the namespace in-place.
     private Node node;
     private final Type type;
+    private final JSChunk chunk;
 
     /**
      * The scope in which the reference is resolved. Note that for ALIASING_GETS like "var x = ns;"
@@ -2403,10 +2420,15 @@ class GlobalNamespace
      * created just for testing. However, all Refs for real use must be created by methods on the
      * Name class, which does do argument checking.
      */
-    private Ref(@Nullable Scope scope, @Nullable Node node, Type type) {
+    private Ref(JSChunk chunk, @Nullable Scope scope, @Nullable Node node, Type type) {
+      this.chunk = chunk;
       this.node = node;
       this.type = type;
       this.scope = scope;
+    }
+
+    public JSChunk getChunk() {
+      return chunk;
     }
 
     @Override

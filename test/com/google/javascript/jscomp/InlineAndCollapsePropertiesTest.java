@@ -3322,7 +3322,41 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void conditionallyLoadedChunk() {
+  public void conditionallyLoadedChunk_unsafeToInlineVar() {
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                lines(
+                    "var modFactory;",
+                    "const registry = {};",
+                    "const factories = {};",
+                    "factories.one = function() {};",
+                    "",
+                    "function build() {",
+                    "  const mod = modFactory;",
+                    "  if (mod) mod();",
+                    "}"))
+            // m2, conditionally loaded after m1
+            .addChunk("modFactory = factories.one; modFactory();")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            lines(
+                "var modFactory;",
+                "var factories$one = function() {};",
+                "",
+                "function build() {",
+                "  const mod = modFactory;",
+                "  if (mod) mod();",
+                "}"),
+            "modFactory = factories$one; factories$one();"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_unsafeToInlineQname() {
     JSChunk[] chunks =
         JSChunkGraphBuilder.forChain()
             // m1, always loaded
@@ -3337,12 +3371,9 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                     "  if (mod) mod();",
                     "}"))
             // m2, conditionally loaded after m1
-            .addChunk("registry.mod = factories.one;")
+            .addChunk("registry.mod = factories.one; registry.mod();")
             .build();
 
-    // TODO - b/385132629: don't inline the definition of registry.mod into build(). If the mod
-    // chunk is not loaded, then registry.mod will be undefined when build() is called, so it's
-    // wrong to always call `factories$one` in build().
     test(
         srcs(chunks[0], chunks[1]),
         expected(
@@ -3351,8 +3382,41 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "",
                 "function build() {",
                 "  const mod = null;",
-                "  if (factories$one) factories$one();",
+                "  if (registry$mod) registry$mod();",
                 "}"),
-            "var registry$mod = null;"));
+            "var registry$mod = factories$one; factories$one();"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_safeToInline() {
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                lines(
+                    "const registry = {};",
+                    "const factories = {};",
+                    "factories.one = function() {};",
+                    "registry.mod = factories.one;"))
+            // m2, conditionally loaded after m1
+            // Even though this chunk is conditionally loaded, it depends on m1, so it's safe to
+            // inline the value of registry.mod because if this chunk executes, m1 must have
+            // executed first.
+            .addChunk(
+                lines(
+                    "function build() {", "  const mod = registry.mod;", "  if (mod) mod();", "}"))
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            // m1
+            lines("var factories$one = function() {};", "var registry$mod = null;", ""),
+            // m2
+            lines(
+                "function build() {",
+                "  const mod = null;",
+                "  if (factories$one) factories$one();",
+                "}")));
   }
 }

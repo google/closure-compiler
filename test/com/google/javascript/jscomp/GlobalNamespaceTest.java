@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.GlobalNamespace.SimpleAstChange;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
@@ -573,6 +574,10 @@ public final class GlobalNamespaceTest {
 
     assertThat(xbar.getAliasingGets()).isEqualTo(1);
     assertThat(baz.getGlobalSets()).isEqualTo(1);
+    Ref xBarGet = xbar.getRefs().stream().filter(Ref::isAliasingGet).findFirst().get();
+    assertThat(xBarGet.getNode()).isEqualTo(xName.getParent());
+    assertThat(xBarGet.isAliasingGet()).isTrue();
+    assertThat(xBarGet.getChunk()).isEqualTo(xbar.getDeclaration().getChunk());
   }
 
   @Test
@@ -605,8 +610,7 @@ public final class GlobalNamespaceTest {
   private AstChange createGlobalAstChangeForNode(Node jsRoot, Node n) {
     // This only creates a global scope, so don't use this with local nodes
     Scope globalScope = new SyntacticScopeCreator(lastCompiler).createScope(jsRoot, null);
-    // I don't know if lastCompiler.getModules() is correct but it works
-    return new AstChange(globalScope, n);
+    return new SimpleAstChange(n, Iterables.getFirst(lastCompiler.getChunks(), null), globalScope);
   }
 
   @Test

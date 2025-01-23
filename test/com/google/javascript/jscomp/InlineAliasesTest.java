@@ -656,4 +656,21 @@ public class InlineAliasesTest extends CompilerTestCase {
             "a.b++;",
             "use(v1 + v2);"));
   }
+
+  @Test
+  public void testAliasOfStubDeclaration() {
+    test(
+        lines(
+            "const a = {};",
+            "var stubDeclaration;",
+            "/** @const */",
+            "a.b = stubDeclaration;",
+            "alert(a.b);"),
+        lines(
+            "const a = {};",
+            "var stubDeclaration;",
+            "/** @const */",
+            "a.b = stubDeclaration;",
+            "alert(stubDeclaration);"));
+  }
 }
