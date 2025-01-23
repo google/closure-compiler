@@ -2060,7 +2060,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseLicenseOnlyContentParsesLicenseWithInvalidJsDocTag() {
     String comment = "@date 11/12/2023\n@nosideeffects\n@deprecated\n@license Foo\n*/";
-    JSDocInfo r = parse(comment, Config.JsDocParsing.LICENSE_COMMENTS_ONLY);
+    JSDocInfo r = parse(comment, JsDocParsing.LICENSE_COMMENTS_ONLY);
     assertThat(r).isNotNull();
     assertThat(this.prevLicense).isEqualTo(" Foo\n");
     assertThat(r.isNoSideEffects()).isFalse();
@@ -2072,7 +2072,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseLicenseOnlyContentParsesPreservedCommentWithInvalidJsDocTag() {
     String comment = "@date 11/12/2023\n@nosideeffects\n@deprecated\n@preserve Foo\n*/";
-    JSDocInfo r = parse(comment, Config.JsDocParsing.LICENSE_COMMENTS_ONLY);
+    JSDocInfo r = parse(comment, JsDocParsing.LICENSE_COMMENTS_ONLY);
     assertThat(r).isNotNull();
     assertThat(this.prevLicense).isEqualTo(" Foo\n");
     assertThat(r.isNoSideEffects()).isFalse();
