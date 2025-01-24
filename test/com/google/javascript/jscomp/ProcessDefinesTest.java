@@ -41,6 +41,8 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   private ProcessDefines.Mode mode;
   private boolean recognizeClosureDefines = true;
 
+  private boolean enableJ2clPasses = false;
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -55,6 +57,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
+    if (enableJ2clPasses) {
+      J2clSourceFileChecker.markToRunJ2clPasses(compiler);
+    }
     return new ProcessDefinesWithInjectedNamespace(compiler);
   }
 
@@ -938,6 +943,30 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     this.recognizeClosureDefines = false;
     testSame("var CLOSURE_DEFINES = {'FOO': a};");
+  }
+
+  @Test
+  public void testGenerateGlobalAliases() {
+    enableJ2clPasses = true;
+
+    test(
+        lines("var a = {};", "/** @define {number} */ a.b = goog.define('a.b', 1);"),
+        lines("var a = {};", "/** @define {number} */ a.b = 1;", "var jscomp$defines$a$b = a.b;"));
+    test(
+        lines("var a = {};", "/** @define {number} */ a.b = goog.define('c.d', 1);"),
+        lines("var a = {};", "/** @define {number} */ a.b = 1;", "var jscomp$defines$c$d = a.b;"));
+    test(
+        "/** @define {number} */ var a = goog.define('c.d', 1);",
+        lines("/** @define {number} */ var a = 1;", "var jscomp$defines$c$d = a;"));
+    test(
+        lines(
+            "/** @define {number} */ var a = goog.define('a', 1);",
+            "/** @define {number} */ var b = goog.define('b', a);"),
+        lines(
+            "/** @define {number} */ var a = 1;",
+            "var jscomp$defines$a = a;",
+            "/** @define {number} */ var b = a;",
+            "var jscomp$defines$b = b;"));
   }
 
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {

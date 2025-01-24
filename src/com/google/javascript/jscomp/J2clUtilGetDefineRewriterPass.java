@@ -64,8 +64,9 @@ public class J2clUtilGetDefineRewriterPass extends AbstractPostOrderCallback
   }
 
   private Node getDefineReplacement(Node firstExpr, Node secondExpr) {
-    if (defines.contains(firstExpr.getString())) {
-      Node define = NodeUtil.newQName(compiler, firstExpr.getString());
+    String defineName = firstExpr.getString();
+    if (defines.contains(defineName)) {
+      Node define = NodeUtil.newQName(compiler, ProcessDefines.getGlobalDefineAlias(defineName));
       Node defineStringValue = NodeUtil.newCallNode(IR.name("String"), define);
       return IR.comma(secondExpr, defineStringValue);
     } else {

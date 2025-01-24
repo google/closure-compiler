@@ -244,6 +244,31 @@ class ProcessDefines implements CompilerPass {
 
           compiler.reportChangeToEnclosingScope(define.valueParent);
         }
+
+        // When requested, create a globally accessible alias for all define values. This will
+        // provide a hook for passes like J2clUtilGetDefineRewriterPass to read them in out-of-scope
+        // contexts.
+        if (J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
+          String alias = getGlobalDefineAlias(define.defineName);
+          if (!alias.equals(define.defineName)) {
+            // If we had:
+            //  var x = goog.define('y', ...);
+            // we'll add an additional statement:
+            //  var goog$defines$y = x;
+            Node globalDefineName =
+                NodeUtil.newName(
+                    compiler, getGlobalDefineAlias(define.defineName), define.valueParent);
+            Node defineLhs =
+                define.valueParent.isAssign()
+                    ? define.valueParent.getFirstChild().cloneTree()
+                    : define.valueParent.cloneNode();
+            checkState(defineLhs.isName() || defineLhs.isQualifiedName(), defineLhs);
+            Node globalDefineVar =
+                IR.var(globalDefineName, defineLhs).srcrefTreeIfMissing(define.valueParent);
+            globalDefineVar.insertAfter(define.valueParent.getParent());
+            compiler.reportChangeToEnclosingScope(define.valueParent.getParent());
+          }
+        }
       }
     }
 
@@ -259,6 +284,17 @@ class ProcessDefines implements CompilerPass {
         compiler.report(JSError.make(UNKNOWN_DEFINE_WARNING, unknownDefine));
       }
     }
+  }
+
+  static String getGlobalDefineAlias(String defineName) {
+    // Known defines are already globally accessible and may not be present in code. Therefore we'll
+    // reference them directly.
+    // goog.LOCALE is a special case as it's not processed as a define, it is instead
+    // late-substituted.
+    if (KNOWN_DEFINES.contains(defineName) || defineName.equals("goog.LOCALE")) {
+      return defineName;
+    }
+    return "jscomp$defines$" + defineName.replace('.', '$');
   }
 
   /**
@@ -347,7 +383,11 @@ class ProcessDefines implements CompilerPass {
         }
       }
     }
-    compiler.setDefineNames(defineByDefineName.keySet());
+    compiler.setDefineNames(
+        ImmutableSet.<String>builder()
+            .addAll(KNOWN_DEFINES)
+            .addAll(defineByDefineName.keySet())
+            .build());
   }
 
   private @Nullable Ref selectDefineDeclaration(Name name) {
