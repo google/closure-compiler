@@ -1441,8 +1441,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(compiler);
-                return pass;
+                return new ProcessClosurePrimitives(compiler);
               })
           .build();
 
