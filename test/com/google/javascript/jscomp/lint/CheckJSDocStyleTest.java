@@ -19,6 +19,7 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CLASS_DISALLOWED
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_ANNOTATION_ON_GETTER_SETTER;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.LICENSE_CONTAINS_AT_EXTERNS;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_RETURN_JSDOC;
@@ -1114,6 +1115,68 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
                 " */",
                 "function Example() {}")),
         srcs(""));
+  }
+
+  @Test
+  public void testValidLicenseCommentWithoutExterns() {
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * @license",
+                " * Copyright 2024 Google LLC",
+                " */",
+                "",
+                "function Example() {}")));
+  }
+
+  @Test
+  public void testValidLicenseCommentAndExterns_separateBlocks() {
+    testSame(
+        externs(
+            lines(
+                "/**",
+                " * @license",
+                " * Copyright 2024 Google LLC",
+                " */",
+                "/**",
+                " * @fileoverview Some super cool externs.",
+                " * @externs",
+                " */",
+                "",
+                "function Example() {}")),
+        srcs(""));
+  }
+
+  @Test
+  public void testValidLicenseCommentAndExterns_sameBlocks() {
+    testSame(
+        externs(
+            lines(
+                "/**",
+                " * @fileoverview Some super cool externs.",
+                " * @externs",
+                " * @license",
+                " * Copyright 2024 Google LLC",
+                " */",
+                "",
+                "function Example() {}")),
+        srcs(""));
+  }
+
+  @Test
+  public void testInvalidLicenseComment_containsExterns() {
+    test(
+        srcs(
+            lines(
+                "/**",
+                " * @license",
+                " * Copyright 2024 Google LLC",
+                " * @externs - oh no, this tag is treated as part of the @license!",
+                " */",
+                "",
+                "function Example() {}")),
+        warning(LICENSE_CONTAINS_AT_EXTERNS));
   }
 
   @Test

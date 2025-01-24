@@ -82,6 +82,13 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       DiagnosticType.disabled("JSC_EXTERNS_FILES_SHOULD_BE_ANNOTATED",
           "Externs files should be annotated with @externs in the @fileoverview block.");
 
+  public static final DiagnosticType LICENSE_CONTAINS_AT_EXTERNS =
+      DiagnosticType.disabled(
+          "JSC_LICENSE_CONTAINS_AT_EXTERNS",
+          "@license block contains an @externs annotation, which will be parsed as plain "
+              + "license text instead of an actual @externs annotation. You probably meant to put "
+              + "@externs in a separate @fileoverview block.");
+
   public static final DiagnosticType PREFER_BACKTICKS_TO_AT_SIGN_CODE =
       DiagnosticType.disabled(
           "JSC_PREFER_BACKTICKS_TO_AT_SIGN_CODE",
@@ -99,6 +106,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           WRONG_NUMBER_OF_PARAMS,
           INCORRECT_PARAM_NAME,
           EXTERNS_FILES_SHOULD_BE_ANNOTATED,
+          LICENSE_CONTAINS_AT_EXTERNS,
           PREFER_BACKTICKS_TO_AT_SIGN_CODE);
 
   public static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(LINT_DIAGNOSTICS);
@@ -131,7 +139,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       case LET:
       case CONST:
       case STRING_KEY:
-      case SCRIPT:
         break;
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
@@ -141,6 +148,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         if (NodeUtil.getEnclosingClass(n) != null) {
           checkStyleForPrivateProperties(t, n);
         }
+        break;
+      case SCRIPT:
+        checkLicenseComment(t, n);
         break;
       default:
         visitNonFunction(t, n);
@@ -463,6 +473,16 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           t.report(n, EXTERNS_FILES_SHOULD_BE_ANNOTATED);
         }
       }
+    }
+  }
+
+  private void checkLicenseComment(NodeTraversal t, Node n) {
+    if (n.getJSDocInfo() == null || n.getJSDocInfo().getLicense() == null) {
+      return;
+    }
+    String license = n.getJSDocInfo().getLicense();
+    if (license.contains("@externs")) {
+      t.report(n, LICENSE_CONTAINS_AT_EXTERNS);
     }
   }
 }
