@@ -3484,4 +3484,16 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "const {['one']: unused, ...remaining} = obj;",
             "console.log(remaining);"));
   }
+
+  @Test
+  public void testConfirmsGithubIssue4207() {
+    // This test confirms the behavior that was reported in
+    // https://github.com/google/closure-compiler/issues/4207
+    test(
+        lines(
+            "const arr = [];", "for (let i = 0, d = arr; i < 5; i++) {", "  d[i] = \"test\";", "}"),
+        // This behavior is not correct - we should back off on removing the loop content and array
+        // declaration.
+        lines("for (let i = 0; i < 5; i++) {", "}"));
+  }
 }
