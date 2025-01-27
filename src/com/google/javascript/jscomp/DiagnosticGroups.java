@@ -671,6 +671,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup INVALID_CLOSURE_UNAWARE_ANNOTATED_CODE =
       DiagnosticGroups.registerUnsuppressibleGroup(
+          ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE,
           ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
 
   public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
