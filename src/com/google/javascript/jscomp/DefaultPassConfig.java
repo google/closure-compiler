@@ -541,8 +541,6 @@ public final class DefaultPassConfig extends PassConfig {
         passes.addAll(getEarlyOptimizationPasses());
         passes.addAll(getLateOptimizationPasses());
         break;
-      default:
-        throw new IllegalArgumentException("Unknown optimizationPasses: " + optimizationPasses);
     }
 
     return passes;
