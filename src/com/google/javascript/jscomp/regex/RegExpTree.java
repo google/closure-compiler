@@ -113,7 +113,7 @@ public abstract class RegExpTree {
       int numCapturingGroups;
 
       /** The names of capturing groups in the regex expression */
-      Set<String> capturingGroupNames = new LinkedHashSet<>();
+      final Set<String> capturingGroupNames = new LinkedHashSet<>();
 
       /** The length of pattern. */
       final int limit = pattern.length();
