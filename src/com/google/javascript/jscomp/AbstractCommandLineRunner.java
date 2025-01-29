@@ -1251,9 +1251,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     externs = null;
     sources = null;
 
-    Result result;
-    // We won't want to process results for cases where compilation is only partially done.
-    boolean shouldProcessResults = true;
+    final Result result;
     if (config.skipNormalOutputs) {
       metricsRecorder.recordActionName("skip normal outputs");
       // TODO(bradfordcsmith): Should we be ignoring possible init/initChunks() errors here?
@@ -1264,43 +1262,26 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // init() or initChunks() encountered an error.
       compiler.generateReport();
       result = compiler.getResult();
-    } else if (options.getInstrumentForCoverageOnly()) {
-      result = instrumentForCoverage(metricsRecorder);
-    } else if (config.shouldSaveAfterStage1()) {
-      result = performStage1andSave(config.getSaveCompilationStateToFilename(), metricsRecorder);
-      // Don't output any results, since compilation isn't done yet.
-      shouldProcessResults = false;
-    } else if (config.shouldRestoreTypedAstsPerformStage2AndSave()) {
-      result =
-          restoreTypedAstsPerformStage2AndSave(
-              config.getSaveCompilationStateToFilename(), metricsRecorder);
-      // Don't output any results, since compilation isn't done yet.
-      shouldProcessResults = false;
-    } else if (config.shouldRestoreTypedAstsPerformStages2And3()) {
-      result = restoreTypedAstsPerformStages2and3(metricsRecorder);
-    } else if (config.shouldRestoreAndPerformStage2AndSave()) {
-      result =
-          restoreAndPerformStage2AndSave(
-              config.getContinueSavedCompilationFileName(),
-              config.getSaveCompilationStateToFilename(),
-              metricsRecorder);
-      // Don't output any results, since compilation isn't done yet.
-      shouldProcessResults = false;
-    } else if (config.shouldRestoreAndPerformStages2And3()) {
-      result =
-          restoreAndPerformStages2and3(
-              config.getContinueSavedCompilationFileName(), metricsRecorder);
-      if (chunks != null) {
-        chunks = ImmutableList.copyOf(compiler.getChunks());
-      }
-    } else if (config.shouldRestoreAndPerformStage3()) {
-      result =
-          restoreAndPerformStage3(config.getContinueSavedCompilationFileName(), metricsRecorder);
-      if (chunks != null) {
-        chunks = ImmutableList.copyOf(compiler.getChunks());
-      }
     } else {
-      result = performFullCompilation(metricsRecorder);
+      try {
+        // This is the common case - we're actually compiling something.
+        performCompilation(metricsRecorder);
+        result = compiler.getResult();
+        // If we're finished with compilation (i.e. we're not saving state), /and/ the compiler was
+        // restored from a previous state, then we need to re-initialize the set of chunks.
+        // TODO(lharker): figure out if this is still needed.
+        boolean refresh =
+            chunks != null
+                && config.restoredCompilationStage != -1
+                && config.saveAfterCompilationStage == -1;
+        if (refresh) {
+          chunks = ImmutableList.copyOf(compiler.getChunks());
+        }
+      } finally {
+        // Make sure we generate a report of errors and warnings even if the compiler throws an
+        // exception somewhere.
+        compiler.generateReport();
+      }
     }
 
     if (createCommonJsModules) {
@@ -1318,6 +1299,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
+    // We won't want to process results for cases where compilation is only partially done.
+    boolean shouldProcessResults = config.getSaveCompilationStateToFilename() == null;
     int exitStatus =
         shouldProcessResults
             ? processResults(result, chunks, options)
@@ -1326,36 +1309,96 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     return exitStatus;
   }
 
+  private void performCompilation(CompileMetricsRecorderInterface metricsRecorder) {
+    // Parse, restore from a save file, or initialize from a TypedAST list.
+    initializeStateBeforeCompilation();
+
+    // Do the interesting work - checks, optimizations, etc.
+    runCompilerPasses(metricsRecorder);
+
+    // Save state unless there was an exception or error - we won't go on to the next stage if there
+    // was an error, and saving state itself might throw an exception if the compiler is in a bad
+    // state.
+    if (!compiler.hasErrors()) {
+      saveState();
+    }
+    // Perform post-compilation tasks even if compiler.hasErrors()
+    compiler.performPostCompilationTasks();
+  }
+
+  private void runCompilerPasses(CompileMetricsRecorderInterface metricsRecorder) {
+    boolean runStage1 = false;
+    boolean runStage2 = false;
+    boolean runStage3 = false;
+    boolean instrumentForCoverage = false;
+    final String actionMetricsName;
+    if (compiler.getOptions().getInstrumentForCoverageOnly()) {
+      actionMetricsName = "instrument for coverage";
+      instrumentForCoverage = true;
+    } else if (config.shouldSaveAfterStage1()) {
+      actionMetricsName = "stage 1";
+      runStage1 = true;
+    } else if (config.shouldRestoreTypedAstsPerformStage2AndSave()) {
+      actionMetricsName = "parse & optimize";
+      runStage2 = true;
+    } else if (config.shouldRestoreTypedAstsPerformStages2And3()) {
+      actionMetricsName = "skip-checks compile";
+      runStage2 = true;
+      runStage3 = true;
+    } else if (config.shouldRestoreAndPerformStage2AndSave()) {
+      actionMetricsName = "stage 2/3";
+      runStage2 = true;
+    } else if (config.shouldRestoreAndPerformStages2And3()) {
+      // From the outside this looks like the second stage of a 2-stage compile.
+      actionMetricsName = "stage 2/2";
+      runStage2 = true;
+      runStage3 = true;
+    } else if (config.shouldRestoreAndPerformStage3()) {
+      actionMetricsName = "stage 3/3";
+      runStage3 = true;
+    } else {
+      // This is the code path taken when "building" a library by just checking it for errors
+      // and generating an .ijs file and also when doing a full compilation.
+      actionMetricsName = compiler.getOptions().checksOnly ? "checks-only" : "full compile";
+      runStage1 = true;
+      runStage2 = true;
+      runStage3 = true;
+    }
+
+    metricsRecorder.recordActionName(actionMetricsName);
+    if (compiler.hasErrors()) {
+      return;
+    }
+    metricsRecorder.recordStartState(compiler);
+    if (runStage1) {
+      compiler.stage1Passes();
+      if (compiler.hasErrors()) {
+        return;
+      }
+    }
+    if (runStage2) {
+      compiler.stage2Passes(OptimizationPasses.ALL);
+      if (compiler.hasErrors()) {
+        return;
+      }
+    }
+    if (runStage3) {
+      compiler.stage3Passes();
+      if (compiler.hasErrors()) {
+        return;
+      }
+    }
+    if (instrumentForCoverage) {
+      compiler.instrumentForCoverage();
+    }
+  }
+
   /**
    * Child classes should override this if they want to actually record metrics about the
    * compilation.
    */
   protected CompileMetricsRecorderInterface getCompileMetricsRecorder() {
     return new DummyCompileMetricsRecorder();
-  }
-
-  private Result performStage1andSave(
-      String filename, CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("stage 1");
-    try (BufferedOutputStream serializedOutputStream =
-        new BufferedOutputStream(new FileOutputStream(filename))) {
-      compiler.parseForCompilation();
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage1Passes();
-      }
-      if (!compiler.hasErrors()) {
-        compiler.saveState(serializedOutputStream);
-      }
-      compiler.performPostCompilationTasks();
-    } catch (IOException e) {
-      compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, filename));
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
-    }
-    return compiler.getResult();
   }
 
   private void initWithTypedAstFilesystem(
@@ -1381,166 +1424,46 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
   }
 
-  private Result restoreTypedAstsPerformStage2AndSave(
-      String outputFilename, CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("parse & optimize");
-    try {
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes(OptimizationPasses.ALL);
-        if (!compiler.hasErrors()) {
-          try (BufferedOutputStream serializedOutputStream =
-              new BufferedOutputStream(new FileOutputStream(outputFilename))) {
-            compiler.saveState(serializedOutputStream);
-          } catch (IOException e) {
-            compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, outputFilename));
-          }
-          compiler.performPostCompilationTasks();
-        }
-      }
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
-    }
-    return compiler.getResult();
+  /**
+   * Call at the beginning of compilation to initialize the compiler state.
+   *
+   * <p>Compiler state should be initialized no matter what the compilation stage is, but this
+   * method handles the different ways it might be initialized - whether from parsing actual JS
+   * files, from reading library-level TypedASTs, or from restoring a previous compilation state.
+   */
+  private void initializeStateBeforeCompilation() {
+    if (config.restoredCompilationStage != -1) {
+      restoreState(config.getContinueSavedCompilationFileName());
+    } else if (config.typedAstListInputFilename != null) {
+      // we did this elsewhere
+    } else {
+      // parsing!
+      compiler.parseForCompilation();
+  }
   }
 
-  private Result restoreTypedAstsPerformStages2and3(
-      CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("skip-checks compile");
-    try {
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes(OptimizationPasses.ALL);
-        if (!compiler.hasErrors()) {
-          compiler.stage3Passes();
-        }
-        compiler.performPostCompilationTasks();
-      }
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
-    }
-    return compiler.getResult();
-  }
-
-  private Result restoreAndPerformStage2AndSave(
-      String inputFilename,
-      String outputFilename,
-      CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("stage 2/3");
-    try (BufferedInputStream serializedInputStream =
-        new BufferedInputStream(new FileInputStream(inputFilename))) {
-      compiler.restoreState(serializedInputStream);
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes(OptimizationPasses.ALL);
-        if (!compiler.hasErrors()) {
-          try (BufferedOutputStream serializedOutputStream =
-              new BufferedOutputStream(new FileOutputStream(outputFilename))) {
-            compiler.saveState(serializedOutputStream);
-          } catch (IOException e) {
-            compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, outputFilename));
-          }
-          compiler.performPostCompilationTasks();
-        }
-      }
-    } catch (IOException | ClassNotFoundException e) {
-      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, inputFilename));
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
-    }
-    return compiler.getResult();
-  }
-
-  private Result restoreAndPerformStages2and3(
-      String filename, CompileMetricsRecorderInterface metricsRecorder) {
-    // From the outside this looks like the second stage of a 2-stage compile.
-    metricsRecorder.recordActionName("stage 2/2");
+  private void restoreState(String filename) {
     try (BufferedInputStream serializedInputStream =
         new BufferedInputStream(new FileInputStream(filename))) {
       compiler.restoreState(serializedInputStream);
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage2Passes(OptimizationPasses.ALL);
-        if (!compiler.hasErrors()) {
-          compiler.stage3Passes();
-        }
-      }
-      compiler.performPostCompilationTasks();
     } catch (IOException | ClassNotFoundException e) {
       compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
     }
-    return compiler.getResult();
   }
 
-  private Result restoreAndPerformStage3(
-      String filename, CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("stage 3/3");
-    try (BufferedInputStream serializedInputStream =
-        new BufferedInputStream(new FileInputStream(filename))) {
-      compiler.restoreState(serializedInputStream);
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage3Passes();
-      }
-      compiler.performPostCompilationTasks();
-    } catch (IOException | ClassNotFoundException e) {
-      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
+  /** Call at the end of compilation to save the compiler state if applicable. */
+  private void saveState() {
+    if (config.getSaveCompilationStateToFilename() == null) {
+      // nothing to save to.
+      return;
     }
-    return compiler.getResult();
-  }
-
-  private Result performFullCompilation(CompileMetricsRecorderInterface metricsRecorder) {
-    // This is the code path taken when "building" a library by just checking it for errors
-    // and generating an .ijs file and also when doing a full compilation.
-    metricsRecorder.recordActionName(
-        compiler.getOptions().checksOnly ? "checks-only" : "full compile");
-    try {
-      compiler.parseForCompilation();
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.stage1Passes();
-        if (!compiler.hasErrors()) {
-          compiler.stage2Passes(OptimizationPasses.ALL);
-          if (!compiler.hasErrors()) {
-            compiler.stage3Passes();
-          }
-        }
-        compiler.performPostCompilationTasks();
-      }
-    } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
-      compiler.generateReport();
+    String filename = config.getSaveCompilationStateToFilename();
+    try (BufferedOutputStream serializedOutputStream =
+        new BufferedOutputStream(new FileOutputStream(filename))) {
+      compiler.saveState(serializedOutputStream);
+    } catch (IOException e) {
+      compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, filename));
     }
-    return compiler.getResult();
-  }
-
-  private Result instrumentForCoverage(CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("instrument for coverage");
-    try {
-      compiler.parseForCompilation();
-      if (!compiler.hasErrors()) {
-        metricsRecorder.recordStartState(compiler);
-        compiler.instrumentForCoverage();
-      }
-    } finally {
-      compiler.generateReport();
-    }
-    return compiler.getResult();
   }
 
   /** Processes the results of the compile job, and returns an error code. */
