@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -148,22 +149,9 @@ public final class JSChunk implements Serializable, DependencyInfo {
   /** Adds a source code input to this chunk. */
   public void add(CompilerInput input) {
     String inputName = input.getName();
-    checkArgument(
-        !inputs.containsKey(inputName), "%s already exist in chunk %s", inputName, this.getName());
-    inputs.put(inputName, input);
+    CompilerInput previous = inputs.put(inputName, input);
+    checkState(previous == null, "%s already exist in chunk %s", inputName, this.getName());
     input.setChunk(this);
-  }
-
-  /**
-   * Adds a source code input to this chunk. Call only if the input might already be associated with
-   * a chunk. Otherwise, use add(CompilerInput input).
-   */
-  void addAndOverrideChunk(CompilerInput input) {
-    String inputName = input.getName();
-    checkArgument(
-        !inputs.containsKey(inputName), "%s already exist in chunk %s", inputName, this.getName());
-    inputs.put(inputName, input);
-    input.overrideModule(this);
   }
 
   /** Adds a dependency on another chunk. */
