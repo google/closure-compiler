@@ -301,25 +301,49 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
 
     Var var = t.getScope().getVar(rootName);
     if (var != null && var.getScope().isLocal()) {
-      // Currently, tsickle can introduce these
-      // TODO(b/333952917): Remove this once tsickle is fixed.
-      if (isTypeScriptSource(n)) {
-        return;
-      }
+      checkMissingRequireThroughShortName(t, n, var, currentFile, qualifiedName, isStrongReference);
+    } else {
+      checkMissingRequireThroughFullyQualifiedName(
+          t, n, currentFile, qualifiedName, isStrongReference);
+    }
+  }
 
-      if (!currentFile.isModule()) {
-        // Don't worry about aliases outside of module files for now.
-        return;
-      }
+  /**
+   * Checks if a reference to a local variable should actually trigger a missing require warning.
+   *
+   * <p>This only warns within goog.scope and module bodies, in cases where there's a local variable
+   * that's actually an alias of some import.
+   *
+   * @param n the node representing the fully qualified name being checked, starting with localVar
+   * @param localVar the root of the qualified name
+   * @param qualifiedName some fully qualified name to check, starting with localVar
+   * @param isStrongReference whether this is a non-type-only reference
+   */
+  private void checkMissingRequireThroughShortName(
+      NodeTraversal t,
+      Node n,
+      Var localVar,
+      ModuleMetadata currentFile,
+      QualifiedName qualifiedName,
+      boolean isStrongReference) {
+    // TODO(b/333952917): Remove this once tsickle is fixed.
+    if (isTypeScriptSource(n)) {
+      return;
+    }
 
-      // The qualified name *is* the root name if it is "simple"
-      if (qualifiedName.isSimple()) {
-        // It is explicitly imported and we have already validated the import in
-        // `visitMaybeDeclaration`
-        return;
-      }
+    if (!currentFile.isModule()) {
+      // Don't worry about aliases outside of module files for now.
+      return;
+    }
 
-      NodeUtil.GoogRequire require = NodeUtil.getGoogRequireInfo(var);
+    // The qualified name *is* the root name if it is "simple"
+    if (qualifiedName.isSimple()) {
+      // It is explicitly imported and we have already validated the import in
+      // `visitMaybeDeclaration`
+      return;
+    }
+
+    NodeUtil.GoogRequire require = NodeUtil.getGoogRequireInfo(localVar);
       // TODO: validate that this is the correct thing to do
       if (require == null || require.namespace().equals("wiz")) {
         // It is a local name, not an import.
@@ -339,54 +363,69 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       // Verify namespace usage
       QualifiedName normalizeQualifiedName = normalizeQualifiedName(qualifiedName, require);
 
-      // TESTCASES, where A.B should not be used through A:
-      // checked here
-      // X  const A = require('A'); ref(A.B);  // error, missing require A.B
-      // X  const A = require('A'); const B = require('B');   ref(A.B);  // error, incorrect ref
-      // checked in declaration
-      // X  const {B} = require('A');  // error bad import
-      //
+    // TESTCASES, where A.B should not be used through A:
+    // checked here
+    // X  const A = require('A'); ref(A.B);  // error, missing require A.B
+    // X  const A = require('A'); const B = require('B');   ref(A.B);  // error, incorrect ref
+    // checked in declaration
+    // X  const {B} = require('A');  // error bad import
+    //
 
-      // Look for the longest prefix match against a provided namespace.
-      for (QualifiedName subName = normalizeQualifiedName;
-          subName != null;
-          subName = subName.getOwner()) {
-        String namespace = subName.join();
-        if (isAllowedNamespace(currentFile, namespace)) {
-          return;
-        }
-
-        ModuleMetadata requiredFile = moduleByNamespace.get(namespace);
-        if (requiredFile == null) {
-          // Not a known namespace check the parent
-          continue;
-        }
-
-        // TODO: report on the node that needs rewritten, include the namespace that needs
-        // to be added:
-        // Autofix: add the require if necessary, rewrite to be the full namespace, and let fixjs
-        // fix
-        // it up. Write a different message if the namespace is already imported vs missing.
-
-        if (!hasAcceptableRequire(currentFile, subName, requiredFile, isStrongReference)
-            || originalRequiredFile != requiredFile) {
-
-          // `originalRequiredFile != requiredFile` then the file is being referenced through
-          // the wrong namespace even though it is being `goog.require`d in the file.
-
-          DiagnosticType toReport =
-              isStrongReference
-                  ? INDIRECT_NAMESPACE_REF_REQUIRE
-                  : INDIRECT_NAMESPACE_REF_REQUIRE_TYPE;
-          t.report(n, toReport, namespace);
-        }
-
-        // We found the imported namespace: done
+    // Look for the longest prefix match against a provided namespace.
+    for (QualifiedName subName = normalizeQualifiedName;
+        subName != null;
+        subName = subName.getOwner()) {
+      String namespace = subName.join();
+      if (isAllowedNamespace(currentFile, namespace)) {
         return;
       }
 
+      ModuleMetadata requiredFile = moduleByNamespace.get(namespace);
+      if (requiredFile == null) {
+        // Not a known namespace check the parent
+        continue;
+      }
+
+      // TODO: report on the node that needs rewritten, include the namespace that needs
+      // to be added:
+      // Autofix: add the require if necessary, rewrite to be the full namespace, and let fixjs
+      // fix
+      // it up. Write a different message if the namespace is already imported vs missing.
+
+      if (!hasAcceptableRequire(currentFile, subName, requiredFile, isStrongReference)
+          || originalRequiredFile != requiredFile) {
+
+        // `originalRequiredFile != requiredFile` then the file is being referenced through
+        // the wrong namespace even though it is being `goog.require`d in the file.
+
+        DiagnosticType toReport =
+            isStrongReference
+                ? INDIRECT_NAMESPACE_REF_REQUIRE
+                : INDIRECT_NAMESPACE_REF_REQUIRE_TYPE;
+        t.report(n, toReport, namespace);
+      }
+
+      // We found the imported namespace: done
       return;
     }
+  }
+
+  /**
+   * Checks if a reference to a global qualified name should trigger a missing require warning
+   *
+   * <p>Here, "global qualified name" means that the root object for the name is not defined in some
+   * local module or function scope, but is global.
+   *
+   * @param n the node representing the fully qualified name being checked
+   * @param qualifiedName some global fully qualified name to check
+   * @param isStrongReference whether this is a non-type-only reference
+   */
+  private void checkMissingRequireThroughFullyQualifiedName(
+      NodeTraversal t,
+      Node n,
+      ModuleMetadata currentFile,
+      QualifiedName qualifiedName,
+      boolean isStrongReference) {
 
     // Look for the longest prefix match against a provided namespace.
     for (QualifiedName subName = qualifiedName; subName != null; subName = subName.getOwner()) {
@@ -424,13 +463,6 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       t.report(n, toReport, namespace);
       return;
     }
-  }
-
-  static Node getRootNode(Node n) {
-    while (n.isGetProp()) {
-      n = n.getFirstChild();
-    }
-    return n;
   }
 
   /**
