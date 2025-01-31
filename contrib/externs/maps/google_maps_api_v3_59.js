@@ -8292,9 +8292,10 @@ google.maps.PolyMouseEvent.prototype.vertex;
  * polygon</a>, a <a
  * href="https://developers.google.com/maps/documentation/javascript/examples/polygon-hole">polygon
  * with a hole</a>, and more. Note that you can also use the <a
- * href="#Data.Polygon">Data layer</a> to create a polygon. The Data layer
- * offers a simpler way of creating holes because it handles the order of the
- * inner and outer paths for you.
+ * href="https://developers.google.com/maps/documentation/javascript/reference/data#Data.Polygon">Data
+ * layer</a> to create a polygon. The Data layer offers a simpler way of
+ * creating holes because it handles the order of the inner and outer paths for
+ * you.
  *
  * Access by calling `const {Polygon} = await
  * google.maps.importLibrary("maps")`. See
@@ -18918,6 +18919,12 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.locationBias;
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype
     .locationRestriction;
+
+/**
+ * See {@link google.maps.places.PlaceAutocompleteElement.name}
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.name;
 
 /**
  * See {@link google.maps.places.PlaceAutocompleteElement.requestedLanguage}
