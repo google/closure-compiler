@@ -712,7 +712,7 @@ public class Parser {
     }
   }
 
-  private ParseTree parseMethodDeclaration() {
+  private ParseTree parseObjectLiteralMethodDeclaration() {
     return parseMethodDeclaration(createObjectLiteralElementInfo());
   }
 
@@ -732,7 +732,7 @@ public class Parser {
     }
   }
 
-  private ParseTree parseAsyncMethod() {
+  private ParseTree parseObjectLiteralAsyncMethod() {
     return parseAsyncMethod(createObjectLiteralElementInfo());
   }
 
@@ -1930,7 +1930,7 @@ public class Parser {
     eat(TokenType.OPEN_CURLY);
     Token commaToken = null;
     while (peek(TokenType.ELLIPSIS) || peekPropertyNameOrComputedProp(0) || peek(TokenType.STAR)) {
-      result.add(parsePropertyAssignment());
+      result.add(parseObjectLiteralPropertyAssignment());
       commaToken = eatOpt(TokenType.COMMA);
       if (commaToken == null) {
         break;
@@ -1974,10 +1974,10 @@ public class Parser {
     }
   }
 
-  private ParseTree parsePropertyAssignment() {
+  private ParseTree parseObjectLiteralPropertyAssignment() {
     TokenType type = peekType();
     if (type == TokenType.STAR) {
-      return parsePropertyAssignmentGenerator();
+      return parseObjectLiteralPropertyAssignmentGenerator();
     } else if (type == TokenType.ELLIPSIS) {
       recordFeatureUsed(Feature.OBJECT_LITERALS_WITH_SPREAD);
       SourcePosition start = getTreeStartLocation();
@@ -1990,15 +1990,15 @@ public class Parser {
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       if (peekGetAccessor()) {
-        return parseGetAccessor();
+        return parseObjectLiteralGetAccessor();
       } else if (peekSetAccessor()) {
-        return parseSetAccessor();
+        return parseObjectLiteralSetAccessor();
       } else if (peekAsyncMethod()) {
-        return parseAsyncMethod();
+        return parseObjectLiteralAsyncMethod();
       } else if (peekType(1) == TokenType.OPEN_PAREN) {
-        return parseMethodDeclaration();
+        return parseObjectLiteralMethodDeclaration();
       } else {
-        return parsePropertyNameAssignment();
+        return parseObjectLiteralPropertyNameAssignment();
       }
     } else if (type == TokenType.OPEN_SQUARE) {
       SourcePosition start = getTreeStartLocation();
@@ -2020,14 +2020,14 @@ public class Parser {
     }
   }
 
-  private ParseTree parsePropertyAssignmentGenerator() {
+  private ParseTree parseObjectLiteralPropertyAssignmentGenerator() {
     TokenType type = peekType(1);
     if (type == TokenType.STRING
         || type == TokenType.NUMBER
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       // parseMethodDeclaration will consume the '*'.
-      return parseMethodDeclaration();
+      return parseObjectLiteralMethodDeclaration();
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.STAR);
@@ -2072,7 +2072,7 @@ public class Parser {
         && ((IdentifierToken) peekToken(index)).value.equals(string);
   }
 
-  private ParseTree parseGetAccessor() {
+  private ParseTree parseObjectLiteralGetAccessor() {
     return parseGetAccessor(createObjectLiteralElementInfo());
   }
 
@@ -2106,7 +2106,7 @@ public class Parser {
     return peekPredefinedString(PredefinedName.SET) && peekPropertyNameOrComputedProp(1);
   }
 
-  private ParseTree parseSetAccessor() {
+  private ParseTree parseObjectLiteralSetAccessor() {
     return parseSetAccessor(createObjectLiteralElementInfo());
   }
 
@@ -2137,7 +2137,7 @@ public class Parser {
     }
   }
 
-  private ParseTree parsePropertyNameAssignment() {
+  private ParseTree parseObjectLiteralPropertyNameAssignment() {
     SourcePosition start = getTreeStartLocation();
     Token name = eatObjectLiteralPropertyName();
     Token colon = eatOpt(TokenType.COLON);
