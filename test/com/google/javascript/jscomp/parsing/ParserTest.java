@@ -5563,16 +5563,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
         lines(
             "class C {", //
             "  member() {}",
-            "  get field() {}",
-            "  set field(a) {}",
+            "  get prop() {}",
+            "  set prop(a) {}",
             "}"));
 
     parse(
         lines(
             "class C {",
             "  static member() {}",
-            "  static get field() {}",
-            "  static set field(a) {}",
+            "  static get prop() {}",
+            "  static set prop(a) {}",
             "}"));
   }
 
@@ -5584,16 +5584,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
         lines(
             "class C {", //
             "  member() {};",
-            "  get field() {};",
-            "  set field(a) {};",
+            "  get prop() {};",
+            "  set prop(a) {};",
             "}"));
 
     parse(
         lines(
             "class C {",
             "  static member() {};",
-            "  static get field() {};",
-            "  static set field(a) {};",
+            "  static get prop() {};",
+            "  static set prop(a) {};",
             "}"));
   }
 
