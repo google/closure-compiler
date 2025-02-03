@@ -629,10 +629,10 @@ public class Scanner {
         // skipComments() call) so its token is an error.
         if (peek('!')) {
           reportError(getPosition(index), "Shebang comment must be at the start of the file");
-        } else {
-          reportError(getPosition(index), "Invalid usage of #");
+          return createToken(TokenType.ERROR, beginToken);
         }
-        return createToken(TokenType.ERROR, beginToken);
+        // Handle private identifiers.
+        return scanIdentifierOrKeyword(beginToken, ch);
         // TODO: add NumberToken
         // TODO: character following NumericLiteral must not be an IdentifierStart or DecimalDigit
       case '0':
@@ -773,6 +773,7 @@ public class Scanner {
 
     boolean containsUnicodeEscape = ch == '\\';
     boolean bracedUnicodeEscape = false;
+    boolean isPrivateIdentifier = ch == '#';
     int unicodeEscapeLen = containsUnicodeEscape ? 1 : 0;
 
     ch = peekChar();
@@ -804,6 +805,11 @@ public class Scanner {
 
     String value = contents.substring(valueStartIndex, index);
 
+    if (isPrivateIdentifier && value.equals("#")) {
+      reportError(getPosition(beginToken), "Invalid usage of #");
+      return createToken(TokenType.ERROR, beginToken);
+    }
+
     // Process unicode escapes.
     if (containsUnicodeEscape) {
       value = processUnicodeEscapes(value);
@@ -816,6 +822,10 @@ public class Scanner {
     // Check to make sure the first character (or the unicode escape at the
     // beginning of the identifier) is a valid identifier start character.
     char start = value.charAt(0);
+    if (isPrivateIdentifier) {
+      // Skip the leading # for name validation.
+      start = value.charAt(1);
+    }
     if (!Identifiers.isIdentifierStart(start)) {
       reportError(
           getPosition(beginToken),

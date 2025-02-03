@@ -3151,6 +3151,39 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testPrivateClassProperties_definition() {
+    assertPrintSame("class C{#f;}");
+    assertPrintSame("class C{#m(){}}");
+    assertPrintSame("class C{*#g(){}}");
+    assertPrintSame("class C{get #g(){}}");
+    assertPrintSame("class C{set #s(x){}}");
+    assertPrintSame("class C{get #p(){}set #p(x){}}");
+    assertPrintSame("class C{async #a(){}}");
+    assertPrintSame("class C{async *#ag(){}}");
+
+    assertPrintSame("class C{static #sf;}");
+    assertPrintSame("class C{static #sm(){}}");
+    assertPrintSame("class C{static *#sg(){}}");
+    assertPrintSame("class C{static get #sg(){}}");
+    assertPrintSame("class C{static set #ss(x){}}");
+    assertPrintSame("class C{static get #sp(){}static set #sp(x){}}");
+    assertPrintSame("class C{static async #sa(){}}");
+    assertPrintSame("class C{static async *#sag(){}}");
+  }
+
+  @Test
+  public void testPrivateClassProperties_usage() {
+    assertPrintSame("class C{#f;#g=this.#f;}");
+    assertPrintSame("class C{#f;#g=this?.#f;}");
+    assertPrintSame("class C{#m(){this.#m()}}");
+    assertPrintSame("class C{#m(){this?.#m()}}");
+
+    assertPrintSame("class C{static #f;static #m(){const t=this;t.#f}}");
+    assertPrintSame("class C{static #f;static #m(){const t=this;t?.#f}}");
+    assertPrintSame("class C{static #f;static #m(){const t=this;#f in t}}");
+  }
+
+  @Test
   public void testSuper() {
     assertPrintSame("class C extends foo(){}");
     assertPrintSame("class C extends m.foo(){}");

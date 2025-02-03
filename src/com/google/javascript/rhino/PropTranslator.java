@@ -174,10 +174,11 @@ final class PropTranslator {
       case ACCESS_MODIFIER:
       case IS_TYPESCRIPT_ABSTRACT:
       case TYPEDEF_TYPE:
+      case PRIVATE_IDENTIFIER:
         // These cases cannot be translated to a NodeProperty
         return null;
     }
-    throw new AssertionError();
+    throw new AssertionError("Unhandled prop: " + prop);
   }
 
   private static final void checkUnexpectedNullProtoProps() {

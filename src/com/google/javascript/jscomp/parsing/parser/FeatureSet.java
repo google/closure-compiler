@@ -268,6 +268,8 @@ public final class FeatureSet implements Serializable {
     CLASS_STATIC_BLOCK("Class static block", LangVersion.ES_UNSTABLE),
 
     // ES_UNSUPPORTED: Features that we can parse, but not yet supported in all checks
+    // Part of ES2022. Support will improve as implementation progresses.
+    PRIVATE_CLASS_PROPERTIES("Private class properties", LangVersion.ES_UNSUPPORTED),
 
     // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator
     // to the CodeGenerator that it should handle type syntax.

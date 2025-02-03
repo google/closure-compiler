@@ -91,6 +91,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static final String SEMICOLON_EXPECTED = "Semi-colon expected";
 
+  private static final String INVALID_PRIVATE_ID =
+      "Private identifiers may not be used in this context";
+  private static final String PRIVATE_FIELD_NOT_DEFINED =
+      "Private fields must be declared in an enclosing class";
+  private static final String PRIVATE_METHOD_NOT_DEFINED =
+      "Private methods must be declared in an enclosing class";
+  private static final String PRIVATE_FIELD_DELETED = "Private fields cannot be deleted";
+
   private LanguageMode mode;
   private JsDocParsing parsingMode;
   private Config.StrictMode strictMode;
@@ -5997,6 +6005,527 @@ public final class ParserTest extends BaseJSTypeTestCase {
             + " fields");
 
     expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS);
+  }
+
+  @Test
+  public void testPrivateProperty_unstable() {
+    mode = LanguageMode.UNSTABLE;
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+    parseWarning(
+        "class C { #f = 2; }", requiresLanguageModeMessage(Feature.PRIVATE_CLASS_PROPERTIES));
+  }
+
+  @Test
+  public void testPrivateProperty_singleClassMember() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parse("class C { #f; }");
+    parse("class C { #m() {} }");
+    parse("class C { *#g() {} }");
+    parse("class C { get #g() {} }");
+    parse("class C { set #s(x) {} }");
+    parse("class C { get #p() {} set #p(x) {} }");
+    parse("class C { async #a() {} }");
+    parse("class C { async *#ag() {} }");
+
+    parse("class C { static #sf; }");
+    parse("class C { static #sm() {} }");
+    parse("class C { static *#sg() {} }");
+    parse("class C { static get #sg() {} }");
+    parse("class C { static set #ss(x) {} }");
+    parse("class C { static get #sp() {} static set #sp(x) {} }");
+    parse("class C { static async #sa() {} }");
+    parse("class C { static async *#sag() {} }");
+  }
+
+  @Test
+  public void testPrivateProperty_definition_linenocharno() {
+    Node n =
+        parse(
+                lines(
+                    "class C {", //
+                    "  #pf = 1;",
+                    "  #pm() {}",
+                    "}"))
+            .getFirstChild();
+
+    Node members = NodeUtil.getClassMembers(n);
+
+    Node privateField = members.getFirstChild();
+    assertThat(privateField.getLineno()).isEqualTo(2);
+    assertThat(privateField.getCharno()).isEqualTo(2);
+    assertThat(privateField.getLength()).isEqualTo(8); // Includes the assignment
+
+    Node privateMethod = members.getLastChild();
+    assertThat(privateMethod.getLineno()).isEqualTo(3);
+    assertThat(privateMethod.getCharno()).isEqualTo(2);
+    assertThat(privateMethod.getLength()).isEqualTo(3); // Just the method name.
+  }
+
+  @Test
+  public void testPrivateProperty_multipleClassMembers() {
+    parse("class C { #f; #g; }");
+    parse("class C { #m() {} #n() {} }");
+    parse("class C { get #g() {} get #h() {} }");
+    parse("class C { set #s(x) {} set #t(x) {} }");
+    parse("class C { get #s() {} set #s(x) {} get #t() {} set #t(x) {} }");
+
+    parse("class C { static #sf; static #sg; }");
+    parse("class C { static #sm() {} static #sn() {} }");
+    parse("class C { static get #sg() {} static get #sh() {} }");
+    parse("class C { static set #ss(x) {} static set #st(x) {} }");
+    parse(
+        "class C { static get #ss() {} static set #ss(x) {} "
+            + "static get #st() {} static set #st(x) {} }");
+
+    parse("class C { #a; #b; c() {} d() {} get #e() {} set #e(x) {} set #f(x) {} }");
+    parse("class C { static #a; #b; static c() {} d() {} static get #e() {} set #f(x) {} }");
+    parse(
+        "class C { static #a; static #b; static c() {} static d() {} "
+            + "static get #e() {} static set #f(x) {} }");
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_identifierAlreadyDeclared() {
+    String expectedError = "Identifier '#p' has already been declared";
+
+    parseError("class C { #p; #p; }", expectedError);
+    parseError("class C { #p() {} #p() {} }", expectedError);
+    parseError("class C { get #p() {} get #p() {} }", expectedError);
+    parseError("class C { set #p(x) {} set #p(x) {} }", expectedError);
+
+    parseError("class C { static #p; static #p; }", expectedError);
+    parseError("class C { static #p() {} static #p() {} }", expectedError);
+    parseError("class C { static get #p() {} static get #p() {} }", expectedError);
+    parseError("class C { static set #p(x) {} static set #p(x) {} }", expectedError);
+
+    parseError("class C { #p; #p() {} }", expectedError);
+    parseError("class C { #p; get #p() {} }", expectedError);
+    parseError("class C { #p; set #p(x) {} }", expectedError);
+
+    parseError("class C { #p() {} #p; }", expectedError);
+    parseError("class C { #p() {} get #p() {} }", expectedError);
+    parseError("class C { #p() {} set #p(x) {} }", expectedError);
+
+    parseError("class C { get #p() {} #p; }", expectedError);
+    parseError("class C { get #p() {} #p() {} }", expectedError);
+    parse(/**/ "class C { get #p() {} set #p(x) {} }"); // OK
+
+    parseError("class C { set #p(x) {} #p; }", expectedError);
+    parseError("class C { set #p(x) {} #p() {} }", expectedError);
+    parse(/**/ "class C { set #p(x) {} get #p() {} }"); // OK
+
+    parseError("class C { #p; static #p; }", expectedError); // Cross-static duplicate field
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_identifierAlreadyDeclared_crossStaticGetterSetter() {
+    String expectedError = "Identifier '#p' has already been declared";
+
+    // Repeating in all orders as the check is unique for each to a degree.
+    parseError("class C { get #p() {} static set #p(x) {} }", expectedError);
+    parseError("class C { set #p(x) {} static get #p() {} }", expectedError);
+    parseError("class C { static get #p() {} set #p(x) {} }", expectedError);
+    parseError("class C { static set #p(x) {} get #p() {} }", expectedError);
+  }
+
+  @Test
+  public void testPrivateProperty_classMembersReferencingOtherPrivateField() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parse("class C { #f = 1; f = this.#f; }");
+
+    parse("class C { static #sf = 1; static sf = this.#sf; }");
+    parse("class C { static #sf = 1; static sf = C.#sf; }");
+    parse("class C { static #sf; static { this.#sf = 1; } }");
+    parse("class C { static #sf; static { C.#sf = 1; } }");
+  }
+
+  @Test
+  public void testPrivateProperty_reference_linenocharno() {
+    Node n =
+        parse(
+                lines(
+                    "class C {", //
+                    "  #pf1 = 1;",
+                    "  #pf2 = this.#pf1;",
+                    "}"))
+            .getFirstChild();
+
+    Node members = NodeUtil.getClassMembers(n);
+
+    Node field2 = members.getLastChild();
+    assertNode(field2).hasType(Token.MEMBER_FIELD_DEF);
+
+    Node field2GetProp = field2.getFirstChild();
+    assertNode(field2GetProp).hasType(Token.GETPROP);
+    assertNode(field2GetProp).hasStringThat().isEqualTo("#pf1");
+    assertThat(field2GetProp.getLineno()).isEqualTo(3);
+    assertThat(field2GetProp.getCharno()).isEqualTo(14);
+    assertThat(field2GetProp.getLength()).isEqualTo(4);
+  }
+
+  @Test
+  public void testPrivateProperty_classMethodsReferencingOtherPrivateProp() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parse("class C { #f = 1; method() { this.#f = 2; } }");
+    parse("class C { #f = 1; #g = 2; method() { this.#f = this.#g; } }");
+    parse("class C { #f = 1; method() { const t = this; t.#f = 2; } }");
+    parse("class C { #f = 1; method() { const f = () => { this.#f = 2; }; } }");
+    parse("class C { #f = 1; method() { const x = [this.#f]; } }");
+    parse("class C { #f = 1; method() { const x = {y: this.#f}; } }");
+    parse("class C { #pm() { this.#pm(); } }");
+
+    parse("class C { static #f = 1; static method() { this.#f = 2; } }");
+    parse("class C { static #f = 1; static method() { C.#f = 2; } }");
+    parse("class C { static #f = 1; static method() { const x = [this.#f]; } }");
+    parse("class C { static #f = 1; static method() { const x = {y: C.#f}; } }");
+    parse("class C { static #pm() { this.#pm(); } }");
+    parse("class C { static #pm() { C.#pm(); } }");
+  }
+
+  @Test
+  public void testPrivateProperty_nestedClasses() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parse(
+        lines(
+            "class Outer {",
+            "  #of1;",
+            "  #of2;",
+            "  om() {",
+            "    this.#of1;",
+            "    this.#of2;",
+            "    class Inner {",
+            "      #if1;",
+            "      #if2;",
+            "      im() {",
+            "        this.#of1;",
+            "        this.#of2;",
+            "        this.#if1;",
+            "        this.#if2;",
+            "      }",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testPrivateProperty_nestedClasses_invalid_referenceInnerFieldFromOuter() {
+    parseError(
+        lines(
+            "class Outer {",
+            "  #of1;",
+            "  #of2;",
+            "  om() {",
+            "    this.#of1;",
+            "    this.#of2;",
+            "    this.#if1;", // Invalid
+            "    this.#if2;", // Invalid
+            "    class Inner {",
+            "      #if1;",
+            "      #if2;",
+            "      im() {",
+            "        this.#of1;",
+            "        this.#of2;",
+            "        this.#if1;",
+            "        this.#if2;",
+            "      }",
+            "    }",
+            "  }",
+            "}"),
+        PRIVATE_FIELD_NOT_DEFINED,
+        PRIVATE_FIELD_NOT_DEFINED);
+  }
+
+  @Test
+  public void testPrivateProperty_classMethodsReferencingOtherPrivatePropViaOptionalChain() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parse("class C { #f = 1; method() { const t = this; t?.#f; } }");
+    parse("class C { #pm() { const t = this; t?.#pm(); } }");
+  }
+
+  @Test
+  public void testPrivateProperty_destructuredAssignmentDefaultValue() {
+    parse("class C { #px = 1; method(x) { const { y = this.#px } = x; } }");
+    parse("class C { #px = 1; method(x) { const { y: z = this.#px } = x; } }");
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_nonExistentPrivateProp() {
+    parseError("class C { #f = this.#missing; }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError("class C { method() { this.#missing = 1; } }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { #f = 1; method() { this.#f = this.#missing; } }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError("class C { method() { const t = this; t.#missing; } }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError("class C { method() { const t = this; t?.#missing; } }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { method() { const f = () => { this.#missing; }; } }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { method() { class D { method() { this.#missing = 1; } } } }",
+        PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { method() { class D { method() { const x = this.#missing; } } } }",
+        PRIVATE_FIELD_NOT_DEFINED);
+
+    parseError("class C { method() { this.#missing(); } }", PRIVATE_METHOD_NOT_DEFINED);
+
+    parseError("class C { static #f = this.#missing; }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError("class C { static #f = C.#missing; }", PRIVATE_FIELD_NOT_DEFINED);
+
+    parseError("class C { static { this.#missing; } }", PRIVATE_FIELD_NOT_DEFINED);
+    parseError("class C { static { C.#missing; } }", PRIVATE_FIELD_NOT_DEFINED);
+
+    parseError("class C { static { this.#missing(); } }", PRIVATE_METHOD_NOT_DEFINED);
+    parseError("class C { static { C.#missing(); } }", PRIVATE_METHOD_NOT_DEFINED);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_deletePrivateField() {
+    parseError("class C { #f = 1; method() { delete this.#f; } }", PRIVATE_FIELD_DELETED);
+    parseError(
+        "class C { #f = 1; method() { const t = this; delete t.#f; } }", PRIVATE_FIELD_DELETED);
+    parseError(
+        "class C { #f = 1; method() { const t = this; delete t?.#f; } }", PRIVATE_FIELD_DELETED);
+    parseError(
+        "class C { #f = 1; method() { const a = {b: this}; delete ((a.b).#f); } }",
+        PRIVATE_FIELD_DELETED);
+
+    parseError(
+        "class C { static #f = 1; static method() { delete this.#f; } }", PRIVATE_FIELD_DELETED);
+    parseError(
+        "class C { static #f = 1; static method() { delete C.#f; } }", PRIVATE_FIELD_DELETED);
+    parseError("class C { static #f = 1; static { delete this.#f; } }", PRIVATE_FIELD_DELETED);
+    parseError("class C { static #f = 1; static { delete C.#f; } }", PRIVATE_FIELD_DELETED);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_deleteUndeclaredPrivateField() {
+    parseError(
+        "class C { method() { delete this.#f; } }",
+        PRIVATE_FIELD_DELETED,
+        PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { method() { const t = this; delete t.#f; } }",
+        PRIVATE_FIELD_DELETED,
+        PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { method() { const t = this; delete t?.#f; } }",
+        PRIVATE_FIELD_DELETED,
+        PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { method() { const a = {b: this}; delete ((a.b).#f); } }",
+        PRIVATE_FIELD_DELETED,
+        PRIVATE_FIELD_NOT_DEFINED);
+
+    parseError(
+        "class C { static method() { delete this.#f; } }",
+        PRIVATE_FIELD_DELETED,
+        PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { static method() { delete C.#f; } }",
+        PRIVATE_FIELD_DELETED,
+        PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { static { delete this.#f; } }", PRIVATE_FIELD_DELETED, PRIVATE_FIELD_NOT_DEFINED);
+    parseError(
+        "class C { static { delete C.#f; } }", PRIVATE_FIELD_DELETED, PRIVATE_FIELD_NOT_DEFINED);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_objectLiteralProperty() {
+    parseError("const x = { #pf: 1 }", INVALID_PRIVATE_ID);
+    parseError("const x = { #pm() {} }", INVALID_PRIVATE_ID);
+    parseError("const x = { get #pp() {} }", INVALID_PRIVATE_ID);
+    parseError("const x = { set #ps(x) {} }", INVALID_PRIVATE_ID);
+
+    parseError("class C { method() { const x = { #pf: 1 }; } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { const x = { #pm() {} }; } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { const x = { get #pp() {} }; } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { const x = { set #ps(x) {} }; } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_destructuredAssignment() {
+    parseError("const { #px } = x;", INVALID_PRIVATE_ID);
+    parseError("const { x: #px } = x;", INVALID_PRIVATE_ID);
+    parseError("const { x = #px } = x;", INVALID_PRIVATE_ID);
+    parseError("const { x: y = #px } = x;", INVALID_PRIVATE_ID);
+
+    parseError("class C { method() { const { #px } = x; } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { const { x: #px } = x; } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { const { x = #px } = x; } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { const { x: y = #px } = x; } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_variableName() {
+    parseError("const #pv = 1;", INVALID_PRIVATE_ID);
+
+    parseError("class C { method() { const #pv = 1; } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_functionName() {
+    parseError("function #pf() {}", INVALID_PRIVATE_ID);
+    parseError("function* #pf() {}", INVALID_PRIVATE_ID);
+    parseError("async function #pf() {}", INVALID_PRIVATE_ID);
+    parseError("async function* #pf() {}", INVALID_PRIVATE_ID);
+
+    parseError("class C { method() { function #pf() {} } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { function* #pf() {} } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { async function #pf() {} } }", INVALID_PRIVATE_ID);
+    parseError("class C { method() { async function* #pf() {} } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_paramName() {
+    parseError("function f(#p) {}", INVALID_PRIVATE_ID);
+    parseError("class C { method(#p) {} }", INVALID_PRIVATE_ID);
+    parseError("class C { #p; method(#p) {} }", INVALID_PRIVATE_ID);
+
+    parseError("class C { method() { function f(#p) {} } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_className() {
+    parseError("class #PC {}", INVALID_PRIVATE_ID);
+    parseError("class C extends #PSC {}", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_referencePrivateOutsideClass() {
+    parseError("class C { #f = 1; } const c = new C(); c.#f;", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_referencePrivateOutsideClassViaOptionalChain() {
+    parseError("class C { #f = 1; } const c = new C(); c?.#f;", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_referencePrivatePropFromObjectLiteral() {
+    parseError("const o = {}; o.#f = 1;", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_referencePrivatePropFromObjectLiteralViaOptionalChain() {
+    parseError("const o = {}; o?.#f;", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_importName() {
+    parseError("import #pi from './someModule'", INVALID_PRIVATE_ID);
+    parseError("import {#pi} from './someModule'", INVALID_PRIVATE_ID);
+    parseError("import {x as #pi} from './someModule'", INVALID_PRIVATE_ID);
+    parseError("import * as #pi from './someModule'", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_exportName() {
+    parseError("export const #px = 1", INVALID_PRIVATE_ID);
+    parseError("export var #px = 1", INVALID_PRIVATE_ID);
+    parseError("export function #pf() {}", INVALID_PRIVATE_ID);
+    parseError("export class #pc {}", INVALID_PRIVATE_ID);
+    parseError("export {#px}", INVALID_PRIVATE_ID);
+    parseError("export {x as #px}", INVALID_PRIVATE_ID);
+    parseError("export {#px as default}", INVALID_PRIVATE_ID);
+    parseError("export {#y as class}", INVALID_PRIVATE_ID);
+
+    parseError("export {x as #px} from './someModule'", INVALID_PRIVATE_ID);
+    parseError("export {default as #pd} from './someModule'", INVALID_PRIVATE_ID);
+    parseError("export {#px as default} from './someModule'", INVALID_PRIVATE_ID);
+    parseError("export {#pc as class} from './someModule'", INVALID_PRIVATE_ID);
+    parseError("export {#px} from './someModule'", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_labeledStatement() {
+    parseError("#pl: while (true) {}", INVALID_PRIVATE_ID);
+    parseError("while (true) { break #pl; }", INVALID_PRIVATE_ID, "undefined label \"#pl\"");
+    parseError("while (true) { continue #pl; }", INVALID_PRIVATE_ID, "undefined label \"#pl\"");
+
+    parseError("class C { method() { #pl: while (true) {} } }", INVALID_PRIVATE_ID);
+    parseError(
+        "class C { method() { while (true) { break #pl; } } }",
+        INVALID_PRIVATE_ID,
+        "undefined label \"#pl\"");
+    parseError(
+        "class C { method() { while (true) { continue #pl; } } }",
+        INVALID_PRIVATE_ID,
+        "undefined label \"#pl\"");
+  }
+
+  @Test
+  public void testPrivateProperty_inOperatorWithPrivateProp_valid() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parse("class C { #f = 1; static isC(x) { return #f in x; } }");
+    parse("class C { #f = this; m() { return #f in this.#f; } }");
+  }
+
+  @Test
+  public void testPrivateProperty_inOperatorWithPrivateProp_linenocharno() {
+    Node n =
+        parse(
+                lines(
+                    "class C {",
+                    "  #f = 1;",
+                    "  static isC(x) {",
+                    "    return #f in x;",
+                    "  }",
+                    "}"))
+            .getFirstChild();
+
+    Node members = NodeUtil.getClassMembers(n);
+
+    Node staticMethod = members.getLastChild();
+    assertNode(staticMethod).hasType(Token.MEMBER_FUNCTION_DEF);
+    Node methodBlock = staticMethod.getFirstChild().getLastChild();
+    assertNode(methodBlock).hasType(Token.BLOCK);
+    Node returnStatement = methodBlock.getFirstChild();
+    assertNode(returnStatement).hasType(Token.RETURN);
+    Node inExpression = returnStatement.getFirstChild();
+    assertNode(inExpression).hasType(Token.IN);
+    Node inExpressionLeft = inExpression.getFirstChild();
+    assertNode(inExpressionLeft).hasType(Token.NAME);
+    assertNode(inExpressionLeft).hasStringThat().isEqualTo("#f");
+    assertThat(inExpressionLeft.getLineno()).isEqualTo(4);
+    assertThat(inExpressionLeft.getCharno()).isEqualTo(11);
+    assertThat(inExpressionLeft.getLength()).isEqualTo(2);
+  }
+
+  @Test
+  public void testPrivateProperty_inOperatorWithPrivateProp_invalid_nonExistentPrivateProp() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parseError("class C { static isC(x) { return #missing in x; } }", PRIVATE_FIELD_NOT_DEFINED);
+  }
+
+  @Test
+  public void testPrivateProperty_inOperatorWithPrivateProp_invalid_privatePropOnRhs() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parseError("class C { #f = 1; static isC(x) { return #f in #f; } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_inOperatorWithPrivateProp_invalid_surroundingParenthesis() {
+    expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
+
+    parseError("class C { #f = 1; static isC(x) { return (#f) in x; } }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_inOperatorWithPrivateProp_invalid_notInClass() {
+    parseError("const o = {}; if (#f in o) {}", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_stringKeyThatLooksLikePrivateProp() {
+    parse("const o = {'#notAPrivateProp': 1};");
   }
 
   @Test

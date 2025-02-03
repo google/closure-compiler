@@ -203,6 +203,8 @@ public class Node {
     SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
     // This prop holds a reference to a closure-unaware sub-AST.
     CLOSURE_UNAWARE_SHADOW,
+    // Indicates that a string node is a private identifier (e.g. `class { #privateProp }`).
+    PRIVATE_IDENTIFIER,
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -3209,6 +3211,16 @@ public class Node {
   public final void setQuotedStringKey() {
     checkState(this instanceof StringNode, this);
     this.putBooleanProp(Prop.QUOTED, true);
+  }
+
+  public final boolean isPrivateIdentifier() {
+    return (this instanceof StringNode) && this.getBooleanProp(Prop.PRIVATE_IDENTIFIER);
+  }
+
+  public final void setPrivateIdentifier() {
+    checkState(this instanceof StringNode, this);
+    checkState(this.getString().startsWith("#"));
+    this.putBooleanProp(Prop.PRIVATE_IDENTIFIER, true);
   }
 
   /*** AST type check methods ***/

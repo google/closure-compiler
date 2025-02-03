@@ -208,4 +208,41 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
             "const chain = window.a.x.y.b.x.y.c.x.y?.d.x.y.e.x.y",
             "['f-f'].x.y?.['g-g'].x.y?.h.x.y.i.x.y;"));
   }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_computedProp() {
+    testSame("const x = {['#notAPrivateProp']: 1}");
+  }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_computedFieldDef() {
+    testSame("class C {['#notAPrivateProp'] = 1}");
+  }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_getterDef() {
+    testSame("const x = {get '#notAPrivateProp'() {}}");
+    testSame("class C {get '#notAPrivateProp'() {}}");
+  }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_setterDef() {
+    testSame("const x = {set '#notAPrivateProp'(x) {}}");
+    testSame("class C {set '#notAPrivateProp'(x) {}}");
+  }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_stringKey() {
+    testSame("const x = {'#notAPrivateProp': 1}");
+  }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_optchainGetelem() {
+    testSame("x?.['#notAPrivateProp']");
+  }
+
+  @Test
+  public void testClassPrivateProp_notPrivateProp_getelem() {
+    testSame("x['#notAPrivateProp']");
+  }
 }

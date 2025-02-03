@@ -16,15 +16,19 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /** A token representing an identifier. */
 public class IdentifierToken extends Token {
   private final String value;
+  private final boolean privateIdentifier;
 
   public IdentifierToken(SourceRange location, String value) {
     super(TokenType.IDENTIFIER, location);
     this.value = value;
+    privateIdentifier = value.startsWith("#");
   }
 
   @Override
@@ -41,12 +45,26 @@ public class IdentifierToken extends Token {
   }
 
   /**
-   * Gets the value of the identifier.
+   * Gets the value of the identifier assuring that it is not a private identifier.
+   *
+   * <p>You must verify privateIdentifier is false (and presumably error if it is true) before
+   * calling this method.
    *
    * <p>Prefer calling {@link #isKeyword()} or {@link #valueEquals(String)} if those methods meet
    * your needs.
    */
   public String getValue() {
+    checkState(!privateIdentifier);
     return value;
+  }
+
+  /** Gets the value of the identifier, allowing it to be a private identifier. */
+  public String getMaybePrivateValue() {
+    return value;
+  }
+
+  /** Whether the value starts with a #. */
+  public boolean isPrivateIdentifier() {
+    return privateIdentifier;
   }
 }

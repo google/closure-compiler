@@ -706,7 +706,7 @@ public class CodeGenerator {
 
             // Add the property name.
             if (!node.isQuotedStringKey()
-                && TokenStream.isJSIdentifier(name)
+                && (TokenStream.isJSIdentifier(name) || node.isPrivateIdentifier())
                 &&
                 // do not encode literally any non-literal characters that were
                 // Unicode escaped.
