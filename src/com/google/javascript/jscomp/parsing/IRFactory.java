@@ -1518,7 +1518,7 @@ class IRFactory {
 
     Node processBreakStatement(BreakStatementTree statementNode) {
       Node node = newNode(Token.BREAK);
-      if (statementNode.getLabel() != null) {
+      if (statementNode.hasLabel()) {
         Node labelName = transformLabelName(statementNode.name);
         node.addChildToBack(labelName);
       }
@@ -1542,7 +1542,7 @@ class IRFactory {
 
     Node processContinueStatement(ContinueStatementTree statementNode) {
       Node node = newNode(Token.CONTINUE);
-      if (statementNode.getLabel() != null) {
+      if (statementNode.hasLabel()) {
         Node labelName = transformLabelName(statementNode.name);
         node.addChildToBack(labelName);
       }

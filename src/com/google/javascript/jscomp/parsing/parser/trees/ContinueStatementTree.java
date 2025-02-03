@@ -24,13 +24,13 @@ public class ContinueStatementTree extends ParseTree {
 
   public final IdentifierToken name;
 
-  public ContinueStatementTree(SourceRange location, IdentifierToken name) {
+  public ContinueStatementTree(SourceRange location, @Nullable IdentifierToken name) {
     super(ParseTreeType.CONTINUE_STATEMENT, location);
 
     this.name = name;
   }
 
-  public @Nullable String getLabel() {
-    return name == null ? null : name.value;
+  public boolean hasLabel() {
+    return name != null;
   }
 }

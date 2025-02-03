@@ -24,13 +24,13 @@ public class BreakStatementTree extends ParseTree {
 
   public final IdentifierToken name;
 
-  public BreakStatementTree(SourceRange location, IdentifierToken name) {
+  public BreakStatementTree(SourceRange location, @Nullable IdentifierToken name) {
     super(ParseTreeType.BREAK_STATEMENT, location);
 
     this.name = name;
   }
 
-  public @Nullable String getLabel() {
-    return name == null ? null : name.value;
+  public boolean hasLabel() {
+    return name != null;
   }
 }
