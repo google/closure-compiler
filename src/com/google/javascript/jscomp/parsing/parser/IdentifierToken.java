@@ -18,9 +18,7 @@ package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-/**
- * A token representing an identifier.
- */
+/** A token representing an identifier. */
 public class IdentifierToken extends Token {
   public IdentifierToken(SourceRange location, String value) {
     super(TokenType.IDENTIFIER, location);

@@ -3027,7 +3027,7 @@ public class Parser {
                   getTreeLocation(start),
                   operand,
                   arguments,
-                  /* isStartOfOptionalChain = */ true,
+                  /* isStartOfOptionalChain= */ true,
                   arguments.hasTrailingComma);
           break;
         case OPEN_SQUARE:
@@ -3036,7 +3036,7 @@ public class Parser {
           eat(TokenType.CLOSE_SQUARE);
           operand =
               new OptionalMemberLookupExpressionTree(
-                  getTreeLocation(start), operand, member, /* isStartOfOptionalChain = */ true);
+                  getTreeLocation(start), operand, member, /* isStartOfOptionalChain= */ true);
           break;
         case NO_SUBSTITUTION_TEMPLATE:
         case TEMPLATE_HEAD:
@@ -3047,7 +3047,7 @@ public class Parser {
             IdentifierToken id = eatIdOrKeywordAsId();
             operand =
                 new OptionalMemberExpressionTree(
-                    getTreeLocation(start), operand, id, /* isStartOfOptionalChain = */ true);
+                    getTreeLocation(start), operand, id, /* isStartOfOptionalChain= */ true);
           } else {
             reportError("syntax error: %s not allowed in optional chain", peekType());
           }
@@ -3084,7 +3084,7 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   id,
-                  /*isStartOfOptionalChain=*/ false);
+                  /* isStartOfOptionalChain= */ false);
           break;
         case OPEN_PAREN:
           ArgumentListTree arguments = parseArguments();
@@ -3093,7 +3093,7 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   arguments,
-                  /* isStartOfOptionalChain = */ false,
+                  /* isStartOfOptionalChain= */ false,
                   arguments.hasTrailingComma);
           break;
         case OPEN_SQUARE:
@@ -3105,7 +3105,7 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   member,
-                  /* isStartOfOptionalChain = */ false);
+                  /* isStartOfOptionalChain= */ false);
           break;
         default:
           throw new AssertionError("unexpected case: " + peekType());

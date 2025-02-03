@@ -58,9 +58,7 @@ public class FunctionDeclarationTree extends ParseTree {
     this.isAsync = builder.isAsync;
   }
 
-  /**
-   * Builds a {@link FunctionDeclarationTree}.
-   */
+  /** Builds a {@link FunctionDeclarationTree}. */
   public static class Builder {
     private final Kind kind;
 
@@ -149,8 +147,8 @@ public class FunctionDeclarationTree extends ParseTree {
     /**
      * Return a new {@link FunctionDeclarationTree}.
      *
-     * <p> The location is provided at this point because it cannot be correctly calculated
-     * until the whole function has been parsed.
+     * <p>The location is provided at this point because it cannot be correctly calculated until the
+     * whole function has been parsed.
      */
     public FunctionDeclarationTree build(SourceRange location) {
       this.location = location;

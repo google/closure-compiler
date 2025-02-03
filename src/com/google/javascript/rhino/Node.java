@@ -2370,7 +2370,7 @@ public class Node {
         return getFirstChild().isQualifiedName();
 
       case MEMBER_FUNCTION_DEF:
-        // These are explicitly *not* qualified name components.
+      // These are explicitly *not* qualified name components.
       default:
         return false;
     }
@@ -2436,7 +2436,7 @@ public class Node {
             && getFirstChild().matchesQualifiedName(qname, start - 1);
 
       case MEMBER_FUNCTION_DEF:
-        // These are explicitly *not* qualified name components.
+      // These are explicitly *not* qualified name components.
       default:
         return false;
     }
@@ -2462,7 +2462,7 @@ public class Node {
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
 
       case MEMBER_FUNCTION_DEF:
-        // These are explicitly *not* qualified name components.
+      // These are explicitly *not* qualified name components.
       default:
         return false;
     }

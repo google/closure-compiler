@@ -106,7 +106,6 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteNullishCoalesceOperator);
     }
 
-
     // NOTE: This needs to be _before_ await and yield are transpiled away.
     if (options.getInstrumentAsyncContext()) {
       passes.maybeAdd(instrumentAsyncContext);

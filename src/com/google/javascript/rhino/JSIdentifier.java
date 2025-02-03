@@ -45,7 +45,6 @@
 
 package com.google.javascript.rhino;
 
-
 /**
  * Utility class to hold isJSIdentifier.
  *

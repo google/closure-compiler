@@ -46,6 +46,7 @@ public class CodeGenerator {
   private final boolean preferSingleQuotes;
   private final boolean preserveTypeAnnotations;
   private final boolean printNonJSDocComments;
+
   /**
    * To distinguish between gents and non-gents mode so that we can turn off checking the sanity of
    * the source location of comments, and also provide a different mode for comment printing between
@@ -303,7 +304,7 @@ public class CodeGenerator {
 
         // Must have a ';' after a throw statement, otherwise safari can't
         // parse this.
-        cc.endStatement(/*needSemiColon=*/ true, hasTrailingCommentOnSameLine(node));
+        cc.endStatement(/* needSemiColon= */ true, hasTrailingCommentOnSameLine(node));
         break;
 
       case RETURN:
@@ -572,7 +573,7 @@ public class CodeGenerator {
         add("import.meta");
         break;
 
-        // CLASS -> NAME,EXPR|EMPTY,BLOCK
+      // CLASS -> NAME,EXPR|EMPTY,BLOCK
       case CLASS:
         {
           checkState(childCount == 3, node);
@@ -1364,7 +1365,7 @@ public class CodeGenerator {
         cc.endTemplateLit();
         break;
 
-        // Type Declaration ASTs.
+      // Type Declaration ASTs.
       case STRING_TYPE:
         add("string");
         break;
@@ -1411,7 +1412,7 @@ public class CodeGenerator {
         addList(first.getNext());
         add(">");
         break;
-        // CLASS -> NAME,EXPR|EMPTY,BLOCK
+      // CLASS -> NAME,EXPR|EMPTY,BLOCK
       case GENERIC_TYPE_LIST:
         add("<");
         addList(first, false, Context.STATEMENT, ",");
@@ -1794,7 +1795,7 @@ public class CodeGenerator {
           cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
         } else {
           printTrailingComment(n);
-          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
+          cc.endStatement(/* needSemiColon= */ true, /* hasTrailingCommentOnSameLine= */ false);
         }
         return;
       }
@@ -1821,7 +1822,7 @@ public class CodeGenerator {
 
     if (nodeToProcess.isEmpty()) {
       printTrailingComment(n);
-      cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
+      cc.endStatement(/* needSemiColon= */ true, /* hasTrailingCommentOnSameLine= */ false);
     } else {
       add(nodeToProcess, context);
       printTrailingComment(n);
@@ -2145,7 +2146,7 @@ public class CodeGenerator {
             sb.append("\\x0B");
           }
           break;
-          // From the SingleEscapeCharacter grammar production.
+        // From the SingleEscapeCharacter grammar production.
         case '\b':
           sb.append("\\b");
           break;
@@ -2282,7 +2283,7 @@ public class CodeGenerator {
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
       switch (c) {
-          // From the SingleEscapeCharacter grammar production.
+        // From the SingleEscapeCharacter grammar production.
         case '\b':
         case '\f':
         case '\n':
@@ -2337,6 +2338,7 @@ public class CodeGenerator {
     }
     return sb.toString();
   }
+
   /**
    * @param maxCount The maximum number of children to look for.
    * @return The number of children of this node that are non empty up to maxCount.
@@ -2453,7 +2455,7 @@ public class CodeGenerator {
         break;
       case FUNCTION:
         if (n.getLastChild().isEmpty()) {
-          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
+          cc.endStatement(/* needSemiColon= */ true, /* hasTrailingCommentOnSameLine= */ false);
         } else {
           cc.endFunction(context == Context.STATEMENT);
         }
@@ -2471,22 +2473,22 @@ public class CodeGenerator {
         break;
       case COMPUTED_PROP:
         if (n.hasOneChild()) {
-          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
+          cc.endStatement(/* needSemiColon= */ true, /* hasTrailingCommentOnSameLine= */ false);
         }
         break;
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
         if (n.getFirstChild().getLastChild().isEmpty()) {
-          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
+          cc.endStatement(/* needSemiColon= */ true, /* hasTrailingCommentOnSameLine= */ false);
         }
         break;
       case MEMBER_VARIABLE_DEF:
-        cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
+        cc.endStatement(/* needSemiColon= */ true, /* hasTrailingCommentOnSameLine= */ false);
         break;
       default:
         if (context == Context.STATEMENT) {
-          cc.endStatement(/*hasTrailingCommentOnSameLine=*/ false);
+          cc.endStatement(/* hasTrailingCommentOnSameLine= */ false);
         }
     }
   }

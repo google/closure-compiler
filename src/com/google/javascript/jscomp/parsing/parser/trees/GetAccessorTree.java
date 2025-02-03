@@ -33,5 +33,4 @@ public class GetAccessorTree extends ParseTree {
     this.isStatic = isStatic;
     this.body = body;
   }
-
 }

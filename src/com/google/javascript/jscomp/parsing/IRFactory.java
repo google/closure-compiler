@@ -857,7 +857,6 @@ class IRFactory {
       }
       result.append(currentComment.value);
 
-
       lastComment = currentComment;
       if (commentFromJsdocTracker) {
         this.parsedComments.add(currentComment);
