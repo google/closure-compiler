@@ -257,11 +257,6 @@ public class Parser {
     return sourceMapURL;
   }
 
-  /** Returns true if the string value should be treated as a keyword in the current context. */
-  private boolean isKeyword(String value) {
-    return Keywords.isKeyword(value);
-  }
-
   // 14 Program
   public @Nullable ProgramTree parseProgram() {
     try {
@@ -394,7 +389,7 @@ public class Parser {
     if (peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
       destinationName = eatId();
-    } else if (isKeyword(importedName.value)) {
+    } else if (importedName.isKeyword()) {
       reportExpectedError(null, PredefinedName.AS);
     }
     return new ImportSpecifierTree(getTreeLocation(start), importedName, destinationName);
@@ -481,8 +476,8 @@ public class Parser {
     } else if (isExportSpecifier) {
       for (ParseTree tree : exportSpecifierList) {
         IdentifierToken importedName = tree.asExportSpecifier().importedName;
-        if (isKeyword(importedName.value)) {
-          reportError(importedName, "cannot use keyword '%s' here.", importedName.value);
+        if (importedName.isKeyword()) {
+          reportError(importedName, "cannot use keyword '%s' here.", importedName);
         }
       }
     }
@@ -646,7 +641,7 @@ public class Parser {
     if (peekPropertyName(0)) {
       if (peekIdOrKeyword()) {
         elementInfo.setName(eatIdOrKeywordAsId());
-        if (Keywords.isKeyword(elementInfo.getName().value)) {
+        if (elementInfo.getName().isKeyword()) {
           recordFeatureUsed(Feature.KEYWORDS_AS_PROPERTIES);
         }
       } else {
@@ -2060,7 +2055,7 @@ public class Parser {
 
   private @Nullable Token eatPredefinedString(String string) {
     Token token = eatId();
-    if (token == null || !token.asIdentifier().value.equals(string)) {
+    if (token == null || !token.asIdentifier().valueEquals(string)) {
       reportExpectedError(token, string);
       return null;
     }
@@ -2069,7 +2064,7 @@ public class Parser {
 
   private boolean peekPredefinedString(int index, String string) {
     return peek(index, TokenType.IDENTIFIER)
-        && ((IdentifierToken) peekToken(index)).value.equals(string);
+        && ((IdentifierToken) peekToken(index)).valueEquals(string);
   }
 
   private ParseTree parseObjectLiteralGetAccessor() {
@@ -2144,7 +2139,7 @@ public class Parser {
     if (colon == null) {
       if (name.type != TokenType.IDENTIFIER) {
         reportExpectedError(peekToken(), TokenType.COLON);
-      } else if (Keywords.isKeyword(name.asIdentifier().value)) {
+      } else if (name.asIdentifier().isKeyword()) {
         reportError(name, "Cannot use keyword in short object literal");
       } else if (peek(TokenType.EQUAL)) {
         IdentifierExpressionTree idTree =
@@ -2367,7 +2362,7 @@ public class Parser {
           partialExpression.asIdentifierExpression().identifierToken;
       // partialExpression is `async`
       // followed by `[no newline] bindingIdentifier [no newline] =>`
-      return identifierToken.value.equals(ASYNC)
+      return identifierToken.valueEquals(ASYNC)
           && !peekImplicitSemiColon(0)
           && peekId()
           && !peekImplicitSemiColon(1)
@@ -2379,7 +2374,7 @@ public class Parser {
       // partialExpression is `async [no newline] (parameters)`
       // followed by `[no newline] =>`
       return callee.type == ParseTreeType.IDENTIFIER_EXPRESSION
-          && callee.asIdentifierExpression().identifierToken.value.equals(ASYNC)
+          && callee.asIdentifierExpression().identifierToken.valueEquals(ASYNC)
           && callee.location.end.line == arguments.location.start.line
           && !peekImplicitSemiColon()
           && peek(TokenType.ARROW);
@@ -3380,11 +3375,10 @@ public class Parser {
 
     Token name;
     if (peekIdOrKeyword()) {
-      name = eatIdOrKeywordAsId();
+      IdentifierToken idToken = eatIdOrKeywordAsId();
       if (!peek(TokenType.COLON)) {
-        IdentifierToken idToken = (IdentifierToken) name;
-        if (Keywords.isKeyword(idToken.value)) {
-          reportError("cannot use keyword '%s' here.", name);
+        if (idToken.isKeyword()) {
+          reportError("cannot use keyword '%s' here.", idToken);
         }
         if (peek(TokenType.EQUAL)) {
           IdentifierExpressionTree idTree =
@@ -3393,8 +3387,9 @@ public class Parser {
           ParseTree defaultValue = parseAssignmentExpression();
           return new DefaultParameterTree(getTreeLocation(start), idTree, defaultValue);
         }
-        return new PropertyNameAssignmentTree(getTreeLocation(start), name, null);
+        return new PropertyNameAssignmentTree(getTreeLocation(start), idToken, null);
       }
+      name = idToken;
     } else {
       name = parseLiteralExpression().literalToken;
     }

@@ -20,6 +20,8 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /** A token representing an identifier. */
 public class IdentifierToken extends Token {
+  private final String value;
+
   public IdentifierToken(SourceRange location, String value) {
     super(TokenType.IDENTIFIER, location);
     this.value = value;
@@ -30,5 +32,21 @@ public class IdentifierToken extends Token {
     return value;
   }
 
-  public final String value;
+  public boolean isKeyword() {
+    return Keywords.isKeyword(value);
+  }
+
+  public boolean valueEquals(String str) {
+    return value.equals(str);
+  }
+
+  /**
+   * Gets the value of the identifier.
+   *
+   * <p>Prefer calling {@link #isKeyword()} or {@link #valueEquals(String)} if those methods meet
+   * your needs.
+   */
+  public String getValue() {
+    return value;
+  }
 }

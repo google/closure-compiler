@@ -1211,6 +1211,11 @@ class IRFactory {
 
   private class TransformDispatcher {
 
+    // For now, this is just a pass-through. Soon will distinguish based on an IdentifierType.
+    String getIdentifierValue(IdentifierToken identifierToken) {
+      return identifierToken.getValue();
+    }
+
     /**
      * Transforms the given object key `input` into a Node with token `output`.
      *
@@ -1527,7 +1532,8 @@ class IRFactory {
 
     Node transformLabelName(IdentifierToken token) {
       Node label =
-          newStringNodeWithNonJSDocComment(Token.LABEL_NAME, token.value, token.getStart());
+          newStringNodeWithNonJSDocComment(
+              Token.LABEL_NAME, getIdentifierValue(token), token.getStart());
       setSourceInfo(label, token);
       return label;
     }
@@ -1919,7 +1925,7 @@ class IRFactory {
 
       if (isMember) {
         setSourceInfo(node, functionTree);
-        Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
+        Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, getIdentifierValue(name));
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
         // The source info should only include the identifier, not the entire function expression
@@ -1938,7 +1944,7 @@ class IRFactory {
 
       Node node =
           newStringNodeWithNonJSDocComment(
-              Token.MEMBER_FIELD_DEF, tree.name.value, tree.getStart());
+              Token.MEMBER_FIELD_DEF, getIdentifierValue(tree.name), tree.getStart());
       if (tree.initializer != null) {
         Node initializer = transform(tree.initializer);
         node.addChildToBack(initializer);
@@ -2170,7 +2176,7 @@ class IRFactory {
     Node processName(IdentifierToken identifierToken, Token output) {
       NonJSDocComment comment = parseNonJSDocCommentAt(identifierToken.getStart(), true);
 
-      Node node = newStringNode(output, identifierToken.value);
+      Node node = newStringNode(output, getIdentifierValue(identifierToken));
 
       if (output == Token.NAME) {
         maybeWarnReservedKeyword(identifierToken);
@@ -2226,7 +2232,7 @@ class IRFactory {
       NonJSDocComment comment = parseNonJSDocCommentAt(identifierToken.getStart(), false);
 
       maybeWarnReservedKeyword(identifierToken);
-      Node node = newStringNode(Token.NAME, identifierToken.value);
+      Node node = newStringNode(Token.NAME, getIdentifierValue(identifierToken));
 
       if (info != null) {
         node.setJSDocInfo(info);
@@ -2254,7 +2260,7 @@ class IRFactory {
     }
 
     private void maybeWarnReservedKeyword(IdentifierToken token) {
-      String identifier = token.value;
+      String identifier = getIdentifierValue(token);
       boolean isIdentifier = false;
       if (TokenStream.isKeyword(identifier)) {
         features = features.with(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
@@ -2463,7 +2469,7 @@ class IRFactory {
 
       Node getProp =
           newStringNodeWithNonJSDocComment(
-              Token.GETPROP, propName.value, getNode.memberName.getStart());
+              Token.GETPROP, getIdentifierValue(propName), getNode.memberName.getStart());
       getProp.addChildToBack(leftChild);
       setSourceInfo(getProp, propName);
       maybeWarnKeywordProperty(getProp);
@@ -2481,7 +2487,7 @@ class IRFactory {
 
       Node getProp =
           newStringNodeWithNonJSDocComment(
-              Token.OPTCHAIN_GETPROP, propName.value, getNode.memberName.getStart());
+              Token.OPTCHAIN_GETPROP, getIdentifierValue(propName), getNode.memberName.getStart());
       getProp.addChildToBack(leftChild);
       getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
       setSourceInfo(getProp, propName);
@@ -2928,7 +2934,7 @@ class IRFactory {
       }
 
       if (!memberName.type.equals(TokenType.IDENTIFIER)
-          || !memberName.asIdentifier().value.equals("constructor")) {
+          || !memberName.asIdentifier().valueEquals("constructor")) {
         // There's only a potential issue if the member is named "constructor".
         // TODO(b/123769080): Also check for quoted string literals with the value "constructor".
         return false;
@@ -3022,7 +3028,8 @@ class IRFactory {
         // changed to use only "{foo}" part.
         setSourceInfo(secondChild, tree);
       } else {
-        secondChild = newStringNode(Token.IMPORT_STAR, tree.nameSpaceImportIdentifier.value);
+        secondChild =
+            newStringNode(Token.IMPORT_STAR, getIdentifierValue(tree.nameSpaceImportIdentifier));
         setSourceInfo(secondChild, tree.nameSpaceImportIdentifier);
       }
       Node thirdChild = processString(tree.moduleSpecifier);
