@@ -158,7 +158,6 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   public void testUnresolvedNamedTypes() {
     errorReporter.expectAllWarnings(
         "Bad type annotation. Unknown type not.resolved.A",
-        "Bad type annotation. Unknown type not.resolved.A",
         "Bad type annotation. Unknown type not.resolved.B");
 
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {

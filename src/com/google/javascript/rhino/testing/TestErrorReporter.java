@@ -44,6 +44,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 
 /**
  * An error reporter for testing that verifies that messages reported to the reporter are expected.
@@ -51,17 +52,20 @@ import java.util.Collections;
 public final class TestErrorReporter implements ErrorReporter {
   private final ArrayList<String> expectedErrors = new ArrayList<>();
   private final ArrayList<String> expectedWarnings = new ArrayList<>();
-  private final ArrayList<String> seenErrors = new ArrayList<>();
-  private final ArrayList<String> seenWarnings = new ArrayList<>();
+
+  // Seen diagnostics are stored in a LinkedHashMap to deduplicate identical diagnostics.
+  // The default com.google.javascript.jscomp.SortingErrorManager behaves in this way.
+  private final LinkedHashMap<String, String> seenErrors = new LinkedHashMap<>();
+  private final LinkedHashMap<String, String> seenWarnings = new LinkedHashMap<>();
 
   @Override
   public void error(String message, String sourceName, int line, int lineOffset) {
-    this.seenErrors.add(message);
+    seenErrors.put(fmtDiagnosticKey(message, sourceName, line, lineOffset), message);
   }
 
   @Override
   public void warning(String message, String sourceName, int line, int lineOffset) {
-    this.seenWarnings.add(message);
+    seenWarnings.put(fmtDiagnosticKey(message, sourceName, line, lineOffset), message);
   }
 
   public TestErrorReporter expectAllErrors(String... errors) {
@@ -75,7 +79,11 @@ public final class TestErrorReporter implements ErrorReporter {
   }
 
   public void verifyHasEncounteredAllWarningsAndErrors() {
-    assertThat(seenWarnings).containsExactlyElementsIn(expectedWarnings).inOrder();
-    assertThat(seenErrors).containsExactlyElementsIn(expectedErrors).inOrder();
+    assertThat(seenWarnings.values()).containsExactlyElementsIn(expectedWarnings).inOrder();
+    assertThat(seenErrors.values()).containsExactlyElementsIn(expectedErrors).inOrder();
+  }
+
+  private String fmtDiagnosticKey(String message, String sourceName, int line, int lineOffset) {
+    return message + ":" + sourceName + ":" + line + ":" + lineOffset;
   }
 }

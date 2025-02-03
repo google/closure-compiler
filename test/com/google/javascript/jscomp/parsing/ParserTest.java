@@ -4121,6 +4121,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.STRING_CONTINUATION);
     strictMode = SLOPPY;
 
+    // This test runs on this input code, which technically has STRING_CONTINUATIONS_WARNINGs at 2
+    // places:
+    // ```
+    // function x() {
+    //    a = "\ <--- STRING_CONTINUATIONS_WARNING
+    //    \ \ <--- STRING_CONTINUATIONS_WARNING
+    //    ";
+    // };
+    // ```
+    // We deduplicate based on the key `sourceName:line_no:col_no:warning` being the same. Here,
+    // even though the `STRING_CONTINUATIONS_WARNING` happens at 2 places, JSCompiler reports the
+    // warnings within a string with a location pointing to the start of the string token. This
+    // happens here `charno(token.location.start)`:
+    // google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/parsing/IRFactory.java?rcl=719034735&l=3482
+    // Hence, after deduplication, we only get one error.
     parseWarning(
         lines(
             "function x() {", //
@@ -4129,7 +4144,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "        \";",
             "};"),
         "Unnecessary escape: '\\ ' is equivalent to just ' '",
-        STRING_CONTINUATIONS_WARNING,
         STRING_CONTINUATIONS_WARNING);
   }
 

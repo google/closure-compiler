@@ -4728,8 +4728,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testNamedTypeEquals() {
     try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
       // test == if references are equal
-      errorReporter.expectAllWarnings(
-          "Bad type annotation. Unknown type type1", "Bad type annotation. Unknown type type1");
+      errorReporter.expectAllWarnings("Bad type annotation. Unknown type type1");
       NamedType a = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
       NamedType b = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
       assertThat(a.equals(b)).isTrue();
