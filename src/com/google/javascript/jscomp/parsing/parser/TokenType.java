@@ -128,7 +128,6 @@ public enum TokenType {
   CARET_EQUAL("^="),
   SLASH("/"),
   SLASH_EQUAL("/="),
-  POUND("#"),
 
   // Logical Assignment Punctuators
   AND_EQUAL("&&="),

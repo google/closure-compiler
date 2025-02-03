@@ -47,7 +47,10 @@ public class Scanner {
   private int typeParameterLevel;
 
   public Scanner(
-      ErrorReporter errorReporter, CommentRecorder commentRecorder, SourceFile file, int offset) {
+      ErrorReporter errorReporter,
+      CommentRecorder commentRecorder,
+      SourceFile file,
+      int offset) {
     this.errorReporter = errorReporter;
     this.commentRecorder = commentRecorder;
     this.source = file;
@@ -622,9 +625,16 @@ public class Scanner {
             return createToken(TokenType.BAR, beginToken);
         }
       case '#':
-        return createToken(TokenType.POUND, beginToken);
-      // TODO: add NumberToken
-      // TODO: character following NumericLiteral must not be an IdentifierStart or DecimalDigit
+        // Shebang is not actually ever parsed here (when used correctly, it's handled above in the
+        // skipComments() call) so its token is an error.
+        if (peek('!')) {
+          reportError(getPosition(index), "Shebang comment must be at the start of the file");
+        } else {
+          reportError(getPosition(index), "Invalid usage of #");
+        }
+        return createToken(TokenType.ERROR, beginToken);
+        // TODO: add NumberToken
+        // TODO: character following NumericLiteral must not be an IdentifierStart or DecimalDigit
       case '0':
         return scanPostZero(beginToken);
       case '1':
@@ -982,7 +992,7 @@ public class Scanner {
           if (peekChar(1) == '{') {
             return result;
           }
-        // Fall through.
+          // Fall through.
         default:
           nextChar();
       }
@@ -1046,7 +1056,7 @@ public class Scanner {
           }
           return null;
         }
-      // https://tc39.es/ecma262/#prod-TemplateEscapeSequence
+        // https://tc39.es/ecma262/#prod-TemplateEscapeSequence
       case '\\':
       case 'b':
       case 'f':
@@ -1054,7 +1064,7 @@ public class Scanner {
       case 'r':
       case 't':
       case 'v':
-      // special meaning in template literal
+        // special meaning in template literal
       case '$':
       case '`':
         return null;

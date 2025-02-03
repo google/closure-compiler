@@ -7055,7 +7055,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testShebang() {
     parse("#!/usr/bin/node\n var x = 1;");
-    parseError("var x = 1; \n #!/usr/bin/node", "primary expression expected");
+    parseError("var x = 1; \n #!/usr/bin/node", "Shebang comment must be at the start of the file");
+  }
+
+  @Test
+  public void testInvalidPoundUsage() {
+    parseError("var x = 1; \n# Wrong-style comment", "Invalid usage of #");
   }
 
   @Test
