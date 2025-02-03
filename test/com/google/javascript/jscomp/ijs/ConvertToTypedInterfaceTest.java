@@ -1570,20 +1570,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   @Test
   public void testTemplatedClass() {
-    test(
-        lines(
-            "/** @template T */",
-            "const Foo = goog.defineClass(null, {",
-            "  /** @param {T} x */",
-            "  constructor: function(x) { /** @const */ this.x = x;},",
-            "});"),
-        lines(
-            "/** @template T */",
-            "const Foo = goog.defineClass(null, {",
-            "  /** @param {T} x */",
-            "  constructor: function(x) {},",
-            "});",
-            "/** @const {T} */ Foo.prototype.x;"));
 
     test(
         lines(
@@ -1619,51 +1605,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "class Foo { constructor() { /** @type {number} */ this.num = 5;} }",
         "class Foo { constructor() {} } /** @type {number} */ Foo.prototype.num;");
 
-    test(
-        lines(
-            "const Foo = goog.defineClass(null, {",
-            "  constructor: function() { /** @type {number} */ this.num = 5;},",
-            "});"),
-        lines(
-            "const Foo = goog.defineClass(null, {",
-            "  constructor: function() {},",
-            "});",
-            "/** @type {number} */ Foo.prototype.num;"));
-
-    test(
-        lines(
-            "ns.Foo = goog.defineClass(null, {",
-            "  constructor: function() { /** @type {number} */ this.num = 5;},",
-            "});"),
-        lines(
-            "ns.Foo = goog.defineClass(null, {",
-            "  constructor: function() {},",
-            "});",
-            "/** @type {number} */ ns.Foo.prototype.num;"));
-
-    test(
-        lines(
-            "const Foo = goog.defineClass(null, {",
-            "  /** @return {number} */",
-            "  foo: function() { return 5;},",
-            "});"),
-        lines(
-            "const Foo = goog.defineClass(null, {",
-            "  /** @return {number} */",
-            "  foo: function() {},",
-            "});"));
-
-    test(
-        lines(
-            "const Foo = goog.defineClass(null, {",
-            "  /** @return {number} */",
-            "  foo() { return 5;},",
-            "});"),
-        lines(
-            "const Foo = goog.defineClass(null, {",
-            "  /** @return {number} */",
-            "  foo() {},",
-            "});"));
   }
 
   @Test

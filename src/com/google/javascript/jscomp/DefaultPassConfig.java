@@ -230,7 +230,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(gatherModuleMetadataPass);
       checks.maybeAdd(createModuleMapPass);
       checks.maybeAdd(declaredGlobalExternsOnWindow);
-      checks.maybeAdd(closureRewriteClass);
       checks.maybeAdd(checkSideEffects);
       checks.maybeAdd(angularPass);
       checks.maybeAdd(closureGoogScopeAliases);
@@ -249,7 +248,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.shouldGenerateTypedExterns()) {
       checks.maybeAdd(addSyntheticScript);
       checks.maybeAdd(closureGoogScopeAliasesForIjs);
-      checks.maybeAdd(closureRewriteClass);
       checks.maybeAdd(generateIjs);
       checks.maybeAdd(removeExtraRequires);
       if (options.wrapGoogModulesForWhitespaceOnly) {
@@ -330,10 +328,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.maybeAdd(checkSuper);
-
-    if (options.closurePass) {
-      checks.maybeAdd(closureRewriteClass);
-    }
 
     checks.maybeAdd(checkSideEffects);
 
@@ -1622,13 +1616,6 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("checkTypeImportCodeReferences")
           .setInternalFactory(CheckTypeImportCodeReferences::new)
-          .build();
-
-  /** Rewrites goog.defineClass */
-  private final PassFactory closureRewriteClass =
-      PassFactory.builder()
-          .setName(PassNames.CLOSURE_REWRITE_CLASS)
-          .setInternalFactory(ClosureRewriteClass::new)
           .build();
 
   /** Checks of correct usage of goog.module */

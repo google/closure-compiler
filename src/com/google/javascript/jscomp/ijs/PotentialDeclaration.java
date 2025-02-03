@@ -402,8 +402,8 @@ abstract class PotentialDeclaration {
   }
 
   /**
-   * A declaration of a method defined using the ES6 method syntax or goog.defineClass. Note that a
-   * method defined as an assignment to a prototype property would be a NameDeclaration instead.
+   * A declaration of a method defined using the ES6 method syntax. Note that a method defined as an
+   * assignment to a prototype property would be a NameDeclaration instead.
    */
   private static class MethodDeclaration extends PotentialDeclaration {
     MethodDeclaration(String name, Node functionNode) {
@@ -682,7 +682,6 @@ abstract class PotentialDeclaration {
   private static boolean isTypedRhs(Node rhs) {
     return rhs.isFunction()
         || rhs.isClass()
-        || NodeUtil.isCallTo(rhs, "goog.defineClass")
         || (rhs.isQualifiedName() && GOOG_ABSTRACTMETHOD.matches(rhs));
   }
 

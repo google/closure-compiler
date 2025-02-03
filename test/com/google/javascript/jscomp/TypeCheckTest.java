@@ -16866,39 +16866,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testLends10() {
-    newTest()
-        .addSource(
-            "function defineClass(x) { return function() {}; } "
-                + "/** @constructor */"
-                + "var Foo = defineClass("
-                + "    /** @lends {Foo.prototype} */ ({/** @type {number} */ bar: 1}));"
-                + "/** @return {string} */ function f() { return (new Foo()).bar; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
-        .run();
-  }
-
-  @Test
-  public void testLends11() {
-    newTest()
-        .addSource(
-            "function defineClass(x, y) { return function() {}; } "
-                + "/** @constructor */"
-                + "var Foo = function() {};"
-                + "/** @return {*} */ Foo.prototype.bar = function() { return 3; };"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Foo}\n"
-                + " */\n"
-                + "var SubFoo = defineClass(Foo, "
-                + "    /** @lends {SubFoo.prototype} */ ({\n"
-                + "      /** @override @return {number} */ bar: function() { return 3; }}));"
-                + "/** @return {string} */ function f() { return (new SubFoo()).bar(); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
-        .run();
-  }
-
-  @Test
   public void testDeclaredNativeTypeEquality() {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertTypeEquals(

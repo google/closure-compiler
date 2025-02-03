@@ -136,13 +136,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return null;
   }
 
-  private static final QualifiedName GOOG_DEFINECLASS = QualifiedName.of("goog.defineClass");
-
-  @Override
-  public boolean isClassFactoryCall(Node callNode) {
-    return GOOG_DEFINECLASS.matches(callNode.getFirstChild());
-  }
-
   /**
    * Determines whether the given node is a class-defining name, like "inherits" or "mixin."
    *

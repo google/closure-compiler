@@ -227,9 +227,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
     Node lvalue = NodeUtil.isNameDeclaration(n) || n.isAssign() ? n.getFirstChild() : n;
-    // Static properties for goog.defineClass are rewritten to qualified names before typechecking
-    // runs and are valid as @typedefs.
-    if (!lvalue.isQualifiedName() && !isGoogDefineClassStatic(lvalue)) {
+    if (!lvalue.isQualifiedName()) {
       reportMisplaced(
           n,
           "typedef",
@@ -240,14 +238,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           "typedef",
           "@typedef is not allowed on instance or prototype properties. Did you mean @type?");
     }
-  }
-
-  /** Whether this is a property in this object: {@code goog.defineClass(superClass, {statics: {} */
-  private boolean isGoogDefineClassStatic(Node n) {
-    return n.isStringKey()
-        && n.getParent().isObjectLit()
-        && n.getGrandparent().isStringKey()
-        && n.getGrandparent().getString().equals("statics");
   }
 
   private void validateTemplates(Node n, JSDocInfo info) {
@@ -284,13 +274,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
 
     if (n.isAssign() && n.getFirstChild().isQualifiedName() && n.getLastChild().isFunction()) {
       return n.getLastChild();
-    }
-
-    if (n.isStringKey()
-        && n.getGrandparent() != null
-        && ClosureRewriteClass.isGoogDefineClass(n.getGrandparent())
-        && n.getFirstChild().isFunction()) {
-      return n.getFirstChild();
     }
 
     if (n.isGetterDef() || n.isSetterDef()) {
@@ -389,13 +372,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
 
-    // TODO(b/124020008): Delete this case when `goog.defineClass` is dropped.
-    boolean isGoogDefineClassConstructor =
-        n.getParent().isObjectLit()
-            && (n.isMemberFunctionDef() || n.isStringKey())
-            && "constructor".equals(n.getString());
-    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n) || isGoogDefineClassConstructor) {
-      // @abstract annotation on an ES6 or goog.defineClass constructor
+    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
+      // @abstract annotation on an ES6 constructor
       report(n, MISPLACED_ANNOTATION, "@abstract", "constructors cannot be abstract");
       return;
     }

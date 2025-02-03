@@ -22,17 +22,14 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.QualifiedName;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Static utility methods for dealing with classes. The primary benefit is for papering over the
- * differences between ES6 class and goog.defineClass syntax.
+ * differences between ES6 class syntax.
  */
 final class ClassUtil {
   private ClassUtil() {}
-
-  private static final QualifiedName GOOG_DEFINECLASS = QualifiedName.of("goog.defineClass");
 
   /**
    * Return whether the given node represents a GETPROP with a first child THIS inside a named
@@ -107,15 +104,7 @@ final class ClassUtil {
   static boolean isClassMethod(Node functionNode) {
     checkArgument(functionNode.isFunction());
     Node parent = functionNode.getParent();
-    if (parent.isMemberFunctionDef() && parent.getParent().isClassMembers()) {
-      // ES6 class
-      return true;
-    }
-    // goog.defineClass
-    return parent.isStringKey()
-        && parent.getParent().isObjectLit()
-        && parent.getGrandparent().isCall()
-        && GOOG_DEFINECLASS.matches(parent.getGrandparent().getFirstChild());
+    return (parent.isMemberFunctionDef() && parent.getParent().isClassMembers());
   }
 
   /**
@@ -131,27 +120,18 @@ final class ClassUtil {
     checkArgument(functionNode.isFunction());
     if (isClassMethod(functionNode)) {
       Node parent = functionNode.getParent();
-      if (parent.isMemberFunctionDef()) {
-        // ES6 class
-        Node classNode = functionNode.getGrandparent().getParent();
-        checkState(classNode.isClass());
-        return NodeUtil.getName(classNode);
-      }
-      // goog.defineClass
-      checkState(parent.isStringKey());
-      Node defineClassCall = parent.getGrandparent();
-      checkState(defineClassCall.isCall());
-      return NodeUtil.getBestLValue(defineClassCall).getQualifiedName();
+      checkState(parent.isMemberFunctionDef());
+      // ES6 class
+      Node classNode = functionNode.getGrandparent().getParent();
+      checkState(classNode.isClass());
+      return NodeUtil.getName(classNode);
     }
     return NodeUtil.getName(functionNode);
   }
 
   static boolean isConstructor(Node functionNode) {
     if (isClassMethod(functionNode)) {
-      return NodeUtil.isEs6Constructor(functionNode)
-          ||
-          // TODO(b/124020008): Delete this case when `goog.defineClass` is dropped.
-          "constructor".equals(functionNode.getParent().getString());
+      return NodeUtil.isEs6Constructor(functionNode);
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(functionNode);
     return jsdoc != null && jsdoc.isConstructorOrInterface();

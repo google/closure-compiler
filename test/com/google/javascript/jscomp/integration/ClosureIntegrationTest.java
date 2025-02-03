@@ -296,38 +296,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testBug18078936() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-
-    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-
-    test(
-        options,
-        "goog.inherits = function(a,b) {};"
-            + "goog.defineClass = function(a,b) {};"
-            + "/** @template T */\n"
-            + "var ClassA = goog.defineClass(null, {\n"
-            + "  constructor: function() {},\n"
-            + ""
-            + "  /** @param {T} x */\n"
-            + "  fn: function(x) {}\n"
-            + "});\n"
-            + ""
-            + "/** @extends {ClassA.<string>} */\n"
-            + "var ClassB = goog.defineClass(ClassA, {\n"
-            + "  constructor: function() {},\n"
-            + ""
-            + "  /** @override */\n"
-            + "  fn: function(x) {}\n"
-            + "});\n"
-            + ""
-            + "(new ClassB).fn(3);\n"
-            + "",
-        DiagnosticGroups.CHECK_TYPES);
-  }
-
-  @Test
   public void testUnresolvedDefine() {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);

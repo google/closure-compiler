@@ -516,7 +516,6 @@ public class ConvertToTypedInterface implements CompilerPass {
             NodeUtil.deleteNode(member, compiler);
             break;
           case MEMBER_FUNCTION_DEF:
-          case STRING_KEY: // inside goog.defineClass
           case GETTER_DEF:
           case SETTER_DEF:
             processFunction(member.getLastChild());
@@ -545,7 +544,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     private static boolean isClass(Node n) {
-      return n.isClass() || NodeUtil.isCallTo(n, "goog.defineClass");
+      return n.isClass();
     }
 
     private static String rootName(String qualifiedName) {

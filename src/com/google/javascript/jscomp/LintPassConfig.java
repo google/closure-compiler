@@ -53,7 +53,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     passes.maybeAdd(gatherModuleMetadataPass);
     passes.maybeAdd(earlyLintChecks);
     passes.maybeAdd(variableReferenceCheck);
-    passes.maybeAdd(closureRewriteClass);
     passes.maybeAdd(lateLintChecks);
     return passes;
   }
@@ -117,12 +116,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
           .setName("variableReferenceCheck")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(VariableReferenceCheck::new)
-          .build();
-
-  private final PassFactory closureRewriteClass =
-      PassFactory.builder()
-          .setName(PassNames.CLOSURE_REWRITE_CLASS)
-          .setInternalFactory(ClosureRewriteClass::new)
           .build();
 
   private final PassFactory lateLintChecks =

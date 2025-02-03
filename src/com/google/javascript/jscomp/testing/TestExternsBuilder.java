@@ -56,7 +56,6 @@ public class TestExternsBuilder {
           "goog.forwardDeclare = function(ns) {};",
           "goog.setTestOnly = function() {};",
           "goog.scope = function(fn) {};",
-          "goog.defineClass = function(superClass, clazz) {};",
           "goog.declareModuleId = function(ns) {};",
           "/**",
           " * @param {string} name",

@@ -40,7 +40,6 @@ public final class PassNames {
   public static final String CHECK_TYPES = "checkTypes";
   public static final String CHECK_VARIABLE_REFERENCES = "checkVariableReferences";
   public static final String CHECK_VARS = "checkVars";
-  public static final String CLOSURE_REWRITE_CLASS = "closureRewriteClass";
   public static final String COALESCE_VARIABLE_NAMES = "coalesceVariableNames";
   public static final String COLLAPSE_ANONYMOUS_FUNCTIONS = "collapseAnonymousFunctions";
   public static final String COLLAPSE_OBJECT_LITERALS = "collapseObjectLiterals";

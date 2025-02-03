@@ -1914,13 +1914,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExport8() {
-    test(
-        lines("goog.module('ns.a');", "exports = goog.defineClass(null, {});"),
-        "/** @const */ var module$exports$ns$a = goog.defineClass(null, {});");
-  }
-
-  @Test
   public void testExport9() {
     // Doesn't legacy-to-binary bridge export a typedef.
     testSame(
@@ -1948,15 +1941,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         lines(
             "/** @const */ var module$exports$a$B = {};",
             "/** @const @typedef {string} */ module$exports$a$B.C;"));
-  }
-
-  @Test
-  public void testExport12() {
-    test(
-        lines("goog.module('ns.a');", "exports.foo = goog.defineClass(null, {});"),
-        lines(
-            "/** @const */ var module$exports$ns$a = {};",
-            "/** @const */ module$exports$ns$a.foo = goog.defineClass(null, {});"));
   }
 
   @Test
