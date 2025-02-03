@@ -89,7 +89,8 @@ final class ScriptNodeDeserializer {
       return ScriptNodeDeserializer.this;
     }
 
-    private Node visit(AstNode astNode, FeatureContext context, @Nullable Node sourceFileTemplate) {
+    private Node visit(
+        AstNode astNode, @Nullable FeatureContext context, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
         sourceFileTemplate =
@@ -113,12 +114,18 @@ final class ScriptNodeDeserializer {
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
-      this.recordScriptFeatures(context, n);
+      if (context != null) {
+        this.recordScriptFeatures(context, n);
+      }
 
-      FeatureContext newContext = contextFor(context, n);
+      @Nullable FeatureContext newContext = contextFor(context, n);
       if (Node.hasBitSet(properties, NodeProperty.CLOSURE_UNAWARE_SHADOW.getNumber())) {
         AstNode serializedShadowChild = astNode.getChild(0);
-        Node shadowedCode = this.visit(serializedShadowChild, newContext, sourceFileTemplate);
+        // Unlike normal deserialization, we want to avoid recording features for code within the
+        // shadow because we don't run transpilation passes over it and later stages of the compiler
+        // attempt to validate that transpilation has successfully run over the entire AST and no
+        // features remain that won't work in the given language output level.
+        Node shadowedCode = this.visit(serializedShadowChild, null, sourceFileTemplate);
         this.owner().setOriginalNameIfPresent(serializedShadowChild, shadowedCode);
         // The shadowed code is only the "source" parts of the shadow structure, and does not
         // include the synthetic code that is needed for the compiler to consider it a valid
@@ -699,7 +706,11 @@ final class ScriptNodeDeserializer {
     NONE;
   }
 
-  private static FeatureContext contextFor(FeatureContext parentContext, Node node) {
+  private static @Nullable FeatureContext contextFor(
+      @Nullable FeatureContext parentContext, Node node) {
+    if (parentContext == null) {
+      return null;
+    }
     switch (node.getToken()) {
       case PARAM_LIST:
         return FeatureContext.PARAM_LIST;

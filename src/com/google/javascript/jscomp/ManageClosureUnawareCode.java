@@ -15,9 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.colors.StandardColors;
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -61,18 +64,18 @@ final class ManageClosureUnawareCode implements CompilerPass {
               + " @closureUnaware.");
 
   private final AbstractCompiler compiler;
-  private final AstFactory astFactory;
-  private static final String JSCOMP_CLOSURE_UNAWARE_CODE_PRESERVE_FN =
+  private static final String JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME =
       "$jscomp_wrap_closure_unaware_code";
 
   private final boolean isUnwrapping;
 
-  /** Whether the synthetic extern for JSCOMP_CLOSURE_UNAWARE_CODE_PRESERVE_FN has been injected */
-  private boolean preserveFunctionInjected = false;
+  /**
+   * Whether the synthetic extern for JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME has been injected
+   */
+  private boolean shadowHostNameExternInjected = false;
 
   private ManageClosureUnawareCode(AbstractCompiler compiler, final boolean unwrapPhase) {
     this.compiler = compiler;
-    this.astFactory = compiler.createAstFactory();
     this.isUnwrapping = unwrapPhase;
   }
 
@@ -91,7 +94,54 @@ final class ManageClosureUnawareCode implements CompilerPass {
       return;
     }
     // wrapping mode
-    NodeTraversal.traverse(compiler, root, new ValidateAndWrapGlobalIifeCode());
+    new ValidateAndWrapClosureUnawareCode(compiler).process(externs, root);
+  }
+
+  private final class ValidateAndWrapClosureUnawareCode implements CompilerPass {
+
+    private final AbstractCompiler compiler;
+
+    private ValidateAndWrapClosureUnawareCode(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+
+      for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+        if (script.isClosureUnawareCode()) {
+
+          ValidateAndWrapClosureUnawareScript validateAndWrapClosureUnawareScript =
+              new ValidateAndWrapClosureUnawareScript(compiler);
+          NodeTraversal.traverse(compiler, script, validateAndWrapClosureUnawareScript);
+          // If the file was marked as @closureUnaware, but we didn't actually wrap anything, that
+          // means that the file was not in the expected shape.
+          boolean hasWrappedSomething =
+              validateAndWrapClosureUnawareScript.hasSeenClosureUnawareAnnotation();
+          if (!hasWrappedSomething) {
+            reportUnexpectedClosureUnawareCode(compiler, script);
+          }
+        } else {
+          // This would occur if the annotation was present in a non-fileoverview comment and the
+          // fileoverview did not contain this annotation.
+          NodeUtil.visitPreOrder(
+              script,
+              new NodeUtil.Visitor() {
+                @Override
+                public void visit(Node n) {
+                  JSDocInfo jsDocInfo = n.getJSDocInfo();
+                  if (jsDocInfo != null && jsDocInfo.isClosureUnawareCode()) {
+                    reportUnexpectedClosureUnawareCode(compiler, n);
+                  }
+                }
+              });
+        }
+      }
+    }
+  }
+
+  private static final void reportUnexpectedClosureUnawareCode(AbstractCompiler compiler, Node n) {
+    compiler.report(JSError.make(n, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE));
   }
 
   /**
@@ -118,249 +168,102 @@ final class ManageClosureUnawareCode implements CompilerPass {
    *
    * <p>exports assignment statements
    */
-  private final class ValidateAndWrapGlobalIifeCode implements NodeTraversal.Callback {
+  private final class ValidateAndWrapClosureUnawareScript extends AbstractPostOrderCallback {
 
-    private void reportUnexpectedCode(Node n) {
-      compiler.report(JSError.make(n, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE));
+    private final AbstractCompiler compiler;
+    private final AstFactory astFactory;
+
+    ValidateAndWrapClosureUnawareScript(AbstractCompiler compiler) {
+      this.compiler = compiler;
+      this.astFactory = compiler.createAstFactory();
     }
 
-    @Override
-    public final boolean shouldTraverse(NodeTraversal t, Node n, @Nullable Node parent) {
-      return parent == null || !parent.isScript(); // Don't traverse children of scripts
-    }
+    private boolean seenClosureUnawareAnnotation = false;
 
     @Override
     public final void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-      if (n == null || !n.isScript()) {
+      checkArgument(
+          !n.isRoot(),
+          "ValidateAndWrapClosureUnawareScript should be run directly on each SCRIPT node"
+              + " individually, and should not be re-used across SCRIPT nodes.");
+
+      JSDocInfo jsDocInfo = n.getJSDocInfo();
+      if (jsDocInfo == null || !jsDocInfo.isClosureUnawareCode()) {
         return;
       }
-      if (!n.isClosureUnawareCode()) {
+
+      if (n.isScript()) {
+        // This is a file-overview comment, which should not trigger shadowing.
         return;
       }
 
-      // We want to look at:
-      // top-level CALLs
-      //   (SCRIPT -> (MODULE_BODY -> )? EXPR_RESULT -> CALL)
-      // second-level CALLS inside IF
-      //   (SCRIPT -> (MODULE_BODY -> )? EXPR_RESULT -> IF -> BLOCK -> EXPR_RESULT -> CALL)
-      // calls inside nested IF
-      //   (SCRIPT -> (MODULE_BODY -> )? EXPR_RESULT -> IF -> BLOCK -> IF -> BLOCK -> EXPR_RESULT ->
-      // CALL)
+      seenClosureUnawareAnnotation = true;
 
-      // We are going to manually find the relevant nodes here, and anything else we will report an
-      // error for.
-      Node script = n;
-
-      Node exprParent = script.getFirstChild();
-      if (exprParent == null) {
-        reportUnexpectedCode(script);
+      if (!isValidClosureUnawareAnnotatedNode(n)) {
+        reportUnexpectedClosureUnawareCode(compiler, n);
         return;
       }
-      if (!exprParent.isModuleBody()) {
-        if (exprParent.isExprResult()) {
-          if (NodeUtil.isExprCall(exprParent)
-              && NodeUtil.isBundledGoogModuleCall(exprParent.getFirstChild())) {
-            // EXPR_RESULT -> CALL -> FUNCTION -> BLOCK -> EXPR_RESULT(s)
-            // We want the BLOCK node, as we will iterate over it to get EXPR_RESULTs
-            exprParent = exprParent.getFirstChild().getSecondChild().getChildAtIndex(2);
-          } else {
-            // Sometimes, there is no MODULE_BODY node in the AST, just SCRIPT -> EXPR_RESULT(s).
-            // Assume that if we didn't find the MODULE_BODY as the first child of the SCRIPT that
-            // all the EXPR_RESULT are direct children of the SCRIPT.
-            exprParent = script;
-          }
-        } else {
-          reportUnexpectedCode(script);
-          return;
-        }
-      }
 
-      // MODULE_BODY has a list of statement kinds. We want to validate that they are all "known"
-      for (Node child = exprParent.getFirstChild(); child != null; child = child.getNext()) {
-        // Allowed statement types:
-        if (child.isExprResult()
-            && child.getFirstChild().isString()
-            && child.getFirstChild().getString().equals("use strict")) {
-          // "use strict" pragmas, likely added by the whitespace-wrapping of Closure modules
-          continue;
-        }
-
-        // -- calls to goog.module
-        if (NodeUtil.isGoogModuleCall(child)) {
-          continue;
-        }
-
-        // -- direct calls to goog.require (no assignments)
-        if (NodeUtil.isExprCall(child) && NodeUtil.isGoogRequireCall(child.getFirstChild())) {
-          continue;
-        }
-
-        if (child.isConst()) {
-          if (child.getFirstChild().isDestructuringLhs()) {
-            Node rhs = child.getFirstChild().getSecondChild();
-            if (rhs != null && NodeUtil.isGoogRequireCall(rhs)) {
-              continue;
-            }
-            reportUnexpectedCode(child);
-            continue;
-          }
-          // get RHS of this const declaration and see if it is a goog.require
-          Node rhs = child.getSecondChild();
-          if (rhs != null && NodeUtil.isGoogRequireCall(rhs)) {
-            continue;
-          }
-          reportUnexpectedCode(child);
-          continue;
-        }
-
-        if (NodeUtil.isExprCall(child)) {
-          maybeRewriteCall(t, child.getFirstChild());
-          continue;
-        }
-
-        if (child.isIf()) {
-          visitIf(t, child, 0);
-          continue;
-        }
-
-        // exports =
-        if (child.isExprResult() && child.getFirstChild().isAssign()) {
-          Node lhs = child.getFirstFirstChild();
-          if (lhs != null && lhs.matchesName("exports")) {
-            continue;
-          }
-          reportUnexpectedCode(child);
-          continue;
-        }
-
-        if (child.isReturn() && child.getFirstChild().matchesName("exports")) {
-          // return exports;
-          // Likely added by whitespace-wrapping of Closure modules
-          continue;
-        }
-
-        // Fallthrough: we don't know why this statement is here?
-        reportUnexpectedCode(child);
-      }
+      hideClosureUnawareCodeRoot(t, n);
     }
 
-    private void visitIfBlockStmt(NodeTraversal t, Node n, int depth) {
-      Node child = n.getFirstChild();
-      if (NodeUtil.isExprCall(child)) {
-        maybeRewriteCall(t, child.getFirstChild());
-        return;
-      }
-
-      // Could be a nested if
-      if (child.isIf()) {
-        if (depth > 1) {
-          // This nested if statement is too deep - we only expect at most two layers of nested IF
-          reportUnexpectedCode(child);
-          return;
-        } else {
-          visitIf(t, child, depth + 1);
-          return;
-        }
-      }
-      // We don't know what this is.
-      reportUnexpectedCode(child);
+    private final boolean hasSeenClosureUnawareAnnotation() {
+      return seenClosureUnawareAnnotation;
     }
 
-    private void visitIf(NodeTraversal t, Node n, int depth) {
-      Node trueBlock = n.getSecondChild();
-      @Nullable Node falseBlock = null;
-      if (n.getChildCount() > 2) {
-        falseBlock = n.getChildAtIndex(2);
-      }
-      boolean hasProblems = false;
-      if (trueBlock.getChildCount() > 1) {
-        reportUnexpectedCode(trueBlock);
-        hasProblems = true;
-      }
-      if (falseBlock != null && falseBlock.getChildCount() > 1) {
-        reportUnexpectedCode(falseBlock);
-        hasProblems = true;
-      }
-      if (hasProblems) {
-        return;
+    private final boolean isValidClosureUnawareAnnotatedNode(Node n) {
+      // We only intend to support hiding FUNCTION nodes that are children under a CALL node
+      // as this generally matches the mental model of what we are rewriting it with.
+      if (!n.isFunction()) {
+        return false;
       }
 
-      // This IF has a true (and possibly a false) block, both with one child.
-      visitIfBlockStmt(t, trueBlock, depth);
-      if (falseBlock != null) {
-        visitIfBlockStmt(t, falseBlock, depth);
+      Node parent = n.getParent();
+      if (parent == null) {
+        return false;
       }
+      // We only support:
+
+      //  - FUNCTION nodes that are direct CALL callees
+      if (parent.isCall()) {
+        return true;
+      }
+      //  - FUNCTION nodes that are children of a GETPROP node that is a direct CALL callee (e.g.
+      //    fn.call or fn.apply can be the CALL callee)
+      Node grandparent = parent.getParent();
+      if (grandparent == null) {
+        return false;
+      }
+      if (parent.isGetProp() && grandparent.isCall()) {
+        String calledFn = parent.getString();
+        return calledFn.equals("call") || calledFn.equals("apply");
+      }
+
+      return false;
     }
 
-    private void maybeRewriteCall(NodeTraversal t, Node n) {
-      if (!n.isCall() || n.getChildCount() != 2) {
-        reportUnexpectedCode(n);
-        return;
+    private final void hideClosureUnawareCodeRoot(NodeTraversal t, Node n) {
+      if (!shadowHostNameExternInjected) {
+        NodeUtil.createSynthesizedExternsSymbol(
+            compiler, JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME);
+        shadowHostNameExternInjected = true;
       }
 
-      Node prop = n.getFirstChild();
-      // <>.call()
-      if (!prop.isGetProp() || !prop.getString().equals("call") || prop.getChildCount() != 1) {
-        reportUnexpectedCode(prop);
-        return;
-      }
-      Node globalThisArg = n.getSecondChild();
-      if (globalThisArg == null || !globalThisArg.getString().equals("globalThis")) {
-        reportUnexpectedCode(globalThisArg);
-        return;
-      }
+      Node shadowNameNode =
+          astFactory.createNameWithUnknownType(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME);
+      shadowNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      n.replaceWith(shadowNameNode);
 
-      Node evalFn = prop.getFirstChild();
-      if (!evalFn.isFunction() || evalFn.getSecondChild().hasChildren()) {
-        // not a function, or a function with parameters
-        reportUnexpectedCode(evalFn);
-        return;
-      }
+      Node shadowJsRoot = IR.root(IR.script(astFactory.exprResult(n)));
 
-      Node closureUnawareCodeBlock = evalFn.getChildAtIndex(2);
-      if (!closureUnawareCodeBlock.isBlock()) {
-        reportUnexpectedCode(closureUnawareCodeBlock);
-        return;
-      }
-
-      wrapClosureUnawareCode(t, n);
+      shadowNameNode.setClosureUnawareShadow(shadowJsRoot);
+      t.reportCodeChange(shadowNameNode);
     }
   }
 
-  private void wrapClosureUnawareCode(NodeTraversal t, Node iifeNode) {
-    // These code blocks should be in the form of:
-    // CALL
-    //   GETPROP
-    //     FUNCTION
-    //       NAME
-    //       PARAM_LIST
-    //       BLOCK
-    //         ... closure unaware code here ...
-    //   NAME globalThis
-
-    if (!preserveFunctionInjected) {
-      NodeUtil.createSynthesizedExternsSymbol(compiler, JSCOMP_CLOSURE_UNAWARE_CODE_PRESERVE_FN);
-      preserveFunctionInjected = true;
-    }
-
-    Node codeBlock = iifeNode.getFirstFirstChild().getChildAtIndex(2);
-    String stringifiedCode = compiler.toSource(codeBlock);
-
-    Node wrappedReplacement =
-        astFactory
-            .createCall(
-                astFactory.createNameWithUnknownType(JSCOMP_CLOSURE_UNAWARE_CODE_PRESERVE_FN),
-                AstFactory.type(JSTypeNative.UNKNOWN_TYPE, StandardColors.UNKNOWN),
-                astFactory.createString(stringifiedCode))
-            .srcrefTree(iifeNode);
-
-    wrappedReplacement.getFirstChild().putBooleanProp(Node.IS_CONSTANT_NAME, true);
-
-    iifeNode.replaceWith(wrappedReplacement);
-    NodeUtil.markFunctionsDeleted(iifeNode.getFirstFirstChild(), compiler);
-    t.reportCodeChange();
-  }
-
+  // TODO jameswr: Given that the CodePrinter supports printing out the shadow instead of the shadow
+  // host node, do we even need to revert the AST back to the original form at the end of
+  // compilation?
   private final class UnwrapConcealedClosureUnawareCode implements NodeTraversal.Callback {
 
     @Override
@@ -374,36 +277,80 @@ final class ManageClosureUnawareCode implements CompilerPass {
       }
 
       // Once inside a closureUnaware script, we want to traverse the entire thing to make sure we
-      // find all the calls to $jscomp_wrap_closure_unaware_code.
+      // find all the nodes marked as closure-unaware shadows.
       return true;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
+      if (!tryUnwrapOldClosureUnawareCode(t, n, parent)) {
+        tryUnwrapClosureUnawareShadowedCode(t, n, parent);
+      }
+    }
+
+    private void tryUnwrapClosureUnawareShadowedCode(
+        NodeTraversal t, Node n, @Nullable Node parent) {
+      Node shadowAstRoot = n.getClosureUnawareShadow();
+      if (shadowAstRoot == null) {
+        return;
+      }
+
+      // ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
+      Node originalCodeFunction = shadowAstRoot.getFirstFirstChild().getFirstChild();
+      originalCodeFunction.detach();
+      n.replaceWith(originalCodeFunction);
+      t.reportCodeChange(originalCodeFunction);
+      // Note: you might be tempted to mark this new FUNCTION as  "newly created scope".
+      // This is probably wrong - the scope never actually disappeared from the perspective of the
+      // compiler, and ChangeVerifier will complain (correctly) if that was done.
+
+      // With the shadowed code detached, we are just iterating over all the synthetic nodes created
+      // above and marking them as deleted to avoid confusing various compiler verification checks.
+      NodeUtil.visitPreOrder(
+          shadowAstRoot,
+          new NodeUtil.Visitor() {
+            @Override
+            public void visit(Node n) {
+              n.setDeleted(true);
+            }
+          });
+      // Also mark the NAME node that was hosting the shadow as deleted, in case anything is looking
+      // for it.
+      n.setDeleted(true);
+
+      // This ROOT -> SCRIPT -> EXPR_RESULT node structure that was enclosed in the shadow is now
+      // dangling and we need to inform the compiler that we've removed it.
+      t.reportCodeChange(shadowAstRoot.getFirstChild());
+    }
+
+    private boolean tryUnwrapOldClosureUnawareCode(NodeTraversal t, Node n, @Nullable Node parent) {
       if (!n.isCall()) {
-        // We only expect free calls to the preserve function - anything else is probably a bug.
-        if (n.matchesName(JSCOMP_CLOSURE_UNAWARE_CODE_PRESERVE_FN) && !parent.isCall()) {
+        // We only expect usages of the JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME as part of the
+        // RHS of a CALL, either directly (old-style free call) or indirectly (new-style GETPROP ->
+        // .call or .apply) - anything else is a compiler bug.
+        if (n.matchesName(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME)
+            && !(parent.isCall() || (parent.isGetProp() && parent.getParent().isCall()))) {
           compiler.report(JSError.make(n, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE));
         }
-        return;
+        return false;
       }
 
       Node call = n;
       Node callee = call.getFirstChild();
       // <>.call()
-      if (!callee.matchesName(JSCOMP_CLOSURE_UNAWARE_CODE_PRESERVE_FN)) {
-        return;
+      if (!callee.matchesName(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME)) {
+        return false;
       }
 
       if (call.getChildCount() != 2) {
         compiler.report(JSError.make(call, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE));
-        return; // callee and a single arg
+        return false; // callee and a single arg
       }
 
       Node stringifiedSource = call.getSecondChild();
       if (stringifiedSource == null || !stringifiedSource.isString()) {
         compiler.report(JSError.make(call, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE));
-        return;
+        return false;
       }
       String wrappedSrc = stringifiedSource.getString();
 
@@ -436,6 +383,7 @@ final class ManageClosureUnawareCode implements CompilerPass {
         call.replaceWith(parsedCode);
         NodeUtil.markNewScopesChanged(parsedCode.getFirstFirstChild(), compiler);
         t.reportCodeChange();
+        return true;
       } catch (RuntimeException e) {
         System.err.println(e);
         throw e;
