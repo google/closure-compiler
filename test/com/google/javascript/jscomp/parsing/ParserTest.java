@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
@@ -370,7 +369,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testBreakInForOf() {
     strictMode = SLOPPY;
     expectFeatures(Feature.FOR_OF);
-    parse("" + "for (var x of [1, 2, 3]) {\n" + "  if (x == 2) break;\n" + "}");
+    parse(
+        lines(
+            "for (var x of [1, 2, 3]) {", //
+            "  if (x == 2) break;",
+            "}"));
   }
 
   @Test
@@ -419,7 +422,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testContinueInForOf() {
     strictMode = SLOPPY;
     expectFeatures(Feature.FOR_OF);
-    parse("" + "for (var x of [1, 2, 3]) {\n" + "  if (x == 2) continue;\n" + "}");
+    parse(
+        lines(
+            "for (var x of [1, 2, 3]) {", //
+            "  if (x == 2) continue;",
+            "}"));
   }
 
   /**
@@ -1179,7 +1186,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachment19() {
     Node fn =
-        parse("function f() { " + "  /** @type {string} */" + "  return;" + "};").getFirstChild();
+        parse(
+                lines(
+                    "function f() { ", //
+                    "  /** @type {string} */",
+                    "  return;",
+                    "};"))
+            .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
@@ -1190,7 +1203,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachment20() {
     Node fn =
-        parse("function f() { " + "  /** @type {string} */" + "  if (true) return;" + "};")
+        parse(
+                lines(
+                    "function f() { ", //
+                    "  /** @type {string} */",
+                    "  if (true) return;",
+                    "};"))
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2447,7 +2465,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineJSDocAttachment4() {
-    parse("function f(/**\n" + " * @type {string}\n" + " */ x) {}");
+    parse(
+        lines(
+            "function f(/**", //
+            " * @type {string}",
+            " */ x) {}"));
   }
 
   @Test
@@ -2639,19 +2661,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // The original repro case as reported.
     js =
-        Joiner.on('\n')
-            .join(
-                "(function() {",
-                "  var url=\"\";",
-                "  switch(true)",
-                "  {",
-                "    case /a.com\\/g|l.i/N/.test(url):",
-                "      return \"\";",
-                "    case /b.com\\/T/.test(url):",
-                "      return \"\";",
-                "  }",
-                "}",
-                ")();");
+        lines(
+            "(function() {",
+            "  var url=\"\";",
+            "  switch(true)",
+            "  {",
+            "    case /a.com\\/g|l.i/N/.test(url):",
+            "      return \"\";",
+            "    case /b.com\\/T/.test(url):",
+            "      return \"\";",
+            "  }",
+            "}",
+            ")();");
     parseError(js, "primary expression expected");
   }
 
@@ -2973,25 +2994,41 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.COMPUTED_PROPERTIES);
 
     testComputedProperty(
-        Joiner.on('\n')
-            .join(
-                "var prop = 'some complex expression';", "", "var x = {", "  [prop]: 'foo'", "}"));
+        lines(
+            "var prop = 'some complex expression';", //
+            "",
+            "var x = {",
+            "  [prop]: 'foo'",
+            "}"));
 
     testComputedProperty(
-        Joiner.on('\n')
-            .join(
-                "var prop = 'some complex expression';",
-                "",
-                "var x = {",
-                "  [prop + '!']: 'foo'",
-                "}"));
+        lines(
+            "var prop = 'some complex expression';",
+            "",
+            "var x = {",
+            "  [prop + '!']: 'foo'",
+            "}"));
 
     testComputedProperty(
-        Joiner.on('\n').join("var prop;", "", "var x = {", "  [prop = 'some expr']: 'foo'", "}"));
+        lines(
+            "var prop;", //
+            "",
+            "var x = {",
+            "  [prop = 'some expr']: 'foo'",
+            "}"));
 
-    testComputedProperty(Joiner.on('\n').join("var x = {", "  [1 << 8]: 'foo'", "}"));
+    testComputedProperty(
+        lines(
+            "var x = {", //
+            "  [1 << 8]: 'foo'",
+            "}"));
 
-    String js = Joiner.on('\n').join("var x = {", "  [1 << 8]: 'foo',", "  [1 << 7]: 'bar'", "}");
+    String js =
+        lines(
+            "var x = {", //
+            "  [1 << 8]: 'foo',",
+            "  [1 << 7]: 'bar'",
+            "}");
     mode = LanguageMode.ECMASCRIPT_2015;
     strictMode = SLOPPY;
     parse(js);
@@ -4011,14 +4048,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function * f() { return yield; }"); // OK
     parse("function * f() { return yield 1; }"); // OK
     parse(
-        LINE_JOINER.join(
+        lines(
             "function * f() {",
             "  yield *", // line break allowed here
             "      [1, 2, 3];",
             "}"));
     expectFeatures();
     parseError(
-        LINE_JOINER.join(
+        lines(
             "function * f() {",
             "  yield", // line break not allowed here
             "      *[1, 2, 3];",
@@ -4085,8 +4122,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parseWarning(
-        Joiner.on('\n')
-            .join("function x() {", "        a = \"\\", "        \\ \\", "        \";", "};"),
+        lines(
+            "function x() {", //
+            "        a = \"\\",
+            "        \\ \\",
+            "        \";",
+            "};"),
         "Unnecessary escape: '\\ ' is equivalent to just ' '",
         STRING_CONTINUATIONS_WARNING,
         STRING_CONTINUATIONS_WARNING);
@@ -5157,14 +5198,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testForEach() {
     parseError(
-        "function f(stamp, status) {\n"
-            + "  for each ( var curTiming in this.timeLog.timings ) {\n"
-            + "    if ( curTiming.callId == stamp ) {\n"
-            + "      curTiming.flag = status;\n"
-            + "      break;\n"
-            + "    }\n"
-            + "  }\n"
-            + "};",
+        lines(
+            "function f(stamp, status) {",
+            "  for each ( var curTiming in this.timeLog.timings ) {",
+            "    if ( curTiming.callId == stamp ) {",
+            "      curTiming.flag = status;",
+            "      break;",
+            "    }",
+            "  }",
+            "};"),
         "'(' expected");
   }
 
@@ -5237,7 +5279,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var unterm = 'forgot closing quote", "Unterminated string literal");
 
     parseError(
-        "var unterm = 'forgot closing quote\n" + "alert(unterm);", "Unterminated string literal");
+        lines(
+            "var unterm = 'forgot closing quote", //
+            "alert(unterm);"),
+        "Unterminated string literal");
 
     // test combo of a string continuation + useless escape warning + unterminated literal error
     // create a TestErrorReporter so that we can expect both a warning and an error
@@ -5262,7 +5307,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var unterm = /forgot trailing slash", "Expected '/' in regular expression literal");
 
     parseError(
-        "var unterm = /forgot trailing slash\n" + "alert(unterm);",
+        lines(
+            "var unterm = /forgot trailing slash", //
+            "alert(unterm);"),
         "Expected '/' in regular expression literal");
   }
 
@@ -5512,14 +5559,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     parse("class C {}");
 
-    parse("class C {\n" + "  member() {}\n" + "  get field() {}\n" + "  set field(a) {}\n" + "}\n");
+    parse(
+        lines(
+            "class C {", //
+            "  member() {}",
+            "  get field() {}",
+            "  set field(a) {}",
+            "}"));
 
     parse(
-        "class C {\n"
-            + "  static member() {}\n"
-            + "  static get field() {}\n"
-            + "  static set field(a) {}\n"
-            + "}\n");
+        lines(
+            "class C {",
+            "  static member() {}",
+            "  static get field() {}",
+            "  static set field(a) {}",
+            "}"));
   }
 
   @Test
@@ -5527,18 +5581,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES);
     strictMode = SLOPPY;
     parse(
-        "class C {\n"
-            + "  member() {};\n"
-            + "  get field() {};\n"
-            + "  set field(a) {};\n"
-            + "}\n");
+        lines(
+            "class C {", //
+            "  member() {};",
+            "  get field() {};",
+            "  set field(a) {};",
+            "}"));
 
     parse(
-        "class C {\n"
-            + "  static member() {};\n"
-            + "  static get field() {};\n"
-            + "  static set field(a) {};\n"
-            + "}\n");
+        lines(
+            "class C {",
+            "  static member() {};",
+            "  static get field() {};",
+            "  static set field(a) {};",
+            "}"));
   }
 
   @Test
@@ -5546,8 +5602,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
     strictMode = SLOPPY;
     parse(
-        Joiner.on('\n')
-            .join("class KeywordMethods {", "  continue() {}", "  throw() {}", "  else() {}", "}"));
+        lines(
+            "class KeywordMethods {", //
+            "  continue() {}",
+            "  throw() {}",
+            "  else() {}",
+            "}"));
   }
 
   @Test
@@ -5555,11 +5615,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
     strictMode = SLOPPY;
     parse(
-        LINE_JOINER.join(
-            "class C {", "  import() {};", "  get break() {};", "  set break(a) {};", "}"));
+        lines(
+            "class C {", //
+            "  import() {};",
+            "  get break() {};",
+            "  set break(a) {};",
+            "}"));
 
     parse(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  static import() {};",
             "  static get break() {};",
@@ -5571,7 +5635,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testClass_semicolonsInBodyAreIgnored() {
     Node tree =
         parse(
-            LINE_JOINER.join(
+            lines(
                 "class C {", //
                 "  foo() {};;;;;;",
                 "}"));
@@ -6494,7 +6558,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         Feature.CONST_DECLARATIONS,
         Feature.LET_DECLARATIONS);
     parse(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  async(x) { return x; }",
             "}",
@@ -6998,13 +7062,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLookaheadGithubIssue699() {
     long start = System.currentTimeMillis();
     parse(
-        "[1,[1,[1,[1,[1,[1,\n"
-            + "[1,[1,[1,[1,[1,[1,\n"
-            + "[1,[1,[1,[1,[1,[1,\n"
-            + "[1,[1,[1,[1,[1,[1,\n"
-            + "[1,[1,[1,[1,[1,[1,\n"
-            + "[1,[1,\n"
-            + "[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] ");
+        lines(
+            "[1,[1,[1,[1,[1,[1,",
+            "[1,[1,[1,[1,[1,[1,",
+            "[1,[1,[1,[1,[1,[1,",
+            "[1,[1,[1,[1,[1,[1,",
+            "[1,[1,[1,[1,[1,[1,",
+            "[1,[1,",
+            "[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] "));
 
     long stop = System.currentTimeMillis();
 
@@ -7014,18 +7079,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testInvalidHandling1() {
     parse(
-        ""
-            + "/**\n"
-            + " * @fileoverview Definition.\n"
-            + " * @mods {ns.bar}\n"
-            + " * @modName mod\n"
-            + " *\n"
-            + " * @extends {ns.bar}\n"
-            + " * @author someone\n"
-            + " */\n"
-            + "\n"
-            + "goog.provide('ns.foo');\n"
-            + "");
+        lines(
+            "/**",
+            " * @fileoverview Definition.",
+            " * @mods {ns.bar}",
+            " * @modName mod",
+            " *",
+            " * @extends {ns.bar}",
+            " * @author someone",
+            " */",
+            "",
+            "goog.provide('ns.foo');"));
   }
 
   @Test
@@ -7090,18 +7154,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseInlineSourceMap() {
     String code =
-        "var X = (function () {\n"
-            + "    function X(input) {\n"
-            + "        this.y = input;\n"
-            + "    }\n"
-            + "    return X;\n"
-            + "}());\n"
-            + "console.log(new X(1));\n"
-            + "//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
-            + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
-            + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
-            + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
-            + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());",
+            "console.log(new X(1));",
+            "//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
+                + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
+                + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
+                + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
+                + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==");
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo(
@@ -7115,14 +7180,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseSourceMapRelativeURL() {
     String code =
-        "var X = (function () {\n"
-            + "    function X(input) {\n"
-            + "        this.y = input;\n"
-            + "    }\n"
-            + "    return X;\n"
-            + "}());\n"
-            + "console.log(new X(1));\n"
-            + "//# sourceMappingURL=somefile.js.map";
+        lines(
+            "var X = (function () {",
+            "    function X(input) {",
+            "        this.y = input;",
+            "    }",
+            "    return X;",
+            "}());",
+            "console.log(new X(1));",
+            "//# sourceMappingURL=somefile.js.map");
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL).isEqualTo("somefile.js.map");
   }
@@ -7134,7 +7200,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseSourceMapAbsoluteURL() {
     String code =
-        "console.log('asdf');\n" + "//# sourceMappingURL=/some/absolute/path/to/somefile.js.map";
+        lines(
+            "console.log('asdf');", //
+            "//# sourceMappingURL=/some/absolute/path/to/somefile.js.map");
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL).isEqualTo("/some/absolute/path/to/somefile.js.map");
   }
@@ -7146,8 +7214,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseSourceMapAbsoluteURLHTTP() {
     String code =
-        "console.log('asdf');\n"
-            + "//# sourceMappingURL=http://google.com/some/absolute/path/to/somefile.js.map";
+        lines(
+            "console.log('asdf');",
+            "//# sourceMappingURL=http://google.com/some/absolute/path/to/somefile.js.map");
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo("http://google.com/some/absolute/path/to/somefile.js.map");
