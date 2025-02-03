@@ -23,18 +23,21 @@ public class SetAccessorTree extends ParseTree {
 
   public final Token propertyName;
   public final FormalParameterListTree parameter;
+  public final boolean isClassMember;
   public final boolean isStatic;
   public final BlockTree body;
 
   public SetAccessorTree(
       SourceRange location,
       Token propertyName,
+      boolean isClassMember,
       boolean isStatic,
       FormalParameterListTree parameter,
       BlockTree body) {
     super(ParseTreeType.SET_ACCESSOR, location);
 
     this.propertyName = propertyName;
+    this.isClassMember = isClassMember;
     this.isStatic = isStatic;
     this.parameter = parameter;
     this.body = body;

@@ -22,14 +22,20 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 public class GetAccessorTree extends ParseTree {
 
   public final Token propertyName;
+  public final boolean isClassMember;
   public final boolean isStatic;
   public final BlockTree body;
 
   public GetAccessorTree(
-      SourceRange location, Token propertyName, boolean isStatic, BlockTree body) {
+      SourceRange location,
+      Token propertyName,
+      boolean isClassMember,
+      boolean isStatic,
+      BlockTree body) {
     super(ParseTreeType.GET_ACCESSOR, location);
 
     this.propertyName = propertyName;
+    this.isClassMember = isClassMember;
     this.isStatic = isStatic;
     this.body = body;
   }
