@@ -311,7 +311,8 @@ public class TranspilationPasses {
                   new RewritePolyfills(
                       compiler,
                       compiler.getOptions().getRewritePolyfills(),
-                      compiler.getOptions().getIsolatePolyfills()))
+                      compiler.getOptions().getIsolatePolyfills(),
+                      compiler.getOptions().getInjectPolyfillsNewerThan()))
           .build();
 
   static final PassFactory instrumentAsyncContext =

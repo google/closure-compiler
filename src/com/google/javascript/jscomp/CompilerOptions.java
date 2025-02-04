@@ -862,6 +862,28 @@ public class CompilerOptions implements Serializable {
   /** Isolates injected polyfills from the global scope. */
   private boolean isolatePolyfills = false;
 
+  /**
+   * Configures polyfill injection of all polyfills newer than the given language mode, regardless
+   * of whether they are actually referenced in the code being compiled.
+   *
+   * <p>How is this different from --inject_library? --inject_library takes a specific JS file
+   * defined in the jscomp/js package, and injects that and all of its dependencies. This option
+   * takes a language mode.
+   *
+   * <p>For example, the common use of `--inject_library` is passing `--inject_library=es6_runtime`.
+   * es6_runtime.js is a file that contains both all the ES6 polyfills and also ES6 transpilation
+   * utilities (library code referenced by transpiled code). So
+   *
+   * <ul>
+   *   <li>es6_runtime includes transpilation utilities, not just polyfills.
+   *       `--inject_polyfills_newer_than=ES5` will not add transpilation utilities, just the
+   *       polyfills,
+   *   <li>if someone forgot to add a new polyfill to es6_runtime.js, then `--inject_library` will
+   *       not add it, but `--inject_polyfills_newer_than=ES5` will add it.
+   * </ul>
+   */
+  private LanguageMode injectPolyfillsNewerThan = null;
+
   /** Whether to instrument reentrant functions for AsyncContext. */
   private boolean instrumentAsyncContext = false;
 
@@ -2608,6 +2630,14 @@ public class CompilerOptions implements Serializable {
 
   public boolean getIsolatePolyfills() {
     return this.isolatePolyfills;
+  }
+
+  public void setInjectPolyfillsNewerThan(LanguageMode injectPolyfillsNewerThan) {
+    this.injectPolyfillsNewerThan = injectPolyfillsNewerThan;
+  }
+
+  LanguageMode getInjectPolyfillsNewerThan() {
+    return this.injectPolyfillsNewerThan;
   }
 
   /** Sets whether to isolate polyfills from the global scope. */

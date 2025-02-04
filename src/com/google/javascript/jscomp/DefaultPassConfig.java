@@ -154,14 +154,14 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
-    if (options.needsTranspilationFrom(ES2015)) {
-      if (options.getRewritePolyfills()) {
+    if (options.needsTranspilationFrom(ES2015) && options.getRewritePolyfills()) {
         if (options.getIsolatePolyfills()) {
           throw new IllegalStateException(
               "Polyfill isolation cannot be used in transpileOnly mode");
         }
         TranspilationPasses.addRewritePolyfillPass(passes);
-      }
+    } else if (options.getInjectPolyfillsNewerThan() != null) {
+      TranspilationPasses.addRewritePolyfillPass(passes);
     }
 
     passes.maybeAdd(injectRuntimeLibraries);
@@ -883,7 +883,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
-    if (options.rewritePolyfills || options.getIsolatePolyfills()) {
+    if (options.rewritePolyfills
+        || options.getIsolatePolyfills()
+        || options.getInjectPolyfillsNewerThan() != null) {
       TranspilationPasses.addRewritePolyfillPass(passes);
     }
 
@@ -2392,7 +2394,9 @@ public final class DefaultPassConfig extends PassConfig {
                       // If we are forcing injection of some library code, don't remove polyfills.
                       // Otherwise, we might end up removing polyfills the user specifically asked
                       // to include.
-                      .removeUnusedPolyfills(options.forceLibraryInjection.isEmpty())
+                      .removeUnusedPolyfills(
+                          options.forceLibraryInjection.isEmpty()
+                              && options.getInjectPolyfillsNewerThan() == null)
                       .assumeGettersArePure(options.getAssumeGettersArePure())
                       .build())
           .build();

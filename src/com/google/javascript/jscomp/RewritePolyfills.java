@@ -16,12 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -53,6 +58,7 @@ public class RewritePolyfills implements CompilerPass {
   private final boolean injectPolyfills;
   private final boolean isolatePolyfills;
   private Set<String> libraries;
+  private final LanguageMode injectPolyfillsNewerThan;
 
   /**
    * @param injectPolyfills if true, injects $jscomp.polyfill initializations into the first input.
@@ -61,13 +67,17 @@ public class RewritePolyfills implements CompilerPass {
    *     IsolatePolyfills} to prevent their deletion.
    */
   public RewritePolyfills(
-      AbstractCompiler compiler, boolean injectPolyfills, boolean isolatePolyfills) {
+      AbstractCompiler compiler,
+      boolean injectPolyfills,
+      boolean isolatePolyfills,
+      LanguageMode injectPolyfillsNewerThan) {
     this(
         compiler,
         Polyfills.fromTable(
             ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")),
         injectPolyfills,
-        isolatePolyfills);
+        isolatePolyfills,
+        injectPolyfillsNewerThan);
   }
 
   @VisibleForTesting
@@ -75,11 +85,13 @@ public class RewritePolyfills implements CompilerPass {
       AbstractCompiler compiler,
       Polyfills polyfills,
       boolean injectPolyfills,
-      boolean isolatePolyfills) {
+      boolean isolatePolyfills,
+      LanguageMode injectPolyfillsNewerThan) {
     this.compiler = compiler;
     this.polyfills = polyfills;
     this.injectPolyfills = injectPolyfills;
     this.isolatePolyfills = isolatePolyfills;
+    this.injectPolyfillsNewerThan = injectPolyfillsNewerThan;
   }
 
   @Override
@@ -96,22 +108,42 @@ public class RewritePolyfills implements CompilerPass {
       compiler.reportChangeToEnclosingScope(jscompLookupMethodDecl);
     }
 
-    if (!this.injectPolyfills) {
+    if (!this.injectPolyfills && this.injectPolyfillsNewerThan == null) {
       // Nothing left to do. Probably this pass only needed to run because --isolate_polyfills is
       // enabled but not --rewrite_polyfills.
       return;
     }
-
-    this.libraries = new LinkedHashSet<>();
-    new PolyfillUsageFinder(compiler, polyfills).traverseExcludingGuarded(root, this::inject);
-
-    if (libraries.isEmpty()) {
-      return;
+    if (this.injectPolyfills) {
+      this.libraries = new LinkedHashSet<>();
+      new PolyfillUsageFinder(compiler, polyfills).traverseExcludingGuarded(root, this::inject);
     }
 
+    final ImmutableList<String> librariesToInject;
+    if (this.injectPolyfillsNewerThan != null) {
+      ImmutableList<Polyfill> polyfillsToInject =
+          polyfills.getPolyfillsNewerThan(this.injectPolyfillsNewerThan);
+      librariesToInject =
+          polyfillsToInject.stream()
+              // Skip polyfills that have no associated library. This is true for language
+              // features like `Proxy` and `String.raw` that have no associated polyfill, hence
+              // there's
+              // nothing to inject here.
+              .filter(p -> !p.library.isEmpty())
+              .map(p -> p.library)
+              .collect(toImmutableList());
+    } else {
+      librariesToInject = ImmutableList.copyOf(this.libraries);
+    }
+
+    this.injectAll(librariesToInject, /* forceInjection= */ this.injectPolyfillsNewerThan != null);
+  }
+
+  private void injectAll(Iterable<String> librariesToInject, boolean forceInjection) {
     Node lastNode = null;
-    for (String library : libraries) {
-      lastNode = compiler.ensureLibraryInjected(library, false);
+    for (String library : librariesToInject) {
+      checkNotNull(library);
+      checkState(!library.isEmpty(), "unexpected empty library");
+      lastNode = compiler.ensureLibraryInjected(library, forceInjection);
     }
     if (lastNode != null) {
       Node parent = lastNode.getParent();
@@ -153,20 +185,8 @@ public class RewritePolyfills implements CompilerPass {
       if (JSCOMP_POLYFILL.matches(name)) {
         final String nativeVersionStr = name.getNext().getNext().getNext().getString();
         polyfillSupportFeatureSet = FeatureSet.valueOf(nativeVersionStr);
-        // Safari has been really slow to implement these regex features, even though it has
-        // kept on top of the features we polyfill, so we want to ignore the regex features
-        // when deciding whether the polyfill should be considered "already supported" in the
-        // target environment.
-        // NOTE: This special case seems reasonable for now, but if further divergence occurs
-        // we should consider doing a more direct solution by having the polyfill definitions
-        // report names of `FeatureSet` values representing browser `FeatureSet` year instead of
-        // spec release year.
         polyfillSupportFeatureSet =
-            polyfillSupportFeatureSet.without(
-                Feature.REGEXP_FLAG_S,
-                Feature.REGEXP_LOOKBEHIND,
-                Feature.REGEXP_NAMED_GROUPS,
-                Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+            PolyfillUsageFinder.getPolyfillSupportedFeatureSet(nativeVersionStr);
       }
     }
     return polyfillSupportFeatureSet;

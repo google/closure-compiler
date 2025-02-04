@@ -2594,6 +2594,58 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
+  public void testInjectPolyfillsNewerThan_noDeadCodeRemovalForUnusedPolyfills() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setInjectPolyfillsNewerThan(LanguageMode.ECMASCRIPT_2018);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addConsole().addArray().addString().addObject().build()));
+    compile(options, "console.log('hello world');");
+
+    assertThat(lastCompiler.getErrors()).isEmpty();
+    // String.prototype.trimEnd is in ES2019, so we expect the polyfill to be injected.
+    assertThat(lastCompiler.toSource()).contains("String.prototype.trimEnd");
+    // String.prototype.startsWith is in ES2015, so we expect do not expect the polyfill
+    assertThat(lastCompiler.toSource()).doesNotContain("String.prototype.startsWith");
+  }
+
+  @Test
+  public void
+      testInjectPolyfillsNewerThan_noDeadCodeRemovalForUnusedPolyfills_withForceInjectLibrary() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setInjectPolyfillsNewerThan(LanguageMode.ECMASCRIPT_2018);
+    options.setGeneratePseudoNames(true);
+    options.setForceLibraryInjection(ImmutableList.of("es6/string/startswith"));
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addConsole().addArray().addString().addObject().build()));
+    compile(options, "console.log('hello world');");
+
+    assertThat(lastCompiler.getErrors()).isEmpty();
+    // String.prototype.trimEnd is in ES2019, so we expect the polyfill to be injected.
+    assertThat(lastCompiler.toSource()).contains("String.prototype.trimEnd");
+    // String.prototype.startsWith is injected because of the force inject library flag, even though
+    // it is in ES2015.
+    assertThat(lastCompiler.toSource()).contains("String.prototype.startsWith");
+    // String.prototype.endsWith is in ES2015, so we do not expect the polyfill (since
+    // unlike String.prototype.startsWith, it is not forced to be injected)
+    assertThat(lastCompiler.toSource()).doesNotContain("String.prototype.endsWith");
+  }
+
+  @Test
   public void testIsolatePolyfills_worksWithoutRewritePolyfills() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

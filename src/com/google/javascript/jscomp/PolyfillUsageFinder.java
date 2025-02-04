@@ -21,10 +21,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.List;
@@ -93,11 +97,17 @@ final class PolyfillUsageFinder {
     private final ImmutableMap<String, Polyfill> statics;
     // Set of suffixes of qualified names.
     private final ImmutableSet<String> suffixes;
+    // Map of all polyfills, keyed by their native version (the first ECMAScript spec version in
+    // which they are defined)
+    private final ImmutableMultimap<String, Polyfill> byNativeVersion;
 
     private Polyfills(
-        ImmutableMultimap<String, Polyfill> methods, ImmutableMap<String, Polyfill> statics) {
+        ImmutableMultimap<String, Polyfill> methods,
+        ImmutableMap<String, Polyfill> statics,
+        ImmutableMultimap<String, Polyfill> byNativeVersion) {
       this.methods = methods;
       this.statics = statics;
+      this.byNativeVersion = byNativeVersion;
       this.suffixes =
           ImmutableSet.copyOf(
               statics.keySet().stream()
@@ -119,6 +129,7 @@ final class PolyfillUsageFinder {
     static Polyfills fromTable(String table) {
       ImmutableMultimap.Builder<String, Polyfill> methods = ImmutableMultimap.builder();
       ImmutableMap.Builder<String, Polyfill> statics = ImmutableMap.builder();
+      ImmutableMultimap.Builder<String, Polyfill> byNativeVersion = ImmutableMultimap.builder();
       for (String line : Splitter.on('\n').omitEmptyStrings().split(table)) {
         List<String> tokens = Splitter.on(' ').omitEmptyStrings().splitToList(line.trim());
         if (tokens.size() == 1 && tokens.get(0).isEmpty()) {
@@ -142,10 +153,46 @@ final class PolyfillUsageFinder {
         } else {
           statics.put(symbol, polyfill);
         }
+        byNativeVersion.put(nativeVersionStr, polyfill);
       }
-      return new Polyfills(methods.build(), statics.buildOrThrow());
+      return new Polyfills(methods.build(), statics.buildOrThrow(), byNativeVersion.build());
     }
 
+    ImmutableList<Polyfill> getPolyfillsNewerThan(LanguageMode languageMode) {
+      FeatureSet featureSet = languageMode.toFeatureSet();
+      ImmutableList.Builder<Polyfill> result = ImmutableList.builder();
+
+      for (String nativeVersionStr : byNativeVersion.keySet()) {
+        FeatureSet polyfillNativeFeatureSet = getPolyfillSupportedFeatureSet(nativeVersionStr);
+        if (!featureSet.contains(polyfillNativeFeatureSet)) {
+          result.addAll(byNativeVersion.get(nativeVersionStr));
+        }
+      }
+      return result.build();
+    }
+  }
+
+  /**
+   * Converts a polyfill native version string as passed to $jscomp.polyfill, e.g. "es6", to a
+   * FeatureSet.
+   */
+  static FeatureSet getPolyfillSupportedFeatureSet(String nativeVersionStr) {
+    FeatureSet polyfillSupportFeatureSet = FeatureSet.valueOf(nativeVersionStr);
+    // Safari has been really slow to implement these regex features, even though it has
+    // kept on top of the features we polyfill, so we want to ignore the regex features
+    // when deciding whether the polyfill should be considered "already supported" in the
+    // target environment.
+    // NOTE: This special case seems reasonable for now, but if further divergence occurs
+    // we should consider doing a more direct solution by having the polyfill definitions
+    // report names of `FeatureSet` values representing browser `FeatureSet` year instead of
+    // spec release year.
+    polyfillSupportFeatureSet =
+        polyfillSupportFeatureSet.without(
+            Feature.REGEXP_FLAG_S,
+            Feature.REGEXP_LOOKBEHIND,
+            Feature.REGEXP_NAMED_GROUPS,
+            Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+    return polyfillSupportFeatureSet;
   }
 
   @AutoValue
