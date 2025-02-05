@@ -76,6 +76,16 @@ google.maps.AddressDescriptor.prototype.areas;
 google.maps.AddressDescriptor.prototype.landmarks;
 
 /**
+ * @record
+ */
+google.maps.AirQualityLibrary = function() {};
+
+/**
+ * @type {typeof google.maps.airQuality.AirQualityMeterElement}
+ */
+google.maps.AirQualityLibrary.prototype.AirQualityMeterElement;
+
+/**
  * Animations that can be played on a marker. Use the {@link
  * google.maps.Marker.setAnimation} method on Marker or the {@link
  * google.maps.MarkerOptions.animation} option to play an animation.
@@ -10409,6 +10419,13 @@ google.maps.TransitFare = function() {};
 google.maps.TransitFare.prototype.currency;
 
 /**
+ * The value of the fare, expressed in the given <code>currency</code>, as a
+ * string.
+ * @type {string}
+ */
+google.maps.TransitFare.prototype.text;
+
+/**
  * The numerical value of the fare, expressed in the given
  * <code>currency</code>.
  * @type {number}
@@ -11175,6 +11192,66 @@ google.maps.event.addDomListener = function(
  */
 google.maps.event.addDomListenerOnce = function(
     instance, eventName, handler, capture) {};
+
+/**
+ * @const
+ */
+google.maps.airQuality = {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Displays air quality information for a given location.
+ *
+ * Access by calling `const {AirQualityMeterElement} = await
+ * google.maps.importLibrary("airQuality")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.airQuality.AirQualityMeterElementOptions=} options
+ * @implements {google.maps.airQuality.AirQualityMeterElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.airQuality.AirQualityMeterElement = function(options) {};
+
+/**
+ * The location to render the air quality meter for. Normalizes to a
+ * <code>LatLngAltitude</code>.
+ * @default <code>null</code>
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLng|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngAltitude|null|undefined}
+ */
+google.maps.airQuality.AirQualityMeterElement.prototype.location;
+
+/**
+ * An override for the language to request from the <a
+ * href="https://developers.google.com/maps/documentation/air-quality/overview">Air
+ * Quality API</a>. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>.
+ * @default <code>null</code>
+ * @type {string|null}
+ */
+google.maps.airQuality.AirQualityMeterElement.prototype.requestedLanguage;
+
+
+
+/**
+ * AirQualityMeterElement options.
+ * @record
+ */
+google.maps.airQuality.AirQualityMeterElementOptions = function() {};
+
+/**
+ * See {@link google.maps.airQuality.AirQualityMeterElement.location}
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLng|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngAltitude|null|undefined}
+ */
+google.maps.airQuality.AirQualityMeterElementOptions.prototype.location;
+
+/**
+ * See {@link google.maps.airQuality.AirQualityMeterElement.requestedLanguage}
+ * @type {string|null|undefined}
+ */
+google.maps.airQuality.AirQualityMeterElementOptions.prototype
+    .requestedLanguage;
 
 /**
  * @const
@@ -18319,7 +18396,7 @@ google.maps.places.Place = function(options) {};
 /**
  * Accessibility options of this Place. <code>undefined</code> if the
  * accessibility options data have not been called for from the server.
- * @type {google.maps.places.AccessibilityOptions|null|undefined}
+ * @type {!google.maps.places.AccessibilityOptions|null|undefined}
  */
 google.maps.places.Place.prototype.accessibilityOptions;
 
@@ -18353,7 +18430,7 @@ google.maps.places.Place.prototype.attributions;
  * The location&#39;s operational status. <code>null</code> if there is no known
  * status. <code>undefined</code> if the status data has not been loaded from
  * the server.
- * @type {google.maps.places.BusinessStatus|null|undefined}
+ * @type {!google.maps.places.BusinessStatus|null|undefined}
  */
 google.maps.places.Place.prototype.businessStatus;
 
@@ -18391,7 +18468,7 @@ google.maps.places.Place.prototype.editorialSummaryLanguageCode;
 /**
  * EV Charge options provided by the place. <code>undefined</code> if the EV
  * charge options have not been called for from the server.
- * @type {google.maps.places.EVChargeOptions|null|undefined}
+ * @type {!google.maps.places.EVChargeOptions|null|undefined}
  */
 google.maps.places.Place.prototype.evChargeOptions;
 
@@ -18404,7 +18481,7 @@ google.maps.places.Place.prototype.formattedAddress;
 /**
  * Fuel options provided by the place. <code>undefined</code> if the fuel
  * options have not been called for from the server.
- * @type {google.maps.places.FuelOptions|null|undefined}
+ * @type {!google.maps.places.FuelOptions|null|undefined}
  */
 google.maps.places.Place.prototype.fuelOptions;
 
@@ -18512,7 +18589,7 @@ google.maps.places.Place.prototype.isReservable;
 
 /**
  * The Place’s position.
- * @type {google.maps.LatLng|null|undefined}
+ * @type {!google.maps.LatLng|null|undefined}
  */
 google.maps.places.Place.prototype.location;
 
@@ -18527,14 +18604,14 @@ google.maps.places.Place.prototype.nationalPhoneNumber;
 /**
  * Options of parking provided by the place. <code>undefined</code> if the
  * parking options data have not been called for from the server.
- * @type {google.maps.places.ParkingOptions|null|undefined}
+ * @type {!google.maps.places.ParkingOptions|null|undefined}
  */
 google.maps.places.Place.prototype.parkingOptions;
 
 /**
  * Payment options provided by the place. <code>undefined</code> if the payment
  * options data have not been called for from the server.
- * @type {google.maps.places.PaymentOptions|null|undefined}
+ * @type {!google.maps.places.PaymentOptions|null|undefined}
  */
 google.maps.places.Place.prototype.paymentOptions;
 
@@ -18546,7 +18623,7 @@ google.maps.places.Place.prototype.paymentOptions;
 google.maps.places.Place.prototype.photos;
 
 /**
- * @type {google.maps.places.PlusCode|null|undefined}
+ * @type {!google.maps.places.PlusCode|null|undefined}
  */
 google.maps.places.Place.prototype.plusCode;
 
@@ -18555,7 +18632,7 @@ google.maps.places.Place.prototype.plusCode;
  * values <ul style="list-style-type: none;"> <li><code>Free</code></li>
  * <li><code>Inexpensive</code></li> <li><code>Moderate</code></li>
  * <li><code>Expensive</code></li> <li><code>Very Expensive</code></li> </ul>
- * @type {google.maps.places.PriceLevel|null|undefined}
+ * @type {!google.maps.places.PriceLevel|null|undefined}
  */
 google.maps.places.Place.prototype.priceLevel;
 
@@ -18589,7 +18666,7 @@ google.maps.places.Place.prototype.primaryTypeDisplayNameLanguageCode;
 google.maps.places.Place.prototype.rating;
 
 /**
- * @type {google.maps.places.OpeningHours|null|undefined}
+ * @type {!google.maps.places.OpeningHours|null|undefined}
  */
 google.maps.places.Place.prototype.regularOpeningHours;
 
@@ -18720,7 +18797,7 @@ google.maps.places.Place.prototype.utcOffsetMinutes;
 
 /**
  * The preferred viewport when displaying this Place on a map.
- * @type {google.maps.LatLngBounds|null|undefined}
+ * @type {!google.maps.LatLngBounds|null|undefined}
  */
 google.maps.places.Place.prototype.viewport;
 
@@ -18731,7 +18808,7 @@ google.maps.places.Place.prototype.viewport;
 google.maps.places.Place.prototype.websiteURI;
 
 /**
- * @type {google.maps.places.OpeningHours|null|undefined}
+ * @type {!google.maps.places.OpeningHours|null|undefined}
  * @deprecated Use {@link google.maps.places.Place.regularOpeningHours} instead.
  */
 google.maps.places.Place.prototype.openingHours;
@@ -18827,12 +18904,26 @@ google.maps.places.PlaceAspectRating.prototype.type;
 google.maps.places.PlaceAutocompleteElement = function(options) {};
 
 /**
- * The component restrictions. Component restrictions are used to restrict
- * predictions to only those within the parent component. For example, the
- * country.
- * @type {!google.maps.places.ComponentRestrictions|null}
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Included primary <a
+ * href="https://developers.google.com/maps/documentation/places/javascript/place-types">Place
+ * type</a> (for example, &quot;restaurant&quot; or &quot;gas_station&quot;).
+ * <br/><br/> A Place is only returned if its primary type is included in this
+ * list. Up to 5 values can be specified. If no types are specified, all Place
+ * types are returned.
+ * @type {!Array<string>|null}
  */
-google.maps.places.PlaceAutocompleteElement.prototype.componentRestrictions;
+google.maps.places.PlaceAutocompleteElement.prototype.includedPrimaryTypes;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Only include results in the specified regions, specified as up to 15 CLDR
+ * two-character region codes. An empty set will not restrict the results. If
+ * both <code>locationRestriction</code> and <code>includedRegionCodes</code>
+ * are set, the results will be located in the area of intersection.
+ * @type {!Array<string>|null}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.includedRegionCodes;
 
 /**
  * A soft boundary or hint to use when searching for places.
@@ -18856,6 +18947,14 @@ google.maps.places.PlaceAutocompleteElement.prototype.locationRestriction;
  * @type {string|null}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.name;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * The origin from which to calculate distance. If not specified, distance is
+ * not calculated. The altitude, if given, is not used in the calculation.
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.origin;
 
 /**
  * A language identifier for the language in which the results should be
@@ -18882,65 +18981,116 @@ google.maps.places.PlaceAutocompleteElement.prototype.requestedLanguage;
 google.maps.places.PlaceAutocompleteElement.prototype.requestedRegion;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * The unit system used to display distances. If not specified, the unit system
+ * is determined by requestedRegion.
+ * @type {!google.maps.UnitSystem|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The component restrictions. Component restrictions are used to restrict
+ * predictions to only those within the parent component. For example, the
+ * country.
+ * @type {!google.maps.places.ComponentRestrictions|null}
+ * @deprecated This property will continue to function in the beta channel, but
+ *     will not be made available in alpha or at release. For migration
+ *     purposes, specify both this property and <code>includeRegionCodes</code>.
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.componentRestrictions;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The types of predictions to be returned. For supported types, see the <a
  * href="https://developers.google.com/maps/documentation/javascript/places-autocomplete#constrain-place-types">
  * developer&#39;s guide</a>. If no types are specified, all types will be
  * returned.
  * @type {!Array<string>|null}
+ * @deprecated This property will continue to function in the beta channel, but
+ *     will not be made available in alpha or at release. For migration
+ *     purposes, specify both this property and
+ *     <code>includedPrimaryTypes</code>.
  */
 google.maps.places.PlaceAutocompleteElement.prototype.types;
 
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
- * Options for constructing a PlaceAutocompleteElement.
+ * Options for constructing a PlaceAutocompleteElement. For the description of
+ * each property, refer to the property of the same name in the
+ * PlaceAutocompleteElement class.
  * @record
  */
 google.maps.places.PlaceAutocompleteElementOptions = function() {};
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.componentRestrictions}
- * @type {!google.maps.places.ComponentRestrictions|null|undefined}
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype
-    .componentRestrictions;
+    .includedPrimaryTypes;
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.locationBias}
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .includedRegionCodes;
+
+/**
  * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.locationBias;
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.locationRestriction}
  * @type {!google.maps.places.LocationRestriction|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype
     .locationRestriction;
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.name}
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.name;
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.requestedLanguage}
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.origin;
+
+/**
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.requestedRegion}
- * @type {string|null|undefined}
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {!google.maps.UnitSystem|null|undefined}
  */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
+google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
- * See {@link google.maps.places.PlaceAutocompleteElement.types}
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {!google.maps.places.ComponentRestrictions|null|undefined}
+ * @deprecated This property will continue to function in the beta channel, but
+ *     will not be made available in alpha or at release. For migration
+ *     purposes, specify both this property and
+ *     <code>includedRegionCodes</code>.
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .componentRestrictions;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {!Array<string>|null|undefined}
+ * @deprecated This property will continue to function in the beta channel, but
+ *     will not be made available in alpha or at release. For migration
+ *     purposes, specify both this property and
+ *     <code>includedPrimaryTypes</code>.
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
 
@@ -18955,6 +19105,12 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
+ * @deprecated The <code>gmp-placeselect</code> event will continue to trigger
+ *     in the beta channel, but will not trigger in alpha or at release. For
+ *     migration purposes, continue to listen to the
+ *     <code>gmp-placeselect</code> event, but also add an event listener for
+ *     the <code>gmp-select</code> event, which returns a
+ *     <code>PlacePredictionSelectEvent</code> object.
  */
 google.maps.places.PlaceAutocompletePlaceSelectEvent = function() {};
 
@@ -18975,6 +19131,12 @@ google.maps.places.PlaceAutocompletePlaceSelectEvent.prototype.place;
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
+ * @deprecated The <code>gmp-requesterror</code> event will continue to trigger
+ *     in the beta channel, but will not trigger in alpha or at release. For
+ *     migration purposes, continue to listen to the
+ *     <code>gmp-requesterror</code> event, but also add an event listener for
+ *     the <code>gmp-error</code> event, which returns an <code>Event</code>
+ *     object.
  */
 google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
 
@@ -19535,6 +19697,26 @@ google.maps.places.PlacePrediction.prototype.types;
  * @return {!google.maps.places.Place}
  */
 google.maps.places.PlacePrediction.prototype.toPlace = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * This event is created after the user selects a prediction item with the
+ * PlaceAutocompleteElement. Access the selection with
+ * <code>event.placePrediction</code>.
+ *
+ * Access by calling `const {PlacePredictionSelectEvent} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.places.PlacePredictionSelectEvent = function() {};
+
+/**
+ * @type {!google.maps.places.PlacePrediction}
+ */
+google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
 
 /**
  * Defines information about a Place.
