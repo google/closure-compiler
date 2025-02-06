@@ -695,6 +695,8 @@ public final class DefaultPassConfig extends PassConfig {
     // This pass works best after collapseVariableDeclarations.
     passes.maybeAdd(denormalize);
 
+    passes.maybeAdd(createEmptyPass(PassNames.BEFORE_VARIABLE_RENAMING));
+
     if (options.variableRenaming != VariableRenamingPolicy.ALL) {
       // If we're leaving some (or all) variables with their old names,
       // then we need to undo any of the markers we added for distinguishing
