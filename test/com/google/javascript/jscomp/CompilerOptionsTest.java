@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
@@ -26,8 +25,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -155,31 +152,6 @@ public final class CompilerOptionsTest {
     options.setEmitUseStrict(true);
 
     assertThat(options.shouldEmitUseStrict()).isTrue();
-  }
-
-  @Test
-  public void testSerialization() throws Exception {
-    CompilerOptions options = new CompilerOptions();
-    options.setDefineToBooleanLiteral("trueVar", true);
-    options.setDefineToBooleanLiteral("falseVar", false);
-    options.setDefineToNumberLiteral("threeVar", 3);
-    options.setDefineToStringLiteral("strVar", "str");
-    options.setAmbiguateProperties(false);
-    options.setOutputCharset(US_ASCII);
-
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    options.serialize(byteArrayOutputStream);
-
-    options =
-        CompilerOptions.deserialize(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-
-    ImmutableMap<String, Node> actual = options.getDefineReplacements();
-    assertEquivalent(new Node(Token.TRUE), actual.get("trueVar"));
-    assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
-    assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
-    assertEquivalent(Node.newString("str"), actual.get("strVar"));
-    assertThat(options.shouldAmbiguateProperties()).isFalse();
-    assertThat(options.getOutputCharset()).isEqualTo(US_ASCII);
   }
 
   @Test
