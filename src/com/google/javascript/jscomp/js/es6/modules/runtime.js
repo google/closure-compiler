@@ -480,29 +480,6 @@ $jscomp.registerAndLoadModule = function(
 
 
 /**
- * Registers an object as if it is the exports of an ES6 module so that it may
- * be retrieved via $jscomp.require.
- *
- * Used by Closure Library in the event that only some ES6 modules need
- * transpilation.
- *
- * @param {string} absModulePath
- * @param {?} exports
- */
-$jscomp.registerEs6ModuleExports = function(absModulePath, exports) {
-  if (moduleCache.has(absModulePath)) {
-    throw new Error(
-        'Module at path ' + absModulePath + ' is already registered.');
-  }
-
-  var entry =
-      new CacheEntry(null, new Module(absModulePath, exports), absModulePath);
-  moduleCache.set(absModulePath, entry);
-  markAvailable(absModulePath);
-};
-
-
-/**
  * Hook to clear all loaded modules. Meant to only be used by tests.
  */
 $jscomp.clearModules = function() {
