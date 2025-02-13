@@ -415,6 +415,7 @@ public final class TypedAstDeserializer {
         codedInput.readMessage(typedAstBuilder, ExtensionRegistry.getEmptyRegistry());
         TypedAst typedAst = typedAstBuilder.build();
         typedAstBuilder.clear();
+        codedInput.resetSizeCounter();
         deserializer.deserializeTypedAst(
             typedAst, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
       }
