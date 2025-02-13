@@ -85,6 +85,12 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
           "''{0}'' references a namespace which was not required by this file.\n"
               + "Please add a goog.requireType.");
 
+  public static final DiagnosticType NON_LEGACY_GOOG_MODULE_REFERENCE =
+      DiagnosticType.error(
+          "JSC_NON_LEGACY_GOOG_MODULE_REFERENCE",
+          "''{0}'' references the name of a module without goog.declareLegacyNamespace(), which "
+              + "is not actually defined. Use goog.module.get() instead.");
+
   /** The set of template parameter names found so far in the file currently being checked. */
   private final LinkedHashSet<String> templateParamNames = new LinkedHashSet<>();
 
@@ -133,7 +139,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       if (root.equals("this") || root.equals("super")) {
         return;
       }
-      visitQualifiedName(t, n, currentModule, qualifiedName, /* isStrongReference= */ true);
+      visitQualifiedName(t, n, currentModule, qualifiedName, Strength.CODE);
     }
 
     if (n.isName() && !n.getString().isEmpty()) {
@@ -147,37 +153,36 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     templateParamNames.addAll(info.getTemplateTypeNames());
     templateParamNames.addAll(info.getTypeTransformations().keySet());
     if (info.hasType()) {
-      visitJsDocExpr(t, currentModule, info.getType(), /* isStrongReference= */ false);
+      visitJsDocExpr(t, currentModule, info.getType(), Strength.WEAK_TYPE);
     }
     for (String param : info.getParameterNames()) {
       if (info.hasParameterType(param)) {
-        visitJsDocExpr(
-            t, currentModule, info.getParameterType(param), /* isStrongReference= */ false);
+        visitJsDocExpr(t, currentModule, info.getParameterType(param), Strength.WEAK_TYPE);
       }
     }
     if (info.hasReturnType()) {
-      visitJsDocExpr(t, currentModule, info.getReturnType(), /* isStrongReference= */ false);
+      visitJsDocExpr(t, currentModule, info.getReturnType(), Strength.WEAK_TYPE);
     }
     if (info.hasEnumParameterType()) {
-      visitJsDocExpr(t, currentModule, info.getEnumParameterType(), /* isStrongReference= */ false);
+      visitJsDocExpr(t, currentModule, info.getEnumParameterType(), Strength.WEAK_TYPE);
     }
     if (info.hasTypedefType()) {
-      visitJsDocExpr(t, currentModule, info.getTypedefType(), /* isStrongReference= */ false);
+      visitJsDocExpr(t, currentModule, info.getTypedefType(), Strength.WEAK_TYPE);
     }
     if (info.hasThisType()) {
-      visitJsDocExpr(t, currentModule, info.getThisType(), /* isStrongReference= */ false);
+      visitJsDocExpr(t, currentModule, info.getThisType(), Strength.WEAK_TYPE);
     }
     if (info.hasBaseType()) {
       // Note that `@extends` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, currentModule, info.getBaseType(), /* isStrongReference= */ true);
+      visitJsDocExpr(t, currentModule, info.getBaseType(), Strength.IMPLEMENTS_EXTENDS);
     }
     for (JSTypeExpression expr : info.getExtendedInterfaces()) {
       // Note that `@extends` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, currentModule, expr, /* isStrongReference= */ true);
+      visitJsDocExpr(t, currentModule, expr, Strength.IMPLEMENTS_EXTENDS);
     }
     for (JSTypeExpression expr : info.getImplementedInterfaces()) {
       // Note that `@implements` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, currentModule, expr, /* isStrongReference= */ true);
+      visitJsDocExpr(t, currentModule, expr, Strength.IMPLEMENTS_EXTENDS);
     }
   }
 
@@ -185,10 +190,10 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       NodeTraversal t,
       ModuleMetadata currentModule,
       JSTypeExpression expr,
-      boolean isStrongReference) {
+      Strength referenceStrength) {
     for (Node typeNode : expr.getAllTypeNodes()) {
       visitQualifiedName(
-          t, typeNode, currentModule, QualifiedName.of(typeNode.getString()), isStrongReference);
+          t, typeNode, currentModule, QualifiedName.of(typeNode.getString()), referenceStrength);
     }
   }
 
@@ -258,7 +263,10 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         // through namespace destructuring, otherwise...
         if (alternateFile != null && alternateFile.hasLegacyGoogNamespaces()) {
           if (!hasAcceptableRequire(
-              currentFile, qualifiedName, alternateFile, require.isStrongRequire())) {
+              currentFile,
+              qualifiedName,
+              alternateFile,
+              require.isStrongRequire() ? Strength.CODE : Strength.WEAK_TYPE)) {
             // TODO: report on the node that needs to be removed, include the namespace that needs
             // to be added.
             final DiagnosticType toReport =
@@ -281,7 +289,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       Node n,
       ModuleMetadata currentFile,
       QualifiedName qualifiedName,
-      boolean isStrongReference) {
+      Strength referenceStrength) {
 
     String rootName = qualifiedName.getRoot();
     if (qualifiedName.isSimple()) {
@@ -301,10 +309,10 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
 
     Var var = t.getScope().getVar(rootName);
     if (var != null && var.getScope().isLocal()) {
-      checkMissingRequireThroughShortName(t, n, var, currentFile, qualifiedName, isStrongReference);
+      checkMissingRequireThroughShortName(t, n, var, currentFile, qualifiedName, referenceStrength);
     } else {
       checkMissingRequireThroughFullyQualifiedName(
-          t, n, currentFile, qualifiedName, isStrongReference);
+          t, n, currentFile, qualifiedName, referenceStrength);
     }
   }
 
@@ -325,7 +333,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       Var localVar,
       ModuleMetadata currentFile,
       QualifiedName qualifiedName,
-      boolean isStrongReference) {
+      Strength referenceStrength) {
     // TODO(b/333952917): Remove this once tsickle is fixed.
     if (isTypeScriptSource(n)) {
       return;
@@ -333,6 +341,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
 
     if (!currentFile.isModule()) {
       // Don't worry about aliases outside of module files for now.
+      // TODO - b/390433455: also check aliases within the top level of a goog.scope file.
       return;
     }
 
@@ -392,14 +401,14 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       // fix
       // it up. Write a different message if the namespace is already imported vs missing.
 
-      if (!hasAcceptableRequire(currentFile, subName, requiredFile, isStrongReference)
+      if (!hasAcceptableRequire(currentFile, subName, requiredFile, referenceStrength)
           || originalRequiredFile != requiredFile) {
 
         // `originalRequiredFile != requiredFile` then the file is being referenced through
         // the wrong namespace even though it is being `goog.require`d in the file.
 
         DiagnosticType toReport =
-            isStrongReference
+            referenceStrength.isStrong
                 ? INDIRECT_NAMESPACE_REF_REQUIRE
                 : INDIRECT_NAMESPACE_REF_REQUIRE_TYPE;
         t.report(n, toReport, namespace);
@@ -418,14 +427,14 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
    *
    * @param n the node representing the fully qualified name being checked
    * @param qualifiedName some global fully qualified name to check
-   * @param isStrongReference whether this is a non-type-only reference
+   * @param referenceStrength whether this is a non-type-only reference
    */
   private void checkMissingRequireThroughFullyQualifiedName(
       NodeTraversal t,
       Node n,
       ModuleMetadata currentFile,
       QualifiedName qualifiedName,
-      boolean isStrongReference) {
+      Strength referenceStrength) {
 
     // Look for the longest prefix match against a provided namespace.
     for (QualifiedName subName = qualifiedName; subName != null; subName = subName.getOwner()) {
@@ -446,16 +455,23 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
          * In files that represent modules, report a require without an alias the same as a totally
          * missing require.
          */
-        toReport = isStrongReference ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE;
-      } else if (!hasAcceptableRequire(currentFile, subName, requiredFile, isStrongReference)) {
+        toReport = referenceStrength.isStrong ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE;
+      } else if (!hasAcceptableRequire(currentFile, subName, requiredFile, referenceStrength)) {
         /*
          * In files that aren't modules, report a qualified name reference only if there's no
          * require to satisfy it.
          */
         toReport =
-            isStrongReference
+            referenceStrength.isStrong
                 ? MISSING_REQUIRE_IN_PROVIDES_FILE
                 : MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE;
+      } else if (!referenceStrength.isTypeOnly && requiredFile.isNonLegacyGoogModule()) {
+        // The referenced file has a valid goog.require for it, but the reference cannot be in a
+        // regular qualified name: that won't be defined at runtime.
+        // However, this only applies to references in actual code. Type-only references may still
+        // reference the namespace in a script. The Closure type system will still resolve the
+        // namespace - it just doesn't have any runtime effect.
+        toReport = NON_LEGACY_GOOG_MODULE_REFERENCE;
       } else {
         return;
       }
@@ -515,9 +531,12 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
    * different files.
    */
   private static boolean hasAcceptableRequire(
-      ModuleMetadata rdep, QualifiedName namespace, ModuleMetadata dep, boolean isStrongReference) {
+      ModuleMetadata rdep,
+      QualifiedName namespace,
+      ModuleMetadata dep,
+      Strength referenceStrength) {
     Set<String> acceptableRequires = rdep.stronglyRequiredGoogNamespaces().elementSet();
-    if (!isStrongReference) {
+    if (!referenceStrength.isStrong) {
       acceptableRequires =
           Sets.union(acceptableRequires, rdep.weaklyRequiredGoogNamespaces().elementSet());
     }
@@ -530,5 +549,24 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     }
 
     return false;
+  }
+
+  /**
+   * Represents the strength of references of an require'd name, i.e. whether references are in code
+   * only (strong, not-typeOnly), JsDoc annotations for \@implements or \@extends (strong as well as
+   * typeOnly) or in other JsDoc annotations only (weak, typeOnly).
+   */
+  enum Strength {
+    CODE(true, false),
+    IMPLEMENTS_EXTENDS(true, true),
+    WEAK_TYPE(false, true);
+
+    Strength(boolean isStrong, boolean isTypeOnly) {
+      this.isStrong = isStrong;
+      this.isTypeOnly = isTypeOnly;
+    }
+
+    final boolean isStrong;
+    final boolean isTypeOnly;
   }
 }

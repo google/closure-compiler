@@ -1254,6 +1254,62 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
+  public void testReferenceNonLegacyGoogModule_inScript_required_warns() {
+    test(
+        srcs(
+            "goog.module('test.a'); exports.x = 1;",
+            "goog.provide('test.b'); goog.require('test.a'); console.log(test.a.x);"),
+        error(CheckMissingRequires.NON_LEGACY_GOOG_MODULE_REFERENCE));
+  }
+
+  @Test
+  public void testReferenceNonLegacyGoogModule_inScript_typePosition_required_noWarning() {
+    checkNoWarning(
+        """
+        goog.module('test.a');
+        /** @interface */
+        exports.C = class {};\
+        """,
+        """
+        goog.provide('test.b');
+        goog.require('test.a');
+        /** @implements {test.a.C} */
+        test.b.C = class {
+          /** @param {!test.a.C} c */
+          foo(c) {}
+        };
+        """);
+  }
+
+  @Test
+  public void testReferenceNonLegacyGoogModule_inScript_typePosition_and_code_required_warning() {
+    test(
+        srcs(
+            """
+            goog.module('test.a');
+            /** @interface */
+            exports.C = class {};\
+            """,
+            """
+            goog.provide('test.b');
+            goog.require('test.a');
+            /** @implements {test.a.C} */
+            test.b.C = class {
+              /** @param {!test.a.C} c */
+              foo(c) { test.a.C; } // reports error
+            };
+            """),
+        error(CheckMissingRequires.NON_LEGACY_GOOG_MODULE_REFERENCE));
+  }
+
+  @Test
+  public void tesNonLegacyGoogModule_inScript_required_noWarning() {
+    checkNoWarning(
+        "goog.module('test.a'); goog.module.declareLegacyNamespace(); exports.x = 1;",
+        "goog.provide('test.b'); goog.require('test.a'); console.log(test.a.x);");
+  }
+
   private void checkNoWarning(String... js) {
     testSame(srcs(js));
   }
