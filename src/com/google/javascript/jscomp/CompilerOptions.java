@@ -42,11 +42,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -58,7 +53,7 @@ import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /** Compiler options */
-public class CompilerOptions implements Serializable {
+public class CompilerOptions {
   // The number of characters after which we insert a line break in the code
   static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
 
@@ -2777,11 +2772,6 @@ public class CompilerOptions implements Serializable {
     this.chunkOutputType = chunkOutputType;
   }
 
-  /** Serializes compiler options to a stream. */
-  public void serialize(OutputStream objectOutputStream) throws IOException {
-    new ObjectOutputStream(objectOutputStream).writeObject(this);
-  }
-
   public void setStrictMessageReplacement(boolean strictMessageReplacement) {
     this.strictMessageReplacement = strictMessageReplacement;
   }
@@ -3358,19 +3348,6 @@ public class CompilerOptions implements Serializable {
       }
     }
     return reservedChars;
-  }
-
-  private void writeObject(ObjectOutputStream out) throws IOException {
-    out.defaultWriteObject();
-    out.writeObject(outputCharset == null ? null : outputCharset.name());
-  }
-
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    in.defaultReadObject();
-    String outputCharsetName = (String) in.readObject();
-    if (outputCharsetName != null) {
-      outputCharset = Charset.forName(outputCharsetName);
-    }
   }
 
   boolean shouldOptimize() {
