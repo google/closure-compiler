@@ -1580,6 +1580,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x=y-x");
     test("x=x|y", "x|=y");
     test("x=y|x", "x|=y");
+    test("x=x|y|z", "x|=y|z");
+    testSame("x=x&&y&&z");
     test("x=x*y", "x*=y");
     test("x=y*x", "x*=y");
     test("x=x**y", "x**=y");
