@@ -640,6 +640,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(ambiguateProperties);
     }
 
+    passes.maybeAdd(createEmptyPass(PassNames.BEFORE_RENAME_PROPERTIES));
     if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.maybeAdd(renameProperties);
     } else {

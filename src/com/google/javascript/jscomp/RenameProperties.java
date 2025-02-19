@@ -36,32 +36,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 /**
- * RenameProperties renames properties (including methods) of all JavaScript
- * objects. This includes prototypes, functions, object literals, etc.
+ * RenameProperties renames properties (including methods) of all JavaScript objects. This includes
+ * prototypes, functions, object literals, etc.
  *
- * <p> If provided a VariableMap of previously used names, it tries to reuse
- * those names.
+ * <p>If provided a VariableMap of previously used names, it tries to reuse those names.
  *
- * <p> To prevent a property from getting renamed you may extern it (add it to
- * your externs file) or put it in quotes.
+ * <p>To prevent a property from getting renamed you may extern it (add it to your externs file) or
+ * put it in quotes.
  *
- * <p> To avoid run-time JavaScript errors, use quotes when accessing properties
- * that are defined using quotes.
+ * <p>To avoid run-time JavaScript errors, use quotes when accessing properties that are defined
+ * using quotes.
  *
  * <pre>
  *   var a = {'myprop': 0}, b = a['myprop'];  // correct
  *   var x = {'myprop': 0}, y = x.myprop;     // incorrect
  * </pre>
  *
- * This pass also recognizes and replaces special renaming functions. They supply
- * a property name as the string literal for the first argument.
- * This pass will replace them as though they were JS property
- * references. Here are two examples:
- *    JSCompiler_renameProperty('propertyName') -> 'jYq'
- *    JSCompiler_renameProperty('myProp.nestedProp.innerProp') -> 'e4.sW.C$'
+ * This pass also recognizes and replaces special renaming functions. They supply a property name as
+ * the string literal for the first argument. This pass will replace them as though they were JS
+ * property references. Here are two examples: JSCompiler_renameProperty('propertyName') -> 'jYq'
+ * JSCompiler_renameProperty('myProp.nestedProp.innerProp') -> 'e4.sW.C$'
+ *
+ * <p>This class is not thread-safe.
  */
 class RenameProperties implements CompilerPass {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
@@ -91,6 +91,13 @@ class RenameProperties implements CompilerPass {
 
   // Shared name generator
   private final NameGenerator nameGenerator;
+
+  // Filter function for property names. The function takes a node as input and returns true if the
+  // node should be renamed.
+  private final Predicate<Node> propertyRenameEligibilityFilter;
+  // Property names that should not be renamed, based on the propertyNameFilter. Unlike
+  // externedNames, this set is dynamically constructed during the pass.
+  private final Set<String> filteredOutNames = new LinkedHashSet<>();
 
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
       (Property p1, Property p2) -> {
@@ -133,12 +140,50 @@ class RenameProperties implements CompilerPass {
       char @Nullable [] reservedFirstCharacters,
       char @Nullable [] reservedNonFirstCharacters,
       NameGenerator nameGenerator) {
+    this(
+        compiler,
+        generatePseudoNames,
+        prevUsedPropertyMap,
+        reservedFirstCharacters,
+        reservedNonFirstCharacters,
+        nameGenerator,
+        (Node n) -> true);
+  }
+
+  /**
+   * Creates an instance.
+   *
+   * @param compiler the JSCompiler
+   * @param generatePseudoNames generate pseudo names. e.g. foo -> $foo$ instead of compact
+   *     obfuscated names. This is used for debugging.
+   * @param prevUsedPropertyMap the property renaming map used in a previous compilation
+   * @param reservedFirstCharacters if specified these characters won't be used in generated names
+   *     for the first character
+   * @param reservedNonFirstCharacters if specified these characters won't be used in generated
+   *     names for characters after the first
+   * @param nameGenerator a shared NameGenerator that this instance can use; the instance may reset
+   *     or reconfigure it, so the caller should not expect any state to be preserved
+   * @param propertyRenameEligibilityFilter limit the nodes that are renamed using a predicate
+   *     function. When this returns true, the property name is renamed if and only if all other
+   *     property references for the same name match the predicate. If this returns false for any
+   *     instance of a property, then no property references anywhere in the AST to that property
+   *     are renamed
+   */
+  RenameProperties(
+      AbstractCompiler compiler,
+      boolean generatePseudoNames,
+      VariableMap prevUsedPropertyMap,
+      char @Nullable [] reservedFirstCharacters,
+      char @Nullable [] reservedNonFirstCharacters,
+      NameGenerator nameGenerator,
+      Predicate<Node> propertyRenameEligibilityFilter) {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
     this.prevUsedPropertyMap = prevUsedPropertyMap;
     this.reservedFirstCharacters = reservedFirstCharacters;
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
     this.nameGenerator = nameGenerator;
+    this.propertyRenameEligibilityFilter = propertyRenameEligibilityFilter;
     externedNames.addAll(compiler.getExternProperties());
   }
 
@@ -168,6 +213,9 @@ class RenameProperties implements CompilerPass {
     // Update the string nodes.
     for (Node n : stringNodesToRename) {
       String oldName = n.getString();
+      if (filteredOutNames.contains(oldName)) {
+        continue;
+      }
       Property p = propertyMap.get(oldName);
       if (p != null && p.newName != null) {
         checkState(oldName.equals(p.oldName));
@@ -188,7 +236,11 @@ class RenameProperties implements CompilerPass {
         String replacement;
         if (p != null && p.newName != null) {
           checkState(oldName.equals(p.oldName));
-          replacement = p.newName;
+          if (filteredOutNames.contains(oldName)) {
+            replacement = oldName;
+          } else {
+            replacement = p.newName;
+          }
         } else {
           replacement = oldName;
         }
@@ -306,16 +358,24 @@ class RenameProperties implements CompilerPass {
             quotedNames.add(child.getString());
           }
           break;
-        case CALL: {
-          // We replace property renaming function calls with a string
-          // containing the renamed property.
-          Node fnName = n.getFirstChild();
+        case CALL:
+          {
+            // We replace property renaming function calls with a string
+            // containing the renamed property.
+            Node fnName = n.getFirstChild();
+
             if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
-            callNodeToParentMap.put(n, parent);
-            countCallCandidates(t, n);
+              callNodeToParentMap.put(n, parent);
+              countCallCandidates(t, n);
+              Node stringArgument = n.getSecondChild();
+              if (!propertyRenameEligibilityFilter.test(n)) {
+                for (String name : DOT_SPLITTER.split(stringArgument.getString())) {
+                  filteredOutNames.add(name);
+                }
+              }
+            }
+            break;
           }
-          break;
-        }
         case MEMBER_FUNCTION_DEF:
           checkState(!n.isQuotedStringKey());
           if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
@@ -382,6 +442,9 @@ class RenameProperties implements CompilerPass {
     private void maybeMarkCandidate(Node n) {
       String name = n.getString();
       if (!externedNames.contains(name)) {
+        if (!propertyRenameEligibilityFilter.test(n)) {
+          filteredOutNames.add(n.getString());
+        }
         stringNodesToRename.add(n);
         countPropertyOccurrence(name);
       }

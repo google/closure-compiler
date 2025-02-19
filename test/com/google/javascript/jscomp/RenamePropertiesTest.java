@@ -16,9 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.Node;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +38,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   private RenameProperties renameProperties;
   private boolean generatePseudoNames;
   private @Nullable VariableMap prevUsedPropertyMap;
+  private @Nullable Predicate<Node> propertyNameFilter = (Node name) -> true;
 
   public RenamePropertiesTest() {
     super(EXTERNS);
@@ -787,6 +791,146 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         lines("var foo = { ", "  a: 1, ", "  b() {", "    return this.a", "  }", "};", "foo.b();"));
   }
 
+  @Test
+  public void testPrototypePropertiesUsingFilterFunction() {
+    propertyNameFilter =
+        (node) -> {
+          String name = node.getString();
+          name = nullToEmpty(name);
+          return name.startsWith("get");
+        };
+
+    test(
+        "Bar.prototype.getA = function(){}; bar.getA();"
+            + "Bar.prototype.getB = function(){};"
+            + "Bar.prototype.setC = function(){};",
+        "Bar.prototype.a = function(){}; bar.a();"
+            + "Bar.prototype.b = function(){};"
+            + "Bar.prototype.setC = function(){}");
+  }
+
+  @Test
+  public void testPrototypePropertiesUsingFilterOnFilename() {
+    propertyNameFilter =
+        (node) -> {
+          String name = node.getSourceFileName();
+          name = nullToEmpty(name);
+          return name.equals("foo.js");
+        };
+
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.js",
+                """
+                Foo.prototype.getA = function(){};
+                Foo.prototype.getB = function(){};
+                foo.getA();
+                foo.getB();
+                """),
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                Bar.prototype.getA = function(){};
+                bar.getA();
+                """)),
+        expected(
+            SourceFile.fromCode(
+                "foo.js",
+                """
+                Foo.prototype.getA = function(){};
+                Foo.prototype.b = function(){};
+                foo.getA();
+                foo.b();
+                """),
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                Bar.prototype.getA = function(){};
+                bar.getA();
+                """)));
+  }
+
+  @Test
+  public void testPrototypeAndRenameFunctionsFilterOnFilename() {
+    propertyNameFilter =
+        (node) -> {
+          String name = node.getSourceFileName();
+          name = nullToEmpty(name);
+          return name.equals("foo.js");
+        };
+
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.js",
+                """
+                var foo = {myProp: 0, myProp2: 1};
+                f(foo[JSCompiler_renameProperty('myProp')]);
+                f(foo[JSCompiler_renameProperty('myProp2')]);
+                """),
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                var bar = {myProp: 0};
+                f(bar[JSCompiler_renameProperty('myProp')]);
+                """)),
+        expected(
+            SourceFile.fromCode(
+                "foo.js",
+                """
+                var foo = {myProp: 0, b: 1};
+                f(foo['myProp']);
+                f(foo['b']);
+                """),
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                var bar = {myProp: 0};
+                f(bar['myProp']);
+                """)));
+  }
+
+  @Test
+  public void testPrototypeAndRenameFunctionsFilterOnFilename2() {
+    propertyNameFilter =
+        (node) -> {
+          String name = node.getSourceFileName();
+          name = nullToEmpty(name);
+          return name.equals("foo.js");
+        };
+
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.js",
+                """
+                var foo = {myProp: 0, myProp2: 1};
+                f(JSCompiler_renameProperty('otherProp.myProp.someProp'));
+                f(JSCompiler_renameProperty('otherProp.myProp2.someProp'));
+                """),
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                var bar = {myProp: 0};
+                f(JSCompiler_renameProperty('otherProp.myProp.someProp'));
+                """)),
+        expected(
+            SourceFile.fromCode(
+                "foo.js",
+                """
+                var foo = {myProp: 0, d: 1};
+                f('otherProp.myProp.someProp');
+                f('otherProp.d.someProp');
+                """),
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                var bar = {myProp: 0};
+                f('otherProp.myProp.someProp');
+                """)));
+  }
+
   private Compiler compileChunks(String externs, JSChunk[] chunks) {
     SourceFile externsInput = SourceFile.fromCode("externs", externs);
 
@@ -810,6 +954,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             prevUsedPropertyMap,
             null,
             null,
-            new DefaultNameGenerator());
+            new DefaultNameGenerator(),
+            propertyNameFilter);
   }
 }
