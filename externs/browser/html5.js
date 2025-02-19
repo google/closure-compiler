@@ -3945,6 +3945,16 @@ PopStateEvent.prototype.initPopStateEvent = function(
     typeArg, canBubbleArg, cancelableArg, stateArg) {};
 
 /**
+ * Returns true if the user agent performed a visual transition for this
+ * navigation before dispatching this event. iOS edge swipe back buttons are
+ * captured using this property.
+ * As of 2025-02-18, this is not fully supported by all Tier 1 browsers.
+ * See https://developer.mozilla.org/en-US/docs/Web/API/PopStateEvent/hasUAVisualTransition
+ * @type {boolean}
+ */
+PopStateEvent.prototype.hasUAVisualTransition;
+
+/**
  * @see http://www.whatwg.org/specs/web-apps/current-work/#hashchangeevent
  * @constructor
  * @extends {Event}
