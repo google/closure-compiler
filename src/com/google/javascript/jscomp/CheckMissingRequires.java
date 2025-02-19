@@ -91,11 +91,25 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
           "''{0}'' references the name of a module without goog.declareLegacyNamespace(), which "
               + "is not actually defined. Use goog.module.get() instead.");
 
+  public static final DiagnosticType MISSING_REQUIRE_FOR_GOOG_MODULE_GET =
+      DiagnosticType.warning(
+          "JSC_MISSING_REQUIRE_FOR_GOOG_MODULE_GET",
+          "''{0}'' references a namespace which was not required by this file.\n"
+              + "Please add a goog.require.");
+
   /** The set of template parameter names found so far in the file currently being checked. */
   private final LinkedHashSet<String> templateParamNames = new LinkedHashSet<>();
 
   /** The mapping from Closure namespace into the module that provides it. */
   private final ImmutableMap<String, ModuleMetadata> moduleByNamespace;
+
+  /**
+   * Tracks how many "control flow scopes" we've entered, starting at 0
+   *
+   * <p>Where a "control flow scope" is here defined as any scope /except/ for either the global
+   * control flow scope, or an IIFE or goog.scope body within the global control flow scope.
+   */
+  private int controlFlowScopeDepth = 0;
 
   public CheckMissingRequires(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     super(compiler, moduleMetadataMap);
@@ -110,6 +124,9 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
   @Override
   public boolean shouldTraverse(
       NodeTraversal t, Node n, @Nullable ModuleMetadata currentModule, Node scopeRoot) {
+    if (NodeUtil.isValidCfgRoot(n) && !isInGlobalControlFlowScope(n)) {
+      controlFlowScopeDepth++;
+    }
     if (currentModule == null) {
       return true;
     }
@@ -119,9 +136,43 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     return true;
   }
 
+  /**
+   * Takes a valid "control flow root", as defined by {@link NodeUtil#isValidCfgRoot}, and returns
+   * whether it creates a new "control flow scope" from the parent scope (the global scope).
+   */
+  private boolean isInGlobalControlFlowScope(Node n) {
+    switch (n.getToken()) {
+      case SCRIPT:
+      case ROOT:
+        return true;
+      case MODULE_BODY:
+      case BLOCK: // class static blocks
+        return false;
+      case FUNCTION:
+        if (controlFlowScopeDepth > 0) {
+          return false;
+        }
+        // Check for functions invoked immediately within the global scope - so IIFEs or
+        // goog.scope callees.
+        if (isGoogScopeBody(NodeUtil.getFunctionBody(n))) {
+          return true;
+        }
+        return isIIFE(n);
+      default:
+        throw new AssertionError("Unexpected control flow root: " + n);
+    }
+  }
+
+  private static boolean isIIFE(Node n) {
+    return n.isFunction() && n.getParent().isCall() && n.isFirstChildOf(n.getParent());
+  }
+
   @Override
   public void visit(
       NodeTraversal t, Node n, @Nullable ModuleMetadata currentModule, @Nullable Node scopeRoot) {
+    if (NodeUtil.isValidCfgRoot(n) && !isInGlobalControlFlowScope(n)) {
+      controlFlowScopeDepth--;
+    }
     if (currentModule != null && n == currentModule.rootNode()) {
       // For this pass, template parameter names are only meaningful inside the file defining them.
       templateParamNames.clear();
@@ -144,6 +195,10 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
 
     if (n.isName() && !n.getString().isEmpty()) {
       visitMaybeDeclaration(t, n, currentModule);
+    }
+
+    if (n.isCall() && controlFlowScopeDepth == 0) {
+      visitMaybeGoogModuleGet(t, n, currentModule);
     }
   }
 
@@ -197,9 +252,44 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     }
   }
 
+  private static final QualifiedName GOOG_SCOPE = QualifiedName.of("goog.scope");
+
+  private static boolean isGoogScopeBody(Node hoistScopeRoot) {
+    return hoistScopeRoot.isBlock()
+        && hoistScopeRoot.getParent().isFunction()
+        && hoistScopeRoot.getGrandparent().isCall()
+        && GOOG_SCOPE.matches(hoistScopeRoot.getGrandparent().getFirstChild());
+  }
+
+  /**
+   * Check for invalid goog.module.get calls executed on script load
+   *
+   * <p>We don't check for goog.module.get within function bodies though (except for goog.scope
+   * since that's basically an IIFE) - it's possible that the module will have been loaded by the
+   * time the goog.module.get is called even though there's no strong require. It's up to the caller
+   * to ensure that it's loaded.
+   */
+  private void visitMaybeGoogModuleGet(
+      NodeTraversal t, Node googModuleGet, ModuleMetadata currentFile) {
+    checkState(googModuleGet.isCall());
+    if (!NodeUtil.isGoogModuleGetCall(googModuleGet)) {
+      return;
+    }
+    String importedNamespace = googModuleGet.getSecondChild().getString();
+    ModuleMetadata requiredFile = moduleByNamespace.get(importedNamespace);
+    if (requiredFile == null) {
+      // goog.module.get of a non-existing namespace is an error in another pass.
+      return;
+    }
+    if (!hasAcceptableRequire(
+        currentFile, QualifiedName.of(importedNamespace), requiredFile, Strength.WEAK_TYPE)) {
+      t.report(googModuleGet, MISSING_REQUIRE_FOR_GOOG_MODULE_GET, importedNamespace);
+    }
+  }
+
   private void visitMaybeDeclaration(NodeTraversal t, Node n, ModuleMetadata currentFile) {
     if (!currentFile.isModule()) {
-      // This check only makes sense in goog.module files.
+      // This check only makes sense in goog.module files
       return;
     }
 

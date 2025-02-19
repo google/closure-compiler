@@ -1310,6 +1310,174 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "goog.provide('test.b'); goog.require('test.a'); console.log(test.a.x);");
   }
 
+  @Test
+  public void testWarning_googScope_googModuleGet_noRequire() {
+    checkRequireForGoogModuleGetWarning(
+        "foo.bar.Baz",
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "goog.scope(function() {",
+            "const Baz = goog.module.get('foo.bar.Baz');",
+            "exports.fn = function() { new Baz(); }",
+            "});"));
+  }
+
+  @Test
+  public void testWarning_script_googModuleGet_inProvideInitialization_noRequire() {
+    checkRequireForGoogModuleGetWarning(
+        "foo.bar.Baz",
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "test.boo = new (goog.module.get('foo.bar.Baz').Boo)();"));
+  }
+
+  @Test
+  public void testWarning_script_googModuleGet_inScriptIfBlock_noRequire() {
+    checkRequireForGoogModuleGetWarning(
+        "foo.bar.Baz",
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "if (true) { console.log(new (goog.module.get('foo.bar.Baz').Boo)()); }"));
+  }
+
+  @Test
+  public void testWarning_script_googModuleGet_inScript_inTopLevelIIFE_noRequire() {
+    checkRequireForGoogModuleGetWarning(
+        "foo.bar.Baz",
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "(() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();"));
+  }
+
+  @Test
+  public void testWarning_googScope_googModuleGet_withPropAccess_noRequire() {
+    checkRequireForGoogModuleGetWarning(
+        "foo.bar.Baz",
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "goog.scope(function() {",
+            "const Woo = goog.module.get('foo.bar.Baz').Boo.Goo.Woo;",
+            "exports.fn = function() { new Woo(); }",
+            "});"));
+  }
+
+  @Test
+  public void testNoWarning_googScope_googModuleGet_hasRequire() {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "goog.require('foo.bar.Baz');",
+            "",
+            "goog.scope(function() {",
+            "const Baz = goog.module.get('foo.bar.Baz');",
+            "function fn() { new Baz(); }",
+            "});"));
+  }
+
+  @Test
+  public void testWarning_googScope_googModuleGet_IIFE_noRequire() {
+    checkRequireForGoogModuleGetWarning(
+        "foo.bar.Baz",
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "goog.scope(function() {",
+            "  (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();",
+            "});"));
+  }
+
+  @Test
+  public void testWarning_script_googModuleGet_inFunctionInScript_noRequire_noWarning() {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            // We allow this goog.module.get despite the lack of goog.require: it's possible that
+            // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
+            // to the caller to ensure that it's loaded.
+            "test.fn = function() {",
+            "  console.log(new (goog.module.get('foo.bar.Baz').Boo)());",
+            "}"));
+  }
+
+  @Test
+  public void
+      testWarning_script_googModuleGet_inFunctionInScript_inNonTopLevelIIFE_noRequire_noWarning() {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports.Boo = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            // We allow this goog.module.get despite the lack of goog.require: it's possible that
+            // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
+            // to the caller to ensure that it's loaded.
+            "test.fn = function() {",
+            "  (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();",
+            "}"));
+  }
+
+  @Test
+  public void testNoWarning_nestedInGoogScope_googModuleGet_noRequire() {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.bar.Baz');", //
+            "/** @constructor */",
+            "exports = function() {}"),
+        lines(
+            "goog.provide('test');", //
+            "",
+            "goog.scope(function() {",
+            "test.fn = function() {",
+            // We allow this goog.module.get despite the lack of goog.require: it's possible that
+            // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
+            // to the caller to ensure that it's loaded.
+            "  const Baz = goog.module.get('foo.bar.Baz');",
+            "  new Baz();",
+            "  new goog.module.get('foo.bar.Baz');",
+            "}",
+            "});"));
+  }
+
   private void checkNoWarning(String... js) {
     testSame(srcs(js));
   }
@@ -1366,6 +1534,13 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     testSame(
         srcs(js),
         warning(CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkRequireForGoogModuleGetWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.MISSING_REQUIRE_FOR_GOOG_MODULE_GET)
             .withMessageContaining("'" + namespace + "'"));
   }
 }
