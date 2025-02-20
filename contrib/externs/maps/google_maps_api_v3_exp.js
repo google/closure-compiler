@@ -15826,13 +15826,6 @@ google.maps.maps3d.Map3DElement.prototype.bounds;
 google.maps.maps3d.Map3DElement.prototype.center;
 
 /**
- * When <code>true</code>, default map labels aren&#39;t rendered.
- * @default <code>false</code>
- * @type {boolean|null|undefined}
- */
-google.maps.maps3d.Map3DElement.prototype.defaultLabelsDisabled;
-
-/**
  * When <code>true</code>, all default UI buttons are disabled. Does not disable
  * the keyboard and gesture controls.
  * @default <code>false</code>
@@ -15902,6 +15895,13 @@ google.maps.maps3d.Map3DElement.prototype.minHeading;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.minTilt;
+
+/**
+ * Specifies a mode the map should be rendered in. If not set, the map won&#39;t
+ * be rendered.
+ * @type {!google.maps.maps3d.MapMode|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.mode;
 
 /**
  * The distance from camera to the center of the map, in meters.
@@ -15985,12 +15985,6 @@ google.maps.maps3d.Map3DElementOptions.prototype.bounds;
 google.maps.maps3d.Map3DElementOptions.prototype.center;
 
 /**
- * See {@link google.maps.maps3d.Map3DElement.defaultLabelsDisabled}.
- * @type {boolean|null|undefined}
- */
-google.maps.maps3d.Map3DElementOptions.prototype.defaultLabelsDisabled;
-
-/**
  * See {@link google.maps.maps3d.Map3DElement.defaultUIDisabled}.
  * @type {boolean|null|undefined}
  */
@@ -16039,6 +16033,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.minHeading;
 google.maps.maps3d.Map3DElementOptions.prototype.minTilt;
 
 /**
+ * See {@link google.maps.maps3d.Map3DElement.mode}.
+ * @type {!google.maps.maps3d.MapMode|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.mode;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.range}.
  * @type {number|null|undefined}
  */
@@ -16055,6 +16055,29 @@ google.maps.maps3d.Map3DElementOptions.prototype.roll;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.tilt;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Specifies a mode the map should be rendered in.
+ *
+ * Access by calling `const {MapMode} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.MapMode = {
+  /**
+   * This map mode displays a transparent layer of major streets on satellite,
+   * or photorealistic imagery.
+   */
+  HYBRID: 'HYBRID',
+  /**
+   * This map mode displays satellite, or photorealistic imagery where
+   * available.
+   */
+  SATELLITE: 'SATELLITE',
+};
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -16371,7 +16394,7 @@ google.maps.maps3d.Polygon3DElement = function(options) {};
 
 /**
  * Specifies how altitude components in the coordinates are interpreted.
- * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @default {@link google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND}
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.altitudeMode;
@@ -16529,7 +16552,7 @@ google.maps.maps3d.Polyline3DElement = function(options) {};
 
 /**
  * Specifies how altitude components in the coordinates are interpreted.
- * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @default {@link google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND}
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.altitudeMode;
