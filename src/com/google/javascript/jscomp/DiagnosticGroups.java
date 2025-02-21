@@ -492,6 +492,7 @@ public class DiagnosticGroups {
           "suspiciousCode",
           CheckDuplicateCase.DUPLICATE_CASE,
           CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
+          CheckSuspiciousCode.SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN,
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR,
           CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND,
