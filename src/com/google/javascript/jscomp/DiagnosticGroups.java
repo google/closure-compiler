@@ -120,6 +120,7 @@ public class DiagnosticGroups {
   // to parsing/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, "
+          + "breakingOptionalChain, "
           + "checkPrototypalTypes, "
           + "checkRegExp, "
           + "checkTypes, "
@@ -499,6 +500,10 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR,
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           TypeCheck.DETERMINISTIC_TEST);
+
+  public static final DiagnosticGroup BREAKING_OPTIONAL_CHAIN =
+          DiagnosticGroups.registerGroup(
+                  "breakingOptionalChain", CheckSuspiciousCode.SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN);
 
   public static final DiagnosticGroup FUNCTION_PARAMS =
       DiagnosticGroups.registerGroup(

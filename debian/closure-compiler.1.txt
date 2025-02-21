@@ -359,6 +359,7 @@ require as a parameter a `WARNCLASS` warning class name. The following
 names are valid warning class names:
 
 * ``accessControls``
+* ``breakingOptionalChain``
 * ``checkRegExp``
 * ``checkTypes``
 * ``checkVars``
