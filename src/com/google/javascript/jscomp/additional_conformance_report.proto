@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package jscomp;
+
+import "third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto";
+
+option java_multiple_files = true;
+
+/* An additional report of the conformance violations containing violations
+ * grouped by their requirement's rule_id. */
+message AdditionalConformanceReport {
+  // The number of total conformance violations.
+  int32 num_violations = 1;
+
+  // Violations by Rule ID.
+  repeated ReportByRuleId report_by_rule_id = 2;
+
+  // Reports of violations for a given rule id.
+  message ReportByRuleId {
+    string rule_id = 3;
+    int32 num_violations_for_rule = 4;
+    // The locations of the conformance violations seen for this rule.
+    repeated ViolationLocation violation_locations = 5;
+  }
+
+  // The location of a single conformance violation.
+  message ViolationLocation {
+    string path = 3;
+    int32 line_no = 4;
+    int32 col_no = 5;
+    string error_message = 6;
+  }
+}
