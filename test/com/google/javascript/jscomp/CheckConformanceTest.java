@@ -495,7 +495,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  type: BANNED_NAME\n"
             + "  value: 'eval'\n"
             + "  error_message: 'eval is not allowed'\n"
-            + "  whitelist: 'genfiles/file.js'\n "
+            + "  whitelist: 'file.js'\n "
             + "}";
 
     testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
@@ -508,7 +508,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  type: BANNED_NAME\n"
             + "  value: 'eval'\n"
             + "  error_message: 'eval is not allowed'\n"
-            + "  allowlist: 'genfiles/file.js'\n "
+            + "  allowlist: 'file.js'\n "
             + "}";
 
     testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
@@ -521,8 +521,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  type: BANNED_NAME\n"
             + "  value: 'eval'\n"
             + "  error_message: 'eval is not allowed'\n"
-            + "  whitelist: 'genfiles/file1.js'\n "
-            + "  allowlist: 'genfiles/file2.js'\n "
+            + "  whitelist: 'file1.js'\n "
+            + "  allowlist: 'file2.js'\n "
             + "}";
 
     testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file1.js", "eval()")));
