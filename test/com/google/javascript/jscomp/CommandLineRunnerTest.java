@@ -186,8 +186,10 @@ public final class CommandLineRunnerTest {
     assertThat(new String(outReader.toByteArray(), UTF_8)).isEmpty();
   }
 
+  // TODO(b/395966861): delete this test, `test3StageCompile` is the same test but uses the new
+  // stage 2 flags.
   @Test
-  public void test3StageCompile() throws Exception {
+  public void test3StageCompile_Old() throws Exception {
 
     // Create a message bundle to use
     File msgBundle = temporaryFolder.newFile("messages.xtb");
@@ -265,6 +267,141 @@ public final class CommandLineRunnerTest {
               "--restore_stage1_from_file",
               stage1Save.toString(),
               "--save_stage2_to_file",
+              stage2Save.toString()
+            });
+    verifyFlagsAreIncompatibleWithChecksOnly(stage2Flags);
+    runner = new CommandLineRunner(stringListToArray(stage2Flags));
+    assertThat(runner.doRun()).isEqualTo(0);
+
+    // During stage 2 the message is wrapped in a function call to protect it from mangling by
+    // optimizations.
+    assertThat(runner.getCompiler().toSource())
+        .isEqualTo(
+            concatStrings(
+                "console.log(",
+                "__jscomp_define_msg__({\"key\":\"MSG_HELLO\",\"msg_text\":\"hello\"})",
+                ");"));
+
+    // Create a path for the final output
+    File compiledFile = temporaryFolder.newFile("compiled.js");
+    // Create a path for the output source map
+    File sourceMapFile = temporaryFolder.newFile("compiled.sourcemap");
+
+    // run the compiler to generate the final output
+    final ImmutableList<String> stage3Flags =
+        createStringList(
+            commonFlags,
+            new String[] {
+              "--restore_stage2_from_file",
+              stage2Save.toString(),
+              "--js_output_file",
+              compiledFile.toString(),
+              "--create_source_map",
+              sourceMapFile.toString()
+            });
+    verifyFlagsAreIncompatibleWithChecksOnly(stage3Flags);
+    runner = new CommandLineRunner(stringListToArray(stage3Flags));
+    assertThat(runner.doRun()).isEqualTo(0);
+
+    // During stage 3 the message is actually replaced and the output written to the compiled
+    // output file.
+    final String compiledJs = java.nio.file.Files.readString(compiledFile.toPath());
+    assertThat(compiledJs).isEqualTo("console.log(\"hola\");\n");
+
+    final JsonObject expectedSourceMap = new JsonObject();
+    expectedSourceMap.addProperty("version", 3);
+    expectedSourceMap.addProperty("file", compiledFile.getAbsolutePath());
+    expectedSourceMap.addProperty("lineCount", 1);
+    expectedSourceMap.addProperty("mappings", "AAEAA,OAAQC,CAAAA,GAAR,CADkBC,MAClB;");
+    expectedSourceMap.add("sources", newJsonArrayOfStrings(srcFile.getAbsolutePath()));
+    expectedSourceMap.add(
+        "sourcesContent", newJsonArrayOfStrings(java.nio.file.Files.readString(srcFile.toPath())));
+    expectedSourceMap.add("names", newJsonArrayOfStrings("console", "log", "MSG_HELLO"));
+
+    final String sourceMapText = java.nio.file.Files.readString(sourceMapFile.toPath());
+    JsonObject actualSourceMap = getJsonObjectFromJson(sourceMapText);
+    assertThat(actualSourceMap).isEqualTo(expectedSourceMap);
+  }
+
+  @Test
+  public void test3StageCompile() throws Exception {
+
+    // Create a message bundle to use
+    File msgBundle = temporaryFolder.newFile("messages.xtb");
+    final ImmutableList<String> lines =
+        ImmutableList.of(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<!DOCTYPE translationbundle SYSTEM \"translationbundle.dtd\">",
+            "<translationbundle lang=\"es\">",
+            "<translation id=\"6289482750305328564\">hola</translation>",
+            "</translationbundle>",
+            "");
+    writeLinesToFile(msgBundle, lines);
+
+    // Create test externs with a definition for goog.getMsg().
+    final File externsFile = temporaryFolder.newFile("externs.js");
+    writeLinesToFile(
+        externsFile,
+        "/**",
+        " * @fileoverview test externs",
+        " * @externs",
+        " */",
+        "var goog = {};",
+        "/**",
+        " * @nosideeffects",
+        " * @param {string} msg",
+        " * @param {Object=} placeholderReplacements",
+        " * @param {Object=} options",
+        " * @return {string}",
+        " */",
+        "goog.getMsg = function(msg, placeholderReplacements, options) {};");
+
+    // Create an input file
+    File srcFile = temporaryFolder.newFile("input.js");
+    writeLinesToFile(
+        srcFile,
+        "/** @desc greeting */",
+        "const MSG_HELLO = goog.getMsg('hello');",
+        "console.log(MSG_HELLO);");
+
+    // Create a path for the stage 1 output
+    File stage1Save = temporaryFolder.newFile("stage1.save");
+
+    ImmutableList<String> commonFlags =
+        ImmutableList.of(
+            "--compilation_level=ADVANCED_OPTIMIZATIONS",
+            "--source_map_include_content",
+            "--translations_file",
+            msgBundle.toString(),
+            "--externs",
+            externsFile.toString(),
+            "--js",
+            srcFile.toString());
+
+    // Run the compiler to generate the stage 1 save file
+    final ImmutableList<String> stage1Flags =
+        createStringList(
+            commonFlags, new String[] {"--save_stage1_to_file", stage1Save.toString()});
+    verifyFlagsAreIncompatibleWithChecksOnly(stage1Flags);
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            stringListToArray(stage1Flags), new PrintStream(outReader), new PrintStream(errReader));
+    assertThat(runner.doRun()).isEqualTo(0);
+    assertThat(new String(outReader.toByteArray(), UTF_8)).isEmpty();
+
+    assertThat(runner.getCompiler().toSource())
+        .isEqualTo("const MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
+
+    // Create a path for the stage 2 output
+    File stage2Save = temporaryFolder.newFile("stage2.save");
+    // run the compiler to generate the stage 2 save file
+    final ImmutableList<String> stage2Flags =
+        createStringList(
+            commonFlags,
+            new String[] {
+              "--stage2_filename_to_restore_from",
+              stage1Save.toString(),
+              "--stage2_filename_to_save_to",
               stage2Save.toString()
             });
     verifyFlagsAreIncompatibleWithChecksOnly(stage2Flags);

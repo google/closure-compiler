@@ -258,18 +258,25 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "modules.")
     private List<String> chunk = new ArrayList<>();
 
-    // TODO(bradfordcsmith): deprecate and remove this in favor of --restore_stage1_from_file
+    // TODO(b/395966861): deprecate and remove this in favor of --stage2_filename_to_restore_from
     @Option(
         name = "--continue-saved-compilation",
         usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
     private @Nullable String continueSavedCompilationFile = null;
 
+    // TODO(b/395966861): deprecate and remove this in favor of --stage2_filename_to_restore_from
     @Option(
         name = "--restore_stage1_from_file",
         usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
     private @Nullable String restoreStage1FromFile = null;
+
+    @Option(
+        name = "--stage2_filename_to_restore_from",
+        usage = "Filename where a stage 2 compilation state was previously saved.",
+        hidden = true)
+    private @Nullable String stage2FilenameToRestoreFrom = null;
 
     @Option(
         name = "--restore_stage2_from_file",
@@ -290,11 +297,18 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         hidden = true)
     private @Nullable String saveStage1ToFile = null;
 
+    // TODO(b/395966861): deprecate and remove this in favor of --stage2_filename_to_save_to
     @Option(
         name = "--save_stage2_to_file",
         usage = "Filename to save stage 2 state so that the compilation can be resumed later.",
         hidden = true)
     private @Nullable String saveStage2ToFile = null;
+
+    @Option(
+        name = "--stage2_filename_to_save_to",
+        usage = "Filename to save stage 2 state so that the compilation can be resumed later.",
+        hidden = true)
+    private @Nullable String stage2FilenameToSaveTo = null;
 
     @Option(
         name = "--variable_renaming_report",
@@ -1790,6 +1804,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
       String stage1RestoreFile = flags.restoreStage1FromFile;
       if (stage1RestoreFile == null) {
+        // TODO(b/395966861): delete the `flags.restoreStage1FromFile` flag and just use this one
+        stage1RestoreFile = flags.stage2FilenameToRestoreFrom;
+      }
+      if (stage1RestoreFile == null) {
         // TODO(bradfordcsmith): deprecate and remove this flag
         stage1RestoreFile = flags.continueSavedCompilationFile;
       }
@@ -1811,6 +1829,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         stage1SaveFile = flags.saveAfterChecksFile;
       }
       String stage2SaveFile = flags.saveStage2ToFile;
+      if (stage2SaveFile == null) {
+        // TODO(b/395966861): delete the `flags.saveStage2ToFile` flag and just use this one
+        stage2SaveFile = flags.stage2FilenameToSaveTo;
+      }
       if (stage1SaveFile != null) {
         checkState(stage2SaveFile == null, "cannot save both stage 1 and stage 2");
         checkState(stage1RestoreFile == null, "cannot perform stage 1 on a restored stage 1");
