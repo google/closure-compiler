@@ -26,7 +26,7 @@ $jscomp.polyfill('Symbol.dispose', function(orig) {
     return orig;
   }
   return Symbol('Symbol.dispose');
-  // probably ES2025
+  // probably ES2026
 }, 'es_next', 'es3');
 
 $jscomp.polyfill('Symbol.asyncDispose', function(orig) {
@@ -34,7 +34,7 @@ $jscomp.polyfill('Symbol.asyncDispose', function(orig) {
     return orig;
   }
   return Symbol('Symbol.asyncDispose');
-  // probably ES2025
+  // probably ES2026
 }, 'es_next', 'es3');
 
 $jscomp.polyfill('SuppressedError', function(orig) {
@@ -81,6 +81,6 @@ $jscomp.polyfill('SuppressedError', function(orig) {
   SuppressedError.prototype.name = 'SuppressedError';
 
   return SuppressedError;
-  // probably ES2025
+  // probably ES2026
 }, 'es_next', 'es3');
 

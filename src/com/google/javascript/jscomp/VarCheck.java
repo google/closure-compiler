@@ -325,14 +325,15 @@ class VarCheck implements ScopedCallback, CompilerPass {
    */
   static final ImmutableSet<String> REQUIRED_SYMBOLS =
       ImmutableSet.of(
+          // go/keep-sorted start
           "AggregateError",
           "Array",
           "Error",
           "Float32Array",
           "Function",
           "Infinity",
-          "JSCompiler_renameProperty",
           "JSCOMPILER_PRESERVE", // added by CheckSideEffects
+          "JSCompiler_renameProperty",
           "Map",
           "Math",
           "NaN",
@@ -340,10 +341,12 @@ class VarCheck implements ScopedCallback, CompilerPass {
           "Object",
           "Promise",
           "RangeError",
+          "ReferenceError",
           "Reflect",
           "RegExp",
           "Set",
           "String",
+          "SuppressedError",
           "Symbol",
           "TypeError",
           "WeakMap",
@@ -354,7 +357,9 @@ class VarCheck implements ScopedCallback, CompilerPass {
           "parseInt",
           "self",
           "undefined",
-          "window");
+          "window"
+          // go/keep-sorted end
+          );
 
   /**
    * Create a new variable in a synthetic script. This will prevent subsequent compiler passes from

@@ -2444,3 +2444,57 @@ SuppressedError.prototype.error;
  * @type {?}
  */
 SuppressedError.prototype.suppressed;
+
+
+/**
+ * @record
+ */
+function Disposable() {}
+
+/**
+ * @return {void}
+ */
+Disposable.prototype[Symbol.dispose] = function() {};
+
+/**
+ * A DisposableStack is an object that can be used to contain one or more
+ * resources that should be disposed together.
+ *
+ * @constructor
+ */
+function DisposableStack() {}
+
+/**
+ * @type {boolean}
+ */
+DisposableStack.prototype.disposed;
+
+/**
+ * @return {void}
+ */
+DisposableStack.prototype.dispose = function() {};
+/**
+ * @return {void}
+ */
+DisposableStack.prototype[Symbol.dispose] = function () {};
+/**
+ * @param {!Disposable|null|undefined} disposable
+ * @return {!Disposable|null|undefined}
+ */
+DisposableStack.prototype.use = function(disposable) {};
+/**
+ * @template T
+ * @param {T} value
+ * @param {function(T)} onDispose
+ * @return {T}
+ */
+DisposableStack.prototype.adopt = function(value, onDispose) {};
+/**
+ * @param {function(): void} onDispose
+ * @return {void}
+ */
+DisposableStack.prototype.defer = function(onDispose) {};
+/**
+ * @return {!DisposableStack}
+ */
+DisposableStack.prototype.move = function() {};
