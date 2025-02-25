@@ -231,6 +231,8 @@ jobs:
       uses: actions/checkout@v4
       if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
       with:
+        # a depth of 0 triggers a fetch of all historical commits/branches/tags
+        # https://github.com/marketplace/actions/checkout#Fetch-all-history-for-all-tags-and-branches
         fetch-depth: 0
 
     - name: Tag cut CL
