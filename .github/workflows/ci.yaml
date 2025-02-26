@@ -185,3 +185,65 @@ jobs:
         env:
           SONATYPE_USERNAME: closure-compiler
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+
+  tag_release_version_id:
+    name: Tag Release Version ID
+    # Run on a push to master but not on a pull request
+    # Pull requests are not necessarily trusted to configure the
+    # correct release tag.
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    # Checkout the piper-cut-cl.json from the most recent two commits
+    - name: Checkout Current closure-compiler Commit
+      # https://github.com/marketplace/actions/checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+        sparse-checkout: |
+          .github/piper-cut-cl.json
+          .github/ci_support/tag_release_version.sh
+        sparse-checkout-cone-mode: false
+
+    - id: detect_changes
+      run: |
+        PIPER_DIFF=$(git diff HEAD~1 -- .github/piper-cut-cl.json)
+        FOUND_NEW_RELEASE=$([ -n "$PIPER_DIFF" ] && echo "true" || echo "false")
+        echo "foundNewRelease=$FOUND_NEW_RELEASE" >> "$GITHUB_OUTPUT"
+        echo "foundNewRelease: $FOUND_NEW_RELEASE"
+
+    - id: set_piper_json_vars
+      if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
+      # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#steps-context
+      run: |
+        {
+            echo 'piperJson<<EOF'
+            cat ./.github/piper-cut-cl.json
+            echo EOF
+        } >> "$GITHUB_OUTPUT"
+
+    # Check out all historical commits
+    # This is much more expensive than just checking out the most recent
+    # 2 commits, as done above, so only do this if actually cutting a release
+    - name: Checkout all closure-compiler commits and tags
+      uses: actions/checkout@v4
+      if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
+      with:
+        # a depth of 0 triggers a fetch of all historical commits/branches/tags
+        # https://github.com/marketplace/actions/checkout#Fetch-all-history-for-all-tags-and-branches
+        fetch-depth: 0
+
+    - name: Tag cut CL
+      id: tag_cut_cl
+      if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
+      run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          .github/ci_support/tag_release_version.sh \
+              "${{ fromJson(env.piperJson).piper_cut_cl }}" \
+              "${{ fromJson(env.piperJson).version_id }}";
+      env:
+        piperJson: ${{ steps.set_piper_json_vars.outputs.piperJson }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
