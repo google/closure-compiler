@@ -5875,8 +5875,6 @@ google.maps.MapCapabilities.prototype.isDataDrivenStylingAvailable;
 google.maps.MapCapabilities.prototype.isWebGLOverlayViewAvailable;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * MapElement is an <code>HTMLElement</code> subclass for rendering maps. After
  * loading the <code>maps</code> library, a map can be created in HTML. For
  * example: <pre><code>&lt;gmp-map center=&quot;37.4220656,-122.0840897&quot;
@@ -5884,8 +5882,8 @@ google.maps.MapCapabilities.prototype.isWebGLOverlayViewAvailable;
  * map-id=&quot;DEMO_MAP_ID&quot;&gt;<br>&nbsp;&nbsp;&lt;button
  * slot=&quot;control-block-start-inline-end&quot;&gt;Custom
  * Control&lt;/button&gt;<br>&lt;/gmp-map&gt;</code></pre> <br> Internally, it
- * uses {@link google.maps.Map}, which can be accessed with the
- * <code>innerMap</code> property.
+ * uses {@link google.maps.Map}, which can be accessed with the {@link
+ * google.maps.MapElement.innerMap} property.
  *
  * Access by calling `const {MapElement} = await
  * google.maps.importLibrary("maps")`. See
@@ -6858,6 +6856,11 @@ google.maps.MapsLibrary.prototype.KmlLayerStatus;
 google.maps.MapsLibrary.prototype.Map;
 
 /**
+ * @type {typeof google.maps.MapElement}
+ */
+google.maps.MapsLibrary.prototype.MapElement;
+
+/**
  * @type {typeof google.maps.MapTypeControlStyle}
  */
 google.maps.MapsLibrary.prototype.MapTypeControlStyle;
@@ -6933,7 +6936,6 @@ google.maps.MapsLibrary.prototype.TransitLayer;
 google.maps.MapsLibrary.prototype.WebGLOverlayView;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.ZoomChangeEvent}
  */
 google.maps.MapsLibrary.prototype.ZoomChangeEvent;
@@ -8310,7 +8312,7 @@ google.maps.PolyMouseEvent.prototype.vertex;
  * Access by calling `const {Polygon} = await
  * google.maps.importLibrary("maps")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?google.maps.PolygonOptions=} opts
+ * @param {(!google.maps.PolygonOptions|null)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -8330,7 +8332,7 @@ google.maps.Polygon.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this shape is attached.
- * @return {?google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.Polygon.prototype.getMap = function() {};
 
@@ -8371,13 +8373,13 @@ google.maps.Polygon.prototype.setEditable = function(editable) {};
 /**
  * Renders this shape on the specified map. If map is set to <code>null</code>,
  * the shape will be removed.
- * @param {?google.maps.Map} map
+ * @param {!google.maps.Map|null} map
  * @return {undefined}
  */
 google.maps.Polygon.prototype.setMap = function(map) {};
 
 /**
- * @param {?google.maps.PolygonOptions} options
+ * @param {!google.maps.PolygonOptions|null} options
  * @return {undefined}
  */
 google.maps.Polygon.prototype.setOptions = function(options) {};
@@ -8546,7 +8548,7 @@ google.maps.Polyline.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this shape is attached.
- * @return {?google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.Polyline.prototype.getMap = function() {};
 
@@ -8581,7 +8583,7 @@ google.maps.Polyline.prototype.setEditable = function(editable) {};
 /**
  * Renders this shape on the specified map. If map is set to <code>null</code>,
  * the shape will be removed.
- * @param {?google.maps.Map} map
+ * @param {!google.maps.Map|null} map
  * @return {undefined}
  */
 google.maps.Polyline.prototype.setMap = function(map) {};
@@ -11062,8 +11064,6 @@ google.maps.WebGLStateOptions = function() {};
 google.maps.WebGLStateOptions.prototype.gl;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This event is created from monitoring zoom change.
  *
  * Access by calling `const {ZoomChangeEvent} = await
@@ -16734,10 +16734,7 @@ google.maps.marker.AdvancedMarkerClickEvent = function() {};
 
 /**
  * Shows a position on a map. Note that the <code>position</code> must be set
- * for the <code>AdvancedMarkerElement</code> to display.<br> <br>
- * <strong>Note:</strong> Usage as a Web Component (e.g. using the custom
- * <code>&lt;gmp-advanced-marker&gt;</code> HTML element, is only available in
- * the <code>v=beta</code> channel).
+ * for the <code>AdvancedMarkerElement</code> to display.
  *
  * Access by calling `const {AdvancedMarkerElement} = await
  * google.maps.importLibrary("marker")`. See
@@ -16757,19 +16754,6 @@ google.maps.marker.AdvancedMarkerElement = function(options) {};
 google.maps.marker.AdvancedMarkerElement.prototype.collisionBehavior;
 
 /**
- * See {@link google.maps.marker.AdvancedMarkerElementOptions.content}.
- * @type {!Node|null|undefined}
- */
-google.maps.marker.AdvancedMarkerElement.prototype.content;
-
-/**
- * This field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement}
- */
-google.maps.marker.AdvancedMarkerElement.prototype.element;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * See {@link google.maps.marker.AdvancedMarkerElementOptions.gmpClickable}.
  * @type {boolean|null|undefined}
  */
@@ -16804,6 +16788,22 @@ google.maps.marker.AdvancedMarkerElement.prototype.title;
  * @type {number|null|undefined}
  */
 google.maps.marker.AdvancedMarkerElement.prototype.zIndex;
+
+/**
+ * This field is read-only. The DOM Element backing the view.
+ * @type {!HTMLElement}
+ * @deprecated Use the AdvancedMarkerElement directly.
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.element;
+
+/**
+ * See {@link google.maps.marker.AdvancedMarkerElementOptions.content}.
+ * @type {!Node|null|undefined}
+ * @deprecated Use <a
+ *     href="https://developer.mozilla.org/docs/Web/API/Element/children">.children</a>
+ *     instead.
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.content;
 
 
 
@@ -17815,6 +17815,10 @@ google.maps.places.EVConnectorType = {
    */
   J1772: 'J1772',
   /**
+   * The North American Charging System (NACS), standardized as SAE J3400.
+   */
+  NACS: 'NACS',
+  /**
    * Other connector types.
    */
   OTHER: 'OTHER',
@@ -18050,6 +18054,14 @@ google.maps.places.FuelType = {
    * Diesel fuel.
    */
   DIESEL: 'DIESEL',
+  /**
+   * Diesel plus fuel.
+   */
+  DIESEL_PLUS: 'DIESEL_PLUS',
+  /**
+   * E 100.
+   */
+  E100: 'E100',
   /**
    * E 80.
    */
