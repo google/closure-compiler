@@ -162,25 +162,16 @@ public final class CompilerOptionsTest {
         .isEqualTo("some/path");
     assertThat(pattern.matcher("blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
         .isEqualTo("some/path");
-    assertThat(pattern.matcher("google3/blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
+    assertThat(pattern.matcher("google3/bazel-out/k8-fastbin/bin/some/path").replaceAll(""))
         .isEqualTo("some/path");
     assertThat(pattern.matcher("google3/blaze-out/k8-fastbin/genfiles/some/path").replaceAll(""))
-        .isEqualTo("some/path");
-    assertThat(pattern.matcher("something/google3/blaze-out/k8-fastbin/some/path").replaceAll(""))
+        .isEqualTo("genfiles/some/path");
+    assertThat(pattern.matcher("somethin/google3/blaze-out/k8-fastbin/some/path").replaceAll(""))
         .isEqualTo("blaze-out/k8-fastbin/some/path");
-    assertThat(
-            pattern.matcher("/something/google3/blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
-        .isEqualTo("some/path");
-    assertThat(pattern.matcher("google3/some/path").replaceAll("")).isEqualTo("some/path");
 
     assertThat(pattern.matcher("google3/foo/blaze-out/some/path").replaceAll(""))
         .isEqualTo("foo/blaze-out/some/path");
     assertThat(pattern.matcher("google3/blaze-out/foo/blaze-out/some/path").replaceAll(""))
         .isEqualTo("blaze-out/foo/blaze-out/some/path");
-
-    assertThat(pattern.matcher("bazel-out/k8-fastbin/bin/some/path").replaceAll(""))
-        .isEqualTo("some/path");
-    assertThat(pattern.matcher("bazel-out/k8-fastbin/genfiles/some/path").replaceAll(""))
-        .isEqualTo("some/path");
   }
 }

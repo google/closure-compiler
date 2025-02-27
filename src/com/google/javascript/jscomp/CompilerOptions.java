@@ -1183,14 +1183,18 @@ public class CompilerOptions {
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
   /**
-   * Remove the first match of this regex from any paths when checking conformance allowlists.
+   * Remove the first match of this regex from any paths when checking conformance whitelists.
    *
    * <p>You can use this to make absolute paths relative to the root of your source tree. This is
    * useful to work around CI and build systems that use absolute paths.
    */
   private Optional<Pattern> conformanceRemoveRegexFromPath =
       Optional.of(
-          Pattern.compile("^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin|genfiles)/)?"));
+          // The regex uses lookahead because we want to be able to identify generated files. For a
+          // path like "blaze-out/directory/bin/some/file.js" we strip out the entire prefix,
+          // resulting in a reported path of "some/file.js". For generated files, we only strip the
+          // first two segments, leaving "genfiles/some/file.js".
+          Pattern.compile("^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
 
   public void setConformanceRemoveRegexFromPath(Optional<Pattern> pattern) {
     conformanceRemoveRegexFromPath = pattern;

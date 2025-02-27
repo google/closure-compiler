@@ -31,26 +31,22 @@ message Requirement {
   // and contacts.
   optional string error_message = 1;
 
-  // Optional: A list of google3-relative path prefixes that are exempt from the
-  // requirement. Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for
-  // generated files.
+  // Optional: A list of source path prefixes that are exempt from the
+  // requirement.
   // DEPRECATED: Use allowlist instead.
   repeated string whitelist = 2 [deprecated = true];
 
-  // Optional: A list of google3-relative path regexps that are exempt from the
-  // requirement. Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for
-  // generated files.
+  // Optional: A list of source paths regexs that are exempt from the
+  // requirement.
   // DEPRECATED: Use allowlist_regexp instead.
   repeated string whitelist_regexp = 3;
 
-  // Optional: A list of google3-relative path prefixes that are exempt from the
-  // requirement. Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for
-  // generated files.
+  // Optional: A list of source path prefixes that are exempt from the
+  // requirement.
   repeated string allowlist = 17;
 
-  // Optional: A list of google3-relative path regexps that are exempt from the
-  // requirement. Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for
-  // generated files.
+  // Optional: A list of source path prefixes that are exempt from the
+  // requirement.
   repeated string allowlist_regexp = 18;
 
   message WhitelistEntry {
@@ -63,14 +59,10 @@ message Requirement {
 
     optional Reason reason = 1;
 
-    // A list of google3-relative path prefixes to be allowlisted.
-    // Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for generated
-    // files.
+    // A list of source path prefixes.
     repeated string prefix = 2;
 
-    // A list of google3-relative path regexps to be allowlisted.
-    // Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for generated
-    // files.
+    // A list of regexes matching sources to be ignored
     repeated string regexp = 3;
 
     // Short explanation.
