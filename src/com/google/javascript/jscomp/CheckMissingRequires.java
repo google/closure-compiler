@@ -323,8 +323,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         return;
       }
 
-      // TODO: validate that this is the correct thing to do for wiz
-      if (require == null || require.namespace().equals("wiz")) {
+      if (require == null) {
         return;
       }
 
@@ -443,8 +442,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     }
 
     NodeUtil.GoogRequire require = NodeUtil.getGoogRequireInfo(localVar);
-      // TODO: validate that this is the correct thing to do
-      if (require == null || require.namespace().equals("wiz")) {
+    if (require == null) {
         // It is a local name, not an import.
         // NOTE: this *could be a local alias* of an imported name
         //   but at some point the only real fix is to not use `goog.provide`
