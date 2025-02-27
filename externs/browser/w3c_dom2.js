@@ -1786,6 +1786,12 @@ HTMLImageElement.prototype.isMap;
 
 /**
  * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-loading
+ */
+HTMLImageElement.prototype.loading;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-77376969
  */
 HTMLImageElement.prototype.longDesc;
@@ -2733,6 +2739,12 @@ HTMLIFrameElement.prototype.frameBorder;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-1678118
  */
 HTMLIFrameElement.prototype.height;
+
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#dom-iframe-loading
+ */
+HTMLIFrameElement.prototype.loading;
 
 /**
  * @type {string}

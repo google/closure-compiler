@@ -1729,6 +1729,36 @@ CSSProperties.prototype.overflow;
 
 /**
  * @type {string}
+ * @see https://drafts.csswg.org/css-scroll-anchoring/#exclusion-api
+ */
+CSSProperties.prototype.overflowAnchor;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-overflow/#overflow-clip-margin
+ */
+CSSProperties.prototype.overflowClipMargin;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-text/#overflow-wrap-property
+ */
+CSSProperties.prototype.overflowWrap;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-overflow/#overflow-properties
+ */
+CSSProperties.prototype.overflowX;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-overflow/#overflow-properties
+ */
+CSSProperties.prototype.overflowY;
+
+/**
+ * @type {string}
  * @see https://www.w3.org/TR/css-overscroll-1/#propdef-overscroll-behavior
  */
 CSSProperties.prototype.overscrollBehavior;
