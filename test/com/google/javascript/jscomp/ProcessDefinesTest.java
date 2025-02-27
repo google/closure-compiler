@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +63,21 @@ public final class ProcessDefinesTest extends CompilerTestCase {
       J2clSourceFileChecker.markToRunJ2clPasses(compiler);
     }
     return new ProcessDefinesWithInjectedNamespace(compiler);
+  }
+
+  private FeatureSet outputFeatureSet = FeatureSet.ES2017;
+
+  private static final Pattern ZONE_INPUT_PATTERN = Pattern.compile(".*/packages/zone.js/.*\\.js");
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+
+    options.setOutputFeatureSet(outputFeatureSet);
+    options.setEnableZonesDefineName("javascript.angular2.ENABLE_ZONES");
+    options.setZoneInputPattern(ZONE_INPUT_PATTERN);
+
+    return options;
   }
 
   @Override
@@ -969,6 +986,62 @@ public final class ProcessDefinesTest extends CompilerTestCase {
             "var jscomp$defines$b = b;"));
   }
 
+  @Test
+  public void testEs2017OrGreaterFailsWhenCompilingZone() {
+    outputFeatureSet = FeatureSet.ES2017;
+
+    testError(
+        srcs(
+            SourceFile.fromCode(
+                "third_party/javascript/angular2/rc/packages/zone.js/lib/zone.closure.js",
+                lines(
+                    "/** @define {boolean} */",
+                    "const ENABLE_ZONES = goog.define('javascript.angular2.ENABLE_ZONES', true)"))),
+        ProcessDefines.ZONE_NOT_SUPPORTED_WITH_NATIVE_ASYNC_AWAIT);
+  }
+
+  @Test
+  public void testEs2017OrGreaterAllowedWhenCompilingZoneWithItDisabled() {
+    outputFeatureSet = FeatureSet.ES2017;
+
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "defines.js", "var CLOSURE_DEFINES = {'javascript.angular2.ENABLE_ZONES': false};"),
+            SourceFile.fromCode(
+                "third_party/javascript/angular2/rc/packages/zone.js/lib/zone.closure.js",
+                lines(
+                    "/** @define {boolean} */",
+                    "const ENABLE_ZONES = goog.define('javascript.angular2.ENABLE_ZONES',"
+                        + " true)"))));
+  }
+
+  @Test
+  public void testEs2017OrGreaterFailsWhenCompilingZoneWithItExplicitlyEnabled() {
+    outputFeatureSet = FeatureSet.ES2017;
+
+    testError(
+        srcs(
+            SourceFile.fromCode(
+                "defines.js", "var CLOSURE_DEFINES = {'javascript.angular2.ENABLE_ZONES': true};"),
+            SourceFile.fromCode(
+                "third_party/javascript/angular2/rc/packages/zone.js/lib/zone.closure.js",
+                lines(
+                    "/** @define {boolean} */",
+                    "const ENABLE_ZONES = goog.define('javascript.angular2.ENABLE_ZONES', true)"))),
+        ProcessDefines.ZONE_NOT_SUPPORTED_WITH_NATIVE_ASYNC_AWAIT);
+  }
+
+  @Test
+  public void testZoneAllowedWhenCompilingLessThanEs2017() {
+    outputFeatureSet = FeatureSet.ES2016;
+
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "third_party/javascript/angular2/rc/packages/zone.js/lib/zone.closure.js", "")));
+  }
+
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {
     private final Compiler compiler;
 
@@ -984,6 +1057,8 @@ public final class ProcessDefinesTest extends CompilerTestCase {
           .setMode(mode)
           .injectNamespace(() -> namespace)
           .setRecognizeClosureDefines(recognizeClosureDefines)
+          .setEnableZonesDefineName(compiler.getOptions().getEnableZonesDefineName())
+          .setZoneInputPattern(compiler.getOptions().getZoneInputPattern())
           .build()
           .process(externs, js);
     }

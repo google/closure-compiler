@@ -2410,6 +2410,26 @@ public class CompilerOptions {
     this.defineReplacements.putAll(defineReplacements);
   }
 
+  private @Nullable String enableZonesDefineName = null;
+
+  public @Nullable String getEnableZonesDefineName() {
+    return this.enableZonesDefineName;
+  }
+
+  public void setEnableZonesDefineName(@Nullable String enableZonesDefineName) {
+    this.enableZonesDefineName = enableZonesDefineName;
+  }
+
+  private @Nullable Pattern zoneInputPattern = null;
+
+  public @Nullable Pattern getZoneInputPattern() {
+    return this.zoneInputPattern;
+  }
+
+  public void setZoneInputPattern(@Nullable Pattern zoneInputPattern) {
+    this.zoneInputPattern = zoneInputPattern;
+  }
+
   public void setRewriteGlobalDeclarationsForTryCatchWrapping(boolean rewrite) {
     this.rewriteGlobalDeclarationsForTryCatchWrapping = rewrite;
   }

@@ -2073,6 +2073,8 @@ public final class DefaultPassConfig extends PassConfig {
                     .putReplacements(options.getDefineReplacements())
                     .setMode(mode)
                     .setRecognizeClosureDefines(compiler.getOptions().closurePass)
+                    .setEnableZonesDefineName(options.getEnableZonesDefineName())
+                    .setZoneInputPattern(options.getZoneInputPattern())
                     .build())
         .build();
   }
