@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.AstValidator;
@@ -34,6 +35,7 @@ import com.google.javascript.jscomp.PassFactory;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
@@ -76,6 +78,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean parseInlineSourceMaps;
   private ImmutableList<String> runtimeLibraries = null;
   private Optional<PassFactory> preSerializePassFactory = Optional.empty();
+  private boolean skipMatchingScriptFeaturesBeforeAndAfterSerialization = false;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -236,11 +239,13 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassDeclaration() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("class Foo {}");
   }
 
   @Test
   public void testEmptyClassDeclarationWithExtends() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("class Foo {} class Bar extends Foo {}");
   }
 
@@ -264,6 +269,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassDeclarationWithFields() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(lines("class Foo {", "  a = 1;", "  d;", "}"));
 
     // Type checking will report computed property accesses as errors for a class,
@@ -283,6 +289,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassStaticBlock() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         lines(
             "class Foo {", //
@@ -293,6 +300,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_variables() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         lines(
             "class Foo {", //
@@ -306,6 +314,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_function() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         lines(
             "class Foo {", //
@@ -318,6 +327,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testMultipleClassStaticBlocks() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         lines(
             "class Foo {", //
@@ -372,11 +382,13 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testFunctionCallRestAndSpread() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("function f(...x) {} f(...[1, 2, 3]);");
   }
 
   @Test
   public void testFunctionDefaultAndDestructuringParameters() {
+    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("function f([a, b], x = 0, {y, ...z} = {y: 1}) {}");
   }
 
@@ -806,10 +818,10 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     InputStream serializedStream = toInputStream(externs, code, expected);
     Compiler serializingCompiler = getLastCompiler();
 
-    ImmutableList<SourceFile> externFiles =
-        collectSourceFilesFromScripts(serializingCompiler.getRoot().getFirstChild());
-    ImmutableList<SourceFile> codeFiles =
-        collectSourceFilesFromScripts(serializingCompiler.getRoot().getSecondChild());
+    Node oldRoot = serializingCompiler.getRoot();
+
+    ImmutableList<SourceFile> externFiles = collectSourceFilesFromScripts(oldRoot.getFirstChild());
+    ImmutableList<SourceFile> codeFiles = collectSourceFilesFromScripts(oldRoot.getSecondChild());
 
     // NOTE: We need a fresh compiler instance in which to deserialize, because:
     // 1. This is a better representation of what will happen in production use.
@@ -854,10 +866,52 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     Node expectedRoot = this.parseExpectedJs(expected);
     assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
+    Node newRoot = IR.root(newExternsRoot, newSourceRoot);
+
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
-        .validateRoot(IR.root(newExternsRoot, newSourceRoot));
+        .validateRoot(newRoot);
+
+    // TODO(b/394454662): Remove this condition once feature set with deserialization and parser are
+    // in sync.
+    if (!skipMatchingScriptFeaturesBeforeAndAfterSerialization) {
+      assertFeatureSetsOfScriptsMatch(oldRoot, newRoot);
+    }
+
     consumer = null;
     return new Result(ast, registry, newSourceRoot, deserializingCompiler);
+  }
+
+  private void assertFeatureSetsOfScriptsMatch(Node oldRoot, Node newRoot) {
+    ImmutableMap<SourceFile, FeatureSet> featureSetsOfOldScripts = getFeatureSetsOfScripts(oldRoot);
+    ImmutableMap<SourceFile, FeatureSet> featureSetsOfNewScripts = getFeatureSetsOfScripts(newRoot);
+    assertThat(featureSetsOfNewScripts.keySet()).isEqualTo(featureSetsOfOldScripts.keySet());
+    for (SourceFile sourceFile : featureSetsOfOldScripts.keySet()) {
+      FeatureSet oldFeatureSet = featureSetsOfOldScripts.get(sourceFile);
+      FeatureSet newFeatureSet = featureSetsOfNewScripts.get(sourceFile);
+      checkState(
+          oldFeatureSet.equals(newFeatureSet),
+          "Feature sets of scripts do not match for file %s. Old: %s, New: %s",
+          sourceFile.getName(),
+          oldFeatureSet,
+          newFeatureSet);
+    }
+  }
+
+  private ImmutableMap<SourceFile, FeatureSet> getFeatureSetsOfScripts(Node root) {
+    ImmutableMap.Builder<SourceFile, FeatureSet> builder = ImmutableMap.builder();
+    Node externsRoot = root.getFirstChild();
+    Node sourceRoot = root.getSecondChild();
+    for (Node script = externsRoot.getFirstChild(); script != null; script = script.getNext()) {
+      checkState(script.isScript());
+      builder.put(
+          (SourceFile) script.getStaticSourceFile(), (FeatureSet) script.getProp(Node.FEATURE_SET));
+    }
+    for (Node script = sourceRoot.getFirstChild(); script != null; script = script.getNext()) {
+      checkState(script.isScript());
+      builder.put(
+          (SourceFile) script.getStaticSourceFile(), (FeatureSet) script.getProp(Node.FEATURE_SET));
+    }
+    return builder.buildOrThrow();
   }
 
   private ImmutableList<SourceFile> collectSourceFilesFromScripts(Node root) {

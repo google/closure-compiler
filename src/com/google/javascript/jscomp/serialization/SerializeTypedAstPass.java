@@ -30,7 +30,8 @@ import java.util.zip.GZIPOutputStream;
 /**
  * A compiler pass intended to serialize the types in the AST.
  *
- * <p>Under construction. Do not use!
+ * <p>Serialization means that the AST is converted to a proto representation and output to a file
+ * or stream. Deserialization means the reverse process.
  */
 public final class SerializeTypedAstPass implements CompilerPass {
 
