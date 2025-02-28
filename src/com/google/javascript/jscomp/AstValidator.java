@@ -1886,6 +1886,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateRegExpLit(Node n) {
+    validateFeature(Feature.REGEXP_SYNTAX, n);
     validateNodeType(Token.REGEXP, n);
     validateProperties(n);
     validateChildCountIn(n, 1, 2);
