@@ -195,6 +195,10 @@ final class ScriptNodeDeserializer {
           }
           return;
 
+        case REGEXP:
+          this.addScriptFeature(Feature.REGEXP_SYNTAX);
+          return;
+
         case SETTER_DEF:
           this.addScriptFeature(Feature.SETTER);
           if (context.equals(FeatureContext.CLASS_MEMBERS)) {
