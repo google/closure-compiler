@@ -3310,6 +3310,37 @@ class RemoveUnusedCode implements CompilerPass {
       }
       NodeUtil.markFunctionsDeleted(nameNode, compiler);
     }
+
+    @Override
+    boolean isVariableAssignment() {
+      return true;
+    }
+
+    @Override
+    boolean isAssignedValueLocal() {
+      final Node initialValueNode = nameNode.getFirstChild();
+      if (initialValueNode == null) {
+        // `var foo;`
+        // the "assigned" value is undefined, which should be considered a "local" value,
+        // since it is a constant.
+        return true;
+      }
+      // Handle `var name = name || defaultValue;`
+      final Node valueNode = maybeUnwrapQnameOrDefaultValueNode(nameNode, initialValueNode);
+      return NodeUtil.evaluatesToLocalValue(valueNode);
+    }
+
+    @Override
+    @Nullable Node getLocalAssignedValue() {
+      final Node initialValueNode = nameNode.getFirstChild();
+      if (initialValueNode == null) {
+        // `var foo;` has no node to represent the `undefined` value that is assigned.
+        return null;
+      }
+      // Handle `var name = name || defaultValue;`
+      final Node valueNode = maybeUnwrapQnameOrDefaultValueNode(nameNode, initialValueNode);
+      return NodeUtil.evaluatesToLocalValue(valueNode) ? valueNode : null;
+    }
   }
 
   void removeExpressionCompletely(Node expression) {

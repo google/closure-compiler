@@ -3486,42 +3486,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConfirmsGithubIssue4207() {
-    // This test confirms the behavior that was reported in
-    // https://github.com/google/closure-compiler/issues/4207
-    test(
+  public void testArrayReferenceInForLoopNameDeclarations() {
+    testSame(
         lines(
-            "const arr = [];",
-            "for (let i = 0, ref = arr; i < 5; i++) {",
-            // "for (let i = 0, ref = arr; i < 5; i++) {",
-            "  ref[i] = \"test\";",
-            "}",
-            "console.log(arr);"),
-        // This behavior is not correct - we should back off on removing the loop content and array
-        // declaration.
-        lines("const arr=[];", "for (let i = 0; i < 5; i++);", "console.log(arr)"));
-  }
-
-  @Test
-  public void testLoopInsideFunctionForGithubIssue4207() {
-    test(
-        lines(
-            "function insideFunction() {",
-            " const arr = [];",
-            " for (let i=0, ref=arr; i<5; i++) {",
-            "   ref[i] = \"test\";",
-            " }",
-            " console.log(arr);",
-            "}",
-            "insideFunction();"),
-        // This behavior is not correct, reference to arr declared in the for loop declarations
-        // along with the logic inside the loop should not be removed.
-        lines(
-            "function insideFunction(){",
             "const arr=[];",
-            "for(let i=0;i<5;i++);",
-            "console.log(arr)",
-            "}",
-            "insideFunction()"));
+            "for (let i = 0, ref = arr; i<5; i++)",
+            "  ref[i] = \"test\";",
+            "console.log(arr)"));
   }
+ 
 }
