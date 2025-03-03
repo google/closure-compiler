@@ -1991,6 +1991,21 @@ HTMLElement.prototype.formResetCallback;
  */
 HTMLElement.prototype.formStateRestoreCallback = function(state, reason) {};
 
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondrag;
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondragend;
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondragenter;
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondragleave;
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondragover;
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondragstart;
+/** @type {?function(!DragEvent)} */
+HTMLElement.prototype.ondrop;
+
 /**
  * @see https://dom.spec.whatwg.org/#dictdef-getrootnodeoptions
  * @typedef {{
