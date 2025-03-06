@@ -2974,17 +2974,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void performTranspilationAndOptimizations(OptimizationPasses optimizationPasses) {
     checkState(options.shouldOptimize());
     // getOptimizations() also includes transpilation passes
-    ImmutableList<PassFactory> optimizations =
+    ImmutableList<PassFactory> allOptimizationPassesToRun =
         getPassConfig().getOptimizations(optimizationPasses).build();
-    if (optimizations.isEmpty()) {
+    if (allOptimizationPassesToRun.isEmpty()) {
       return;
     }
+
+    // Get the subset of optimization passes to run in the current segment of optimizations.
+    List<PassFactory> optimizationPassesToRunInCurrentSegment =
+        getOptimizationPassesToRunInCurrentSegment(optimizationPasses, allOptimizationPassesToRun);
 
     // note whether any script gets transpiled
     markTranspiledFiles();
 
     phaseOptimizer = createPhaseOptimizer();
-    phaseOptimizer.consume(optimizations);
+    phaseOptimizer.consume(optimizationPassesToRunInCurrentSegment);
     phaseOptimizer.process(externsRoot, jsRoot);
     phaseOptimizer = null;
   }
@@ -3013,6 +3017,75 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             .computeCfg();
     stopTracer(tracer, "computeCFG");
     return cfg;
+  }
+
+  /**
+   * Takes the entire list of optimization passes to run in the current build, and returns the
+   * subset of passes that should be run in this current segment of optimizations.
+   *
+   * <p>The 3 cases are:
+   *
+   * <ol>
+   *   <li>If we are running `OptimizationPasses.ALL`, this will return the entire list of
+   *       optimization passes.
+   *   <li>If we are running `OptimizationPasses.FIRST_HALF`, this will return all passes up to the
+   *       half-way point marker pass `OPTIMIZATIONS_HALFWAY_POINT`.
+   *   <li>If we are running `OptimizationPasses.SECOND_HALF`, this will return all passes after the
+   *       half-way point marker pass `OPTIMIZATIONS_HALFWAY_POINT`.
+   * </ol>
+   */
+  private List<PassFactory> getOptimizationPassesToRunInCurrentSegment(
+      OptimizationPasses optimizationPasses, List<PassFactory> allOptimizationPassesToRun) {
+
+    // Create a list of passes based on which segment of optimizations we are running.
+    List<PassFactory> optimizationPassList = new ArrayList<>();
+
+    switch (optimizationPasses) {
+      case ALL:
+        optimizationPassList = allOptimizationPassesToRun;
+        break;
+      case FIRST_HALF:
+        optimizationPassList =
+            passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+        break;
+      case SECOND_HALF:
+        optimizationPassList =
+            passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+        break;
+    }
+
+    return optimizationPassList;
+  }
+
+  /**
+   * Returns a subset of passes from the given list of passes, up to but not including the given
+   * pass name.
+   */
+  private List<PassFactory> passListUntil(List<PassFactory> passes, String passName) {
+    List<PassFactory> passList = new ArrayList<>();
+    for (PassFactory pass : passes) {
+      if (pass.getName().equals(passName)) {
+        return passList;
+      }
+      passList.add(pass);
+    }
+    return passList;
+  }
+
+  /**
+   * Returns a subset of passes from the given list of passes, starting right after the given pass
+   * name.
+   */
+  private List<PassFactory> passListAfter(List<PassFactory> passes, String passName) {
+    List<PassFactory> passList = new ArrayList<>();
+    for (PassFactory pass : passes) {
+      if (pass.getName().equals(passName)) {
+        passList.clear();
+        continue;
+      }
+      passList.add(pass);
+    }
+    return passList;
   }
 
   private static final String SYNTHETIC_FILE_NAME_PREFIX = " [synthetic:";

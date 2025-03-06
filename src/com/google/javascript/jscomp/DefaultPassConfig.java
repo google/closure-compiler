@@ -524,18 +524,9 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    switch (optimizationPasses) {
-      case FIRST_HALF:
-        passes.addAll(getEarlyOptimizationPasses());
-        break;
-      case SECOND_HALF:
-        passes.addAll(getLateOptimizationPasses());
-        break;
-      case ALL:
-        passes.addAll(getEarlyOptimizationPasses());
-        passes.addAll(getLateOptimizationPasses());
-        break;
-    }
+    passes.addAll(getEarlyOptimizationPasses());
+    passes.maybeAdd(createEmptyPass(PassNames.OPTIMIZATIONS_HALFWAY_POINT));
+    passes.addAll(getLateOptimizationPasses());
 
     return passes;
   }
