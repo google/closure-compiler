@@ -180,10 +180,16 @@ var x=42;
 #### Downloading from Maven Repository
 
 NOTE: Maven releases were put on hold in early 2024 and are not likely to resume
-until early 2025.
+until early 2025. See https://github.com/google/closure-compiler/issues/4220.
 
 A pre-compiled release of the compiler is also available via
 [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
+
+### Web-based tooling
+
+https://jscompressor.treblereel.dev/ is a web-based UI and REST API for Closure
+Compiler, developed and maintained by at
+https://github.com/treblereel/jscompressor.
 
 ### Basic usage
 
