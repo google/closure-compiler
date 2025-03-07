@@ -365,6 +365,36 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testJsMessageOnPublicField_directAlias() {
+    extractMessagesSafely(
+        lines(
+            "/** @desc Something */",
+            "const MSG_SOMETHING = goog.getMsg('Something');",
+            "class Foo {",
+            "  MSG_SOMETHING = MSG_SOMETHING;",
+            "}"));
+    assertThat(assertOneMessage().getKey()).isEqualTo("MSG_SOMETHING");
+  }
+
+  // Note: This may be undesirable but represents the current behavior.
+  // Ideally the assignment to this MSG in the constructor should be sufficient to avoid the error.
+  @Test
+  public void testJsMessageOnPublicField_indirectAliasPresentlyErrors() {
+    extractMessages(
+        lines(
+            "/** @desc Anything */",
+            "const MSG_ANYTHING = goog.getMsg('Anything');",
+            "class Baz {",
+            "  MSG_ANYTHING;",
+            "  constructor() {",
+            "    this.MSG_ANYTHING = MSG_ANYTHING;",
+            "  }",
+            "}"));
+    assertOneError(MESSAGE_HAS_NO_VALUE);
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  @Test
   public void testErrorOnPublicFields() {
     extractMessages(
         lines(
