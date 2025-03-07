@@ -19,6 +19,7 @@
  * @suppress {uselessCode}
  */
 'require es6/array';
+'require es6/async_disposable_stack';
 'require es6/dispose';
 'require es6/disposable_stack';
 'require es6/globalthis';

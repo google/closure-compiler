@@ -2498,3 +2498,57 @@ DisposableStack.prototype.defer = function(onDispose) {};
  * @return {!DisposableStack}
  */
 DisposableStack.prototype.move = function() {};
+
+/**
+ * @record
+ */
+function AsyncDisposable() {}
+
+/**
+ * @return {void}
+ */
+AsyncDisposable.prototype[Symbol.asyncDispose] = function() {};
+
+/**
+ * An AsyncDisposableStack is an object that can be used to contain one or more
+ * resources that should be disposed of together. The resources may be disposed
+ * of asynchronously.
+ *
+ * @constructor
+ */
+function AsyncDisposableStack() {}
+
+/**
+ * @type {boolean}
+ */
+AsyncDisposableStack.prototype.disposed;
+
+/**
+ * @return {!Promise<void>}
+ */
+AsyncDisposableStack.prototype.disposeAsync = function() {};
+/**
+ * @return {!Promise<void>}
+ */
+AsyncDisposableStack.prototype[Symbol.asyncDispose] = function () {};
+/**
+ * @param {!AsyncDisposable|!Disposable|null|undefined} disposable
+ * @return {!AsyncDisposable|!Disposable|null|undefined}
+ */
+AsyncDisposableStack.prototype.use = function(disposable) {};
+/**
+ * @template T
+ * @param {T} value
+ * @param {function(T): (void|!Promise<void>)} onDispose
+ * @return {T}
+ */
+AsyncDisposableStack.prototype.adopt = function(value, onDispose) {};
+/**
+ * @param {function(): (void|!Promise<void>)} onDispose
+ * @return {void}
+ */
+AsyncDisposableStack.prototype.defer = function(onDispose) {};
+/**
+ * @return {!AsyncDisposableStack}
+ */
+AsyncDisposableStack.prototype.move = function() {};
