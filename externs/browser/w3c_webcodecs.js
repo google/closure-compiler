@@ -1137,6 +1137,12 @@ var PredefinedColorSpace;
 
 /**
  * @typedef {string}
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#colorspaceconversion
+ */
+var ColorSpaceConversion;
+
+/**
+ * @typedef {string}
  */
 var OpusBitstreamFormat;
 
@@ -1157,6 +1163,12 @@ var VideoColorPrimaries;
  * @see https://www.w3.org/TR/webcodecs/#enumdef-videotransfercharacteristics
  */
 var VideoTransferCharacteristics;
+
+/**
+ * @typedef {ArrayBuffer|ArrayBufferView|ReadableStream}
+ * @see https://www.w3.org/TR/webcodecs/#typedefdef-imagebuffersource
+ */
+var ImageBufferSource;
 
 /**
  * Available only in secure contexts.
@@ -1257,3 +1269,205 @@ EncodedVideoChunk.prototype.byteLength;
  * @see https://www.w3.org/TR/webcodecs/#dom-encodedvideochunk-copyto
  */
 EncodedVideoChunk.prototype.copyTo = function(destination) {};
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-imagedecodeoptions
+ */
+function ImageDecodeOptions() {}
+
+/**
+ * @type {boolean|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecodeoptions-completeframesonly
+ */
+ImageDecodeOptions.prototype.completeFramesOnly;
+
+/**
+ * @type {number|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecodeoptions-frameindex
+ */
+ImageDecodeOptions.prototype.frameIndex;
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-imagedecoderesult
+ */
+function ImageDecodeResult() {}
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderesult-complete
+ */
+ImageDecodeResult.prototype.complete;
+
+/**
+ * @type {!VideoFrame}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderesult-image
+ */
+ImageDecodeResult.prototype.image;
+
+/**
+ * @record
+ * @struct
+ * @see https://www.w3.org/TR/webcodecs/#dictdef-imagedecoderinit
+ */
+function ImageDecoderInit() {}
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-type
+ */
+ImageDecoderInit.prototype.type;
+
+/**
+ * @type {!ImageBufferSource}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-data
+ */
+ImageDecoderInit.prototype.data;
+
+/**
+ * @type {!ColorSpaceConversion|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-colorspaceconversion
+ */
+ImageDecoderInit.prototype.colorSpaceConversion;
+
+/**
+ * @type {number|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-desiredwidth
+ */
+ImageDecoderInit.prototype.desiredWidth;
+
+/**
+ * @type {number|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-desiredheight
+ */
+ImageDecoderInit.prototype.desiredHeight;
+
+/**
+ * @type {boolean|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-preferanimation
+ */
+ImageDecoderInit.prototype.preferAnimation;
+
+/**
+ * @type {!Array<!ArrayBuffer>|undefined}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoderinit-transfer
+ */
+ImageDecoderInit.prototype.transfer;
+
+/**
+ * @constructor
+ * @param {!ImageDecoderInit} init
+ * @see https://www.w3.org/TR/webcodecs/#imagedecoder
+ */
+function ImageDecoder(init) {}
+
+/**
+ * @const {boolean}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-complete
+ */
+ImageDecoder.prototype.complete;
+
+/**
+ * @const {!Promise<undefined>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-completed
+ */
+ImageDecoder.prototype.completed;
+
+/**
+ * @const {!ImageTrackList}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-tracks
+ */
+ImageDecoder.prototype.tracks;
+
+/**
+ * @const {string}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-type
+ */
+ImageDecoder.prototype.type;
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-close
+ */
+ImageDecoder.prototype.close = function() {};
+
+/**
+ * @param {!ImageDecodeOptions=} options
+ * @return {!Promise<!ImageDecodeResult>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-decode
+ */
+ImageDecoder.prototype.decode = function(options) {};
+
+/**
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-reset
+ */
+ImageDecoder.prototype.reset = function() {};
+
+/**
+ * @param {string} type
+ * @return {!Promise<boolean>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagedecoder-istypesupported
+ */
+ImageDecoder.isTypeSupported = function(type) {};
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#imagetrack
+ */
+function ImageTrack() {}
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetrack-animated
+ */
+ImageTrack.prototype.animated;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetrack-framecount
+ */
+ImageTrack.prototype.frameCount;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetrack-repetitionCount
+ */
+ImageTrack.prototype.repetitionCount;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetrack-selected
+ */
+ImageTrack.prototype.selected;
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/webcodecs/#imagetracklist
+ */
+function ImageTrackList() {}
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetracklist-length
+ */
+ImageTrackList.prototype.length;
+
+/**
+ * @type {!Promise<undefined>}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetracklist-ready
+ */
+ImageTrackList.prototype.ready;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetracklist-selectedindex
+ */
+ImageTrackList.prototype.selectedIndex;
+
+/**
+ * @type {!ImageTrack}
+ * @see https://www.w3.org/TR/webcodecs/#dom-imagetracklist-selectedtrack
+ */
+ImageTrackList.prototype.selectedTrack;
