@@ -2523,6 +2523,15 @@ RTCInboundRtpStreamStats.prototype.framesAssembledFromMultiplePackets;
 /** @const {number|undefined} */
 RTCInboundRtpStreamStats.prototype.totalAssemblyTime;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalCorruptionProbability;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalSquaredCorruptionProbability;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.corruptionMeasurements;
+
 /**
  * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteinboundrtpstreamstats
  * @interface
