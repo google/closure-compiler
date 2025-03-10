@@ -5324,6 +5324,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "* @inner \n"
             + "* @lends {string} \n"
             + "* @link \n"
+            + "* @mayhaveextraedge \n"
             + "* @member \n"
             + "* @memberOf \n"
             + "* @modName \n"

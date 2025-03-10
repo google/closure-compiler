@@ -1094,6 +1094,7 @@ public final class JsDocInfoParser {
         case SOY_MODULE:
         case SOY_TEMPLATE:
         case WIZ_ANALYZER:
+        case MAY_HAVE_EXTRA_EDGE:
           return eatUntilEOLIfNotAnnotation();
         case USED_VIA_DOT_CONSTRUCTOR:
           if (!jsdocBuilder.recordUsedViaDotConstructor()) {

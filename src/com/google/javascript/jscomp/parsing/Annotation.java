@@ -51,6 +51,7 @@ enum Annotation {
   LENDS,
   LICENSE, // same as preserve
   LOG_TYPE_IN_COMPILER,
+  MAY_HAVE_EXTRA_EDGE,
   MEANING,
   MIXIN_CLASS,
   MIXIN_FUNCTION,
@@ -142,6 +143,7 @@ enum Annotation {
           .put("lends", Annotation.LENDS)
           .put("license", Annotation.LICENSE)
           .put("logTypeInCompiler", Annotation.LOG_TYPE_IN_COMPILER)
+          .put("mayhaveextraedge", Annotation.MAY_HAVE_EXTRA_EDGE)
           .put("meaning", Annotation.MEANING)
           .put("mixinClass", Annotation.MIXIN_CLASS)
           .put("mixinFunction", Annotation.MIXIN_FUNCTION)

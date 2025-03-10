@@ -325,6 +325,7 @@ public class JsFileFullParser {
           break;
         case "@enhanceable":
         case "@pintomodule":
+        case "@mayhaveextraedge":
           info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           break;
         case "@enhance":
