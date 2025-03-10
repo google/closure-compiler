@@ -32,9 +32,11 @@
 Element.prototype.animate = function(frames, options) {};
 
 /**
+ * @param {GetAnimationsOptions=} options
  * @return {!Array<!Animation>}
+ * @see https://www.w3.org/TR/web-animations/#dom-animatable-getanimations
  */
-Element.prototype.getAnimations = function() {};
+Element.prototype.getAnimations = function(options) {};
 
 /**
  * @return {!Array<!Animation>}
@@ -438,3 +440,13 @@ GroupEffect.prototype.timing;
 
 /** @type {!Array<!AnimationEffect>} */
 GroupEffect.prototype.children;
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/web-animations/#dom-animatable-getanimations
+ */
+var GetAnimationsOptions = function() {};
+
+/** @type {(undefined|boolean)} */
+GetAnimationsOptions.prototype.subtree;
