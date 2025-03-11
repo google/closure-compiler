@@ -283,9 +283,7 @@ final class ManageClosureUnawareCode implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-      if (!tryUnwrapOldClosureUnawareCode(t, n, parent)) {
-        tryUnwrapClosureUnawareShadowedCode(t, n, parent);
-      }
+      tryUnwrapClosureUnawareShadowedCode(t, n, parent);
     }
 
     private void tryUnwrapClosureUnawareShadowedCode(
@@ -321,73 +319,6 @@ final class ManageClosureUnawareCode implements CompilerPass {
       // This ROOT -> SCRIPT -> EXPR_RESULT node structure that was enclosed in the shadow is now
       // dangling and we need to inform the compiler that we've removed it.
       t.reportCodeChange(shadowAstRoot.getFirstChild());
-    }
-
-    private boolean tryUnwrapOldClosureUnawareCode(NodeTraversal t, Node n, @Nullable Node parent) {
-      if (!n.isCall()) {
-        // We only expect usages of the JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME as part of the
-        // RHS of a CALL, either directly (old-style free call) or indirectly (new-style GETPROP ->
-        // .call or .apply) - anything else is a compiler bug.
-        if (n.matchesName(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME)
-            && !(parent.isCall() || (parent.isGetProp() && parent.getParent().isCall()))) {
-          compiler.report(JSError.make(n, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE));
-        }
-        return false;
-      }
-
-      Node call = n;
-      Node callee = call.getFirstChild();
-      // <>.call()
-      if (!callee.matchesName(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME)) {
-        return false;
-      }
-
-      if (call.getChildCount() != 2) {
-        compiler.report(JSError.make(call, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE));
-        return false; // callee and a single arg
-      }
-
-      Node stringifiedSource = call.getSecondChild();
-      if (stringifiedSource == null || !stringifiedSource.isString()) {
-        compiler.report(JSError.make(call, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE));
-        return false;
-      }
-      String wrappedSrc = stringifiedSource.getString();
-
-      // We add the @closureUnaware annotation to the wrapped block so that the parsed SCRIPT node
-      // will have JSDoc with isClosureUnawareCode returning true.
-      // We need to do this because this block of code is parsed in isolation and there is no other
-      // signal present to prevent emitting invalid JSDoc parse errors when the wrapped code
-      // contains
-      // "invalid" (non-closure?) JSDoc.
-      // This annotation is not attached to the CALL node which we will attach to the AST later, and
-      // that is intentional.
-      String unwrappedCode =
-          "/**\n"
-              + " * @fileoverview\n"
-              + " * @closureUnaware\n"
-              + " */\n"
-              + "(/** @closureUnaware */ function() "
-              + wrappedSrc
-              + ").call(globalThis);";
-
-      try {
-        Node parsedCodeRoot =
-            compiler.parseSyntheticCode(
-                // The wrappedSrc is the entire BLOCK node from the previous function.
-                call.getSourceFileName(), unwrappedCode);
-        Node parsedCode = parsedCodeRoot.getOnlyChild().getOnlyChild();
-        parsedCode.srcrefTree(call); // The original src info should have been stashed here
-        parsedCode.detach();
-
-        call.replaceWith(parsedCode);
-        NodeUtil.markNewScopesChanged(parsedCode.getFirstFirstChild(), compiler);
-        t.reportCodeChange();
-        return true;
-      } catch (RuntimeException e) {
-        System.err.println(e);
-        throw e;
-      }
     }
   }
 }
