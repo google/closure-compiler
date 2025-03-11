@@ -6515,7 +6515,7 @@ google.maps.MapType = function() {};
 /**
  * Alt text to display when this MapType&#39;s button is hovered over in the
  * MapTypeControl. Optional.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.MapType.prototype.alt;
 
@@ -6535,13 +6535,13 @@ google.maps.MapType.prototype.minZoom;
 
 /**
  * Name to display in the MapTypeControl. Optional.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.MapType.prototype.name;
 
 /**
  * The Projection used to render this MapType. Optional; defaults to Mercator.
- * @type {?google.maps.Projection}
+ * @type {!google.maps.Projection|null}
  */
 google.maps.MapType.prototype.projection;
 
@@ -6554,7 +6554,7 @@ google.maps.MapType.prototype.radius;
 
 /**
  * The dimensions of each tile. Required.
- * @type {google.maps.Size}
+ * @type {!google.maps.Size|null}
  */
 google.maps.MapType.prototype.tileSize;
 
@@ -6565,7 +6565,7 @@ google.maps.MapType.prototype.tileSize;
  * @param {google.maps.Point} tileCoord Tile coordinates.
  * @param {number} zoom Tile zoom.
  * @param {Document} ownerDocument The document which owns this tile.
- * @return {?Element} Resulting tile.
+ * @return {Element|null} Resulting tile.
  */
 google.maps.MapType.prototype.getTile = function(
     tileCoord, zoom, ownerDocument) {};
@@ -6573,7 +6573,7 @@ google.maps.MapType.prototype.getTile = function(
 /**
  * Releases the given tile, performing any necessary cleanup. The provided tile
  * will have already been removed from the document. Optional.
- * @param {?Element} tile Tile to release.
+ * @param {Element|null} tile Tile to release.
  * @return {undefined}
  */
 google.maps.MapType.prototype.releaseTile = function(tile) {};
@@ -10285,7 +10285,7 @@ google.maps.TrafficLayerOptions.prototype.autoRefresh;
 
 /**
  * Map on which to display the traffic layer.
- * @type {google.maps.Map|null|undefined}
+ * @type {!google.maps.Map|null|undefined}
  */
 google.maps.TrafficLayerOptions.prototype.map;
 
@@ -10561,7 +10561,7 @@ google.maps.TransitOptions = function() {};
  * The desired arrival time for the route, specified as a Date object. The Date
  * object measures time in milliseconds since 1 January 1970. If arrival time is
  * specified, departure time is ignored.
- * @type {Date|null|undefined}
+ * @type {!Date|null|undefined}
  */
 google.maps.TransitOptions.prototype.arrivalTime;
 
@@ -10570,21 +10570,21 @@ google.maps.TransitOptions.prototype.arrivalTime;
  * Date object measures time in milliseconds since 1 January 1970. If neither
  * departure time nor arrival time is specified, the time is assumed to be
  * &quot;now&quot;.
- * @type {Date|null|undefined}
+ * @type {!Date|null|undefined}
  */
 google.maps.TransitOptions.prototype.departureTime;
 
 /**
  * One or more preferred modes of transit, such as bus or train. If no
  * preference is given, the API returns the default best route.
- * @type {Array<!google.maps.TransitMode>|null|undefined}
+ * @type {!Array<!google.maps.TransitMode>|null|undefined}
  */
 google.maps.TransitOptions.prototype.modes;
 
 /**
  * A preference that can bias the choice of transit route, such as less walking.
  * If no preference is given, the API returns the default best route.
- * @type {google.maps.TransitRoutePreference|null|undefined}
+ * @type {!google.maps.TransitRoutePreference|null|undefined}
  */
 google.maps.TransitOptions.prototype.routingPreference;
 
@@ -17455,11 +17455,18 @@ google.maps.places.AutocompleteRequest.prototype.region;
  * longer valid; your app must generate a fresh token for each session. If the
  * <code>sessionToken</code> parameter is omitted, or if you reuse a session
  * token, the session is charged as if no session token was provided (each
- * request is billed separately). <br/><br/> We recommend the following
- * guidelines: <ul><li>Use session tokens for all Place Autocomplete calls.</li>
- * <li>Generate a fresh token for each session.</li> <li>Be sure to pass a
- * unique session token for each new session. Using the same token for more than
- * one session will result in each request being billed individually.</li> </ul>
+ * request is billed separately). <br/><br/> When a session token is provided in
+ * the request to {@link
+ * google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions}, the
+ * same token will automatically be included in the first call to fetchFields on
+ * a {@link google.maps.places.Place} returned by calling {@link
+ * google.maps.places.PlacePrediction.toPlace} on one of the resulting {@link
+ * google.maps.places.AutocompleteSuggestion}s. <br/><br/> We recommend the
+ * following guidelines: <ul><li>Use session tokens for all Place Autocomplete
+ * calls.</li> <li>Generate a fresh token for each session.</li> <li>Be sure to
+ * pass a unique session token for each new session. Using the same token for
+ * more than one session will result in each request being billed
+ * individually.</li> </ul>
  * @type {!google.maps.places.AutocompleteSessionToken|undefined}
  */
 google.maps.places.AutocompleteRequest.prototype.sessionToken;
@@ -17538,13 +17545,25 @@ google.maps.places.AutocompleteSuggestion = function() {};
 
 /**
  * Contains the human-readable name for the returned result. For establishment
- * results, this is usually the business name and address.
+ * results, this is usually the business name and address. <br/><br/> If
+ * a {@link google.maps.places.AutocompleteRequest.sessionToken} was provided in
+ * the AutocompleteRequest used to fetch this AutocompleteSuggestion, the same
+ * token will automatically be included when calling {@link
+ * google.maps.places.Place.fetchFields} for the first time on the {@link
+ * google.maps.places.Place} returned by a call to {@link
+ * google.maps.places.PlacePrediction.toPlace}.
  * @type {!google.maps.places.PlacePrediction|null}
  */
 google.maps.places.AutocompleteSuggestion.prototype.placePrediction;
 
 /**
- * Fetches a list of AutocompleteSuggestions.
+ * Fetches a list of AutocompleteSuggestions. <br/><br/> If a {@link
+ * google.maps.places.AutocompleteRequest.sessionToken} is provided in the
+ * request, then that session token will automatically be included when
+ * calling {@link google.maps.places.Place.fetchFields} for the first time, on
+ * each {@link google.maps.places.Place} returned by {@link
+ * google.maps.places.PlacePrediction.toPlace} on the resulting {@link
+ * google.maps.places.PlacePrediction}s.
  * @param {!google.maps.places.AutocompleteRequest} autocompleteRequest
  * @return {!Promise<!{suggestions:!Array<!google.maps.places.AutocompleteSuggestion>}>}
  */
@@ -18926,7 +18945,17 @@ google.maps.places.PlaceAspectRating.prototype.type;
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
- * provides a UI component for the Places Autocomplete API.
+ * provides a UI component for the Places Autocomplete API. <br/><br/>
+ * PlaceAutocompleteElement automatically uses {@link
+ * google.maps.places.AutocompleteSessionToken}s internally to group the query
+ * and selection phases of a user&#39;s autocomplete search. <br/><br/> The
+ * first call to {@link google.maps.places.Place.fetchFields} on a {@link
+ * google.maps.places.Place} returned by {@link
+ * google.maps.places.PlacePrediction.toPlace} will automatically include the
+ * session token used to fetch the <code>PlacePrediction</code>. <br/><br/> See
+ * <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/place-session-tokens">https://developers.google.com/maps/documentation/places/web-service/place-session-tokens</a>
+ * for more details on how sessions work.
  *
  * Access by calling `const {PlaceAutocompleteElement} = await
  * google.maps.importLibrary("places")`. See
@@ -19726,9 +19755,17 @@ google.maps.places.PlacePrediction.prototype.text;
 google.maps.places.PlacePrediction.prototype.types;
 
 /**
- * Returns a Place representation of this PlacePrediction. A subsequent call
- * to {@link google.maps.places.Place.fetchFields} is required to get full Place
- * details.
+ * Returns a {@link google.maps.places.Place} representation of this
+ * PlacePrediction. A subsequent call to {@link
+ * google.maps.places.Place.fetchFields} is required to get full Place details.
+ * <br/><br/> If a {@link google.maps.places.AutocompleteRequest.sessionToken}
+ * was provided in the {@link google.maps.places.AutocompleteRequest} used to
+ * fetch this PlacePrediction, the same token will automatically be included
+ * when calling fetchFields. <br/><br/> Alternatively, when using {@link
+ * google.maps.places.PlaceAutocompleteElement} the first call to {@link
+ * google.maps.places.Place.fetchFields} on a {@link google.maps.places.Place}
+ * returned by {@link google.maps.places.PlacePrediction.toPlace} will
+ * automatically include the session token.
  * @return {!google.maps.places.Place}
  */
 google.maps.places.PlacePrediction.prototype.toPlace = function() {};
@@ -19738,7 +19775,9 @@ google.maps.places.PlacePrediction.prototype.toPlace = function() {};
  *
  * This event is created after the user selects a prediction item with the
  * PlaceAutocompleteElement. Access the selection with
- * <code>event.placePrediction</code>.
+ * <code>event.placePrediction</code>. <br/><br/> Convert placePrediction to
+ * a {@link google.maps.places.Place} by calling {@link
+ * google.maps.places.PlacePrediction.toPlace}.
  *
  * Access by calling `const {PlacePredictionSelectEvent} = await
  * google.maps.importLibrary("places")`. See
@@ -19749,6 +19788,8 @@ google.maps.places.PlacePrediction.prototype.toPlace = function() {};
 google.maps.places.PlacePredictionSelectEvent = function() {};
 
 /**
+ * Convert this to a {@link google.maps.places.Place} by calling {@link
+ * google.maps.places.PlacePrediction.toPlace}.
  * @type {!google.maps.places.PlacePrediction}
  */
 google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
