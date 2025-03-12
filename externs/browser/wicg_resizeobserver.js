@@ -88,6 +88,12 @@ ResizeObserverEntry.prototype.contentBoxSize;
 ResizeObserverEntry.prototype.contentRect;
 
 /**
+ * @const {!Array<!ResizeObserverSize>}
+ * @see https://developer.mozilla.org/docs/Web/API/ResizeObserverEntry/devicePixelContentBoxSize
+ */
+ResizeObserverEntry.prototype.devicePixelContentBoxSize;
+
+/**
  * @const {!Element}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/target
  */

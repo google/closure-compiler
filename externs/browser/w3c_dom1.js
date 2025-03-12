@@ -629,6 +629,82 @@ Attr.prototype.value;
 
 /**
  * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleValue
+ */
+function CSSStyleValue() {}
+
+/**
+ * @param {string} property
+ * @param {string} cssText
+ * @return {!CSSStyleValue}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleValue/parse_static
+ */
+CSSStyleValue.parse = function(property, cssText) {}
+
+/**
+ * @param {string} property
+ * @param {string} cssText
+ * @return {!Array<!CSSStyleValue>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleValue/parseAll_static
+ */
+CSSStyleValue.parseAll = function(property, cssText) {}
+
+/**
+ * @override
+ * @return {string}
+ */
+CSSStyleValue.prototype.toString = function() {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly
+ */
+function StylePropertyMapReadOnly() {}
+
+/**
+ * @const {number}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/size
+ */
+StylePropertyMapReadOnly.prototype.size;
+
+/**
+ * @param {string} property
+ * @return {(CSSStyleValue|undefined)}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/get
+ */
+StylePropertyMapReadOnly.prototype.get = function(property) {}
+
+/**
+ * @param {string} property
+ * @return {!Array<!CSSStyleValue>}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/getAll
+ */
+StylePropertyMapReadOnly.prototype.getAll = function(property) {}
+
+/**
+ * @param {string} property
+ * @return {boolean}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/has
+ */
+StylePropertyMapReadOnly.prototype.has = function(property) {}
+
+/**
+ * @param {function(!Array<!CSSStyleValue>, string, !StylePropertyMapReadOnly): void} callbackfn
+ * @param {*=} opt_thisArg
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/forEach
+ */
+StylePropertyMapReadOnly.prototype.forEach = function(callbackfn, opt_thisArg) {}
+
+/**
+ * @typedef {{
+ *   serializableShadowRoots: (boolean|undefined),
+ *   shadowRoots: (!Array<!ShadowRoot>|undefined)
+ * }}
+ */
+var GetHTMLOptions;
+
+/**
+ * @constructor
  * @extends {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-745549614
  */
@@ -665,6 +741,19 @@ Element.prototype.tagName;
  *    SVGElement as ?.
  */
 Element.prototype.className;
+
+/**
+ * @return {!StylePropertyMapReadOnly}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/computedStyleMap
+ */
+Element.prototype.computedStyleMap = function() {};
+
+/**
+ * @param {!GetHTMLOptions=} options
+ * @return {string}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/getHTML
+ */
+Element.prototype.getHTML = function (options) {}
 
 /**
  * @param {string} name
@@ -859,6 +948,9 @@ Window.prototype.dispatchEvent = function(evt) {};
  * @type {?function (string, string, number, number, !Error):?}
  */
 Window.prototype.onerror;
+/** @type {?function (MessageEvent<*>)} */ Window.prototype.onmessageerror
+/** @type {?function (PageTransitionEvent)} */ Window.prototype.onpagehide;
+/** @type {?function (PageTransitionEvent)} */ Window.prototype.onpageshow;
 /** @type {?function (Event)} */ Window.prototype.onfocus;
 /** @type {?function (Event)} */ Window.prototype.onhashchange;
 /** @type {?function (Event)} */ Window.prototype.onkeydown;
@@ -878,6 +970,10 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onscroll;
 /** @type {?function (Event)} */ Window.prototype.onselect;
 /** @type {?function (Event=)} */ Window.prototype.onsubmit;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitioncancel;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitionend;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitionrun;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitionstart;
 /** @type {?function (Event)} */ Window.prototype.onunhandledrejection;
 /** @type {?function (Event)} */ Window.prototype.onunload;
 /** @type {?function (Event)} */ Window.prototype.onwheel;

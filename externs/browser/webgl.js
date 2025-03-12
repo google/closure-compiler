@@ -1825,6 +1825,11 @@ WebGLRenderingContext.prototype.BROWSER_DEFAULT_WEBGL;
 WebGLRenderingContext.prototype.canvas;
 
 /**
+ * @type {string}
+ */
+WebGLRenderingContext.prototype.drawingBufferColorSpace;
+
+/**
  * @type {number}
  */
 WebGLRenderingContext.prototype.drawingBufferWidth;

@@ -73,6 +73,7 @@ function PerformanceResourceTiming() {}
 /** @type {number} */ PerformanceResourceTiming.prototype.connectEnd;
 /** @type {number} */
 PerformanceResourceTiming.prototype.secureConnectionStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.responseStatus;
 /** @type {number} */ PerformanceResourceTiming.prototype.requestStart;
 /** @type {number} */ PerformanceResourceTiming.prototype.responseStart;
 /** @type {number} */ PerformanceResourceTiming.prototype.responseEnd;
@@ -228,8 +229,24 @@ function PerformanceMeasureOptions() {}
 /** @type {number|undefined} */ PerformanceMeasureOptions.prototype.duration;
 /** @type {string|number|undefined} */ PerformanceMeasureOptions.prototype.end;
 
+/**
+ * @see https://developer.mozilla.org/docs/Web/API/EventCounts
+ * @constructor
+ */
+function EventCounts() {}
+
+/**
+ * @param {function(number, string, !EventCounts): void} callback
+ * @param {*} thisArg
+ * @return {void}
+ */
+EventCounts.prototype.forEach = function(callback, thisArg) {}
+
 /** @constructor */
 function Performance() {}
+
+/** @const {!EventCounts} */
+Performance.prototype.eventCounts;
 
 /** @type {PerformanceTiming} */
 Performance.prototype.timing;

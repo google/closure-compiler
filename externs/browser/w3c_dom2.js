@@ -445,6 +445,12 @@ HTMLElement.prototype.className;
 HTMLElement.prototype.click = function() {};
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/outerText
+ */
+HTMLElement.prototype.outerText;
+
+/**
  * @type {string|null}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/popover
  */
@@ -514,6 +520,12 @@ function HTMLLinkElement() {}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-87355129
  */
 HTMLLinkElement.prototype.disabled;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLLinkElement/fetchPriority
+ */
+HTMLLinkElement.prototype.fetchPriority;
 
 /**
  * @type {string}
@@ -1241,6 +1253,17 @@ HTMLTextAreaElement.prototype.focus = function() {};
 HTMLTextAreaElement.prototype.select = function() {};
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLTextAreaElement/wrap
+ */
+HTMLTextAreaElement.prototype.wrap;
+
+/**
+ * @type {string}
+ */
+HTMLTextAreaElement.prototype.dirName;
+
+/**
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-34812697
@@ -1767,6 +1790,12 @@ HTMLImageElement.prototype.alt;
 HTMLImageElement.prototype.border;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLImageElement/fetchPriority
+ */
+HTMLImageElement.prototype.fetchPriority;
+
+/**
  * @type {number}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-91561496
  */
@@ -2173,6 +2202,12 @@ HTMLScriptElement.prototype.event;
 
 /**
  * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLScriptElement/fetchPriority
+ */
+HTMLScriptElement.prototype.fetchPriority;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-66979266
  */
 HTMLScriptElement.prototype.htmlFor;
@@ -2350,6 +2385,12 @@ HTMLTableElement.prototype.deleteTHead = function() {};
  * @see https://www.w3.org/TR/html5/tabular-data.html#htmltableelement
  */
 HTMLTableElement.prototype.insertRow = function(opt_index) {};
+
+/**
+ * @return {!HTMLTableSectionElement}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLTableElement/createTBody
+ */
+HTMLTableElement.prototype.createTBody = function() {};
 
 /**
  * @constructor

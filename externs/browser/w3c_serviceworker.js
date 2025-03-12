@@ -300,6 +300,9 @@ ServiceWorkerContainer.prototype.oncontrollerchange;
 /** @type {?function(!ExtendableMessageEvent): void} */
 ServiceWorkerContainer.prototype.onmessage;
 
+/** @type {?function(!MessageEvent<*>)} */
+ServiceWorkerContainer.prototype.onmessageerror;
+
 /** @type {?function(!ErrorEvent): void} */
 ServiceWorkerContainer.prototype.onerror;
 

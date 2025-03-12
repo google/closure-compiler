@@ -641,6 +641,111 @@ function RTCDTMFToneChangeEvent(type, eventInitDict) {}
  */
 RTCDTMFToneChangeEvent.prototype.tone;
 
+/**
+ * @interface
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCEncodedVideoFrame/getMetadata
+ */
+function RTCEncodedVideoFrameMetadata() {}
+
+/** @type {Array<number>|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.contributingSources;
+
+/** @type {Array<number>|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.dependencies;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.frameId;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.height;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.payloadType;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.spatialIndex;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.synchronizationSource;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.temporalIndex;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.timestamp;
+
+/** @type {number|undefined} */
+RTCEncodedVideoFrameMetadata.prototype.width;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/RTCEncodedVideoFrame
+ */
+function RTCEncodedVideoFrame() {}
+
+/**
+ * @const {!ArrayBuffer}
+ */
+RTCEncodedVideoFrame.prototype.data;
+
+/**
+ * @const {number}
+ */
+RTCEncodedVideoFrame.prototype.timestamp;
+
+
+/**
+ * @const {string}
+ */
+RTCEncodedVideoFrame.prototype.type;
+
+
+/**
+ * @return {!RTCEncodedVideoFrameMetadata}
+ */
+RTCEncodedVideoFrame.prototype.getMetadata = function() {};
+
+
+/**
+ * @interface
+ * @see https://developer.mozilla.org/docs/Web/API/RTCEncodedAudioFrame/getMetadata
+ */
+function RTCEncodedAudioFrameMetadata() {}
+
+/** @type {Array<number>|undefined} */
+RTCEncodedAudioFrameMetadata.prototype.contributingSources;
+
+/** @type {number|undefined} */
+RTCEncodedAudioFrameMetadata.prototype.payloadType;
+
+/** @type {number|undefined} */
+RTCEncodedAudioFrameMetadata.prototype.sequenceNumber;
+
+/** @type {number|undefined} */
+RTCEncodedAudioFrameMetadata.prototype.synchronizationSource;
+
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/RTCEncodedAudioFrame
+ */
+function RTCEncodedAudioFrame() {}
+
+/**
+ * @const {!ArrayBuffer}
+ */
+RTCEncodedAudioFrame.prototype.data;
+
+/**
+ * @const {number}
+ */
+RTCEncodedAudioFrame.prototype.timestamp;
+
+/**
+ * @return {!RTCEncodedAudioFrameMetadata}
+ */
+RTCEncodedAudioFrame.prototype.getMetadata = function() {};
+
 
 /**
  * @interface
@@ -2384,7 +2489,7 @@ RTCInboundRtpStreamStats.prototype.qpSum;
 RTCInboundRtpStreamStats.prototype.totalDecodeTime;
 
 /** @const {number} */
-RTCInboundRtpStreamStats.prototype.totalInterframeDelay;
+RTCInboundRtpStreamStats.prototype.totalInterFrameDelay;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.totalSquaredInterFrameDelay;
@@ -2907,6 +3012,9 @@ RTCIceCandidatePairStats.prototype.bytesReceived;
 
 /** @const {number|undefined} */
 RTCIceCandidatePairStats.prototype.lastPacketReceivedTimestamp;
+
+/** @const {number|undefined} */
+RTCIceCandidatePairStats.prototype.lastPacketSentTimestamp
 
 /** @const {number|undefined} */
 RTCIceCandidatePairStats.prototype.totalRoundTripTime;

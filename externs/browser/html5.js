@@ -1687,6 +1687,12 @@ Worker.prototype.webkitPostMessage = function(message, transferOrOptions) {};
 Worker.prototype.onmessage;
 
 /**
+ * @type {?function(!MessageEvent)}
+ * @see https://developer.mozilla.org/docs/Web/API/Worker/messageerror_event
+ */
+Worker.prototype.onmessageerror;
+
+/**
  * Sent when the worker thread encounters an error.
  * @type {?function(!ErrorEvent): void}
  */
@@ -2331,6 +2337,15 @@ HTMLMediaElement.prototype.buffered;
 /** @type {?MediaStream} */
 HTMLMediaElement.prototype.srcObject;
 
+/** @type {boolean} */
+HTMLMediaElement.prototype.defaultMuted;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.disableRemotePlayback;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.preservesPitch;
+
 /**
  * Loads the media element.
  * @return {undefined}
@@ -2357,6 +2372,12 @@ HTMLMediaElement.prototype.oncanplaythrough;
 
 /** @type {?function(!Event)} */
 HTMLMediaElement.prototype.ondurationchange;
+
+/** @type {?function(!MediaEncryptedEvent)} */
+HTMLMediaElement.prototype.onencrypted;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onwaitingforkey;
 
 /** @type {?function(!Event)} */
 HTMLMediaElement.prototype.onemptied;
@@ -2620,6 +2641,12 @@ TextTrack.prototype.addCue = function(cue) {};
 TextTrack.prototype.removeCue = function(cue) {};
 
 /**
+ * @type {?function(!Event)}
+ * @see https://developer.mozilla.org/docs/Web/API/TextTrack/cuechange_event
+ */
+TextTrack.prototype.oncuechange;
+
+/**
  * @const {TextTrackCueList}
  */
 TextTrack.prototype.activeCues;
@@ -2634,6 +2661,30 @@ TextTrack.prototype.cues;
  * @see https://html.spec.whatwg.org/multipage/media.html#dom-texttrack-id-dev
  */
 TextTrack.prototype.id;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/TextTrack/inBandMetadataTrackDispatchType
+ */
+TextTrack.prototype.inBandMetadataTrackDispatchType;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/TextTrack/kind
+ */
+TextTrack.prototype.kind;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/TextTrack/label
+ */
+TextTrack.prototype.label;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/TextTrack/language
+ */
+TextTrack.prototype.language;
 
 /**
  * @type {string}
@@ -2834,6 +2885,9 @@ HTMLVideoElement.prototype.videoWidth;
 
 /** @type {number} */
 HTMLVideoElement.prototype.videoHeight;
+
+/** @type {boolean} */
+HTMLVideoElement.prototype.playsInline;
 
 /** @type {string} */
 HTMLVideoElement.prototype.poster;
@@ -3073,6 +3127,12 @@ MessagePort.prototype.close = function() {};
  */
 MessagePort.prototype.onmessage;
 
+/**
+ * @type {?function(!MessageEvent<*>): void}
+ * @see https://developer.mozilla.org/docs/Web/API/MessagePort/messageerror_event
+ */
+MessagePort.prototype.onmessageerror;
+
 // HTML5 MessageEvent class
 /**
  * @typedef {Window|MessagePort|ServiceWorker}
@@ -3268,6 +3328,12 @@ BroadcastChannel.prototype.removeEventListener = function(
  * @type {?function(!MessageEvent<*>)}
  */
 BroadcastChannel.prototype.onmessage;
+
+/**
+ * @type {?function(!MessageEvent<*>)}
+ * @see https://developer.mozilla.org/docs/Web/API/BroadcastChannel/messageerror_event
+ */
+BroadcastChannel.prototype.onmessageerror;
 
 /**
  * The name of the channel.
@@ -5008,6 +5074,13 @@ ShadowRoot.prototype.styleSheets;
 
 
 /**
+ * @param {!GetHTMLOptions=} options
+ * @return {string}
+ * @see https://developer.mozilla.org/docs/Web/API/ShadowRoot/getHTML
+ */
+ShadowRoot.prototype.getHTML = function(options) {};
+
+/**
  * @typedef {string}
  * @see https://dom.spec.whatwg.org/#enumdef-shadowrootmode
  */
@@ -5825,6 +5898,12 @@ Navigator.prototype.setAppBadge = function(contents) {};
  * @override
  */
 Navigator.prototype.clearAppBadge = function() {};
+
+/**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/docs/Web/API/Navigator/pdfViewerEnabled
+ */
+Navigator.prototype.pdfViewerEnabled;
 
 /**
  * @constructor

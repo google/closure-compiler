@@ -299,6 +299,83 @@ CSSRule.PAGE_RULE;
 
 /**
  * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap
+ */
+function StylePropertyMapReadonly() {}
+
+/**
+ * @const {number}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/size
+ */
+StylePropertyMapReadonly.prototype.size;
+
+/**
+ * @param {string} property
+ * @return {(!CSSStyleValue|undefined)}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/get
+ */
+StylePropertyMapReadonly.prototype.get = function(property) {}
+
+/**
+ * @param {string} property
+ * @return {!Array<!CSSStyleValue>}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/getAll
+ */
+StylePropertyMapReadonly.prototype.getAll = function(property) {}
+
+/**
+ * @param {string} property
+ * @return {boolean}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/has
+ */
+StylePropertyMapReadonly.prototype.has = function(property) {}
+
+/**
+ * @param {function(!Array<!CSSStyleValue>, string, !StylePropertyMapReadOnly): void} callbackfn
+ * @param {*=} opt_thisArg
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/forEach
+ */
+StylePropertyMapReadonly.prototype.forEach = function(callbackfn, opt_thisArg) {}
+
+/**
+ * @constructor
+ * @extends {StylePropertyMapReadOnly}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap
+ */
+function StylePropertyMap() {}
+
+/**
+ * @param {string} property
+ * @param {...(CSSStyleValue|string)} values
+
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/append
+ */
+StylePropertyMap.prototype.append = function(property, values) {};
+
+/**
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/clear
+ */
+StylePropertyMap.prototype.clear = function() {};
+
+/**
+ * @param {string} property
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/delete
+ */
+StylePropertyMap.prototype.delete = function(property) {};
+
+/**
+ * @param {string} property
+ * @param {...(CSSStyleValue|string)} values
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/set
+ */
+StylePropertyMap.prototype.set = function(property, values) {};
+
+/**
+ * @constructor
  * @extends {CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleRule
  */
@@ -315,6 +392,12 @@ CSSStyleRule.prototype.selectorText;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleRule-style
  */
 CSSStyleRule.prototype.style;
+
+/**
+ * @type {!StylePropertyMap}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleRule/styleMap
+ */
+CSSStyleRule.prototype.styleMap;
 
 /**
  * @constructor
@@ -576,6 +659,195 @@ CSSStyleDeclaration.prototype.setAttribute = function(
 CSSStyleDeclaration.prototype.setExpression = function(
     name, expr, opt_language) {};
 
+/**
+ * Some properties are declared on CSSProperties. Here are the missing ones.
+ * @see https://developer.mozilla.org/docs/Web/CSS
+ */
+/** @type {string} */ CSSStyleDeclaration.prototype.accentColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.alignmentBaseline;
+/** @type {string} */ CSSStyleDeclaration.prototype.animationComposition;
+/** @type {string} */ CSSStyleDeclaration.prototype.appearance;
+/** @type {string} */ CSSStyleDeclaration.prototype.backgroundClip;
+/** @type {string} */ CSSStyleDeclaration.prototype.backgroundOrigin;
+/** @type {string} */ CSSStyleDeclaration.prototype.baselineShift;
+/** @type {string} */ CSSStyleDeclaration.prototype.baselineSource;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEndColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEndStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEndWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStartColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStartStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStartWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderEndEndRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderEndStartRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEndColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEndStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEndWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStartColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStartStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStartWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderStartEndRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderStartStartRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.breakAfter;
+/** @type {string} */ CSSStyleDeclaration.prototype.breakBefore;
+/** @type {string} */ CSSStyleDeclaration.prototype.breakInside;
+/** @type {string} */ CSSStyleDeclaration.prototype.caretColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.clipRule;
+/** @type {string} */ CSSStyleDeclaration.prototype.colorInterpolation;
+/** @type {string} */ CSSStyleDeclaration.prototype.colorInterpolationFilters;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnCount;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnFill;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRule;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRuleColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRuleStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRuleWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnSpan;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.columns;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicBlockSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicHeight;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicInlineSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.container;
+/** @type {string} */ CSSStyleDeclaration.prototype.counterSet;
+/** @type {string} */ CSSStyleDeclaration.prototype.dominantBaseline;
+/** @type {string} */ CSSStyleDeclaration.prototype.float;
+/** @type {string} */ CSSStyleDeclaration.prototype.floodColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.floatOpacity;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontFeatureSettings;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontKerning;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontOpticalSizing;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontPalette;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesis;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesisSmallCaps;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesisStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesisWeight;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantAlternates;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantCaps;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantEastAsian;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantLigatures;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantNumeric;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariationSettings;
+/** @type {string} */ CSSStyleDeclaration.prototype.forcedColorAdjust;
+/** @type {string} */ CSSStyleDeclaration.prototype.gridColumnGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.gridGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.gridRowGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.hyphenateCharacter;
+/** @type {string} */ CSSStyleDeclaration.prototype.hyphens;
+/** @type {string} */ CSSStyleDeclaration.prototype.imageRendering;
+/** @type {string} */ CSSStyleDeclaration.prototype.justifyItems;
+/** @type {string} */ CSSStyleDeclaration.prototype.justifySelf;
+/** @type {string} */ CSSStyleDeclaration.prototype.lightingColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.lineBreak;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.marker;
+/** @type {string} */ CSSStyleDeclaration.prototype.markerEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.markerMid;
+/** @type {string} */ CSSStyleDeclaration.prototype.markerStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.mask;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskClip;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskComposite;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskMode;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskOrigin;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskRepeat;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskType;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskDepth;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.maxBlockSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.maxInlineSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.minBlockSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.minInlineSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetDistance;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetPath;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetRotate;
+/** @type {string} */ CSSStyleDeclaration.prototype.overflowAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.overflowClipMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorX;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorY;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.paintOrder;
+/** @type {string} */ CSSStyleDeclaration.prototype.placeContent;
+/** @type {string} */ CSSStyleDeclaration.prototype.placeItems;
+/** @type {string} */ CSSStyleDeclaration.prototype.placeSelf;
+/** @type {string} */ CSSStyleDeclaration.prototype.printColorAdjust;
+/** @type {string} */ CSSStyleDeclaration.prototype.rowGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.rubyAlign;
+/** @type {string} */ CSSStyleDeclaration.prototype.rubyPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollBehavior;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginLeft;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginRight;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginTop;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollSnapAlign;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollSnapStop;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollSnapType;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollbarColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollbarGutter;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollbarWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeImageThreshold;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeOutside;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeRendering;
+/** @type {string} */ CSSStyleDeclaration.prototype.stopColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.stopOpacity;
+/** @type {string} */ CSSStyleDeclaration.prototype.tabSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.textAlignLast;
+/** @type {string} */ CSSStyleDeclaration.prototype.textAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.textCombineUpright;
+/** @type {string} */ CSSStyleDeclaration.prototype.textDecorationSkipInk;
+/** @type {string} */ CSSStyleDeclaration.prototype.textDecorationThickness;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasis;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasisColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasisPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasisStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.textOrientation;
+/** @type {string} */ CSSStyleDeclaration.prototype.textRendering;
+/** @type {string} */ CSSStyleDeclaration.prototype.textUnderlineOffset;
+/** @type {string} */ CSSStyleDeclaration.prototype.textUnderlinePosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.textWrap;
+/** @type {string} */ CSSStyleDeclaration.prototype.textWrapMode;
+/** @type {string} */ CSSStyleDeclaration.prototype.textWrapStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.transformBox;
+/** @type {string} */ CSSStyleDeclaration.prototype.transitionBehavior;
+/** @type {string} */ CSSStyleDeclaration.prototype.vectorEffect;
+/** @type {string} */ CSSStyleDeclaration.prototype.whiteSpaceCollapse;
+/** @type {string} */ CSSStyleDeclaration.prototype.wordBreak;
 
 /**
  * @constructor
@@ -2936,6 +3208,15 @@ CheckVisibilityOptions.prototype.checkOpacity;
 
 /** @type {(boolean|undefined)} */
 CheckVisibilityOptions.prototype.checkVisibilityCSS;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.contentVisibilityAuto;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.opacityProperty;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.visibilityProperty;
 
 /**
  * @param {CheckVisibilityOptions=} options
