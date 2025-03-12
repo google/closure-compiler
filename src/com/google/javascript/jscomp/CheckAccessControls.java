@@ -232,7 +232,9 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     // We need to handle declaration syntaxes separately in a way that we can't determine based on
     // the type of just one node.
     // TODO(nickreid): Determine if these can be replaced with FUNCTION and CLASS cases below.
-    if (NodeUtil.isFunctionDeclaration(n) || NodeUtil.isClassDeclaration(n)) {
+    if (NodeUtil.isFunctionDeclaration(n)
+        // isClassDeclaration returns false for many instances that we need to handle here.
+        || n.isClass()) {
       return instanceTypeFor(n.getJSType());
     }
 

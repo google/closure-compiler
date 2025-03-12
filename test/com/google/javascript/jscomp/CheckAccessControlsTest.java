@@ -1492,6 +1492,123 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProtectedAccessForProperties17() {
+    // Access in subclass field initializer where Subclass parent is SCRIPT.
+    test(
+        srcs(
+            """
+            class SuperClass {
+              /** @protected @return {number} */
+              getNum() { return 1; }
+            }
+            """,
+            """
+            class Subclass extends SuperClass {
+              numField = this.getNum();
+            }
+            """));
+  }
+
+  @Test
+  public void testProtectedAccessForProperties18() {
+    // Access in subclass field initializer where Subclass parent is BLOCK.
+    test(
+        srcs(
+            """
+            class SuperClass {
+              /** @protected @return {number} */
+              getNum() { return 1; }
+            }
+            """,
+            """
+            {
+              class Subclass extends SuperClass {
+                numField = this.getNum();
+              }
+            }
+            """));
+  }
+
+  @Test
+  public void testProtectedAccessForProperties19() {
+    // Access in subclass field initializer where class parent is ASSIGN.
+    test(
+        srcs(
+            """
+            class SuperClass {
+              /** @protected @return {number} */
+              getNum() { return 1; }
+            }
+            """,
+            """
+            const Subclass = class extends SuperClass {
+              numField = this.getNum();
+            }
+            """));
+  }
+
+  @Test
+  public void testProtectedAccessForProperties20() {
+    // Access in subclass field initializer where class parent is FUNCTION.
+    test(
+        srcs(
+            """
+            class SuperClass {
+              /** @protected @return {number} */
+              getNum() { return 1; }
+            }
+            """,
+            """
+            const Subclass = (() => class extends SuperClass {
+              numField = this.getNum();
+            })();
+            """));
+  }
+
+  @Test
+  public void testProtectedAccessForProperties21() {
+    // Access in subclass field initializer where class parent is RETURN.
+    test(
+        srcs(
+            """
+            class SuperClass {
+              /** @protected @return {number} */
+              getNum() { return 1; }
+            }
+            """,
+            """
+            function classGenerator() {
+              return class extends SuperClass {
+                numField = this.getNum();
+              };
+            }
+            const Subclass = classGenerator();
+            """));
+  }
+
+  @Test
+  public void testProtectedAccessForProperties22() {
+    // Access in subclass field initializer where class parent is GETPROP.
+    test(
+        srcs(
+            """
+            class SuperClass {
+              /** @protected @return {number} */
+              getNum() { return 1; }
+            }
+            """,
+            """
+            function getValue() {
+              return class extends SuperClass {
+                numField = this.getNum();
+                static staticField = 1;
+              }.staticField;
+            }
+            const value = getValue();
+            """));
+  }
+
+  @Test
   public void testProtectedPropAccess_inDifferentFile_inSubclass_throughDestructuring() {
     test(
         srcs(
