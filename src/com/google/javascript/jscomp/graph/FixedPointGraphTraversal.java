@@ -125,7 +125,7 @@ public final class FixedPointGraphTraversal<N, E> {
       workSet.add(graph.getNode(n));
     }
     for (; !workSet.isEmpty() && cycleCount < maxIterations; cycleCount++) {
-      visitNode(workSet.iterator().next(), workSet);
+      visitNode(workSet.getFirst(), workSet);
     }
 
     checkState(cycleCount != maxIterations, NON_HALTING_ERROR_MSG);
