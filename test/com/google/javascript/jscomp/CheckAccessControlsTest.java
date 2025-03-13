@@ -2205,9 +2205,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                     "  constructor() {",
                     "    this.prop = 'asdf';",
                     "  }",
-                    "}",
-                    "",
-                    "Child.prototype = new Parent();"))),
+                    "}"))),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 

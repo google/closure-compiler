@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -85,6 +86,10 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       DiagnosticType.warning(
           "JSC_FUNCTION_LITERAL_UNDEFINED_THIS",
           "Function literal argument refers to undefined this argument");
+
+  static final DiagnosticType REASSIGN_CLASS_PROTOTYPE =
+      DiagnosticType.error(
+          "JSC_REASSIGN_CLASS_PROTOTYPE", "Reassigning a class prototype is not allowed");
 
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
@@ -1366,7 +1371,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         //    so that we can use it for missing property checks.
         if (objectType.hasProperty(propName) || !objectType.isInstanceType()) {
           if ("prototype".equals(propName)) {
-            objectType.defineDeclaredProperty(propName, rightType, getprop);
+            defineDeclaredProperty(objectType, propName, rightType, getprop);
           } else {
             objectType.defineInferredProperty(propName, rightType, getprop);
           }
@@ -1377,6 +1382,21 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         }
       }
     }
+  }
+
+  @CanIgnoreReturnValue
+  private boolean defineDeclaredProperty(
+      ObjectType objectType, String propName, JSType rightType, Node getprop) {
+    if (propName.equals("prototype") && !getprop.getParent().isExprResult()) {
+      FunctionType functionType = objectType.toMaybeFunctionType();
+      if (functionType != null
+          && functionType.getSource() != null
+          && functionType.getSource().isClass()) {
+        compiler.report(JSError.make(getprop.getParent(), REASSIGN_CLASS_PROTOTYPE));
+        return true;
+      }
+    }
+    return objectType.defineDeclaredProperty(propName, rightType, getprop);
   }
 
   /**
@@ -1398,7 +1418,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
             (!objectType.hasOwnProperty(propName)
                 && (!objectType.isInstanceType()
                     || (var.isExtern() && !objectType.isNativeObjectType())))) {
-          return objectType.defineDeclaredProperty(propName, var.getType(), getprop);
+          return defineDeclaredProperty(objectType, propName, var.getType(), getprop);
         }
       }
     }

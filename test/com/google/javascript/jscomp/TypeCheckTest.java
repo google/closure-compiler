@@ -23534,6 +23534,29 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     assertThat(fooBar.isAmbiguousConstructor()).isTrue();
   }
 
+  @Test
+  public void testReassignClassPrototype() {
+    newTest()
+        .addSource(
+            "class Foo {}", //
+            "Foo.prototype = {};")
+        .addDiagnostic(TypeInference.REASSIGN_CLASS_PROTOTYPE)
+        .diagnosticsAreErrors()
+        .run();
+  }
+
+  @Test
+  public void testReassignClassPrototypeObjectType() {
+    newTest()
+        .addSource(
+            "class Foo {}", //
+            "const x = /** @type {!Object} */ ({});",
+            "Foo.prototype = x;")
+        .addDiagnostic(TypeInference.REASSIGN_CLASS_PROTOTYPE)
+        .diagnosticsAreErrors()
+        .run();
+  }
+
   private void testClosureTypes(String js, @Nullable String description) {
     testClosureTypesMultipleWarnings(
         js, description == null ? null : ImmutableList.of(description));
