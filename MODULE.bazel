@@ -1,12 +1,7 @@
 bazel_dep(name = "rules_java", version = "8.6.1")
 bazel_dep(name = "protobuf", version = "29.1")
 bazel_dep(name = "bazel_jar_jar", version = "0.1.5")
-bazel_dep(name = "google_bazel_common")
-git_override(
-    module_name = "google_bazel_common",
-    commit = "0aa5acbefe37b58cc8f0fbdb510606bbeb19ef8a",
-    remote = "https://github.com/google/bazel-common",
-)
+bazel_dep(name = "google_bazel_common", version = "0.0.1")
 
 bazel_dep(name = "rules_jvm_external", version = "6.6")
 
