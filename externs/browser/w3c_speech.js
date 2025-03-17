@@ -405,6 +405,15 @@ SpeechSynthesis.prototype.pause;
 /** @type {function()} */
 SpeechSynthesis.prototype.resume;
 
+/** @type {boolean} */
+SpeechSynthesis.prototype.paused;
+
+/** @type {boolean} */
+SpeechSynthesis.prototype.pending;
+
+/** @type {boolean} */
+SpeechSynthesis.prototype.speaking;
+
 /**
  * @return {SpeechSynthesisVoiceList}
  */

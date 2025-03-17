@@ -1910,6 +1910,9 @@ InputDeviceInfo.prototype.getCapabilities = function() {};
  */
 function MediaDevices() {}
 
+/** @type {?function (!Event)} */
+MediaDevices.prototype.ondevicechange;
+
 /**
  * @return {!Promise<!Array<!MediaDeviceInfo>>}
  */
