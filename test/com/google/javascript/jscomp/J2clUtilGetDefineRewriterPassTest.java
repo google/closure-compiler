@@ -44,43 +44,49 @@ public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
   @Test
   public void testUtilGetDefine() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = {}",
-            "/** @define {boolean} */ a.b.c = goog.define('a.b.c', true);",
-            "nativebootstrap.Util.$getDefine('a.b.c', 'def');"),
-        lines(
-            "var a = {};",
-            "a.b = {}",
-            "/** @define {boolean} */ a.b.c = true;",
-            "var jscomp$defines$a$b$c = a.b.c;",
-            "('def', String(jscomp$defines$a$b$c));"));
+        """
+        var a = {};
+        a.b = {}
+        /** @define {boolean} */ a.b.c = goog.define('a.b.c', true);
+        nativebootstrap.Util.$getDefine('a.b.c', 'def');
+        """,
+        """
+        var a = {};
+        a.b = {}
+        /** @define {boolean} */ a.b.c = true;
+        var jscomp$defines$a$b$c = a.b.c;
+        ('def', String(jscomp$defines$a$b$c));
+        """);
     test(
-        lines(
-            "var a = {};",
-            "a.b = {}",
-            "/** @define {boolean} */ a.b.c = goog.define('a.b.c', true);",
-            "nativebootstrap.Util.$getDefine('a.b.c');"),
-        lines(
-            "var a = {};",
-            "a.b = {}",
-            "/** @define {boolean} */ a.b.c = true;",
-            "var jscomp$defines$a$b$c = a.b.c;",
-            "(null, String(jscomp$defines$a$b$c));"));
+        """
+        var a = {};
+        a.b = {}
+        /** @define {boolean} */ a.b.c = goog.define('a.b.c', true);
+        nativebootstrap.Util.$getDefine('a.b.c');
+        """,
+        """
+        var a = {};
+        a.b = {}
+        /** @define {boolean} */ a.b.c = true;
+        var jscomp$defines$a$b$c = a.b.c;
+        (null, String(jscomp$defines$a$b$c));
+        """);
     test(
-        lines(
-            "/** @define {boolean} */ var x = goog.define('x', 1);",
-            "/** @define {boolean} */ var y = goog.define('y', x);",
-            "nativebootstrap.Util.$getDefine('x');",
-            "nativebootstrap.Util.$getDefine('y');"),
-        lines(
-            "/** @define {boolean} */ var x = 1;",
-            "var jscomp$defines$x = x;",
-            "/** @define {boolean} */ var y = x;",
-            "var jscomp$defines$y = y;",
-            "(null, String(jscomp$defines$x));",
-            "(null, String(jscomp$defines$y));"));
-    test(lines("nativebootstrap.Util.$getDefine('COMPILED');"), "(null, String(COMPILED));");
+        """
+        /** @define {boolean} */ var x = goog.define('x', 1);
+        /** @define {boolean} */ var y = goog.define('y', x);
+        nativebootstrap.Util.$getDefine('x');
+        nativebootstrap.Util.$getDefine('y');
+        """,
+        """
+        /** @define {boolean} */ var x = 1;
+        var jscomp$defines$x = x;
+        /** @define {boolean} */ var y = x;
+        var jscomp$defines$y = y;
+        (null, String(jscomp$defines$x));
+        (null, String(jscomp$defines$y));
+        """);
+    test("nativebootstrap.Util.$getDefine('COMPILED');", "(null, String(COMPILED));");
   }
 
   @Test
