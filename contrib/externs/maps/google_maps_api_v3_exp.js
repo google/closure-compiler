@@ -2633,16 +2633,16 @@ google.maps.DirectionsStep.prototype.lat_lngs;
 google.maps.DirectionsStep.prototype.polyline;
 
 /**
- * @enum {string}
- * @deprecated Deprecated as of 2011. Use {@link google.maps.TravelMode}
- *     instead.
+ * @enum {?}
+ * @deprecated Deprecated as of 2011. Use {\@link
+ *     mapsapi.directions.service.directionsConstants.TravelMode} instead.
  */
 google.maps.DirectionsTravelMode = {};
 
 /**
- * @enum {string}
- * @deprecated Deprecated as of 2011. Use {@link google.maps.UnitSystem}
- *     instead.
+ * @enum {?}
+ * @deprecated Deprecated as of 2011. Use {\@link
+ *     mapsapi.directions.service.directionsConstants.UnitSystem} instead.
  */
 google.maps.DirectionsUnitSystem = {};
 
