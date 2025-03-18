@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package jscomp;
 
-import "third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto";
-
 option java_multiple_files = true;
 option java_package = "com.google.javascript.jscomp";
 
