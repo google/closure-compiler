@@ -264,7 +264,7 @@ final class ManageClosureUnawareCode implements CompilerPass {
   // TODO jameswr: Given that the CodePrinter supports printing out the shadow instead of the shadow
   // host node, do we even need to revert the AST back to the original form at the end of
   // compilation?
-  private final class UnwrapConcealedClosureUnawareCode implements NodeTraversal.Callback {
+  private static final class UnwrapConcealedClosureUnawareCode implements NodeTraversal.Callback {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, @Nullable Node parent) {
