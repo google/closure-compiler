@@ -2670,6 +2670,68 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReproduceBug401582520() {
+    // InlineFunctions is inlining reading a property before the side-effectful calls that
+    // initializes it occurs.
+    test(
+        """
+  var module$exports$foo$Foo$$0clinit = function() {
+    module$exports$foo$Foo$$0clinit = function() {
+    };
+    module$exports$foo$Foo$options_ = ["a", "b", "c", "d"];
+  };
+
+  var module$exports$foo$Foo$create = function(o$jscomp$1) {
+    module$exports$foo$Foo$$0clinit();
+    return new module$exports$foo$Foo(o$jscomp$1);
+  };
+
+  var module$exports$foo$Foo = class {
+    constructor(o) {
+      this.o_ = o;
+    }
+  };
+
+  var module$exports$foo$Foo$options_;
+
+  console.log(function(JSCompiler_StaticMethods_isKnown$self) {
+    return module$exports$foo$Foo$options_.includes(JSCompiler_StaticMethods_isKnown$self.o_);
+  }(function(o$jscomp$2) {
+    return module$exports$foo$Foo$create(o$jscomp$2);
+  }("abc")));
+""",
+        """
+var module$exports$foo$Foo$$0clinit = function() {
+  module$exports$foo$Foo$$0clinit = function() {
+  };
+  module$exports$foo$Foo$options_ = ["a", "b", "c", "d"];
+};
+
+var module$exports$foo$Foo = class {
+  constructor(o) {
+    this.o_ = o;
+  }
+};
+
+var module$exports$foo$Foo$options_;
+var JSCompiler_temp_const$jscomp$3 = console;
+var JSCompiler_temp_const$jscomp$2 = JSCompiler_temp_const$jscomp$3.log;
+// The below line grabs a reference to `module$exports$foo$Foo$options_` before it is overwritten
+// by the call to clinit.
+var JSCompiler_temp_const$jscomp$1 = module$exports$foo$Foo$options_;
+// The below line is the problem. `JSCompiler_temp_const$jscomp$1` is undefined, leading to a
+// runtime error `TypeError: Cannot read properties of undefined (reading 'includes')`.
+var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.includes;
+var JSCompiler_inline_result$jscomp$4;
+{
+  module$exports$foo$Foo$$0clinit();
+  JSCompiler_inline_result$jscomp$4 = new module$exports$foo$Foo("abc");
+}
+JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1, JSCompiler_inline_result$jscomp$4.o_));
+""");
+  }
+
+  @Test
   public void testBug4944818() {
     test(
         "var getDomServices_ = function(self) {\n"
