@@ -66,10 +66,10 @@ public class InputId implements Serializable {
     if (this == obj) {
       return true;
     }
-    if (!(obj instanceof InputId)) {
+    if (!(obj instanceof InputId inputId)) {
       return false;
     }
-    return id.equals(((InputId) obj).id);
+    return id.equals(inputId.id);
   }
 
   @Override

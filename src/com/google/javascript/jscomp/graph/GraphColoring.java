@@ -102,10 +102,10 @@ public abstract class GraphColoring<N, E> {
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof Color)) {
+      if (!(other instanceof Color color)) {
         return false;
       } else {
-        return value == ((Color) other).value;
+        return value == color.value;
       }
     }
 

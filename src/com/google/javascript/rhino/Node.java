@@ -2631,7 +2631,7 @@ public class Node {
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
   public final @Nullable JSType getJSType() {
-    return (this.jstypeOrColor instanceof JSType) ? (JSType) this.jstypeOrColor : null;
+    return (this.jstypeOrColor instanceof JSType jSType) ? jSType : null;
   }
 
   /** Returns the compiled inferred type on this node, or throws an NPE if there isn't one. */
@@ -2651,7 +2651,7 @@ public class Node {
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
   public final @Nullable Color getColor() {
-    return (this.jstypeOrColor instanceof Color) ? (Color) this.jstypeOrColor : null;
+    return (this.jstypeOrColor instanceof Color color) ? color : null;
   }
 
   @CanIgnoreReturnValue

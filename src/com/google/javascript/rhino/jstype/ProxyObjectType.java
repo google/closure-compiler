@@ -101,8 +101,8 @@ public class ProxyObjectType extends ObjectType {
   final void setReferencedType(JSType referencedType) {
     checkNotNull(referencedType);
     this.referencedType = referencedType;
-    if (referencedType instanceof ObjectType) {
-      this.referencedObjType = (ObjectType) referencedType;
+    if (referencedType instanceof ObjectType objectType) {
+      this.referencedObjType = objectType;
     } else {
       this.referencedObjType = null;
     }

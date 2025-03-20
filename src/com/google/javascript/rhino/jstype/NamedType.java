@@ -377,8 +377,8 @@ public final class NamedType extends ProxyObjectType {
 
   private void checkEnumElementCycle(ErrorReporter reporter) {
     JSType referencedType = getReferencedType();
-    if (referencedType instanceof EnumElementType
-        && identical(this, ((EnumElementType) referencedType).getPrimitiveType())) {
+    if (referencedType instanceof EnumElementType enumElementType
+        && identical(this, enumElementType.getPrimitiveType())) {
       handleTypeCycle(reporter);
     }
   }

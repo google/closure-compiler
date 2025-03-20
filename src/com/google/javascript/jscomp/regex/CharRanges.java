@@ -417,8 +417,10 @@ final class CharRanges {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof CharRanges)) { return false; }
-    return Arrays.equals(this.ranges, ((CharRanges) o).ranges);
+    if (!(o instanceof CharRanges charRanges)) {
+      return false;
+    }
+    return Arrays.equals(this.ranges, charRanges.ranges);
   }
 
   @Override

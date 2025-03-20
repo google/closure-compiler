@@ -554,9 +554,9 @@ public class JSDocInfo implements Serializable {
 
     @Override
     boolean isEquivalentTo(SourcePosition<Node> that) {
-      if (!(that instanceof TypePosition)
+      if (!(that instanceof TypePosition typePosition)
           || !isSamePositionAs(that)
-          || brackets != ((TypePosition) that).brackets
+          || brackets != typePosition.brackets
           || (getItem() == null) != (that.getItem() == null)) {
         return false;
       }
@@ -1548,8 +1548,8 @@ public class JSDocInfo implements Serializable {
       throw new IllegalArgumentException("no property value");
     }
 
-    if (propertyValues instanceof Object[]) {
-      return ((Object[]) propertyValues)[index];
+    if (propertyValues instanceof Object[] array) {
+      return array[index];
     }
 
     if (index != 0) {

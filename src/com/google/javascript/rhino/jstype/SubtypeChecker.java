@@ -429,11 +429,9 @@ final class SubtypeChecker {
   }
 
   private boolean isArrowTypeSubtype(ArrowType subtype, JSType nonArrowSupertype) {
-    if (!(nonArrowSupertype instanceof ArrowType)) {
+    if (!(nonArrowSupertype instanceof ArrowType supertype)) {
       return false;
     }
-
-    ArrowType supertype = (ArrowType) nonArrowSupertype;
 
     // This is described in Draft 2 of the ES4 spec,
     // Section 3.4.7: Subtyping Function Types.

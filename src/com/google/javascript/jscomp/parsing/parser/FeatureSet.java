@@ -454,7 +454,7 @@ public final class FeatureSet implements Serializable {
 
   @Override
   public boolean equals(Object other) {
-    return other instanceof FeatureSet && ((FeatureSet) other).features.equals(features);
+    return other instanceof FeatureSet featureSet && featureSet.features.equals(features);
   }
 
   @Override

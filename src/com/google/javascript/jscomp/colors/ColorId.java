@@ -132,11 +132,10 @@ public final class ColorId implements Serializable, LogsGson.Able {
 
   @Override
   public boolean equals(Object x) {
-    if (!(x instanceof ColorId)) {
+    if (!(x instanceof ColorId that)) {
       return false;
     }
 
-    ColorId that = (ColorId) x;
     return this.rightAligned == that.rightAligned;
   }
 

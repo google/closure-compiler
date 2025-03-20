@@ -403,8 +403,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     for (String key : this.extensions.keySet()) {
       Object objValue = this.extensions.get(key);
       String value;
-      if (objValue instanceof String) {
-        value = escapeString((String) objValue);  // escapes native String
+      if (objValue instanceof String string) {
+        value = escapeString(string); // escapes native String
       } else {
         value = objValue.toString();
       }

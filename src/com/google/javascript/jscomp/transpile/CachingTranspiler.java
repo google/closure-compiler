@@ -84,8 +84,7 @@ public final class CachingTranspiler implements Transpiler {
 
     @Override
     public boolean equals(Object other) {
-      return other instanceof Key
-          && ((Key) other).path.equals(path) && ((Key) other).code.equals(code);
+      return other instanceof Key key && key.path.equals(path) && key.code.equals(code);
     }
 
     @Override

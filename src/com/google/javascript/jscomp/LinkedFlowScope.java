@@ -321,10 +321,9 @@ class LinkedFlowScope implements FlowScope {
   @Override
   public boolean equals(Object other) {
 
-    if (!(other instanceof LinkedFlowScope)) {
+    if (!(other instanceof LinkedFlowScope that)) {
       return false;
     }
-    LinkedFlowScope that = (LinkedFlowScope) other;
 
     // If two flow scopes are in the same function, then they could have
     // two possible function scopes: the real one and the BOTTOM scope.

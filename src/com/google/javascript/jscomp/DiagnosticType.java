@@ -96,7 +96,7 @@ public final class DiagnosticType
 
   @Override
   public boolean equals(Object type) {
-    return type instanceof DiagnosticType && ((DiagnosticType) type).key.equals(key);
+    return type instanceof DiagnosticType diagnosticType && diagnosticType.key.equals(key);
   }
 
   @Override

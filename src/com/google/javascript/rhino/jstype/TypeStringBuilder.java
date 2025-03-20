@@ -77,8 +77,8 @@ final class TypeStringBuilder {
         separate = true;
       }
 
-      if (e instanceof JSType) {
-        this.append((JSType) e);
+      if (e instanceof JSType jSType) {
+        this.append(jSType);
       } else {
         this.append((String) e);
       }

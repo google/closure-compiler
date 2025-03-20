@@ -486,7 +486,7 @@ public class NodeTraversal {
     this.compiler = checkNotNull(builder.compiler);
     this.callback = checkNotNull(builder.callback);
     this.scopeCallback =
-        (this.callback instanceof ScopedCallback) ? (ScopedCallback) this.callback : null;
+        (this.callback instanceof ScopedCallback scopedCallback) ? scopedCallback : null;
     this.scopeCreator =
         (builder.scopeCreator == null)
             ? new SyntacticScopeCreator(this.compiler)
@@ -1194,7 +1194,7 @@ public class NodeTraversal {
    * `Node` representing the root of the scope.
    */
   private Node getNodeRootFromScopeObj(Object root) {
-    return root instanceof Node ? (Node) root : ((AbstractScope) root).getRootNode();
+    return root instanceof Node node ? node : ((AbstractScope) root).getRootNode();
   }
 
   /** Returns the current scope's root. */

@@ -156,8 +156,8 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
 
     @Override
     public boolean equals(Object other) {
-      return (other instanceof ReachingUses)
-          && ((ReachingUses) other).mayUsePMap.equivalent(this.mayUsePMap, ReachingUses::equalMaps);
+      return (other instanceof ReachingUses reachingUses)
+          && reachingUses.mayUsePMap.equivalent(this.mayUsePMap, ReachingUses::equalMaps);
     }
 
     private static boolean equalMaps(PMap<Node, Node> map1, PMap<Node, Node> map2) {

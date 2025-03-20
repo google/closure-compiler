@@ -548,10 +548,9 @@ public final class CodePrinter {
       }
 
       StaticSourceFile staticSrc = NodeUtil.getSourceFile(n);
-      if (!(staticSrc instanceof SourceFile)) {
+      if (!(staticSrc instanceof SourceFile src)) {
         return null;
       }
-      SourceFile src = (SourceFile) staticSrc;
 
       String srcCode;
       try {

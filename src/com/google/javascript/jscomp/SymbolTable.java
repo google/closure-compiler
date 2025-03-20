@@ -1623,10 +1623,9 @@ public final class SymbolTable {
 
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof Symbol)) {
+      if (!(o instanceof Symbol other)) {
         return false;
       }
-      Symbol other = (Symbol) o;
 
       return isTypeInferred() == other.isTypeInferred()
           && Objects.equals(getName(), other.getName())

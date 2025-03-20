@@ -2948,8 +2948,8 @@ public class Parser {
     ParseTree operand = parseNewExpression();
 
     // this test is equivalent to is member expression
-    if (!(operand instanceof NewExpressionTree)
-        || ((NewExpressionTree) operand).arguments != null) {
+    if (!(operand instanceof NewExpressionTree newExpressionTree)
+        || newExpressionTree.arguments != null) {
       // We have a MemberExpression, but it may actually be just the first part of a CallExpression
       // Attempt to gather the rest of the CallExpression, if so.
       while (peekCallSuffix()) {

@@ -379,8 +379,8 @@ public abstract class JSType {
   }
 
   public final boolean isLiteralObject() {
-    if (this instanceof PrototypeObjectType) {
-      return ((PrototypeObjectType) this).isAnonymous();
+    if (this instanceof PrototypeObjectType prototypeObjectType) {
+      return prototypeObjectType.isAnonymous();
     }
     return false;
   }
@@ -696,8 +696,8 @@ public abstract class JSType {
     if (this == other) {
       return true;
     }
-    return (other instanceof JSType)
-        && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, (JSType) other);
+    return (other instanceof JSType jSType)
+        && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, jSType);
   }
 
   /**
@@ -878,7 +878,7 @@ public abstract class JSType {
    * dereferencing, you should use autoboxesTo() or dereference().
    */
   public @Nullable ObjectType toObjectType() {
-    return this instanceof ObjectType ? (ObjectType) this : null;
+    return this instanceof ObjectType objectType ? objectType : null;
   }
 
   /**

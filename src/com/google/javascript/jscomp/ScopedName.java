@@ -64,11 +64,11 @@ abstract class ScopedName {
 
   @Override
   public final boolean equals(Object other) {
-    if (!(other instanceof ScopedName)) {
+    if (!(other instanceof ScopedName scopedName)) {
       return false;
     }
-    return getName().equals(((ScopedName) other).getName())
-        && getScopeRoot().equals(((ScopedName) other).getScopeRoot());
+    return getName().equals(scopedName.getName())
+        && getScopeRoot().equals(scopedName.getScopeRoot());
   }
 
   @Override

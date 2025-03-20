@@ -209,10 +209,9 @@ public class SortingErrorManager implements ErrorManager {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof ErrorWithLevel)) {
+      if (!(obj instanceof ErrorWithLevel e)) {
         return false;
       }
-      ErrorWithLevel e = (ErrorWithLevel) obj;
       return Objects.equals(level, e.level)
           && Objects.equals(error.getDescription(), e.error.getDescription())
           && Objects.equals(error.getSourceName(), e.error.getSourceName())

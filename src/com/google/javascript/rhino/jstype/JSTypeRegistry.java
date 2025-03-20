@@ -1014,8 +1014,8 @@ public final class JSTypeRegistry {
 
   private JSType getTypeInternal(StaticScope scope, String name) {
     checkTypeName(name);
-    if (scope instanceof SyntheticTemplateScope) {
-      TemplateType type = ((SyntheticTemplateScope) scope).getTemplateType(name);
+    if (scope instanceof SyntheticTemplateScope syntheticTemplateScope) {
+      TemplateType type = syntheticTemplateScope.getTemplateType(name);
       if (type != null) {
         return type;
       }
@@ -1030,10 +1030,9 @@ public final class JSTypeRegistry {
   }
 
   private @Nullable JSType resolveViaComponents(StaticScope scope, String qualifiedName) {
-    if (qualifiedName.isEmpty() || !(scope instanceof StaticTypedScope)) {
+    if (qualifiedName.isEmpty() || !(scope instanceof StaticTypedScope resolutionScope)) {
       return null;
     }
-    StaticTypedScope resolutionScope = (StaticTypedScope) scope;
     // Skip closure namespace resolution of types whose root component is defined in a local scope
     // (not a global scope). Those will follow the normal resolution scheme. (For legacy
     // compatibility reasons we don't check for global names that are the same as the module root).
@@ -1148,8 +1147,8 @@ public final class JSTypeRegistry {
       return slotType.toMaybeFunctionType().getInstanceType();
     } else if (slotType.isNoObjectType()) {
       return this.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE);
-    } else if (slotType instanceof EnumType) {
-      return ((EnumType) slotType).getElementsType();
+    } else if (slotType instanceof EnumType enumType) {
+      return enumType.getElementsType();
     } else {
       return null;
     }
@@ -1233,8 +1232,7 @@ public final class JSTypeRegistry {
       type = getSentinelObjectLiteral();
     }
 
-    if (type instanceof ObjectType && ((ObjectType) type).hasReferenceName()) {
-      ObjectType objType = (ObjectType) type;
+    if (type instanceof ObjectType objType && objType.hasReferenceName()) {
       eachRefTypeIndexedByProperty.put(propertyName, objType);
     } else {
       nonRefTypesIndexedByProperty.put(propertyName, type);
@@ -1874,8 +1872,7 @@ public final class JSTypeRegistry {
    * change the implicit prototype if other classes have already subclassed this one.
    */
   public void resetImplicitPrototype(JSType type, ObjectType newImplicitProto) {
-    if (type instanceof PrototypeObjectType) {
-      PrototypeObjectType poType = (PrototypeObjectType) type;
+    if (type instanceof PrototypeObjectType poType) {
       poType.clearCachedValues();
       poType.setImplicitPrototype(newImplicitProto);
     }
@@ -2025,8 +2022,8 @@ public final class JSTypeRegistry {
       case BANG: // Not nullable
         {
           JSType child = createTypeFromCommentNode(n.getFirstChild(), sourceName, scope);
-          if (child instanceof NamedType) {
-            return ((NamedType) child).getBangType();
+          if (child instanceof NamedType namedType) {
+            return namedType.getBangType();
           }
           return child.restrictByNotNullOrUndefined();
         }
@@ -2105,7 +2102,8 @@ public final class JSTypeRegistry {
             return addNullabilityBasedOnParseContext(n, nominalType, scope);
           }
 
-          if (!(nominalType instanceof ObjectType) || isNonNullableName(scope, n.getString())) {
+          if (!(nominalType instanceof ObjectType objectType)
+              || isNonNullableName(scope, n.getString())) {
             return nominalType;
           }
 
@@ -2116,7 +2114,7 @@ public final class JSTypeRegistry {
           }
 
           return addNullabilityBasedOnParseContext(
-              n, createTemplatizedType((ObjectType) nominalType, templateArgs), scope);
+              n, createTemplatizedType(objectType, templateArgs), scope);
         }
 
       case FUNCTION:
@@ -2344,8 +2342,8 @@ public final class JSTypeRegistry {
     SyntheticTemplateScope(StaticTypedScope delegate, Iterable<TemplateType> templates) {
       this.delegate = delegate;
       PMap<String, TemplateType> types =
-          delegate instanceof SyntheticTemplateScope
-              ? ((SyntheticTemplateScope) delegate).types
+          delegate instanceof SyntheticTemplateScope syntheticTemplateScope
+              ? syntheticTemplateScope.types
               : HamtPMap.<String, TemplateType>empty();
       for (TemplateType key : templates) {
         types = types.plus(key.getReferenceName(), key);

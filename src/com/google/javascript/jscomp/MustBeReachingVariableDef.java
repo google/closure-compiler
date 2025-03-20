@@ -76,10 +76,9 @@ final class MustBeReachingVariableDef
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof Definition)) {
+      if (!(other instanceof Definition otherDef)) {
         return false;
       }
-      Definition otherDef = (Definition) other;
       // If the var has the same definition node we can assume they have the
       // same depends set.
       return otherDef.node == node;
@@ -135,7 +134,7 @@ final class MustBeReachingVariableDef
 
     @Override
     public boolean equals(Object other) {
-      return (other instanceof MustDef) && ((MustDef) other).reachingDef.equals(this.reachingDef);
+      return (other instanceof MustDef mustDef) && mustDef.reachingDef.equals(this.reachingDef);
     }
 
     @Override

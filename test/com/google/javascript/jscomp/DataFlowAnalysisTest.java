@@ -95,10 +95,10 @@ public final class DataFlowAnalysisTest {
     @Override
     public boolean equals(Object other) {
       // Use the String's .equals()
-      if (!(other instanceof Variable)) {
+      if (!(other instanceof Variable variable)) {
         return false;
       }
-      return ((Variable) other).name.equals(name);
+      return variable.name.equals(name);
     }
 
     @Override
@@ -136,10 +136,10 @@ public final class DataFlowAnalysisTest {
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof NumberValue)) {
+      if (!(other instanceof NumberValue numberValue)) {
         return false;
       }
-      return ((NumberValue) other).value == value;
+      return numberValue.value == value;
     }
 
     @Override
@@ -281,10 +281,9 @@ public final class DataFlowAnalysisTest {
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof ArithmeticInstruction)) {
+      if (!(other instanceof ArithmeticInstruction that)) {
         return false;
       }
-      ArithmeticInstruction that = (ArithmeticInstruction) other;
       return that.order == this.order
           && that.operation.equals(this.operation)
           && that.operand1.equals(this.operand1)

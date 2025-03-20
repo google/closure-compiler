@@ -86,8 +86,8 @@ class LiveVariablesAnalysis
     @Override
     public boolean equals(Object other) {
       checkNotNull(other);
-      return (other instanceof LiveVariableLattice)
-          && this.liveSet.equals(((LiveVariableLattice) other).liveSet);
+      return (other instanceof LiveVariableLattice liveVariableLattice)
+          && this.liveSet.equals(liveVariableLattice.liveSet);
     }
 
     // There is only a version of this function with index since var.index will
