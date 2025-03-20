@@ -29,13 +29,15 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
   public void testTypeofBigInt() {
     newTest()
         .addSource(
-            "/**",
-            " * @param {bigint|number} i",
-            " * @return {boolean}",
-            " */",
-            "function foo(i) {",
-            "  return typeof i === 'bigint';",
-            "}")
+            """
+            /**
+             * @param {bigint|number} i
+             * @return {boolean}
+             */
+            function foo(i) {
+              return typeof i === 'bigint';
+            }
+            """)
         .run();
   }
 
@@ -466,11 +468,13 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     // is done with arrays, but for now we will avoid such restrictions.
     newTest()
         .addSource(
-            "var obj = {};",
-            "/** @type {bigint} */ var b;",
-            "/** @type {bigint|number} */ var bn;",
-            "obj[b] = 1;",
-            "obj[bn] = 3;")
+            """
+            var obj = {};
+            /** @type {bigint} */ var b;
+            /** @type {bigint|number} */ var bn;
+            obj[b] = 1;
+            obj[bn] = 3;
+            """)
         .run();
   }
 

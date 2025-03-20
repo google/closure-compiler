@@ -131,15 +131,15 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
     private TypeTestBuilder() {}
 
-    public TypeTestBuilder addSource(String... x) {
+    public TypeTestBuilder addSource(String source) {
       checkState(this.source == null, "Can only have one source right now.");
-      this.source = lines(x);
+      this.source = source;
       return this;
     }
 
-    public TypeTestBuilder addExterns(String... x) {
+    public TypeTestBuilder addExterns(String externs) {
       checkState(this.externs == null, "Can only have one externs right now.");
-      this.externs = lines(x);
+      this.externs = externs;
       return this;
     }
 

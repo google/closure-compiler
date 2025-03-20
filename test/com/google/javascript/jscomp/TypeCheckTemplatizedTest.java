@@ -114,9 +114,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
     newTest()
         .addExterns("/** @constructor */ window.Object = Object;")
         .addSource(
-            "/** @param {!window.Object<number>} a",
-            " *  @return {string}",
-            " */ var f = function(a) { return a[0]; };")
+            """
+            /** @param {!window.Object<number>} a
+             *  @return {string}
+             */ var f = function(a) { return a[0]; };
+            """)
         .addDiagnostic(
             """
             inconsistent return type
@@ -131,9 +133,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
     newTest()
         .addExterns("/** @const */ window.Object = Object;")
         .addSource(
-            "/** @param {!window.Object<number>} a",
-            " *  @return {string}",
-            " */ var f = function(a) { return a[0]; };")
+            """
+            /** @param {!window.Object<number>} a
+             *  @return {string}
+             */ var f = function(a) { return a[0]; };
+            """)
         .addDiagnostic(
             """
             inconsistent return type
@@ -411,13 +415,15 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMatch1() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop;",
-            "function f(/** !WithPropT<number> */ x){}",
-            "/** @constructor */ function Foo() {}",
-            "/** @type {number} */ Foo.prototype.prop;",
-            "f(new Foo);")
+            """
+            /** @record @template T */
+            function WithPropT() {}
+            /** @type {T} */ WithPropT.prototype.prop;
+            function f(/** !WithPropT<number> */ x){}
+            /** @constructor */ function Foo() {}
+            /** @type {number} */ Foo.prototype.prop;
+            f(new Foo);
+            """)
         .run();
   }
 
@@ -425,13 +431,15 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMatch2() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop",
-            "function f(/** !WithPropT<number> */ x){};",
-            "/** @constructor @template U */ function Foo() {}",
-            "/** @type {number} */ Foo.prototype.prop",
-            "f(new Foo)")
+            """
+            /** @record @template T */
+            function WithPropT() {}
+            /** @type {T} */ WithPropT.prototype.prop
+            function f(/** !WithPropT<number> */ x){};
+            /** @constructor @template U */ function Foo() {}
+            /** @type {number} */ Foo.prototype.prop
+            f(new Foo)
+            """)
         .run();
   }
 
@@ -439,13 +447,15 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMatch3() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop",
-            "function f(/** !WithPropT<string> */ x){};",
-            "/** @constructor @template U */ function Foo() {}",
-            "/** @type {U} */ Foo.prototype.prop",
-            "f(new Foo)")
+            """
+            /** @record @template T */
+            function WithPropT() {}
+            /** @type {T} */ WithPropT.prototype.prop
+            function f(/** !WithPropT<string> */ x){};
+            /** @constructor @template U */ function Foo() {}
+            /** @type {U} */ Foo.prototype.prop
+            f(new Foo)
+            """)
         .run();
   }
 
@@ -453,13 +463,15 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMismatch1() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop",
-            "function f(/** !WithPropT<number> */ x){};",
-            "/** @constructor */ function Foo() {}",
-            "/** @type {string} */ Foo.prototype.prop = 'str'",
-            "f(new Foo)")
+            """
+            /** @record @template T */
+            function WithPropT() {}
+            /** @type {T} */ WithPropT.prototype.prop
+            function f(/** !WithPropT<number> */ x){};
+            /** @constructor */ function Foo() {}
+            /** @type {string} */ Foo.prototype.prop = 'str'
+            f(new Foo)
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of f does not match formal parameter
@@ -475,13 +487,15 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMismatch2() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop",
-            "function f(/** !WithPropT<number> */ x){};",
-            "/** @constructor @template U */ function Foo() {}",
-            "/** @type {string} */ Foo.prototype.prop = 'str'",
-            "f(new Foo)")
+            """
+            /** @record @template T */
+            function WithPropT() {}
+            /** @type {T} */ WithPropT.prototype.prop
+            function f(/** !WithPropT<number> */ x){};
+            /** @constructor @template U */ function Foo() {}
+            /** @type {string} */ Foo.prototype.prop = 'str'
+            f(new Foo)
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of f does not match formal parameter
@@ -497,19 +511,21 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMismatch3() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop",
-            "function f(/** !WithPropT<number> */ x){};",
-            "/**",
-            " * @constructor",
-            " * @template U",
-            " * @param {U} x",
-            " */",
-            "function Foo(x) {",
-            "  /** @type {U} */ this.prop = x",
-            "}",
-            "f(new Foo('str'))")
+            """
+            /** @record @template T */
+            function WithPropT() {}
+            /** @type {T} */ WithPropT.prototype.prop
+            function f(/** !WithPropT<number> */ x){};
+            /**
+             * @constructor
+             * @template U
+             * @param {U} x
+             */
+            function Foo(x) {
+              /** @type {U} */ this.prop = x
+            }
+            f(new Foo('str'))
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of f does not match formal parameter
@@ -525,20 +541,22 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedStructuralMismatch4() {
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithProp() {}",
-            "/** @type {T} */ WithProp.prototype.prop;",
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {number} */ this.prop = 4;",
-            "}",
-            "/**",
-            " * @template U",
-            " * @param {!WithProp<U>} x",
-            " * @param {U} y",
-            " */",
-            "function f(x, y){};",
-            "f(new Foo, 'str')")
+            """
+            /** @record @template T */
+            function WithProp() {}
+            /** @type {T} */ WithProp.prototype.prop;
+            /** @constructor */
+            function Foo() {
+              /** @type {number} */ this.prop = 4;
+            }
+            /**
+             * @template U
+             * @param {!WithProp<U>} x
+             * @param {U} y
+             */
+            function f(x, y){};
+            f(new Foo, 'str')
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of f does not match formal parameter
@@ -556,24 +574,26 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
     // Currently they match with type WithProp<?>, which is somewhat unsatisfying.
     newTest()
         .addSource(
-            "/** @record @template T */",
-            "function WithProp() {}",
-            "/** @type {T} */ WithProp.prototype.prop;",
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {number} */ this.prop = 4;",
-            "}",
-            "/** @constructor */",
-            "function Bar() {",
-            "  /** @type {string} */ this.prop = 'str';",
-            "}",
-            "/**",
-            " * @template U",
-            " * @param {!WithProp<U>} x",
-            " * @param {!WithProp<U>} y",
-            " */",
-            "function f(x, y){};",
-            "f(new Foo, new Bar)")
+            """
+            /** @record @template T */
+            function WithProp() {}
+            /** @type {T} */ WithProp.prototype.prop;
+            /** @constructor */
+            function Foo() {
+              /** @type {number} */ this.prop = 4;
+            }
+            /** @constructor */
+            function Bar() {
+              /** @type {string} */ this.prop = 'str';
+            }
+            /**
+             * @template U
+             * @param {!WithProp<U>} x
+             * @param {!WithProp<U>} y
+             */
+            function f(x, y){};
+            f(new Foo, new Bar)
+            """)
         .run();
   }
 }

@@ -33,21 +33,25 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching1() {
     newTest()
         .addExterns(
-            "/** @record */",
-            "function Interface1() {}",
-            "/** @type {number} */",
-            "Interface1.prototype.length;",
-            "",
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @type {number} */",
-            "C1.prototype.length;")
+            """
+            /** @record */
+            function Interface1() {}
+            /** @type {number} */
+            Interface1.prototype.length;
+
+            /** @constructor */
+            function C1() {}
+            /** @type {number} */
+            C1.prototype.length;
+            """)
         .addSource(
-            "/** @type{Interface1} */",
-            "var obj1;",
-            "/** @type{C1} */",
-            "var obj2 = new C1();",
-            "obj1 = obj2;")
+            """
+            /** @type{Interface1} */
+            var obj1;
+            /** @type{C1} */
+            var obj2 = new C1();
+            obj1 = obj2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -56,20 +60,24 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching2() {
     newTest()
         .addExterns(
-            "/** @record */",
-            "function Interface1() {}",
-            "/** @type {number} */",
-            "Interface1.prototype.length;",
-            "",
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @type {number} */",
-            "C1.prototype.length;")
+            """
+            /** @record */
+            function Interface1() {}
+            /** @type {number} */
+            Interface1.prototype.length;
+
+            /** @constructor */
+            function C1() {}
+            /** @type {number} */
+            C1.prototype.length;
+            """)
         .addSource(
-            "/** @type{Interface1} */", //
-            "var obj1;",
-            "var obj2 = new C1();",
-            "obj1 = obj2;")
+            """
+            /** @type{Interface1} */
+            var obj1;
+            var obj2 = new C1();
+            obj1 = obj2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -78,18 +86,22 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching3() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I1() {}",
-            "",
-            "/** @record */",
-            "function I2() {}")
+            """
+            /** @record */
+            function I1() {}
+
+            /** @record */
+            function I2() {}
+            """)
         .addSource(
-            "/** @type {I1} */", //
-            "var i1;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i1 = i2;",
-            "i2 = i1;")
+            """
+            /** @type {I1} */
+            var i1;
+            /** @type {I2} */
+            var i2;
+            i1 = i2;
+            i2 = i1;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -98,18 +110,22 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching4_1() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I1() {}",
-            "",
-            "/** @record */",
-            "function I2() {}")
+            """
+            /** @record */
+            function I1() {}
+
+            /** @record */
+            function I2() {}
+            """)
         .addSource(
-            "/** @type {I1} */", //
-            "var i1;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i2 = i1;",
-            "i1 = i2;")
+            """
+            /** @type {I1} */
+            var i1;
+            /** @type {I2} */
+            var i2;
+            i2 = i1;
+            i1 = i2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -118,19 +134,23 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching5_1() {
     newTest()
         .addExterns(
-            "/** @record */",
-            "function I1() {}",
-            "",
-            "/** @interface */",
-            "function I3() {}",
-            "/** @type {number} */",
-            "I3.prototype.length;")
+            """
+            /** @record */
+            function I1() {}
+
+            /** @interface */
+            function I3() {}
+            /** @type {number} */
+            I3.prototype.length;
+            """)
         .addSource(
-            "/** @type {I1} */", //
-            "var i1;",
-            "/** @type {I3} */",
-            "var i3;",
-            "i1 = i3;")
+            """
+            /** @type {I1} */
+            var i1;
+            /** @type {I3} */
+            var i3;
+            i1 = i3;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -139,18 +159,22 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching7_1() {
     newTest()
         .addExterns(
-            "/** @record */",
-            "function I1() {}",
-            "",
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @type {number} */",
-            "C1.prototype.length;")
+            """
+            /** @record */
+            function I1() {}
+
+            /** @constructor */
+            function C1() {}
+            /** @type {number} */
+            C1.prototype.length;
+            """)
         .addSource(
-            "/** @type {I1} */",
-            "var i1;" + "/** @type {C1} */",
-            "var c1;",
-            "i1 = c1;   // no warning")
+            """
+            /** @type {I1} */
+            var i1;/** @type {C1} */
+            var c1;
+            i1 = c1;   // no warning
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -159,20 +183,24 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching9() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @type {number} */",
-            "C1.prototype.length;",
-            "",
-            "/** @constructor */",
-            "function C2() {}",
-            "/** @type {number} */",
-            "C2.prototype.length;")
+            """
+            /** @constructor */
+            function C1() {}
+            /** @type {number} */
+            C1.prototype.length;
+
+            /** @constructor */
+            function C2() {}
+            /** @type {number} */
+            C2.prototype.length;
+            """)
         .addSource(
-            "/** @type {C1} */", //
-            "var c1;" + "/** @type {C2} */",
-            "var c2;",
-            "c1 = c2;")
+            """
+            /** @type {C1} */
+            var c1;/** @type {C2} */
+            var c2;
+            c1 = c2;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -186,30 +214,34 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching11_1() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function I3() {}",
-            "/** @type {number} */",
-            "I3.prototype.length;",
-            "",
-            "/** ",
-            " * @record",
-            " * @extends I3",
-            " */",
-            "function I4() {}",
-            "/** @type {boolean} */",
-            "I4.prototype.prop;",
-            "",
-            "/** @constructor */",
-            "function C4() {}",
-            "/** @type {number} */",
-            "C4.prototype.length;",
-            "/** @type {boolean} */",
-            "C4.prototype.prop;")
+            """
+            /** @interface */
+            function I3() {}
+            /** @type {number} */
+            I3.prototype.length;
+
+            /**
+             * @record
+             * @extends I3
+             */
+            function I4() {}
+            /** @type {boolean} */
+            I4.prototype.prop;
+
+            /** @constructor */
+            function C4() {}
+            /** @type {number} */
+            C4.prototype.length;
+            /** @type {boolean} */
+            C4.prototype.prop;
+            """)
         .addSource(
-            "/** @type {I4} */", //
-            "var i4;" + "/** @type {C4} */",
-            "var c4;",
-            "i4 = c4;")
+            """
+            /** @type {I4} */
+            var i4;/** @type {C4} */
+            var c4;
+            i4 = c4;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -218,24 +250,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching13() {
     newTest()
         .addExterns(
-            "/**",
-            "   * @record",
-            "   */",
-            "  function I5() {}",
-            "  /** @type {I5} */",
-            "  I5.prototype.next;",
-            "",
-            "  /**",
-            "   * @interface",
-            "   */",
-            "  function C5() {}",
-            "  /** @type {C5} */",
-            "  C5.prototype.next;")
+            """
+            /**
+               * @record
+               */
+              function I5() {}
+              /** @type {I5} */
+              I5.prototype.next;
+
+              /**
+               * @interface
+               */
+              function C5() {}
+              /** @type {C5} */
+              C5.prototype.next;
+            """)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;" + "/** @type {C5} */",
-            "var c5;",
-            "i5 = c5;")
+            """
+            /** @type {I5} */
+            var i5;/** @type {C5} */
+            var c5;
+            i5 = c5;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -244,24 +280,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching13_2() {
     newTest()
         .addExterns(
-            "/**",
-            "   * @record",
-            "   */",
-            "  function I5() {}",
-            "  /** @type {I5} */",
-            "  I5.prototype.next;",
-            "",
-            "  /**",
-            "   * @record",
-            "   */",
-            "  function C5() {}",
-            "  /** @type {C5} */",
-            "  C5.prototype.next;")
+            """
+            /**
+             * @record
+             */
+            function I5() {}
+            /** @type {I5} */
+            I5.prototype.next;
+
+            /**
+             * @record
+             */
+            function C5() {}
+            /** @type {C5} */
+            C5.prototype.next;
+            """)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;" + "/** @type {C5} */",
-            "var c5;",
-            "i5 = c5;")
+            """
+            /** @type {I5} */
+            var i5;/** @type {C5} */
+            var c5;
+            i5 = c5;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -270,24 +310,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching13_3() {
     newTest()
         .addExterns(
-            "/**",
-            "   * @interface",
-            "   */",
-            "  function I5() {}",
-            "  /** @type {I5} */",
-            "  I5.prototype.next;",
-            "",
-            "  /**",
-            "   * @record",
-            "   */",
-            "  function C5() {}",
-            "  /** @type {C5} */",
-            "  C5.prototype.next;")
+            """
+            /**
+             * @interface
+             */
+            function I5() {}
+            /** @type {I5} */
+            I5.prototype.next;
+
+            /**
+             * @record
+             */
+            function C5() {}
+            /** @type {C5} */
+            C5.prototype.next;
+            """)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;" + "/** @type {C5} */",
-            "var c5;",
-            "i5 = c5;")
+            """
+            /** @type {I5} */
+            var i5;/** @type {C5} */
+            var c5;
+            i5 = c5;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -301,25 +345,29 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching15() {
     newTest()
         .addExterns(
-            "/** @record */",
-            "function I5() {}",
-            "/** @type {I5} */",
-            "I5.prototype.next;",
-            "",
-            "/** @constructor */",
-            "function C6() {}",
-            "/** @type {C6} */",
-            "C6.prototype.next;",
-            "",
-            "/** @constructor */",
-            "function C5() {}",
-            "/** @type {C6} */",
-            "C5.prototype.next;")
+            """
+            /** @record */
+            function I5() {}
+            /** @type {I5} */
+            I5.prototype.next;
+
+            /** @constructor */
+            function C6() {}
+            /** @type {C6} */
+            C6.prototype.next;
+
+            /** @constructor */
+            function C5() {}
+            /** @type {C6} */
+            C5.prototype.next;
+            """)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;" + "/** @type {C5} */",
-            "var c5;",
-            "i5 = c5;")
+            """
+            /** @type {I5} */
+            var i5;/** @type {C5} */
+            var c5;
+            i5 = c5;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -377,10 +425,12 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;" + "/** @type {C5} */",
-            "var c5;",
-            "i5 = c5;")
+            """
+            /** @type {I5} */
+            var i5;/** @type {C5} */
+            var c5;
+            i5 = c5;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -391,14 +441,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD)
         .addSource(
-            "/** @type {C5} */",
-            "var c5;",
-            "/**",
-            " * @param {I5} i5",
-            " */",
-            "function f(i5) {}",
-            "",
-            "f(c5);")
+            """
+            /** @type {C5} */
+            var c5;
+            /**
+             * @param {I5} i5
+             */
+            function f(i5) {}
+
+            f(c5);
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -409,10 +461,12 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;" + "/** @type {C5} */",
-            "var c5;",
-            "i5.next = c5;")
+            """
+            /** @type {I5} */
+            var i5;/** @type {C5} */
+            var c5;
+            i5.next = c5;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -471,11 +525,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(EXTERNS_FOR_LONG_NONMATCHING_CHAIN)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;",
-            "/** @type {C5} */",
-            "var c5;",
-            "i5 = c5;")
+            """
+            /** @type {I5} */
+            var i5;
+            /** @type {C5} */
+            var c5;
+            i5 = c5;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -492,14 +548,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(EXTERNS_FOR_LONG_NONMATCHING_CHAIN)
         .addSource(
-            "/** @type {C5} */",
-            "var c5;",
-            "/**",
-            " * @param {I5} i5",
-            " */",
-            "function f(i5) {}",
-            "",
-            "f(c5);")
+            """
+            /** @type {C5} */
+            var c5;
+            /**
+             * @param {I5} i5
+             */
+            function f(i5) {}
+
+            f(c5);
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of f does not match formal parameter
@@ -516,11 +574,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(EXTERNS_FOR_LONG_NONMATCHING_CHAIN)
         .addSource(
-            "/** @type {I5} */", //
-            "var i5;",
-            "/** @type {C5} */",
-            "var c5;",
-            "i5.next = c5;")
+            """
+            /** @type {I5} */
+            var i5;
+            /** @type {C5} */
+            var c5;
+            i5.next = c5;
+            """)
         .addDiagnostic(
             """
             assignment to property next of I5
@@ -541,23 +601,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -571,23 +635,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // the type structure of I5 and C5 are different
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_NONMATCHING_CHAIN
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -608,23 +676,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(C5): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(I5): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(C5): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(I5): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -639,23 +711,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(C5, C5, I5): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(I5, C5): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(C5, C5, I5): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(I5, C5): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -669,23 +745,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -696,23 +776,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:I5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:I5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:C5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -723,23 +807,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -749,24 +837,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching30_3_1() {
     newTest()
         .addExterns(
-            "/** @record */ function I5() {}",
-            "/** @constructor @implements {I5} */ function C5() {}",
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @record */ function I5() {}
+            /** @constructor @implements {I5} */ function C5() {}
+            /** @record */
+            function I7() {}
+            /** @type{function(this:C5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:I5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -776,24 +868,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching30_3_2() {
     newTest()
         .addExterns(
-            "/** @interface */ function I5() {}",
-            "/** @constructor @implements {I5} */ function C5() {}",
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @interface */ function I5() {}
+            /** @constructor @implements {I5} */ function C5() {}
+            /** @record */
+            function I7() {}
+            /** @type{function(this:C5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:I5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -806,24 +902,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching30_3_3() {
     newTest()
         .addExterns(
-            "/** @interface */ function I5() {}",
-            "/** @constructor */ function C5() {}",
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @interface */ function I5() {}
+            /** @constructor */ function C5() {}
+            /** @record */
+            function I7() {}
+            /** @type{function(this:C5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:I5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -838,24 +938,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            "/** @record */ function I5() {}",
-            "/** @constructor */ function C5() {}",
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @record */ function I5() {}
+            /** @constructor */ function C5() {}
+            /** @record */
+            function I7() {}
+            /** @type{function(this:C5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:I5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -866,24 +970,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            "/** @record */ function I5() {}",
-            "/** @constructor @implements {I5} */ function C5() {}",
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:I5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @record */ function I5() {}
+            /** @constructor @implements {I5} */ function C5() {}
+            /** @record */
+            function I7() {}
+            /** @type{function(this:I5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:C5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -896,24 +1004,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching30_4_2() {
     newTest()
         .addExterns(
-            "/** @interface */ function I5() {}",
-            "/** @constructor */ function C5() {}",
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:I5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @interface */ function I5() {}
+            /** @constructor */ function C5() {}
+            /** @record */
+            function I7() {}
+            /** @type{function(this:I5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:C5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -932,23 +1044,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -959,22 +1075,26 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {{prop: I7, prop2: C7}}*/",
-            "var r1;",
-            "/** @type {{prop: C7, prop2: C7}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: I7, prop2: C7}}*/
+            var r1;
+            /** @type {{prop: C7, prop2: C7}} */
+            var r2;
+            r1 = r2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -985,22 +1105,26 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {{prop: I7, prop2: C7}}*/",
-            "var r1;",
-            "/** @type {{prop: C7, prop2: C7, prop3: C7}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: I7, prop2: C7}}*/
+            var r1;
+            /** @type {{prop: C7, prop2: C7, prop3: C7}} */
+            var r2;
+            r1 = r2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1014,23 +1138,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {{fun: function(C7):I7, prop: {prop: I7}}} */",
-            " var com1;",
-            "/** @type {{fun: function(I7):C7, prop: {prop: C7}}} */",
-            "var com2;",
-            "",
-            "com1 = com2;")
+            """
+            /** @type {{fun: function(C7):I7, prop: {prop: I7}}} */
+             var com1;
+            /** @type {{fun: function(I7):C7, prop: {prop: C7}}} */
+            var com2;
+
+            com1 = com2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1044,23 +1172,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {{fun: function(C7):I7, prop: {prop: I7}}} */",
-            " var com1;",
-            "/** @type {{fun: function(I7):C7, prop: {prop: C7}}} */",
-            "var com2;",
-            "",
-            "com1 = com2;")
+            """
+            /** @type {{fun: function(C7):I7, prop: {prop: I7}}} */
+             var com1;
+            /** @type {{fun: function(I7):C7, prop: {prop: C7}}} */
+            var com2;
+
+            com1 = com2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1074,23 +1206,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // the type structure of I5 and C5 are different
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
-            "/** @record */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_NONMATCHING_CHAIN
+                + """
+                /** @record */
+                function I7() {}
+                /** @type{function(this:C5, C5, C5, I5=): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(this:I5, I5, C5=, I5=): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {{fun: function(C7):I7, prop: {prop: I7}}} */",
-            "var com1;",
-            "/** @type {{fun: function(I7):C7, prop: {prop: C7}}} */",
-            "var com2;",
-            "",
-            "com1 = com2;")
+            """
+            /** @type {{fun: function(C7):I7, prop: {prop: I7}}} */
+            var com1;
+            /** @type {{fun: function(I7):C7, prop: {prop: C7}}} */
+            var com2;
+
+            com1 = com2;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -1113,13 +1249,17 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_39() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {I2} */", //
-            "var o1 = {length : 'test'};")
+            """
+            /** @type {I2} */
+            var o1 = {length : 'test'};
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1135,13 +1275,17 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_matching() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {I2} */", //
-            "var o1 = {length : 123};")
+            """
+            /** @type {I2} */
+            var o1 = {length : 123};
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1150,14 +1294,18 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_matching() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {",
-            "  /** @type {number} */",
-            "  this.length;",
-            "}")
+            """
+            /** @record */
+            function I2() {
+              /** @type {number} */
+              this.length;
+            }
+            """)
         .addSource(
-            "/** @type {!I2} */", //
-            "var o1 = {length : 123};")
+            """
+            /** @type {!I2} */
+            var o1 = {length : 123};
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1166,13 +1314,17 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_missing() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {!I2} */", //
-            "var o1 = {};")
+            """
+            /** @type {!I2} */
+            var o1 = {};
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1189,14 +1341,18 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_missing() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {",
-            "  /** @type {number} */",
-            "  this.length;",
-            "}")
+            """
+            /** @record */
+            function I2() {
+              /** @type {number} */
+              this.length;
+            }
+            """)
         .addSource(
-            "/** @type {!I2} */", //
-            "var o1 = {};")
+            """
+            /** @type {!I2} */
+            var o1 = {};
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1213,13 +1369,17 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_mismatch() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {!I2} */", //
-            "var o1 = {length: null};")
+            """
+            /** @type {!I2} */
+            var o1 = {length: null};
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1236,14 +1396,18 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_mismatch() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {",
-            "  /** @type {number} */",
-            "  this.length;",
-            "}")
+            """
+            /** @record */
+            function I2() {
+              /** @type {number} */
+              this.length;
+            }
+            """)
         .addSource(
-            "/** @type {!I2} */", //
-            "var o1 = {length: null};")
+            """
+            /** @type {!I2} */
+            var o1 = {length: null};
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1260,16 +1424,20 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_41() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {I2} */",
-            "var o1 = {length : 123};",
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;")
+            """
+            /** @type {I2} */
+            var o1 = {length : 123};
+            /** @type {I2} */
+            var i;
+            i = o1;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1278,16 +1446,20 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching41_forObjectLiterals_41_1() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {I2} */",
-            "var o1 = {length : 123};",
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;")
+            """
+            /** @type {I2} */
+            var o1 = {length : 123};
+            /** @type {I2} */
+            var i;
+            i = o1;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1296,16 +1468,20 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_42() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "/** @type {{length: number}} */",
-            "var o1 = {length : 123};",
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;")
+            """
+            /** @type {{length: number}} */
+            var o1 = {length : 123};
+            /** @type {I2} */
+            var i;
+            i = o1;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1314,15 +1490,19 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_43() {
     newTest()
         .addExterns(
-            "/** @record */", //
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;")
+            """
+            /** @record */
+            function I2() {}
+            /** @type {number} */
+            I2.prototype.length;
+            """)
         .addSource(
-            "var o1 = {length : 123};", //
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;")
+            """
+            var o1 = {length : 123};
+            /** @type {I2} */
+            var i;
+            i = o1;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1331,15 +1511,19 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching44() {
     newTest()
         .addExterns(
-            "/** @record */ function I() {}",
-            "/** @type {!Function} */ I.prototype.removeEventListener;",
-            "/** @type {!Function} */ I.prototype.addEventListener;",
-            "/** @constructor */ function C() {}",
-            "/** @type {!Function} */ C.prototype.addEventListener;")
+            """
+            /** @record */ function I() {}
+            /** @type {!Function} */ I.prototype.removeEventListener;
+            /** @type {!Function} */ I.prototype.addEventListener;
+            /** @constructor */ function C() {}
+            /** @type {!Function} */ C.prototype.addEventListener;
+            """)
         .addSource(
-            "/** @param {C|I} x */", //
-            "function f(x) { x.addEventListener(); }",
-            "f(new C());")
+            """
+            /** @param {C|I} x */
+            function f(x) { x.addEventListener(); }
+            f(new C());
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1352,14 +1536,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching45() {
     newTest()
         .addSource(
-            "/**",
-            " * @record",
-            " * @template X",
-            " */",
-            "function I() {}",
-            "/** @constructor */",
-            "function C() {}",
-            "var /** !I */ i = new C;")
+            """
+            /**
+             * @record
+             * @template X
+             */
+            function I() {}
+            /** @constructor */
+            function C() {}
+            var /** !I */ i = new C;
+            """)
         .run();
   }
 
@@ -1367,23 +1553,25 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching46() {
     newTest()
         .addSource(
-            "/** @interface */",
-            "function I2() {}",
-            "/**",
-            " * @interface",
-            " * @extends {I2}",
-            " */",
-            "function I3() {}",
-            "/**",
-            " * @record",
-            " * @extends {I3}",
-            " */",
-            "function I4() {}",
-            "/** @type {I4} */",
-            "var i4;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i4 = i2;")
+            """
+            /** @interface */
+            function I2() {}
+            /**
+             * @interface
+             * @extends {I2}
+             */
+            function I3() {}
+            /**
+             * @record
+             * @extends {I3}
+             */
+            function I4() {}
+            /** @type {I4} */
+            var i4;
+            /** @type {I2} */
+            var i2;
+            i4 = i2;
+            """)
         .run();
   }
 
@@ -1391,24 +1579,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching47() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function I2() {}",
-            "/**",
-            " * @interface",
-            " * @extends {I2}",
-            " */",
-            "function I3() {}",
-            "/**",
-            " * @record",
-            " * @extends {I3}",
-            " */",
-            "function I4() {}")
+            """
+            /** @interface */
+            function I2() {}
+            /**
+             * @interface
+             * @extends {I2}
+             */
+            function I3() {}
+            /**
+             * @record
+             * @extends {I3}
+             */
+            function I4() {}
+            """)
         .addSource(
-            "/** @type {I4} */", //
-            "var i4;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i4 = i2;")
+            """
+            /** @type {I4} */
+            var i4;
+            /** @type {I2} */
+            var i2;
+            i4 = i2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1418,18 +1610,20 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     newTest()
         .addExterns("")
         .addSource(
-            "/** @interface */",
-            "function I2() {}",
-            "/**",
-            " * @record",
-            " * @extends {I2}",
-            " */",
-            "function I3() {}",
-            "/** @type {I3} */",
-            "var i3;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i3 = i2;")
+            """
+            /** @interface */
+            function I2() {}
+            /**
+             * @record
+             * @extends {I2}
+             */
+            function I3() {}
+            /** @type {I3} */
+            var i3;
+            /** @type {I2} */
+            var i2;
+            i3 = i2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1438,19 +1632,23 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching49() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function I2() {}",
-            "/**",
-            " * @record",
-            " * @extends {I2}",
-            " */",
-            "function I3() {}")
+            """
+            /** @interface */
+            function I2() {}
+            /**
+             * @record
+             * @extends {I2}
+             */
+            function I3() {}
+            """)
         .addSource(
-            "/** @type {I3} */", //
-            "var i3;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i3 = i2;")
+            """
+            /** @type {I3} */
+            var i3;
+            /** @type {I2} */
+            var i2;
+            i3 = i2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1459,19 +1657,23 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching49_2() {
     newTest()
         .addExterns(
-            "/** @record */",
-            "function I2() {}",
-            "/**",
-            " * @record",
-            " * @extends {I2}",
-            " */",
-            "function I3() {}")
+            """
+            /** @record */
+            function I2() {}
+            /**
+             * @record
+             * @extends {I2}
+             */
+            function I3() {}
+            """)
         .addSource(
-            "/** @type {I3} */", //
-            "var i3;",
-            "/** @type {I2} */",
-            "var i2;",
-            "i3 = i2;")
+            """
+            /** @type {I3} */
+            var i3;
+            /** @type {I2} */
+            var i2;
+            i3 = i2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1480,19 +1682,23 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching50() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function I2() {}",
-            "/**",
-            " * @record",
-            " * @extends {I2}",
-            " */",
-            "function I3() {}")
+            """
+            /** @interface */
+            function I2() {}
+            /**
+             * @record
+             * @extends {I2}
+             */
+            function I3() {}
+            """)
         .addSource(
-            "/** @type {I3} */",
-            "var i3;",
-            "/** @type {{length : number}} */",
-            "var r = {length: 123};",
-            "i3 = r;")
+            """
+            /** @type {I3} */
+            var i3;
+            /** @type {{length : number}} */
+            var r = {length: 123};
+            i3 = r;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1501,21 +1707,25 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching1_1() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function Interface1() {}",
-            "/** @type {number} */",
-            "Interface1.prototype.length;",
-            "",
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @type {number} */",
-            "C1.prototype.length;")
+            """
+            /** @interface */
+            function Interface1() {}
+            /** @type {number} */
+            Interface1.prototype.length;
+
+            /** @constructor */
+            function C1() {}
+            /** @type {number} */
+            C1.prototype.length;
+            """)
         .addSource(
-            "/** @type{Interface1} */",
-            "var obj1;",
-            "/** @type{C1} */",
-            "var obj2 = new C1();",
-            "obj1 = obj2;")
+            """
+            /** @type{Interface1} */
+            var obj1;
+            /** @type{C1} */
+            var obj2 = new C1();
+            obj1 = obj2;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -1535,23 +1745,27 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
-            "/** @interface */",
-            "function I7() {}",
-            "/** @type{function(): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(): C5} */",
-            "C7.prototype.getElement = function(){};")
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD
+                + """
+                /** @interface */
+                function I7() {}
+                /** @type{function(): I5} */
+                I7.prototype.getElement = function(){};
+
+                /** @constructor */
+                function C7() {}
+                /** @type{function(): C5} */
+                C7.prototype.getElement = function(){};
+                """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -1568,24 +1782,28 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(
-            "/** @interface */ function I5() {}",
-            "/** @constructor @implements {I5} */ function C5() {}",
-            "/** @interface */",
-            "function I7() {}",
-            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
-            "I7.prototype.getElement = function(){};",
-            "",
-            "/** @constructor */",
-            "function C7() {}",
-            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
-            "C7.prototype.getElement = function(){};")
+            """
+            /** @interface */ function I5() {}
+            /** @constructor @implements {I5} */ function C5() {}
+            /** @interface */
+            function I7() {}
+            /** @type{function(this:C5, C5, C5, I5=): I5} */
+            I7.prototype.getElement = function(){};
+
+            /** @constructor */
+            function C7() {}
+            /** @type{function(this:I5, I5, C5=, I5=): C5} */
+            C7.prototype.getElement = function(){};
+            """)
         .addSource(
-            "/** @type {I7} */", //
-            "var i7;",
-            "/** @type {C7} */",
-            "var c7;",
-            "",
-            "i7 = c7;")
+            """
+            /** @type {I7} */
+            var i7;
+            /** @type {C7} */
+            var c7;
+
+            i7 = c7;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -1600,14 +1818,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceWithOptionalProperty() {
     newTest()
         .addSource(
-            "/** @record */ function Rec() {}",
-            "/** @type {string} */ Rec.prototype.str;",
-            "/** @type {(number|undefined)} */ Rec.prototype.opt_num;",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "Foo.prototype.str = 'foo';",
-            "",
-            "var /** !Rec */ x = new Foo;")
+            """
+            /** @record */ function Rec() {}
+            /** @type {string} */ Rec.prototype.str;
+            /** @type {(number|undefined)} */ Rec.prototype.opt_num;
+
+            /** @constructor */ function Foo() {}
+            Foo.prototype.str = 'foo';
+
+            var /** !Rec */ x = new Foo;
+            """)
         .run();
   }
 
@@ -1615,14 +1835,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceWithUnknownProperty() {
     newTest()
         .addSource(
-            "/** @record */ function Rec() {}",
-            "/** @type {string} */ Rec.prototype.str;",
-            "/** @type {?} */ Rec.prototype.unknown;",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "Foo.prototype.str = 'foo';",
-            "",
-            "var /** !Rec */ x = new Foo;")
+            """
+            /** @record */ function Rec() {}
+            /** @type {string} */ Rec.prototype.str;
+            /** @type {?} */ Rec.prototype.unknown;
+
+            /** @constructor */ function Foo() {}
+            Foo.prototype.str = 'foo';
+
+            var /** !Rec */ x = new Foo;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1638,14 +1860,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceWithOptionalUnknownProperty() {
     newTest()
         .addSource(
-            "/** @record */ function Rec() {}",
-            "/** @type {string} */ Rec.prototype.str;",
-            "/** @type {?|undefined} */ Rec.prototype.opt_unknown;",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "Foo.prototype.str = 'foo';",
-            "",
-            "var /** !Rec */ x = new Foo;")
+            """
+            /** @record */ function Rec() {}
+            /** @type {string} */ Rec.prototype.str;
+            /** @type {?|undefined} */ Rec.prototype.opt_unknown;
+
+            /** @constructor */ function Foo() {}
+            Foo.prototype.str = 'foo';
+
+            var /** !Rec */ x = new Foo;
+            """)
         .run();
   }
 
@@ -1653,14 +1877,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceWithTopProperty() {
     newTest()
         .addSource(
-            "/** @record */ function Rec() {}",
-            "/** @type {string} */ Rec.prototype.str;",
-            "/** @type {*} */ Rec.prototype.top;",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "Foo.prototype.str = 'foo';",
-            "",
-            "var /** !Rec */ x = new Foo;")
+            """
+            /** @record */ function Rec() {}
+            /** @type {string} */ Rec.prototype.str;
+            /** @type {*} */ Rec.prototype.top;
+
+            /** @constructor */ function Foo() {}
+            Foo.prototype.str = 'foo';
+
+            var /** !Rec */ x = new Foo;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1676,20 +1902,22 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfaceCycleDoesntCrash() {
     newTest()
         .addSource(
-            "/**  @record */ function Foo() {};",
-            "/**  @return {MutableFoo} */ Foo.prototype.toMutable;",
-            "/**  @record */ function MutableFoo() {};",
-            "/**  @param {Foo} from */ MutableFoo.prototype.copyFrom;",
-            "",
-            "/**  @record */ function Bar() {};",
-            "/**  @return {MutableBar} */ Bar.prototype.toMutable;",
-            "/**  @record */ function MutableBar() {};",
-            "/**  @param {Bar} from */ MutableBar.prototype.copyFrom;",
-            "",
-            "/** @constructor @implements {MutableBar} */ function MutableBarImpl() {};",
-            "/** @override */ MutableBarImpl.prototype.copyFrom = function(from) {};",
-            "/** @constructor  @implements {MutableFoo} */ function MutableFooImpl() {};",
-            "/** @override */ MutableFooImpl.prototype.copyFrom = function(from) {};")
+            """
+            /**  @record */ function Foo() {};
+            /**  @return {MutableFoo} */ Foo.prototype.toMutable;
+            /**  @record */ function MutableFoo() {};
+            /**  @param {Foo} from */ MutableFoo.prototype.copyFrom;
+
+            /**  @record */ function Bar() {};
+            /**  @return {MutableBar} */ Bar.prototype.toMutable;
+            /**  @record */ function MutableBar() {};
+            /**  @param {Bar} from */ MutableBar.prototype.copyFrom;
+
+            /** @constructor @implements {MutableBar} */ function MutableBarImpl() {};
+            /** @override */ MutableBarImpl.prototype.copyFrom = function(from) {};
+            /** @constructor  @implements {MutableFoo} */ function MutableFooImpl() {};
+            /** @override */ MutableFooImpl.prototype.copyFrom = function(from) {};
+            """)
         .run();
   }
 
@@ -1697,14 +1925,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfacesMatchOwnProperties1() {
     newTest()
         .addSource(
-            "/** @record */ function WithProp() {}",
-            "/** @type {number} */ WithProp.prototype.prop;",
-            "",
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {number} */ this.prop = 5;",
-            "}",
-            "var /** !WithProp */ wp = new Foo;")
+            """
+            /** @record */ function WithProp() {}
+            /** @type {number} */ WithProp.prototype.prop;
+
+            /** @constructor */
+            function Foo() {
+              /** @type {number} */ this.prop = 5;
+            }
+            var /** !WithProp */ wp = new Foo;
+            """)
         .run();
   }
 
@@ -1712,14 +1942,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfacesMatchOwnProperties2() {
     newTest()
         .addSource(
-            "/** @record */ function WithProp() {}",
-            "/** @type {number} */ WithProp.prototype.prop;",
-            "",
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {number} */ this.oops = 5;",
-            "}",
-            "var /** !WithProp */ wp = new Foo;")
+            """
+            /** @record */ function WithProp() {}
+            /** @type {number} */ WithProp.prototype.prop;
+
+            /** @constructor */
+            function Foo() {
+              /** @type {number} */ this.oops = 5;
+            }
+            var /** !WithProp */ wp = new Foo;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1735,14 +1967,16 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfacesMatchOwnProperties3() {
     newTest()
         .addSource(
-            "/** @record */ function WithProp() {}",
-            "/** @type {number} */ WithProp.prototype.prop;",
-            "",
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {string} */ this.prop = 'str';",
-            "}",
-            "var /** !WithProp */ wp = new Foo;")
+            """
+            /** @record */ function WithProp() {}
+            /** @type {number} */ WithProp.prototype.prop;
+
+            /** @constructor */
+            function Foo() {
+              /** @type {string} */ this.prop = 'str';
+            }
+            var /** !WithProp */ wp = new Foo;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1758,12 +1992,14 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfacesMatchFunctionNamespace1() {
     newTest()
         .addSource(
-            "/** @record */ function WithProp() {}",
-            "/** @type {number} */ WithProp.prototype.prop;",
-            "",
-            "var ns = function() {};",
-            "/** @type {number} */ ns.prop;",
-            "var /** !WithProp */ wp = ns;")
+            """
+            /** @record */ function WithProp() {}
+            /** @type {number} */ WithProp.prototype.prop;
+
+            var ns = function() {};
+            /** @type {number} */ ns.prop;
+            var /** !WithProp */ wp = ns;
+            """)
         .run();
   }
 
@@ -1771,12 +2007,14 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfacesMatchFunctionNamespace2() {
     newTest()
         .addSource(
-            "/** @record */ function WithProp() {}",
-            "/** @type {number} */ WithProp.prototype.prop;",
-            "",
-            "var ns = function() {};",
-            "/** @type {number} */ ns.oops;",
-            "var /** !WithProp */ wp = ns;")
+            """
+            /** @record */ function WithProp() {}
+            /** @type {number} */ WithProp.prototype.prop;
+
+            var ns = function() {};
+            /** @type {number} */ ns.oops;
+            var /** !WithProp */ wp = ns;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1792,12 +2030,14 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testStructuralInterfacesMatchFunctionNamespace3() {
     newTest()
         .addSource(
-            "/** @record */ function WithProp() {}",
-            "/** @type {number} */ WithProp.prototype.prop;",
-            "",
-            "var ns = function() {};",
-            "/** @type {string} */ ns.prop;",
-            "var /** !WithProp */ wp = ns;")
+            """
+            /** @record */ function WithProp() {}
+            /** @type {number} */ WithProp.prototype.prop;
+
+            var ns = function() {};
+            /** @type {string} */ ns.prop;
+            var /** !WithProp */ wp = ns;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -1813,21 +2053,23 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
   public void testRecursiveTemplatizedStructuralInterface() {
     newTest()
         .addSource(
-            "/**",
-            " * @record",
-            " * @template T",
-            " */",
-            "var Rec = function() { };",
-            "/** @type {!Rec<T>} */",
-            "Rec.prototype.p;",
-            "",
-            "/**",
-            " * @constructor @implements {Rec<U>}",
-            " * @template U",
-            " */",
-            "var Foo = function() {};",
-            "/** @override */",
-            "Foo.prototype.p = new Foo;")
+            """
+            /**
+             * @record
+             * @template T
+             */
+            var Rec = function() { };
+            /** @type {!Rec<T>} */
+            Rec.prototype.p;
+
+            /**
+             * @constructor @implements {Rec<U>}
+             * @template U
+             */
+            var Foo = function() {};
+            /** @override */
+            Foo.prototype.p = new Foo;
+            """)
         .run();
   }
 }

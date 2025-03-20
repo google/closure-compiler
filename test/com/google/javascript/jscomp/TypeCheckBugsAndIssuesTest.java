@@ -53,12 +53,14 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue61b() {
     newTest()
         .addSource(
-            "/** @const */ var ns = {};",
-            "(function() {",
-            "  /** @param {string} b */",
-            "  ns.a = function(b) {};",
-            "})();",
-            "ns.a(123);")
+            """
+            /** @const */ var ns = {};
+            (function() {
+              /** @param {string} b */
+              ns.a = function(b) {};
+            })();
+            ns.a(123);
+            """)
         .addDiagnostic(
             "actual parameter 1 of ns.a does not match formal parameter\n"
                 + "found   : number\n"
@@ -70,12 +72,14 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue61c() {
     newTest()
         .addSource(
-            "var ns = {};",
-            "(function() {",
-            "  /** @param {string} b */",
-            "  ns.a = function(b) {};",
-            "})();",
-            "ns.a(123);")
+            """
+            var ns = {};
+            (function() {
+              /** @param {string} b */
+              ns.a = function(b) {};
+            })();
+            ns.a(123);
+            """)
         .addDiagnostic(
             "actual parameter 1 of ns.a does not match formal parameter\n"
                 + "found   : number\n"
@@ -144,9 +148,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addString().addArray().build())
         .addSource(
-            "Array.indexOf = function() {};",
-            "var s = 'hello';",
-            "alert(s.toLowerCase.indexOf('1'));")
+            """
+            Array.indexOf = function() {};
+            var s = 'hello';
+            alert(s.toLowerCase.indexOf('1'));
+            """)
         .addDiagnostic("Property indexOf never defined on String.prototype.toLowerCase")
         .run();
   }
@@ -181,11 +187,13 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addArray().addObject().build())
         .addSource(
-            "/** @type { function(string): {innerHTML: string} } */",
-            "document.getElementById;",
-            "var list = /** @type {!Array<string>} */ ['hello', 'you'];",
-            "list.push('?');",
-            "document.getElementById('node').innerHTML = list.toString();")
+            """
+            /** @type { function(string): {innerHTML: string} } */
+            document.getElementById;
+            var list = /** @type {!Array<string>} */ ['hello', 'you'];
+            list.push('?');
+            document.getElementById('node').innerHTML = list.toString();
+            """)
         .run();
   }
 
@@ -194,15 +202,17 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
-            "/** @constructor */ function C() {",
-            "  /** @type {?Array} */ this.a = [];",
-            "}",
-            "C.prototype.f = function() {",
-            "  if (this.a.length > 0) {",
-            "    g(this.a);",
-            "  }",
-            "};",
-            "/** @param {number} a */ function g(a) {}")
+            """
+            /** @constructor */ function C() {
+              /** @type {?Array} */ this.a = [];
+            }
+            C.prototype.f = function() {
+              if (this.a.length > 0) {
+                g(this.a);
+              }
+            };
+            /** @param {number} a */ function g(a) {}
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of g does not match formal parameter
@@ -357,11 +367,13 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue635b() {
     newTest()
         .addSource(
-            "/** @constructor */",
-            "function F() {}",
-            "/** @constructor */",
-            "function G() {}",
-            "/** @type {function(new:G)} */ var x = F;")
+            """
+            /** @constructor */
+            function F() {}
+            /** @constructor */
+            function G() {}
+            /** @type {function(new:G)} */ var x = F;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -545,13 +557,15 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue810() {
     newTest()
         .addSource(
-            "/** @constructor */",
-            "var Type = function() {",
-            "  this.prop = x;",
-            "};",
-            "Type.prototype.doIt = function(obj) {",
-            "  this.prop = obj.unknownProp;",
-            "};")
+            """
+            /** @constructor */
+            var Type = function() {
+              this.prop = x;
+            };
+            Type.prototype.doIt = function(obj) {
+              this.prop = obj.unknownProp;
+            };
+            """)
         .addDiagnostic(
             "Property unknownProp never defined on obj" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .run();
@@ -763,11 +777,13 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testNullishCoalesceTypeIsFirstOrSecondArgument() {
     newTest()
         .addSource(
-            "/** @param {Function} opt_f ... */",
-            "function foo(opt_f) {",
-            "  /** @type {Function} */",
-            "  return opt_f ?? function() {};",
-            "}")
+            """
+            /** @param {Function} opt_f ... */
+            function foo(opt_f) {
+              /** @type {Function} */
+              return opt_f ?? function() {};
+            }
+            """)
         .run();
   }
 
@@ -803,8 +819,10 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     this.newTest()
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
-            "/** @type {String} */ var s = new String('foo');", //
-            "var b = s.match(/a/) != null;")
+            """
+            /** @type {String} */ var s = new String('foo');
+            var b = s.match(/a/) != null;
+            """)
         .run();
   }
 
@@ -1029,22 +1047,24 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
-            "/**",
-            " * @param {Array<T>} x",
-            " * @param {function(T)} y",
-            " * @template T",
-            " */",
-            "var forEach = function(x, y) {",
-            "  for (var i = 0; i < x.length; i++) y(x[i]);",
-            "};",
-            "/** @param {number} x */",
-            "function f(x) {}",
-            "/** @param {?} x */",
-            "function h(x) {",
-            "  var top = null;",
-            "  forEach(x, function(z) { top = z; });",
-            "  if (top) f(top);",
-            "}")
+            """
+            /**
+             * @param {Array<T>} x
+             * @param {function(T)} y
+             * @template T
+             */
+            var forEach = function(x, y) {
+              for (var i = 0; i < x.length; i++) y(x[i]);
+            };
+            /** @param {number} x */
+            function f(x) {}
+            /** @param {?} x */
+            function h(x) {
+              var top = null;
+              forEach(x, function(z) { top = z; });
+              if (top) f(top);
+            }
+            """)
         .run();
   }
 
